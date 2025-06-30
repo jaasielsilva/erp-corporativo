@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel do CEO - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="components/sidebar :: sidebar"></aside>
+
+    <main class="main-content">
+      <header th:replace="components/topbar :: topbar"></header>
+
+      <section class="content-area">
+        <h1>Gestão empresarial unificada e inteligente</h1>
+        <h2>Controle completo para seu negócio</h2>
+        <div class="dashboard-cards">
+          <div class="card-metric"><h4>Total de Vendas</h4><p>R$ 12.345,67</p></div>
+          <div class="card-metric"><h4>Clientes Ativos</h4><p>120</p></div>
+          <div class="card-metric"><h4>Produtos no Estoque</h4><p>547</p></div>
+          <div class="card-metric"><h4>Projetos em Andamento</h4><p>8</p></div>
+        </div>
+        <article class="card">
+          <h3>Gráfico de Vendas</h3>
+          <canvas id="graficoVendas" height="100"></canvas>
+        </article>
+        <article class="card">
+          <h3>Últimas Vendas</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Produto</th>
+                <th>Valor</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>#00123</td><td>Empresa XYZ</td><td>Notebook</td><td>R$ 4.500,00</td><td>26/06/2025</td></tr>
+              <tr><td>#00124</td><td>João da Silva</td><td>Mouse</td><td>R$ 80,00</td><td>26/06/2025</td></tr>
+            </tbody>
+          </table>
+        </article>
+        <div class="action-buttons">
+          <a href="/demo">Ver Demonstração</a>
+          <a href="/funcionalidades">Funcionalidades</a>
+          <a href="/planos">Planos e Preços</a>
+          <a href="/contato">Fale com a Equipe</a>
+        </div>
+      </section>
+
+      <footer th:replace="components/footer :: footer"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+</body>
+</html>

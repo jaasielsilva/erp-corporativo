@@ -10,10 +10,10 @@
 </head>
 <body>
   <div class="app-container">
-    <aside th:replace="components/sidebar :: sidebar"></aside>
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
     <main class="main-content">
-      <header th:replace="components/topbar :: topbar"></header>
+      <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
         <h1>Gestão empresarial unificada e inteligente</h1>
@@ -54,7 +54,7 @@
         </div>
       </section>
 
-      <footer th:replace="components/footer :: footer"></footer>
+      <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
 

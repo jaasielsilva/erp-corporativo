@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,19 +18,20 @@ public class UsuarioDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(email);
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
 
-        if (usuario == null) {
+        if (usuarioOpt.isEmpty()) {
             throw new UsernameNotFoundException("Usuário não encontrado com email: " + email);
         }
 
+        Usuario usuario = usuarioOpt.get();
+
         return new org.springframework.security.core.userdetails.User(
-                usuario.getEmail(), // <- login será o email
+                usuario.getEmail(), // login é o email
                 usuario.getSenha(),
                 usuario.getPerfis().stream()
                         .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
                         .collect(Collectors.toList())
-                        
         );
     }
 }

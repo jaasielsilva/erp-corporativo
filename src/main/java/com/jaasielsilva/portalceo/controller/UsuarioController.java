@@ -70,17 +70,20 @@ public class UsuarioController {
     }
 
     // Endpoint para retornar a foto do usuário por ID
-    @GetMapping("/usuarios/{id}/foto")
-    public ResponseEntity<byte[]> getFotoPerfil(@PathVariable Long id) {
-        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id); // método no serviço para buscar usuário
-        if (usuarioOpt.isEmpty() || usuarioOpt.get().getFotoPerfil() == null) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{id}/foto")
+    public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
+    Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
 
+    if (usuarioOpt.isPresent() && usuarioOpt.get().getFotoPerfil() != null) {
         byte[] foto = usuarioOpt.get().getFotoPerfil();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_JPEG); // ajuste se for outro formato
+        headers.setContentType(MediaType.IMAGE_JPEG); // ajuste se precisar PNG
+
         return new ResponseEntity<>(foto, headers, HttpStatus.OK);
     }
+
+    return ResponseEntity.notFound().build();
+    }
+
 }

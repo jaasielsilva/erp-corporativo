@@ -34,11 +34,10 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    public Usuario buscarPorEmail(String email) {
+    public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
 
-    // método para buscar usuário por ID
     public Optional<Usuario> buscarPorId(Long id) {
         return usuarioRepository.findById(id);
     }

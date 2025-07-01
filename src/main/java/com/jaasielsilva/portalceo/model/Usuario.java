@@ -27,8 +27,9 @@ public class Usuario {
 
     // Alterar para armazenar bytes da imagem
     @Lob
-    @Column(name = "foto_perfil")
+    @Column(name = "foto_perfil", columnDefinition = "LONGBLOB")
     private byte[] fotoPerfil;
+
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "usuario_perfil",

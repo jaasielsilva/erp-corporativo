@@ -20,15 +20,16 @@ public class UsuarioDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByEmail(email);
 
         if (usuario == null) {
-            throw new UsernameNotFoundException("Usuário não encontrado com e-mail: " + email);
+            throw new UsernameNotFoundException("Usuário não encontrado com email: " + email);
         }
 
         return new org.springframework.security.core.userdetails.User(
-            usuario.getEmail(),
-            usuario.getSenha(),
-            usuario.getPerfis().stream()
-                .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
-                .collect(Collectors.toList())
+                usuario.getEmail(), // <- login será o email
+                usuario.getSenha(),
+                usuario.getPerfis().stream()
+                        .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
+                        .collect(Collectors.toList())
+                        
         );
     }
 }

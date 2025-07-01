@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 @Service
 public class UsuarioService {
@@ -20,22 +21,14 @@ public class UsuarioService {
     private BCryptPasswordEncoder passwordEncoder;
 
     public void salvarUsuario(Usuario usuario, MultipartFile foto) throws IOException {
-        // Criptografa a senha se ainda não estiver criptografada
+        // Criptografa senha se não estiver criptografada
         if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
 
-        // Salvar foto se existir
+        // Salva bytes da foto diretamente na entidade
         if (foto != null && !foto.isEmpty()) {
-            String diretorio = "uploads/";
-            File pasta = new File(diretorio);
-            if (!pasta.exists()) {
-                pasta.mkdirs(); // cria a pasta se não existir
-            }
-
-            String caminho = diretorio + foto.getOriginalFilename();
-            foto.transferTo(new File(caminho));
-            usuario.setFotoPerfil(caminho);
+            usuario.setFotoPerfil(foto.getBytes());
         }
 
         usuarioRepository.save(usuario);
@@ -43,5 +36,10 @@ public class UsuarioService {
 
     public Usuario buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
+    }
+
+    // método para buscar usuário por ID
+    public Optional<Usuario> buscarPorId(Long id) {
+        return usuarioRepository.findById(id);
     }
 }

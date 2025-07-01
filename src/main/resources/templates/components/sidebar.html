@@ -2,7 +2,7 @@
 <div class="sidebar" th:fragment="sidebar">
   <div>
     <div class="user-panel">
-      <img th:src="@{${usuario.fotoPerfil}}" alt="Foto do usuário" class="user-avatar" />
+      <img th:src="@{/usuarios/{id}/foto(id=${usuario.id})}" alt="Foto do usuário" class="user-avatar" />
       <div class="user-name" th:text="${usuario.nome}">Nome do Usuário</div>
     </div>
 

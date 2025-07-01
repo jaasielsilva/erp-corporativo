@@ -25,13 +25,14 @@ public class Usuario {
     @Column(nullable = false)
     private String senha;
 
+    // Alterar para armazenar bytes da imagem
+    @Lob
     @Column(name = "foto_perfil")
-    private String fotoPerfil;
+    private byte[] fotoPerfil;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "usuario_perfil",
         joinColumns = @JoinColumn(name = "usuario_id"),
         inverseJoinColumns = @JoinColumn(name = "perfil_id"))
     private Set<Perfil> perfis;
-
 }

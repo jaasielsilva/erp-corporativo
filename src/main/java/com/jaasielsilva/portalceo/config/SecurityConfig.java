@@ -38,7 +38,7 @@ public class SecurityConfig {
             .permitAll()
         )
         .logout(logout -> logout.permitAll())
-        .authenticationProvider(authenticationProvider()); // ✅ aqui é o detalhe que faltava
+        .authenticationProvider(authenticationProvider());
 
     return http.build();
     }

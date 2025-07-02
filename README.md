@@ -234,22 +234,3 @@ cd painel-do-ceo
 
 ## Build e run com Maven
 ./mvnw spring-boot:run
-
-
----
-
-## 📖 Documentação e Suporte
-Documentação das APIs REST
-
-Guia rápido de usuários e administradores
-
-Procedimentos para backup e restauração de dados
-
-## 💡 Dicas para Colaboradores e Futuras Melhorias
-Usar profiles Spring para diferentes ambientes (dev, test, prod)
-
-Automatizar testes e integração contínua (CI/CD)
-
-Considerar microserviços para módulos independentes em versões futuras
-
-Monitoramento e logging com ELK Stack ou Prometheus + Grafana

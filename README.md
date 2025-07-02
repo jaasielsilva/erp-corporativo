@@ -232,8 +232,9 @@ cd painel-do-ceo
 # Criar schema e ajustar application.properties conforme seu ambiente
 
 
-# Build e run com Maven
+## Build e run com Maven
 ./mvnw spring-boot:run
+
 
 ---
 
@@ -244,7 +245,7 @@ Guia rápido de usuários e administradores
 
 Procedimentos para backup e restauração de dados
 
-💡 Dicas para Colaboradores e Futuras Melhorias
+## 💡 Dicas para Colaboradores e Futuras Melhorias
 Usar profiles Spring para diferentes ambientes (dev, test, prod)
 
 Automatizar testes e integração contínua (CI/CD)

@@ -221,7 +221,7 @@ templates/
 Breve passo a passo para iniciar o sistema localmente:
 
 
-```bash
+
 # Clonar o repositório
 git clone https://github.com/seu-usuario/painel-do-ceo.git
 
@@ -235,14 +235,9 @@ cd painel-do-ceo
 # Build e run com Maven
 ./mvnw spring-boot:run
 
-# 🧠 Testando aqui
-
-Sistema ERP completo para gestão empresarial desenvolvido com Spring Boot, Thymeleaf, MySQL e HTML/CSS puro.  
-Ideal para controle administrativo de pequenas e médias empresas, com foco em modularidade, usabilidade e escalabilidade.
-
 ---
 
-📖 Documentação e Suporte
+## 📖 Documentação e Suporte
 Documentação das APIs REST
 
 Guia rápido de usuários e administradores

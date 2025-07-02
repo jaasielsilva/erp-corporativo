@@ -214,9 +214,12 @@ templates/
     └── recuperar-senha.html
 ---
 
+
 ## 📦 Como Rodar o Projeto
 
+
 Breve passo a passo para iniciar o sistema localmente:
+
 
 ```bash
 # Clonar o repositório
@@ -228,6 +231,7 @@ cd painel-do-ceo
 # Configurar o banco de dados (MySQL)
 # Criar schema e ajustar application.properties conforme seu ambiente
 
+
 # Build e run com Maven
 ./mvnw spring-boot:run
 
@@ -238,6 +242,7 @@ Documentação das APIs REST
 Guia rápido de usuários e administradores
 
 Procedimentos para backup e restauração de dados
+
 
 💡 Dicas para Colaboradores e Futuras Melhorias
 Usar profiles Spring para diferentes ambientes (dev, test, prod)

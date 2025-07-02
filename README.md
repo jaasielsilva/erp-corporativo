@@ -212,37 +212,39 @@ templates/
 └── login/
     ├── login.html
     └── recuperar-senha.html
+---
+
 ## 📦 Como Rodar o Projeto
+
 Breve passo a passo para iniciar o sistema localmente:
 
-bash
-Copiar
-Editar
-## Clonar o repositório
+```bash
+# Clonar o repositório
 git clone https://github.com/seu-usuario/painel-do-ceo.git
 
-## Entrar na pasta do projeto
+# Entrar na pasta do projeto
 cd painel-do-ceo
 
-## Configurar o banco de dados (MySQL)
-## Criar schema e ajustar application.properties
+# Configurar o banco de dados (MySQL)
+# Criar schema e ajustar application.properties conforme seu ambiente
 
-## Build e run com Maven
+# Build e run com Maven
 ./mvnw spring-boot:run
 
-## 📖 Documentação e Suporte
+
+📖 Documentação e Suporte
 Documentação das APIs REST
 
 Guia rápido de usuários e administradores
 
 Procedimentos para backup e restauração de dados
 
-## 💡 Dicas para Colaboradores e Futuras Melhorias
+💡 Dicas para Colaboradores e Futuras Melhorias
 Usar profiles Spring para diferentes ambientes (dev, test, prod)
 
 Automatizar testes e integração contínua (CI/CD)
 
 Considerar microserviços para módulos independentes em versões futuras
 
-Monitoramento e logging com ELK Stack ou Prometheus+Grafana
+Monitoramento e logging com ELK Stack ou Prometheus + Grafana
 

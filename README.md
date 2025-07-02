@@ -235,7 +235,12 @@ cd painel-do-ceo
 # Build e run com Maven
 ./mvnw spring-boot:run
 
+# 🧠 Testando aqui
 
+Sistema ERP completo para gestão empresarial desenvolvido com Spring Boot, Thymeleaf, MySQL e HTML/CSS puro.  
+Ideal para controle administrativo de pequenas e médias empresas, com foco em modularidade, usabilidade e escalabilidade.
+
+---
 
 📖 Documentação e Suporte
 Documentação das APIs REST

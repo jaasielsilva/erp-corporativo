@@ -34,30 +34,32 @@ public class UsuarioController {
     }
 
     @PostMapping("/cadastrar")
-    public String cadastrarUsuario(
-            @Valid @ModelAttribute("usuario") Usuario usuario,
-            BindingResult bindingResult,
-            @RequestParam("confirmSenha") String confirmSenha,
-            @RequestParam("foto") MultipartFile foto,  // nome 'foto' para ser consistente com o formulário
-            Model model) {
+public String cadastrarUsuario(
+        @Valid @ModelAttribute("usuario") Usuario usuario,
+        BindingResult bindingResult,
+        @RequestParam("confirmSenha") String confirmSenha,
+        @RequestParam("foto") MultipartFile foto,
+        Model model) {
 
-        if (!usuario.getSenha().equals(confirmSenha)) {
-            bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
-        }
-
-        if (bindingResult.hasErrors()) {
-            return "usuarios/cadastro";
-        }
-
-        try {
-            usuarioService.salvarUsuario(usuario, foto);
-        } catch (Exception e) {
-            model.addAttribute("erro", e.getMessage());
-            return "usuarios/cadastro";
-        }
-
-        return "redirect:/login?cadastroSucesso";
+    if (!usuario.getSenha().equals(confirmSenha)) {
+        bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
     }
+
+    if (bindingResult.hasErrors()) {
+        return "usuarios/cadastro";
+    }
+
+    try {
+        usuarioService.salvarUsuario(usuario, foto);
+    } catch (Exception e) {
+        model.addAttribute("erro", e.getMessage());
+        return "usuarios/cadastro";
+    }
+
+    // Redireciona para a dashboard após o cadastro
+    return "redirect:/dashboard";
+}
+
 
     @GetMapping("/{id}/foto")
     public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {

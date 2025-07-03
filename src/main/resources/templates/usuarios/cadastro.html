@@ -11,188 +11,195 @@
 
   <style>
     /* Reset básico */
-    body, html {
-      height: 100%;
-      margin: 0;
-      background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      color: #f1f5f9;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
+body, html {
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #f1f5f9;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-    .app-container {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+.app-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
-    aside.sidebar {
-      position: fixed;
-      width: 280px;
-      height: 100%;
-      background: #111827;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.4);
-      z-index: 10;
-    }
+aside.sidebar {
+  position: fixed;
+  width: 280px;
+  height: 100%;
+  background: #111827;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.4);
+  z-index: 10;
+}
 
-    main.main-content {
-      margin-left: 280px;
-      flex-grow: 1;
-      overflow-y: auto;
-      background: #f9fafb;
-      color: #1f2937;
-      padding: 40px 60px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+main.main-content {
+  margin-left: 280px;
+  flex-grow: 1;
+  overflow-y: auto;
+  background: #f9fafb;
+  color: #1f2937;
+  padding: 40px 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    /* Form container: sombra e borda arredondada com fundo branco */
-    .form-wrapper {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
-      width: 650px;
-      padding: 40px 50px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px 40px;
-      position: relative;
-    }
+/* Container do formulário com sombra e borda arredondada */
+.form-wrapper {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+  width: 650px;
+  padding: 40px 50px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px 40px;
+  position: relative;
+}
 
-    /* Título grande e estiloso */
-    .form-wrapper h2 {
-      grid-column: 1 / -1;
-      font-weight: 800;
-      font-size: 2.8rem;
-      color: #1e293b;
-      margin-bottom: 30px;
-      letter-spacing: 0.05em;
-      user-select: none;
-      text-align: center;
-    }
+/* Título grande e estiloso */
+.form-wrapper h2 {
+  grid-column: 1 / -1;
+  font-weight: 800;
+  font-size: 2.8rem;
+  color: #1e293b;
+  margin-bottom: 30px;
+  letter-spacing: 0.05em;
+  user-select: none;
+  text-align: center;
+}
 
-    /* Cada grupo do campo com label e input */
-    .form-group {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
+/* Grupos dos campos (label + input) */
+.form-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
 
-    /* Label com efeito leve */
-    .form-group label {
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #334155;
-      font-size: 14px;
-      letter-spacing: 0.04em;
-      user-select: none;
-      transition: color 0.3s ease;
-    }
+/* Label */
+.form-group label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #334155;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  user-select: none;
+  transition: color 0.3s ease;
+}
 
-    /* Inputs estilos */
-    .form-group input[type="text"],
-    .form-group input[type="email"],
-    .form-group input[type="password"],
-    .form-group input[type="file"] {
-      padding: 14px 15px;
-      border-radius: 10px;
-      border: 2px solid #cbd5e1;
-      font-size: 15px;
-      color: #1e293b;
-      font-weight: 600;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-      outline-offset: 2px;
-      width: 100%;
-      box-sizing: border-box;
-    }
+/* Inputs estilos */
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="file"] {
+  padding: 14px 15px;
+  border-radius: 10px;
+  border: 2px solid #cbd5e1;
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 600;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  outline-offset: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-    /* Efeito foco */
-    .form-group input:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 10px #3b82f6aa;
-      outline: none;
-    }
+/* Efeito foco */
+.form-group input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 10px #3b82f6aa;
+  outline: none;
+}
 
-    /* Ícones dentro dos inputs */
-    .form-group.has-icon {
-      position: relative;
-    }
-    .form-group.has-icon input {
-      padding-right: 40px;
-    }
-    .form-group .icon {
-      position: absolute;
-      top: 50%;
-      right: 12px;
-      transform: translateY(-50%);
-      color: #94a3b8;
-      font-size: 18px;
-      pointer-events: none;
-      user-select: none;
-      transition: color 0.3s ease;
-    }
-    .form-group.has-icon input:focus + .icon {
-      color: #2563eb;
-    }
+/* Ícones dentro dos inputs */
+.form-group.has-icon {
+  position: relative;
+}
+.form-group.has-icon input {
+  padding-right: 40px;
+}
+.form-group .icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 18px;
+  pointer-events: none;
+  user-select: none;
+  transition: color 0.3s ease;
+}
+.form-group.has-icon input:focus + .icon {
+  color: #2563eb;
+}
 
-    /* Botão grande, arredondado, com sombra */
-    button.btn-primary {
-      grid-column: 1 / -1;
-      margin-top: 20px;
-      padding: 18px 0;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(90deg, #2563eb, #3b82f6);
-      color: white;
-      font-weight: 700;
-      font-size: 1.2rem;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      box-shadow: 0 6px 15px rgba(37, 99, 235, 0.6);
-      user-select: none;
-      transition: background 0.4s ease;
-      filter: drop-shadow(0 0 0.4rem #3b82f6aa);
-    }
-    button.btn-primary:hover {
-      background: linear-gradient(90deg, #1e40af, #2563eb);
-      filter: drop-shadow(0 0 1rem #2563ebcc);
-    }
+/* Botão grande, arredondado, com sombra */
+button.btn-primary {
+  grid-column: 1 / -1;
+  margin-top: 20px;
+  padding: 18px 0;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.6);
+  user-select: none;
+  transition: background 0.4s ease;
+  filter: drop-shadow(0 0 0.4rem #3b82f6aa);
+}
+button.btn-primary:hover {
+  background: linear-gradient(90deg, #1e40af, #2563eb);
+  filter: drop-shadow(0 0 1rem #2563ebcc);
+}
 
-    /* Preview foto abaixo do formulário (fora do grid) */
-    .preview-container {
-      margin-top: 20px;
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      overflow: hidden;
-      box-shadow: 0 0 15px #3b82f6cc;
-      border: 4px solid white;
-      background: #f3f4f6;
-      display: none;
-      user-select: none;
-    }
-    .preview-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+/* Preview foto abaixo do formulário (fora do grid) */
+.preview-container {
+  margin-top: 20px;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 15px #3b82f6cc;
+  border: 4px solid white;
+  background: #f3f4f6;
+  display: none;
+  user-select: none;
+}
+.preview-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-    /* Responsividade: mobile com 1 coluna */
-    @media (max-width: 720px) {
-      main.main-content {
-        padding: 20px 15px;
-      }
-      .form-wrapper {
-        width: 100%;
-        padding: 30px 20px;
-        grid-template-columns: 1fr;
-      }
-      .preview-container {
-        margin: 15px auto 0;
-      }
-    }
+/* Estilo para campos com erro */
+.form-group.error input {
+  border-color: #dc2626;
+  box-shadow: 0 0 10px #dc2626aa;
+}
+
+/* Responsividade: mobile com 1 coluna */
+@media (max-width: 720px) {
+  main.main-content {
+    padding: 20px 15px;
+  }
+  .form-wrapper {
+    width: 100%;
+    padding: 30px 20px;
+    grid-template-columns: 1fr;
+  }
+  .preview-container {
+    margin: 15px auto 0;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -205,36 +212,53 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
-        <form class="form-wrapper" th:action="@{/usuarios/salvar}" method="post" enctype="multipart/form-data" th:object="${usuario}" novalidate>
+        <form class="form-wrapper" th:action="@{/usuarios/cadastrar}" method="post" enctype="multipart/form-data" th:object="${usuario}" novalidate>
 
           <h2>Cadastro de Usuário</h2>
 
-          <div class="form-group has-icon">
+          <!-- Mensagem de erro geral -->
+          <div th:if="${erro}" class="alert alert-danger" th:text="${erro}" style="margin-bottom: 20px; font-weight: 600; color: #b91c1c;"></div>
+
+          <!-- Mensagens de erro de validação -->
+          <div th:if="${#fields.hasErrors()}" style="margin-bottom: 20px; color: #b91c1c;">
+            <ul>
+              <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+            </ul>
+          </div>
+
+          <div class="form-group has-icon" th:classappend="${#fields.hasErrors('nome')}? 'error'">
             <label for="nome">Nome</label>
             <input type="text" id="nome" th:field="*{nome}" placeholder="Digite seu nome completo" required />
             <span class="icon"><i class="fas fa-user"></i></span>
           </div>
 
-          <div class="form-group has-icon">
+          <div class="form-group has-icon" th:classappend="${#fields.hasErrors('email')}? 'error'">
             <label for="email">Email</label>
             <input type="email" id="email" th:field="*{email}" placeholder="exemplo@teste.com" required />
             <span class="icon"><i class="fas fa-envelope"></i></span>
           </div>
 
-          <div class="form-group has-icon">
+          <div class="form-group has-icon" th:classappend="${#fields.hasErrors('senha')}? 'error'">
             <label for="senha">Senha</label>
             <input type="password" id="senha" th:field="*{senha}" placeholder="Senha segura" required minlength="6" />
             <span class="icon"><i class="fas fa-lock"></i></span>
           </div>
 
-          <div class="form-group">
-            <label for="foto">Foto de Perfil</label>
-            <input type="file" id="foto" name="foto" accept="image/*" />
+          <div class="form-group has-icon">
+            <label for="confirmSenha">Confirmar Senha</label>
+            <input type="password" id="confirmSenha" name="confirmSenha" placeholder="Repita a senha" required minlength="6" />
+            <span class="icon"><i class="fas fa-lock"></i></span>
           </div>
+
+          <div class="form-group">
+            <label for="fotoPerfil">Foto de Perfil</label>
+            <input type="file" name="foto" accept="image/*" />
+          </div>
+
 
           <button type="submit" class="btn-primary">Cadastrar</button>
 
-          <div class="preview-container" id="previewContainer">
+          <div class="preview-container" id="previewContainer" style="display:none;">
             <img id="previewImg" alt="Pré-visualização da foto" />
           </div>
 
@@ -248,7 +272,7 @@
   </div>
 
   <script>
-    const fotoInput = document.getElementById('foto');
+    const fotoInput = document.getElementById('fotoPerfil');
     const previewContainer = document.getElementById('previewContainer');
     const previewImg = document.getElementById('previewImg');
 

@@ -27,20 +27,10 @@ public class UsuarioController {
 
     @GetMapping("/novo")
     public String mostrarFormCadastro(Model model) {
-        model.addAttribute("usuario", new Usuario());
-        return "usuarios/cadastro";  // template Thymeleaf
-    }
-
-    @PostMapping("/salvar")
-    public String salvar(@ModelAttribute Usuario usuario,
-                         @RequestParam("foto") MultipartFile foto) {
-        try {
-            usuarioService.salvarUsuario(usuario, foto);
-        } catch (Exception e) {
-            e.printStackTrace();
-            // opcional: adicionar mensagem de erro no model para mostrar ao usuário
+        if (!model.containsAttribute("usuario")) {
+            model.addAttribute("usuario", new Usuario());
         }
-        return "redirect:/usuarios/novo";
+        return "usuarios/cadastro";  // template Thymeleaf
     }
 
     @PostMapping("/cadastrar")
@@ -48,7 +38,7 @@ public class UsuarioController {
             @Valid @ModelAttribute("usuario") Usuario usuario,
             BindingResult bindingResult,
             @RequestParam("confirmSenha") String confirmSenha,
-            @RequestParam("fotoPerfil") MultipartFile fotoPerfil,
+            @RequestParam("foto") MultipartFile foto,  // nome 'foto' para ser consistente com o formulário
             Model model) {
 
         if (!usuario.getSenha().equals(confirmSenha)) {
@@ -60,30 +50,28 @@ public class UsuarioController {
         }
 
         try {
-            usuarioService.salvarUsuario(usuario, fotoPerfil);
+            usuarioService.salvarUsuario(usuario, foto);
         } catch (Exception e) {
-            model.addAttribute("erro", "Erro ao cadastrar usuário: " + e.getMessage());
+            model.addAttribute("erro", e.getMessage());
             return "usuarios/cadastro";
         }
 
         return "redirect:/login?cadastroSucesso";
     }
 
-    // Endpoint para retornar a foto do usuário por ID
     @GetMapping("/{id}/foto")
     public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
-    Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
 
-    if (usuarioOpt.isPresent() && usuarioOpt.get().getFotoPerfil() != null) {
-        byte[] foto = usuarioOpt.get().getFotoPerfil();
+        if (usuarioOpt.isPresent() && usuarioOpt.get().getFotoPerfil() != null) {
+            byte[] foto = usuarioOpt.get().getFotoPerfil();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_JPEG); // ajuste se precisar PNG
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_JPEG);
 
-        return new ResponseEntity<>(foto, headers, HttpStatus.OK);
+            return new ResponseEntity<>(foto, headers, HttpStatus.OK);
+        }
+
+        return ResponseEntity.notFound().build();
     }
-
-    return ResponseEntity.notFound().build();
-    }
-
 }

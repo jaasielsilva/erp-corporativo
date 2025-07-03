@@ -2,10 +2,12 @@
 <div class="sidebar" th:fragment="sidebar">
   <div>
     <div class="user-panel">
-      <img th:src="@{/usuarios/{id}/foto(id=${usuario.id})}" alt="Foto do usuário" class="user-avatar" />
-      <div class="user-name" th:text="${usuario.nome}">Nome do Usuário</div>
+      <img th:if="${usuarioLogado != null}"
+           th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}" 
+           alt="Foto do usuário" 
+           class="user-avatar" />
+      <div class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Nome do Usuário</div>
     </div>
-
 
     <nav>
       <ul>

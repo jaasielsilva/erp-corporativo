@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 public class SecurityConfig {
@@ -70,11 +71,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CommandLineRunner createAdminUser(BCryptPasswordEncoder passwordEncoder) {
+    public CommandLineRunner createInitialData(BCryptPasswordEncoder passwordEncoder) {
         return args -> {
+            // Cria permissões se não existirem
             Permissao roleAdmin = permissaoRepository.findByNome("ROLE_ADMIN")
                 .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_ADMIN", new HashSet<>())));
 
+            Permissao roleUser = permissaoRepository.findByNome("ROLE_USER")
+                .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_USER", new HashSet<>())));
+
+            // Cria perfil ADMIN se não existir e associa permissão
             Perfil adminPerfil = perfilRepository.findByNome("ADMIN")
                 .orElseGet(() -> {
                     Perfil p = new Perfil();
@@ -84,17 +90,27 @@ public class SecurityConfig {
                     return perfilRepository.save(p);
                 });
 
+            // Cria perfil USER se não existir e associa permissão
+            Perfil userPerfil = perfilRepository.findByNome("USER")
+                .orElseGet(() -> {
+                    Perfil p = new Perfil();
+                    p.setNome("USER");
+                    p.setPermissoes(new HashSet<>());
+                    p.getPermissoes().add(roleUser);
+                    return perfilRepository.save(p);
+                });
+
+            // Cria usuário admin se não existir
             if (usuarioRepository.findByEmail("admin@teste.com").isEmpty()) {
                 Usuario admin = new Usuario();
                 admin.setNome("Administrador");
                 admin.setEmail("admin@teste.com");
                 admin.setSenha(passwordEncoder.encode("12345"));
-                admin.setPerfis(new HashSet<>());
-                admin.getPerfis().add(adminPerfil);
+                admin.setPerfis(Set.of(adminPerfil));
 
                 // Carrega imagem da pasta static/img
                 try {
-                    ClassPathResource image = new ClassPathResource("static/img/jaasiel.jpg");
+                    ClassPathResource image = new ClassPathResource("static/img/gerente.png");
                     byte[] imageBytes = Files.readAllBytes(image.getFile().toPath());
                     admin.setFotoPerfil(imageBytes);
                 } catch (IOException e) {
@@ -103,7 +119,7 @@ public class SecurityConfig {
                 }
 
                 usuarioRepository.save(admin);
-                System.out.println("Usuário administrador criado: admin@teste.com / 123456");
+                System.out.println("Usuário administrador criado: admin@teste.com / 12345");
             } else {
                 System.out.println("Usuário administrador já existe.");
             }

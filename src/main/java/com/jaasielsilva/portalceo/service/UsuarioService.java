@@ -1,6 +1,8 @@
 package com.jaasielsilva.portalceo.service;
 
+import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UsuarioService {
@@ -20,29 +23,32 @@ public class UsuarioService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private PerfilRepository perfilRepository;
+
     public void salvarUsuario(Usuario usuario, MultipartFile foto) throws IOException, Exception {
-        // Verifica se já existe usuário com o mesmo email
+        // Verifica duplicidade de e-mail
         Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
 
-        if (existente.isPresent()) {
-            // Se for cadastro novo, bloqueia
-            if (usuario.getId() == null) {
-                throw new Exception("Email já cadastrado!");
-            }
-            // Se for edição, permite salvar só se o id do existente for igual ao do usuário atual
-            else if (!existente.get().getId().equals(usuario.getId())) {
-                throw new Exception("Email já cadastrado para outro usuário!");
-            }
+        if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
+            throw new Exception("Email já cadastrado!");
         }
 
-        // Criptografa senha se não estiver criptografada
+        // Criptografa a senha se ainda não estiver
         if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
 
-        // Salva bytes da foto diretamente na entidade
+        // Define a foto, se enviada
         if (foto != null && !foto.isEmpty()) {
             usuario.setFotoPerfil(foto.getBytes());
+        }
+
+        // Se nenhum perfil foi setado (formulário não enviou), define o padrão USER
+        if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
+            Perfil perfilPadrao = perfilRepository.findByNome("USER")
+                .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
+            usuario.setPerfis(Set.of(perfilPadrao));
         }
 
         usuarioRepository.save(usuario);

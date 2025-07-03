@@ -251,16 +251,26 @@ button.btn-primary:hover {
           </div>
 
           <div class="form-group">
-            <label for="fotoPerfil">Foto de Perfil</label>
-            <input type="file" name="foto" accept="image/*" />
-          </div>
+  <label for="fotoPerfil">Foto de Perfil</label>
+  <input type="file" name="foto" id="fotoPerfil" accept="image/*" />
+</div>
 
+<!-- Novo campo: seleção de perfil -->
+<div class="form-group">
+  <label for="perfilId">Perfil do Usuário</label>
+  <select id="perfilId" name="perfilId" required>
+    <option value="" disabled selected>Selecione um perfil</option>
+    <option th:each="perfil : ${perfis}"
+            th:value="${perfil.id}"
+            th:text="${perfil.nome}"></option>
+  </select>
+</div>
 
-          <button type="submit" class="btn-primary">Cadastrar</button>
+<button type="submit" class="btn-primary">Cadastrar</button>
 
-          <div class="preview-container" id="previewContainer" style="display:none;">
-            <img id="previewImg" alt="Pré-visualização da foto" />
-          </div>
+<div class="preview-container" id="previewContainer" style="display:none;">
+  <img id="previewImg" alt="Pré-visualização da foto" />
+</div>
 
         </form>
       </section>

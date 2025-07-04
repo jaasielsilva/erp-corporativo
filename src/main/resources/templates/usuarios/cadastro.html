@@ -169,14 +169,9 @@
       <section class="content-area">
         <h1><i class="fas fa-user-plus"></i> Cadastrar Novo Usuário</h1>
 
-        <form th:action="@{/usuarios/cadastrar}"
-      th:object="${usuario}"
-      method="post"
-      enctype="multipart/form-data">
+        <form th:action="@{/usuarios/cadastrar}" method="post" th:object="${usuario}">
 
-
-
-        <div class="form-group">
+          <div class="form-group">
           <label for="nome">Nome completo:</label>
           <input type="text" id="nome" th:field="*{nome}" placeholder="Digite o nome completo" required />
           <div class="error" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>

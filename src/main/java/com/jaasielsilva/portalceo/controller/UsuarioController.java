@@ -12,8 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
 import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
@@ -35,15 +35,25 @@ public class UsuarioController {
     public String mostrarFormCadastro(Model model) {
         if (!model.containsAttribute("usuario")) {
             model.addAttribute("usuario", new Usuario());
-            model.addAttribute("perfis", perfilRepository.findAll());
         }
+        model.addAttribute("perfis", perfilRepository.findAll());
         return "usuarios/cadastro";
     }
+
+    // recebe os dados diretamente do banco e atualiza em tempo real
     @GetMapping("/index")
     public String mostrarFormindex(Model model) {
-        model.addAttribute("usuario", new Usuario());
-        return "usuarios/index";
-    }
+    model.addAttribute("usuario", new Usuario());
+
+    EstatisticasUsuariosDTO stats = usuarioService.buscarEstatisticas();
+    model.addAttribute("totalUsuarios", stats.getTotalUsuarios());
+    model.addAttribute("ativos", stats.getTotalAtivos());
+    model.addAttribute("administradores", stats.getTotalAdministradores());
+    model.addAttribute("bloqueados", stats.getTotalBloqueados());
+
+    return "usuarios/index";
+}
+
 
     @GetMapping("/listar")
     public String mostrarFormlist(Model model) {
@@ -56,36 +66,39 @@ public class UsuarioController {
         @Valid @ModelAttribute("usuario") Usuario usuario,
         BindingResult bindingResult,
         @RequestParam("confirmSenha") String confirmSenha,
-        @RequestParam("foto") MultipartFile foto,
         @RequestParam("perfilId") Long perfilId,
         Model model) {
 
+        // Validação de senha
         if (!usuario.getSenha().equals(confirmSenha)) {
             bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
         }
 
+        // Em caso de erro, retorna ao formulário
         if (bindingResult.hasErrors()) {
             model.addAttribute("perfis", perfilRepository.findAll());
             return "usuarios/cadastro";
         }
 
         try {
-            Perfil perfilSelecionado = perfilRepository.findById(perfilId)
-                .orElseThrow(() -> new RuntimeException("Perfil selecionado não encontrado"));
-            usuario.setPerfis(Set.of(perfilSelecionado));
+            // Busca perfil selecionado
+            Perfil perfil = perfilRepository.findById(perfilId)
+                .orElseThrow(() -> new RuntimeException("Perfil não encontrado"));
 
-            usuarioService.salvarUsuario(usuario, foto);
+            usuario.setPerfis(Set.of(perfil));
+
+            // Salva o usuário
+            usuarioService.salvarUsuario(usuario);
+
         } catch (Exception e) {
-            model.addAttribute("erro", e.getMessage());
-            model.addAttribute("perfis", perfilRepository.findAll()); // Para evitar erro no reload
+            model.addAttribute("erro", "Erro ao cadastrar: " + e.getMessage());
+            model.addAttribute("perfis", perfilRepository.findAll());
             return "usuarios/cadastro";
         }
 
-        return "redirect:/dashboard";
-}
+        return "redirect:/usuarios/listar";
+    }
 
-
-    // Endpoint pra buscar a imagem salva no banco de dados exemplo http://localhost:8080/usuarios/2/foto 
     @GetMapping("/{id}/foto")
     public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);

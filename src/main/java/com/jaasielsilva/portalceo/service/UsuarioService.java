@@ -9,9 +9,7 @@ import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,21 +26,20 @@ public class UsuarioService {
     @Autowired
     private PerfilRepository perfilRepository;
 
-    public void salvarUsuario(Usuario usuario, MultipartFile foto) throws IOException, Exception {
+    public void salvarUsuario(Usuario usuario) throws Exception {
+        // Verifica duplicidade de e-mail
         Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
 
         if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
-            throw new Exception("Email já cadastrado!");
+            throw new Exception("E-mail já cadastrado!");
         }
 
+        // Criptografa senha caso ainda não esteja
         if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
 
-        if (foto != null && !foto.isEmpty()) {
-            usuario.setFotoPerfil(foto.getBytes());
-        }
-
+        // Se nenhum perfil for informado, define o padrão USER
         if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
             Perfil perfilPadrao = perfilRepository.findByNome("USER")
                 .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
@@ -76,7 +73,6 @@ public class UsuarioService {
         return usuarioRepository.countByStatus(Usuario.Status.INATIVO);
     }
 
-    // Corrigido para usar o método correto do repository
     public long totalAdministradores() {
         return usuarioRepository.countUsuariosPorPerfil("ADMIN");
     }
@@ -86,12 +82,11 @@ public class UsuarioService {
     }
 
     public EstatisticasUsuariosDTO buscarEstatisticas() {
-        long totalUsuarios = totalUsuarios();
-        long totalAtivos = totalAtivos();
-        long totalBloqueados = totalBloqueados();
-        long totalAdministradores = totalAdministradores();
-
-        return new EstatisticasUsuariosDTO(totalUsuarios, totalAtivos, totalAdministradores, totalBloqueados);
+        return new EstatisticasUsuariosDTO(
+            totalUsuarios(),
+            totalAtivos(),
+            totalAdministradores(),
+            totalBloqueados()
+        );
     }
-    
 }

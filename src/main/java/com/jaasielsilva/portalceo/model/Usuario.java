@@ -16,6 +16,9 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 30, unique = true)
+    private String matricula; // matrícula / código funcionário
+
     @Column(nullable = false)
     private String nome;
 
@@ -33,13 +36,36 @@ public class Usuario {
 
     private LocalDate dataNascimento;
 
+    private String departamento; // novo campo - setor/departamento
+
+    private String cargo; // novo campo - cargo/função
+
+    private LocalDate dataAdmissao; // novo campo - data de admissão
+
+    private String cep; // <-- **ADICIONE ESSA LINHA**
+
     private String endereco;
 
     private String cidade;
 
     private String estado;
 
-    @Lob
+    @Column(length = 10)
+    private String ramal;
+
+// Data de Demissão
+private LocalDate dataDemissao;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 15)
+    private Genero genero;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private NivelAcesso nivelAcesso;
+
+    @Lob    
     @Column(name = "foto_perfil", columnDefinition = "LONGBLOB")
     private byte[] fotoPerfil;
 
@@ -50,7 +76,7 @@ public class Usuario {
     private Set<Perfil> perfis;
 
     public enum Status {
-        ATIVO, INATIVO
+        ATIVO, INATIVO, LICENCA, AFASTADO
     }
 
     @Enumerated(EnumType.STRING)

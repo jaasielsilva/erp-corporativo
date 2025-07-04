@@ -2,7 +2,7 @@ package com.jaasielsilva.portalceo.controller;
 
 import java.util.Optional;
 import java.util.Set;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
@@ -23,14 +24,16 @@ import jakarta.validation.Valid;
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
+    private final PerfilRepository perfilRepository;
 
-    @Autowired
-    private PerfilRepository perfilRepository;
+    public UsuarioController(UsuarioService usuarioService, PerfilRepository perfilRepository) {
+        this.usuarioService = usuarioService;
+        this.perfilRepository = perfilRepository;
+    }
 
     @GetMapping("/cadastro")
-    public String mostrarFormCadastro(Model model) {
+    public String mostrarFormularioCadastro(Model model) {
         if (!model.containsAttribute("usuario")) {
             model.addAttribute("usuario", new Usuario());
         }
@@ -38,35 +41,32 @@ public class UsuarioController {
         return "usuarios/cadastro";
     }
 
-    // recebe os dados diretamente do banco e atualiza em tempo real
     @GetMapping("/index")
-    public String mostrarFormindex(Model model) {
-    model.addAttribute("usuario", new Usuario());
+    public String mostrarEstatisticasUsuarios(Model model) {
+        model.addAttribute("usuario", new Usuario());
 
-    EstatisticasUsuariosDTO stats = usuarioService.buscarEstatisticas();
-    model.addAttribute("totalUsuarios", stats.getTotalUsuarios());
-    model.addAttribute("ativos", stats.getTotalAtivos());
-    model.addAttribute("administradores", stats.getTotalAdministradores());
-    model.addAttribute("bloqueados", stats.getTotalBloqueados());
+        EstatisticasUsuariosDTO stats = usuarioService.buscarEstatisticas();
+        model.addAttribute("totalUsuarios", stats.getTotalUsuarios());
+        model.addAttribute("ativos", stats.getTotalAtivos());
+        model.addAttribute("administradores", stats.getTotalAdministradores());
+        model.addAttribute("bloqueados", stats.getTotalBloqueados());
 
-    return "usuarios/index";
-}
-
+        return "usuarios/index";
+    }
 
     @GetMapping("/listar")
-    public String mostrarFormlist(Model model) {
+    public String listarUsuarios(Model model) {
         model.addAttribute("usuarios", usuarioService.buscarTodos());
         return "usuarios/listar";
     }
 
     @PostMapping("/cadastrar")
-    public String cadastrarUsuario(
-    @Valid @ModelAttribute("usuario") Usuario usuario,
-    BindingResult bindingResult,
-    @RequestParam("confirmSenha") String confirmSenha,
-    @RequestParam(value = "foto", required = false) MultipartFile foto,
-    @RequestParam("perfilId") Long perfilId,
-    Model model) {
+public String cadastrarUsuario(
+        @Valid @ModelAttribute("usuario") Usuario usuario,
+        BindingResult bindingResult,
+        @RequestParam("confirmSenha") String confirmSenha,
+        @RequestParam("perfilId") Long perfilId,
+        Model model) {
 
     if (!usuario.getSenha().equals(confirmSenha)) {
         bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
@@ -74,28 +74,25 @@ public class UsuarioController {
 
     if (bindingResult.hasErrors()) {
         model.addAttribute("perfis", perfilRepository.findAll());
+        model.addAttribute("usuario", usuario);
         return "usuarios/cadastro";
     }
 
     try {
-        usuario.setPerfis(Set.of(perfilRepository.findById(perfilId).orElseThrow()));
-
-        if (foto != null && !foto.isEmpty()) {
-            usuario.setFotoPerfil(foto.getBytes()); // converte MultipartFile para byte[]
-        }
+        usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
+                .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
 
         usuarioService.salvarUsuario(usuario);
 
     } catch (Exception e) {
-        model.addAttribute("erro", "Erro ao cadastrar: " + e.getMessage());
+        model.addAttribute("erro", e.getMessage());
         model.addAttribute("perfis", perfilRepository.findAll());
+        model.addAttribute("usuario", usuario);
         return "usuarios/cadastro";
     }
 
     return "redirect:/usuarios/listar";
-    }
-
-
+}
 
 
     @GetMapping("/{id}/foto")

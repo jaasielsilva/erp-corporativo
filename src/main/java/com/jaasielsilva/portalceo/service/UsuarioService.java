@@ -5,7 +5,11 @@ import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
+
+import jakarta.validation.ConstraintViolationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -41,8 +45,25 @@ public class UsuarioService {
         usuario.setPerfis(Set.of(perfilPadrao));
     }
 
-    usuarioRepository.save(usuario);
-}
+    try {
+        usuarioRepository.save(usuario);
+    } catch (DataIntegrityViolationException e) {
+        Throwable cause = e.getCause();
+        // Tenta identificar a constraint pelo nome na mensagem de erro
+        String message = cause != null ? cause.getMessage() : e.getMessage();
+        if (message != null) {
+            String lowerMsg = message.toLowerCase();
+            if (lowerMsg.contains("cpf")) {
+                throw new Exception("CPF já cadastrado no sistema.");
+            } else if (lowerMsg.contains("email")) {
+                throw new Exception("Email já cadastrado no sistema.");
+            } else if (lowerMsg.contains("matricula")) {
+                throw new Exception("Matrícula já cadastrada no sistema.");
+            }
+        }
+        // Se não for erro esperado, relança
+        throw e;}
+    }
 
 
 

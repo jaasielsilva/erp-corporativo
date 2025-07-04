@@ -71,58 +71,74 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CommandLineRunner createInitialData(BCryptPasswordEncoder passwordEncoder) {
-        return args -> {
-            // Cria permissões se não existirem
-            Permissao roleAdmin = permissaoRepository.findByNome("ROLE_ADMIN")
-                .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_ADMIN", new HashSet<>())));
+public CommandLineRunner createInitialData(BCryptPasswordEncoder passwordEncoder) {
+    return args -> {
+        // Cria permissões se não existirem
+        Permissao roleAdmin = permissaoRepository.findByNome("ROLE_ADMIN")
+            .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_ADMIN", new HashSet<>())));
 
-            Permissao roleUser = permissaoRepository.findByNome("ROLE_USER")
-                .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_USER", new HashSet<>())));
+        Permissao roleUser = permissaoRepository.findByNome("ROLE_USER")
+            .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_USER", new HashSet<>())));
 
-            // Cria perfil ADMIN se não existir e associa permissão
-            Perfil adminPerfil = perfilRepository.findByNome("ADMIN")
-                .orElseGet(() -> {
-                    Perfil p = new Perfil();
-                    p.setNome("ADMIN");
-                    p.setPermissoes(new HashSet<>());
-                    p.getPermissoes().add(roleAdmin);
-                    return perfilRepository.save(p);
-                });
+        // Cria perfil ADMIN se não existir e associa permissão
+        Perfil adminPerfil = perfilRepository.findByNome("ADMIN")
+            .orElseGet(() -> {
+                Perfil p = new Perfil();
+                p.setNome("ADMIN");
+                p.setPermissoes(new HashSet<>());
+                p.getPermissoes().add(roleAdmin);
+                return perfilRepository.save(p);
+            });
 
-            // Cria perfil USER se não existir e associa permissão
-            Perfil userPerfil = perfilRepository.findByNome("USER")
-                .orElseGet(() -> {
-                    Perfil p = new Perfil();
-                    p.setNome("USER");
-                    p.setPermissoes(new HashSet<>());
-                    p.getPermissoes().add(roleUser);
-                    return perfilRepository.save(p);
-                });
+        // Cria perfil USER se não existir e associa permissão
+        Perfil userPerfil = perfilRepository.findByNome("USER")
+            .orElseGet(() -> {
+                Perfil p = new Perfil();
+                p.setNome("USER");
+                p.setPermissoes(new HashSet<>());
+                p.getPermissoes().add(roleUser);
+                return perfilRepository.save(p);
+            });
 
-            // Cria usuário admin se não existir
-            if (usuarioRepository.findByEmail("admin@teste.com").isEmpty()) {
-                Usuario admin = new Usuario();
-                admin.setNome("Administrador");
-                admin.setEmail("admin@teste.com");
-                admin.setSenha(passwordEncoder.encode("12345"));
-                admin.setPerfis(Set.of(adminPerfil));
+        // Cria usuário admin se não existir
+        if (usuarioRepository.findByEmail("admin@teste.com").isEmpty()) {
+            Usuario admin = new Usuario();
+            admin.setNome("Administrador");
+            admin.setEmail("admin@teste.com");
+            admin.setSenha(passwordEncoder.encode("12345"));
+            admin.setPerfis(Set.of(adminPerfil));
 
-                // Carrega imagem da pasta static/img
-                try {
-                    ClassPathResource image = new ClassPathResource("static/img/gerente.png");
-                    byte[] imageBytes = Files.readAllBytes(image.getFile().toPath());
-                    admin.setFotoPerfil(imageBytes);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    admin.setFotoPerfil(null);
-                }
+            // Aqui adiciona os demais campos da entidade
+            admin.setMatricula("ADM001");
+            admin.setCpf("00000000000");
+            admin.setTelefone("(11) 99999-9999");
+            admin.setDataNascimento(java.time.LocalDate.of(1980, 1, 1));
+            admin.setDepartamento("TI");
+            admin.setCargo("Administrador");
+            admin.setDataAdmissao(java.time.LocalDate.of(2020, 1, 1));
+            admin.setEndereco("Rua Exemplo, 123");
+            admin.setCidade("São Paulo");
+            admin.setEstado("SP");
+            admin.setCep("01000-000");
+            admin.setStatus(Usuario.Status.ATIVO);
+            // Se tiver enum Genero, importe e set aqui:
+            // admin.setGenero(com.jaasielsilva.portalceo.model.Genero.MASCULINO);
 
-                usuarioRepository.save(admin);
-                System.out.println("Usuário administrador criado: admin@teste.com / 12345");
-            } else {
-                System.out.println("Usuário administrador já existe.");
+            // Carrega imagem da pasta static/img exatamente igual
+            try {
+                ClassPathResource image = new ClassPathResource("static/img/gerente.png");
+                byte[] imageBytes = Files.readAllBytes(image.getFile().toPath());
+                admin.setFotoPerfil(imageBytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+                admin.setFotoPerfil(null);
             }
-        };
-    }
+
+            usuarioRepository.save(admin);
+            System.out.println("Usuário administrador criado: admin@teste.com / 12345");
+        } else {
+            System.out.println("Usuário administrador já existe.");
+        }
+    };
+}
 }

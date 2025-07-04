@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.service;
 
+import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
 import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
@@ -28,24 +29,20 @@ public class UsuarioService {
     private PerfilRepository perfilRepository;
 
     public void salvarUsuario(Usuario usuario, MultipartFile foto) throws IOException, Exception {
-        // Verifica duplicidade de e-mail
         Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
 
         if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
             throw new Exception("Email já cadastrado!");
         }
 
-        // Criptografa a senha se ainda não estiver
         if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
 
-        // Define a foto, se enviada
         if (foto != null && !foto.isEmpty()) {
             usuario.setFotoPerfil(foto.getBytes());
         }
 
-        // Se nenhum perfil foi setado (formulário não enviou), define o padrão USER
         if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
             Perfil perfilPadrao = perfilRepository.findByNome("USER")
                 .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
@@ -63,8 +60,38 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
-    // listar todos os usuarios do banco de dados
     public List<Usuario> buscarTodos() {
         return usuarioRepository.findAll();
     }
+
+    public long totalUsuarios() {
+        return usuarioRepository.count();
+    }
+
+    public long totalAtivos() {
+        return usuarioRepository.countByStatus(Usuario.Status.ATIVO);
+    }
+
+    public long totalInativos() {
+        return usuarioRepository.countByStatus(Usuario.Status.INATIVO);
+    }
+
+    // Corrigido para usar o método correto do repository
+    public long totalAdministradores() {
+        return usuarioRepository.countUsuariosPorPerfil("ADMIN");
+    }
+
+    public long totalBloqueados() {
+        return totalInativos();
+    }
+
+    public EstatisticasUsuariosDTO buscarEstatisticas() {
+        long totalUsuarios = totalUsuarios();
+        long totalAtivos = totalAtivos();
+        long totalBloqueados = totalBloqueados();
+        long totalAdministradores = totalAdministradores();
+
+        return new EstatisticasUsuariosDTO(totalUsuarios, totalAtivos, totalAdministradores, totalBloqueados);
+    }
+    
 }

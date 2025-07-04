@@ -1,6 +1,5 @@
 package com.jaasielsilva.portalceo.controller;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -32,23 +31,25 @@ public class UsuarioController {
     @Autowired
     private PerfilRepository perfilRepository;
 
-    @GetMapping("/index")
-    public String mostrarFormindex(Model model) {
-        if (!model.containsAttribute("usuario")) {
-            model.addAttribute("usuario", new Usuario());
-            model.addAttribute("perfis", perfilRepository.findAll());
-        }
-        return "usuarios/index";
-    }
     @GetMapping("/cadastro")
     public String mostrarFormCadastro(Model model) {
         if (!model.containsAttribute("usuario")) {
             model.addAttribute("usuario", new Usuario());
             model.addAttribute("perfis", perfilRepository.findAll());
         }
-        return "usuarios/cadastro";  // Apontando para cadastro.html
+        return "usuarios/cadastro";
+    }
+    @GetMapping("/index")
+    public String mostrarFormindex(Model model) {
+        model.addAttribute("usuario", new Usuario());
+        return "usuarios/index";
     }
 
+    @GetMapping("/listar")
+    public String mostrarFormlist(Model model) {
+        model.addAttribute("usuarios", usuarioService.buscarTodos());
+        return "usuarios/listar";
+    }
 
     @PostMapping("/cadastrar")
     public String cadastrarUsuario(
@@ -100,12 +101,4 @@ public class UsuarioController {
 
         return ResponseEntity.notFound().build();
     }
-
-    @GetMapping("/listar")
-    public String listarUsuarios(Model model) {
-    List<Usuario> usuarios = usuarioService.buscarTodos();
-    model.addAttribute("usuarios", usuarios);
-    return "usuarios/listar";
-    }
-
 }

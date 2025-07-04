@@ -20,11 +20,12 @@
 
         <!-- Estatísticas rápidas -->
         <div class="dashboard-cards">
-          <div class="card-metric"><h4>Total de Usuários</h4><p>328</p></div>
-          <div class="card-metric"><h4>Ativos</h4><p>312</p></div>
-          <div class="card-metric"><h4>Administradores</h4><p>7</p></div>
-          <div class="card-metric"><h4>Bloqueados</h4><p>9</p></div>
+          <div class="card-metric"><h4>Total de Usuários</h4><p th:text="${totalUsuarios}">0</p></div>
+          <div class="card-metric"><h4>Ativos</h4><p th:text="${ativos}">0</p></div>
+          <div class="card-metric"><h4>Administradores</h4><p th:text="${administradores}">0</p></div>
+          <div class="card-metric"><h4>Bloqueados</h4><p th:text="${bloqueados}">0</p></div>
         </div>
+
 
         <!-- Divisor de seção -->
         <div class="section-divider">

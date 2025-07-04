@@ -2,7 +2,6 @@ package com.jaasielsilva.portalceo.controller;
 
 import java.util.Optional;
 import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -12,9 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
-import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.service.UsuarioService;
@@ -63,41 +61,42 @@ public class UsuarioController {
 
     @PostMapping("/cadastrar")
     public String cadastrarUsuario(
-        @Valid @ModelAttribute("usuario") Usuario usuario,
-        BindingResult bindingResult,
-        @RequestParam("confirmSenha") String confirmSenha,
-        @RequestParam("perfilId") Long perfilId,
-        Model model) {
+    @Valid @ModelAttribute("usuario") Usuario usuario,
+    BindingResult bindingResult,
+    @RequestParam("confirmSenha") String confirmSenha,
+    @RequestParam(value = "foto", required = false) MultipartFile foto,
+    @RequestParam("perfilId") Long perfilId,
+    Model model) {
 
-        // Validação de senha
-        if (!usuario.getSenha().equals(confirmSenha)) {
-            bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
-        }
-
-        // Em caso de erro, retorna ao formulário
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("perfis", perfilRepository.findAll());
-            return "usuarios/cadastro";
-        }
-
-        try {
-            // Busca perfil selecionado
-            Perfil perfil = perfilRepository.findById(perfilId)
-                .orElseThrow(() -> new RuntimeException("Perfil não encontrado"));
-
-            usuario.setPerfis(Set.of(perfil));
-
-            // Salva o usuário
-            usuarioService.salvarUsuario(usuario);
-
-        } catch (Exception e) {
-            model.addAttribute("erro", "Erro ao cadastrar: " + e.getMessage());
-            model.addAttribute("perfis", perfilRepository.findAll());
-            return "usuarios/cadastro";
-        }
-
-        return "redirect:/usuarios/listar";
+    if (!usuario.getSenha().equals(confirmSenha)) {
+        bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
     }
+
+    if (bindingResult.hasErrors()) {
+        model.addAttribute("perfis", perfilRepository.findAll());
+        return "usuarios/cadastro";
+    }
+
+    try {
+        usuario.setPerfis(Set.of(perfilRepository.findById(perfilId).orElseThrow()));
+
+        if (foto != null && !foto.isEmpty()) {
+            usuario.setFotoPerfil(foto.getBytes()); // converte MultipartFile para byte[]
+        }
+
+        usuarioService.salvarUsuario(usuario);
+
+    } catch (Exception e) {
+        model.addAttribute("erro", "Erro ao cadastrar: " + e.getMessage());
+        model.addAttribute("perfis", perfilRepository.findAll());
+        return "usuarios/cadastro";
+    }
+
+    return "redirect:/usuarios/listar";
+    }
+
+
+
 
     @GetMapping("/{id}/foto")
     public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {

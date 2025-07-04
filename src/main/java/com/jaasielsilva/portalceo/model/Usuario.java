@@ -2,7 +2,6 @@ package com.jaasielsilva.portalceo.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -50,13 +49,11 @@ public class Usuario {
         inverseJoinColumns = @JoinColumn(name = "perfil_id"))
     private Set<Perfil> perfis;
 
-    // Enum para status do usuário
     public enum Status {
         ATIVO, INATIVO
     }
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status = Status.ATIVO;  // valor padrão para evitar NULL
-   
+    private Status status = Status.ATIVO;
 }

@@ -5,11 +5,9 @@ import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -27,27 +25,26 @@ public class UsuarioService {
     private PerfilRepository perfilRepository;
 
     public void salvarUsuario(Usuario usuario) throws Exception {
-        // Verifica duplicidade de e-mail
-        Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
+    Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
 
-        if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
-            throw new Exception("E-mail já cadastrado!");
-        }
-
-        // Criptografa senha caso ainda não esteja
-        if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
-            usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-        }
-
-        // Se nenhum perfil for informado, define o padrão USER
-        if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
-            Perfil perfilPadrao = perfilRepository.findByNome("USER")
-                .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
-            usuario.setPerfis(Set.of(perfilPadrao));
-        }
-
-        usuarioRepository.save(usuario);
+    if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
+        throw new Exception("Email já cadastrado!");
     }
+
+    if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+    }
+
+    if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
+        Perfil perfilPadrao = perfilRepository.findByNome("USER")
+            .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
+        usuario.setPerfis(Set.of(perfilPadrao));
+    }
+
+    usuarioRepository.save(usuario);
+}
+
+
 
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);

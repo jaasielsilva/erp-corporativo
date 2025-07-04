@@ -170,7 +170,8 @@
           </thead>
           <tbody>
             <tr th:each="usuario : ${usuarios}">
-              <td><img th:src="@{'/usuarios/' + ${usuario.id} + '/foto'}" class="avatar" alt="Foto" /></td>
+              <!-- Imagem fixa para todos os usuários -->
+              <td><img src="/img/gerente.png" class="avatar" alt="Foto" /></td>
               <td th:text="${usuario.nome}">João</td>
               <td th:text="${usuario.email}">email@exemplo.com</td>
               <td>

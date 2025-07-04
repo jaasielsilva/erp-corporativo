@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Usuários - Painel do CEO</title>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+
+  <style>
+    h2 {
+      font-size: 2.4rem;
+      color: #1e293b;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+
+    .search-form {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-form input {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      width: 220px;
+    }
+
+    .search-form button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn-novo {
+      padding: 10px 20px;
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-novo:hover {
+      background: linear-gradient(90deg, #1e40af, #2563eb);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    thead {
+      background: #2563eb;
+      color: white;
+    }
+
+    thead th, tbody td {
+      padding: 14px 16px;
+      text-align: left;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tbody tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    .acoes a, .acoes button {
+      margin-right: 8px;
+      color: #2563eb;
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    .acoes button:hover,
+    .acoes a:hover {
+      color: #1e40af;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .badge-admin {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .badge-user {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .table-center {
+      text-align: center;
+      color: #64748b;
+      font-weight: 600;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h2><i class="fas fa-users"></i> Usuários Cadastrados</h2>
+
+        <!-- Barra de ferramentas -->
+        <div class="toolbar">
+          <form class="search-form" th:action="@{/usuarios}" method="get">
+            <input type="text" name="busca" placeholder="Buscar por nome ou email" th:value="${param.busca}">
+            <button type="submit"><i class="fas fa-search"></i> Buscar</button>
+          </form>
+          <a th:href="@{/usuarios/novo}" class="btn-novo"><i class="fas fa-user-plus"></i> Novo Usuário</a>
+        </div>
+
+        <!-- Tabela -->
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Perfil</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="usuario : ${usuarios}">
+              <td><img th:src="@{'/usuarios/' + ${usuario.id} + '/foto'}" class="avatar" alt="Foto" /></td>
+              <td th:text="${usuario.nome}">João</td>
+              <td th:text="${usuario.email}">email@exemplo.com</td>
+              <td>
+                <span th:each="perfil : ${usuario.perfis}" 
+                      th:text="${perfil.nome}" 
+                      th:classappend="${perfil.nome == 'ADMIN'} ? 'badge badge-admin' : 'badge badge-user'">
+                </span>
+              </td>
+              <td class="acoes">
+                <a th:href="@{'/usuarios/' + ${usuario.id} + '/detalhes'}" title="Detalhes"><i class="fas fa-eye"></i></a>
+                <a th:href="@{'/usuarios/' + ${usuario.id} + '/editar'}" title="Editar"><i class="fas fa-edit"></i></a>
+                <form th:action="@{'/usuarios/' + ${usuario.id} + '/excluir'}" method="post" style="display:inline" 
+                      onsubmit="return confirm('Deseja realmente excluir este usuário?');">
+                  <button type="submit" title="Excluir"><i class="fas fa-trash-alt" style="color:#dc2626;"></i></button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(usuarios)}">
+              <td colspan="5" class="table-center">Nenhum usuário encontrado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+</body>
+</html>

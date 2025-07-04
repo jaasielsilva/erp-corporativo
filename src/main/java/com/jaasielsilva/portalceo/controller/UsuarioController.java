@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -90,4 +91,12 @@ public class UsuarioController {
 
         return ResponseEntity.notFound().build();
     }
+
+    @GetMapping("/listar")
+    public String listarUsuarios(Model model) {
+    List<Usuario> usuarios = usuarioService.buscarTodos();
+    model.addAttribute("usuarios", usuarios);
+    return "usuarios/listar";
+    }
+
 }

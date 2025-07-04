@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -60,5 +61,10 @@ public class UsuarioService {
 
     public Optional<Usuario> buscarPorId(Long id) {
         return usuarioRepository.findById(id);
+    }
+
+    // listar todos os usuarios do banco de dados
+    public List<Usuario> buscarTodos() {
+        return usuarioRepository.findAll();
     }
 }

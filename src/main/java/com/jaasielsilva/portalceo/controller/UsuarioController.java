@@ -32,14 +32,23 @@ public class UsuarioController {
     @Autowired
     private PerfilRepository perfilRepository;
 
-    @GetMapping("/novo")
+    @GetMapping("/index")
+    public String mostrarFormindex(Model model) {
+        if (!model.containsAttribute("usuario")) {
+            model.addAttribute("usuario", new Usuario());
+            model.addAttribute("perfis", perfilRepository.findAll());
+        }
+        return "usuarios/index";
+    }
+    @GetMapping("/cadastro")
     public String mostrarFormCadastro(Model model) {
         if (!model.containsAttribute("usuario")) {
             model.addAttribute("usuario", new Usuario());
             model.addAttribute("perfis", perfilRepository.findAll());
         }
-        return "usuarios/cadastro";
+        return "usuarios/cadastro";  // Apontando para cadastro.html
     }
+
 
     @PostMapping("/cadastrar")
     public String cadastrarUsuario(

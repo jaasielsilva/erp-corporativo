@@ -9,9 +9,13 @@ import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,11 +49,22 @@ public class UsuarioService {
         usuario.setPerfis(Set.of(perfilPadrao));
     }
 
+    // Define imagem padrão se nenhuma for enviada
+    if (usuario.getFotoPerfil() == null) {
+        try {
+            ClassPathResource imagemPadrao = new ClassPathResource("static/img/gerente.png");
+            byte[] fotoPadrao = Files.readAllBytes(imagemPadrao.getFile().toPath());
+            usuario.setFotoPerfil(fotoPadrao);
+        } catch (IOException e) {
+            e.printStackTrace();
+            usuario.setFotoPerfil(null); // ou mantém null, se preferir
+        }
+    }
+
     try {
         usuarioRepository.save(usuario);
     } catch (DataIntegrityViolationException e) {
         Throwable cause = e.getCause();
-        // Tenta identificar a constraint pelo nome na mensagem de erro
         String message = cause != null ? cause.getMessage() : e.getMessage();
         if (message != null) {
             String lowerMsg = message.toLowerCase();
@@ -61,9 +76,10 @@ public class UsuarioService {
                 throw new Exception("Matrícula já cadastrada no sistema.");
             }
         }
-        // Se não for erro esperado, relança
-        throw e;}
+        throw e;
     }
+}
+
 
 
 
@@ -107,4 +123,9 @@ public class UsuarioService {
             totalBloqueados()
         );
     }
+
+    public Optional<Usuario> buscarPorCpf(String cpf) {
+    return usuarioRepository.findByCpf(cpf); // método customizado no seu repository
+}
+
 }

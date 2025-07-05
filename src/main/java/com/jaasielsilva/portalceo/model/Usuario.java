@@ -17,7 +17,7 @@ public class Usuario {
     private Long id;
 
     @Column(length = 30, unique = true)
-    private String matricula; // matrícula / código funcionário
+    private String matricula;
 
     @Column(nullable = false)
     private String nome;
@@ -36,13 +36,15 @@ public class Usuario {
 
     private LocalDate dataNascimento;
 
-    private String departamento; // novo campo - setor/departamento
+    private String departamento;
 
-    private String cargo; // novo campo - cargo/função
+    private String cargo;
 
-    private LocalDate dataAdmissao; // novo campo - data de admissão
+    private LocalDate dataAdmissao;
 
-    private String cep; // <-- **ADICIONE ESSA LINHA**
+    private LocalDate dataDemissao;
+
+    private String cep;
 
     private String endereco;
 
@@ -53,10 +55,6 @@ public class Usuario {
     @Column(length = 10)
     private String ramal;
 
-// Data de Demissão
-private LocalDate dataDemissao;
-
-
     @Enumerated(EnumType.STRING)
     @Column(length = 15)
     private Genero genero;
@@ -65,14 +63,16 @@ private LocalDate dataDemissao;
     @Column(length = 10)
     private NivelAcesso nivelAcesso;
 
-    @Lob    
+    @Lob
     @Column(name = "foto_perfil", columnDefinition = "LONGBLOB")
     private byte[] fotoPerfil;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuario_perfil",
+    @JoinTable(
+        name = "usuario_perfil",
         joinColumns = @JoinColumn(name = "usuario_id"),
-        inverseJoinColumns = @JoinColumn(name = "perfil_id"))
+        inverseJoinColumns = @JoinColumn(name = "perfil_id")
+    )
     private Set<Perfil> perfis;
 
     public enum Status {

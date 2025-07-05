@@ -74,6 +74,12 @@
             <input type="date" id="dataNascimento" th:field="*{dataNascimento}" />
           </div>
 
+          <!-- CEP -->
+          <div class="form-group">
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep" th:field="*{cep}" placeholder="00000-000" maxlength="9" />
+          </div>
+
           <div class="form-group full-width">
             <label for="endereco">Endereço:</label>
             <input type="text" id="endereco" th:field="*{endereco}" placeholder="Rua, número, complemento" />
@@ -89,11 +95,7 @@
             <input type="text" id="estado" th:field="*{estado}" maxlength="2" placeholder="UF" />
           </div>
 
-          <!-- CEP -->
-          <div class="form-group">
-            <label for="cep">CEP:</label>
-            <input type="text" id="cep" th:field="*{cep}" placeholder="00000-000" maxlength="9" />
-          </div>
+          
           
           <div class="form-group">
             <label for="perfilId">Perfil:</label>
@@ -111,18 +113,22 @@
             <input type="text" id="cargo" th:field="*{cargo}" placeholder="Digite o cargo/função" />
           </div>
 
-          <!-- Gênero -->
-<div class="form-group">
-  <label for="genero">Gênero:</label>
-  <select id="genero" th:field="*{genero}">
-    <option value="" disabled selected>-- Selecione o gênero --</option>
-    <option value="M">Masculino</option>
-    <option value="F">Feminino</option>
-    <option value="O">Outro</option>
-    <option value="N">Prefiro não informar</option>
-  </select>
-</div>
+          <div class="form-group">
+            <label for="departamento">Departamento:</label>
+            <input type="text" id="departamento" th:field="*{departamento}" placeholder="Digite o departamento" />
+          </div>
 
+          <!-- Gênero -->
+            <div class="form-group">
+    <label for="genero">Gênero:</label>
+    <select id="genero" th:field="*{genero}">
+      <option value="" disabled selected>-- Selecione o gênero --</option>
+      <option th:each="gen : ${generos}" 
+              th:value="${gen}" 
+              th:text="${gen}"></option>
+    </select>
+  </div>
+          
 <!-- Nível de Acesso -->
 <div class="form-group">
   <label for="nivelAcesso">Nível de Acesso:</label>
@@ -134,11 +140,11 @@
   </select>
 </div>
 
-<!-- Data de Demissão -->
-<div class="form-group">
-  <label for="dataDemissao">Data de Demissão:</label>
-  <input type="date" id="dataDemissao" th:field="*{dataDemissao}" />
-</div>
+      <!-- Data de Admissão -->
+      <div class="form-group">
+        <label for="dataAdmissao">Data de Admissão:</label>
+        <input type="date" id="dataAdmissao" th:field="*{dataAdmissao}" />
+      </div>
 
 
           <div class="form-group buttons full-width">

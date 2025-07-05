@@ -428,3 +428,141 @@ html, body {
   background-color: #be123c;
 }
 
+/* Container geral do formulário */
+.form-usuario {
+  max-width: 1100px; /* mantém compacto */
+  margin: 40px auto;
+  background: #ffffff; /* fundo branco para sofisticação */
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  color: #1e293b;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 colunas iguais */
+  gap: 18px 30px; /* espaçamento vertical e horizontal */
+}
+
+/* Cada grupo do formulário ocupa 1 célula do grid */
+.form-usuario .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.form-usuario label {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+/* Inputs e selects */
+.form-usuario input[type="text"],
+.form-usuario input[type="email"],
+.form-usuario input[type="password"],
+.form-usuario input[type="date"],
+.form-usuario select {
+  padding: 8px 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #334155;
+  max-width: 100%;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.06);
+}
+
+/* Foco no input */
+.form-usuario input[type="text"]:focus,
+.form-usuario input[type="email"]:focus,
+.form-usuario input[type="password"]:focus,
+.form-usuario input[type="date"]:focus,
+.form-usuario select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 8px #2563ebaa;
+}
+
+/* Mensagem de erro */
+.form-usuario .error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+/* Campos que ocupam a largura total - ocupam as 4 colunas */
+.form-usuario .full-width {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+/* Botões container - ocupa as 4 colunas */
+.form-usuario .buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-start;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+/* Botão submit */
+.form-usuario .btn-submit {
+  background-color: #2563eb;
+  color: white;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgb(37 99 235 / 0.5);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-usuario .btn-submit:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 5px 12px rgb(29 78 216 / 0.7);
+}
+
+/* Botão cancelar */
+.form-usuario .btn-cancel {
+  background-color: #dc2626;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.form-usuario .btn-cancel:hover {
+  background-color: #b91c1c;
+}
+
+/* Responsividade para telas pequenas */
+@media (max-width: 900px) {
+  .form-usuario {
+    grid-template-columns: 1fr; /* 1 coluna no mobile */
+    padding: 20px;
+  }
+
+  .form-usuario .buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-usuario .btn-submit,
+  .form-usuario .btn-cancel {
+    width: 100%;
+    justify-content: center;
+  }
+}

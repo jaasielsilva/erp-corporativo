@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalhes do Usuário - Painel do CEO</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h2>Detalhes do Usuário</h2>
+
+        <div>
+          <img th:src="@{'/usuarios/' + ${usuario.id} + '/foto'}" alt="Foto do usuário" width="120" />
+          <p><strong>Nome:</strong> <span th:text="${usuario.nome}"></span></p>
+          <p><strong>Email:</strong> <span th:text="${usuario.email}"></span></p>
+          <p><strong>CPF:</strong> <span th:text="${usuario.cpf}"></span></p>
+          <p><strong>Telefone:</strong> <span th:text="${usuario.telefone}"></span></p>
+          <p><strong>Departamento:</strong> <span th:text="${usuario.departamento}"></span></p>
+          <p><strong>Cargo:</strong> <span th:text="${usuario.cargo}"></span></p>
+          <p><strong>Status:</strong> <span th:text="${usuario.status}"></span></p>
+          <p><strong>Perfis:</strong>
+            <span th:each="perfil : ${usuario.perfis}" th:text="${perfil.nome} + ' '"></span>
+          </p>
+        </div>
+
+        <a th:href="@{/usuarios/listar}">Voltar para lista</a>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -91,7 +91,7 @@ public CommandLineRunner createInitialData(BCryptPasswordEncoder passwordEncoder
             });
 
         // Cria perfil USER se não existir e associa permissão
-        Perfil userPerfil = perfilRepository.findByNome("USER")
+        perfilRepository.findByNome("USER")
             .orElseGet(() -> {
                 Perfil p = new Perfil();
                 p.setNome("USER");

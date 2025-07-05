@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Editar Usuário</title>
+</head>
+<body>
+  <h1>Editar Usuário</h1>
+
+  <form th:action="@{'/usuarios/' + ${usuario.id} + '/editar'}" method="post" th:object="${usuario}">
+    <label>Nome:</label>
+    <input type="text" th:field="*{nome}" required />
+
+    <label>Email:</label>
+    <input type="email" th:field="*{email}" required />
+
+    <label>CPF:</label>
+    <input type="text" th:field="*{cpf}" readonly />
+
+    <label>Senha:</label>
+    <input type="password" th:field="*{senha}" />
+
+    <label>Confirmar Senha:</label>
+    <input type="password" name="confirmSenha" />
+
+    <!-- Perfil, status, genero, etc... conforme seu modelo -->
+
+    <label>Perfil:</label>
+    <select name="perfilId" required>
+      <option th:each="perfil : ${perfis}" th:value="${perfil.id}"
+        th:text="${perfil.nome}" th:selected="${usuario.perfis.contains(perfil)}">Perfil</option>
+    </select>
+
+    <button type="submit">Salvar</button>
+  </form>
+
+  <a th:href="@{/usuarios/listar}">Voltar à lista</a>
+</body>
+</html>

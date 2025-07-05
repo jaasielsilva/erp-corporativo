@@ -13,6 +13,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     
     long countByStatus(Usuario.Status status);
 
+    Optional<Usuario> findByCpf(String cpf);
+
     // Query para contar usuários com perfil ADMIN
     @Query("SELECT COUNT(u) FROM Usuario u JOIN u.perfis p WHERE p.nome = :nomePerfil")
     long countUsuariosPorPerfil(@Param("nomePerfil") String nomePerfil);

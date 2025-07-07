@@ -42,7 +42,8 @@ public class Usuario {
 
     private LocalDate dataAdmissao;
 
-    private LocalDate dataDemissao;
+    // ✅ Corrigido: nome correto para o campo usado no HTML
+    private LocalDate dataDesligamento;
 
     private String cep;
 
@@ -75,10 +76,15 @@ public class Usuario {
     )
     private Set<Perfil> perfis;
 
+    // ✅ Enum com os status possíveis
     public enum Status {
-        ATIVO, INATIVO, LICENCA, AFASTADO
+        ATIVO,
+        INATIVO,
+        BLOQUEADO,
+        DEMITIDO
     }
 
+    // ✅ Campo status com valor padrão
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ATIVO;

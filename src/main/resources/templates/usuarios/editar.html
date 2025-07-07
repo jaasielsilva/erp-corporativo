@@ -129,6 +129,35 @@
             <input type="date" id="dataAdmissao" th:field="*{dataAdmissao}" />
           </div>
 
+          <!-- ... [código anterior permanece inalterado] ... -->
+
+<div class="form-group">
+  <label for="status">Situação:</label>
+  <select id="status" th:field="*{status}" required>
+    <option value="" disabled>-- Selecione o status --</option>
+    <option value="ATIVO">Ativo</option>
+    <option value="INATIVO">Inativo</option>
+    <option value="DEMITIDO">Demitido</option>
+  </select>
+</div>
+
+<div class="form-group" id="campoDesligamento" style="display:none;">
+  <label for="dataDesligamento">Data de Desligamento:</label>
+  <input type="date" id="dataDesligamento" th:field="*{dataDesligamento}" />
+</div>
+
+<div class="form-group buttons full-width">
+  <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+  <a th:href="@{/usuarios/listar}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
+</div>
+
+</form> <!-- fechamento correto do form -->
+
+</section>
+
+
+
+          
           <div class="form-group buttons full-width">
             <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
             <a th:href="@{/usuarios/listar}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
@@ -136,6 +165,28 @@
         </form>
       </section>
 
+      <!-- ✅ mover o script para fora do form -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const status = document.getElementById("status");
+    const campoDesligamento = document.getElementById("campoDesligamento");
+    const dataDesligamento = document.getElementById("dataDesligamento");
+
+    function verificarStatus() {
+      if (status.value === "DEMITIDO") {
+        campoDesligamento.style.display = "block";
+      } else {
+        campoDesligamento.style.display = "none";
+        if (dataDesligamento) {
+          dataDesligamento.value = "";
+        }
+      }
+    }
+
+    status.addEventListener("change", verificarStatus);
+    verificarStatus(); // executa na inicialização da página
+  });
+</script>
       <!-- Script para preenchimento automático via CEP -->
       <script>
         document.getElementById('cep').addEventListener('blur', function() {

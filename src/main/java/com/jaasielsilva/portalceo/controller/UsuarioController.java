@@ -7,6 +7,8 @@ import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
 import com.jaasielsilva.portalceo.model.Genero;
 import com.jaasielsilva.portalceo.model.NivelAcesso;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.repository.CargoRepository;
+import com.jaasielsilva.portalceo.repository.DepartamentoRepository;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
@@ -27,10 +29,17 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final PerfilRepository perfilRepository;
+    private final CargoRepository cargoRepository;
+    private final DepartamentoRepository departamentoRepository;
 
-    public UsuarioController(UsuarioService usuarioService, PerfilRepository perfilRepository) {
+    public UsuarioController(UsuarioService usuarioService,
+                             PerfilRepository perfilRepository,
+                             CargoRepository cargoRepository,
+                             DepartamentoRepository departamentoRepository) {
         this.usuarioService = usuarioService;
         this.perfilRepository = perfilRepository;
+        this.cargoRepository = cargoRepository;
+        this.departamentoRepository = departamentoRepository;
     }
 
     @GetMapping("/cadastro")
@@ -42,6 +51,9 @@ public class UsuarioController {
         model.addAttribute("generos", Genero.values());
         model.addAttribute("status", Usuario.Status.values());
         model.addAttribute("niveis", NivelAcesso.values());
+        model.addAttribute("cargos", cargoRepository.findAll());
+        model.addAttribute("departamentos", departamentoRepository.findAll());
+
         return "usuarios/cadastro";
     }
 
@@ -72,42 +84,45 @@ public class UsuarioController {
         @RequestParam("perfilId") Long perfilId,
         Model model) {
 
-    if (!usuario.getSenha().equals(confirmSenha)) {
-        bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
-    }
-
-    if (bindingResult.hasErrors()) {
-        model.addAttribute("perfis", perfilRepository.findAll());
-        model.addAttribute("generos", Genero.values());
-        model.addAttribute("status", Usuario.Status.values());
-        model.addAttribute("niveis", NivelAcesso.values());
-        model.addAttribute("usuario", usuario);
-        return "usuarios/cadastro";
-    }
-
-    try {
-        usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
-                .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
-
-        // Limpa dataDesligamento se status não for DEMITIDO
-        if (usuario.getStatus() != Usuario.Status.DEMITIDO) {
-            usuario.setDataDesligamento(null);
+        if (!usuario.getSenha().equals(confirmSenha)) {
+            bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
         }
 
-        usuarioService.salvarUsuario(usuario);
-    } catch (Exception e) {
-        model.addAttribute("erro", e.getMessage());
-        model.addAttribute("perfis", perfilRepository.findAll());
-        model.addAttribute("generos", Genero.values());
-        model.addAttribute("status", Usuario.Status.values());
-        model.addAttribute("niveis", NivelAcesso.values());
-        model.addAttribute("usuario", usuario);
-        return "usuarios/cadastro";
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("perfis", perfilRepository.findAll());
+            model.addAttribute("generos", Genero.values());
+            model.addAttribute("status", Usuario.Status.values());
+            model.addAttribute("niveis", NivelAcesso.values());
+            model.addAttribute("cargos", cargoRepository.findAll());
+            model.addAttribute("departamentos", departamentoRepository.findAll());
+            model.addAttribute("usuario", usuario);
+            return "usuarios/cadastro";
+        }
+
+        try {
+            usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
+                    .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
+
+            // Limpa dataDesligamento se status não for DEMITIDO
+            if (usuario.getStatus() != Usuario.Status.DEMITIDO) {
+                usuario.setDataDesligamento(null);
+            }
+
+            usuarioService.salvarUsuario(usuario);
+        } catch (Exception e) {
+            model.addAttribute("erro", e.getMessage());
+            model.addAttribute("perfis", perfilRepository.findAll());
+            model.addAttribute("generos", Genero.values());
+            model.addAttribute("status", Usuario.Status.values());
+            model.addAttribute("niveis", NivelAcesso.values());
+            model.addAttribute("cargos", cargoRepository.findAll());
+            model.addAttribute("departamentos", departamentoRepository.findAll());
+            model.addAttribute("usuario", usuario);
+            return "usuarios/cadastro";
+        }
+
+        return "redirect:/usuarios/listar";
     }
-
-    return "redirect:/usuarios/listar";
-}
-
 
     @GetMapping("/{id}/foto")
     public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
@@ -125,12 +140,10 @@ public class UsuarioController {
         return ResponseEntity.notFound().build();
     }
 
-    // Mostrar formulário editar - GET /usuarios/{id}/editar
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
         if (usuarioOpt.isEmpty()) {
-            // Pode usar RedirectAttributes para mensagem de erro
             return "redirect:/usuarios/listar";
         }
         if (!model.containsAttribute("usuario")) {
@@ -140,94 +153,92 @@ public class UsuarioController {
         model.addAttribute("generos", Genero.values());
         model.addAttribute("status", Usuario.Status.values());
         model.addAttribute("niveis", NivelAcesso.values());
-        return "usuarios/editar"; // nome do template Thymeleaf editar.html
-    }
-
-    // Salvar edição - POST /usuarios/{id}/editar
-    @PostMapping("/{id}/editar")
-public String salvarEdicaoUsuario(
-        @PathVariable Long id,
-        @Valid @ModelAttribute("usuario") Usuario usuario,
-        BindingResult bindingResult,
-        @RequestParam("confirmSenha") String confirmSenha,
-        @RequestParam("perfilId") Long perfilId,
-        Model model) {
-
-    if (!usuario.getSenha().equals(confirmSenha)) {
-        bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
-    }
-
-    if (bindingResult.hasErrors()) {
-        model.addAttribute("perfis", perfilRepository.findAll());
-        model.addAttribute("generos", Genero.values());
-        model.addAttribute("status", Usuario.Status.values());
-        model.addAttribute("niveis", NivelAcesso.values());
+        model.addAttribute("cargos", cargoRepository.findAll());
+        model.addAttribute("departamentos", departamentoRepository.findAll());
         return "usuarios/editar";
     }
 
-    try {
-        // ⚠️ Verifica se data de desligamento foi preenchida
-        if (usuario.getDataDesligamento() != null) {
-            usuarioService.excluirPorId(id);
-            return "redirect:/usuarios/listar";
+    @PostMapping("/{id}/editar")
+    public String salvarEdicaoUsuario(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("usuario") Usuario usuario,
+            BindingResult bindingResult,
+            @RequestParam("confirmSenha") String confirmSenha,
+            @RequestParam("perfilId") Long perfilId,
+            Model model) {
+
+        if (!usuario.getSenha().equals(confirmSenha)) {
+            bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
         }
 
-        usuario.setId(id);
-        usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
-                .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
-        usuarioService.salvarUsuario(usuario);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("perfis", perfilRepository.findAll());
+            model.addAttribute("generos", Genero.values());
+            model.addAttribute("status", Usuario.Status.values());
+            model.addAttribute("niveis", NivelAcesso.values());
+            model.addAttribute("cargos", cargoRepository.findAll());
+            model.addAttribute("departamentos", departamentoRepository.findAll());
+            return "usuarios/editar";
+        }
 
-    } catch (Exception e) {
-        model.addAttribute("erro", e.getMessage());
+        try {
+            if (usuario.getDataDesligamento() != null) {
+                usuarioService.excluirPorId(id);
+                return "redirect:/usuarios/listar";
+            }
+
+            usuario.setId(id);
+            usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
+                    .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
+            usuarioService.salvarUsuario(usuario);
+
+        } catch (Exception e) {
+            model.addAttribute("erro", e.getMessage());
+            model.addAttribute("perfis", perfilRepository.findAll());
+            model.addAttribute("generos", Genero.values());
+            model.addAttribute("status", Usuario.Status.values());
+            model.addAttribute("niveis", NivelAcesso.values());
+            model.addAttribute("cargos", cargoRepository.findAll());
+            model.addAttribute("departamentos", departamentoRepository.findAll());
+            return "usuarios/editar";
+        }
+
+        return "redirect:/usuarios/listar";
+    }
+
+    @GetMapping("/editar")
+    public String mostrarFormularioBuscaPorCpf() {
+        return "usuarios/editar";  // formulário para digitar CPF
+    }
+
+    @PostMapping("/editar")
+    public String buscarUsuarioPorCpf(@RequestParam("cpf") String cpf, Model model) {
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorCpf(cpf);
+
+        if (usuarioOpt.isEmpty()) {
+            model.addAttribute("erro", "Usuário com CPF " + cpf + " não encontrado.");
+            return "usuarios/editar";
+        }
+
+        model.addAttribute("usuario", usuarioOpt.get());
         model.addAttribute("perfis", perfilRepository.findAll());
         model.addAttribute("generos", Genero.values());
         model.addAttribute("status", Usuario.Status.values());
         model.addAttribute("niveis", NivelAcesso.values());
-        return "usuarios/editar";
+        model.addAttribute("cargos", cargoRepository.findAll());
+        model.addAttribute("departamentos", departamentoRepository.findAll());
+
+        return "usuarios/editarcadastro"; // formulário completo para editar dados do usuário
     }
 
-    return "redirect:/usuarios/listar";
-}
-
-
-
-   // Mostrar formulário para digitar CPF - GET /usuarios/editar
-@GetMapping("/editar")
-public String mostrarFormularioBuscaPorCpf() {
-    return "usuarios/editar";  // seu template com o formulário de busca por CPF
-}
-
-// Receber CPF do formulário e buscar usuário - POST /usuarios/editar
-@PostMapping("/editar")
-public String buscarUsuarioPorCpf(@RequestParam("cpf") String cpf, Model model) {
-    Optional<Usuario> usuarioOpt = usuarioService.buscarPorCpf(cpf);
-
-    if (usuarioOpt.isEmpty()) {
-        model.addAttribute("erro", "Usuário com CPF " + cpf + " não encontrado.");
-        return "usuarios/editar"; // volta para o formulário de busca com mensagem de erro
-    }
-
-    // Usuário encontrado, preparar dados para o formulário de edição completo
-    model.addAttribute("usuario", usuarioOpt.get());
-    model.addAttribute("perfis", perfilRepository.findAll());
-    model.addAttribute("generos", Genero.values());
-    model.addAttribute("status", Usuario.Status.values());
-    model.addAttribute("niveis", NivelAcesso.values());
-
-    return "usuarios/editarcadastro";  // template com o formulário completo para editar dados do usuário
-}
-
-    // exluir um usuario por Id
     @PostMapping("/{id}/excluir")
     public String excluirUsuario(@PathVariable Long id, Model model) {
         try {
             usuarioService.excluirPorId(id);
         } catch (Exception e) {
             model.addAttribute("erro", "Erro ao excluir usuário: " + e.getMessage());
-            return "redirect:/usuarios/listar"; // pode adicionar um atributo flash se quiser feedback
+            return "redirect:/usuarios/listar";
         }
         return "redirect:/usuarios/listar";
     }
-
-
 }

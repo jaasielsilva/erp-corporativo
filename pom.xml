@@ -77,6 +77,12 @@
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
 
+		<!--Dependencia do spring pra versão do Banco de dados-->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+
 
 	</dependencies>
 

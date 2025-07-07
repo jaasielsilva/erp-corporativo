@@ -36,13 +36,9 @@ public class Usuario {
 
     private LocalDate dataNascimento;
 
-    private String departamento;
-
-    private String cargo;
-
     private LocalDate dataAdmissao;
 
-    // ✅ Corrigido: nome correto para o campo usado no HTML
+    // corrigido nome para dataDesligamento
     private LocalDate dataDesligamento;
 
     private String cep;
@@ -76,7 +72,7 @@ public class Usuario {
     )
     private Set<Perfil> perfis;
 
-    // ✅ Enum com os status possíveis
+    // Enum com os status possíveis
     public enum Status {
         ATIVO,
         INATIVO,
@@ -84,8 +80,17 @@ public class Usuario {
         DEMITIDO
     }
 
-    // ✅ Campo status com valor padrão
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ATIVO;
+
+    // Relacionamento ManyToOne para Cargo e Departamento
+    @ManyToOne
+    @JoinColumn(name = "cargo_id")
+    private Cargo cargo;
+
+    @ManyToOne
+    @JoinColumn(name = "departamento_id")
+    private Departamento departamento;
+
 }

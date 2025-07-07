@@ -23,8 +23,8 @@ public class SecurityConfig {
     private final UsuarioRepository usuarioRepository;
     private final PerfilRepository perfilRepository;
     private final PermissaoRepository permissaoRepository;
-    private final CargoRepository cargoRepository; // novo
-    private final DepartamentoRepository departamentoRepository; // novo
+    private final CargoRepository cargoRepository;
+    private final DepartamentoRepository departamentoRepository;
 
     public SecurityConfig(UsuarioRepository usuarioRepository,
                           PerfilRepository perfilRepository,
@@ -104,7 +104,7 @@ public class SecurityConfig {
                     return perfilRepository.save(p);
                 });
 
-            // Cria cargo "Administrador" se não existir
+            // Cargo "Administrador"
             Cargo cargoAdmin = cargoRepository.findByNome("Administrador")
                 .orElseGet(() -> {
                     Cargo c = new Cargo();
@@ -112,7 +112,7 @@ public class SecurityConfig {
                     return cargoRepository.save(c);
                 });
 
-            // Cria departamento "TI" se não existir
+            // Departamento "TI"
             Departamento departamentoTI = departamentoRepository.findByNome("TI")
                 .orElseGet(() -> {
                     Departamento d = new Departamento();
@@ -120,7 +120,7 @@ public class SecurityConfig {
                     return departamentoRepository.save(d);
                 });
 
-            // Usuário admin
+            // Criação do usuário admin
             if (usuarioRepository.findByEmail("admin@teste.com").isEmpty()) {
                 Usuario admin = new Usuario();
                 admin.setNome("Administrador");
@@ -131,16 +131,16 @@ public class SecurityConfig {
                 admin.setCpf("00000000000");
                 admin.setTelefone("(11) 99999-9999");
                 admin.setDataNascimento(java.time.LocalDate.of(1980, 1, 1));
-                admin.setDepartamento(departamentoTI); // seta entidade Departamento
-                admin.setCargo(cargoAdmin); // seta entidade Cargo
+                admin.setDepartamento(departamentoTI);
+                admin.setCargo(cargoAdmin);
                 admin.setDataAdmissao(java.time.LocalDate.of(2020, 1, 1));
                 admin.setEndereco("Rua Exemplo, 123");
                 admin.setCidade("São Paulo");
                 admin.setEstado("SP");
                 admin.setCep("01000-000");
                 admin.setStatus(Usuario.Status.ATIVO);
-                // Exemplo para Genero (ajuste conforme seu enum)
-                // admin.setGenero(Genero.MASCULINO);
+                admin.setGenero(Genero.MASCULINO);  // ajuste conforme enum
+                admin.setRamal("1010");
 
                 try {
                     ClassPathResource image = new ClassPathResource("static/img/gerente.png");

@@ -146,4 +146,9 @@ public class UsuarioService {
         }
         return false;
     }
+
+    public List<Usuario> buscarPorNomeOuEmail(String busca) {
+    return usuarioRepository.buscarPorNomeOuEmail(busca);
+}
+
 }

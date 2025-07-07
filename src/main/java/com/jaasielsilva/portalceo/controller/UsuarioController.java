@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,6 +44,18 @@ public class UsuarioController {
         this.cargoRepository = cargoRepository;
         this.departamentoRepository = departamentoRepository;
     }
+
+    @GetMapping
+    public String listarUsuarios(@RequestParam(value = "busca", required = false) String busca, Model model) {
+    List<Usuario> usuarios;
+    if (busca == null || busca.isEmpty()) {
+        usuarios = usuarioService.buscarTodos();
+    } else {
+        usuarios = usuarioService.buscarPorNomeOuEmail(busca);
+    }
+    model.addAttribute("usuarios", usuarios);
+    return "usuarios/listar"; // ou "usuarios/lista" — o que você usar
+}
 
     @GetMapping("/cadastro")
     public String mostrarFormularioCadastro(Model model) {

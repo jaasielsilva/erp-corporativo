@@ -236,4 +236,18 @@ public class UsuarioController {
         boolean autorizado = usuarioService.usuarioTemPermissaoParaExcluir(matricula);
         return Map.of("autorizado", autorizado);
     }
+
+    // Endpoint pra verificar detalhes do usuario
+    @GetMapping("/{id}/detalhes")
+    public String exibirDetalhesUsuario(@PathVariable Long id, Model model) {
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+
+        if (usuarioOpt.isEmpty()) {
+            return "redirect:/usuarios/listar"; // redireciona se não encontrar
+        }
+
+        model.addAttribute("usuario", usuarioOpt.get());
+        return "usuarios/detalhes"; // nome do arquivo HTML na pasta templates/usuarios
+    }
+
 }

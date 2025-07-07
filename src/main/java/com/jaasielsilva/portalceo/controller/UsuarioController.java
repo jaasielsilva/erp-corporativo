@@ -201,4 +201,17 @@ public String buscarUsuarioPorCpf(@RequestParam("cpf") String cpf, Model model) 
     return "usuarios/editarcadastro";  // template com o formulário completo para editar dados do usuário
 }
 
+    // exluir um usuario por Id
+    @PostMapping("/{id}/excluir")
+    public String excluirUsuario(@PathVariable Long id, Model model) {
+        try {
+            usuarioService.excluirPorId(id);
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao excluir usuário: " + e.getMessage());
+            return "redirect:/usuarios/listar"; // pode adicionar um atributo flash se quiser feedback
+        }
+        return "redirect:/usuarios/listar";
+    }
+
+
 }

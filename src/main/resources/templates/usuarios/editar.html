@@ -2,38 +2,165 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
-  <title>Editar Usuário</title>
+  <title>Editar Usuário - Painel do CEO</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
 <body>
-  <h1>Editar Usuário</h1>
+  <div class="app-container">
+    <aside th:replace="components/sidebar :: sidebar"></aside>
+    <main class="main-content">
+      <header th:replace="components/topbar :: topbar"></header>
 
-  <form th:action="@{'/usuarios/' + ${usuario.id} + '/editar'}" method="post" th:object="${usuario}">
-    <label>Nome:</label>
-    <input type="text" th:field="*{nome}" required />
+      <section class="content-area">
+        <h1><i class="fas fa-user-edit"></i> Editar Usuário</h1>
 
-    <label>Email:</label>
-    <input type="email" th:field="*{email}" required />
+        <form th:action="@{'/usuarios/' + ${usuario.id} + '/editar'}" method="post" th:object="${usuario}" class="form-usuario">
 
-    <label>CPF:</label>
-    <input type="text" th:field="*{cpf}" readonly />
+          <div class="form-group">
+            <label for="matricula">Matrícula:</label>
+            <input type="text" id="matricula" th:field="*{matricula}" required />
+          </div>
 
-    <label>Senha:</label>
-    <input type="password" th:field="*{senha}" />
+          <div class="form-group">
+            <label for="ramal">Ramal:</label>
+            <input type="text" id="ramal" th:field="*{ramal}" />
+          </div>
 
-    <label>Confirmar Senha:</label>
-    <input type="password" name="confirmSenha" />
+          <div class="form-group">
+            <label for="nome">Nome completo:</label>
+            <input type="text" id="nome" th:field="*{nome}" required />
+          </div>
 
-    <!-- Perfil, status, genero, etc... conforme seu modelo -->
+          <div class="form-group">
+            <label for="email">E-mail:</label>
+            <input type="email" id="email" th:field="*{email}" required />
+          </div>
 
-    <label>Perfil:</label>
-    <select name="perfilId" required>
-      <option th:each="perfil : ${perfis}" th:value="${perfil.id}"
-        th:text="${perfil.nome}" th:selected="${usuario.perfis.contains(perfil)}">Perfil</option>
-    </select>
+          <div class="form-group">
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" th:field="*{senha}" />
+          </div>
 
-    <button type="submit">Salvar</button>
-  </form>
+          <div class="form-group">
+            <label for="confirmSenha">Confirmar Senha:</label>
+            <input type="password" id="confirmSenha" name="confirmSenha" />
+          </div>
 
-  <a th:href="@{/usuarios/listar}">Voltar à lista</a>
+          <div class="form-group">
+            <label for="telefone">Telefone:</label>
+            <input type="text" id="telefone" th:field="*{telefone}" />
+          </div>
+
+          <div class="form-group">
+            <label for="cpf">CPF:</label>
+            <input type="text" id="cpf" th:field="*{cpf}" readonly />
+          </div>
+
+          <div class="form-group">
+            <label for="dataNascimento">Data de Nascimento:</label>
+            <input type="date" id="dataNascimento" th:field="*{dataNascimento}" />
+          </div>
+
+          <div class="form-group">
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep" th:field="*{cep}" maxlength="9" />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="endereco">Endereço:</label>
+            <input type="text" id="endereco" th:field="*{endereco}" />
+          </div>
+
+          <div class="form-group">
+            <label for="cidade">Cidade:</label>
+            <input type="text" id="cidade" th:field="*{cidade}" />
+          </div>
+
+          <div class="form-group">
+            <label for="estado">Estado:</label>
+            <input type="text" id="estado" th:field="*{estado}" maxlength="2" />
+          </div>
+
+          <div class="form-group">
+            <label for="perfilId">Perfil:</label>
+            <select id="perfilId" name="perfilId" required>
+              <option value="" disabled>-- Selecione um perfil --</option>
+              <option th:each="perfil : ${perfis}"
+                      th:value="${perfil.id}"
+                      th:text="${perfil.nome}"
+                      th:selected="${usuario.perfis.contains(perfil)}"></option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="cargo">Cargo:</label>
+            <input type="text" id="cargo" th:field="*{cargo}" />
+          </div>
+
+          <div class="form-group">
+            <label for="departamento">Departamento:</label>
+            <input type="text" id="departamento" th:field="*{departamento}" />
+          </div>
+
+          <div class="form-group">
+            <label for="genero">Gênero:</label>
+            <select id="genero" th:field="*{genero}">
+              <option value="" disabled>-- Selecione o gênero --</option>
+              <option th:each="gen : ${generos}"
+                      th:value="${gen}"
+                      th:text="${gen}"></option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="nivelAcesso">Nível de Acesso:</label>
+            <select id="nivelAcesso" th:field="*{nivelAcesso}" required>
+              <option value="" disabled>-- Selecione o nível de acesso --</option>
+              <option value="ADMIN">Administrador</option>
+              <option value="USER">Usuário</option>
+              <option value="GUEST">Visitante</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="dataAdmissao">Data de Admissão:</label>
+            <input type="date" id="dataAdmissao" th:field="*{dataAdmissao}" />
+          </div>
+
+          <div class="form-group buttons full-width">
+            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+            <a th:href="@{/usuarios/listar}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
+          </div>
+        </form>
+      </section>
+
+      <!-- Script para preenchimento automático via CEP -->
+      <script>
+        document.getElementById('cep').addEventListener('blur', function() {
+          let cep = this.value.replace(/\D/g, '');
+          if (cep.length === 8) {
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+              .then(response => response.json())
+              .then(data => {
+                if (!data.erro) {
+                  document.getElementById('endereco').value = data.logradouro || '';
+                  document.getElementById('cidade').value = data.localidade || '';
+                  document.getElementById('estado').value = data.uf || '';
+                } else {
+                  alert('CEP não encontrado.');
+                }
+              })
+              .catch(() => {
+                alert('Erro ao consultar o CEP.');
+              });
+          }
+        });
+      </script>
+
+      <footer th:replace="components/footer :: footer"></footer>
+    </main>
+  </div>
 </body>
 </html>

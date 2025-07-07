@@ -6,7 +6,7 @@ import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 
-import jakarta.validation.ConstraintViolationException;
+import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -80,6 +80,14 @@ public class UsuarioService {
     }
 }
 
+    // transação pra excluir usuario 
+    @Transactional
+    public void excluirPorId(Long id) {
+        if (!usuarioRepository.existsById(id)) {
+            throw new IllegalArgumentException("Usuário com ID " + id + " não encontrado.");
+        }
+        usuarioRepository.deleteById(id);
+    }
 
 
 

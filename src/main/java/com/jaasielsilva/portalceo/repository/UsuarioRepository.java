@@ -12,7 +12,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);  
     
     long countByStatus(Usuario.Status status);
-
+    Optional<Usuario> findByMatricula(String matricula);
     Optional<Usuario> findByCpf(String cpf);
 
     // Query para contar usuários com perfil ADMIN

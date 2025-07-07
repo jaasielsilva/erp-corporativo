@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 
@@ -47,13 +49,7 @@ public class UsuarioController {
         if (!model.containsAttribute("usuario")) {
             model.addAttribute("usuario", new Usuario());
         }
-        model.addAttribute("perfis", perfilRepository.findAll());
-        model.addAttribute("generos", Genero.values());
-        model.addAttribute("status", Usuario.Status.values());
-        model.addAttribute("niveis", NivelAcesso.values());
-        model.addAttribute("cargos", cargoRepository.findAll());
-        model.addAttribute("departamentos", departamentoRepository.findAll());
-
+        adicionarAtributosComuns(model);
         return "usuarios/cadastro";
     }
 
@@ -89,12 +85,7 @@ public class UsuarioController {
         }
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("perfis", perfilRepository.findAll());
-            model.addAttribute("generos", Genero.values());
-            model.addAttribute("status", Usuario.Status.values());
-            model.addAttribute("niveis", NivelAcesso.values());
-            model.addAttribute("cargos", cargoRepository.findAll());
-            model.addAttribute("departamentos", departamentoRepository.findAll());
+            adicionarAtributosComuns(model);
             model.addAttribute("usuario", usuario);
             return "usuarios/cadastro";
         }
@@ -103,7 +94,6 @@ public class UsuarioController {
             usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
                     .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
 
-            // Limpa dataDesligamento se status não for DEMITIDO
             if (usuario.getStatus() != Usuario.Status.DEMITIDO) {
                 usuario.setDataDesligamento(null);
             }
@@ -111,12 +101,7 @@ public class UsuarioController {
             usuarioService.salvarUsuario(usuario);
         } catch (Exception e) {
             model.addAttribute("erro", e.getMessage());
-            model.addAttribute("perfis", perfilRepository.findAll());
-            model.addAttribute("generos", Genero.values());
-            model.addAttribute("status", Usuario.Status.values());
-            model.addAttribute("niveis", NivelAcesso.values());
-            model.addAttribute("cargos", cargoRepository.findAll());
-            model.addAttribute("departamentos", departamentoRepository.findAll());
+            adicionarAtributosComuns(model);
             model.addAttribute("usuario", usuario);
             return "usuarios/cadastro";
         }
@@ -149,12 +134,7 @@ public class UsuarioController {
         if (!model.containsAttribute("usuario")) {
             model.addAttribute("usuario", usuarioOpt.get());
         }
-        model.addAttribute("perfis", perfilRepository.findAll());
-        model.addAttribute("generos", Genero.values());
-        model.addAttribute("status", Usuario.Status.values());
-        model.addAttribute("niveis", NivelAcesso.values());
-        model.addAttribute("cargos", cargoRepository.findAll());
-        model.addAttribute("departamentos", departamentoRepository.findAll());
+        adicionarAtributosComuns(model);
         return "usuarios/editar";
     }
 
@@ -172,18 +152,13 @@ public class UsuarioController {
         }
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("perfis", perfilRepository.findAll());
-            model.addAttribute("generos", Genero.values());
-            model.addAttribute("status", Usuario.Status.values());
-            model.addAttribute("niveis", NivelAcesso.values());
-            model.addAttribute("cargos", cargoRepository.findAll());
-            model.addAttribute("departamentos", departamentoRepository.findAll());
+            adicionarAtributosComuns(model);
             return "usuarios/editar";
         }
 
         try {
             if (usuario.getDataDesligamento() != null) {
-                usuarioService.excluirPorId(id);
+                usuarioService.excluirUsuario(id);
                 return "redirect:/usuarios/listar";
             }
 
@@ -194,12 +169,7 @@ public class UsuarioController {
 
         } catch (Exception e) {
             model.addAttribute("erro", e.getMessage());
-            model.addAttribute("perfis", perfilRepository.findAll());
-            model.addAttribute("generos", Genero.values());
-            model.addAttribute("status", Usuario.Status.values());
-            model.addAttribute("niveis", NivelAcesso.values());
-            model.addAttribute("cargos", cargoRepository.findAll());
-            model.addAttribute("departamentos", departamentoRepository.findAll());
+            adicionarAtributosComuns(model);
             return "usuarios/editar";
         }
 
@@ -221,24 +191,36 @@ public class UsuarioController {
         }
 
         model.addAttribute("usuario", usuarioOpt.get());
+        adicionarAtributosComuns(model);
+
+        return "usuarios/editarcadastro"; // formulário completo para editar dados do usuário
+    }
+
+    @PostMapping("/{id}/excluir")
+    public String excluirUsuario(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            usuarioService.excluirUsuario(id);
+            redirectAttributes.addFlashAttribute("sucesso", "Usuário excluído com sucesso.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao excluir usuário: " + e.getMessage());
+        }
+        return "redirect:/usuarios/listar";
+    }
+
+    private void adicionarAtributosComuns(Model model) {
         model.addAttribute("perfis", perfilRepository.findAll());
         model.addAttribute("generos", Genero.values());
         model.addAttribute("status", Usuario.Status.values());
         model.addAttribute("niveis", NivelAcesso.values());
         model.addAttribute("cargos", cargoRepository.findAll());
         model.addAttribute("departamentos", departamentoRepository.findAll());
-
-        return "usuarios/editarcadastro"; // formulário completo para editar dados do usuário
     }
 
-    @PostMapping("/{id}/excluir")
-    public String excluirUsuario(@PathVariable Long id, Model model) {
-        try {
-            usuarioService.excluirPorId(id);
-        } catch (Exception e) {
-            model.addAttribute("erro", "Erro ao excluir usuário: " + e.getMessage());
-            return "redirect:/usuarios/listar";
-        }
-        return "redirect:/usuarios/listar";
+    // Endpoint AJAX para validar matrícula
+    @GetMapping("/validar-matricula")
+    @ResponseBody
+    public Map<String, Boolean> validar(@RequestParam String matricula) {
+        boolean autorizado = usuarioService.usuarioTemPermissaoParaExcluir(matricula);
+        return Map.of("autorizado", autorizado);
     }
 }

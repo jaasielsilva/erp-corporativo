@@ -136,6 +136,51 @@
       font-weight: 600;
       padding: 20px;
     }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal-content input {
+      padding: 10px;
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .modal-content button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    .modal-content button:hover {
+      background-color: #1e40af;
+    }
   </style>
 </head>
 <body>
@@ -148,7 +193,6 @@
       <section class="content-area">
         <h2><i class="fas fa-users"></i> Usuários Cadastrados</h2>
 
-        <!-- Barra de ferramentas -->
         <div class="toolbar">
           <form class="search-form" th:action="@{/usuarios}" method="get">
             <input type="text" name="busca" placeholder="Buscar por nome ou email" th:value="${param.busca}">
@@ -157,7 +201,6 @@
           <a th:href="@{/usuarios/cadastro}" class="btn-novo"><i class="fas fa-user-plus"></i> Novo Usuário</a>
         </div>
 
-        <!-- Tabela -->
         <table>
           <thead>
             <tr>
@@ -170,23 +213,21 @@
           </thead>
           <tbody>
             <tr th:each="usuario : ${usuarios}">
-              <!-- Imagem fixa para todos os usuários -->
               <td><img src="/img/gerente.png" class="avatar" alt="Foto" /></td>
               <td th:text="${usuario.nome}">João</td>
               <td th:text="${usuario.email}">email@exemplo.com</td>
               <td>
-                <span th:each="perfil : ${usuario.perfis}" 
-                      th:text="${perfil.nome}" 
+                <span th:each="perfil : ${usuario.perfis}"
+                      th:text="${perfil.nome}"
                       th:classappend="${perfil.nome == 'ADMIN'} ? 'badge badge-admin' : 'badge badge-user'">
                 </span>
               </td>
               <td class="acoes">
                 <a th:href="@{'/usuarios/' + ${usuario.id} + '/detalhes'}" title="Detalhes"><i class="fas fa-eye"></i></a>
                 <a th:href="@{'/usuarios/' + ${usuario.id} + '/editar'}" title="Editar"><i class="fas fa-edit"></i></a>
-                <form th:action="@{'/usuarios/' + ${usuario.id} + '/excluir'}" method="post" style="display:inline" 
-                      onsubmit="return confirm('Deseja realmente excluir este usuário?');">
-                  <button type="submit" title="Excluir"><i class="fas fa-trash-alt" style="color:#dc2626;"></i></button>
-                </form>
+                <button type="button" th:onclick="'abrirModalExcluir(' + ${usuario.id} + ')'" title="Excluir">
+                  <i class="fas fa-trash-alt" style="color:#dc2626;"></i>
+                </button>
               </td>
             </tr>
             <tr th:if="${#lists.isEmpty(usuarios)}">
@@ -199,5 +240,49 @@
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
+
+  <!-- Modal -->
+  <div id="modal-excluir" class="modal">
+    <div class="modal-content">
+      <h3>Digite sua matrícula de administrador para confirmar:</h3>
+      <input type="text" id="matriculaInput" placeholder="Matrícula admin">
+      <button onclick="validarEExcluir()">Confirmar exclusão</button>
+      <button onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <form id="formExcluir" method="post" th:action="@{'/usuarios/0/excluir'}" style="display:none;"></form>
+
+  <script>
+    let usuarioIdParaExcluir = null;
+
+    function abrirModalExcluir(id) {
+      usuarioIdParaExcluir = id;
+      document.getElementById('modal-excluir').style.display = 'flex';
+    }
+
+    function fecharModal() {
+      usuarioIdParaExcluir = null;
+      document.getElementById('modal-excluir').style.display = 'none';
+      document.getElementById('matriculaInput').value = '';
+    }
+
+    async function validarEExcluir() {
+      const matricula = document.getElementById('matriculaInput').value;
+
+      const response = await fetch('/usuarios/validar-matricula?matricula=' + encodeURIComponent(matricula));
+      const resultado = await response.json();
+
+      if (resultado.autorizado) {
+        const form = document.getElementById('formExcluir');
+        form.setAttribute('action', '/usuarios/' + usuarioIdParaExcluir + '/excluir');
+        form.submit();
+      } else {
+        alert('Você não tem permissão para excluir usuários.');
+      }
+
+      fecharModal();
+    }
+  </script>
 </body>
 </html>

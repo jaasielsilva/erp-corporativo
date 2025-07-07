@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,63 +34,62 @@ public class UsuarioService {
     private PerfilRepository perfilRepository;
 
     public void salvarUsuario(Usuario usuario) throws Exception {
-    Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
+        Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
 
-    if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
-        throw new Exception("Email já cadastrado!");
-    }
-
-    if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-    }
-
-    if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
-        Perfil perfilPadrao = perfilRepository.findByNome("USER")
-            .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
-        usuario.setPerfis(Set.of(perfilPadrao));
-    }
-
-    // Define imagem padrão se nenhuma for enviada
-    if (usuario.getFotoPerfil() == null) {
-        try {
-            ClassPathResource imagemPadrao = new ClassPathResource("static/img/gerente.png");
-            byte[] fotoPadrao = Files.readAllBytes(imagemPadrao.getFile().toPath());
-            usuario.setFotoPerfil(fotoPadrao);
-        } catch (IOException e) {
-            e.printStackTrace();
-            usuario.setFotoPerfil(null); // ou mantém null, se preferir
+        if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
+            throw new Exception("Email já cadastrado!");
         }
-    }
 
-    try {
-        usuarioRepository.save(usuario);
-    } catch (DataIntegrityViolationException e) {
-        Throwable cause = e.getCause();
-        String message = cause != null ? cause.getMessage() : e.getMessage();
-        if (message != null) {
-            String lowerMsg = message.toLowerCase();
-            if (lowerMsg.contains("cpf")) {
-                throw new Exception("CPF já cadastrado no sistema.");
-            } else if (lowerMsg.contains("email")) {
-                throw new Exception("Email já cadastrado no sistema.");
-            } else if (lowerMsg.contains("matricula")) {
-                throw new Exception("Matrícula já cadastrada no sistema.");
+        if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
+            usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+        }
+
+        if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
+            Perfil perfilPadrao = perfilRepository.findByNome("USER")
+                .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
+            usuario.setPerfis(Set.of(perfilPadrao));
+        }
+
+        // Define imagem padrão se nenhuma for enviada
+        if (usuario.getFotoPerfil() == null) {
+            try {
+                ClassPathResource imagemPadrao = new ClassPathResource("static/img/gerente.png");
+                byte[] fotoPadrao = Files.readAllBytes(imagemPadrao.getFile().toPath());
+                usuario.setFotoPerfil(fotoPadrao);
+            } catch (IOException e) {
+                e.printStackTrace();
+                usuario.setFotoPerfil(null); // ou mantém null, se preferir
             }
         }
-        throw e;
-    }
-}
 
-    // transação pra excluir usuario 
+        try {
+            usuarioRepository.save(usuario);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = e.getCause();
+            String message = cause != null ? cause.getMessage() : e.getMessage();
+            if (message != null) {
+                String lowerMsg = message.toLowerCase();
+                if (lowerMsg.contains("cpf")) {
+                    throw new Exception("CPF já cadastrado no sistema.");
+                } else if (lowerMsg.contains("email")) {
+                    throw new Exception("Email já cadastrado no sistema.");
+                } else if (lowerMsg.contains("matricula")) {
+                    throw new Exception("Matrícula já cadastrada no sistema.");
+                }
+            }
+            throw e;
+        }
+    }
+
+    // transação para excluir usuário por id
     @Transactional
-    public void excluirPorId(Long id) {
+    @PreAuthorize("hasAuthority('ADMIN')") // só ADMIN pode excluir
+    public void excluirUsuario(Long id) {
         if (!usuarioRepository.existsById(id)) {
             throw new IllegalArgumentException("Usuário com ID " + id + " não encontrado.");
         }
         usuarioRepository.deleteById(id);
     }
-
-
 
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
@@ -133,7 +133,17 @@ public class UsuarioService {
     }
 
     public Optional<Usuario> buscarPorCpf(String cpf) {
-    return usuarioRepository.findByCpf(cpf); // método customizado no seu repository
-}
+        return usuarioRepository.findByCpf(cpf);
+    }
 
+    // Método para validar se usuário com matricula tem permissão para excluir
+    public boolean usuarioTemPermissaoParaExcluir(String matricula) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByMatricula(matricula);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            return usuario.getPerfis().stream()
+                .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN"));
+        }
+        return false;
+    }
 }

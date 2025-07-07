@@ -1,10 +1,20 @@
 package com.jaasielsilva.portalceo.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
+import com.lowagie.text.*;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Chunk;
+import com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.text.BaseColor;
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
 import com.jaasielsilva.portalceo.model.Genero;
 import com.jaasielsilva.portalceo.model.NivelAcesso;
@@ -24,6 +34,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @Controller
@@ -47,15 +58,15 @@ public class UsuarioController {
 
     @GetMapping
     public String listarUsuarios(@RequestParam(value = "busca", required = false) String busca, Model model) {
-    List<Usuario> usuarios;
-    if (busca == null || busca.isEmpty()) {
-        usuarios = usuarioService.buscarTodos();
-    } else {
-        usuarios = usuarioService.buscarPorNomeOuEmail(busca);
+        List<Usuario> usuarios;
+        if (busca == null || busca.isEmpty()) {
+            usuarios = usuarioService.buscarTodos();
+        } else {
+            usuarios = usuarioService.buscarPorNomeOuEmail(busca);
+        }
+        model.addAttribute("usuarios", usuarios);
+        return "usuarios/listar"; // ou "usuarios/lista" — o que você usar
     }
-    model.addAttribute("usuarios", usuarios);
-    return "usuarios/listar"; // ou "usuarios/lista" — o que você usar
-}
 
     @GetMapping("/cadastro")
     public String mostrarFormularioCadastro(Model model) {
@@ -87,11 +98,11 @@ public class UsuarioController {
 
     @PostMapping("/cadastrar")
     public String cadastrarUsuario(
-        @Valid @ModelAttribute("usuario") Usuario usuario,
-        BindingResult bindingResult,
-        @RequestParam("confirmSenha") String confirmSenha,
-        @RequestParam("perfilId") Long perfilId,
-        Model model) {
+            @Valid @ModelAttribute("usuario") Usuario usuario,
+            BindingResult bindingResult,
+            @RequestParam("confirmSenha") String confirmSenha,
+            @RequestParam("perfilId") Long perfilId,
+            Model model) {
 
         if (!usuario.getSenha().equals(confirmSenha)) {
             bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
@@ -248,6 +259,95 @@ public class UsuarioController {
 
         model.addAttribute("usuario", usuarioOpt.get());
         return "usuarios/detalhes"; // nome do arquivo HTML na pasta templates/usuarios
+    }
+
+    // ENDPOINT PARA GERAR PDF 
+    @GetMapping("/{id}/pdf")
+    public void gerarPdfUsuario(@PathVariable Long id, HttpServletResponse response) throws IOException {
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+
+        if (usuarioOpt.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        Usuario usuario = usuarioOpt.get();
+
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=curriculo_usuario_" + usuario.getId() + ".pdf");
+
+        Document document = new Document();
+        try {
+            PdfWriter.getInstance(document, response.getOutputStream());
+            document.open();
+
+            Font tituloFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20);
+            Paragraph titulo = new Paragraph("Currículo Profissional", tituloFont);
+            titulo.setAlignment(Element.ALIGN_CENTER);
+            titulo.setSpacingAfter(20f);
+            document.add(titulo);
+
+            Font secaoFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
+            Font textoFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+
+            Paragraph dadosPessoais = new Paragraph("Dados Pessoais", secaoFont);
+            dadosPessoais.setSpacingAfter(8f);
+            document.add(dadosPessoais);
+
+            document.add(new Paragraph("Nome: " + usuario.getNome(), textoFont));
+            document.add(new Paragraph("Email: " + usuario.getEmail(), textoFont));
+            document.add(new Paragraph("Telefone: " + usuario.getTelefone(), textoFont));
+            document.add(new Paragraph("Data de Nascimento: " + (usuario.getDataNascimento() != null ? usuario.getDataNascimento().toString() : "N/A"), textoFont));
+            document.add(new Paragraph("Gênero: " + (usuario.getGenero() != null ? usuario.getGenero().name() : "N/A"), textoFont));
+            document.add(new Paragraph("CPF: " + usuario.getCpf(), textoFont));
+            document.add(Chunk.NEWLINE);
+
+            Paragraph endereco = new Paragraph("Endereço", secaoFont);
+            endereco.setSpacingAfter(8f);
+            document.add(endereco);
+
+            String enderecoCompleto = String.format("%s, %s - %s (%s)",
+                    usuario.getEndereco(),
+                    usuario.getCidade(),
+                    usuario.getEstado(),
+                    usuario.getCep());
+            document.add(new Paragraph(enderecoCompleto, textoFont));
+            document.add(Chunk.NEWLINE);
+
+            Paragraph infoProfissional = new Paragraph("Informações Profissionais", secaoFont);
+            infoProfissional.setSpacingAfter(8f);
+            document.add(infoProfissional);
+
+            document.add(new Paragraph("Departamento: " + (usuario.getDepartamento() != null ? usuario.getDepartamento().getNome() : "N/A"), textoFont));
+            document.add(new Paragraph("Cargo: " + (usuario.getCargo() != null ? usuario.getCargo().getNome() : "N/A"), textoFont));
+            document.add(new Paragraph("Nível de Acesso: " + (usuario.getNivelAcesso() != null ? usuario.getNivelAcesso().name() : "N/A"), textoFont));
+            document.add(new Paragraph("Status: " + usuario.getStatus(), textoFont));
+            document.add(new Paragraph("Data de Admissão: " + (usuario.getDataAdmissao() != null ? usuario.getDataAdmissao().toString() : "N/A"), textoFont));
+            if (usuario.getDataDesligamento() != null) {
+                document.add(new Paragraph("Data de Desligamento: " + usuario.getDataDesligamento().toString(), textoFont));
+            }
+            document.add(Chunk.NEWLINE);
+
+            Paragraph perfis = new Paragraph("Perfis de Acesso", secaoFont);
+            perfis.setSpacingAfter(8f);
+            document.add(perfis);
+
+            StringBuilder perfisStr = new StringBuilder();
+            if (usuario.getPerfis() != null && !usuario.getPerfis().isEmpty()) {
+                usuario.getPerfis().forEach(perfil -> perfisStr.append(perfil.getNome()).append(", "));
+                if (perfisStr.length() > 2) {
+                    perfisStr.setLength(perfisStr.length() - 2); // remove última vírgula
+                }
+            } else {
+                perfisStr.append("N/A");
+            }
+            document.add(new Paragraph(perfisStr.toString(), textoFont));
+
+            document.close();
+
+        } catch (DocumentException e) {
+            throw new IOException("Erro ao gerar PDF", e);
+        }
     }
 
 }

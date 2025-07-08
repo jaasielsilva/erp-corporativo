@@ -230,11 +230,16 @@ templates/
     ├── login.html
     └── recuperar-senha.html.
 
+## 🛠️ Tecnologias e Arquitetura
+
+- **Backend:** Spring Boot (Java 17+), Spring Security, Spring Data JPA  
+- **Frontend:** Thymeleaf, HTML5, CSS3, JavaScript (com potencial para frameworks futuros)  
+- **Banco de Dados:** MySQL  
+- **Gerenciamento de Dependências:** Maven ou Gradle  
+- **Controle de Versão:** Git  
 
 ---
-
-
-# 📦 Como Rodar o Projeto (Passo a passo)
+## 📦 Como Rodar o Projeto (Passo a passo)
 
 # 1️⃣ Clonar o repositório
 git clone https://github.com/seu-usuario/painel-do-ceo.git

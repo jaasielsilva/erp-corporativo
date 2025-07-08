@@ -213,7 +213,7 @@
 
         <div class="toolbar">
           <form class="search-form" th:action="@{/usuarios}" method="get">
-            <input type="text" name="busca" placeholder="Buscar por nome ou email" th:value="${param.busca}">
+            <input type="text" name="busca" placeholder="Buscar por nome ou email" th:value="${param.busca}" />
             <button type="submit"><i class="fas fa-search"></i> Buscar</button>
           </form>
 
@@ -234,13 +234,16 @@
           </thead>
           <tbody>
             <tr th:each="usuario : ${usuarios}">
-              <td><img src="/img/gerente.png" class="avatar" alt="Foto" /></td>
+              <td>
+                <img th:src="${usuario.fotoPerfil != null} ? @{/usuarios/{id}/foto(id=${usuario.id})} : @{/img/gerente.png}"
+                     class="avatar" alt="Foto" />
+              </td>
               <td th:text="${usuario.nome}">João</td>
               <td th:text="${usuario.email}">email@exemplo.com</td>
               <td>
                 <span th:each="perfil : ${usuario.perfis}"
                       th:text="${perfil.nome}"
-                      th:classappend="${perfil.nome == 'ADMIN'} ? 'badge badge-admin' : 'badge badge-user'">
+                      th:classappend="${perfil.nome == 'ADMIN'} ? ' badge badge-admin' : ' badge badge-user'">
                 </span>
               </td>
               <td class="acoes">
@@ -250,6 +253,7 @@
                 <a th:href="@{'/usuarios/' + ${usuario.id} + '/editar'}" title="Editar">
                   <i class="fas fa-edit"></i>
                 </a>
+
                 <a href="#" class="btn-resetar-senha" th:attr="data-id=${usuario.id}" title="Resetar Senha">
                   <i class="fas fa-unlock-alt" style="color:#0ea5e9;"></i>
                 </a>
@@ -275,12 +279,13 @@
     <div class="modal-content">
       <h3>Digite sua matrícula de administrador para confirmar:</h3>
       <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
+      <div id="msgErroMatricula" style="color: red; margin-top: 10px; display: none;"></div>
       <button onclick="validarEExcluir()">Confirmar exclusão</button>
       <button onclick="fecharModal()">Cancelar</button>
     </div>
   </div>
 
-  <form id="formExcluir" method="post" th:action="@{'/usuarios/0/excluir'}" style="display:none;"></form>
+  <form id="formExcluir" method="post" style="display:none;"></form>
 
   <!-- Modal Popup Personalizado -->
   <div id="popupMensagem" class="modal-popup">
@@ -321,9 +326,7 @@
 
         fetch(`/usuarios/${usuarioId}/resetar-senha`, {
           method: 'POST',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => {
           if (!response.ok) return response.text().then(text => { throw new Error(text) });
@@ -350,29 +353,28 @@
       usuarioIdParaExcluir = null;
       document.getElementById('modal-excluir').style.display = 'none';
       document.getElementById('matriculaInput').value = '';
+      document.getElementById('msgErroMatricula').style.display = 'none';
+      document.getElementById('msgErroMatricula').textContent = '';
     }
 
     async function validarEExcluir() {
-      const matricula = document.getElementById('matriculaInput').value;
+  // validação da matrícula...
 
-      try {
-        const response = await fetch('/usuarios/validar-matricula?matricula=' + encodeURIComponent(matricula));
-        const resultado = await response.json();
+  // Se autorizado, chama a exclusão via fetch
+  const excluirResponse = await fetch('/usuarios/' + usuarioIdParaExcluir + '/excluir', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
 
-        if (resultado.autorizado) {
-          const form = document.getElementById('formExcluir');
-          form.setAttribute('action', '/usuarios/' + usuarioIdParaExcluir + '/excluir');
-          form.submit();
-        } else {
-          alert('Você não tem permissão para excluir usuários.');
-        }
-      } catch (error) {
-        alert('Erro na validação da matrícula.');
-        console.error(error);
-      }
+  if (excluirResponse.ok) {
+    window.location.reload();
+  } else {
+    const errorData = await excluirResponse.json();
+    document.getElementById('msgErroMatricula').textContent = errorData.erro || 'Erro ao excluir usuário. Contate o ADMINISTRADOR DO SISTEMA.';
+    document.getElementById('msgErroMatricula').style.display = 'block';
+  }
+}
 
-      fecharModal();
-    }
   </script>
 </body>
 </html>

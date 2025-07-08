@@ -1,45 +1,47 @@
 package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
+import com.jaasielsilva.portalceo.model.PasswordResetToken;
 import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.repository.PasswordResetTokenRepository;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 public class UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-
-    @Autowired
-    private PerfilRepository perfilRepository;
-
-    @Autowired
-    private JavaMailSender mailSender;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private BCryptPasswordEncoder passwordEncoder;
+    @Autowired private PerfilRepository perfilRepository;
+    @Autowired private JavaMailSender mailSender;
+    @Autowired private PasswordResetTokenRepository tokenRepository;
 
     public void salvarUsuario(Usuario usuario) throws Exception {
-        Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
+        // Impede alteração do admin master
+        if (usuario.getId() != null) {
+            Optional<Usuario> existente = usuarioRepository.findById(usuario.getId());
+            if (existente.isPresent() && "admin@teste.com".equalsIgnoreCase(existente.get().getEmail())) {
+                throw new IllegalStateException("O usuário administrador principal não pode ser alterado.");
+            }
+        }
 
+        Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
         if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
             throw new Exception("Email já cadastrado!");
         }
@@ -50,7 +52,7 @@ public class UsuarioService {
 
         if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
             Perfil perfilPadrao = perfilRepository.findByNome("USER")
-                    .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
             usuario.setPerfis(Set.of(perfilPadrao));
         }
 
@@ -77,15 +79,6 @@ public class UsuarioService {
             }
             throw e;
         }
-    }
-
-    @Transactional
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public void excluirUsuario(Long id) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new IllegalArgumentException("Usuário com ID " + id + " não encontrado.");
-        }
-        usuarioRepository.deleteById(id);
     }
 
     public Optional<Usuario> buscarPorEmail(String email) {
@@ -122,10 +115,10 @@ public class UsuarioService {
 
     public EstatisticasUsuariosDTO buscarEstatisticas() {
         return new EstatisticasUsuariosDTO(
-                totalUsuarios(),
-                totalAtivos(),
-                totalAdministradores(),
-                totalBloqueados()
+            totalUsuarios(),
+            totalAtivos(),
+            totalAdministradores(),
+            totalBloqueados()
         );
     }
 
@@ -135,9 +128,9 @@ public class UsuarioService {
 
     public boolean usuarioTemPermissaoParaExcluir(String matricula) {
         return usuarioRepository.findByMatricula(matricula)
-                .map(usuario -> usuario.getPerfis().stream()
-                        .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN")))
-                .orElse(false);
+            .map(usuario -> usuario.getPerfis().stream()
+                .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN")))
+            .orElse(false);
     }
 
     public List<Usuario> buscarPorNomeOuEmail(String busca) {
@@ -146,87 +139,115 @@ public class UsuarioService {
 
     // ---------------------- RESET DE SENHA ----------------------
 
-    public boolean autenticarAdmin(String loginAdmin, String senhaAdmin) {
-        Optional<Usuario> adminOpt = usuarioRepository.findByEmail(loginAdmin);
-        if (adminOpt.isEmpty()) return false;
+    public void resetarSenhaPorId(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
 
-        Usuario admin = adminOpt.get();
-        boolean isAdmin = admin.getPerfis().stream()
-                .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN"));
-        return isAdmin && passwordEncoder.matches(senhaAdmin, admin.getSenha());
+        boolean enviado = enviarLinkRedefinicaoSenha(usuario.getEmail());
+        if (!enviado) {
+            throw new RuntimeException("Falha ao enviar o e-mail com link de redefinição.");
+        }
     }
 
-    public String recuperarSenhaDescriptografada(String loginUsuario) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(loginUsuario);
-        return usuarioOpt.map(usuario -> "senha-descriptografada-exemplo").orElse(null);
-    }
-
-public boolean enviarSenhaPorEmail(String emailDestinatario, String senha) {
-    try {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(emailDestinatario);
+    public boolean enviarLinkRedefinicaoSenha(String email) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
         if (usuarioOpt.isEmpty()) return false;
 
         Usuario usuario = usuarioOpt.get();
+        String token = gerarTokenRedefinicao(usuario);
+        String url = "http://localhost:8080/resetar-senha?token=" + token;
 
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+        String html = "<html><body>"
+                + "<h3>Olá " + usuario.getNome() + ",</h3>"
+                + "<p>Recebemos sua solicitação para redefinição de senha.</p>"
+                + "<p><a href=\"" + url + "\">Clique aqui para redefinir sua senha</a></p>"
+                + "<p><small>O link expira em 1 hora.</small></p>"
+                + "</body></html>";
 
-        helper.setTo(emailDestinatario);
-        helper.setSubject("Recuperação de senha - Painel do CEO");
-
-        String htmlMsg = "<!DOCTYPE html>" +
-                "<html>" +
-                "<head>" +
-                "  <meta charset='UTF-8'>" +
-                "  <style>" +
-                "    body { font-family: Arial, sans-serif; background-color: #f5f8fa; padding: 20px; }" +
-                "    .container { max-width: 600px; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }" +
-                "    h2 { color: #333333; }" +
-                "    p { font-size: 16px; color: #555555; }" +
-                "    .senha { font-size: 18px; font-weight: bold; color: #2d89ef; background: #e3f2fd; padding: 10px; border-radius: 4px; display: inline-block; }" +
-                "    .footer { margin-top: 30px; font-size: 12px; color: #999999; }" +
-                "  </style>" +
-                "</head>" +
-                "<body>" +
-                "  <div class='container'>" +
-                "    <h2>Olá " + usuario.getNome() + ",</h2>" +
-                "    <p>Sua senha foi resetada com sucesso.</p>" +
-                "    <p>Sua nova senha é:</p>" +
-                "    <p class='senha'>" + senha + "</p>" +
-                "    <p>Recomendamos que altere sua senha após o login para garantir sua segurança.</p>" +
-                "    <div class='footer'>Este é um e-mail automático, por favor não responda.</div>" +
-                "  </div>" +
-                "</body>" +
-                "</html>";
-
-        helper.setText(htmlMsg, true);  // 'true' indica que é HTML
-
-        mailSender.send(mimeMessage);
-
-        return true;
-    } catch (MessagingException e) {
-        e.printStackTrace();
-        return false;
+        try {
+            MimeMessage mensagem = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensagem, true, "UTF-8");
+            helper.setTo(email);
+            helper.setSubject("Redefinição de senha - Painel do CEO");
+            helper.setText(html, true);
+            mailSender.send(mensagem);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-}
 
+    @Transactional
+    public Optional<Usuario> validarToken(String token) {
+        Optional<PasswordResetToken> tokenOpt = tokenRepository.findByToken(token);
+        if (tokenOpt.isEmpty()) return Optional.empty();
 
-    public void resetarSenhaPorId(Long id) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
-        if (usuarioOpt.isEmpty()) {
-            throw new IllegalArgumentException("Usuário com ID " + id + " não encontrado.");
+        PasswordResetToken resetToken = tokenOpt.get();
+
+        if (resetToken.getExpiracao().isBefore(LocalDateTime.now()) || resetToken.isUsado()) {
+            return Optional.empty();
         }
 
-        Usuario usuario = usuarioOpt.get();
+        return Optional.of(resetToken.getUsuario());
+    }
 
-        String novaSenha = "123456"; // aqui pode ser uma senha gerada dinamicamente
-        usuario.setSenha(passwordEncoder.encode(novaSenha));
-        usuarioRepository.save(usuario);
+    @Transactional
+    public boolean redefinirSenhaComToken(String token, String novaSenha) {
+        try {
+            Optional<PasswordResetToken> tokenOpt = tokenRepository.findByToken(token);
+            if (tokenOpt.isEmpty()) return false;
 
-        // Envia a nova senha por e-mail
-        boolean enviado = enviarSenhaPorEmail(usuario.getEmail(), novaSenha);
-        if (!enviado) {
-            throw new RuntimeException("Senha resetada, mas falha ao enviar o e-mail.");
+            PasswordResetToken resetToken = tokenOpt.get();
+
+            if (resetToken.getExpiracao().isBefore(LocalDateTime.now()) || resetToken.isUsado()) {
+                return false;
+            }
+
+            Usuario usuario = resetToken.getUsuario();
+            usuario.setSenha(passwordEncoder.encode(novaSenha));
+            usuarioRepository.save(usuario);
+
+            resetToken.setUsado(true);
+            tokenRepository.save(resetToken);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao redefinir a senha. Por favor, tente novamente mais tarde.");
         }
+    }
+
+    @Transactional
+    public String gerarTokenRedefinicao(Usuario usuario) {
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiracao = LocalDateTime.now().plusHours(1);
+
+        PasswordResetToken novoToken = new PasswordResetToken(token, usuario, expiracao);
+        novoToken.setUsado(false);
+        tokenRepository.save(novoToken);
+
+        return token;
+    }
+
+    @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void excluirUsuario(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
+
+        if ("admin@teste.com".equalsIgnoreCase(usuario.getEmail())) {
+            throw new IllegalStateException("Este usuário administrador não pode ser excluído.");
+        }
+
+        boolean ehAdmin = usuario.getPerfis().stream()
+            .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+
+        if (ehAdmin && usuarioRepository.countUsuariosPorPerfil("ADMIN") <= 1) {
+            throw new IllegalStateException("Não é possível excluir o último administrador do sistema.");
+        }
+
+        tokenRepository.deleteByUsuarioId(usuario.getId());
+        usuarioRepository.delete(usuario);
     }
 }

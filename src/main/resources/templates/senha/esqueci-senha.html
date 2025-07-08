@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Esqueci minha senha</title>
+</head>
+<body>
+<h2>Esqueci minha senha</h2>
+
+<form th:action="@{/esqueci-senha}" method="post">
+    <label for="email">Digite seu e-mail cadastrado:</label>
+    <input type="email" name="email" required>
+    <button type="submit">Enviar link</button>
+</form>
+
+<p th:if="${mensagem}" th:text="${mensagem}"></p>
+</body>
+</html>

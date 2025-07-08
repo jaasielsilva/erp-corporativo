@@ -13,6 +13,7 @@ import com.jaasielsilva.portalceo.repository.*;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -183,16 +184,25 @@ public class UsuarioController {
         return "usuarios/editar";
     }
 
-    @PostMapping("/{id}/excluir")
-    public String excluirUsuario(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    // ===============================
+    // EXCLUSÃO DE USUÁRIO COM TRATAMENTO DE ERRO
+    // ===============================
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/usuarios/{id}/excluir")
+    public ResponseEntity<?> excluirUsuario(@PathVariable Long id) {
         try {
             usuarioService.excluirUsuario(id);
-            redirectAttributes.addFlashAttribute("sucesso", "Usuário excluído com sucesso.");
+            return ResponseEntity.ok().body(Map.of("mensagem", "Usuário excluído com sucesso."));
+        } catch (IllegalStateException e) {
+            // Exceção que você lança no service para impedir exclusão
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao excluir usuário: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(Map.of("erro", "Erro inesperado ao excluir usuário."));
         }
-        return "redirect:/usuarios/listar";
-    }
+}
 
     // ===============================
     // BLOCO: UTILITÁRIOS
@@ -365,25 +375,24 @@ public class UsuarioController {
     // BLOCO: RESETAR SENHA
     // ===============================
 
-
     // Resetar senha pelo ID via POST, retorno texto simples (ex: para AJAX)
     @PostMapping("/{id}/resetar-senha")
     @ResponseBody
     public Map<String, String> resetarSenhaPorId(@PathVariable Long id) {
-    Map<String, String> resposta = new HashMap<>();
-    try {
-        usuarioService.resetarSenhaPorId(id);
-        resposta.put("status", "sucesso");
-        resposta.put("mensagem", "Senha resetada com sucesso para o usuário " + id);
-    } catch (Exception e) {
-        e.printStackTrace();
-        resposta.put("status", "erro");
-        resposta.put("mensagem", "Erro ao resetar senha: " + e.getMessage());
+        Map<String, String> resposta = new HashMap<>();
+        try {
+            usuarioService.resetarSenhaPorId(id);
+            resposta.put("status", "sucesso");
+            resposta.put("mensagem", "Senha resetada com sucesso para o usuário " + id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            resposta.put("status", "erro");
+            resposta.put("mensagem", "Erro ao resetar senha: " + e.getMessage());
+        }
+        return resposta;
     }
-    return resposta;
-}
 
-   // ===============================
+    // ===============================
     // MÉTODO AUXILIAR
     // ===============================
 

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relatório de Usuários - Painel do CEO</title>
+  
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Container dos gráficos - mantém o grid flexível e responsivo */
+    .charts-container {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 10rem; /* Reduzido para evitar forçar scroll vertical */
+  margin-bottom: 3rem;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Garante que os gráficos fiquem dentro da largura da tela */
+}
+
+
+    .chart-card {
+      flex: 1 1 420px; /* largura mínima para melhor leitura */
+      max-width: 600px; /* limite máximo */
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 1.5rem 2rem 2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .chart-card h3 {
+      width: 100%;
+      margin-bottom: 0rem; /* margem maior para espaçamento */
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.4rem;
+      border-bottom: 2px solid #3b82f6;
+      padding-bottom: 0.3rem;
+    }
+    canvas {
+      max-width: 100%;
+      height: 320px;
+    }
+
+    /* Ajuste na grid dos cards de links para melhor espaçamento e centralização */
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 22px;
+      margin-bottom: 3rem;
+      justify-items: center;
+    }
+
+    /* Estilo dos links para ocupar todo espaço do card com texto e ícone alinhados */
+    .link-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #e2e8f0;
+      background-color: #1f2937;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: background-color 0.3s, transform 0.3s;
+      font-weight: 600;
+      font-size: 1.1rem;
+      width: 100%;
+      max-width: 220px;
+      user-select: none;
+      height: auto;
+    }
+
+    .link-card i {
+      font-size: 1.8rem;
+      color: #3b82f6;
+      transition: color 0.3s ease;
+    }
+
+    .link-card:hover {
+      background-color: #334155;
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    }
+
+    .link-card:hover i {
+      color: #60a5fa;
+    }
+
+    /* Responsividade */
+    @media (max-width: 900px) {
+      .charts-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .chart-card {
+        max-width: 100%;
+        flex: 1 1 auto;
+      }
+      .dashboard-cards {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+      }
+      .link-card {
+        max-width: 100%;
+        font-size: 1rem;
+        padding: 18px 12px;
+      }
+    }
+
+    body {
+  overflow-x: hidden; /* Impede barra horizontal */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header class="topbar" th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1><i class="fas fa-chart-pie"></i> Relatório de Usuários</h1>
+        <p style="margin-bottom: 2rem;">
+          Bem-vindo, <strong th:text="${usuario.nome}">Usuário</strong>. Veja abaixo as ações disponíveis para análise avançada.
+        </p>
+
+        <!-- Ações complementares -->
+        <div class="dashboard-cards">
+          <a th:href="@{'/usuarios/' + ${usuario.id} + '/pdf'}" class="link-card" title="Gerar PDF com meu perfil">
+            <i class="fas fa-file-pdf"></i> Meu Perfil (PDF)
+          </a>
+          <a th:href="@{/usuarios/relatorio-geral}" class="link-card" title="Relatório completo de usuários">
+            <i class="fas fa-file-alt"></i> Relatório Completo
+          </a>
+          <a th:href="@{/usuarios/exportar-excel}" class="link-card" title="Exportar dados em Excel">
+            <i class="fas fa-file-excel"></i> Exportar Excel
+          </a>
+          <a th:href="@{/usuarios/ativar-desativar}" class="link-card" title="Ativar ou desativar usuários">
+            <i class="fas fa-toggle-on"></i> Ativar / Desativar
+          </a>
+          <a th:href="@{/usuarios/alertas}" class="link-card" title="Visualizar alertas de segurança">
+            <i class="fas fa-exclamation-triangle"></i> Alertas de Segurança
+          </a>
+          <a th:href="@{/usuarios/comparativo}" class="link-card" title="Comparar dados de usuários entre períodos">
+  <i class="fas fa-chart-line"></i> Comparativo por Período
+</a>
+
+<a th:href="@{/usuarios/comparativo-perfil}" class="link-card" title="Comparar dados entre perfis">
+  <i class="fas fa-balance-scale"></i> Comparativo de Perfis
+</a>
+
+
+<a th:href="@{/usuarios/enviar-email}" class="link-card" title="Enviar relatório por e-mail">
+  <i class="fas fa-envelope"></i> Enviar por E-mail
+</a>
+
+
+<a th:href="@{/usuarios/filtros-avancados}" class="link-card" title="Aplicar filtros personalizados por perfil, status e período">
+  <i class="fas fa-filter"></i> Filtros Avançados
+</a>
+
+<a th:href="@{/usuarios/estatisticas}" class="link-card" title="Estatísticas detalhadas de uso por usuário">
+  <i class="fas fa-chart-bar"></i> Estatísticas por Usuário
+</a>
+
+
+          
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-container" role="region" aria-label="Gráficos de usuários por status e perfil">
+          <div class="chart-card">
+            <h3><i class="fas fa-users"></i> Usuários por Status</h3>
+            <canvas id="statusChart" aria-label="Gráfico de barras mostrando usuários por status" role="img"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3><i class="fas fa-user-tag"></i> Usuários por Perfil</h3>
+            <canvas id="perfilChart" aria-label="Gráfico de rosca mostrando usuários por perfil" role="img"></canvas>
+          </div>
+        </div>
+        
+      </section>
+
+      <footer class="footer" th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script>
+    const statusData = {
+      labels: ['Ativos', 'Bloqueados', 'Inativos'],
+      datasets: [{
+        label: 'Quantidade',
+        data: [120, 15, 25],
+        backgroundColor: ['#28a745', '#dc3545', '#6c757d'],
+        borderRadius: 5,
+        barPercentage: 0.6
+      }]
+    };
+
+    const perfilData = {
+      labels: ['Administrador', 'Usuário Comum', 'Convidado'],
+      datasets: [{
+        label: 'Usuários',
+        data: [30, 90, 40],
+        backgroundColor: ['#3b82f6', '#facc15', '#0ea5e9']
+      }]
+    };
+
+    window.onload = () => {
+      const ctxStatus = document.getElementById('statusChart').getContext('2d');
+      new Chart(ctxStatus, {
+        type: 'bar',
+        data: statusData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            y: { beginAtZero: true, stepSize: 20 }
+          }
+        }
+      });
+
+      const ctxPerfil = document.getElementById('perfilChart').getContext('2d');
+      new Chart(ctxPerfil, {
+        type: 'doughnut',
+        data: perfilData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { enabled: true }
+          }
+        }
+      });
+    };
+  </script>
+</body>
+</html>

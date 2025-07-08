@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.controller;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -248,18 +249,27 @@ public class UsuarioController {
         return Map.of("autorizado", autorizado);
     }
 
+    // Endpoint pra exibir a pagina de relatorios
+    @GetMapping("/relatorio")
+    public String meusDados(Model model, Principal principal) {
+    Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(principal.getName());
+    if (usuarioOpt.isEmpty()) return "redirect:/logout";
+    model.addAttribute("usuario", usuarioOpt.get());
+    return "usuarios/relatorio-usuarios";
+    }
+
+
     // Endpoint pra verificar detalhes do usuario
     @GetMapping("/{id}/detalhes")
     public String exibirDetalhesUsuario(@PathVariable Long id, Model model) {
-        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-
-        if (usuarioOpt.isEmpty()) {
-            return "redirect:/usuarios/listar"; // redireciona se não encontrar
-        }
-
-        model.addAttribute("usuario", usuarioOpt.get());
-        return "usuarios/detalhes"; // nome do arquivo HTML na pasta templates/usuarios
+    Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+    if (usuarioOpt.isEmpty()) {
+        return "redirect:/usuarios/listar";
     }
+    model.addAttribute("usuario", usuarioOpt.get());
+    return "usuarios/detalhes";
+    }
+
 
     // ENDPOINT PARA GERAR PDF 
     @GetMapping("/{id}/pdf")

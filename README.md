@@ -1,3 +1,4 @@
+
 # 🧠 Painel do CEO - ERP Corporativo
 
 Sistema ERP completo para gestão empresarial desenvolvido com Spring Boot, Thymeleaf, MySQL e HTML/CSS puro.  
@@ -21,22 +22,27 @@ A navegação principal é feita por uma **sidebar lateral** que permanece consi
 - **Controle de Versão:** Git  
 
 ---
+
 ## 📧 Funcionalidades de E-mail (Passo a passo para iniciantes)
+
 O sistema possui suporte ao envio automático de e-mails, como por exemplo para resetar a senha de um usuário.
 
-✅ 1. Configuração SMTP (no application.properties)
-No arquivo localizado em src/main/resources/application.properties, adicione a configuração do seu servidor SMTP:
+### 1️⃣ Configuração SMTP (no application.properties)
 
-# Configuração SMTP para envio de e-mails
-- spring.mail.host=                             smtp.seuservidor.com        # Endereço do servidor SMTP (ex: smtp.gmail.com)
-- spring.mail.port=                             587                         # Porta (geralmente 587 para TLS)
-- spring.mail.username=                         seu-email@dominio.com       # E-mail que enviará as mensagens
-- spring.mail.password=                         sua-senha                   # Senha do e-mail (ou senha de app)
-- spring.mail.properties.mail.smtp.auth=        true                        # Habilita autenticação SMTP
-- spring.mail.properties.mail.smtp.starttls.enable=true                    # Habilita criptografia TLS
+No arquivo localizado em `src/main/resources/application.properties`, adicione a configuração do seu servidor SMTP:
 
-💡 Dica para Gmail:
+```properties
+spring.mail.host=smtp.seuservidor.com            # Endereço do servidor SMTP (ex: smtp.gmail.com)
+spring.mail.port=587                             # Porta (geralmente 587 para TLS)
+spring.mail.username=seu-email@dominio.com      # E-mail que enviará as mensagens
+spring.mail.password=sua-senha                    # Senha do e-mail (ou senha de app)
+spring.mail.properties.mail.smtp.auth=true       # Habilita autenticação SMTP
+spring.mail.properties.mail.smtp.starttls.enable=true  # Habilita criptografia TLS
+```
+
+💡 **Dica para Gmail:**  
 Se for utilizar o Gmail, é necessário ativar a verificação em duas etapas e gerar uma senha de aplicativo no painel de segurança do Google para usar no lugar da senha normal.
+
 ---
 
 ## 🧩 Modularidade e Escalabilidade
@@ -52,13 +58,14 @@ O sistema é dividido em módulos independentes que facilitam:
 ## 🔐 Segurança
 
 - Controle de acesso baseado em perfis e permissões
-  
+
 ---
 
 ## 📂 Organização dos Templates Thymeleaf
 
-Componentes reutilizáveis (header, sidebar, footer) para manter consistência visual e facilitar atualizações globais.  
+Componentes reutilizáveis (header, sidebar, footer) para manter consistência visual e facilitar atualizações globais.
 
+---
 
 ## 📁 Estrutura dos Templates Thymeleaf
 
@@ -229,44 +236,73 @@ templates/
 └── login/
     ├── login.html
     └── recuperar-senha.html
+```
 
 ---
 
-
 ## 📦 Como Rodar o Projeto (Passo a passo)
 
-1️⃣ Clonar o repositório**
+### 1️⃣ Clonar o repositório
+
+```bash
 git clone https://github.com/seu-usuario/painel-do-ceo.git
+```
 
-# 2️⃣ Acessar a pasta do projeto
+### 2️⃣ Acessar a pasta do projeto
+
+```bash
 cd painel-do-ceo
+```
 
-# 3️⃣ Configurar o banco de dados MySQL
-# Certifique-se de que o MySQL está rodando e execute no seu console MySQL:
-# CREATE DATABASE painel_ceo;
+### 3️⃣ Configurar o banco de dados MySQL
 
-# Depois, abra o arquivo:
-# src/main/resources/application.properties
-# E edite as seguintes linhas conforme seu ambiente:
+Certifique que o MySQL está rodando e execute no console:
 
-# spring.datasource.url=jdbc:mysql://localhost:3306/painel_ceo
-# spring.datasource.username=seu_usuario_mysql
-# spring.datasource.password=sua_senha_mysql
+```sql
+CREATE DATABASE painel_ceo;
+```
 
-# (Opcional) Configuração de e-mail SMTP para envio de senha
-# spring.mail.host=smtp.seuservidor.com
-# spring.mail.port=587
-# spring.mail.username=seu-email@dominio.com
-# spring.mail.password=sua-senha
-# spring.mail.properties.mail.smtp.auth=true
-# spring.mail.properties.mail.smtp.starttls.enable=true
+Depois, abra o arquivo `src/main/resources/application.properties` e ajuste as configurações do banco:
 
-# 4️⃣ Rodar o projeto com Maven (modo rápido)
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/painel_ceo
+spring.datasource.username=seu_usuario_mysql
+spring.datasource.password=sua_senha_mysql
+```
+
+### 4️⃣ (Opcional) Configuração de e-mail SMTP para envio de senha
+
+```properties
+spring.mail.host=smtp.seuservidor.com
+spring.mail.port=587
+spring.mail.username=seu-email@dominio.com
+spring.mail.password=sua-senha
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+```
+
+### 5️⃣ Rodar o projeto com Maven (modo rápido)
+
+```bash
 ./mvnw spring-boot:run
+```
 
-# 5️⃣ Ou gerar o .jar e executar manualmente
+### 6️⃣ Ou gerar o `.jar` e executar manualmente
+
+```bash
 ./mvnw clean package
 java -jar target/painel-do-ceo-0.0.1-SNAPSHOT.jar
+```
 
-# ✅ Pronto!
-# Acesse o sistema em: http://localhost:8080
+### ✅ Pronto!
+
+Acesse o sistema em: [http://localhost:8080](http://localhost:8080)
+
+---
+
+## 📬 Contato e Contribuição
+
+Para dúvidas, sugestões ou contribuições, fique à vontade para abrir uma issue ou enviar um pull request no repositório.
+
+Obrigado por usar o Painel do CEO!
+

@@ -21,15 +21,12 @@ A navegação principal é feita por uma **sidebar lateral** que permanece consi
 - **Controle de Versão:** Git  
 
 ---
-📧 Funcionalidades de E-mail (Passo a passo para iniciantes)
+## 📧 Funcionalidades de E-mail (Passo a passo para iniciantes)
 O sistema possui suporte ao envio automático de e-mails, como por exemplo para resetar a senha de um usuário.
 
 ✅ 1. Configuração SMTP (no application.properties)
 No arquivo localizado em src/main/resources/application.properties, adicione a configuração do seu servidor SMTP:
 
-properties
-Copiar
-Editar
 # Configuração SMTP para envio de e-mails
 spring.mail.host=smtp.seuservidor.com         # Endereço do servidor SMTP (ex: smtp.gmail.com)
 spring.mail.port=587                          # Porta (geralmente 587 para TLS)
@@ -37,7 +34,7 @@ spring.mail.username=seu-email@dominio.com    # E-mail que enviará as mensagens
 spring.mail.password=sua-senha                # Senha do e-mail (ou senha de app)
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
-💡 Se estiver usando o Gmail, ative a verificação em duas etapas e gere uma senha de app.
+## 💡 Se estiver usando o Gmail, ative a verificação em duas etapas e gere uma senha de app.
 
 ---
 

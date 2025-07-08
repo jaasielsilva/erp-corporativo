@@ -231,27 +231,40 @@ templates/
     └── recuperar-senha.html
 ---
 
-## 📦 Como Rodar o Projeto
+# 📦 Como Rodar o Projeto (Passo a passo)
 
-
-Breve passo a passo para iniciar o sistema localmente:
-
-
-
-# Clonar o repositório
+# 1️⃣ Clonar o repositório
 git clone https://github.com/seu-usuario/painel-do-ceo.git
 
-# Entrar na pasta do projeto
+# 2️⃣ Acessar a pasta do projeto
 cd painel-do-ceo
 
-# Configurar o banco de dados (MySQL)
-# Criar schema e ajustar application.properties conforme seu ambiente
+# 3️⃣ Configurar o banco de dados MySQL
+# Certifique-se de que o MySQL está rodando e execute no seu console MySQL:
+# CREATE DATABASE painel_ceo;
 
+# Depois, abra o arquivo:
+# src/main/resources/application.properties
+# E edite as seguintes linhas conforme seu ambiente:
 
-## Build e run com Maven
+# spring.datasource.url=jdbc:mysql://localhost:3306/painel_ceo
+# spring.datasource.username=seu_usuario_mysql
+# spring.datasource.password=sua_senha_mysql
+
+# (Opcional) Configuração de e-mail SMTP para envio de senha
+# spring.mail.host=smtp.seuservidor.com
+# spring.mail.port=587
+# spring.mail.username=seu-email@dominio.com
+# spring.mail.password=sua-senha
+# spring.mail.properties.mail.smtp.auth=true
+# spring.mail.properties.mail.smtp.starttls.enable=true
+
+# 4️⃣ Rodar o projeto com Maven (modo rápido)
 ./mvnw spring-boot:run
 
-## ou Executar o projeto
+# 5️⃣ Ou gerar o .jar e executar manualmente
 ./mvnw clean package
 java -jar target/painel-do-ceo-0.0.1-SNAPSHOT.jar
- 
+
+# ✅ Pronto!
+# Acesse o sistema em: http://localhost:8080

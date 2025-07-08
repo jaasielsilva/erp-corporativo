@@ -302,7 +302,33 @@ Acesse o sistema em: [http://localhost:8080](http://localhost:8080)
 
 ## 📬 Contato e Contribuição
 
-Para dúvidas, sugestões ou contribuições.
+Para dúvidas, sugestões ou contribuições, fique à vontade para abrir uma issue ou enviar um pull request no repositório.
 
 Obrigado por usar o Painel do CEO!
 
+---
+
+## 📋 Controllers recomendados (baseados nas pastas principais):
+
+| Pasta / Módulo    | Controller sugerido     | Justificativa                                  |
+|-------------------|------------------------|-----------------------------------------------|
+| dashboard         | DashboardController    | Controla a página principal e suas subpáginas |
+| usuarios          | UsuarioController      | CRUD e funcionalidades relacionadas a usuários|
+| permissoes        | PermissaoController    | Gestão de perfis e permissões                  |
+| clientes          | ClienteController      | Gestão de clientes                             |
+| fornecedores      | FornecedorController   | Gestão de fornecedores                         |
+| produtos          | ProdutoController      | Produtos e seus subrecursos                    |
+| estoque           | EstoqueController      | Controle de inventário, entradas, saídas, ajustes|
+| vendas            | VendaController        | Vendas, relatórios, comissões                  |
+| compras           | CompraController       | Compras, pedidos, histórico                     |
+| financeiro        | FinanceiroController   | Contas a pagar/receber, fluxo de caixa, balanço|
+| transferencias    | TransferenciaController| Transferências bancárias ou internas           |
+| servicos          | ServicoController      | Serviços, contratos, faturamento                |
+| agenda            | AgendaController       | Calendário, eventos, lembretes                  |
+| projetos          | ProjetoController      | Projetos, tarefas, equipes                      |
+| relatorios        | RelatorioController    | Relatórios variados                             |
+| rh                | RhController           | Recursos Humanos, folha, benefícios, treinamentos|
+| perfil            | PerfilController       | Edição de perfil, senha, configurações pessoais|
+| configuracoes     | ConfiguracaoController | Configurações gerais do sistema                 |
+| contato           | ContatoController      | Formulários de contato e histórico              |
+| login             | LoginController        | Login e recuperação de senha                    |

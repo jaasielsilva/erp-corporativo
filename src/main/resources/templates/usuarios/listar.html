@@ -296,85 +296,109 @@
   </div>
 
   <script>
-    // Função para mostrar popup personalizado
-    function mostrarPopupPersonalizado(mensagem) {
-      const popup = document.getElementById('popupMensagem');
-      const texto = document.getElementById('popupTexto');
-      const btnFechar = document.getElementById('popupFechar');
+  // Função para mostrar popup personalizado
+  function mostrarPopupPersonalizado(mensagem) {
+    const popup = document.getElementById('popupMensagem');
+    const texto = document.getElementById('popupTexto');
+    const btnFechar = document.getElementById('popupFechar');
 
-      texto.textContent = mensagem;
-      popup.style.display = 'flex';
+    texto.textContent = mensagem;
+    popup.style.display = 'flex';
 
-      // Fechar popup ao clicar no X
-      btnFechar.onclick = function() {
+    // Fechar popup ao clicar no X
+    btnFechar.onclick = function() {
+      popup.style.display = 'none';
+    };
+
+    // Fechar popup ao clicar fora do conteúdo
+    window.onclick = function(event) {
+      if (event.target === popup) {
         popup.style.display = 'none';
-      };
+      }
+    };
+  }
 
-      // Fechar popup ao clicar fora do conteúdo
-      window.onclick = function(event) {
-        if (event.target === popup) {
-          popup.style.display = 'none';
-        }
-      };
-    }
+  // Resetar senha via AJAX
+  document.querySelectorAll('.btn-resetar-senha').forEach(botao => {
+    botao.addEventListener('click', function(event) {
+      event.preventDefault();
+      const usuarioId = this.getAttribute('data-id');
 
-    // Resetar senha via AJAX
-    document.querySelectorAll('.btn-resetar-senha').forEach(botao => {
-      botao.addEventListener('click', function(event) {
-        event.preventDefault();
-        const usuarioId = this.getAttribute('data-id');
-
-        fetch(`/usuarios/${usuarioId}/resetar-senha`, {
-          method: 'POST',
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-          if (!response.ok) return response.text().then(text => { throw new Error(text) });
-          return response.json();
-        })
-        .then(data => {
-          mostrarPopupPersonalizado(data.mensagem);
-        })
-        .catch(error => {
-          mostrarPopupPersonalizado('Erro inesperado ao resetar a senha: ' + error.message);
-          console.error(error);
-        });
+      fetch(`/usuarios/${usuarioId}/resetar-senha`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(response => {
+        if (!response.ok) return response.text().then(text => { throw new Error(text) });
+        return response.json();
+      })
+      .then(data => {
+        mostrarPopupPersonalizado(data.mensagem);
+      })
+      .catch(error => {
+        mostrarPopupPersonalizado('Erro inesperado ao resetar a senha: ' + error.message);
+        console.error(error);
       });
     });
-
-    let usuarioIdParaExcluir = null;
-
-    function abrirModalExcluir(id) {
-      usuarioIdParaExcluir = id;
-      document.getElementById('modal-excluir').style.display = 'flex';
-    }
-
-    function fecharModal() {
-      usuarioIdParaExcluir = null;
-      document.getElementById('modal-excluir').style.display = 'none';
-      document.getElementById('matriculaInput').value = '';
-      document.getElementById('msgErroMatricula').style.display = 'none';
-      document.getElementById('msgErroMatricula').textContent = '';
-    }
-
-    async function validarEExcluir() {
-  // validação da matrícula...
-
-  // Se autorizado, chama a exclusão via fetch
-  const excluirResponse = await fetch('/usuarios/' + usuarioIdParaExcluir + '/excluir', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
   });
 
-  if (excluirResponse.ok) {
-    window.location.reload();
-  } else {
-    const errorData = await excluirResponse.json();
-    document.getElementById('msgErroMatricula').textContent = errorData.erro || 'Erro ao excluir usuário. Contate o ADMINISTRADOR DO SISTEMA.';
-    document.getElementById('msgErroMatricula').style.display = 'block';
-  }
-}
+  let usuarioIdParaExcluir = null;
 
-  </script>
+  function abrirModalExcluir(id) {
+    usuarioIdParaExcluir = id;
+    document.getElementById('modal-excluir').style.display = 'flex';
+    document.getElementById('matriculaInput').value = '';
+    document.getElementById('msgErroMatricula').style.display = 'none';
+    document.getElementById('msgErroMatricula').textContent = '';
+  }
+
+  function fecharModal() {
+    usuarioIdParaExcluir = null;
+    document.getElementById('modal-excluir').style.display = 'none';
+    document.getElementById('matriculaInput').value = '';
+    document.getElementById('msgErroMatricula').style.display = 'none';
+    document.getElementById('msgErroMatricula').textContent = '';
+  }
+
+  async function validarEExcluir() {
+    const matricula = document.getElementById('matriculaInput').value.trim();
+    if (!matricula) {
+      document.getElementById('msgErroMatricula').textContent = 'Digite a matrícula do administrador.';
+      document.getElementById('msgErroMatricula').style.display = 'block';
+      return;
+    }
+
+    try {
+      const excluirResponse = await fetch('/usuarios/' + usuarioIdParaExcluir + '/excluir', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Matricula': matricula // se você quiser passar matrícula no header
+        }
+      });
+
+      if (excluirResponse.ok) {
+        fecharModal();
+        alert('Usuário excluído com sucesso!');
+        window.location.reload();
+      } else {
+        let errorText = 'Erro ao excluir usuário. Contate o ADMINISTRADOR DO SISTEMA.';
+        try {
+          const errorData = await excluirResponse.json();
+          errorText = errorData.erro || errorText;
+        } catch {
+          const errorTextRaw = await excluirResponse.text();
+          errorText = errorTextRaw || errorText;
+        }
+        document.getElementById('msgErroMatricula').textContent = errorText;
+        document.getElementById('msgErroMatricula').style.display = 'block';
+      }
+    } catch (error) {
+      document.getElementById('msgErroMatricula').textContent = 'Erro de rede ou servidor: ' + error.message;
+      document.getElementById('msgErroMatricula').style.display = 'block';
+    }
+  }
+</script>
+
 </body>
 </html>

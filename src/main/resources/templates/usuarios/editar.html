@@ -9,9 +9,9 @@
 </head>
 <body>
   <div class="app-container">
-    <aside th:replace="components/sidebar :: sidebar"></aside>
+    <div th:replace="~{components/sidebar :: sidebar}"></div>
     <main class="main-content">
-      <header th:replace="components/topbar :: topbar"></header>
+      <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
         <h1><i class="fas fa-user-edit"></i> Editar Usuário</h1>
@@ -199,7 +199,7 @@
         });
       </script>
 
-      <footer th:replace="components/footer :: footer"></footer>
+      <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
 </body>

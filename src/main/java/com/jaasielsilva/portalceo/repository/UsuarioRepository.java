@@ -17,11 +17,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByCpf(String cpf);
 
     // Query para contar usuários com perfil ADMIN
-    @Query("SELECT COUNT(u) FROM Usuario u JOIN u.perfis p WHERE p.nome = :perfil")
-    long countUsuariosPorPerfil(@Param("perfil") String perfil);
+    @Query("SELECT COUNT(u) FROM Usuario u JOIN u.perfis p WHERE p.nome = :nomePerfil")
+    long countUsuariosPorPerfil(@Param("nomePerfil") String nomePerfil);
 
      @Query("SELECT u FROM Usuario u WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :busca, '%'))")
     List<Usuario> buscarPorNomeOuEmail(@Param("busca") String busca);
 
+    
     
 }

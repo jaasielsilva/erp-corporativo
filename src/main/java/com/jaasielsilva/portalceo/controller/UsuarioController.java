@@ -18,7 +18,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -52,12 +51,6 @@ public class UsuarioController {
                 ? usuarioService.buscarTodos()
                 : usuarioService.buscarPorNomeOuEmail(busca);
         model.addAttribute("usuarios", usuarios);
-        return "usuarios/listar";
-    }
-
-    @GetMapping("/listar")
-    public String listarUsuarios(Model model) {
-        model.addAttribute("usuarios", usuarioService.buscarTodos());
         return "usuarios/listar";
     }
 
@@ -117,13 +110,13 @@ public class UsuarioController {
             return "usuarios/cadastro";
         }
 
-        return "redirect:/usuarios/listar";
+        return "redirect:/usuarios";
     }
 
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-        if (usuarioOpt.isEmpty()) return "redirect:/usuarios/listar";
+        if (usuarioOpt.isEmpty()) return "redirect:/usuarios";
         model.addAttribute("usuario", usuarioOpt.get());
         adicionarAtributosComuns(model);
         return "usuarios/editar";
@@ -149,7 +142,7 @@ public class UsuarioController {
         try {
             if (usuario.getDataDesligamento() != null) {
                 usuarioService.excluirUsuario(id);
-                return "redirect:/usuarios/listar";
+                return "redirect:/usuarios";
             }
 
             usuario.setId(id);
@@ -164,7 +157,7 @@ public class UsuarioController {
             return "usuarios/editar";
         }
 
-        return "redirect:/usuarios/listar";
+        return "redirect:/usuarios";
     }
 
     @PostMapping("/editar")
@@ -189,20 +182,19 @@ public class UsuarioController {
     // ===============================
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PostMapping("/usuarios/{id}/excluir")
+    @PostMapping("/{id}/excluir")
     public ResponseEntity<?> excluirUsuario(@PathVariable Long id) {
         try {
             usuarioService.excluirUsuario(id);
             return ResponseEntity.ok().body(Map.of("mensagem", "Usuário excluído com sucesso."));
         } catch (IllegalStateException e) {
-            // Exceção que você lança no service para impedir exclusão
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                 .body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body(Map.of("erro", "Erro inesperado ao excluir usuário."));
         }
-}
+    }
 
     // ===============================
     // BLOCO: UTILITÁRIOS
@@ -230,7 +222,7 @@ public class UsuarioController {
     @GetMapping("/{id}/detalhes")
     public String exibirDetalhesUsuario(@PathVariable Long id, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-        if (usuarioOpt.isEmpty()) return "redirect:/usuarios/listar";
+        if (usuarioOpt.isEmpty()) return "redirect:/usuarios";
         model.addAttribute("usuario", usuarioOpt.get());
         return "usuarios/detalhes";
     }

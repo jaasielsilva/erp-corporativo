@@ -250,4 +250,6 @@ public class UsuarioService {
         tokenRepository.deleteByUsuarioId(usuario.getId());
         usuarioRepository.delete(usuario);
     }
+
+    
 }

@@ -21,6 +21,26 @@ A navegação principal é feita por uma **sidebar lateral** que permanece consi
 - **Controle de Versão:** Git  
 
 ---
+## 📧 Funcionalidades de E-mail
+O sistema possui suporte ao envio automático de e-mails, como para resetar a senha de um usuário
+
+configuração (substitua pelos dados reais do seu servidor de e-mail):
+# Configuração SMTP para envio de e-mails
+spring.mail.host=smtp.seuservidor.com      # endereço do servidor SMTP
+spring.mail.port=587                       # porta (geralmente 587 para TLS)
+spring.mail.username=seu-email@dominio.com # seu login de e-mail
+spring.mail.password=sua-senha             # sua senha do e-mail
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+Incluir a dependência do Spring Boot Starter Mail
+No arquivo pom.xml (para Maven), certifique-se de ter essa dependência para usar o serviço de e-mail:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
+
+---
 
 ## 🧩 Modularidade e Escalabilidade
 
@@ -212,26 +232,6 @@ templates/
 └── login/
     ├── login.html
     └── recuperar-senha.html
----
-📧 Funcionalidades de E-mail
-O sistema possui suporte ao envio automático de e-mails, como para resetar a senha de um usuário
-
-configuração (substitua pelos dados reais do seu servidor de e-mail):
-# Configuração SMTP para envio de e-mails
-spring.mail.host=smtp.seuservidor.com      # endereço do servidor SMTP
-spring.mail.port=587                       # porta (geralmente 587 para TLS)
-spring.mail.username=seu-email@dominio.com # seu login de e-mail
-spring.mail.password=sua-senha             # sua senha do e-mail
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-
-Incluir a dependência do Spring Boot Starter Mail
-No arquivo pom.xml (para Maven), certifique-se de ter essa dependência para usar o serviço de e-mail:
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-mail</artifactId>
-</dependency>
-
 ---
 
 ## 📦 Como Rodar o Projeto

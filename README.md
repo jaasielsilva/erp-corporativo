@@ -302,7 +302,7 @@ Acesse o sistema em: [http://localhost:8080](http://localhost:8080)
 
 ## 📬 Contato e Contribuição
 
-Para dúvidas, sugestões ou contribuições, fique à vontade para abrir uma issue ou enviar um pull request no repositório.
+Para dúvidas, sugestões ou contribuições.
 
 Obrigado por usar o Painel do CEO!
 

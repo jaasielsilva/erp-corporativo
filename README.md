@@ -231,9 +231,11 @@ templates/
     └── recuperar-senha.html
 
 ---
+
+
 ## 📦 Como Rodar o Projeto (Passo a passo)
 
-- **1️⃣ Clonar o repositório**
+1️⃣ Clonar o repositório**
 git clone https://github.com/seu-usuario/painel-do-ceo.git
 
 # 2️⃣ Acessar a pasta do projeto

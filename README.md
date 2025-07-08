@@ -228,8 +228,11 @@ templates/
 │
 └── login/
     ├── login.html
-    └── recuperar-senha.html
+    └── recuperar-senha.html.
+
+
 ---
+
 
 # 📦 Como Rodar o Projeto (Passo a passo)
 

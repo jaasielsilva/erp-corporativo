@@ -5,7 +5,9 @@ import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
-
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -159,23 +161,55 @@ public class UsuarioService {
         return usuarioOpt.map(usuario -> "senha-descriptografada-exemplo").orElse(null);
     }
 
-    public boolean enviarSenhaPorEmail(String emailDestinatario, String senha) {
-        try {
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(emailDestinatario);
-            if (usuarioOpt.isEmpty()) return false;
+public boolean enviarSenhaPorEmail(String emailDestinatario, String senha) {
+    try {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(emailDestinatario);
+        if (usuarioOpt.isEmpty()) return false;
 
-            Usuario usuario = usuarioOpt.get();
-            SimpleMailMessage mensagem = new SimpleMailMessage();
-            mensagem.setTo(emailDestinatario);
-            mensagem.setSubject("Recuperação de senha");
-            mensagem.setText("Olá " + usuario.getNome() + ",\n\nSua nova senha é: " + senha + "\n\nRecomenda-se alterá-la após o login.");
-            mailSender.send(mensagem);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        Usuario usuario = usuarioOpt.get();
+
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+        helper.setTo(emailDestinatario);
+        helper.setSubject("Recuperação de senha - Painel do CEO");
+
+        String htmlMsg = "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "  <meta charset='UTF-8'>" +
+                "  <style>" +
+                "    body { font-family: Arial, sans-serif; background-color: #f5f8fa; padding: 20px; }" +
+                "    .container { max-width: 600px; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }" +
+                "    h2 { color: #333333; }" +
+                "    p { font-size: 16px; color: #555555; }" +
+                "    .senha { font-size: 18px; font-weight: bold; color: #2d89ef; background: #e3f2fd; padding: 10px; border-radius: 4px; display: inline-block; }" +
+                "    .footer { margin-top: 30px; font-size: 12px; color: #999999; }" +
+                "  </style>" +
+                "</head>" +
+                "<body>" +
+                "  <div class='container'>" +
+                "    <h2>Olá " + usuario.getNome() + ",</h2>" +
+                "    <p>Sua senha foi resetada com sucesso.</p>" +
+                "    <p>Sua nova senha é:</p>" +
+                "    <p class='senha'>" + senha + "</p>" +
+                "    <p>Recomendamos que altere sua senha após o login para garantir sua segurança.</p>" +
+                "    <div class='footer'>Este é um e-mail automático, por favor não responda.</div>" +
+                "  </div>" +
+                "</body>" +
+                "</html>";
+
+        helper.setText(htmlMsg, true);  // 'true' indica que é HTML
+
+        mailSender.send(mimeMessage);
+
+        return true;
+    } catch (MessagingException e) {
+        e.printStackTrace();
+        return false;
     }
+}
+
 
     public void resetarSenhaPorId(Long id) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
@@ -185,7 +219,7 @@ public class UsuarioService {
 
         Usuario usuario = usuarioOpt.get();
 
-        String novaSenha = "123456"; // ou gerar com UUID
+        String novaSenha = "123456"; // aqui pode ser uma senha gerada dinamicamente
         usuario.setSenha(passwordEncoder.encode(novaSenha));
         usuarioRepository.save(usuario);
 

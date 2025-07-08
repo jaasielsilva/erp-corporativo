@@ -383,39 +383,7 @@ public class UsuarioController {
     return resposta;
 }
 
-
-    // Resetar senha via formulário, com autenticação do admin e envio de e-mail
-    @PostMapping("/resetar-senha")
-    public String resetarSenhaComAutenticacao(
-            @RequestParam String adminLogin,
-            @RequestParam String adminSenha,
-            @RequestParam String usuarioLogin,
-            Model model) {
-
-        boolean autorizado = usuarioService.autenticarAdmin(adminLogin, adminSenha);
-
-        if (!autorizado) {
-            model.addAttribute("erro", "Credenciais do admin inválidas.");
-            return "usuarios/resetar-senha";
-        }
-
-        String senhaDescriptografada = usuarioService.recuperarSenhaDescriptografada(usuarioLogin);
-        if (senhaDescriptografada == null) {
-            model.addAttribute("erro", "Usuário não encontrado.");
-            return "usuarios/resetar-senha";
-        }
-
-        boolean emailEnviado = usuarioService.enviarSenhaPorEmail(usuarioLogin, senhaDescriptografada);
-        if (!emailEnviado) {
-            model.addAttribute("erro", "Erro ao enviar e-mail.");
-            return "usuarios/resetar-senha";
-        }
-
-        model.addAttribute("sucesso", "Senha enviada para o e-mail cadastrado.");
-        return "usuarios/resetar-senha";
-    }
-
-    // ===============================
+   // ===============================
     // MÉTODO AUXILIAR
     // ===============================
 

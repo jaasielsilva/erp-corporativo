@@ -2,33 +2,17 @@ package com.jaasielsilva.portalceo.controller;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+
 import com.lowagie.text.*;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Element;
-import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Chunk;
 import com.lowagie.text.pdf.PdfWriter;
-import com.itextpdf.text.BaseColor;
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
-import com.jaasielsilva.portalceo.model.Genero;
-import com.jaasielsilva.portalceo.model.NivelAcesso;
-import com.jaasielsilva.portalceo.model.Usuario;
-import com.jaasielsilva.portalceo.repository.CargoRepository;
-import com.jaasielsilva.portalceo.repository.DepartamentoRepository;
-import com.jaasielsilva.portalceo.repository.PerfilRepository;
+import com.jaasielsilva.portalceo.model.*;
+import com.jaasielsilva.portalceo.repository.*;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -57,17 +41,39 @@ public class UsuarioController {
         this.departamentoRepository = departamentoRepository;
     }
 
+    // ===============================
+    // BLOCO: PÁGINA PRINCIPAL E LISTAGEM
+    // ===============================
+
     @GetMapping
     public String listarUsuarios(@RequestParam(value = "busca", required = false) String busca, Model model) {
-        List<Usuario> usuarios;
-        if (busca == null || busca.isEmpty()) {
-            usuarios = usuarioService.buscarTodos();
-        } else {
-            usuarios = usuarioService.buscarPorNomeOuEmail(busca);
-        }
+        List<Usuario> usuarios = (busca == null || busca.isEmpty())
+                ? usuarioService.buscarTodos()
+                : usuarioService.buscarPorNomeOuEmail(busca);
         model.addAttribute("usuarios", usuarios);
-        return "usuarios/listar"; // ou "usuarios/lista" — o que você usar
+        return "usuarios/listar";
     }
+
+    @GetMapping("/listar")
+    public String listarUsuarios(Model model) {
+        model.addAttribute("usuarios", usuarioService.buscarTodos());
+        return "usuarios/listar";
+    }
+
+    @GetMapping("/index")
+    public String mostrarEstatisticasUsuarios(Model model) {
+        EstatisticasUsuariosDTO stats = usuarioService.buscarEstatisticas();
+        model.addAttribute("usuario", new Usuario());
+        model.addAttribute("totalUsuarios", stats.getTotalUsuarios());
+        model.addAttribute("ativos", stats.getTotalAtivos());
+        model.addAttribute("administradores", stats.getTotalAdministradores());
+        model.addAttribute("bloqueados", stats.getTotalBloqueados());
+        return "usuarios/index";
+    }
+
+    // ===============================
+    // BLOCO: CADASTRO E EDIÇÃO DE USUÁRIOS
+    // ===============================
 
     @GetMapping("/cadastro")
     public String mostrarFormularioCadastro(Model model) {
@@ -78,32 +84,12 @@ public class UsuarioController {
         return "usuarios/cadastro";
     }
 
-    @GetMapping("/index")
-    public String mostrarEstatisticasUsuarios(Model model) {
-        model.addAttribute("usuario", new Usuario());
-
-        EstatisticasUsuariosDTO stats = usuarioService.buscarEstatisticas();
-        model.addAttribute("totalUsuarios", stats.getTotalUsuarios());
-        model.addAttribute("ativos", stats.getTotalAtivos());
-        model.addAttribute("administradores", stats.getTotalAdministradores());
-        model.addAttribute("bloqueados", stats.getTotalBloqueados());
-
-        return "usuarios/index";
-    }
-
-    @GetMapping("/listar")
-    public String listarUsuarios(Model model) {
-        model.addAttribute("usuarios", usuarioService.buscarTodos());
-        return "usuarios/listar";
-    }
-
     @PostMapping("/cadastrar")
-    public String cadastrarUsuario(
-            @Valid @ModelAttribute("usuario") Usuario usuario,
-            BindingResult bindingResult,
-            @RequestParam("confirmSenha") String confirmSenha,
-            @RequestParam("perfilId") Long perfilId,
-            Model model) {
+    public String cadastrarUsuario(@Valid @ModelAttribute("usuario") Usuario usuario,
+                                   BindingResult bindingResult,
+                                   @RequestParam("confirmSenha") String confirmSenha,
+                                   @RequestParam("perfilId") Long perfilId,
+                                   Model model) {
 
         if (!usuario.getSenha().equals(confirmSenha)) {
             bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
@@ -111,7 +97,6 @@ public class UsuarioController {
 
         if (bindingResult.hasErrors()) {
             adicionarAtributosComuns(model);
-            model.addAttribute("usuario", usuario);
             return "usuarios/cadastro";
         }
 
@@ -124,53 +109,32 @@ public class UsuarioController {
             }
 
             usuarioService.salvarUsuario(usuario);
+
         } catch (Exception e) {
             model.addAttribute("erro", e.getMessage());
             adicionarAtributosComuns(model);
-            model.addAttribute("usuario", usuario);
             return "usuarios/cadastro";
         }
 
         return "redirect:/usuarios/listar";
     }
 
-    @GetMapping("/{id}/foto")
-    public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
-        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-
-        if (usuarioOpt.isPresent() && usuarioOpt.get().getFotoPerfil() != null) {
-            byte[] foto = usuarioOpt.get().getFotoPerfil();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.IMAGE_JPEG);
-
-            return new ResponseEntity<>(foto, headers, HttpStatus.OK);
-        }
-
-        return ResponseEntity.notFound().build();
-    }
-
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-        if (usuarioOpt.isEmpty()) {
-            return "redirect:/usuarios/listar";
-        }
-        if (!model.containsAttribute("usuario")) {
-            model.addAttribute("usuario", usuarioOpt.get());
-        }
+        if (usuarioOpt.isEmpty()) return "redirect:/usuarios/listar";
+        model.addAttribute("usuario", usuarioOpt.get());
         adicionarAtributosComuns(model);
         return "usuarios/editar";
     }
 
     @PostMapping("/{id}/editar")
-    public String salvarEdicaoUsuario(
-            @PathVariable Long id,
-            @Valid @ModelAttribute("usuario") Usuario usuario,
-            BindingResult bindingResult,
-            @RequestParam("confirmSenha") String confirmSenha,
-            @RequestParam("perfilId") Long perfilId,
-            Model model) {
+    public String salvarEdicaoUsuario(@PathVariable Long id,
+                                      @Valid @ModelAttribute("usuario") Usuario usuario,
+                                      BindingResult bindingResult,
+                                      @RequestParam("confirmSenha") String confirmSenha,
+                                      @RequestParam("perfilId") Long perfilId,
+                                      Model model) {
 
         if (!usuario.getSenha().equals(confirmSenha)) {
             bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
@@ -190,6 +154,7 @@ public class UsuarioController {
             usuario.setId(id);
             usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
                     .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
+
             usuarioService.salvarUsuario(usuario);
 
         } catch (Exception e) {
@@ -201,24 +166,21 @@ public class UsuarioController {
         return "redirect:/usuarios/listar";
     }
 
-    @GetMapping("/editar")
-    public String mostrarFormularioBuscaPorCpf() {
-        return "usuarios/editar";  // formulário para digitar CPF
-    }
-
     @PostMapping("/editar")
     public String buscarUsuarioPorCpf(@RequestParam("cpf") String cpf, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorCpf(cpf);
-
         if (usuarioOpt.isEmpty()) {
             model.addAttribute("erro", "Usuário com CPF " + cpf + " não encontrado.");
             return "usuarios/editar";
         }
-
         model.addAttribute("usuario", usuarioOpt.get());
         adicionarAtributosComuns(model);
+        return "usuarios/editarcadastro";
+    }
 
-        return "usuarios/editarcadastro"; // formulário completo para editar dados do usuário
+    @GetMapping("/editar")
+    public String mostrarFormularioBuscaPorCpf() {
+        return "usuarios/editar";
     }
 
     @PostMapping("/{id}/excluir")
@@ -232,16 +194,10 @@ public class UsuarioController {
         return "redirect:/usuarios/listar";
     }
 
-    private void adicionarAtributosComuns(Model model) {
-        model.addAttribute("perfis", perfilRepository.findAll());
-        model.addAttribute("generos", Genero.values());
-        model.addAttribute("status", Usuario.Status.values());
-        model.addAttribute("niveis", NivelAcesso.values());
-        model.addAttribute("cargos", cargoRepository.findAll());
-        model.addAttribute("departamentos", departamentoRepository.findAll());
-    }
+    // ===============================
+    // BLOCO: UTILITÁRIOS
+    // ===============================
 
-    // Endpoint AJAX para validar matrícula
     @GetMapping("/validar-matricula")
     @ResponseBody
     public Map<String, Boolean> validar(@RequestParam String matricula) {
@@ -249,40 +205,106 @@ public class UsuarioController {
         return Map.of("autorizado", autorizado);
     }
 
-    // Endpoint pra exibir a pagina de relatorios
-    @GetMapping("/relatorio")
-    public String meusDados(Model model, Principal principal) {
-    Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(principal.getName());
-    if (usuarioOpt.isEmpty()) return "redirect:/logout";
-    model.addAttribute("usuario", usuarioOpt.get());
-    return "usuarios/relatorio-usuarios";
+    @GetMapping("/{id}/foto")
+    public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+        if (usuarioOpt.isPresent() && usuarioOpt.get().getFotoPerfil() != null) {
+            byte[] foto = usuarioOpt.get().getFotoPerfil();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_JPEG);
+            return new ResponseEntity<>(foto, headers, HttpStatus.OK);
+        }
+        return ResponseEntity.notFound().build();
     }
 
-
-    // Endpoint pra verificar detalhes do usuario
     @GetMapping("/{id}/detalhes")
     public String exibirDetalhesUsuario(@PathVariable Long id, Model model) {
-    Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-    if (usuarioOpt.isEmpty()) {
-        return "redirect:/usuarios/listar";
-    }
-    model.addAttribute("usuario", usuarioOpt.get());
-    return "usuarios/detalhes";
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+        if (usuarioOpt.isEmpty()) return "redirect:/usuarios/listar";
+        model.addAttribute("usuario", usuarioOpt.get());
+        return "usuarios/detalhes";
     }
 
+    @GetMapping("/relatorio")
+    public String meusDados(Model model, Principal principal) {
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(principal.getName());
+        if (usuarioOpt.isEmpty()) return "redirect:/logout";
+        model.addAttribute("usuario", usuarioOpt.get());
+        return "usuarios/relatorio-usuarios";
+    }
 
-    // ENDPOINT PARA GERAR PDF 
+    // ===============================
+    // BLOCO: RELATÓRIOS E EXPORTAÇÃO
+    // ===============================
+
+    @GetMapping("/relatorio-geral")
+    public String relatorioGeral(Model model) {
+        return "usuarios/relatorio-geral";
+    }
+
+    @GetMapping("/comparativo")
+    public String comparativoPeriodos() {
+        return "usuarios/comparativo-periodos";
+    }
+
+    @GetMapping("/comparativo-perfil")
+    public String comparativoPerfis() {
+        return "usuarios/comparativo-perfil";
+    }
+
+    @GetMapping("/enviar-email")
+    public String enviarEmailRelatorio() {
+        return "usuarios/enviar-email";
+    }
+
+    @GetMapping("/filtros-avancados")
+    public String filtrosAvancados() {
+        return "usuarios/filtros-avancados";
+    }
+
+    @GetMapping("/estatisticas")
+    public String estatisticasUsuarios() {
+        return "usuarios/estatisticas-usuarios";
+    }
+
+    @GetMapping("/ativar-desativar")
+    public String ativarDesativarUsuarios() {
+        return "usuarios/ativar-desativar";
+    }
+
+    @GetMapping("/alertas")
+    public String alertasSeguranca() {
+        return "usuarios/alertas";
+    }
+
+    @GetMapping("/exportar-excel")
+    public String exportarExcel() {
+        return "redirect:/usuarios/relatorio";
+    }
+
+    @GetMapping("/exportar-json")
+    public String exportarJson() {
+        return "redirect:/usuarios/relatorio";
+    }
+
+    @GetMapping("/resetar-senha")
+    public String listarPermissoes(Model model) {
+        return "usuarios/resetar-senha";
+    }
+
+    // ===============================
+    // BLOCO: RELATÓRIOS PDF
+    // ===============================
+
     @GetMapping("/{id}/pdf")
     public void gerarPdfUsuario(@PathVariable Long id, HttpServletResponse response) throws IOException {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-
         if (usuarioOpt.isEmpty()) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         Usuario usuario = usuarioOpt.get();
-
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=curriculo_usuario_" + usuario.getId() + ".pdf");
 
@@ -300,64 +322,110 @@ public class UsuarioController {
             Font secaoFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
             Font textoFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
 
-            Paragraph dadosPessoais = new Paragraph("Dados Pessoais", secaoFont);
-            dadosPessoais.setSpacingAfter(8f);
-            document.add(dadosPessoais);
-
+            document.add(new Paragraph("Dados Pessoais", secaoFont));
             document.add(new Paragraph("Nome: " + usuario.getNome(), textoFont));
             document.add(new Paragraph("Email: " + usuario.getEmail(), textoFont));
             document.add(new Paragraph("Telefone: " + usuario.getTelefone(), textoFont));
-            document.add(new Paragraph("Data de Nascimento: " + (usuario.getDataNascimento() != null ? usuario.getDataNascimento().toString() : "N/A"), textoFont));
-            document.add(new Paragraph("Gênero: " + (usuario.getGenero() != null ? usuario.getGenero().name() : "N/A"), textoFont));
+            document.add(new Paragraph("Data de Nascimento: " + usuario.getDataNascimento(), textoFont));
             document.add(new Paragraph("CPF: " + usuario.getCpf(), textoFont));
             document.add(Chunk.NEWLINE);
 
-            Paragraph endereco = new Paragraph("Endereço", secaoFont);
-            endereco.setSpacingAfter(8f);
-            document.add(endereco);
-
-            String enderecoCompleto = String.format("%s, %s - %s (%s)",
-                    usuario.getEndereco(),
-                    usuario.getCidade(),
-                    usuario.getEstado(),
-                    usuario.getCep());
-            document.add(new Paragraph(enderecoCompleto, textoFont));
+            document.add(new Paragraph("Endereço", secaoFont));
+            document.add(new Paragraph(usuario.getEndereco() + ", " + usuario.getCidade() + " - " +
+                    usuario.getEstado() + " (" + usuario.getCep() + ")", textoFont));
             document.add(Chunk.NEWLINE);
 
-            Paragraph infoProfissional = new Paragraph("Informações Profissionais", secaoFont);
-            infoProfissional.setSpacingAfter(8f);
-            document.add(infoProfissional);
-
-            document.add(new Paragraph("Departamento: " + (usuario.getDepartamento() != null ? usuario.getDepartamento().getNome() : "N/A"), textoFont));
-            document.add(new Paragraph("Cargo: " + (usuario.getCargo() != null ? usuario.getCargo().getNome() : "N/A"), textoFont));
-            document.add(new Paragraph("Nível de Acesso: " + (usuario.getNivelAcesso() != null ? usuario.getNivelAcesso().name() : "N/A"), textoFont));
+            document.add(new Paragraph("Informações Profissionais", secaoFont));
+            document.add(new Paragraph("Departamento: " + usuario.getDepartamento().getNome(), textoFont));
+            document.add(new Paragraph("Cargo: " + usuario.getCargo().getNome(), textoFont));
+            document.add(new Paragraph("Nível de Acesso: " + usuario.getNivelAcesso(), textoFont));
             document.add(new Paragraph("Status: " + usuario.getStatus(), textoFont));
-            document.add(new Paragraph("Data de Admissão: " + (usuario.getDataAdmissao() != null ? usuario.getDataAdmissao().toString() : "N/A"), textoFont));
+            document.add(new Paragraph("Data de Admissão: " + usuario.getDataAdmissao(), textoFont));
             if (usuario.getDataDesligamento() != null) {
-                document.add(new Paragraph("Data de Desligamento: " + usuario.getDataDesligamento().toString(), textoFont));
+                document.add(new Paragraph("Data de Desligamento: " + usuario.getDataDesligamento(), textoFont));
             }
-            document.add(Chunk.NEWLINE);
 
-            Paragraph perfis = new Paragraph("Perfis de Acesso", secaoFont);
-            perfis.setSpacingAfter(8f);
-            document.add(perfis);
+            document.add(Chunk.NEWLINE);
+            document.add(new Paragraph("Perfis de Acesso", secaoFont));
 
             StringBuilder perfisStr = new StringBuilder();
-            if (usuario.getPerfis() != null && !usuario.getPerfis().isEmpty()) {
-                usuario.getPerfis().forEach(perfil -> perfisStr.append(perfil.getNome()).append(", "));
-                if (perfisStr.length() > 2) {
-                    perfisStr.setLength(perfisStr.length() - 2); // remove última vírgula
-                }
-            } else {
-                perfisStr.append("N/A");
+            usuario.getPerfis().forEach(perfil -> perfisStr.append(perfil.getNome()).append(", "));
+            if (!usuario.getPerfis().isEmpty()) {
+                perfisStr.setLength(perfisStr.length() - 2); // remove última vírgula
             }
             document.add(new Paragraph(perfisStr.toString(), textoFont));
 
             document.close();
-
         } catch (DocumentException e) {
             throw new IOException("Erro ao gerar PDF", e);
         }
+    }
+
+    // ===============================
+    // BLOCO: RESETAR SENHA
+    // ===============================
+
+
+    // Resetar senha pelo ID via POST, retorno texto simples (ex: para AJAX)
+    @PostMapping("/{id}/resetar-senha")
+    @ResponseBody
+    public Map<String, String> resetarSenhaPorId(@PathVariable Long id) {
+    Map<String, String> resposta = new HashMap<>();
+    try {
+        usuarioService.resetarSenhaPorId(id);
+        resposta.put("status", "sucesso");
+        resposta.put("mensagem", "Senha resetada com sucesso para o usuário " + id);
+    } catch (Exception e) {
+        e.printStackTrace();
+        resposta.put("status", "erro");
+        resposta.put("mensagem", "Erro ao resetar senha: " + e.getMessage());
+    }
+    return resposta;
+}
+
+
+    // Resetar senha via formulário, com autenticação do admin e envio de e-mail
+    @PostMapping("/resetar-senha")
+    public String resetarSenhaComAutenticacao(
+            @RequestParam String adminLogin,
+            @RequestParam String adminSenha,
+            @RequestParam String usuarioLogin,
+            Model model) {
+
+        boolean autorizado = usuarioService.autenticarAdmin(adminLogin, adminSenha);
+
+        if (!autorizado) {
+            model.addAttribute("erro", "Credenciais do admin inválidas.");
+            return "usuarios/resetar-senha";
+        }
+
+        String senhaDescriptografada = usuarioService.recuperarSenhaDescriptografada(usuarioLogin);
+        if (senhaDescriptografada == null) {
+            model.addAttribute("erro", "Usuário não encontrado.");
+            return "usuarios/resetar-senha";
+        }
+
+        boolean emailEnviado = usuarioService.enviarSenhaPorEmail(usuarioLogin, senhaDescriptografada);
+        if (!emailEnviado) {
+            model.addAttribute("erro", "Erro ao enviar e-mail.");
+            return "usuarios/resetar-senha";
+        }
+
+        model.addAttribute("sucesso", "Senha enviada para o e-mail cadastrado.");
+        return "usuarios/resetar-senha";
+    }
+
+    // ===============================
+    // MÉTODO AUXILIAR
+    // ===============================
+
+    private void adicionarAtributosComuns(Model model) {
+        model.addAttribute("perfis", perfilRepository.findAll());
+        model.addAttribute("generos", Genero.values());
+        model.addAttribute("status", Usuario.Status.values());
+        model.addAttribute("niveis", NivelAcesso.values());
+        model.addAttribute("cargos", cargoRepository.findAll());
+        model.addAttribute("departamentos", departamentoRepository.findAll());
     }
 
 }

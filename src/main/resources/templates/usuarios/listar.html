@@ -9,6 +9,7 @@
   <link rel="stylesheet" th:href="@{/css/style.css}" />
 
   <style>
+    /* --- seus estilos existentes --- */
     h2 {
       font-size: 2.4rem;
       color: #1e293b;
@@ -17,7 +18,6 @@
       align-items: center;
       gap: 12px;
     }
-
     .toolbar {
       display: flex;
       justify-content: space-between;
@@ -25,12 +25,10 @@
       flex-wrap: wrap;
       margin-bottom: 25px;
     }
-
     .search-form {
       display: flex;
       gap: 10px;
     }
-
     .search-form input {
       padding: 10px;
       border-radius: 8px;
@@ -38,7 +36,6 @@
       font-size: 1rem;
       width: 220px;
     }
-
     .search-form button {
       background: #2563eb;
       color: white;
@@ -47,7 +44,6 @@
       border-radius: 8px;
       cursor: pointer;
     }
-
     .btn-novo {
       padding: 10px 20px;
       background: linear-gradient(90deg, #2563eb, #3b82f6);
@@ -61,11 +57,9 @@
       gap: 8px;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
     }
-
     .btn-novo:hover {
       background: linear-gradient(90deg, #1e40af, #2563eb);
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -73,26 +67,23 @@
       border-radius: 12px;
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
     }
-
     thead {
       background: #2563eb;
       color: white;
     }
-
-    thead th, tbody td {
+    thead th,
+    tbody td {
       padding: 14px 16px;
       text-align: left;
     }
-
     tbody tr {
       border-bottom: 1px solid #e5e7eb;
     }
-
     tbody tr:hover {
       background-color: #f1f5f9;
     }
-
-    .acoes a, .acoes button {
+    .acoes a,
+    .acoes button {
       margin-right: 8px;
       color: #2563eb;
       background: none;
@@ -100,44 +91,37 @@
       font-size: 1.1rem;
       cursor: pointer;
     }
-
-    .acoes button:hover,
-    .acoes a:hover {
+    .acoes a:hover,
+    .acoes button:hover {
       color: #1e40af;
     }
-
     .badge {
       padding: 6px 10px;
       border-radius: 999px;
       font-size: 0.85rem;
       font-weight: 600;
     }
-
     .badge-admin {
       background-color: #fee2e2;
       color: #b91c1c;
     }
-
     .badge-user {
       background-color: #dbeafe;
       color: #1d4ed8;
     }
-
     .avatar {
       width: 36px;
       height: 36px;
       object-fit: cover;
       border-radius: 50%;
     }
-
     .table-center {
       text-align: center;
       color: #64748b;
       font-weight: 600;
       padding: 20px;
     }
-
-    /* Modal */
+    /* Modal Exclusão */
     .modal {
       display: none;
       position: fixed;
@@ -150,7 +134,6 @@
       justify-content: center;
       align-items: center;
     }
-
     .modal-content {
       background: white;
       padding: 30px;
@@ -159,7 +142,6 @@
       max-width: 400px;
       text-align: center;
     }
-
     .modal-content input {
       padding: 10px;
       width: 100%;
@@ -167,7 +149,6 @@
       border-radius: 8px;
       border: 1px solid #ccc;
     }
-
     .modal-content button {
       margin-top: 15px;
       padding: 10px 20px;
@@ -177,9 +158,46 @@
       color: white;
       cursor: pointer;
     }
-
     .modal-content button:hover {
       background-color: #1e40af;
+    }
+    /* Modal Popup Personalizado */
+    .modal-popup {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-popup-content {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px 30px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      text-align: center;
+      font-size: 1.2rem;
+      position: relative;
+    }
+    .modal-popup-fechar {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+    .modal-popup-fechar:hover {
+      color: #000;
     }
   </style>
 </head>
@@ -198,7 +216,10 @@
             <input type="text" name="busca" placeholder="Buscar por nome ou email" th:value="${param.busca}">
             <button type="submit"><i class="fas fa-search"></i> Buscar</button>
           </form>
-          <a th:href="@{/usuarios/cadastro}" class="btn-novo"><i class="fas fa-user-plus"></i> Novo Usuário</a>
+
+          <a th:href="@{/usuarios/cadastro}" class="btn-novo">
+            <i class="fas fa-user-plus"></i> Novo Usuário
+          </a>
         </div>
 
         <table>
@@ -223,8 +244,16 @@
                 </span>
               </td>
               <td class="acoes">
-                <a th:href="@{'/usuarios/' + ${usuario.id} + '/detalhes'}" title="Detalhes"><i class="fas fa-eye"></i></a>
-                <a th:href="@{'/usuarios/' + ${usuario.id} + '/editar'}" title="Editar"><i class="fas fa-edit"></i></a>
+                <a th:href="@{'/usuarios/' + ${usuario.id} + '/detalhes'}" title="Detalhes">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a th:href="@{'/usuarios/' + ${usuario.id} + '/editar'}" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="#" class="btn-resetar-senha" th:attr="data-id=${usuario.id}" title="Resetar Senha">
+                  <i class="fas fa-unlock-alt" style="color:#0ea5e9;"></i>
+                </a>
+
                 <button type="button" th:onclick="'abrirModalExcluir(' + ${usuario.id} + ')'" title="Excluir">
                   <i class="fas fa-trash-alt" style="color:#dc2626;"></i>
                 </button>
@@ -241,11 +270,11 @@
     </main>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal Exclusão -->
   <div id="modal-excluir" class="modal">
     <div class="modal-content">
       <h3>Digite sua matrícula de administrador para confirmar:</h3>
-      <input type="text" id="matriculaInput" placeholder="Matrícula admin">
+      <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
       <button onclick="validarEExcluir()">Confirmar exclusão</button>
       <button onclick="fecharModal()">Cancelar</button>
     </div>
@@ -253,7 +282,63 @@
 
   <form id="formExcluir" method="post" th:action="@{'/usuarios/0/excluir'}" style="display:none;"></form>
 
+  <!-- Modal Popup Personalizado -->
+  <div id="popupMensagem" class="modal-popup">
+    <div class="modal-popup-content">
+      <span id="popupFechar" class="modal-popup-fechar">&times;</span>
+      <p id="popupTexto">Mensagem aqui</p>
+    </div>
+  </div>
+
   <script>
+    // Função para mostrar popup personalizado
+    function mostrarPopupPersonalizado(mensagem) {
+      const popup = document.getElementById('popupMensagem');
+      const texto = document.getElementById('popupTexto');
+      const btnFechar = document.getElementById('popupFechar');
+
+      texto.textContent = mensagem;
+      popup.style.display = 'flex';
+
+      // Fechar popup ao clicar no X
+      btnFechar.onclick = function() {
+        popup.style.display = 'none';
+      };
+
+      // Fechar popup ao clicar fora do conteúdo
+      window.onclick = function(event) {
+        if (event.target === popup) {
+          popup.style.display = 'none';
+        }
+      };
+    }
+
+    // Resetar senha via AJAX
+    document.querySelectorAll('.btn-resetar-senha').forEach(botao => {
+      botao.addEventListener('click', function(event) {
+        event.preventDefault();
+        const usuarioId = this.getAttribute('data-id');
+
+        fetch(`/usuarios/${usuarioId}/resetar-senha`, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (!response.ok) return response.text().then(text => { throw new Error(text) });
+          return response.json();
+        })
+        .then(data => {
+          mostrarPopupPersonalizado(data.mensagem);
+        })
+        .catch(error => {
+          mostrarPopupPersonalizado('Erro inesperado ao resetar a senha: ' + error.message);
+          console.error(error);
+        });
+      });
+    });
+
     let usuarioIdParaExcluir = null;
 
     function abrirModalExcluir(id) {
@@ -270,15 +355,20 @@
     async function validarEExcluir() {
       const matricula = document.getElementById('matriculaInput').value;
 
-      const response = await fetch('/usuarios/validar-matricula?matricula=' + encodeURIComponent(matricula));
-      const resultado = await response.json();
+      try {
+        const response = await fetch('/usuarios/validar-matricula?matricula=' + encodeURIComponent(matricula));
+        const resultado = await response.json();
 
-      if (resultado.autorizado) {
-        const form = document.getElementById('formExcluir');
-        form.setAttribute('action', '/usuarios/' + usuarioIdParaExcluir + '/excluir');
-        form.submit();
-      } else {
-        alert('Você não tem permissão para excluir usuários.');
+        if (resultado.autorizado) {
+          const form = document.getElementById('formExcluir');
+          form.setAttribute('action', '/usuarios/' + usuarioIdParaExcluir + '/excluir');
+          form.submit();
+        } else {
+          alert('Você não tem permissão para excluir usuários.');
+        }
+      } catch (error) {
+        alert('Erro na validação da matrícula.');
+        console.error(error);
       }
 
       fecharModal();

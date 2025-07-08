@@ -50,53 +50,13 @@
             Relatório Geral
           </a>
           
-          <a th:href="@{/usuarios/permissoes}" class="link-card">
-            <i class="fas fa-key"></i>
-            Permissões
-          </a>
           <a th:href="@{/usuarios/resetar-senha}" class="link-card">
             <i class="fas fa-unlock-alt"></i>
             Resetar Senha
           </a>
         </div>
 
-        <!-- Painel de filtros e ordenação -->
-        <div class="filter-panel">
-          <form id="filterForm" onsubmit="return false;" style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-            <div class="filter-group">
-              <label for="statusFilter">Status:</label>
-              <select id="statusFilter" name="status">
-                <option value="">Todos</option>
-                <option value="ativo">Ativo</option>
-                <option value="bloqueado">Bloqueado</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label for="perfilFilter">Perfil:</label>
-              <select id="perfilFilter" name="perfil">
-                <option value="">Todos</option>
-                <option value="admin">Administrador</option>
-                <option value="usuario">Usuário Comum</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label for="ordenarPor">Ordenar por:</label>
-              <select id="ordenarPor" name="ordenar">
-                <option value="nome">Nome</option>
-                <option value="dataCadastro">Data de Cadastro</option>
-                <option value="ultimoLogin">Último Login</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <button type="button" id="limparFiltrosBtn">Limpar filtros</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Últimas ações com usuários -->
+               <!-- Últimas ações com usuários -->
         <div class="info-section">
           <article class="card">
             <h3>Últimas Ações com Usuários</h3>
@@ -117,7 +77,8 @@
             </table>
           </article>
         </div>
-
+        
+        
         <div class="info-section">
           <div class="card-tips">
             <strong>Dica:</strong> Revise as permissões de usuários inativos a cada 30 dias.

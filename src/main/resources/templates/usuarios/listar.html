@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Usuários - Painel do CEO</title>
-
+  <!-- inclua o CSS e JS do toastr -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
 
@@ -275,15 +277,17 @@
   </div>
 
   <!-- Modal Exclusão -->
-  <div id="modal-excluir" class="modal">
-    <div class="modal-content">
-      <h3>Digite sua matrícula de administrador para confirmar:</h3>
-      <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
-      <div id="msgErroMatricula" style="color: red; margin-top: 10px; display: none;"></div>
-      <button onclick="validarEExcluir()">Confirmar exclusão</button>
-      <button onclick="fecharModal()">Cancelar</button>
-    </div>
+  <!-- Modal Exclusão -->
+<div id="modal-excluir" class="modal">
+  <div class="modal-content">
+    <h3>Digite sua matrícula de administrador para confirmar:</h3>
+    <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
+    <div id="msgErroMatricula" style="color: red; margin-top: 10px; display: none;"></div>
+    <div id="msgSucessoExcluir" style="color: green; margin-top: 10px; display: none;"></div> <!-- Mensagem sucesso -->
+    <button onclick="validarEExcluir()">Confirmar exclusão</button>
+    <button onclick="fecharModal()">Cancelar</button>
   </div>
+</div>
 
   <form id="formExcluir" method="post" style="display:none;"></form>
 
@@ -360,44 +364,62 @@
     document.getElementById('msgErroMatricula').textContent = '';
   }
 
-  async function validarEExcluir() {
-    const matricula = document.getElementById('matriculaInput').value.trim();
-    if (!matricula) {
-      document.getElementById('msgErroMatricula').textContent = 'Digite a matrícula do administrador.';
-      document.getElementById('msgErroMatricula').style.display = 'block';
-      return;
-    }
+async function validarEExcluir() {
+  const matricula = document.getElementById('matriculaInput').value.trim();
+  const msgErro = document.getElementById('msgErroMatricula');
+  const msgSucesso = document.getElementById('msgSucessoExcluir');
 
-    try {
-      const excluirResponse = await fetch('/usuarios/' + usuarioIdParaExcluir + '/excluir', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Matricula': matricula // se você quiser passar matrícula no header
-        }
-      });
+  // Resetar mensagens
+  msgErro.style.display = 'none';
+  msgErro.textContent = '';
+  msgSucesso.style.display = 'none';
+  msgSucesso.textContent = '';
 
-      if (excluirResponse.ok) {
-        fecharModal();
-        alert('Usuário excluído com sucesso!');
-        window.location.reload();
-      } else {
-        let errorText = 'Erro ao excluir usuário. Contate o ADMINISTRADOR DO SISTEMA.';
-        try {
-          const errorData = await excluirResponse.json();
-          errorText = errorData.erro || errorText;
-        } catch {
-          const errorTextRaw = await excluirResponse.text();
-          errorText = errorTextRaw || errorText;
-        }
-        document.getElementById('msgErroMatricula').textContent = errorText;
-        document.getElementById('msgErroMatricula').style.display = 'block';
-      }
-    } catch (error) {
-      document.getElementById('msgErroMatricula').textContent = 'Erro de rede ou servidor: ' + error.message;
-      document.getElementById('msgErroMatricula').style.display = 'block';
-    }
+  if (!matricula) {
+    msgErro.textContent = 'Digite a matrícula do administrador.';
+    msgErro.style.display = 'block';
+    return;
   }
+
+  try {
+    const excluirResponse = await fetch('/usuarios/' + usuarioIdParaExcluir + '/excluir', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Matricula': matricula
+      }
+    });
+
+    if (excluirResponse.ok) {
+      msgSucesso.textContent = 'Usuário excluído com sucesso!';
+      msgSucesso.style.display = 'block';
+
+      // Desabilitar botões para evitar múltiplos cliques
+      document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = true;
+
+      setTimeout(() => {
+          fecharModal();
+          // Redirecionar para dashboard
+          window.location.href = '/dashboard';
+        }, 1500);
+
+    } else {
+      let errorText = 'Erro ao excluir usuário. Contate o ADMINISTRADOR DO SISTEMA.';
+      try {
+        const errorData = await excluirResponse.json();
+        errorText = errorData.erro || errorText;
+      } catch {
+        // não tenta ler corpo de novo
+      }
+      msgErro.textContent = errorText;
+      msgErro.style.display = 'block';
+    }
+  } catch (error) {
+    msgErro.textContent = 'Erro de rede ou servidor: ' + error.message;
+    msgErro.style.display = 'block';
+  }
+}
+
 </script>
 
 </body>

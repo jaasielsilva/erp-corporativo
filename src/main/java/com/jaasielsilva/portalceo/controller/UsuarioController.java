@@ -132,12 +132,15 @@ public class UsuarioController {
      */
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
-        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-        if (usuarioOpt.isEmpty()) return "redirect:/usuarios";
-        model.addAttribute("usuario", usuarioOpt.get());
-        adicionarAtributosComuns(model);
-        return "usuarios/editar";
+    Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+    if (usuarioOpt.isEmpty()) {
+        return "redirect:/usuarios";
     }
+    model.addAttribute("usuario", usuarioOpt.get());
+    adicionarAtributosComuns(model);
+    return "usuarios/editar";
+}
+
 
     /**
      * Teste para disparar erro HTTP 400 Bad Request.
@@ -190,7 +193,12 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
                                   @RequestParam("confirmSenha") String confirmSenha,
                                   @RequestParam("perfilId") Long perfilId,
                                   Model model,
-                                  Principal principal) {  // <--- adiciona aqui
+                                  Principal principal) {
+
+    // Busca o usuário original no banco para garantir que dataAdmissao não seja alterada
+    Usuario usuarioBanco = usuarioService.buscarPorId(id)
+        .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+    usuario.setDataAdmissao(usuarioBanco.getDataAdmissao());
 
     if (!usuario.getSenha().equals(confirmSenha)) {
         bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
@@ -203,16 +211,11 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
 
     try {
         if (usuario.getDataDesligamento() != null) {
-            // Obtém o email do usuário logado
             String emailLogado = principal.getName();
-
-            // Busca o usuário logado para pegar a matrícula
             Usuario usuarioLogado = usuarioService.buscarPorEmail(emailLogado)
                                         .orElseThrow(() -> new IllegalStateException("Usuário logado não encontrado"));
 
-            // Passa a matrícula para o método de exclusão
             usuarioService.excluirUsuario(id, usuarioLogado.getMatricula());
-
             return "redirect:/usuarios";
         }
 

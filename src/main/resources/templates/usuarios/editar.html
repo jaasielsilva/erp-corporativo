@@ -6,6 +6,76 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" th:href="@{/css/style.css}" />
+
+  <style>
+    /* Melhorias visuais para todos os inputs e botões */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="tel"],
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    input[readonly], input[disabled] {
+      background-color: #f0f0f0;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .form-group.full-width {
+      width: 100%;
+    }
+
+    .btn-submit {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .btn-submit:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-cancel {
+      margin-left: 1rem;
+      color: #666;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .btn-cancel:hover {
+      text-decoration: underline;
+      color: #333;
+    }
+
+    .buttons {
+      display: flex;
+      align-items: center;
+    }
+  </style>
 </head>
 <body>
   <div class="app-container">
@@ -16,7 +86,7 @@
       <section class="content-area">
         <h1><i class="fas fa-user-edit"></i> Editar Usuário</h1>
 
-        <!-- ✅ MENSAGEM DE ERRO -->
+        <!-- MENSAGEM DE ERRO -->
         <div th:if="${erro}" class="alert alert-danger" role="alert" style="margin-bottom: 16px;">
           <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}"></span>
         </div>
@@ -25,7 +95,7 @@
 
           <div class="form-group">
             <label for="matricula">Matrícula:</label>
-            <input type="text" id="matricula" th:field="*{matricula}" required />
+            <input type="text" id="matricula" th:field="*{matricula}" required maxlength="10" pattern="[0-9]{1,10}" inputmode="numeric" />
           </div>
 
           <div class="form-group">
@@ -44,19 +114,18 @@
           </div>
 
           <div class="form-group">
-  <label for="senha">Senha:</label>
-  <input type="password" id="senha" th:field="*{senha}" required />
-</div>
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" th:field="*{senha}" />
+          </div>
 
-<div class="form-group">
-  <label for="confirmSenha">Confirmar Senha:</label>
-  <input type="password" id="confirmSenha" name="confirmSenha" required />
-</div>
-
+          <div class="form-group">
+            <label for="confirmSenha">Confirmar Senha:</label>
+            <input type="password" id="confirmSenha" name="confirmSenha" />
+          </div>
 
           <div class="form-group">
             <label for="telefone">Telefone:</label>
-            <input type="text" id="telefone" th:field="*{telefone}" />
+            <input type="tel" id="telefone" th:field="*{telefone}" maxlength="11" pattern="[0-9]{10,11}" inputmode="numeric" placeholder="Ex: 11912345678" />
           </div>
 
           <div class="form-group">
@@ -91,8 +160,7 @@
 
           <div class="form-group">
             <label for="perfilId">Perfil:</label>
-            <select id="perfilId" name="perfilId" required
-                    th:disabled="${usuario.email == 'admin@teste.com'}">
+            <select id="perfilId" name="perfilId" required th:disabled="${usuario.email == 'admin@teste.com'}">
               <option value="" disabled>-- Selecione um perfil --</option>
               <option th:each="perfil : ${perfis}"
                       th:value="${perfil.id}"
@@ -102,13 +170,27 @@
           </div>
 
           <div class="form-group">
-            <label for="cargo">Cargo:</label>
-            <input type="text" id="cargo" th:field="*{cargo}" />
+            <label for="cargoId">Cargo:</label>
+            <select id="cargoId" name="cargoId">
+              <option value="" disabled>-- Selecione o cargo --</option>
+              <option th:each="cargo : ${cargos}" 
+                      th:value="${cargo.id}" 
+                      th:text="${cargo.nome}" 
+                      th:selected="${usuario.cargo != null} ? ${usuario.cargo.id} == ${cargo.id} : false">
+              </option>
+            </select>
           </div>
 
           <div class="form-group">
-            <label for="departamento">Departamento:</label>
-            <input type="text" id="departamento" th:field="*{departamento}" />
+            <label for="departamentoId">Departamento:</label>
+            <select id="departamentoId" name="departamentoId">
+              <option value="" disabled>-- Selecione o departamento --</option>
+              <option th:each="dep : ${departamentos}" 
+                      th:value="${dep.id}" 
+                      th:text="${dep.nome}" 
+                      th:selected="${usuario.departamento != null} ? ${usuario.departamento.id} == ${dep.id} : false">
+              </option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -149,7 +231,7 @@
             <input type="date" id="dataDesligamento" th:field="*{dataDesligamento}" />
           </div>
 
-          <div class="form-group buttons full-width">
+          <div class="form-group buttons">
             <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
             <a th:href="@{/usuarios}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
           </div>
@@ -175,7 +257,7 @@
           }
 
           status.addEventListener("change", verificarStatus);
-          verificarStatus(); // executa ao carregar
+          verificarStatus();
         });
       </script>
 

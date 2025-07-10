@@ -34,13 +34,6 @@ public class Usuario {
     @Column(length = 14, unique = true)
     private String cpf;
 
-    private LocalDate dataNascimento;
-
-    private LocalDate dataAdmissao;
-
-    // corrigido nome para dataDesligamento
-    private LocalDate dataDesligamento;
-
     private String cep;
 
     private String endereco;
@@ -92,5 +85,14 @@ public class Usuario {
     @ManyToOne
     @JoinColumn(name = "departamento_id")
     private Departamento departamento;
+
+    @Column(name = "data_nascimento")
+    private LocalDate dataNascimento;
+
+    @Column(name = "data_admissao")
+    private LocalDate dataAdmissao;
+
+    @Column(name = "data_desligamento")
+    private LocalDate dataDesligamento;
 
 }

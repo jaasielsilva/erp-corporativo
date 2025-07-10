@@ -1,94 +1,110 @@
-/* Reset básico e fonte */
+/* --------------------------------------------
+   Reset básico e fonte padrão para todo o site
+--------------------------------------------- */
 * {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box; /* Facilita o controle de espaçamentos */
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; /* Fonte limpa e legível */
 }
 
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  background: #f5f7fa;
-  color: #2c3e50;
+  overflow: hidden; /* Evita scroll na janela geral */
+  background: #f5f7fa; /* Fundo suave */
+  color: #2c3e50; /* Cor padrão do texto */
 }
 
-/* Container principal */
+/* --------------------------------------------
+   Container principal flexível que ocupa a tela inteira
+--------------------------------------------- */
 .app-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  display: flex;       /* Layout flexível horizontal */
+  height: 100vh;       /* Altura total da janela */
+  width: 100vw;        /* Largura total da janela */
+  overflow: hidden;    /* Esconde scroll externo */
 }
 
-/* Sidebar */
+/* --------------------------------------------
+   Sidebar fixa lateral esquerda
+--------------------------------------------- */
 .sidebar {
-  position: fixed;
+  position: fixed;     /* Fixa na tela, não rola junto */
   top: 0;
   left: 0;
-  height: 100vh;
-  width: 280px;
-  background-color: #1f2937;
-  color: #fff;
+  height: 100vh;       /* Ocupa toda a altura da janela */
+  width: 280px;        /* Largura fixa */
+  background-color: #1f2937; /* Fundo escuro */
+  color: #fff;         /* Texto claro */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-  z-index: 1000;
-  transition: left 0.3s ease;
+  justify-content: space-between; /* Espaço entre topo e rodapé */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  overflow-y: auto;    /* Scroll interno se conteúdo maior */
+  z-index: 1000;       /* Fica sobreposto a outros elementos */
+  transition: left 0.3s ease; /* Animação para abrir/fechar */
 }
 
+/* --------------------------------------------
+   Painel de usuário no topo da sidebar
+--------------------------------------------- */
 .user-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 30px 20px 20px;
-  border-bottom: 1px solid #334155;
-  flex-shrink: 0;
+  align-items: center;      /* Centraliza horizontalmente */
+  padding: 30px 20px 20px;  /* Espaçamento interno */
+  border-bottom: 1px solid #334155; /* Linha separadora */
+  flex-shrink: 0;           /* Não reduz */
 }
 
+/* Avatar do usuário */
 .user-avatar {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #3b82f6;
+  border-radius: 50%;       /* Torna circular */
+  object-fit: cover;        /* Cobre o container sem distorcer */
+  border: 3px solid #3b82f6; /* Borda azul */
   margin-bottom: 10px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2); /* Sombra leve */
 }
 
+/* Nome do usuário */
 .user-name {
   font-size: 16px;
   font-weight: 500;
-  color: #e2e8f0;
+  color: #e2e8f0; /* Cinza claro */
   text-align: center;
 }
 
+/* --------------------------------------------
+   Navegação dentro da sidebar
+--------------------------------------------- */
 .sidebar nav {
-  flex-grow: 1;
-  overflow-y: auto;
+  flex-grow: 1;        /* Ocupa todo espaço vertical restante */
+  overflow-y: auto;    /* Scroll caso muitos itens */
   padding: 20px 0;
 }
 
 .sidebar nav ul {
-  list-style: none;
+  list-style: none;    /* Remove marcadores */
   padding: 0;
 }
 
+/* Links da navegação */
 .sidebar nav ul li a {
   display: flex;
   align-items: center;
   padding: 15px 30px;
-  color: #cbd5e1;
+  color: #cbd5e1;          /* Cor do texto normal */
   text-decoration: none;
   font-size: 16px;
-  border-left: 4px solid transparent;
-  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+  border-left: 4px solid transparent; /* Espaço para indicar ativo */
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s; /* Animação suave */
 }
 
+/* Ícone dentro do link */
 .sidebar nav ul li a i {
   width: 24px;
   margin-right: 15px;
@@ -96,30 +112,36 @@ html, body {
   font-size: 18px;
 }
 
+/* Efeito hover e link ativo */
 .sidebar nav ul li a:hover,
 .sidebar nav ul li a.active {
   background-color: #334155;
   color: #fff;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #3b82f6; /* Barra azul indicando ativo */
 }
 
-/* Conteúdo principal */
+/* --------------------------------------------
+   Área principal do conteúdo, ao lado da sidebar
+--------------------------------------------- */
 .main-content {
-  margin-left: 280px;
+  margin-left: 280px;   /* Espaço para sidebar fixa */
   height: 100vh;
-  background: #fff;
+  background: #fff;     /* Fundo branco */
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow-y: auto;     /* Scroll interno */
 }
 
+/* --------------------------------------------
+   Topbar fixa no topo da área principal
+--------------------------------------------- */
 .topbar {
-  background-color: #f3f4f6;
+  background-color: #f3f4f6; /* Fundo claro */
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-between; /* Espaça entre título e usuário */
   padding: 0 30px;
   border-bottom: 1px solid #e5e7eb;
   flex-shrink: 0;
@@ -131,6 +153,7 @@ html, body {
   color: #1e293b;
 }
 
+/* Informações do usuário no topbar */
 .topbar .user-info {
   font-size: 14px;
   color: #64748b;
@@ -144,19 +167,24 @@ html, body {
   font-size: 18px;
 }
 
+/* Botão para abrir o menu lateral no mobile (inicialmente oculto) */
 .topbar .menu-toggle {
   display: none;
   cursor: pointer;
 }
 
+/* --------------------------------------------
+   Área principal do conteúdo dentro do main-content
+--------------------------------------------- */
 .content-area {
   padding: 30px;
   flex-grow: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 60px);
+  max-height: calc(100vh - 60px); /* Altura descontando topbar */
   color: #334155;
 }
 
+/* Títulos principais */
 .content-area h1 {
   font-size: 28px;
   margin-bottom: 15px;
@@ -170,6 +198,9 @@ html, body {
   font-weight: 500;
 }
 
+/* --------------------------------------------
+   Cards de métricas no dashboard (grade responsiva)
+--------------------------------------------- */
 .dashboard-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -177,6 +208,7 @@ html, body {
   margin-bottom: 30px;
 }
 
+/* Card individual de métrica */
 .card-metric {
   background: #1f2937;
   color: #fff;
@@ -197,6 +229,7 @@ html, body {
   font-weight: bold;
 }
 
+/* Card geral */
 .card {
   background-color: #f8fafc;
   border-radius: 8px;
@@ -212,6 +245,7 @@ html, body {
   font-size: 22px;
 }
 
+/* Card de dicas */
 .card-tips {
   background: #fff8e1;
   border-left: 5px solid #ffc107;
@@ -223,6 +257,9 @@ html, body {
   font-size: 1rem;
 }
 
+/* --------------------------------------------
+   Tabela estilizada para listas
+--------------------------------------------- */
 .table-list {
   width: 100%;
   border-collapse: collapse;
@@ -247,6 +284,9 @@ html, body {
   background-color: #f8fafc;
 }
 
+/* --------------------------------------------
+   Botões de ação agrupados com espaçamento
+--------------------------------------------- */
 .action-buttons {
   display: flex;
   gap: 20px;
@@ -264,7 +304,7 @@ html, body {
   text-decoration: none;
   box-shadow: 0 3px 6px rgb(59 130 246 / 0.4);
   transition: background-color 0.3s ease;
-  flex: 1 1 180px;
+  flex: 1 1 180px; /* Tamanho mínimo e cresce */
   text-align: center;
 }
 
@@ -273,6 +313,9 @@ html, body {
   box-shadow: 0 4px 8px rgb(37 99 235 / 0.6);
 }
 
+/* --------------------------------------------
+   Rodapé simples e centralizado
+--------------------------------------------- */
 .footer {
   text-align: center;
   font-size: 14px;
@@ -290,32 +333,36 @@ html, body {
   text-decoration: underline;
 }
 
-/* Responsividade */
+/* --------------------------------------------
+   Responsividade para telas pequenas (até 768px)
+--------------------------------------------- */
 @media (max-width: 768px) {
   .sidebar {
-    left: -280px;
+    left: -280px; /* Sidebar esconde à esquerda */
   }
   .sidebar.open {
-    left: 0;
+    left: 0; /* Abre a sidebar */
   }
   .topbar .menu-toggle {
-    display: block;
+    display: block; /* Mostra botão do menu */
   }
   .main-content {
-    margin-left: 0;
+    margin-left: 0; /* Remove margem para sidebar */
   }
   .dashboard-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Cards empilhados */
   }
   .action-buttons a {
-    flex: 1 1 100%;
+    flex: 1 1 100%; /* Botões ocupam toda largura */
   }
   .content-area {
     padding: 20px;
   }
 }
 
-/* Link Cards */
+/* --------------------------------------------
+   Cartões estilo link com ícone e hover animado
+--------------------------------------------- */
 .link-card {
   display: flex;
   flex-direction: column;
@@ -345,7 +392,9 @@ html, body {
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* Divisor de Seção */
+/* --------------------------------------------
+   Divisor de seção com linha e título centralizado
+--------------------------------------------- */
 .section-divider {
   text-align: center;
   margin: 40px 0 20px;
@@ -368,7 +417,9 @@ html, body {
   color: #475569;
 }
 
-/* Campo de Busca */
+/* --------------------------------------------
+   Campo de busca com foco destacado
+--------------------------------------------- */
 .search-box input {
   width: 100%;
   max-width: 500px;
@@ -386,7 +437,9 @@ html, body {
   box-shadow: 0 0 6px #3b82f6aa;
 }
 
-/* Painel de Filtros */
+/* --------------------------------------------
+   Painel de filtros para formulários
+--------------------------------------------- */
 .filter-panel {
   display: flex;
   flex-wrap: wrap;
@@ -413,6 +466,7 @@ html, body {
   font-size: 14px;
 }
 
+/* Botão para limpar filtros */
 #limparFiltrosBtn {
   padding: 10px 20px;
   background-color: #e11d48;
@@ -428,11 +482,13 @@ html, body {
   background-color: #be123c;
 }
 
-/* Container geral do formulário */
+/* --------------------------------------------
+   Container geral do formulário de usuário (grid)
+--------------------------------------------- */
 .form-usuario {
-  max-width: 1100px; /* mantém compacto */
+  max-width: 1100px; /* largura máxima para não esticar demais */
   margin: 40px auto;
-  background: #ffffff; /* fundo branco para sofisticação */
+  background: #ffffff; /* fundo branco */
   padding: 25px 30px;
   border-radius: 12px;
   box-shadow: 0 6px 15px rgba(0,0,0,0.1);
@@ -444,7 +500,7 @@ html, body {
   gap: 18px 30px; /* espaçamento vertical e horizontal */
 }
 
-/* Cada grupo do formulário ocupa 1 célula do grid */
+/* Cada grupo do formulário */
 .form-usuario .form-group {
   display: flex;
   flex-direction: column;
@@ -487,18 +543,18 @@ html, body {
 
 /* Mensagem de erro */
 .form-usuario .error {
-  color: #dc2626;
+  color: #dc2626; /* vermelho */
   font-size: 0.85rem;
   margin-top: 5px;
 }
 
-/* Campos que ocupam a largura total - ocupam as 4 colunas */
+/* Campos que ocupam a largura total - todas as 4 colunas */
 .form-usuario .full-width {
   grid-column: 1 / -1;
   width: 100%;
 }
 
-/* Botões container - ocupa as 4 colunas */
+/* Botões container - ocupa todas as colunas */
 .form-usuario .buttons {
   grid-column: 1 / -1;
   display: flex;
@@ -548,7 +604,9 @@ html, body {
   background-color: #b91c1c;
 }
 
-/* Responsividade para telas pequenas */
+/* --------------------------------------------
+   Responsividade para telas pequenas (até 900px)
+--------------------------------------------- */
 @media (max-width: 900px) {
   .form-usuario {
     grid-template-columns: 1fr; /* 1 coluna no mobile */
@@ -565,5 +623,53 @@ html, body {
     width: 100%;
     justify-content: center;
   }
-  
 }
+
+/* --------------------------------------------
+   Classe para indicar campos obrigatórios com asterisco vermelho
+--------------------------------------------- */
+.required {
+  color: #dc2626; /* vermelho forte */
+}
+
+/* --------------------------------------------
+   Forçar texto em uppercase (ex: campo Estado)
+--------------------------------------------- */
+.uppercase {
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------
+   Estilo para mensagens de alerta/erro (divs de aviso)
+--------------------------------------------- */
+.alert {
+  padding: 1rem 1.2rem;
+  background-color: #f8d7da; /* vermelho claro */
+  color: #842029; /* vermelho escuro */
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #f5c2c7;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* --------------------------------------------
+   Ajuste de ícones dentro dos botões para alinhamento vertical
+--------------------------------------------- */
+.btn-submit i,
+.btn-cancel i {
+  font-size: 1.1rem;
+  vertical-align: middle;
+}
+
+/* --------------------------------------------
+   Espaçamento extra entre label e small (ex: texto explicativo ao lado do label)
+--------------------------------------------- */
+.form-group label small {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-left: 4px;
+  font-style: italic;
+}
+

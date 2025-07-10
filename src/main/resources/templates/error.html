@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Erro</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="fragments/topbar :: topbar"></div>
+
+<main style="padding: 20px;">
+    <h1>Ocorreu um erro</h1>
+    <p th:text="${mensagem} ?: 'Algo deu errado. Tente novamente mais tarde.'"></p>
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

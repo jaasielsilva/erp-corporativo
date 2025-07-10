@@ -23,6 +23,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      @Query("SELECT u FROM Usuario u WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :busca, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :busca, '%'))")
     List<Usuario> buscarPorNomeOuEmail(@Param("busca") String busca);
 
-    
+     // Conta quantos usuários têm o perfil ADMIN
+    @Query("select count(u) from Usuario u join u.perfis p where p.nome = :perfilNome")
+    long countByPerfilNome(@Param("perfilNome") String perfilNome);
+
+    // Outra consulta para verificar se há pelo menos um admin diferente de um dado usuário
+    @Query("select count(u) from Usuario u join u.perfis p where p.nome = :perfilNome and u.id <> :userId")
+    long countByPerfilNomeExcludingUser(@Param("perfilNome") String perfilNome, @Param("userId") Long userId);
     
 }

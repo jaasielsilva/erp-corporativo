@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>500 - Erro Interno | Portal CEO</title>
+  <style>
+    /* Reutilize o mesmo CSS do 404 */
+  </style>
+</head>
+<body>
+
+<main role="main" aria-labelledby="pageTitle">
+  <svg class="illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="32" r="30" stroke-opacity="0.2"/>
+    <path d="M22 22l20 20" />
+    <path d="M42 22L22 42" />
+  </svg>
+
+  <h1 id="pageTitle">500</h1>
+  <h2>Erro Interno do Servidor</h2>
+  <p class="message">
+    Ocorreu um problema inesperado no servidor.<br/>
+    Nossa equipe já foi notificada e está trabalhando para resolver.<br/>
+    Por favor, tente novamente mais tarde.
+  </p>
+
+  <div class="buttons">
+    <a href="/dashboard" class="btn btn-primary" role="button" aria-label="Voltar para o painel principal">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6H9v6a2 2 0 0 1-2 2H3z"/>
+      </svg>
+      Painel Principal
+    </a>
+    <a href="/contato" class="btn btn-secondary" role="button" aria-label="Entrar em contato com suporte">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Suporte
+    </a>
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2024 Painel do CEO - Todos os direitos reservados.</p>
+  <p>
+    <a href="/politica-privacidade">Política de Privacidade</a> |
+    <a href="/termos">Termos de Uso</a>
+  </p>
+</footer>
+
+</body>
+</html>

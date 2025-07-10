@@ -21,11 +21,23 @@ public class GlobalControllerAdvice {
     @ModelAttribute("usuarioLogado")
     public Usuario usuarioLogado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+
+        // Verifica se está autenticado e não é usuário anonimo
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
             String email = auth.getName(); // geralmente é o username (email)
             Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
             return usuario.orElse(null);
         }
         return null;
+    }
+
+    @ModelAttribute("isAdmin")
+    public boolean isAdmin() {
+        Usuario usuario = usuarioLogado();
+        if (usuario != null && usuario.getPerfis() != null) {
+            return usuario.getPerfis().stream()
+                    .anyMatch(perfil -> "ADMIN".equalsIgnoreCase(perfil.getNome()));
+        }
+        return false;
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -120,6 +121,31 @@ public class UsuarioController {
         model.addAttribute("usuario", usuarioOpt.get());
         adicionarAtributosComuns(model);
         return "usuarios/editar";
+    }
+    
+   @GetMapping("/test-error/400")
+    public void error400() {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad Request Teste");
+    }
+
+    @GetMapping("/test-error/401")
+    public void error401() {
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized Teste");
+    }
+
+    @GetMapping("/test-error/403")
+    public void error403() {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden Teste");
+    }
+
+    @GetMapping("/test-error/404")
+    public void error404() {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found Teste");
+    }
+
+    @GetMapping("/test-error/500")
+    public void error500() {
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error Teste");
     }
 
     @PostMapping("/{id}/editar")

@@ -251,5 +251,27 @@ public class UsuarioService {
         usuarioRepository.delete(usuario);
     }
 
+    public void atualizarPerfisUsuario(Long userId, Set<Perfil> novosPerfis) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        boolean temPerfilAdmin = usuario.getPerfis().stream()
+                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+        boolean novoTemPerfilAdmin = novosPerfis.stream()
+                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+
+        if (temPerfilAdmin && !novoTemPerfilAdmin) {
+            // Tentando remover perfil ADMIN do usuário
+            long outrosAdmins = usuarioRepository.countByPerfilNomeExcludingUser("ADMIN", userId);
+
+            if (outrosAdmins == 0) {
+                throw new RuntimeException("Não é permitido remover o último usuário ADMIN.");
+            }
+        }
+
+        // Atualiza os perfis e salva
+        usuario.setPerfis(novosPerfis);
+        usuarioRepository.save(usuario);
+    }
     
 }

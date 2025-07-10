@@ -16,6 +16,11 @@
       <section class="content-area">
         <h1><i class="fas fa-user-edit"></i> Editar Usuário</h1>
 
+        <!-- ✅ MENSAGEM DE ERRO -->
+        <div th:if="${erro}" class="alert alert-danger" role="alert" style="margin-bottom: 16px;">
+          <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}"></span>
+        </div>
+
         <form th:action="@{'/usuarios/' + ${usuario.id} + '/editar'}" method="post" th:object="${usuario}" class="form-usuario">
 
           <div class="form-group">
@@ -39,14 +44,15 @@
           </div>
 
           <div class="form-group">
-            <label for="senha">Senha:</label>
-            <input type="password" id="senha" th:field="*{senha}" />
-          </div>
+  <label for="senha">Senha:</label>
+  <input type="password" id="senha" th:field="*{senha}" required />
+</div>
 
-          <div class="form-group">
-            <label for="confirmSenha">Confirmar Senha:</label>
-            <input type="password" id="confirmSenha" name="confirmSenha" />
-          </div>
+<div class="form-group">
+  <label for="confirmSenha">Confirmar Senha:</label>
+  <input type="password" id="confirmSenha" name="confirmSenha" required />
+</div>
+
 
           <div class="form-group">
             <label for="telefone">Telefone:</label>
@@ -85,7 +91,8 @@
 
           <div class="form-group">
             <label for="perfilId">Perfil:</label>
-            <select id="perfilId" name="perfilId" required>
+            <select id="perfilId" name="perfilId" required
+                    th:disabled="${usuario.email == 'admin@teste.com'}">
               <option value="" disabled>-- Selecione um perfil --</option>
               <option th:each="perfil : ${perfis}"
                       th:value="${perfil.id}"
@@ -108,9 +115,7 @@
             <label for="genero">Gênero:</label>
             <select id="genero" th:field="*{genero}">
               <option value="" disabled>-- Selecione o gênero --</option>
-              <option th:each="gen : ${generos}"
-                      th:value="${gen}"
-                      th:text="${gen}"></option>
+              <option th:each="gen : ${generos}" th:value="${gen}" th:text="${gen}"></option>
             </select>
           </div>
 
@@ -129,56 +134,54 @@
             <input type="date" id="dataAdmissao" th:field="*{dataAdmissao}" />
           </div>
 
-          <!-- ... [código anterior permanece inalterado] ... -->
+          <div class="form-group">
+            <label for="status">Situação:</label>
+            <select id="status" th:field="*{status}" required>
+              <option value="" disabled>-- Selecione o status --</option>
+              <option value="ATIVO">Ativo</option>
+              <option value="INATIVO">Inativo</option>
+              <option value="DEMITIDO">Demitido</option>
+            </select>
+          </div>
 
-<div class="form-group">
-  <label for="status">Situação:</label>
-  <select id="status" th:field="*{status}" required>
-    <option value="" disabled>-- Selecione o status --</option>
-    <option value="ATIVO">Ativo</option>
-    <option value="INATIVO">Inativo</option>
-    <option value="DEMITIDO">Demitido</option>
-  </select>
-</div>
+          <div class="form-group" id="campoDesligamento" style="display:none;">
+            <label for="dataDesligamento">Data de Desligamento:</label>
+            <input type="date" id="dataDesligamento" th:field="*{dataDesligamento}" />
+          </div>
 
-<div class="form-group" id="campoDesligamento" style="display:none;">
-  <label for="dataDesligamento">Data de Desligamento:</label>
-  <input type="date" id="dataDesligamento" th:field="*{dataDesligamento}" />
-</div>
+          <div class="form-group buttons full-width">
+            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+            <a th:href="@{/usuarios}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
+          </div>
+        </form>
+      </section>
 
-<div class="form-group buttons full-width">
-  <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
-  <a th:href="@{/usuarios/listar}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
-</div>
-
-</form> <!-- fechamento correto do form -->
-
-</section>
-      <!-- ✅ mover o script para fora do form -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const status = document.getElementById("status");
-    const campoDesligamento = document.getElementById("campoDesligamento");
-    const dataDesligamento = document.getElementById("dataDesligamento");
-
-    function verificarStatus() {
-      if (status.value === "DEMITIDO") {
-        campoDesligamento.style.display = "block";
-      } else {
-        campoDesligamento.style.display = "none";
-        if (dataDesligamento) {
-          dataDesligamento.value = "";
-        }
-      }
-    }
-
-    status.addEventListener("change", verificarStatus);
-    verificarStatus(); // executa na inicialização da página
-  });
-</script>
-      <!-- Script para preenchimento automático via CEP -->
+      <!-- Script: mostrar campo dataDesligamento se status for DEMITIDO -->
       <script>
-        document.getElementById('cep').addEventListener('blur', function() {
+        document.addEventListener("DOMContentLoaded", function () {
+          const status = document.getElementById("status");
+          const campoDesligamento = document.getElementById("campoDesligamento");
+          const dataDesligamento = document.getElementById("dataDesligamento");
+
+          function verificarStatus() {
+            if (status.value === "DEMITIDO") {
+              campoDesligamento.style.display = "block";
+            } else {
+              campoDesligamento.style.display = "none";
+              if (dataDesligamento) {
+                dataDesligamento.value = "";
+              }
+            }
+          }
+
+          status.addEventListener("change", verificarStatus);
+          verificarStatus(); // executa ao carregar
+        });
+      </script>
+
+      <!-- Script: Auto preenchimento por CEP -->
+      <script>
+        document.getElementById('cep').addEventListener('blur', function () {
           let cep = this.value.replace(/\D/g, '');
           if (cep.length === 8) {
             fetch(`https://viacep.com.br/ws/${cep}/json/`)
@@ -192,9 +195,7 @@
                   alert('CEP não encontrado.');
                 }
               })
-              .catch(() => {
-                alert('Erro ao consultar o CEP.');
-              });
+              .catch(() => alert('Erro ao consultar o CEP.'));
           }
         });
       </script>

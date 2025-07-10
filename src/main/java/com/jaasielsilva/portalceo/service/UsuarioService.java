@@ -32,8 +32,16 @@ public class UsuarioService {
     @Autowired private JavaMailSender mailSender;
     @Autowired private PasswordResetTokenRepository tokenRepository;
 
+    // ===============================
+    // MÉTODOS DE CADASTRO E ATUALIZAÇÃO
+    // ===============================
+
+    /**
+     * Salva ou atualiza um usuário no banco.
+     * Valida e impede alteração do admin master.
+     * Garante senha criptografada e perfil padrão.
+     */
     public void salvarUsuario(Usuario usuario) throws Exception {
-        // Impede alteração do admin master
         if (usuario.getId() != null) {
             Optional<Usuario> existente = usuarioRepository.findById(usuario.getId());
             if (existente.isPresent() && "admin@teste.com".equalsIgnoreCase(existente.get().getEmail())) {
@@ -41,21 +49,24 @@ public class UsuarioService {
             }
         }
 
-        Optional<Usuario> existente = usuarioRepository.findByEmail(usuario.getEmail());
-        if (existente.isPresent() && (usuario.getId() == null || !existente.get().getId().equals(usuario.getId()))) {
+        Optional<Usuario> existenteEmail = usuarioRepository.findByEmail(usuario.getEmail());
+        if (existenteEmail.isPresent() && (usuario.getId() == null || !existenteEmail.get().getId().equals(usuario.getId()))) {
             throw new Exception("Email já cadastrado!");
         }
 
+        // Criptografa senha se não estiver criptografada
         if (usuario.getSenha() != null && !usuario.getSenha().startsWith("$2a$")) {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         }
 
+        // Define perfil padrão caso não haja perfis atribuídos
         if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
             Perfil perfilPadrao = perfilRepository.findByNome("USER")
                 .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
             usuario.setPerfis(Set.of(perfilPadrao));
         }
 
+        // Define foto padrão se nenhuma for enviada
         if (usuario.getFotoPerfil() == null) {
             try {
                 ClassPathResource imagemPadrao = new ClassPathResource("static/img/gerente.png");
@@ -81,6 +92,34 @@ public class UsuarioService {
         }
     }
 
+    /**
+     * Atualiza os perfis de um usuário,
+     * garantindo que não seja removido o último ADMIN.
+     */
+    public void atualizarPerfisUsuario(Long userId, Set<Perfil> novosPerfis) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        boolean temPerfilAdmin = usuario.getPerfis().stream()
+                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+        boolean novoTemPerfilAdmin = novosPerfis.stream()
+                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+
+        if (temPerfilAdmin && !novoTemPerfilAdmin) {
+            long outrosAdmins = usuarioRepository.countByPerfilNomeExcludingUser("ADMIN", userId);
+            if (outrosAdmins == 0) {
+                throw new RuntimeException("Não é permitido remover o último usuário ADMIN.");
+            }
+        }
+
+        usuario.setPerfis(novosPerfis);
+        usuarioRepository.save(usuario);
+    }
+
+    // ===============================
+    // MÉTODOS DE BUSCA E LISTAGEM
+    // ===============================
+
     public Optional<Usuario> buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
@@ -92,6 +131,25 @@ public class UsuarioService {
     public List<Usuario> buscarTodos() {
         return usuarioRepository.findAll();
     }
+
+    public Optional<Usuario> buscarPorCpf(String cpf) {
+        return usuarioRepository.findByCpf(cpf);
+    }
+
+    public List<Usuario> buscarPorNomeOuEmail(String busca) {
+        return usuarioRepository.buscarPorNomeOuEmail(busca);
+    }
+
+    public boolean usuarioTemPermissaoParaExcluir(String matricula) {
+        return usuarioRepository.findByMatricula(matricula)
+            .map(usuario -> usuario.getPerfis().stream()
+                .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN")))
+            .orElse(false);
+    }
+
+    // ===============================
+    // MÉTODOS DE ESTATÍSTICAS
+    // ===============================
 
     public long totalUsuarios() {
         return usuarioRepository.count();
@@ -122,23 +180,51 @@ public class UsuarioService {
         );
     }
 
-    public Optional<Usuario> buscarPorCpf(String cpf) {
-        return usuarioRepository.findByCpf(cpf);
+    // ===============================
+    // MÉTODOS DE EXCLUSÃO
+    // ===============================
+
+    /**
+     * Exclui usuário validando permissões e regras de negócio.
+     * Remove tokens associados antes da exclusão.
+     */
+    @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void excluirUsuario(Long id, String matriculaSolicitante) {
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
+
+        if ("admin@teste.com".equalsIgnoreCase(usuario.getEmail())) {
+            throw new IllegalStateException("Este usuário administrador não pode ser excluído.");
+        }
+
+        if (usuario.getMatricula().equalsIgnoreCase(matriculaSolicitante)) {
+            throw new IllegalStateException("Usuário não pode se excluir sozinho.");
+        }
+
+        if (!usuarioTemPermissaoParaExcluir(matriculaSolicitante)) {
+            throw new IllegalStateException("Usuário não pode ser excluído: matrícula inválida.");
+        }
+
+        boolean ehAdmin = usuario.getPerfis().stream()
+            .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+
+        if (ehAdmin && usuarioRepository.countUsuariosPorPerfil("ADMIN") <= 1) {
+            throw new IllegalStateException("Não é possível excluir o último administrador do sistema.");
+        }
+
+        tokenRepository.deleteByUsuarioId(usuario.getId());
+        usuarioRepository.delete(usuario);
     }
 
-    public boolean usuarioTemPermissaoParaExcluir(String matricula) {
-        return usuarioRepository.findByMatricula(matricula)
-            .map(usuario -> usuario.getPerfis().stream()
-                .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN")))
-            .orElse(false);
-    }
+    // ===============================
+    // MÉTODOS DE RESET DE SENHA E TOKEN
+    // ===============================
 
-    public List<Usuario> buscarPorNomeOuEmail(String busca) {
-        return usuarioRepository.buscarPorNomeOuEmail(busca);
-    }
-
-    // ---------------------- RESET DE SENHA ----------------------
-
+    /**
+     * Solicita reset de senha por ID de usuário.
+     * Envia email com link para redefinição.
+     */
     public void resetarSenhaPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
@@ -149,6 +235,9 @@ public class UsuarioService {
         }
     }
 
+    /**
+     * Gera e envia o link de redefinição de senha para o email informado.
+     */
     public boolean enviarLinkRedefinicaoSenha(String email) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
         if (usuarioOpt.isEmpty()) return false;
@@ -218,6 +307,9 @@ public class UsuarioService {
         }
     }
 
+    /**
+     * Gera um token único para redefinição de senha válido por 1 hora.
+     */
     @Transactional
     public String gerarTokenRedefinicao(Usuario usuario) {
         String token = UUID.randomUUID().toString();
@@ -229,49 +321,4 @@ public class UsuarioService {
 
         return token;
     }
-
-    @Transactional
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public void excluirUsuario(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
-
-        if ("admin@teste.com".equalsIgnoreCase(usuario.getEmail())) {
-            throw new IllegalStateException("Este usuário administrador não pode ser excluído.");
-        }
-
-        boolean ehAdmin = usuario.getPerfis().stream()
-            .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
-
-        if (ehAdmin && usuarioRepository.countUsuariosPorPerfil("ADMIN") <= 1) {
-            throw new IllegalStateException("Não é possível excluir o último administrador do sistema.");
-        }
-
-        tokenRepository.deleteByUsuarioId(usuario.getId());
-        usuarioRepository.delete(usuario);
-    }
-
-    public void atualizarPerfisUsuario(Long userId, Set<Perfil> novosPerfis) {
-        Usuario usuario = usuarioRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-        boolean temPerfilAdmin = usuario.getPerfis().stream()
-                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
-        boolean novoTemPerfilAdmin = novosPerfis.stream()
-                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
-
-        if (temPerfilAdmin && !novoTemPerfilAdmin) {
-            // Tentando remover perfil ADMIN do usuário
-            long outrosAdmins = usuarioRepository.countByPerfilNomeExcludingUser("ADMIN", userId);
-
-            if (outrosAdmins == 0) {
-                throw new RuntimeException("Não é permitido remover o último usuário ADMIN.");
-            }
-        }
-
-        // Atualiza os perfis e salva
-        usuario.setPerfis(novosPerfis);
-        usuarioRepository.save(usuario);
-    }
-    
 }

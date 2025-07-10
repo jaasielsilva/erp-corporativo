@@ -46,6 +46,9 @@ public class UsuarioController {
     // BLOCO: PÁGINA PRINCIPAL E LISTAGEM
     // ===============================
 
+    /**
+     * Exibe a lista de usuários, com opção de busca por nome ou email.
+     */
     @GetMapping
     public String listarUsuarios(@RequestParam(value = "busca", required = false) String busca, Model model) {
         List<Usuario> usuarios = (busca == null || busca.isEmpty())
@@ -55,6 +58,9 @@ public class UsuarioController {
         return "usuarios/listar";
     }
 
+    /**
+     * Exibe as estatísticas gerais dos usuários no sistema.
+     */
     @GetMapping("/index")
     public String mostrarEstatisticasUsuarios(Model model) {
         EstatisticasUsuariosDTO stats = usuarioService.buscarEstatisticas();
@@ -70,6 +76,9 @@ public class UsuarioController {
     // BLOCO: CADASTRO E EDIÇÃO DE USUÁRIOS
     // ===============================
 
+    /**
+     * Exibe o formulário para cadastro de novo usuário.
+     */
     @GetMapping("/cadastro")
     public String mostrarFormularioCadastro(Model model) {
         if (!model.containsAttribute("usuario")) {
@@ -79,6 +88,10 @@ public class UsuarioController {
         return "usuarios/cadastro";
     }
 
+    /**
+     * Processa o cadastro de um novo usuário.
+     * Valida senhas e associa perfil selecionado.
+     */
     @PostMapping("/cadastrar")
     public String cadastrarUsuario(@Valid @ModelAttribute("usuario") Usuario usuario,
                                    BindingResult bindingResult,
@@ -114,6 +127,9 @@ public class UsuarioController {
         return "redirect:/usuarios";
     }
 
+    /**
+     * Exibe o formulário para edição de usuário existente.
+     */
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
@@ -122,70 +138,102 @@ public class UsuarioController {
         adicionarAtributosComuns(model);
         return "usuarios/editar";
     }
-    
-   @GetMapping("/test-error/400")
+
+    /**
+     * Teste para disparar erro HTTP 400 Bad Request.
+     */
+    @GetMapping("/test-error/400")
     public void error400() {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad Request Teste");
     }
 
+    /**
+     * Teste para disparar erro HTTP 401 Unauthorized.
+     */
     @GetMapping("/test-error/401")
     public void error401() {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized Teste");
     }
 
+    /**
+     * Teste para disparar erro HTTP 403 Forbidden.
+     */
     @GetMapping("/test-error/403")
     public void error403() {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden Teste");
     }
 
+    /**
+     * Teste para disparar erro HTTP 404 Not Found.
+     */
     @GetMapping("/test-error/404")
     public void error404() {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found Teste");
     }
 
+    /**
+     * Teste para disparar erro HTTP 500 Internal Server Error.
+     */
     @GetMapping("/test-error/500")
     public void error500() {
         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error Teste");
     }
 
+    /**
+     * Salva as alterações feitas no usuário após edição.
+     * Se for data de desligamento, exclui o usuário.
+     */
     @PostMapping("/{id}/editar")
-    public String salvarEdicaoUsuario(@PathVariable Long id,
-                                      @Valid @ModelAttribute("usuario") Usuario usuario,
-                                      BindingResult bindingResult,
-                                      @RequestParam("confirmSenha") String confirmSenha,
-                                      @RequestParam("perfilId") Long perfilId,
-                                      Model model) {
+public String salvarEdicaoUsuario(@PathVariable Long id,
+                                  @Valid @ModelAttribute("usuario") Usuario usuario,
+                                  BindingResult bindingResult,
+                                  @RequestParam("confirmSenha") String confirmSenha,
+                                  @RequestParam("perfilId") Long perfilId,
+                                  Model model,
+                                  Principal principal) {  // <--- adiciona aqui
 
-        if (!usuario.getSenha().equals(confirmSenha)) {
-            bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
-        }
-
-        if (bindingResult.hasErrors()) {
-            adicionarAtributosComuns(model);
-            return "usuarios/editar";
-        }
-
-        try {
-            if (usuario.getDataDesligamento() != null) {
-                usuarioService.excluirUsuario(id);
-                return "redirect:/usuarios";
-            }
-
-            usuario.setId(id);
-            usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
-                    .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
-
-            usuarioService.salvarUsuario(usuario);
-
-        } catch (Exception e) {
-            model.addAttribute("erro", e.getMessage());
-            adicionarAtributosComuns(model);
-            return "usuarios/editar";
-        }
-
-        return "redirect:/usuarios";
+    if (!usuario.getSenha().equals(confirmSenha)) {
+        bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
     }
 
+    if (bindingResult.hasErrors()) {
+        adicionarAtributosComuns(model);
+        return "usuarios/editar";
+    }
+
+    try {
+        if (usuario.getDataDesligamento() != null) {
+            // Obtém o email do usuário logado
+            String emailLogado = principal.getName();
+
+            // Busca o usuário logado para pegar a matrícula
+            Usuario usuarioLogado = usuarioService.buscarPorEmail(emailLogado)
+                                        .orElseThrow(() -> new IllegalStateException("Usuário logado não encontrado"));
+
+            // Passa a matrícula para o método de exclusão
+            usuarioService.excluirUsuario(id, usuarioLogado.getMatricula());
+
+            return "redirect:/usuarios";
+        }
+
+        usuario.setId(id);
+        usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
+                .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
+
+        usuarioService.salvarUsuario(usuario);
+
+    } catch (Exception e) {
+        model.addAttribute("erro", e.getMessage());
+        adicionarAtributosComuns(model);
+        return "usuarios/editar";
+    }
+
+    return "redirect:/usuarios";
+}
+
+    /**
+     * Busca usuário por CPF e redireciona para página de edição.
+     */
     @PostMapping("/editar")
     public String buscarUsuarioPorCpf(@RequestParam("cpf") String cpf, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorCpf(cpf);
@@ -198,27 +246,34 @@ public class UsuarioController {
         return "usuarios/editarcadastro";
     }
 
+    /**
+     * Exibe formulário para busca por CPF.
+     */
     @GetMapping("/editar")
     public String mostrarFormularioBuscaPorCpf() {
         return "usuarios/editar";
     }
 
     // ===============================
-    // EXCLUSÃO DE USUÁRIO COM TRATAMENTO DE ERRO
+    // BLOCO: EXCLUSÃO DE USUÁRIO COM TRATAMENTO DE ERRO
     // ===============================
 
+    /**
+     * Endpoint para exclusão de usuário.
+     * Recebe matrícula no header para validação.
+     */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/{id}/excluir")
-    public ResponseEntity<?> excluirUsuario(@PathVariable Long id) {
+    public ResponseEntity<?> excluirUsuario(
+            @PathVariable Long id,
+            @RequestHeader(name = "X-Matricula") String matriculaSolicitante) {
         try {
-            usuarioService.excluirUsuario(id);
-            return ResponseEntity.ok().body(Map.of("mensagem", "Usuário excluído com sucesso."));
+            usuarioService.excluirUsuario(id, matriculaSolicitante);
+            return ResponseEntity.ok(Map.of("mensagem", "Usuário excluído com sucesso."));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(Map.of("erro", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .body(Map.of("erro", "Erro inesperado ao excluir usuário."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("erro", "Erro inesperado ao excluir usuário."));
         }
     }
 
@@ -226,6 +281,9 @@ public class UsuarioController {
     // BLOCO: UTILITÁRIOS
     // ===============================
 
+    /**
+     * Valida se uma matrícula tem permissão para exclusão.
+     */
     @GetMapping("/validar-matricula")
     @ResponseBody
     public Map<String, Boolean> validar(@RequestParam String matricula) {
@@ -233,6 +291,9 @@ public class UsuarioController {
         return Map.of("autorizado", autorizado);
     }
 
+    /**
+     * Retorna a foto do usuário.
+     */
     @GetMapping("/{id}/foto")
     public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
@@ -245,6 +306,9 @@ public class UsuarioController {
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * Exibe detalhes completos do usuário.
+     */
     @GetMapping("/{id}/detalhes")
     public String exibirDetalhesUsuario(@PathVariable Long id, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
@@ -253,6 +317,9 @@ public class UsuarioController {
         return "usuarios/detalhes";
     }
 
+    /**
+     * Exibe dados do usuário logado.
+     */
     @GetMapping("/relatorio")
     public String meusDados(Model model, Principal principal) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(principal.getName());
@@ -324,6 +391,9 @@ public class UsuarioController {
     // BLOCO: RELATÓRIOS PDF
     // ===============================
 
+    /**
+     * Gera PDF com informações completas do usuário.
+     */
     @GetMapping("/{id}/pdf")
     public void gerarPdfUsuario(@PathVariable Long id, HttpServletResponse response) throws IOException {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
@@ -393,7 +463,10 @@ public class UsuarioController {
     // BLOCO: RESETAR SENHA
     // ===============================
 
-    // Resetar senha pelo ID via POST, retorno texto simples (ex: para AJAX)
+    /**
+     * Reseta a senha do usuário pelo ID (via POST).
+     * Retorna JSON com status para requisição AJAX.
+     */
     @PostMapping("/{id}/resetar-senha")
     @ResponseBody
     public Map<String, String> resetarSenhaPorId(@PathVariable Long id) {
@@ -414,6 +487,9 @@ public class UsuarioController {
     // MÉTODO AUXILIAR
     // ===============================
 
+    /**
+     * Adiciona dados comuns para formulários e listas de usuários.
+     */
     private void adicionarAtributosComuns(Model model) {
         model.addAttribute("perfis", perfilRepository.findAll());
         model.addAttribute("generos", Genero.values());

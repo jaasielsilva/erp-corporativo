@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalhes do Cliente - Painel do CEO</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h2>Detalhes do Cliente</h2>
+
+        <div class="detalhes">
+          <p><strong>Nome / Razão Social:</strong> <span th:text="${cliente.nome}"></span></p>
+          <p><strong>Nome Fantasia:</strong> <span th:text="${cliente.nomeFantasia}"></span></p>
+          <p><strong>Tipo:</strong> <span th:text="${cliente.tipoCliente}"></span></p>
+          <p><strong>Email:</strong> <span th:text="${cliente.email}"></span></p>
+          <p><strong>Telefone:</strong> <span th:text="${cliente.telefone}"></span></p>
+          <p><strong>Celular:</strong> <span th:text="${cliente.celular}"></span></p>
+          <p><strong>CPF/CNPJ:</strong> <span th:text="${cliente.cpfCnpj}"></span></p>
+          <p><strong>Inscrição Estadual:</strong> <span th:text="${cliente.inscricaoEstadual}"></span></p>
+          <p><strong>Inscrição Municipal:</strong> <span th:text="${cliente.inscricaoMunicipal}"></span></p>
+
+          <p><strong>Endereço:</strong></p>
+          <ul>
+            <li><strong>Logradouro:</strong> <span th:text="${cliente.logradouro}"></span></li>
+            <li><strong>Número:</strong> <span th:text="${cliente.numero}"></span></li>
+            <li><strong>Complemento:</strong> <span th:text="${cliente.complemento}"></span></li>
+            <li><strong>Bairro:</strong> <span th:text="${cliente.bairro}"></span></li>
+            <li><strong>Cidade:</strong> <span th:text="${cliente.cidade}"></span></li>
+            <li><strong>Estado:</strong> <span th:text="${cliente.estado}"></span></li>
+            <li><strong>CEP:</strong> <span th:text="${cliente.cep}"></span></li>
+          </ul>
+
+          <p><strong>Status:</strong> <span th:text="${cliente.status}"></span></p>
+          <p><strong>Pessoa para Contato:</strong> <span th:text="${cliente.pessoaContato}"></span></p>
+          <p><strong>Observações:</strong></p>
+          <p th:text="${cliente.observacoes}"></p>
+
+          <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" class="btn-editar"><i class="fas fa-edit"></i> Editar</a>
+          <a th:href="@{/clientes}" class="btn-voltar">Voltar</a>
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+</body>
+</html>

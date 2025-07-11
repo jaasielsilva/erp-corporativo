@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title th:text="${cliente.id == null} ? 'Novo Cliente' : 'Editar Cliente'">Formulário Cliente</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h2 th:text="${cliente.id == null} ? 'Novo Cliente' : 'Editar Cliente'"></h2>
+
+        <form th:action="${cliente.id == null} ? @{/clientes/salvar} : @{/clientes/editar}" method="post" th:object="${cliente}">
+          <input type="hidden" th:if="${cliente.id != null}" th:field="*{id}" />
+
+          <fieldset>
+            <legend>Dados Gerais</legend>
+            <label>Nome Completo / Razão Social:</label>
+            <input type="text" th:field="*{nome}" required />
+
+            <label>Nome Fantasia:</label>
+            <input type="text" th:field="*{nomeFantasia}" th:disabled="${cliente.tipoCliente != 'PJ'}" />
+
+            <label>Tipo Cliente:</label>
+            <select th:field="*{tipoCliente}">
+              <option value="PF" th:selected="${cliente.tipoCliente == 'PF'}">Pessoa Física</option>
+              <option value="PJ" th:selected="${cliente.tipoCliente == 'PJ'}">Pessoa Jurídica</option>
+            </select>
+
+            <label>Email:</label>
+            <input type="email" th:field="*{email}" required />
+
+            <label>Telefone:</label>
+            <input type="tel" th:field="*{telefone}" />
+
+            <label>Celular:</label>
+            <input type="tel" th:field="*{celular}" />
+
+            <label>CPF/CNPJ:</label>
+            <input type="text" th:field="*{cpfCnpj}" required />
+
+            <label>Inscrição Estadual:</label>
+            <input type="text" th:field="*{inscricaoEstadual}" th:disabled="${cliente.tipoCliente == 'PF'}" />
+
+            <label>Inscrição Municipal:</label>
+            <input type="text" th:field="*{inscricaoMunicipal}" th:disabled="${cliente.tipoCliente == 'PF'}" />
+          </fieldset>
+
+          <fieldset>
+            <legend>Endereço</legend>
+            <label>Logradouro:</label>
+            <input type="text" th:field="*{logradouro}" />
+
+            <label>Número:</label>
+            <input type="text" th:field="*{numero}" />
+
+            <label>Complemento:</label>
+            <input type="text" th:field="*{complemento}" />
+
+            <label>Bairro:</label>
+            <input type="text" th:field="*{bairro}" />
+
+            <label>Cidade:</label>
+            <input type="text" th:field="*{cidade}" />
+
+            <label>Estado:</label>
+            <input type="text" th:field="*{estado}" maxlength="2" />
+
+            <label>CEP:</label>
+            <input type="text" th:field="*{cep}" />
+          </fieldset>
+
+          <fieldset>
+            <legend>Outros Dados</legend>
+            <label>Status:</label>
+            <select th:field="*{status}">
+              <option value="Ativo" th:selected="${cliente.status == 'Ativo'}">Ativo</option>
+              <option value="Inativo" th:selected="${cliente.status == 'Inativo'}">Inativo</option>
+            </select>
+
+            <label>Pessoa para Contato:</label>
+            <input type="text" th:field="*{pessoaContato}" />
+
+            <label>Observações:</label>
+            <textarea th:field="*{observacoes}" rows="4"></textarea>
+          </fieldset>
+
+          <button type="submit" class="btn-salvar">Salvar</button>
+          <a th:href="@{/clientes}" class="btn-cancelar">Cancelar</a>
+        </form>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,339 @@
+/* --- Dashboard (Cards de Métricas) --- */
+.card-metric {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.2s;
+}
+.card-metric:hover {
+  transform: translateY(-5px);
+}
+
+/* --- Cards VIP com ícones --- */
+.vip-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.vip-card {
+  background: #f8f9fa;
+  border-left: 4px solid #2563eb;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease-in-out;
+}
+.vip-card:hover {
+  background: #eef2f7;
+  transform: scale(1.02);
+}
+.vip-card .icon {
+  font-size: 1.5rem;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Botões de Filtro --- */
+.filter-buttons {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.btn-filter {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  background-color: #e0e0e0;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-filter:hover,
+.btn-filter.active {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+/* --- Campo de Busca --- */
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+  transition: border-color 0.2s ease;
+}
+.search-input:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+/* --- Tabela de Clientes --- */
+.table-list {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-top: 1rem;
+}
+.table-list th,
+.table-list td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+.table-list th {
+  background-color: #f9fafc;
+  font-weight: 600;
+}
+.table-list td .badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.badge.ativo {
+  background-color: #e0f2f1;
+  color: #00796b;
+}
+.badge.inativo {
+  background-color: #ffebee;
+  color: #c62828;
+}
+.badge.pendente {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+/* --- Ações da Tabela --- */
+.acoes .btn-action {
+  border: none;
+  background: none;
+  margin: 0 0.3rem;
+  font-size: 1.1rem;
+  color: #555;
+  transition: color 0.2s ease;
+}
+.btn-action:hover {
+  color: #2563eb;
+}
+
+/* --- Modal de Exclusão --- */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.modal-buttons .btn-submit {
+  background-color: #d32f2f;
+  color: white;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+.btn-cancel {
+  background: transparent;
+  border: 1px solid #aaa;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* --- Mensagens de erro e sucesso --- */
+.msg-erro {
+  color: #d32f2f;
+  margin-top: 0.5rem;
+}
+.msg-sucesso {
+  color: #388e3c;
+  margin-top: 0.5rem;
+}
+
+/* --- Classe auxiliar para esconder elementos --- */
+.hidden {
+  display: none;
+}
+/* --- Cards de Métricas (Dashboard) --- */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.card-metric {
+  background: linear-gradient(135deg, #f5f7fa, #e0e5ec);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+.card-metric h4 {
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.card-metric p {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #2563eb;
+  margin: 0;
+}
+
+.card-metric:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 6px 6px 14px #c2cbd5, -6px -6px 14px #ffffff;
+}
+.card-metric::after {
+  content: '\f0c0'; /* ícone FontAwesome (exemplo: users) */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 1.2rem;
+  color: #c5c5c5;
+  opacity: 0.2;
+  pointer-events: none;
+}
+/* --- Ícones decorativos nos cards principais --- */
+.card-metric {
+  position: relative;
+}
+
+.card-metric::after {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 1.8rem;
+  color: #c5c5c5;
+  opacity: 0.1;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+}
+
+/* Ícone para cada card por ordem */
+.card-metric:nth-child(1)::after {
+  content: '\f0c0'; /* Total de Clientes - users */
+}
+
+.card-metric:nth-child(2)::after {
+  content: '\f058'; /* Ativos - check circle */
+}
+
+.card-metric:nth-child(3)::after {
+  content: '\f057'; /* Inativos - times circle */
+}
+
+.card-metric:nth-child(4)::after {
+  content: '\f1ad'; /* Pessoas Jurídicas - building */
+}
+
+/* Efeito sutil ao passar o mouse */
+.card-metric:hover::after {
+  transform: scale(1.2);
+  opacity: 0.18;
+}
+/* --- Cards de Métricas (Dashboard) --- */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.card-metric {
+  background: linear-gradient(135deg, #f5f7fa, #e0e5ec);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+.card-metric h4 {
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.card-metric p {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #2563eb;
+  margin: 0;
+}
+
+.card-metric:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 6px 6px 14px #c2cbd5, -6px -6px 14px #ffffff;
+}
+
+/* --- Ícones decorativos nos cards de métricas --- */
+.card-metric::after {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 1.8rem;
+  color: #c5c5c5;
+  opacity: 0.1;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+}
+
+.card-metric:hover::after {
+  transform: scale(1.2);
+  opacity: 0.18;
+}
+
+/* Ícone para cada card por ordem */
+.card-metric:nth-child(1)::after {
+  content: '\f0c0'; /* Total de Clientes - users */
+}
+
+.card-metric:nth-child(2)::after {
+  content: '\f058'; /* Ativos - check-circle */
+}
+
+.card-metric:nth-child(3)::after {
+  content: '\f057'; /* Inativos - times-circle */
+}
+
+.card-metric:nth-child(4)::after {
+  content: '\f1ad'; /* Pessoas Jurídicas - building */
+}
+

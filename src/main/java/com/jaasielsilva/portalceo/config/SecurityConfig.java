@@ -1,8 +1,9 @@
 package com.jaasielsilva.portalceo.config;
 
+import com.jaasielsilva.portalceo.security.CustomAuthenticationFailureHandler;
+import com.jaasielsilva.portalceo.security.UsuarioDetailsService;
 import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.repository.*;
-import com.jaasielsilva.portalceo.security.UsuarioDetailsService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,29 +53,31 @@ public class SecurityConfig {
         return provider;
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http,
-                                           DaoAuthenticationProvider authenticationProvider) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .usernameParameter("username")
-                .passwordParameter("password")
-                .defaultSuccessUrl("/dashboard", true)
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout.permitAll())
-            .authenticationProvider(authenticationProvider);
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http,
+                                       DaoAuthenticationProvider authenticationProvider,
+                                       CustomAuthenticationFailureHandler failureHandler) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
+            .anyRequest().authenticated()
+        )
+        .formLogin(form -> form
+            .loginPage("/login")
+            .loginProcessingUrl("/login")
+            .usernameParameter("username")  // ajuste para o nome do campo do form
+            .passwordParameter("password")
+            .defaultSuccessUrl("/dashboard", true)
+            .failureHandler(failureHandler) // usa seu handler customizado
+            .permitAll()
+        )
+        .logout(logout -> logout.permitAll())
+        .authenticationProvider(authenticationProvider);
 
-        return http.build();
-    }
+    return http.build();
+}
+
 
     @Bean
     public CommandLineRunner createInitialData(BCryptPasswordEncoder passwordEncoder) {
@@ -139,7 +142,7 @@ public class SecurityConfig {
                 admin.setEstado("SP");
                 admin.setCep("01000-000");
                 admin.setStatus(Usuario.Status.ATIVO);
-                admin.setGenero(Genero.MASCULINO);  // ajuste conforme enum
+                admin.setGenero(Genero.MASCULINO);
                 admin.setRamal("1010");
 
                 try {

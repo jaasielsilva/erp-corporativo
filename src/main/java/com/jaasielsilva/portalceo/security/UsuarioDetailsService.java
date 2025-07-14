@@ -3,8 +3,10 @@ package com.jaasielsilva.portalceo.security;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.*;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -26,9 +28,26 @@ public class UsuarioDetailsService implements UserDetailsService {
 
         Usuario usuario = usuarioOpt.get();
 
+        // Validação do status do usuário com mensagens específicas
+        if (usuario.getStatus() == Usuario.Status.DEMITIDO) {
+            throw new DisabledException("Usuário demitido não pode acessar o sistema.");
+        }
+
+        if (usuario.getStatus() == Usuario.Status.INATIVO) {
+            throw new LockedException("Usuário inativo não pode fazer login.");
+        }
+
+        if (usuario.getStatus() == Usuario.Status.BLOQUEADO) {
+            throw new LockedException("Usuário bloqueado não pode fazer login.");
+        }
+
         return new org.springframework.security.core.userdetails.User(
-                usuario.getEmail(), // login é o email
+                usuario.getEmail(), 
                 usuario.getSenha(),
+                true, 
+                true, 
+                true, 
+                true, 
                 usuario.getPerfis().stream()
                         .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
                         .collect(Collectors.toList())

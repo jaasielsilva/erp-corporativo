@@ -124,7 +124,7 @@ public class UsuarioController {
             return "usuarios/cadastro";
         }
 
-        return "redirect:/usuarios";
+        return "redirect:/dashboard";
     }
 
     /**

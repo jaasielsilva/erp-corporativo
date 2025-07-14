@@ -189,33 +189,43 @@ public class UsuarioService {
      * Remove tokens associados antes da exclusão.
      */
     @Transactional
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public void excluirUsuario(Long id, String matriculaSolicitante) {
-        Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
+@PreAuthorize("hasAuthority('ADMIN')")
+public void excluirUsuario(Long id, String matriculaSolicitante) {
+    Usuario usuario = usuarioRepository.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
 
-        if ("admin@teste.com".equalsIgnoreCase(usuario.getEmail())) {
-            throw new IllegalStateException("Este usuário administrador não pode ser excluído.");
-        }
-
-        if (usuario.getMatricula().equalsIgnoreCase(matriculaSolicitante)) {
-            throw new IllegalStateException("Usuário não pode se excluir sozinho.");
-        }
-
-        if (!usuarioTemPermissaoParaExcluir(matriculaSolicitante)) {
-            throw new IllegalStateException("Usuário não pode ser excluído: matrícula inválida.");
-        }
-
-        boolean ehAdmin = usuario.getPerfis().stream()
-            .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
-
-        if (ehAdmin && usuarioRepository.countUsuariosPorPerfil("ADMIN") <= 1) {
-            throw new IllegalStateException("Não é possível excluir o último administrador do sistema.");
-        }
-
-        tokenRepository.deleteByUsuarioId(usuario.getId());
-        usuarioRepository.delete(usuario);
+    if ("admin@teste.com".equalsIgnoreCase(usuario.getEmail())) {
+        throw new IllegalStateException("Este usuário administrador não pode ser excluído.");
     }
+
+    if (usuario.getMatricula().equalsIgnoreCase(matriculaSolicitante)) {
+        throw new IllegalStateException("Usuário não pode se excluir sozinho.");
+    }
+
+    if (!usuarioTemPermissaoParaExcluir(matriculaSolicitante)) {
+        throw new IllegalStateException("Usuário não pode ser excluído: matrícula inválida.");
+    }
+
+    boolean ehAdmin = usuario.getPerfis().stream()
+        .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+
+    if (ehAdmin && usuarioRepository.countUsuariosPorPerfil("ADMIN") <= 1) {
+        throw new IllegalStateException("Não é possível excluir o último administrador do sistema.");
+    }
+
+    // Em vez de deletar, atualiza o status para DEMITIDO e registra a data de desligamento
+    usuario.setStatus(Usuario.Status.DEMITIDO);
+    usuario.setDataDesligamento(java.time.LocalDate.now());
+
+    // Opcional: limpar informações sensíveis, telefone, ramal, etc (dependendo da política)
+    usuario.setTelefone(null);
+    usuario.setRamal(null);
+    usuarioRepository.save(usuario);
+
+    // Também pode deletar tokens, se necessário
+    tokenRepository.deleteByUsuarioId(usuario.getId());
+}
+
 
     // ===============================
     // MÉTODOS DE RESET DE SENHA E TOKEN

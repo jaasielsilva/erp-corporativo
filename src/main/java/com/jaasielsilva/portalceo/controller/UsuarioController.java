@@ -42,21 +42,28 @@ public class UsuarioController {
         this.departamentoRepository = departamentoRepository;
     }
 
-    // ===============================
-    // BLOCO: PÁGINA PRINCIPAL E LISTAGEM
-    // ===============================
-
-    /**
-     * Exibe a lista de usuários, com opção de busca por nome ou email.
+        /**
+     * Lista os usuários cadastrados no sistema.
+     * Caso haja parâmetro de busca, filtra por nome ou email.
+     * Exibe apenas usuários com status ATIVO (usuários DEMITIDOS não aparecem).
      */
+
     @GetMapping
     public String listarUsuarios(@RequestParam(value = "busca", required = false) String busca, Model model) {
-        List<Usuario> usuarios = (busca == null || busca.isEmpty())
-                ? usuarioService.buscarTodos()
-                : usuarioService.buscarPorNomeOuEmail(busca);
-        model.addAttribute("usuarios", usuarios);
-        return "usuarios/listar";
-    }
+    List<Usuario> usuarios = (busca == null || busca.isEmpty())
+            ? usuarioService.buscarTodos()
+                .stream()
+                .filter(u -> u.getStatus() == Usuario.Status.ATIVO)
+                .toList()
+            : usuarioService.buscarPorNomeOuEmail(busca)
+                .stream()
+                .filter(u -> u.getStatus() == Usuario.Status.ATIVO)
+                .toList();
+                
+    model.addAttribute("usuarios", usuarios);
+    return "usuarios/listar";
+}
+
 
     /**
      * Exibe as estatísticas gerais dos usuários no sistema.

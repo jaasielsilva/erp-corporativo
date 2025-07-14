@@ -189,8 +189,8 @@ public class UsuarioService {
      * Remove tokens associados antes da exclusão.
      */
     @Transactional
-@PreAuthorize("hasAuthority('ADMIN')")
-public void excluirUsuario(Long id, String matriculaSolicitante) {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void excluirUsuario(Long id, String matriculaSolicitante) {
     Usuario usuario = usuarioRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
 

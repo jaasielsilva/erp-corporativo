@@ -4,14 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Clientes - Painel do CEO</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <!-- FontAwesome para ícones -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-
+  
   <!-- Seu CSS padrão -->
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/clientes.css}" />
-
 </head>
 <body>
   <div class="app-container">
@@ -100,6 +98,11 @@
           aria-label="Busca de clientes"
         />
 
+        <!-- Botão flutuante para cadastrar novo cliente -->
+        <a href="/clientes/cadastro" class="btn-novo" title="Cadastrar novo cliente" aria-label="Cadastrar cliente">
+          <i class="fas fa-user-plus"></i> Novo Cliente
+        </a>
+
         <!-- Lista de clientes -->
         <table class="table-list" id="clientesTable" aria-describedby="tabelaDescricao">
           <caption id="tabelaDescricao" class="sr-only">Lista de clientes cadastrados com opções de ações</caption>
@@ -157,7 +160,6 @@
             </tr>
           </tbody>
         </table>
-        </section>
       </section>
 
       <!-- Rodapé -->

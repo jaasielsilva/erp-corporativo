@@ -336,4 +336,22 @@
 .card-metric:nth-child(4)::after {
   content: '\f1ad'; /* Pessoas Jurídicas - building */
 }
-
+.btn-novo {
+  padding: 6px 14px;               /* Menos espaço interno */
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  color: white;
+  font-weight: 600;
+  font-size: 1.3rem;              /* Fonte um pouco menor */
+  border: none;
+  border-radius: 8px;             /* Levemente arredondado */
+  text-decoration: none;
+  display: inline-flex;           /* inline para encaixar bem no layout */
+  align-items: center;
+  gap: 6px;                      /* Espaço menor entre ícone e texto */
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3); /* sombra mais sutil */
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.btn-novo:hover {
+  background: linear-gradient(90deg, #1e40af, #2563eb);
+  box-shadow: 0 5px 14px rgba(30, 64, 175, 0.5);
+}

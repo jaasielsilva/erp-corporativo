@@ -144,4 +144,10 @@ public class ClienteService {
         return repository.findByStatusIgnoreCaseAndNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(
             "Ativo", busca, busca);
     }
+
+    // Buscar todos os clientes, sem filtro de status
+    public List<Cliente> buscarTodos() {
+    return repository.findAll();
+}
+
 }

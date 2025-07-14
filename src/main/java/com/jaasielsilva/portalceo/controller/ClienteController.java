@@ -30,23 +30,32 @@ public class ClienteController {
      * @return nome do template da lista de clientes
      */
     @GetMapping
-    public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
-        List<Cliente> clientes = service.buscarAtivos(busca);
+public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
+    List<Cliente> clientes;
 
-        model.addAttribute("clientes", clientes);
-        model.addAttribute("totalClientes", service.contarTotal());
-        model.addAttribute("ativos", service.contarAtivos());
-        model.addAttribute("inativos", service.contarInativos());
-        model.addAttribute("pessoasJuridicas", service.contarPessoasJuridicas());
-        model.addAttribute("ativosUltimos30", service.contarAtivosUltimos30Dias());
-        model.addAttribute("clientesPF", service.contarClientesPF());
-        model.addAttribute("clientesPJ", service.contarPessoasJuridicas()); // Usa contarPessoasJuridicas pois contaPJ e redundante
-        model.addAttribute("clientesPendentes", service.contarPendentes());
-        model.addAttribute("clientesInativos90", service.contarInativosMais90Dias());
-        model.addAttribute("clientesFidelizados", service.contarFidelizados());
-
-        return "clientes/lista";
+    if (busca == null || busca.trim().isEmpty()) {
+        // Busca todos os clientes, independente do status
+        clientes = service.buscarTodos();
+    } else {
+        // Busca clientes (ativos e inativos) cujo nome ou email contenha o termo
+        clientes = service.buscarPorNomeOuEmail(busca.trim());
     }
+
+    model.addAttribute("clientes", clientes);
+    model.addAttribute("totalClientes", service.contarTotal());
+    model.addAttribute("ativos", service.contarAtivos());
+    model.addAttribute("inativos", service.contarInativos());
+    model.addAttribute("pessoasJuridicas", service.contarPessoasJuridicas());
+    model.addAttribute("ativosUltimos30", service.contarAtivosUltimos30Dias());
+    model.addAttribute("clientesPF", service.contarClientesPF());
+    model.addAttribute("clientesPJ", service.contarPessoasJuridicas());
+    model.addAttribute("clientesPendentes", service.contarPendentes());
+    model.addAttribute("clientesInativos90", service.contarInativosMais90Dias());
+    model.addAttribute("clientesFidelizados", service.contarFidelizados());
+
+    return "clientes/lista";
+}
+
 
     /**
      * Exibe o formulário para cadastro de um novo cliente.
@@ -56,10 +65,12 @@ public class ClienteController {
      * @return nome do template do formulário de cadastro
      */
     @GetMapping("/cadastro")
-    public String novo(Model model) {
-        model.addAttribute("cliente", new Cliente());
-        return "clientes/cadastro";
-    }
+    public String novoCliente(Model model) {
+    List<Cliente> clientes = service.buscarTodos(); // TODOS clientes
+    model.addAttribute("cliente", new Cliente()); // objeto vazio para preencher o formulário
+    return "clientes/cadastro"; // nome do template Thymeleaf
+}
+
 
     /**
      * Recebe dados do formulário para salvar ou atualizar um cliente.

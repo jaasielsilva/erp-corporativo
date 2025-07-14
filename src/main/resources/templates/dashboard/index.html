@@ -20,7 +20,11 @@
         <h2>Controle completo para seu negócio</h2>
         <div class="dashboard-cards">
           <div class="card-metric"><h4>Total de Vendas</h4><p>R$ 12.345,67</p></div>
-          <div class="card-metric"><h4>Clientes Ativos</h4><p>120</p></div>
+          <div class="card-metric">
+          <h4>Clientes Ativos</h4>
+          <p th:text="${totalClientes}">0</p>
+        </div>
+
           <div class="card-metric"><h4>Produtos no Estoque</h4><p>547</p></div>
           <div class="card-metric"><h4>Projetos em Andamento</h4><p>8</p></div>
         </div>

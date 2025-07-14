@@ -156,3 +156,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expor as funções do modal etc, se necessário (reusar código anterior)
   // ...
 });
+document.addEventListener('DOMContentLoaded', () => {
+  const btnToggle = document.getElementById('btnToggleDarkMode');
+  const body = document.body;
+
+  // Carregar preferência salva no localStorage
+  if (localStorage.getItem('darkMode') === 'enabled') {
+    body.classList.add('dark-mode');
+  }
+
+  btnToggle.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+
+    // Salvar ou remover preferência
+    if (body.classList.contains('dark-mode')) {
+      localStorage.setItem('darkMode', 'enabled');
+    } else {
+      localStorage.removeItem('darkMode');
+    }
+  });
+});

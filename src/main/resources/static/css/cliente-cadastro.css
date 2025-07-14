@@ -18,19 +18,18 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  color: #444;
 }
 
 .card-metric h4 {
   font-size: 1.1rem;
-  color: #444;
   margin-bottom: 0.5rem;
 }
 
 .card-metric p {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #2563eb;
-  margin: 0;
+  color: #2563eb; /* destaque azul royal */
 }
 
 .card-metric:hover {
@@ -93,6 +92,7 @@
   flex-direction: column;
   justify-content: center;
   box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+  color: #333;
 }
 
 .vip-card:hover {
@@ -103,7 +103,7 @@
 
 .vip-card .icon {
   font-size: 2rem;
-  color: #007BFF;
+  color: #2563eb;
   margin-bottom: 0.5rem;
   align-self: center;
 }
@@ -112,14 +112,13 @@
   font-weight: 600;
   margin-bottom: 0.3rem;
   text-align: center;
-  color: #333;
 }
 
 .vip-card p {
   font-size: 1.8rem;
   font-weight: 700;
   text-align: center;
-  color: #007BFF;
+  color: #2563eb;
 }
 
 /* --- Botão Flutuante --- */
@@ -201,6 +200,22 @@
 }
 
 /* --- Tabela de Clientes --- */
+.table-wrapper {
+  display: block;          /* importante para que o overflow funcione */
+  overflow-x: auto;        /* ativa barra de rolagem horizontal quando necessário */
+  max-width: 100%;         /* limita a largura ao container pai */
+  border: 1px solid #ddd;  /* opcional, para visual */
+  padding: 0.5rem;         /* espaçamento */
+  border-radius: 6px;      /* bordas arredondadas */
+  background-color: #fff;  /* fundo branco */
+}
+
+.table-wrapper table {
+  min-width: 900px;       /* força a tabela a ter largura mínima maior que container */
+  border-collapse: collapse;
+  width: 100%;            /* a tabela ocupará toda a largura da div, mas nunca menos que min-width */
+}
+
 .table-list {
   width: 100%;
   border-collapse: collapse;
@@ -216,6 +231,8 @@
   text-align: left;
   border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
+  white-space: nowrap; /* impede quebra de linha */
+  border: 1px solid #ccc;
 }
 
 .table-list th {
@@ -224,31 +241,63 @@
   color: #333;
 }
 
-.table-list td .badge {
-  padding: 0.3rem 0.8rem;
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  display: inline-block;
-  min-width: 70px;
-  text-align: center;
-}
-
 /* Status badges */
+/* --- Badges estilo atualizado --- */
+.badge {
+  display: inline-block;
+  padding: 0.35em 0.75em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 12px;
+  color: white;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+}
+
+/* Status ativo - verde */
 .badge.ativo {
-  background-color: #28a745;
-  color: white;
+  background-color: #28a745; /* verde vivo */
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
 }
 
+/* Status inativo - vermelho */
 .badge.inativo {
-  background-color: #dc3545;
+  background-color: #dc3545; /* vermelho forte */
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+/* Status pendente - amarelo */
+.badge.pendente {
+  background-color: #ffc107; /* amarelo ouro */
+  color: #212529;
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.4);
+}
+
+/* --- Badges modo escuro --- */
+body.dark-mode .badge {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
   color: white;
 }
 
-.badge.pendente {
-  background-color: #ffc107;
-  color: #212529;
+body.dark-mode .badge.ativo {
+  background-color: #43a047; /* verde vibrante */
+  box-shadow: 0 4px 8px rgba(67, 160, 71, 0.6);
 }
+
+body.dark-mode .badge.inativo {
+  background-color: #e53935; /* vermelho forte */
+  box-shadow: 0 4px 8px rgba(229, 57, 53, 0.6);
+}
+
+body.dark-mode .badge.pendente {
+  background-color: #fbc02d; /* amarelo ouro */
+  color: #212121;
+  box-shadow: 0 4px 8px rgba(251, 192, 45, 0.6);
+}
+
 
 /* --- Ações da Tabela --- */
 .acoes .btn-action {
@@ -405,33 +454,34 @@
     gap: 0.5rem;
   }
 }
+
 /* --- Modo Escuro --- */
 body.dark-mode {
-  background-color: #121212;       /* Preto quase total, suave */
-  color: #e0e0e0;                  /* Cinza claro para texto */
+  background-color: #121212;
+  color: #e0e0e0;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body.dark-mode .main-content {
-  background-color: #1e1e2f;       /* Azul bem escuro, mais sofisticado */
+  background-color: #1e1e2f;
   box-shadow: none;
 }
 
 body.dark-mode .card-metric,
 body.dark-mode .vip-card {
-  background-color: #27293d;       /* Azul arroxeado escuro */
+  background-color: #27293d;
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  color: #cfd8dc;                  /* Cinza azulado claro */
+  color: #cfd8dc;
 }
 
 body.dark-mode .table-list {
-  background-color: #1f2235;       /* Fundo escuro da tabela */
+  background-color: #1f2235;
   color: #cfd8dc;
   border-color: #444c5c;
 }
 
 body.dark-mode .table-list th {
-  background-color: #2f3350;       /* Cabeçalho com azul escuro */
+  background-color: #2f3350;
   color: #bbc7d6;
   border-color: #444c5c;
 }
@@ -441,17 +491,17 @@ body.dark-mode .table-list td {
 }
 
 body.dark-mode .badge.ativo {
-  background-color: #43a047;       /* Verde vibrante */
-  color: #e0f2f1;                  /* Verde clarinho */
+  background-color: #43a047;
+  color: #e0f2f1;
 }
 
 body.dark-mode .badge.inativo {
-  background-color: #e53935;       /* Vermelho forte */
+  background-color: #e53935;
   color: #ffebee;
 }
 
 body.dark-mode .badge.pendente {
-  background-color: #fbc02d;       /* Amarelo ouro */
+  background-color: #fbc02d;
   color: #212121;
 }
 
@@ -510,178 +560,220 @@ body.dark-mode .btn-cancel:hover,
 body.dark-mode .btn-cancel:focus {
   background-color: #b71c1c;
 }
-/* --- Cards métricas - claro --- */
-.card-metric {
-  background: linear-gradient(135deg, #f5f7fa, #e0e5ec);
-  border-radius: 20px;
-  padding: 1.5rem;
-  box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #ffffff;
-  text-align: center;
-  transition: all 0.3s ease-in-out;
-  position: relative;
-  cursor: default;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  color: #444;
-}
 
-.card-metric h4 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-}
-
-.card-metric p {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #2563eb; /* destaque azul royal */
-}
-
-/* --- Cards métricas - escuro --- */
-body.dark-mode .card-metric {
-  background-color: #27293d;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  color: #cfd8dc;
-}
-
-body.dark-mode .card-metric h4 {
-  color: #cfd8dc;
-}
-
-body.dark-mode .card-metric p {
-  color: #82aaff; /* azul claro destaque no dark */
-}
-
-/* --- Cards VIP - claro --- */
-.vip-card {
-  background: #f8f9fa;
-  border-left: 4px solid #2563eb;
-  padding: 1rem;
+/* --- Formulário de Cadastro de Cliente --- */
+/* Container geral do formulário de cliente */
+form.form-cliente {
+  max-width: 1200px;
+  margin: 2rem auto;
+  background: #ffffff;
+  padding: 2rem 2.5rem;
   border-radius: 12px;
-  transition: all 0.3s ease-in-out;
-  cursor: default;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+  gap: 1.3rem 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
 }
 
-.vip-card:hover {
-  background: #eef2f7;
-  transform: scale(1.02);
-  box-shadow: 0 8px 16px rgb(0 0 0 / 0.15);
+/* Fieldset com borda suave */
+form.form-cliente fieldset {
+  border: 1px solid #ddd;
+  padding: 1.5rem 2rem 2rem;
+  border-radius: 10px;
+  margin-bottom: 1.8rem;
+  background: #f9fafb;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+  gap: 1.3rem 2rem;
 }
 
-.vip-card .icon {
-  font-size: 2rem;
-  color: #2563eb;
-  margin-bottom: 0.5rem;
-  align-self: center;
-}
-
-.vip-card h4 {
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-  text-align: center;
-}
-
-.vip-card p {
-  font-size: 1.8rem;
+/* Legend destacado */
+form.form-cliente legend {
   font-weight: 700;
-  text-align: center;
-  color: #2563eb;
-}
-
-/* --- Cards VIP - escuro --- */
-body.dark-mode .vip-card {
-  background-color: #27293d;
-  border-left-color: #82aaff; /* azul claro */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  color: #cfd8dc;
-}
-
-body.dark-mode .vip-card:hover {
-  background-color: #3a3f5c;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.8);
-  transform: scale(1.02);
-}
-
-body.dark-mode .vip-card .icon {
-  color: #82aaff;
-}
-
-body.dark-mode .vip-card h4,
-body.dark-mode .vip-card p {
-  color: #cfd8dc;
-}
-
-/* --- Botão flutuante - claro --- */
-.btn-novo {
-  background: linear-gradient(90deg, #2563eb, #3b82f6);
-  color: white;
-  padding: 0.75rem 1.3rem;
-  border-radius: 50px;
-  font-weight: 600;
   font-size: 1.3rem;
-  box-shadow: 0 6px 12px rgb(37 99 235 / 0.3);
+  color: #2563eb;
+  padding: 0 10px;
+  width: auto;
+  margin-left: 10px;
+  letter-spacing: 0.05em;
+}
+
+/* Labels */
+form.form-cliente label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* Inputs e selects padrão */
+form.form-cliente input,
+form.form-cliente select,
+form.form-cliente textarea {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  font-size: 1rem;
+  border: 1.8px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  font-family: inherit;
+  color: #222;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+/* Foco nos campos */
+form.form-cliente input:focus,
+form.form-cliente select:focus,
+form.form-cliente textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+  background-color: #fff;
+}
+
+/* Campos desabilitados */
+form.form-cliente input[readonly],
+form.form-cliente select[disabled] {
+  background-color: #f1f3f5;
+  color: #666;
+  cursor: not-allowed;
+  border-color: #ddd;
+}
+
+/* Botões submit e reset */
+form.form-cliente button {
+  grid-column: span 3;
+  padding: 0.75rem 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  color: #fff;
+  background-color: #2563eb;
+  justify-self: center;
+  max-width: 240px;
+  margin-top: 1rem;
+}
+
+form.form-cliente button:hover {
+  background-color: #1e40af;
+}
+
+/* Mensagens de erro para validação */
+.msg-erro {
+  color: #dc3545;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+/* Campos específicos com largura maior no grid */
+.grid-span-2 {
+  grid-column: span 2;
+}
+
+/* Ajuste para checkbox com label ao lado */
+.checkbox-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: background 0.3s ease, box-shadow 0.3s ease;
-  z-index: 100;
-  text-decoration: none;
+  gap: 0.4rem;
+}
+
+/* Alinhamento específico para botões em formulário */
+.form-buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Ajuste para textarea (ex: observações) */
+form.form-cliente textarea {
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* Ajustes para responsividade do formulário */
+@media (max-width: 992px) {
+  form.form-cliente,
+  form.form-cliente fieldset {
+    grid-template-columns: 1fr 1fr;
+  }
+  form.form-cliente button {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 576px) {
+  form.form-cliente,
+  form.form-cliente fieldset {
+    grid-template-columns: 1fr;
+  }
+  form.form-cliente button {
+    grid-column: span 1;
+  }
+}
+/* --- Scroll fixo para máximo 4 clientes visíveis --- */
+.table-scroll-limit {
+  max-height: calc(4 * 68px + 42px); /* 4 linhas + cabeçalho (~310px) */
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 8px;
+}
+
+/* Scroll mais suave e bonito */
+.table-scroll-limit::-webkit-scrollbar {
+  width: 8px;
+}
+.table-scroll-limit::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.table-scroll-limit::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+.table-scroll-limit::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+
+.btn-excluir-cliente {
+  background: none;
+  border: none;
   cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
 }
 
-.btn-novo:hover,
-.btn-novo:focus {
-  background: linear-gradient(90deg, #1e40af, #2563eb);
-  box-shadow: 0 10px 20px rgb(30 64 175 / 0.6);
-  outline: none;
+.btn-excluir-cliente:hover {
+  background-color: #fee2e2; /* leve fundo vermelho claro */
 }
 
-/* --- Botão flutuante - escuro --- */
-body.dark-mode .btn-novo {
-  background: linear-gradient(90deg, #3949ab, #1e3c72);
-  box-shadow: 0 6px 12px rgba(25, 39, 103, 0.7);
-  color: #e3f2fd;
+
+.btn-excluir-cliente {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
 }
 
-body.dark-mode .btn-novo:hover {
-  background: linear-gradient(90deg, #1e3c72, #3949ab);
-  box-shadow: 0 8px 20px rgba(25, 39, 103, 0.9);
+.btn-excluir-cliente:hover {
+  background-color: #fee2e2; /* leve fundo vermelho claro */
 }
 
-/* --- Badges claro --- */
-.badge.ativo {
-  background-color: #28a745;
-  color: white;
+.btn-excluir-cliente i {
+  color: #dc2626; /* vermelho padrão */
+  font-size: 1.1rem;
 }
-
-.badge.inativo {
-  background-color: #dc3545;
-  color: white;
-}
-
-.badge.pendente {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-/* --- Badges escuro --- */
-body.dark-mode .badge.ativo {
-  background-color: #43a047;
-  color: #e0f2f1;
-}
-
-body.dark-mode .badge.inativo {
-  background-color: #e53935;
-  color: #ffebee;
-}
-
-body.dark-mode .badge.pendente {
-  background-color: #fbc02d;
-  color: #212121;
-}
-

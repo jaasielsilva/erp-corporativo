@@ -1,0 +1,272 @@
+/* cliente-detalhe.css */
+
+/* Reset básico para este arquivo */
+.detalhes p,
+.detalhes ul {
+  margin: 0.4rem 0;
+  font-size: 1rem;
+  color: #2c3e50;
+  line-height: 1.5;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.detalhes strong {
+  color: #34495e;
+  min-width: 140px;
+  display: inline-block;
+  font-weight: 700; /* Deixa o strong mais marcante */
+}
+
+/* Lista de endereço */
+.detalhes ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 1rem;
+}
+
+.detalhes ul li {
+  padding-left: 0.8rem;
+  border-left: 3px solid #2980b9;
+  margin-bottom: 0.6rem;
+  color: #34495e;
+}
+
+/* Container detalhes */
+.detalhes {
+  background-color: #f9fbfd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 32px 40px;
+  max-width: 900px;
+  margin: 1.5rem auto 2rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.detalhes:hover {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Títulos e subtítulos */
+.content-area h2 {
+  font-weight: 700;
+  color: #22313f;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-family: 'Segoe UI Semibold', Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+}
+
+/* Botões ação - container */
+.acoes-detalhes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 2rem 0 1rem;
+  justify-content: center;
+}
+
+/* Botões padrões */
+.acoes-detalhes button,
+.acoes-detalhes a.btn-email {
+  background-color: #2980b9;
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.4rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 8px rgba(41, 128, 185, 0.4);
+}
+
+.acoes-detalhes button:hover,
+.acoes-detalhes a.btn-email:hover {
+  background-color: #1f618d;
+  box-shadow: 0 5px 12px rgba(31, 97, 141, 0.6);
+}
+
+.acoes-detalhes button:active {
+  transform: scale(0.98);
+}
+
+/* Botões com ícones - centralizar ícone e texto */
+.acoes-detalhes i.fas {
+  font-size: 1.1rem;
+}
+
+/* Botões especiais com cores distintas */
+.btn-copy {
+  background-color: #27ae60;
+  box-shadow: 0 3px 8px rgba(39, 174, 96, 0.4);
+}
+
+.btn-copy:hover {
+  background-color: #1e8449;
+  box-shadow: 0 5px 12px rgba(30, 132, 73, 0.6);
+}
+
+.btn-pdf {
+  background-color: #c0392b;
+  box-shadow: 0 3px 8px rgba(192, 57, 43, 0.4);
+}
+
+.btn-pdf:hover {
+  background-color: #922b21;
+  box-shadow: 0 5px 12px rgba(146, 43, 33, 0.6);
+}
+
+.btn-phone {
+  background-color: #f39c12;
+  box-shadow: 0 3px 8px rgba(243, 156, 18, 0.4);
+}
+
+.btn-phone:hover {
+  background-color: #b9770e;
+  box-shadow: 0 5px 12px rgba(185, 119, 14, 0.6);
+}
+
+.btn-mapa {
+  background-color: #8e44ad;
+  box-shadow: 0 3px 8px rgba(142, 68, 173, 0.4);
+}
+
+.btn-mapa:hover {
+  background-color: #6c3483;
+  box-shadow: 0 5px 12px rgba(108, 52, 131, 0.6);
+}
+
+/* Botões principais da página (Editar e Voltar) */
+.botoes-acoes {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.botoes-acoes .btn-editar,
+.botoes-acoes .btn-voltar {
+  flex: none;
+  min-width: 120px;
+  text-align: center;
+  padding: 0.7rem 1.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(34, 49, 63, 0.15);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.botoes-acoes .btn-editar {
+  background-color: #2980b9;
+  color: white;
+  border: none;
+}
+
+.botoes-acoes .btn-editar:hover {
+  background-color: #1f618d;
+  box-shadow: 0 5px 15px rgba(31, 97, 141, 0.4);
+}
+
+.botoes-acoes .btn-voltar {
+  background-color: #bdc3c7;
+  color: #34495e;
+  border: none;
+}
+
+.botoes-acoes .btn-voltar:hover {
+  background-color: #95a5a6;
+  color: #2c3e50;
+}
+
+/* Responsividade */
+@media (max-width: 720px) {
+  .detalhes {
+    padding: 18px 20px;
+    max-width: 95%;
+  }
+  .content-area h2 {
+    font-size: 1.6rem;
+  }
+  .acoes-detalhes {
+    flex-direction: column;
+    align-items: center;
+  }
+  .acoes-detalhes button,
+  .acoes-detalhes a.btn-email {
+    width: 100%;
+    justify-content: center;
+  }
+  .botoes-acoes {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .botoes-acoes .btn-editar,
+  .botoes-acoes .btn-voltar {
+    width: 100%;
+  }
+  .detalhes strong {
+    min-width: 110px;
+  }
+}
+
+/* Pequeno toque de acessibilidade para foco */
+.acoes-detalhes button:focus,
+.acoes-detalhes a.btn-email:focus,
+.botoes-acoes .btn-editar:focus,
+.botoes-acoes .btn-voltar:focus {
+  outline: 3px solid #2980b9;
+  outline-offset: 2px;
+  box-shadow: 0 0 8px #2980b9;
+}
+
+/* Tooltip simples para os botões */
+.acoes-detalhes button[title]:hover::after,
+.acoes-detalhes a[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  background: rgba(34, 49, 63, 0.9);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  transform: translate(-50%, -120%);
+  pointer-events: none;
+  z-index: 1000;
+  max-width: 200px;
+  word-wrap: break-word;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* Ajuste para garantir que tooltip não seja cortado no mobile */
+@media (max-width: 480px) {
+  .acoes-detalhes button[title]:hover::after,
+  .acoes-detalhes a[title]:hover::after {
+    white-space: normal;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    bottom: calc(100% + 6px) !important;
+  }
+}
+
+/* Ajustar botões principais para alinhamento central no mobile */
+@media (max-width: 480px) {
+  .botoes-acoes {
+    width: 100%;
+    text-align: center;
+  }
+  .botoes-acoes .btn-editar,
+  .botoes-acoes .btn-voltar {
+    width: 100%;
+  }
+}

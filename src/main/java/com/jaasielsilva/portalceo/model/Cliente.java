@@ -28,9 +28,9 @@ public class Cliente {
 
     private String cpfCnpj;
 
-    private String tipoCliente; // PF ou PJ, pode melhorar usando Enum
+    private String tipoCliente; // PF ou PJ
 
-    // Endereço separado em campos
+    // Endereço separado
     private String logradouro;
     private String numero;
     private String complemento;
@@ -41,14 +41,26 @@ public class Cliente {
 
     private LocalDate dataCadastro;
 
-    private String status; // Ex: Ativo, Inativo
+    private String status;
 
-    private String pessoaContato; // Nome do contato principal
+    private String pessoaContato;
 
     private String observacoes;
 
     private LocalDateTime dataCriacao;
+
     private LocalDateTime dataAlteracao;
+
+    private String nomeFantasia;
+
+    // Novos campos que podem estar no formulário
+    private String inscricaoMunicipal;
+
+    private String inscricaoEstadual;
+
+    private String representanteLegal;
+
+    // Outros campos que seu formulário usa...
 
     @PrePersist
     public void onPrePersist() {

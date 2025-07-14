@@ -6,6 +6,7 @@
   <title>Detalhes do Cliente - Painel do CEO</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/cliente-detalhe.css}" />
 </head>
 <body>
   <div class="app-container">
@@ -43,13 +44,89 @@
           <p><strong>Observações:</strong></p>
           <p th:text="${cliente.observacoes}"></p>
 
-          <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" class="btn-editar"><i class="fas fa-edit"></i> Editar</a>
-          <a th:href="@{/clientes}" class="btn-voltar">Voltar</a>
-        </div>
+          <!-- Novas Ações -->
+<div class="acoes-detalhes" role="group" aria-label="Ações do cliente">
+
+  <!-- Enviar Email -->
+  <a th:href="'mailto:' + ${cliente.email}" class="btn-email" title="Enviar Email">
+    <i class="fas fa-envelope"></i> Enviar Email
+  </a>
+
+  <!-- Exportar para PDF -->
+  <button type="button" class="btn-pdf" title="Exportar Detalhes para PDF" onclick="exportarPDF()">
+    <i class="fas fa-file-pdf"></i> Exportar PDF
+  </button>
+  
+  <!-- Imprimir detalhes -->
+  <button type="button" class="btn-print" title="Imprimir detalhes" onclick="window.print()">
+    <i class="fas fa-print"></i> Imprimir
+  </button>
+
+  <!-- Emitir Nota Fiscal -->
+  <button type="button" class="btn-invoice" title="Emitir Nota Fiscal" th:onclick="|emitirNotaFiscal(${cliente.id})|">
+    <i class="fas fa-file-invoice"></i> Emitir Nota Fiscal
+  </button>
+</div>
+
+         <div class="botoes-acoes">
+  <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" class="btn-editar">
+    <i class="fas fa-edit"></i> Editar
+  </a>
+  <a th:href="@{/clientes}" class="btn-voltar">Voltar</a>
+</div>
+
+</div>
+          
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
+
+  <!-- Scripts para funcionalidades -->
+  <script>
+    // Copiar texto para clipboard
+    document.querySelectorAll('.btn-copy').forEach(button => {
+      button.addEventListener('click', () => {
+        const text = button.getAttribute('data-copy-text');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(() => {
+            alert('Copiado para a área de transferência: ' + text);
+          }, () => {
+            alert('Falha ao copiar');
+          });
+        } else {
+          alert('Navegador não suporta copiar para clipboard');
+        }
+      });
+    });
+    // Exportar detalhes para PDF simples (usando jsPDF)
+    function exportarPDF() {
+      if (!window.jspdf) {
+        alert('Biblioteca jsPDF não carregada');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('Detalhes do Cliente', 10, 20);
+
+      const detalhes = document.querySelector('.detalhes');
+      let y = 30;
+      detalhes.querySelectorAll('p, ul').forEach(el => {
+        const text = el.innerText || el.textContent;
+        doc.setFontSize(12);
+        const splitText = doc.splitTextToSize(text, 180);
+        doc.text(splitText, 10, y);
+        y += splitText.length * 7 + 5;
+      });
+
+      doc.save('detalhes-cliente.pdf');
+    }
+  </script>
+
+  <!-- Import jsPDF CDN para exportar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </body>
 </html>

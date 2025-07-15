@@ -760,19 +760,6 @@ form.form-cliente textarea {
 }
 
 
-.btn-excluir-cliente {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-}
-
-.btn-excluir-cliente:hover {
-  background-color: #fee2e2; /* leve fundo vermelho claro */
-}
-
 .btn-excluir-cliente i {
   color: #dc2626; /* vermelho padrão */
   font-size: 1.1rem;

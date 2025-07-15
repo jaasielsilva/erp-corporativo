@@ -1,0 +1,162 @@
+/* cliente-editar.css */
+.page-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  font-size: 2rem; /* opcional, para deixar maior */
+  color: #2563eb;  /* opcional, cor azul padrão ERP */
+}
+
+/* Container geral do formulário */
+.form-cadastro {
+  max-width: 900px; /* mais largo para 3 colunas */
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas iguais */
+  gap: 1.5rem 2rem; /* espaçamento entre linhas e colunas */
+
+  max-height: 85vh; /* limita altura para evitar barra de rolagem da página */
+  overflow-y: auto; /* scroll interno se necessário */
+}
+
+/* Grupos de campos organizados dentro do grid */
+.form-group,
+fieldset.form-group {
+  display: flex;
+  flex-direction: column;
+  margin: 0; /* margem controlada pelo grid gap */
+}
+
+/* Labels */
+.form-group label,
+fieldset.form-group legend {
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* Inputs, selects e textarea com altura reduzida em 5px */
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group select,
+.form-group textarea,
+fieldset.form-group input[type="text"] {
+  padding: 0.25rem 0.75rem; /* antes 0.5rem vertical */
+  font-size: 0.95rem; /* ligeiramente menor */
+  min-height: 28px; /* altura mínima menor */
+  border: 1.8px solid #ccc;
+  border-radius: 4px;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="tel"]:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+fieldset.form-group input[type="text"]:focus {
+  border-color: #2563eb; /* Azul padrão do ERP */
+  outline: none;
+}
+
+/* Textarea específico */
+.form-group textarea {
+  resize: vertical;
+  min-height: 70px; /* antes 90px */
+}
+
+/* Fieldset styling */
+fieldset.form-group {
+  border: 1px solid #ccc;
+  padding: 1rem 1.25rem 1.5rem;
+  border-radius: 6px;
+  grid-column: span 3; /* fieldsets ocupam toda a largura (3 colunas) */
+}
+
+/* Form actions (botões) */
+.form-actions {
+  grid-column: span 3; /* botões ocupam as 3 colunas */
+  display: flex;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* Botões */
+.btn-submit,
+.btn-cancel {
+  padding: 0.6rem 1.25rem;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background-color 0.3s ease;
+}
+
+/* Botão salvar */
+.btn-submit {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-submit:hover,
+.btn-submit:focus {
+  background-color: #1e4bb8;
+  outline: none;
+}
+
+/* Botão cancelar (link estilizado) */
+.btn-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+  text-decoration: none;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+}
+
+.btn-cancel:hover,
+.btn-cancel:focus {
+  background-color: #cfcfcf;
+  outline: none;
+  text-decoration: none;
+}
+
+/* Ícones dentro dos botões */
+.btn-submit i,
+.btn-cancel i {
+  font-size: 1.1rem;
+}
+
+/* Responsividade simples */
+@media (max-width: 900px) {
+  .form-cadastro {
+    grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas médias */
+  }
+  fieldset.form-group,
+  .form-actions {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .form-cadastro {
+    grid-template-columns: 1fr; /* 1 coluna em telas pequenas */
+  }
+  fieldset.form-group,
+  .form-actions {
+    grid-column: span 1;
+  }
+}

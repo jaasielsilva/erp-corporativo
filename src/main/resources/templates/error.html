@@ -6,14 +6,14 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<div th:replace="fragments/sidebar :: sidebar"></div>
-<div th:replace="fragments/topbar :: topbar"></div>
+<div th:replace="~{components/sidebar :: sidebar}"></div>
+<div th:replace="~{components/topbar :: topbar}"></div>
 
 <main style="padding: 20px;">
     <h1>Ocorreu um erro</h1>
     <p th:text="${mensagem} ?: 'Algo deu errado. Tente novamente mais tarde.'"></p>
 </main>
 
-<div th:replace="fragments/footer :: footer"></div>
+<div th:replace="~{components/footer :: footer}"></div>
 </body>
 </html>

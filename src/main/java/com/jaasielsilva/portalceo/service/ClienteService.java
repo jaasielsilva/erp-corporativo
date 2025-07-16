@@ -109,26 +109,17 @@ public class ClienteService {
     return repository.findByAtivoTrue();
 }
 
-public boolean excluirLogicamente(Long clienteId, String matriculaAdmin) {
+public boolean excluirLogicamente(Long clienteId, Usuario usuario) {
     Optional<Cliente> clienteOpt = repository.findById(clienteId);
     if (clienteOpt.isEmpty()) {
         return false;
     }
+
     Cliente cliente = clienteOpt.get();
 
-    Optional<Usuario> usuarioOpt = usuarioService.buscarPorMatricula(matriculaAdmin);
-    if (usuarioOpt.isEmpty()) {
-        return false;
-    }
-    Usuario usuario = usuarioOpt.get();
-
-    if (usuario.getNivelAcesso() != NivelAcesso.ADMIN) {
-        return false;
-    }
-
     // Exclusão lógica
-    cliente.setAtivo(false);                    // marca cliente como inativo
-    cliente.setStatus("Inativo");               // atualiza status, opcional mas recomendável
+    cliente.setAtivo(false);
+    cliente.setStatus("Inativo");
     cliente.setDataExclusao(LocalDateTime.now());
     cliente.setUsuarioExclusao(usuario);
 

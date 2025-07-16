@@ -6,7 +6,12 @@ import com.jaasielsilva.portalceo.service.ClienteService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.NivelAcesso;
+import com.jaasielsilva.portalceo.service.UsuarioService;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +27,9 @@ public class ClienteController {
 
     @Autowired
     private ClienteService clienteService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     // Injeção via construtor, prática recomendada para melhor testabilidade e imutabilidade
     public ClienteController(ClienteService service) {
@@ -136,16 +144,39 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
         return "redirect:/clientes";
     }
     @PostMapping("/{id}/excluir")
-public ResponseEntity<?> excluirCliente(
-    @PathVariable Long id,
-    @RequestParam("matriculaAdmin") String matriculaAdmin
-) {
-    boolean excluido = clienteService.excluirLogicamente(id, matriculaAdmin);
-    if (!excluido) {
+    public ResponseEntity<?> excluirCliente(
+        @PathVariable Long id,
+        @RequestParam("matriculaAdmin") String matriculaInformada
+    ) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    String emailLogado = auth.getName();
+
+    Optional<Usuario> usuarioLogadoOpt = usuarioService.buscarPorEmail(emailLogado);
+    if (usuarioLogadoOpt.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("erro", "Usuário não autenticado."));
+    }
+
+    Usuario usuarioLogado = usuarioLogadoOpt.get();
+
+    // Verifica se o usuário tem nível ADMIN
+    if (usuarioLogado.getNivelAcesso() != NivelAcesso.ADMIN) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body(Map.of("erro", "Matrícula inválida ou sem permissão, ou cliente não encontrado."));
+            .body(Map.of("erro", "Apenas administradores podem excluir clientes."));
+    }
+
+    // Verifica se a matrícula digitada corresponde ao usuário logado
+    if (!usuarioLogado.getMatricula().equalsIgnoreCase(matriculaInformada)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+            .body(Map.of("erro", "Matrícula incorreta para este usuário."));
+    }
+
+    boolean excluido = clienteService.excluirLogicamente(id, usuarioLogado);
+    if (!excluido) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(Map.of("erro", "Cliente não encontrado."));
     }
 
     return ResponseEntity.ok(Map.of("mensagem", "Cliente excluído logicamente com sucesso."));
-}
+}   
 }

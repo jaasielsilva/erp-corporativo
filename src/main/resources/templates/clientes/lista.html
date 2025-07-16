@@ -186,11 +186,27 @@
         </div>
       </section>
 
+      <!-- Modal de confirmação de exclusão -->
+<div id="modal-excluir" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h2>Confirmar Exclusão</h2>
+    <p>Digite a matrícula do administrador para confirmar:</p>
+    <input id="matriculaInput" type="text" placeholder="Matrícula do administrador" />
+
+    <p id="msgErroMatricula" class="erro hidden" role="alert"></p>
+    <p id="msgSucessoExcluir" class="sucesso hidden" role="status"></p>
+
+    <div class="modal-actions">
+      <button id="btnConfirmarExcluir" class="btn-confirmar">Confirmar</button>
+      <button id="btnCancelarExcluir" class="btn-cancelar">Cancelar</button>
+    </div>
+  </div>
+</div>
+
       <!-- Rodapé -->
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
-<!-- ... (HTML anterior idêntico até o final do </form>) -->
 </body>
 <script src="/js/cliente-editar.js" defer></script>
 

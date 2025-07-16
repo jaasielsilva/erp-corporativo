@@ -4,7 +4,12 @@ import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.service.ClienteService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 public class ClienteController {
 
     private final ClienteService service;
+
+    @Autowired
+    private ClienteService clienteService;
 
     // Injeção via construtor, prática recomendada para melhor testabilidade e imutabilidade
     public ClienteController(ClienteService service) {
@@ -127,4 +135,17 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
         service.excluir(id);
         return "redirect:/clientes";
     }
+    @PostMapping("/{id}/excluir")
+public ResponseEntity<?> excluirCliente(
+    @PathVariable Long id,
+    @RequestParam("matriculaAdmin") String matriculaAdmin
+) {
+    boolean excluido = clienteService.excluirLogicamente(id, matriculaAdmin);
+    if (!excluido) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+            .body(Map.of("erro", "Matrícula inválida ou sem permissão, ou cliente não encontrado."));
+    }
+
+    return ResponseEntity.ok(Map.of("mensagem", "Cliente excluído logicamente com sucesso."));
+}
 }

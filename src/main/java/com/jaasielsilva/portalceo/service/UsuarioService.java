@@ -140,6 +140,10 @@ public class UsuarioService {
         return usuarioRepository.buscarPorNomeOuEmail(busca);
     }
 
+    public Optional<Usuario> buscarPorMatricula(String matricula) {
+    return usuarioRepository.findByMatricula(matricula);
+}
+
     public boolean usuarioTemPermissaoParaExcluir(String matricula) {
         return usuarioRepository.findByMatricula(matricula)
             .map(usuario -> usuario.getPerfis().stream()

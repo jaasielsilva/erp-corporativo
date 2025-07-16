@@ -19,15 +19,10 @@ public class Cliente {
     private Long id;
 
     private String nome;
-
     private String email;
-
     private String telefone;
-
     private String celular;
-
     private String cpfCnpj;
-
     private String tipoCliente; // PF ou PJ
 
     // Endereço separado
@@ -40,27 +35,23 @@ public class Cliente {
     private String cep;
 
     private LocalDate dataCadastro;
-
     private String status;
-
     private String pessoaContato;
-
     private String observacoes;
-
     private LocalDateTime dataCriacao;
-
     private LocalDateTime dataAlteracao;
-
     private String nomeFantasia;
-
-    // Novos campos que podem estar no formulário
     private String inscricaoMunicipal;
-
     private String inscricaoEstadual;
-
     private String representanteLegal;
 
-    // Outros campos que seu formulário usa...
+    @ManyToOne
+    @JoinColumn(name = "usuario_exclusao_id")
+    private Usuario usuarioExclusao;
+
+    private Boolean ativo = true;
+
+    private LocalDateTime dataExclusao;
 
     @PrePersist
     public void onPrePersist() {
@@ -68,6 +59,9 @@ public class Cliente {
         dataCadastro = LocalDate.now();
         if (status == null) {
             status = "Ativo";
+        }
+        if (ativo == null) {
+            ativo = true;
         }
     }
 

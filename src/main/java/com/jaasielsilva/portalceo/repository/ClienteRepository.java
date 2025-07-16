@@ -66,4 +66,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      */
     List<Cliente> findByStatusIgnoreCaseAndNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(
         String status, String nome, String email);
-}
+
+    List<Cliente> findByAtivoTrue();
+
+    }

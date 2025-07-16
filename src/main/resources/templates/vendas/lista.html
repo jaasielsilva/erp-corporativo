@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Vendas</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<main>
+    <h1>Vendas Realizadas</h1>
+    <a th:href="@{/vendas/nova}">Nova Venda</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Data</th>
+                <th>Valor</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="venda : ${vendas}">
+                <td th:text="${venda.id}"></td>
+                <td th:text="${venda.cliente.nome}"></td>
+                <td th:text="${#temporals.format(venda.dataVenda, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${#numbers.formatCurrency(venda.total)}"></td>
+                <td th:text="${venda.status}">-</td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

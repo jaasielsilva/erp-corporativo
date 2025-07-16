@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -25,7 +26,7 @@ public class Cliente {
     private String cpfCnpj;
     private String tipoCliente; // PF ou PJ
 
-    // Endereço separado
+    // Endereço
     private String logradouro;
     private String numero;
     private String complemento;
@@ -35,24 +36,39 @@ public class Cliente {
     private String cep;
 
     private LocalDate dataCadastro;
+
     private String status;
+
     private String pessoaContato;
     private String observacoes;
-    private LocalDateTime dataCriacao;
-    private LocalDateTime dataAlteracao;
-    private String nomeFantasia;
-    private String inscricaoMunicipal;
-    private String inscricaoEstadual;
-    private String representanteLegal;
 
+    private String nomeFantasia;          // Para PJ
+    private String inscricaoMunicipal;    // Para PJ
+    private String inscricaoEstadual;     // Para PJ
+
+    private Boolean ativo = true;
+
+    private LocalDateTime dataExclusao;       // Exclusão lógica
+
+    // Auditoria de criação
+    private LocalDateTime dataCriacao;
+
+    // Auditoria de última edição
+    @ManyToOne
+    @JoinColumn(name = "usuario_edicao_id")
+    private Usuario editadoPor;
+
+    private LocalDateTime dataUltimaEdicao;
+
+    @OneToMany(mappedBy = "cliente")
+    private List<Venda> vendas;
+
+    // Auditoria de exclusão
     @ManyToOne
     @JoinColumn(name = "usuario_exclusao_id")
     private Usuario usuarioExclusao;
 
-    private Boolean ativo = true;
-
-    private LocalDateTime dataExclusao;
-
+    // Callbacks JPA para setar datas e valores padrão
     @PrePersist
     public void onPrePersist() {
         dataCriacao = LocalDateTime.now();
@@ -67,6 +83,6 @@ public class Cliente {
 
     @PreUpdate
     public void onPreUpdate() {
-        dataAlteracao = LocalDateTime.now();
+        dataUltimaEdicao = LocalDateTime.now();
     }
 }

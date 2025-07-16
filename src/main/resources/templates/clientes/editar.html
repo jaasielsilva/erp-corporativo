@@ -24,12 +24,13 @@
         <h1 class="page-title">Editar Cliente</h1>
 
         <form 
-          th:action="@{'/clientes/' + ${cliente.id} + '/editar'}" 
-          th:object="${cliente}" 
-          method="post" 
-          class="form-cadastro"
-          novalidate
-        >
+  th:action="@{/clientes/{id}/editar(id=${cliente.id})}" 
+  th:object="${cliente}" 
+  method="post" 
+  class="form-cadastro"
+  novalidate
+>
+
           <div class="form-group">
             <label for="nome">Nome / Razão Social <span aria-hidden="true">*</span></label>
             <input type="text" id="nome" th:field="*{nome}" placeholder="Digite o nome ou razão social" required />

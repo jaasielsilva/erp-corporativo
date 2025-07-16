@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.controller;
 import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.service.ClienteService;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +47,7 @@ public class ClienteController {
      * @return nome do template da lista de clientes
      */
     @GetMapping
-public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
+    public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
     List<Cliente> clientes;
 
     if (busca == null || busca.trim().isEmpty()) {
@@ -85,7 +86,7 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
     List<Cliente> clientes = service.buscarTodos(); // TODOS clientes
     model.addAttribute("cliente", new Cliente()); // objeto vazio para preencher o formulário
     return "clientes/cadastro"; // nome do template Thymeleaf
-}
+    }
 
 
     /**
@@ -97,9 +98,10 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
      */
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Cliente cliente) {
-        service.salvar(cliente);
-        return "redirect:/clientes";
+    service.salvar(cliente); // salva novo ou atualiza existente
+    return "redirect:/clientes";
     }
+
 
     /**
      * Exibe o formulário para edição de um cliente existente.
@@ -111,10 +113,12 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
      */
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long id, Model model) {
-        var cliente = service.buscarPorId(id);
-        model.addAttribute("cliente", cliente.orElse(new Cliente()));
-        return "clientes/form";
+    var cliente = service.buscarPorId(id);
+    model.addAttribute("cliente", cliente.orElse(new Cliente()));
+    return "clientes/editar";
     }
+
+
 
     /**
      * Exibe os detalhes completos de um cliente específico.
@@ -179,4 +183,45 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
 
     return ResponseEntity.ok(Map.of("mensagem", "Cliente excluído logicamente com sucesso."));
 }   
+
+@PostMapping("/{id}/editar")
+public String atualizarCliente(@PathVariable Long id, @ModelAttribute Cliente clienteAtualizado, Principal principal) {
+    Cliente clienteExistente = service.buscarPorId(id)
+        .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+    // Atualiza os campos editáveis
+    clienteExistente.setNome(clienteAtualizado.getNome());
+    clienteExistente.setEmail(clienteAtualizado.getEmail());
+    clienteExistente.setTelefone(clienteAtualizado.getTelefone());
+    clienteExistente.setCelular(clienteAtualizado.getCelular());
+    clienteExistente.setCpfCnpj(clienteAtualizado.getCpfCnpj());
+    clienteExistente.setTipoCliente(clienteAtualizado.getTipoCliente());
+    clienteExistente.setLogradouro(clienteAtualizado.getLogradouro());
+    clienteExistente.setNumero(clienteAtualizado.getNumero());
+    clienteExistente.setComplemento(clienteAtualizado.getComplemento());
+    clienteExistente.setBairro(clienteAtualizado.getBairro());
+    clienteExistente.setCidade(clienteAtualizado.getCidade());
+    clienteExistente.setEstado(clienteAtualizado.getEstado());
+    clienteExistente.setCep(clienteAtualizado.getCep());
+    clienteExistente.setStatus(clienteAtualizado.getStatus());
+    clienteExistente.setPessoaContato(clienteAtualizado.getPessoaContato());
+    clienteExistente.setObservacoes(clienteAtualizado.getObservacoes());
+    clienteExistente.setNomeFantasia(clienteAtualizado.getNomeFantasia());
+    clienteExistente.setInscricaoMunicipal(clienteAtualizado.getInscricaoMunicipal());
+    clienteExistente.setInscricaoEstadual(clienteAtualizado.getInscricaoEstadual());
+
+    // Busca o usuário autenticado pelo email (username)
+    Usuario usuarioAutenticado = usuarioService.buscarPorEmail(principal.getName())
+        .orElseThrow(() -> new RuntimeException("Usuário autenticado não encontrado"));
+
+    // Setar auditoria no cliente
+    clienteExistente.setEditadoPor(usuarioAutenticado);
+    clienteExistente.setDataUltimaEdicao(java.time.LocalDateTime.now());
+
+    // Salvar o cliente atualizado
+    service.salvar(clienteExistente);
+
+    return "redirect:/clientes";
+}
+
 }

@@ -19,6 +19,8 @@ public class Venda {
     private Long id;
 
     private BigDecimal total;
+    
+    private String formaPagamento;
 
     @Column(name = "data_venda")
     private LocalDateTime dataVenda;

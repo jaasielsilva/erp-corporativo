@@ -1,38 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Nova Venda</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+  <meta charset="UTF-8" />
+  <title>Nova Venda - Painel do CEO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/cliente-venda.css}" />  
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
 <body>
-<main>
-    <h1>Nova Venda</h1>
+<div class="app-container">
+  <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <form th:action="@{/vendas/salvar}" th:object="${venda}" method="post">
-        <label for="cliente">Cliente:</label>
-        <select id="cliente" th:field="*{cliente}" required>
-            <option th:each="cliente : ${clientes}" 
-                    th:value="${cliente.id}" 
-                    th:text="${cliente.nome}">
-            </option>
-        </select>
+  <main class="main-content">
+    <header th:replace="~{components/topbar :: topbar}"></header>
 
-        <label for="total">Valor Total:</label>
-        <input type="number" id="total" step="0.01" th:field="*{total}" required />
+    <section class="content-area">
+      <h1>Venda</h1>
 
-        <label for="status">Status:</label>
-        <select id="status" th:field="*{status}">
-            <option value="Finalizada">Finalizada</option>
-            <option value="Pendente">Pendente</option>
-            <option value="Cancelada">Cancelada</option>
-        </select>
+      <form th:action="@{/vendas/salvar}" th:object="${venda}" method="post" class="form-grid" novalidate>
+        
+        <!-- Dados da Venda -->
+        <div class="form-section">
+            <!-- Itens da Venda -->
+        <div class="form-section">
+          <h2>Adicionar Produto por EAN</h2>
 
-        <label for="observacoes">Observações:</label>
-        <textarea id="observacoes" th:field="*{observacoes}"></textarea>
+          <div class="form-group ean-group">
+            <label for="ean">Código de Barras (EAN): <span class="tooltip" title="Digite ou escaneie o código de barras do produto">?</span></label>
+            <input type="text" id="ean" name="ean" placeholder="Digite ou escaneie o código de barras" autocomplete="off" />
+            <button type="button" id="btnAdicionarProduto" class="button small primary" style="margin-left: 0.5rem;">
+              <i class="fas fa-plus"></i> Adicionar Produto
+            </button>
+          </div>
 
-        <button type="submit">Salvar Venda</button>
-    </form>
-</main>
+          <div id="produtoEncontrado" style="margin-top: 0.5rem; color: green; font-weight: bold;"></div>
+
+          <table id="tabelaProdutos" style="margin-top: 1rem;">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>EAN</th>
+                <th>Quantidade</th>
+                <th>Preço Unit.</th>
+                <th>Subtotal</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Produtos adicionados via JS aqui -->
+            </tbody>
+          </table>
+        </div>
+        <h2>Dados da Venda</h2>
+          <div class="form-group">
+            <label for="cliente">Cliente: <span class="tooltip" title="Selecione o cliente responsável pela compra">?</span></label>
+            <select id="cliente" th:field="*{cliente}" required>
+              <option value="" disabled selected>Selecione um cliente</option>
+              <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}"></option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="dataVenda">Data da Venda: <span class="tooltip" title="Data em que a venda foi realizada">?</span></label>
+            <input type="date" id="dataVenda" th:field="*{dataVenda}" required />
+          </div>
+
+          <div class="form-group">
+            <label for="total">Valor Total (R$): <span class="tooltip" title="Informe o valor total da venda">?</span></label>
+            <input type="number" id="total" step="0.01" min="0" th:field="*{total}" placeholder="0.00" required readonly />
+          </div>
+
+          <div class="form-group">
+            <label for="formaPagamento">Forma de Pagamento: <span class="tooltip" title="Selecione a forma de pagamento">?</span></label>
+            <select id="formaPagamento" th:field="*{formaPagamento}" required>
+              <option value="" disabled selected>Selecione uma forma</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Pix">Pix</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Status e Observações -->
+        <div class="form-section">
+          <h2>Status e Observações</h2>
+
+          <div class="form-group">
+            <label for="status">Status da Venda: <span class="tooltip" title="Status atual da venda">?</span></label>
+            <select id="status" th:field="*{status}" required>
+              <option value="" disabled selected>Selecione o status</option>
+              <option value="Finalizada">Finalizada</option>
+              <option value="Pendente">Pendente</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="observacoes">Observações:</label>
+            <textarea id="observacoes" th:field="*{observacoes}" rows="4" placeholder="Comentários adicionais..."></textarea>
+          </div>
+        </div>
+
+        <!-- Resumo dinâmico do total -->
+        <div class="summary" id="resumoTotal">
+          Valor total formatado: R$ 0,00
+        </div>
+
+        <!-- Botões -->
+        <div class="form-actions full-width">
+          <button type="submit" class="button primary">
+            <i class="fas fa-save"></i> Salvar Venda
+          </button>
+          <a th:href="@{/vendas}" class="button secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </a>
+        </div>
+      </form>
+    </section>
+
+    <footer th:replace="~{components/footer :: footer}"></footer>
+  </main>
+</div>
+
+<script th:src="@{/js/cliente-venda.js}"></script>
+
+
+
 </body>
 </html>

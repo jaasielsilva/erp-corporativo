@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastrar Produto</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/produto.css}" />
+</head>
+<body>
+  <div th:replace="~{components/sidebar :: sidebar}"></div>
+  <div class="main-content">
+    <div th:replace="~{components/topbar :: topbar}"></div>
+
+    <main class="container">
+      <h1>Cadastrar Produto</h1>
+
+      <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post" class="form-grid">
+        <div class="form-group">
+          <label>Nome:</label>
+          <input type="text" th:field="*{nome}" required />
+        </div>
+        <div class="form-group">
+          <label>EAN:</label>
+          <input type="text" th:field="*{ean}" required />
+        </div>
+        <div class="form-group">
+          <label>Preço:</label>
+          <input type="number" step="0.01" th:field="*{preco}" required />
+        </div>
+        <div class="form-group">
+          <label>Estoque:</label>
+          <input type="number" th:field="*{estoque}" required />
+        </div>
+        <div class="form-group">
+          <label>Unidade de Medida:</label>
+          <input type="text" th:field="*{unidadeMedida}" placeholder="Ex: un, kg, L" />
+        </div>
+        <div class="form-group">
+          <label>Categoria:</label>
+          <!-- Aqui troquei para usar categoria.id -->
+          <select th:field="*{categoria.id}">
+            <option value="" disabled selected>Selecione</option>
+            <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nome}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fornecedor:</label>
+          <!-- Aqui troquei para usar fornecedor.id -->
+          <select th:field="*{fornecedor.id}">
+            <option value="" disabled selected>Selecione</option>
+            <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nome}"></option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+        </div>
+        <div class="form-actions full-width">
+          <button type="submit" class="btn btn-success">Salvar</button>
+        </div>
+      </form>
+    </main>
+
+    <div th:replace="~{components/footer :: footer}"></div>
+  </div>
+</body>
+</html>

@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class VendaService {
@@ -37,5 +39,20 @@ public class VendaService {
 
     public BigDecimal getTotalVendas() {
         return calcularTotalDeVendas();
+    }
+
+    public List<Venda> buscarPorCpfCnpj(String cpfCnpj) {
+        if (cpfCnpj == null || cpfCnpj.isBlank()) {
+            return listarTodas();
+        }
+        return vendaRepository.findByClienteCpfCnpjContainingIgnoreCase(cpfCnpj.trim());
+    }
+
+    public String formatarValorTotal(List<Venda> vendas) {
+        double total = vendas.stream()
+                .mapToDouble(v -> v.getTotal().doubleValue())
+                .sum();
+        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        return nf.format(total);
     }
 }

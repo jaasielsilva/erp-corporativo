@@ -1,0 +1,231 @@
+/* Fonte base e fundo */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9fafb;
+  color: #1e293b;
+  margin: 2rem;
+}
+
+/* Container geral */
+.app-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Conteúdo principal */
+.main-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 2rem 3rem;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+/* Títulos */
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+h2 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  color: #334155;
+}
+
+/* Formulário com grid 4 colunas */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem 2rem;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+
+/* Form-section ocupa toda largura */
+.form-section {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+/* Input, select e textarea estilos */
+input[type="text"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+  padding: 8px 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 6px #2563ebaa;
+}
+
+/* Textarea tamanho */
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Full width para campos que precisam ocupar toda largura */
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Botões */
+button.button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 22px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s ease;
+}
+
+button.button.primary:hover {
+  background-color: #1e40af;
+}
+
+a.button.secondary {
+  background-color: #94a3b8;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 10px 22px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s ease;
+}
+
+a.button.secondary:hover {
+  background-color: #64748b;
+}
+
+/* Agrupamento dos botões de ação */
+.form-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+/* Tabela Produtos */
+#tabelaProdutos {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.05);
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+#tabelaProdutos thead {
+  background-color: #2563eb;
+  color: white;
+  font-weight: 700;
+}
+
+#tabelaProdutos th,
+#tabelaProdutos td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e7ff;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+#tabelaProdutos tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Tooltip simples */
+.tooltip {
+  cursor: help;
+  border-bottom: 1px dotted #475569;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-left: 4px;
+  display: inline-block;
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 125%;
+  background-color: #2563eb;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+  visibility: visible;
+}
+
+.tooltip::after {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Resumo total */
+.summary {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  button.button, a.button {
+    width: 100%;
+    justify-content: center;
+  }
+}

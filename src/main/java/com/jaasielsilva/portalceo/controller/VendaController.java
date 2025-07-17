@@ -19,8 +19,17 @@ public class VendaController {
     private ClienteService clienteService;
 
     @GetMapping
-    public String listar(Model model) {
-        model.addAttribute("vendas", vendaService.listarTodas());
+    public String listar(
+            @RequestParam(name = "cpfCnpj", required = false) String cpfCnpj,
+            Model model) {
+
+        var vendasFiltradas = vendaService.buscarPorCpfCnpj(cpfCnpj);
+        model.addAttribute("vendas", vendasFiltradas);
+        model.addAttribute("cpfCnpj", cpfCnpj);
+
+        model.addAttribute("totalVendas", vendasFiltradas.size());
+        model.addAttribute("valorTotalFormatado", vendaService.formatarValorTotal(vendasFiltradas));
+
         return "vendas/lista";
     }
 

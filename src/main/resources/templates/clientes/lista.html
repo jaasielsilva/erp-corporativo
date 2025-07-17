@@ -136,52 +136,7 @@
                 <th scope="col">Ações</th>
               </tr>
             </thead>
-            <tbody>
-              <tr
-                th:each="cliente : ${clientes}"
-                class="cliente-row"
-                th:data-status="${cliente.status.toLowerCase()}"
-              >
-                <td><span th:text="${cliente.nome}">Nome do Cliente</span></td>
-                <td th:text="${cliente.tipoCliente}">PF/PJ</td>
-                <td th:text="${cliente.email}">email@cliente.com</td>
-                <td th:text="${cliente.telefone}">(00) 00000-0000</td>
-                <td>
-                  <span
-                    th:text="${cliente.status}"
-                    th:classappend="'badge ' + ${cliente.status.toLowerCase()}"
-                    >Ativo</span
-                  >
-                </td>
-                <td class="acoes">
-                  <a
-                    th:href="@{'/clientes/' + ${cliente.id} + '/detalhes'}"
-                    title="Detalhes"
-                  >
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <a
-                    th:href="@{'/clientes/' + ${cliente.id} + '/editar'}"
-                    title="Editar"
-                  >
-                    <i class="fas fa-edit"></i>
-                  </a>
-
-                  <button
-                    type="button"
-                    class="btn-excluir-cliente"
-                    th:attr="onclick=|abrirModalExcluir(${cliente.id})|"
-                    title="Excluir"
-                    aria-label="Excluir cliente"
-                  >
-                    <i class="fas fa-trash-alt"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr th:if="${#lists.isEmpty(clientes)}">
-                <td colspan="6" class="table-center">Nenhum cliente encontrado.</td>
-              </tr>
-            </tbody>
+           
           </table>
         </div>
       </section>

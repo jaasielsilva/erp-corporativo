@@ -3,6 +3,8 @@ package com.jaasielsilva.portalceo.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +25,7 @@ public class Venda {
     private String formaPagamento;
 
     @Column(name = "data_venda")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime dataVenda;
 
     @ManyToOne

@@ -20,40 +20,81 @@
         <h2>Controle completo para seu negócio</h2>
         <div class="dashboard-cards">
           <div class="card-metric">
-  <h4>Total de Vendas</h4>
-  <p>R$ <span th:text="${#numbers.formatDecimal(totalVendas, 2, 'COMMA', 2, 'POINT')}"></span></p>
-</div>
+          <h4>Total de Vendas</h4>
+          <p>R$ <span th:text="${#numbers.formatDecimal(totalVendas, 2, 'COMMA', 2, 'POINT')}"></span></p>
+        </div>
 
           <div class="card-metric">
           <h4>Clientes Ativos</h4>
           <p th:text="${totalClientes}">0</p>
         </div>
+          
+          <div class="card-metric">
+            <h4>Produtos no Estoque</h4>
+            <p th:text="${produtosEstoque}">0</p>
+          </div>
 
-          <div class="card-metric"><h4>Produtos no Estoque</h4><p>547</p></div>
           <div class="card-metric"><h4>Projetos em Andamento</h4><p>8</p></div>
         </div>
         <article class="card">
-          <h3>Gráfico de Vendas</h3>
-          <canvas id="graficoVendas" height="100"></canvas>
-        </article>
+  <h3>Gráfico de Vendas</h3>
+  <canvas id="graficoVendas" height="100"></canvas>
+</article>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+  const labels = /*[[${graficoLabels}]]*/ [];
+  const data = /*[[${graficoValores}]]*/ [];
+
+  const ctx = document.getElementById('graficoVendas').getContext('2d');
+  const graficoVendas = new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: labels,
+          datasets: [{
+              label: 'Vendas (R$)',
+              data: data,
+              backgroundColor: 'rgba(54, 162, 235, 0.5)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+          }]
+      },
+      options: {
+          scales: {
+              y: {
+                  beginAtZero: true
+              }
+          }
+      }
+  });
+/*]]>*/
+</script>
+
+        
         <article class="card">
-          <h3>Últimas Vendas</h3>
-          <table class="table-list">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Cliente</th>
-                <th>Produto</th>
-                <th>Valor</th>
-                <th>Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>#00123</td><td>Empresa XYZ</td><td>Notebook</td><td>R$ 4.500,00</td><td>26/06/2025</td></tr>
-              <tr><td>#00124</td><td>João da Silva</td><td>Mouse</td><td>R$ 80,00</td><td>26/06/2025</td></tr>
-            </tbody>
-          </table>
-        </article>
+  <h3>Últimas Vendas</h3>
+  <table class="table-list">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Valor</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody>
+     <tr th:each="venda : ${ultimasVendas}">
+    <td th:text="'#' + ${venda.id}"></td>
+    <td th:text="${venda.cliente.nome}"></td>
+    <td th:text="${#numbers.formatDecimal(venda.total, 1, 'COMMA', 2, 'POINT')}"></td>
+    <td th:text="${#temporals.format(venda.dataVenda, 'dd/MM/yyyy HH:mm')}"></td>
+    </tr>
+
+
+    </tbody>
+  </table>
+</article>
+
         <div class="action-buttons">
           <a href="/demo">Ver Demonstração</a>
           <a href="/funcionalidades">Funcionalidades</a>

@@ -29,7 +29,7 @@ public class ProdutoController {
 
     @GetMapping
     public String listar(Model model) {
-        model.addAttribute("produtos", produtoService.listarTodos());
+        model.addAttribute("produtos", produtoService.listarTodosProdutos());
         return "produto/lista";
     }
 

@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -44,4 +46,9 @@ public class Venda {
             dataVenda = LocalDateTime.now();
         }
     }
+
+    @OneToMany(mappedBy = "venda", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VendaItem> itens = new ArrayList<>();
+
+
 }

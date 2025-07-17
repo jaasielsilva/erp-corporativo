@@ -1,13 +1,15 @@
 package com.jaasielsilva.portalceo.service;
 
+import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.Venda;
+import com.jaasielsilva.portalceo.model.VendaItem;
+import com.jaasielsilva.portalceo.repository.ProdutoRepository;
 import com.jaasielsilva.portalceo.repository.VendaRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -24,8 +26,27 @@ public class VendaService {
     @Autowired
     private VendaRepository vendaRepository;
 
-    // Salva uma venda no banco
+    @Autowired
+    private ProdutoRepository produtoRepository;
+    
+    @Autowired
+    private ProdutoService produtoService;
+
+    // Salva a venda e atualiza o estoque dos produtos vendidos
+    @Transactional
     public void salvar(Venda venda) {
+        for (VendaItem item : venda.getItens()) {
+            item.setVenda(venda);
+            Produto produto = item.getProduto();
+
+            int novaQuantidade = produto.getEstoque() - item.getQuantidade(); // seu campo é 'estoque' no Produto
+            if (novaQuantidade < 0) {
+                throw new RuntimeException("Estoque insuficiente para o produto: " + produto.getNome());
+            }
+
+            produto.setEstoque(novaQuantidade);
+            produtoService.salvar(produto); // atualiza o estoque no banco
+        }
         vendaRepository.save(venda);
     }
 
@@ -39,18 +60,17 @@ public class VendaService {
         return vendaRepository.countByClienteId(clienteId);
     }
 
-    // Calcula o total de todas as vendas (soma dos valores)
+    // Calcula o total de todas as vendas
     public BigDecimal calcularTotalDeVendas() {
-        return vendaRepository.calcularTotalDeVendas()
-                .orElse(BigDecimal.ZERO);
+        return vendaRepository.calcularTotalDeVendas().orElse(BigDecimal.ZERO);
     }
 
-    // Retorna o total de vendas (atalho)
+    // Retorna o total de vendas
     public BigDecimal getTotalVendas() {
         return calcularTotalDeVendas();
     }
 
-    // Busca vendas por CPF ou CNPJ do cliente (filtro)
+    // Busca vendas por CPF ou CNPJ
     public List<Venda> buscarPorCpfCnpj(String cpfCnpj) {
         if (cpfCnpj == null || cpfCnpj.isBlank()) {
             return listarTodas();
@@ -58,7 +78,7 @@ public class VendaService {
         return vendaRepository.findByClienteCpfCnpjContainingIgnoreCase(cpfCnpj.trim());
     }
 
-    // Formata o valor total das vendas para o formato de moeda brasileiro
+    // Formata o valor total das vendas para moeda brasileira
     public String formatarValorTotal(List<Venda> vendas) {
         double total = vendas.stream()
                 .mapToDouble(v -> v.getTotal().doubleValue())
@@ -73,38 +93,35 @@ public class VendaService {
         return vendaRepository.findTop2ByOrderByDataVendaDesc(pageable);
     }
 
-    // busca com controle total via Pageable (útil se quiser paginação de verdade)
+    // Paginação completa de vendas
     public List<Venda> buscarUltimasVendasPaginadas(Pageable pageable) {
         return vendaRepository.findAllByOrderByDataVendaDesc(pageable);
     }
 
-    // metodo pra criar o grafico das vendas
+    // Retorna vendas por mês (últimos X meses) para gráfico
     public Map<YearMonth, BigDecimal> getVendasUltimosMeses(int meses) {
-    // Pega data inicial (5 meses atrás, no primeiro dia do mês) e converte para LocalDateTime início do dia
-    LocalDate dataInicial = LocalDate.now().minusMonths(meses - 1).withDayOfMonth(1);
-    LocalDateTime dataInicialDateTime = dataInicial.atStartOfDay();
+        LocalDate dataInicial = LocalDate.now().minusMonths(meses - 1).withDayOfMonth(1);
+        LocalDateTime dataInicialDateTime = dataInicial.atStartOfDay();
 
-    // Consulta os totais agrupados por ano e mês
-    List<Object[]> resultados = vendaRepository.totalVendasPorMesDesde(dataInicialDateTime);
+        List<Object[]> resultados = vendaRepository.totalVendasPorMesDesde(dataInicialDateTime);
+        Map<YearMonth, BigDecimal> vendasPorMes = new LinkedHashMap<>();
 
-    Map<YearMonth, BigDecimal> vendasPorMes = new LinkedHashMap<>();
+        // Inicializa com zero para todos os meses
+        for (int i = 0; i < meses; i++) {
+            YearMonth ym = YearMonth.from(LocalDate.now().minusMonths(meses - 1 - i));
+            vendasPorMes.put(ym, BigDecimal.ZERO);
+        }
 
-    // Inicializa mapa com meses que podem não ter vendas
-    for (int i = 0; i < meses; i++) {
-        YearMonth ym = YearMonth.from(LocalDate.now().minusMonths(meses - 1 - i));
-        vendasPorMes.put(ym, BigDecimal.ZERO);
+        // Preenche os meses com os dados reais
+        for (Object[] row : resultados) {
+            Integer ano = (Integer) row[0];
+            Integer mes = (Integer) row[1];
+            BigDecimal total = (BigDecimal) row[2];
+
+            YearMonth ym = YearMonth.of(ano, mes);
+            vendasPorMes.put(ym, total);
+        }
+
+        return vendasPorMes;
     }
-
-    // Preenche valores vindos da consulta
-    for (Object[] row : resultados) {
-        Integer ano = (Integer) row[0];
-        Integer mes = (Integer) row[1];
-        BigDecimal total = (BigDecimal) row[2];
-
-        YearMonth ym = YearMonth.of(ano, mes);
-        vendasPorMes.put(ym, total);
-    }
-
-    return vendasPorMes;
-}
 }

@@ -4,18 +4,16 @@ import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.repository.CategoriaRepository;
 import com.jaasielsilva.portalceo.repository.FornecedorRepository;
 import com.jaasielsilva.portalceo.repository.ProdutoRepository;
-import com.jaasielsilva.portalceo.model.Categoria;
-import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/produtos")
-public class ProdutoController {
+@RestController 
+@RequestMapping("/api/produtos")
+public class ProdutoRestController {
 
     @Autowired
     private  ProdutoService produtoService;
@@ -50,8 +48,21 @@ public String salvarProduto(@ModelAttribute Produto produto) {
     produto.setFornecedor(fornecedorRepository.findById(fornecedorId).orElse(null));
 
     produtoRepository.save(produto);
-    return "redirect:/produtos";  // Corrigido para URL correta da lista
-}
+    return "redirect:/produtos";
+    }
+
+    @GetMapping("/buscar-por-ean")
+    public ResponseEntity<?> buscarPorEan(@RequestParam String ean) {
+        Produto produto = produtoRepository.findByEan(ean);
+        if (produto == null) {
+            return ResponseEntity.status(404).body("Produto não encontrado");
+        }
+        if (produto.getEstoque() == null || produto.getEstoque() <= 0) {
+            return ResponseEntity.status(400).body("Produto sem estoque disponível");
+        }
+        // Retorna o produto (pode criar um DTO para não vazar dados sensíveis)
+        return ResponseEntity.ok(produto);
+    }
 
 
 }

@@ -1,5 +1,3 @@
-// venda.js
-
 document.addEventListener('DOMContentLoaded', () => {
   const btnAdicionarProduto = document.getElementById('btnAdicionarProduto');
   const inputEAN = document.getElementById('ean');
@@ -41,44 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarResumoTotal();
   }
 
-  // Adicionar produto simulado (pode ser substituído por busca real no backend)
-  btnAdicionarProduto.addEventListener('click', () => {
-    const ean = inputEAN.value.trim();
-    if (!ean) {
-      alert('Por favor, digite ou escaneie o código de barras.');
+  // Função para adicionar o produto na tabela
+  function adicionarProdutoNaTabela(produto) {
+    // Verificar se produto já está na tabela
+    if ([...tabelaProdutosBody.children].some(row => row.dataset.ean === produto.ean)) {
+      alert('Produto já adicionado na lista.');
       return;
     }
 
-    // Simulação de busca - substitua por sua busca backend aqui
-    const produtoSimulado = {
-      nome: 'Produto Exemplo',
-      ean: ean,
-      precoUnitario: 25.50
-    };
-
-    // Verificar se produto já está na tabela
-    const linhas = tabelaProdutosBody.querySelectorAll('tr');
-    for (let linha of linhas) {
-      if (linha.dataset.ean === ean) {
-        alert('Produto já adicionado na lista.');
-        inputEAN.value = '';
-        return;
-      }
-    }
-
-    produtoEncontrado.textContent = `Produto encontrado: ${produtoSimulado.nome}`;
-    inputEAN.value = '';
-
-    // Criar nova linha
     const tr = document.createElement('tr');
-    tr.dataset.ean = produtoSimulado.ean;
+    tr.dataset.ean = produto.ean;
 
     tr.innerHTML = `
-      <td>${produtoSimulado.nome}</td>
-      <td>${produtoSimulado.ean}</td>
-      <td><input type="number" value="1" min="1" class="quantidade" style="width: 60px;" /></td>
-      <td>R$ ${produtoSimulado.precoUnitario.toFixed(2)}</td>
-      <td class="subtotal">R$ ${produtoSimulado.precoUnitario.toFixed(2)}</td>
+      <td>${produto.nome}</td>
+      <td>${produto.ean}</td>
+      <td><input type="number" min="1" max="${produto.estoque}" value="1" class="quantidade" style="width: 60px;" /></td>
+      <td>R$ ${produto.preco.toFixed(2)}</td>
+      <td class="subtotal">R$ ${produto.preco.toFixed(2)}</td>
       <td><button type="button" class="btnRemover" title="Remover produto"><i class="fas fa-trash-alt"></i></button></td>
     `;
 
@@ -94,7 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
         qty = 1;
         inputQuantidade.value = 1;
       }
-      const subtotal = qty * produtoSimulado.precoUnitario;
+      if (qty > produto.estoque) {
+        qty = produto.estoque;
+        inputQuantidade.value = qty;
+        alert('Quantidade maior que o estoque disponível.');
+      }
+      const subtotal = qty * produto.preco;
       tdSubtotal.textContent = `R$ ${subtotal.toFixed(2)}`;
       atualizarResumoTotal();
     });
@@ -105,6 +87,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     atualizarResumoTotal();
+  }
+
+  // Evento principal para o botão de adicionar produto
+  btnAdicionarProduto.addEventListener('click', () => {
+    const ean = inputEAN.value.trim();
+    if (!ean) {
+      alert('Por favor, digite ou escaneie o código de barras.');
+      return;
+    }
+
+    fetch(`/api/produtos/buscar-por-ean?ean=${ean}`)
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => { throw new Error(text) });
+        }
+        return response.json();
+      })
+      .then(produto => {
+        adicionarProdutoNaTabela(produto);
+        inputEAN.value = '';
+        produtoEncontrado.style.color = 'green';
+        produtoEncontrado.textContent = `Produto encontrado: ${produto.nome} adicionado.`;
+      })
+      .catch(error => {
+        produtoEncontrado.style.color = 'red';
+        produtoEncontrado.textContent = error.message;
+      });
   });
 
   // Inicializa resumo ao carregar a página

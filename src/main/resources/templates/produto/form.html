@@ -5,7 +5,7 @@
   <title>Cadastrar Produto</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/produto.css}" />
+  <link rel="stylesheet" th:href="@{/css/produto-form.css}" />
 </head>
 <body>
   <div th:replace="~{components/sidebar :: sidebar}"></div>
@@ -13,49 +13,98 @@
     <div th:replace="~{components/topbar :: topbar}"></div>
 
     <main class="container">
-      <h1>Cadastrar Produto</h1>
+      <h1 class="form-title"><i class="fas fa-box"></i> Cadastro de Produto</h1>
 
-      <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post" class="form-grid">
-        <div class="form-group">
-          <label>Nome:</label>
-          <input type="text" th:field="*{nome}" required />
+      <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post" class="form-container">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome do Produto:</label>
+            <input type="text" th:field="*{nome}" required placeholder="Ex: Café em pó 500g" />
+          </div>
+          <div class="form-group">
+            <label>EAN (Código de Barras):</label>
+            <input type="text" th:field="*{ean}" required placeholder="Ex: 7891234567890" />
+          </div>
         </div>
-        <div class="form-group">
-          <label>EAN:</label>
-          <input type="text" th:field="*{ean}" required />
-        </div>
-        <div class="form-group">
-          <label>Preço:</label>
-          <input type="number" step="0.01" th:field="*{preco}" required />
-        </div>
-        <div class="form-group">
-          <label>Estoque:</label>
-          <input type="number" th:field="*{estoque}" required />
-        </div>
-        <div class="form-group">
-          <label>Unidade de Medida:</label>
-          <input type="text" th:field="*{unidadeMedida}" placeholder="Ex: un, kg, L" />
-        </div>
-        <div class="form-group">
-          <label>Categoria:</label>
-          <select name="categoria" th:field="*{categoria}">
-            <option value="" disabled selected>-- Nenhuma categoria disponível --</option>
-            <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nome}"></option>
-        </select>
 
+        <div class="form-row">
+          <div class="form-group">
+            <label>Preço (R$):</label>
+            <input type="number" step="0.01" th:field="*{preco}" required placeholder="Ex: 19.90" />
+          </div>
+          <div class="form-group">
+            <label>Estoque Atual:</label>
+            <input type="number" th:field="*{estoque}" required placeholder="Ex: 100" />
+          </div>
         </div>
-        <div class="form-group">
-          <label>Fornecedor:</label>
-          <select name="fornecedor" th:field="*{fornecedor}">
-            <option value="" disabled selected>-- Nenhum fornecedor disponível --</option>
-            <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nome}"></option>
-          </select>
 
+        <div class="form-row">
+          <div class="form-group">
+            <label>Unidade de Medida:</label>
+            <input type="text" th:field="*{unidadeMedida}" placeholder="Ex: un, kg, L" />
+          </div>
+          <div class="form-group">
+            <label>Código Interno (SKU):</label>
+            <input type="text" th:field="*{codigoInterno}" placeholder="Ex: PRD-0001" />
+          </div>
         </div>
-        <div class="form-group full-width">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Marca:</label>
+            <input type="text" th:field="*{marca}" placeholder="Marca do Produto" />
+          </div>
+          <div class="form-group">
+            <label>Estoque Mínimo:</label>
+            <input type="number" th:field="*{minimoEstoque}" placeholder="Ex: 10" />
+          </div>
         </div>
-        <div class="form-actions full-width">
-          <button type="submit" class="btn btn-success">Salvar</button>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Peso (kg):</label>
+            <input type="number" step="0.01" th:field="*{peso}" placeholder="Ex: 0.5" />
+          </div>
+          <div class="form-group">
+            <label>Imagem (URL):</label>
+            <input type="text" th:field="*{imagemUrl}" placeholder="https://exemplo.com/imagem.jpg" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dimensões (cm):</label>
+            <div class="dimension-group">
+              <input type="number" step="0.01" th:field="*{largura}" placeholder="Largura" />
+              <input type="number" step="0.01" th:field="*{altura}" placeholder="Altura" />
+              <input type="number" step="0.01" th:field="*{profundidade}" placeholder="Profundidade" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Descrição:</label>
+            <textarea th:field="*{descricao}" rows="3" placeholder="Detalhes técnicos, características, etc."></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Categoria:</label>
+            <select th:field="*{categoria}">
+              <option value="" th:if="${#lists.isEmpty(categorias)}">-- Nenhuma categoria disponível --</option>
+              <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nome}"></option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Fornecedor:</label>
+            <select th:field="*{fornecedor}">
+              <option value="" th:if="${#lists.isEmpty(fornecedores)}">-- Nenhum fornecedor disponível --</option>
+              <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.razaoSocial}"></option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Salvar Produto</button>
         </div>
       </form>
     </main>

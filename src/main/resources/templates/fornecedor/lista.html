@@ -1,24 +1,57 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Fornecedores</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fornecedores - Painel do CEO</title>
+    
+    <!-- Ícones e estilos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/fornecedor.css}" />
 </head>
 <body>
-<h1>Lista de Fornecedores</h1>
-<a th:href="@{/fornecedores/novo}">Novo Fornecedor</a>
-<table>
-    <tr>
-        <th>Nome</th>
-        <th>CNPJ</th>
-        <th>Telefone</th>
-        <th>Email</th>
-    </tr>
-    <tr th:each="f : ${fornecedores}">
-        <td th:text="${f.nome}"></td>
-        <td th:text="${f.cnpj}"></td>
-        <td th:text="${f.telefone}"></td>
-        <td th:text="${f.email}"></td>
-    </tr>
-</table>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <h1>Fornecedores</h1>
+
+            <a class="button primary mt-3" th:href="@{/fornecedores/novo}">
+                <i class="fas fa-plus-circle"></i> Novo Fornecedor
+            </a>
+
+            <article class="card mt-3">
+                <h3>Lista de Fornecedores</h3>
+                <table class="table-list">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>CNPJ</th>
+                            <th>Telefone</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="f : ${fornecedores}">
+                        <td th:text="${f.id}">ID</td>
+                        <td th:text="${f.razaoSocial}">Razão Social</td>
+                        <td th:text="${f.cnpj}">CNPJ</td>
+                        <td th:text="${f.telefone}">Telefone</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </article>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
 </body>
 </html>

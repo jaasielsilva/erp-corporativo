@@ -1,24 +1,15 @@
-package com.jaasielsilva.portalceo.model;
+package com.jaasielsilva.portalceo.dto;
 
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 
-@Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Fornecedor {
+public class FornecedorDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String razaoSocial;
     private String nomeFantasia;
-
-    @Column(nullable = false, unique = true)
     private String cnpj;
-
     private String inscricaoEstadual;
 
     private String telefone;
@@ -26,7 +17,6 @@ public class Fornecedor {
     private String email;
     private String site;
 
-    // Endereço
     private String rua;
     private String numero;
     private String bairro;
@@ -34,6 +24,5 @@ public class Fornecedor {
     private String estado;
     private String cep;
 
-    @Column(length = 1000)
     private String observacoes;
 }

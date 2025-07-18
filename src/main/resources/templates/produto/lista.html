@@ -37,13 +37,13 @@
             <td th:text="${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}"></td>
             <td th:text="${produto.estoque}"></td>
             <td th:text="${produto.categoria?.nome}"></td>
-            <td th:text="${produto.fornecedor?.nome}"></td>
+            <span th:text="${produto.fornecedor != null} ? ${produto.fornecedor.nome} : 'Sem fornecedor'"></span>
           </tr>
         </tbody>
       </table>
     </main>
 
-    <div th:replace="~{components/footer :: footer}"></div>
+    <footer th:replace="~{components/footer :: footer}"></footer>
   </div>
 </body>
 </html>

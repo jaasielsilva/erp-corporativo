@@ -58,27 +58,36 @@
         <article class="card mt-3">
           <h3>Lista de Vendas</h3>
           <table class="table-list">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Cliente</th>
-                <th>CPF/CNPJ</th>
-                <th>Data</th>
-                <th>Valor</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:each="venda : ${vendas}">
-                <td th:text="${venda.id}"></td>
-                <td th:text="${venda.cliente.nome}"></td>
-                <td th:text="${venda.cliente.cpfCnpj}"></td>
-                <td th:text="${#temporals.format(venda.dataVenda, 'dd/MM/yyyy HH:mm')}"></td>
-                <td th:text="${#numbers.formatCurrency(venda.total)}"></td>
-                <td th:text="${venda.status}">-</td>
-              </tr>
-            </tbody>
-          </table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Cliente</th>
+      <th>CPF/CNPJ</th>
+      <th>Data</th>
+      <th>Valor</th>
+      <th>Status</th>
+      <th>Ações</th> <!-- nova coluna -->
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="venda : ${vendas}">
+      <td th:text="${venda.id}"></td>
+      <td th:text="${venda.cliente.nome}"></td>
+      <td th:text="${venda.cliente.cpfCnpj}"></td>
+      <td th:text="${#temporals.format(venda.dataVenda, 'dd/MM/yyyy HH:mm')}"></td>
+      <td th:text="${#numbers.formatCurrency(venda.total)}"></td>
+      <td th:text="${venda.status}">-</td>
+      <td>
+        <a th:href="@{/vendas/{id}/pdf(id=${venda.id})}" 
+           class="button small primary" target="_blank" 
+           title="Imprimir Venda">
+          <i class="fas fa-print"></i> Imprimir
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
         </article>
 
         <div class="info-section">

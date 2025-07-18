@@ -5,29 +5,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabelaProdutosBody = document.querySelector('#tabelaProdutos tbody');
   const inputTotal = document.getElementById('total');
   const spanFormatado = document.getElementById('total-formatado');
+  const btnSalvar = document.querySelector('button[type="submit"]');
+  const selectCliente = document.getElementById('cliente');
 
+  // Formata número em moeda BRL
   function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  // Atualiza o total na tabela e nos campos
   function atualizarResumoTotal() {
     let total = 0;
     tabelaProdutosBody.querySelectorAll('tr').forEach(tr => {
       const subtotalText = tr.querySelector('.subtotal').textContent;
-      const subtotalNum = parseFloat(subtotalText.replace('R$ ', '').replace(/\./g, '').replace(',', '.'));
+      const subtotalNum = parseFloat(subtotalText.replace('R$', '').replace(/\./g, '').replace(',', '.'));
       if (!isNaN(subtotalNum)) total += subtotalNum;
     });
     inputTotal.value = total.toFixed(2);
-    spanFormatado.textContent = formatarMoeda(total);
+    if (spanFormatado) {
+      spanFormatado.textContent = formatarMoeda(total);
+    }
+    atualizarBotaoSalvar();
   }
 
+  // Reindexa inputs para o Spring identificar corretamente os itens na lista
+  function reindexarItens() {
+    tabelaProdutosBody.querySelectorAll('tr').forEach((tr, idx) => {
+      tr.querySelectorAll('input').forEach(input => {
+        // Substitui o índice dentro dos colchetes itens[0], itens[1], ...
+        input.name = input.name.replace(/itens\[\d+\]/, `itens[${idx}]`);
+      });
+    });
+  }
+
+  // Remove uma linha da tabela e atualiza tudo
   function removerLinha(tr) {
     tr.remove();
+    reindexarItens();
     atualizarResumoTotal();
     produtoEncontrado.textContent = '';
   }
 
+  // Função que adiciona o produto na tabela (carrinho)
   function adicionarProdutoNaTabela(produto) {
+    // Verifica se produto já está na tabela para não duplicar
     if ([...tabelaProdutosBody.children].some(row => row.dataset.ean === produto.ean)) {
       alert('Produto já adicionado na lista.');
       return;
@@ -60,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputQuantidade = tr.querySelector('.quantidade');
     const tdSubtotal = tr.querySelector('.subtotal');
 
+    // Atualiza subtotal e total quando muda a quantidade
     inputQuantidade.addEventListener('input', () => {
       let qty = parseInt(inputQuantidade.value);
       if (isNaN(qty) || qty < 1) qty = 1;
@@ -72,11 +94,13 @@ document.addEventListener('DOMContentLoaded', () => {
       atualizarResumoTotal();
     });
 
+    // Remove o produto da tabela
     tr.querySelector('.btnRemover').addEventListener('click', () => removerLinha(tr));
 
     atualizarResumoTotal();
   }
 
+  // Busca produto pelo EAN via API REST (backend)
   function buscarProdutoEAN(ean) {
     fetch(`/api/produtos/buscar-por-ean?ean=${encodeURIComponent(ean)}`)
       .then(res => {
@@ -96,6 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
+  // Valida se o botão salvar pode ser habilitado (cliente selecionado + produtos no carrinho)
+  function atualizarBotaoSalvar() {
+    const temProdutos = tabelaProdutosBody.children.length > 0;
+    const clienteSelecionado = selectCliente.value !== "";
+    btnSalvar.disabled = !(temProdutos && clienteSelecionado);
+  }
+
+  // Eventos
   btnAdicionarProduto.addEventListener('click', () => {
     const ean = inputEAN.value.trim();
     if (!ean) {
@@ -116,5 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
     produtoEncontrado.textContent = '';
   });
 
+  selectCliente.addEventListener('change', atualizarBotaoSalvar);
+
+  // Inicializa botão salvar
+  atualizarBotaoSalvar();
   atualizarResumoTotal();
 });

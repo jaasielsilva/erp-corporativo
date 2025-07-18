@@ -60,3 +60,20 @@
   background-color: #28a745;
   color: white;
 }
+
+.footer {
+  text-align: center;
+  font-size: 14px;
+  padding: 20px 0;
+  color: #94a3b8;
+  border-top: 1px solid #e5e7eb;
+}
+
+.footer a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}

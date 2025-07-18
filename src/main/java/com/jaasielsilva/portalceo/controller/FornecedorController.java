@@ -20,11 +20,14 @@ public class FornecedorController {
         return "fornecedor/lista";
     }
 
+    // Método para abrir o formulário de cadastro com valores padrão
     @GetMapping("/novo")
-    public String novo(Model model) {
-        model.addAttribute("fornecedor", new Fornecedor());
+    public String novoFornecedor(Model model) {
+        Fornecedor fornecedor = new Fornecedor();
+        model.addAttribute("fornecedor", fornecedor);
         return "fornecedor/form";
     }
+
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Fornecedor fornecedor) {

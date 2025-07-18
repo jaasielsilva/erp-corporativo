@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class VendaService {
@@ -32,7 +33,6 @@ public class VendaService {
     @Autowired
     private ProdutoService produtoService;
 
-    // Salva a venda e atualiza o estoque dos produtos vendidos
     @Transactional
     public void salvar(Venda venda) {
         for (VendaItem item : venda.getItens()) {
@@ -123,5 +123,10 @@ public class VendaService {
         }
 
         return vendasPorMes;
+    }
+
+    // Método para buscar uma Venda por ID
+    public Optional<Venda> buscarPorId(Long id) {
+        return vendaRepository.findById(id);
     }
 }

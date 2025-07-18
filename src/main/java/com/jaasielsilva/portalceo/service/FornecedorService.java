@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.repository.FornecedorRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,21 +11,21 @@ import java.util.List;
 @Service
 public class FornecedorService {
 
-    private final FornecedorRepository repository;
-
-    public FornecedorService(FornecedorRepository repository) {
-        this.repository = repository;
-    }
+    @Autowired
+    private FornecedorRepository fornecedorRepository;
 
     public List<Fornecedor> listarTodos() {
-        return repository.findAll();
+        return fornecedorRepository.findAll();
     }
 
+    public List<Fornecedor> findAll() {
+        return fornecedorRepository.findAll();
+    }
     public Fornecedor salvar(Fornecedor fornecedor) {
-        return repository.save(fornecedor);
+        return fornecedorRepository.save(fornecedor);
     }
 
     public Fornecedor buscarPorId(Long id) {
-        return repository.findById(id).orElse(null);
+        return fornecedorRepository.findById(id).orElse(null);
     }
 }

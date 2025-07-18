@@ -4,76 +4,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const produtoEncontrado = document.getElementById('produtoEncontrado');
   const tabelaProdutosBody = document.querySelector('#tabelaProdutos tbody');
   const inputTotal = document.getElementById('total');
-  const resumoTotal = document.getElementById('resumoTotal');
+  const spanFormatado = document.getElementById('total-formatado');
 
-  // Formata número para moeda BRL
-  function formatarValor(valor) {
+  function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  // Atualiza o texto do resumo do total formatado
-  function atualizarResumo() {
-    let val = parseFloat(inputTotal.value);
-    if (!isNaN(val)) {
-      resumoTotal.textContent = "Valor total formatado: " + formatarValor(val);
-    } else {
-      resumoTotal.textContent = "Valor total formatado: R$ 0,00";
-    }
-  }
-
-  // Atualiza o total da venda somando os subtotais da tabela
   function atualizarResumoTotal() {
     let total = 0;
     tabelaProdutosBody.querySelectorAll('tr').forEach(tr => {
       const subtotalText = tr.querySelector('.subtotal').textContent;
-      // Remove "R$ ", troca vírgula por ponto, e faz parseFloat
       const subtotalNum = parseFloat(subtotalText.replace('R$ ', '').replace(/\./g, '').replace(',', '.'));
       if (!isNaN(subtotalNum)) total += subtotalNum;
     });
     inputTotal.value = total.toFixed(2);
-    atualizarResumo();
+    spanFormatado.textContent = formatarMoeda(total);
   }
 
-  // Função para remover uma linha da tabela
   function removerLinha(tr) {
     tr.remove();
     atualizarResumoTotal();
+    produtoEncontrado.textContent = '';
   }
 
-  // Função para adicionar o produto na tabela
   function adicionarProdutoNaTabela(produto) {
-    console.log('Produto recebido:', produto);
-
-    // Tentativa de pegar o preço de forma flexível
-    const precoRaw = produto.preco || produto.precoVenda || produto.precoUnitario;
-    if (!precoRaw && precoRaw !== 0) {
-      alert('Erro: preço do produto não encontrado.');
-      return;
-    }
-
-    // Normaliza preço string para número float
-    const preco = parseFloat(typeof precoRaw === 'string' ? precoRaw.replace(/\./g, '').replace(',', '.') : precoRaw);
-    if (isNaN(preco)) {
-      alert('Erro: preço do produto inválido.');
-      return;
-    }
-
-    // Verificar se produto já está na tabela
     if ([...tabelaProdutosBody.children].some(row => row.dataset.ean === produto.ean)) {
       alert('Produto já adicionado na lista.');
       return;
     }
 
+    const preco = parseFloat(produto.preco || produto.precoVenda || produto.precoUnitario || 0);
     const tr = document.createElement('tr');
     tr.dataset.ean = produto.ean;
+    const index = tabelaProdutosBody.children.length;
 
     tr.innerHTML = `
-      <td>${produto.nome}</td>
+      <td>
+        ${produto.nome}
+        <input type="hidden" name="itens[${index}].produto.id" value="${produto.id}" />
+      </td>
       <td>${produto.ean}</td>
-      <td><input type="number" min="1" max="${produto.estoque}" value="1" class="quantidade" style="width: 60px;" /></td>
-      <td>R$ ${preco.toFixed(2)}</td>
-      <td class="subtotal">R$ ${preco.toFixed(2)}</td>
-      <td><button type="button" class="btnRemover" title="Remover produto"><i class="fas fa-trash-alt"></i></button></td>
+      <td>
+        <input type="number" name="itens[${index}].quantidade" min="1" max="${produto.estoque}" value="1" class="quantidade" />
+      </td>
+      <td>
+        ${formatarMoeda(preco)}
+        <input type="hidden" name="itens[${index}].precoUnitario" value="${preco.toFixed(2)}" />
+      </td>
+      <td class="subtotal">${formatarMoeda(preco)}</td>
+      <td><button type="button" class="btnRemover"><i class="fas fa-trash-alt"></i></button></td>
     `;
 
     tabelaProdutosBody.appendChild(tr);
@@ -83,54 +62,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     inputQuantidade.addEventListener('input', () => {
       let qty = parseInt(inputQuantidade.value);
-      if (isNaN(qty) || qty < 1) {
-        qty = 1;
-        inputQuantidade.value = 1;
-      }
+      if (isNaN(qty) || qty < 1) qty = 1;
       if (qty > produto.estoque) {
         qty = produto.estoque;
-        inputQuantidade.value = qty;
         alert('Quantidade maior que o estoque disponível.');
       }
-      const subtotal = qty * preco;
-      tdSubtotal.textContent = `R$ ${subtotal.toFixed(2)}`;
+      inputQuantidade.value = qty;
+      tdSubtotal.textContent = formatarMoeda(qty * preco);
       atualizarResumoTotal();
     });
 
-    tr.querySelector('.btnRemover').addEventListener('click', () => {
-      removerLinha(tr);
-    });
+    tr.querySelector('.btnRemover').addEventListener('click', () => removerLinha(tr));
 
     atualizarResumoTotal();
   }
 
-  // Evento principal para o botão de adicionar produto
-  btnAdicionarProduto.addEventListener('click', () => {
-    const ean = inputEAN.value.trim();
-    if (!ean) {
-      alert('Por favor, digite ou escaneie o código de barras.');
-      return;
-    }
-
-    fetch(`/api/produtos/buscar-por-ean?ean=${ean}`)
-      .then(response => {
-        if (!response.ok) {
-          return response.text().then(text => { throw new Error(text) });
-        }
-        return response.json();
+  function buscarProdutoEAN(ean) {
+    fetch(`/api/produtos/buscar-por-ean?ean=${encodeURIComponent(ean)}`)
+      .then(res => {
+        if (!res.ok) return res.text().then(msg => { throw new Error(msg) });
+        return res.json();
       })
       .then(produto => {
         adicionarProdutoNaTabela(produto);
-        inputEAN.value = '';
         produtoEncontrado.style.color = 'green';
-        produtoEncontrado.textContent = `Produto encontrado: ${produto.nome} adicionado.`;
+        produtoEncontrado.textContent = `Produto adicionado: ${produto.nome}`;
+        inputEAN.value = '';
+        inputEAN.focus();
       })
-      .catch(error => {
+      .catch(err => {
         produtoEncontrado.style.color = 'red';
-        produtoEncontrado.textContent = error.message;
+        produtoEncontrado.textContent = err.message || 'Produto não encontrado.';
       });
+  }
+
+  btnAdicionarProduto.addEventListener('click', () => {
+    const ean = inputEAN.value.trim();
+    if (!ean) {
+      alert('Digite ou escaneie o código de barras.');
+      return;
+    }
+    buscarProdutoEAN(ean);
   });
 
-  // Inicializa resumo ao carregar a página
+  inputEAN.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      btnAdicionarProduto.click();
+    }
+  });
+
+  inputEAN.addEventListener('focus', () => {
+    produtoEncontrado.textContent = '';
+  });
+
   atualizarResumoTotal();
 });

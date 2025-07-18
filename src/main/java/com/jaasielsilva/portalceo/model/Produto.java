@@ -20,8 +20,7 @@ public class Produto {
     @Column(unique = true)
     private String ean;
 
-    // Renomeado para precoVenda para ficar claro o uso de preço de venda
-    private BigDecimal precoVenda;
+    private BigDecimal preco;
 
     private Integer estoque;
 

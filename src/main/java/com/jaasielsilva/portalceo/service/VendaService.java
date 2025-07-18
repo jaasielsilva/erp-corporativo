@@ -39,7 +39,7 @@ public class VendaService {
             item.setVenda(venda);
             Produto produto = item.getProduto();
 
-            int novaQuantidade = produto.getEstoque() - item.getQuantidade(); // seu campo é 'estoque' no Produto
+            int novaQuantidade = produto.getEstoque() - item.getQuantidade();
             if (novaQuantidade < 0) {
                 throw new RuntimeException("Estoque insuficiente para o produto: " + produto.getNome());
             }

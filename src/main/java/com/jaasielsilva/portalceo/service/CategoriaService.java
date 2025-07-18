@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.Categoria;
 import com.jaasielsilva.portalceo.repository.CategoriaRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,21 +11,26 @@ import java.util.List;
 @Service
 public class CategoriaService {
 
-    private final CategoriaRepository repository;
+    @Autowired
+    private CategoriaRepository categoriaRepository;
 
     public CategoriaService(CategoriaRepository repository) {
-        this.repository = repository;
+        this.categoriaRepository = repository;
     }
 
     public List<Categoria> listarTodas() {
-        return repository.findAll();
+        return categoriaRepository.findAll();
     }
 
     public Categoria salvar(Categoria categoria) {
-        return repository.save(categoria);
+        return categoriaRepository.save(categoria);
     }
 
     public Categoria buscarPorId(Long id) {
-        return repository.findById(id).orElse(null);
+        return categoriaRepository.findById(id).orElse(null);
+    }
+
+    public List<Categoria> findAll() {
+        return categoriaRepository.findAll();
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Controller
@@ -52,27 +53,38 @@ public class VendaController {
         return "vendas/cadastro";
     }
 
-    // 💾 SALVAR VENDA (com produtos fixos por enquanto)
+    // ✅ SALVAR VENDA COM PRODUTOS DINÂMICOS DO FORMULÁRIO
     @PostMapping("/salvar")
-public String salvarVenda(@ModelAttribute Venda venda, @RequestParam Long clienteId, Model model) {
+public String salvarVenda(@ModelAttribute Venda venda,
+                         @RequestParam Long clienteId,
+                         Model model) {
+
     Cliente cliente = clienteService.buscarPorId(clienteId)
         .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
 
     venda.setCliente(cliente);
 
     if (venda.getDataVenda() == null) {
-        venda.setDataVenda(LocalDateTime.now()); // só seta data atual se formulário não enviou
+        venda.setDataVenda(LocalDateTime.now());
     }
 
-    // itens fixos (melhor adaptar para itens do form futuramente)
-    Produto produto1 = produtoService.buscarPorId(1L).orElseThrow();
-    Produto produto2 = produtoService.buscarPorId(2L).orElseThrow();
+    // Vincula cada item à venda e calcula total
+    BigDecimal total = BigDecimal.ZERO;
+    for (VendaItem item : venda.getItens()) {
+        item.setVenda(venda);
 
-    VendaItem item1 = new VendaItem(produto1, 2, produto1.getPrecoVenda());
-    VendaItem item2 = new VendaItem(produto2, 1, produto2.getPrecoVenda());
+        // Para garantir: busca o produto completo no BD pelo id
+        Produto produto = produtoService.buscarPorId(item.getProduto().getId())
+                            .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado"));
 
-    venda.getItens().add(item1);
-    venda.getItens().add(item2);
+        item.setProduto(produto);
+
+        // Somar subtotal: precoUnitario * quantidade
+        BigDecimal subtotal = item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()));
+        total = total.add(subtotal);
+    }
+
+    venda.setTotal(total);
 
     vendaService.salvar(venda);
 

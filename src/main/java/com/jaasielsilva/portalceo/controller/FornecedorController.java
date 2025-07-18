@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.controller;
 
 import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.service.FornecedorService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -10,27 +11,24 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/fornecedores")
 public class FornecedorController {
 
-    private final FornecedorService service;
-
-    public FornecedorController(FornecedorService service) {
-        this.service = service;
-    }
+    @Autowired
+    private FornecedorService fornecedorService;
 
     @GetMapping
     public String listar(Model model) {
-        model.addAttribute("fornecedores", service.listarTodos());
-        return "fornecedores/lista";
+        model.addAttribute("fornecedores", fornecedorService.findAll());
+        return "fornecedor/lista";
     }
 
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("fornecedor", new Fornecedor());
-        return "fornecedores/formulario";
+        return "fornecedor/form";
     }
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Fornecedor fornecedor) {
-        service.salvar(fornecedor);
+        fornecedorService.salvar(fornecedor);
         return "redirect:/fornecedores";
     }
 }

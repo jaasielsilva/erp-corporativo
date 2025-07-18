@@ -38,19 +38,19 @@
         </div>
         <div class="form-group">
           <label>Categoria:</label>
-          <!-- Aqui troquei para usar categoria.id -->
-          <select th:field="*{categoria.id}">
-            <option value="" disabled selected>Selecione</option>
+          <select name="categoria" th:field="*{categoria}">
+            <option value="" disabled selected>-- Nenhuma categoria disponível --</option>
             <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nome}"></option>
-          </select>
+        </select>
+
         </div>
         <div class="form-group">
           <label>Fornecedor:</label>
-          <!-- Aqui troquei para usar fornecedor.id -->
-          <select th:field="*{fornecedor.id}">
-            <option value="" disabled selected>Selecione</option>
+          <select name="fornecedor" th:field="*{fornecedor}">
+            <option value="" disabled selected>-- Nenhum fornecedor disponível --</option>
             <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nome}"></option>
           </select>
+
         </div>
         <div class="form-group full-width">
         </div>

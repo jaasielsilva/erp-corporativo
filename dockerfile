@@ -1,15 +1,14 @@
-# Use uma imagem base oficial do OpenJDK 17 (JRE para rodar, JDK se precisar compilar)
+# Usa imagem base oficial OpenJDK 17 (JDK Slim)
 FROM openjdk:17-jdk-slim
 
-# Defina o diretório de trabalho dentro do container
+# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copie o arquivo JAR da sua aplicação para dentro do container
-# Ajuste o nome do arquivo JAR conforme o seu projeto
+# Copia o arquivo JAR para dentro do container (ajuste o nome se necessário)
 COPY target/portal-ceo-0.0.1-SNAPSHOT.jar app.jar
 
-# Expõe a porta que sua aplicação vai usar (exemplo 8080)
+# Expõe a porta que a aplicação vai usar
 EXPOSE 8080
 
-# Comando para executar a aplicação
+# Comando para rodar a aplicação
 ENTRYPOINT ["java", "-jar", "app.jar"]

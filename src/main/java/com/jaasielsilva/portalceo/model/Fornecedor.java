@@ -15,7 +15,6 @@ public class Fornecedor {
 
     private String razaoSocial;
     private String nomeFantasia;
-
     @Column(nullable = false, unique = true)
     private String cnpj;
 

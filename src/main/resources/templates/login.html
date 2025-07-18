@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -16,35 +17,43 @@
       height: 100vh;
       margin: 0;
     }
+
     .login-container {
       background: white;
       padding: 2.5rem 3rem;
       border-radius: 8px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
       width: 360px;
       text-align: center;
     }
+
     h2 {
       margin-bottom: 1.5rem;
       color: #2c3e50;
     }
+
     form {
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
     }
-    input[type="text"], input[type="password"] {
+
+    input[type="text"],
+    input[type="password"] {
       padding: 0.75rem 1rem;
       font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       transition: border-color 0.3s ease;
     }
-    input[type="text"]:focus, input[type="password"]:focus {
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
       outline: none;
       border-color: #2980b9;
       box-shadow: 0 0 5px #2980b9;
     }
+
     button {
       padding: 0.85rem;
       background-color: #2980b9;
@@ -55,14 +64,17 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
+
     button:hover {
       background-color: #1c5980;
     }
+
     .error-message {
       color: #e74c3c;
       margin-bottom: 1rem;
       font-size: 0.9rem;
     }
+
     .footer-login {
       margin-top: 1rem;
       font-size: 0.85rem;
@@ -70,24 +82,26 @@
     }
   </style>
 </head>
+
 <body>
   <div class="login-container">
     <h2>Login - Painel do CEO</h2>
-    
+
     <form th:action="@{/login}" method="post">
-  <div th:if="${param.error}">
-  <div class="alert alert-danger" th:text="${param.message}">Erro no login.</div>
-</div>
+      <div th:if="${param.error}">
+        <div class="alert alert-danger" th:text="${param.message}">Erro no login.</div>
+      </div>
 
-  <input type="text" name="username" placeholder="Email" required autofocus />
-  <input type="password" name="password" placeholder="Senha" required />
-  <button type="submit">Entrar</button>
-</form>
+      <input type="text" name="username" placeholder="Email" required autofocus />
+      <input type="password" name="password" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
 
-    
+
     <div class="footer-login">
       &copy; 2025 Painel do CEO
     </div>
   </div>
 </body>
+
 </html>

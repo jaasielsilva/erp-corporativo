@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,6 +9,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
+
 <body>
   <div class="app-container">
     <!-- Sidebar -->
@@ -71,10 +73,10 @@
 
           <!-- CPF -->
           <!-- CPF -->
-<div class="form-group">
-  <label for="cpfCnpj">CPF ou CNPJ:</label>
-  <input type="text" id="cpfCnpj" th:field="*{cpf}" placeholder="Digite CPF ou CNPJ" maxlength="18" />
-</div>
+          <div class="form-group">
+            <label for="cpfCnpj">CPF ou CNPJ:</label>
+            <input type="text" id="cpfCnpj" th:field="*{cpf}" placeholder="Digite CPF ou CNPJ" maxlength="18" />
+          </div>
 
 
           <!-- Data de nascimento -->
@@ -129,7 +131,8 @@
           <div class="form-group">
             <label for="departamento">Departamento:</label>
             <select id="departamento" th:field="*{departamento.id}" required>
-              <option value="" disabled th:selected="${usuario.departamento == null}">-- Selecione o departamento --</option>
+              <option value="" disabled th:selected="${usuario.departamento == null}">-- Selecione o departamento --
+              </option>
               <option th:each="dep : ${departamentos}" th:value="${dep.id}" th:text="${dep.nome}"></option>
             </select>
           </div>
@@ -171,17 +174,17 @@
       </section>
 
       <!-- Script: Auto preencher CEP -->
-      
-<script>
-  document.getElementById('cep').addEventListener('input', function () {
-    let cep = this.value.replace(/\D/g, '').substring(0, 8);
-    if (cep.length > 5) {
-      this.value = `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
-    } else {
-      this.value = cep;
-    }
-  });
-</script>
+
+      <script>
+        document.getElementById('cep').addEventListener('input', function () {
+          let cep = this.value.replace(/\D/g, '').substring(0, 8);
+          if (cep.length > 5) {
+            this.value = `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
+          } else {
+            this.value = cep;
+          }
+        });
+      </script>
 
       <!-- Script: Formatar telefone -->
       <script>
@@ -200,39 +203,39 @@
       </script>
 
       <!-- Script: Formatar CPF ou CNPJ -->
-<script>
-  document.getElementById('cpfCnpj').addEventListener('input', function () {
-    let valor = this.value.replace(/\D/g, '');
+      <script>
+        document.getElementById('cpfCnpj').addEventListener('input', function () {
+          let valor = this.value.replace(/\D/g, '');
 
-    if (valor.length <= 11) {
-      // CPF: 000.000.000-00
-      valor = valor.substring(0, 11);
-      if (valor.length > 9) {
-        this.value = `${valor.substring(0, 3)}.${valor.substring(3, 6)}.${valor.substring(6, 9)}-${valor.substring(9, 11)}`;
-      } else if (valor.length > 6) {
-        this.value = `${valor.substring(0, 3)}.${valor.substring(3, 6)}.${valor.substring(6)}`;
-      } else if (valor.length > 3) {
-        this.value = `${valor.substring(0, 3)}.${valor.substring(3)}`;
-      } else {
-        this.value = valor;
-      }
-    } else {
-      // CNPJ: 00.000.000/0000-00
-      valor = valor.substring(0, 14);
-      if (valor.length > 12) {
-        this.value = `${valor.substring(0, 2)}.${valor.substring(2, 5)}.${valor.substring(5, 8)}/${valor.substring(8, 12)}-${valor.substring(12, 14)}`;
-      } else if (valor.length > 8) {
-        this.value = `${valor.substring(0, 2)}.${valor.substring(2, 5)}.${valor.substring(5, 8)}/${valor.substring(8)}`;
-      } else if (valor.length > 5) {
-        this.value = `${valor.substring(0, 2)}.${valor.substring(2, 5)}.${valor.substring(5)}`;
-      } else if (valor.length > 2) {
-        this.value = `${valor.substring(0, 2)}.${valor.substring(2)}`;
-      } else {
-        this.value = valor;
-      }
-    }
-  });
-</script>
+          if (valor.length <= 11) {
+            // CPF: 000.000.000-00
+            valor = valor.substring(0, 11);
+            if (valor.length > 9) {
+              this.value = `${valor.substring(0, 3)}.${valor.substring(3, 6)}.${valor.substring(6, 9)}-${valor.substring(9, 11)}`;
+            } else if (valor.length > 6) {
+              this.value = `${valor.substring(0, 3)}.${valor.substring(3, 6)}.${valor.substring(6)}`;
+            } else if (valor.length > 3) {
+              this.value = `${valor.substring(0, 3)}.${valor.substring(3)}`;
+            } else {
+              this.value = valor;
+            }
+          } else {
+            // CNPJ: 00.000.000/0000-00
+            valor = valor.substring(0, 14);
+            if (valor.length > 12) {
+              this.value = `${valor.substring(0, 2)}.${valor.substring(2, 5)}.${valor.substring(5, 8)}/${valor.substring(8, 12)}-${valor.substring(12, 14)}`;
+            } else if (valor.length > 8) {
+              this.value = `${valor.substring(0, 2)}.${valor.substring(2, 5)}.${valor.substring(5, 8)}/${valor.substring(8)}`;
+            } else if (valor.length > 5) {
+              this.value = `${valor.substring(0, 2)}.${valor.substring(2, 5)}.${valor.substring(5)}`;
+            } else if (valor.length > 2) {
+              this.value = `${valor.substring(0, 2)}.${valor.substring(2)}`;
+            } else {
+              this.value = valor;
+            }
+          }
+        });
+      </script>
 
 
       <!-- Footer -->
@@ -240,4 +243,5 @@
     </main>
   </div>
 </body>
+
 </html>

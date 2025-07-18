@@ -1,366 +1,389 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Editar Usuário - Painel do CEO</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
 
-    <style>
-      /* Estilos do formulário e campos */
-      .form-group {
-        margin-bottom: 1rem;
-        position: relative;
-      }
-      label {
-        display: block;
-        margin-bottom: 0.25rem;
-        font-weight: 600;
-        color: #333;
-      }
-      input[type="text"],
-      input[type="email"],
-      input[type="password"],
-      input[type="date"],
-      input[type="tel"],
-      select {
-        width: 100%;
-        padding: 0.5rem;
-        font-size: 1rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        position: relative;
-      }
-      input[readonly] {
-        background-color: #f0f0f0;
-        color: #666;
-        cursor: not-allowed;
-        user-select: none;
-        padding-right: 2rem;
-      }
-      input[readonly]::after {
-        content: "\f023";
-        font-family: "Font Awesome 5 Free";
-        font-weight: 900;
-        position: absolute;
-        right: 0.75rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #007bff;
-        pointer-events: none;
-      }
-      select.readonly-simulado {
-        background-color: #f0f0f0;
-        color: #666;
-        cursor: not-allowed;
-        user-select: none;
-        pointer-events: none;
-        padding-right: 2rem;
-      }
-      .form-group.readonly-select {
-        position: relative;
-      }
-      .form-group.readonly-select .lock-icon {
-        position: absolute;
-        right: 0.75rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #007bff;
-        pointer-events: none;
-        font-family: "Font Awesome 5 Free";
-        font-weight: 900;
-        font-size: 1.1rem;
-      }
-      .form-group.full-width {
-        width: 100%;
-      }
-      
-      .buttons {
-  display: flex;           /* alinhamento lado a lado */
-  gap: 1rem;               /* espaçamento horizontal entre os botões */
-  margin-top: 1rem;        /* espaçamento acima dos botões */
-}
+<head>
+  <meta charset="UTF-8" />
+  <title>Editar Usuário - Painel do CEO</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
 
-.btn-submit, .btn-cancel {
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border: none;
-}
+  <style>
+    /* Estilos do formulário e campos */
+    .form-group {
+      margin-bottom: 1rem;
+      position: relative;
+    }
 
-.btn-submit {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  transition: background-color 0.3s;
-}
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+      color: #333;
+    }
 
-.btn-submit:hover {
-  background-color: #0056b3;
-}
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="tel"],
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      position: relative;
+    }
 
-.btn-cancel {
-  background-color: transparent;
-  color: #666;
-  border: 1px solid #ccc;
-  transition: color 0.3s, border-color 0.3s;
-}
+    input[readonly] {
+      background-color: #f0f0f0;
+      color: #666;
+      cursor: not-allowed;
+      user-select: none;
+      padding-right: 2rem;
+    }
 
-.btn-cancel:hover {
-  color: #333;
-  border-color: #999;
-  text-decoration: none;
-}
+    input[readonly]::after {
+      content: "\f023";
+      font-family: "Font Awesome 5 Free";
+      font-weight: 900;
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #007bff;
+      pointer-events: none;
+    }
 
-    </style>
-  </head>
-  <body>
-    <div class="app-container">
-      <div th:replace="~{components/sidebar :: sidebar}"></div>
-      <main class="main-content">
-        <header th:replace="~{components/topbar :: topbar}"></header>
+    select.readonly-simulado {
+      background-color: #f0f0f0;
+      color: #666;
+      cursor: not-allowed;
+      user-select: none;
+      pointer-events: none;
+      padding-right: 2rem;
+    }
 
-        <section class="content-area">
-          <h1><i class="fas fa-user-edit"></i> Editar Usuário</h1>
+    .form-group.readonly-select {
+      position: relative;
+    }
 
-          <!-- MENSAGEM DE ERRO -->
-          <div th:if="${erro}" class="alert alert-danger" role="alert" style="margin-bottom: 16px;">
-            <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}"></span>
+    .form-group.readonly-select .lock-icon {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #007bff;
+      pointer-events: none;
+      font-family: "Font Awesome 5 Free";
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+
+    .form-group.full-width {
+      width: 100%;
+    }
+
+    .buttons {
+      display: flex;
+      /* alinhamento lado a lado */
+      gap: 1rem;
+      /* espaçamento horizontal entre os botões */
+      margin-top: 1rem;
+      /* espaçamento acima dos botões */
+    }
+
+    .btn-submit,
+    .btn-cancel {
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border: none;
+    }
+
+    .btn-submit {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      transition: background-color 0.3s;
+    }
+
+    .btn-submit:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-cancel {
+      background-color: transparent;
+      color: #666;
+      border: 1px solid #ccc;
+      transition: color 0.3s, border-color 0.3s;
+    }
+
+    .btn-cancel:hover {
+      color: #333;
+      border-color: #999;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <div th:replace="~{components/sidebar :: sidebar}"></div>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1><i class="fas fa-user-edit"></i> Editar Usuário</h1>
+
+        <!-- MENSAGEM DE ERRO -->
+        <div th:if="${erro}" class="alert alert-danger" role="alert" style="margin-bottom: 16px;">
+          <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}"></span>
+        </div>
+
+        <form th:action="@{'/usuarios/' + ${usuario.id} + '/editar'}" method="post" th:object="${usuario}"
+          class="form-usuario">
+          <!-- Matrícula -->
+          <div class="form-group">
+            <label for="matricula">Matrícula:</label>
+            <input type="text" id="matricula" th:field="*{matricula}" placeholder="Digite a matrícula" required />
           </div>
 
-          <form th:action="@{'/usuarios/' + ${usuario.id} + '/editar'}" method="post" th:object="${usuario}" class="form-usuario">
-            <!-- Matrícula -->
-            <div class="form-group">
-              <label for="matricula">Matrícula:</label>
-              <input type="text" id="matricula" th:field="*{matricula}" placeholder="Digite a matrícula" required />
-            </div>
+          <!-- Ramal -->
+          <div class="form-group">
+            <label for="ramal">Ramal:</label>
+            <input type="text" id="ramal" th:field="*{ramal}" placeholder="Digite o ramal (opcional)" />
+          </div>
 
-            <!-- Ramal -->
-            <div class="form-group">
-              <label for="ramal">Ramal:</label>
-              <input type="text" id="ramal" th:field="*{ramal}" placeholder="Digite o ramal (opcional)" />
-            </div>
+          <!-- Nome completo -->
+          <div class="form-group">
+            <label for="nome">Nome completo:</label>
+            <input type="text" id="nome" th:field="*{nome}" placeholder="Digite o nome completo" required />
+          </div>
 
-            <!-- Nome completo -->
-            <div class="form-group">
-              <label for="nome">Nome completo:</label>
-              <input type="text" id="nome" th:field="*{nome}" placeholder="Digite o nome completo" required />
-            </div>
+          <!-- E-mail -->
+          <div class="form-group">
+            <label for="email">E-mail:</label>
+            <input type="email" id="email" th:field="*{email}" placeholder="Digite o e-mail" required />
+          </div>
 
-            <!-- E-mail -->
-            <div class="form-group">
-              <label for="email">E-mail:</label>
-              <input type="email" id="email" th:field="*{email}" placeholder="Digite o e-mail" required />
-            </div>
+          <!-- Senha -->
+          <div class="form-group">
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" th:field="*{senha}"
+              placeholder="Digite a nova senha (ou deixe em branco)" />
+          </div>
 
-            <!-- Senha -->
-            <div class="form-group">
-              <label for="senha">Senha:</label>
-              <input type="password" id="senha" th:field="*{senha}" placeholder="Digite a nova senha (ou deixe em branco)" />
-            </div>
+          <!-- Confirmar senha -->
+          <div class="form-group">
+            <label for="confirmSenha">Confirmar Senha:</label>
+            <input type="password" id="confirmSenha" name="confirmSenha" placeholder="Repita a senha" />
+          </div>
 
-            <!-- Confirmar senha -->
-            <div class="form-group">
-              <label for="confirmSenha">Confirmar Senha:</label>
-              <input type="password" id="confirmSenha" name="confirmSenha" placeholder="Repita a senha" />
-            </div>
+          <!-- Telefone -->
+          <div class="form-group">
+            <label for="telefone">Telefone:</label>
+            <input type="text" id="telefone" th:field="*{telefone}" placeholder="(11) 98888-7777" maxlength="15" />
+          </div>
 
-            <!-- Telefone -->
-            <div class="form-group">
-              <label for="telefone">Telefone:</label>
-              <input type="text" id="telefone" th:field="*{telefone}" placeholder="(11) 98888-7777" maxlength="15" />
-            </div>
+          <!-- CPF ou CNPJ (bloqueado) -->
+          <div class="form-group readonly-select" title="Campo bloqueado 🔒">
+            <label for="cpfCnpj">CPF ou CNPJ:</label>
+            <input type="text" id="cpfCnpj" th:field="*{cpf}" placeholder="Digite CPF ou CNPJ" maxlength="18" readonly
+              style="padding-right: 2rem;" />
+          </div>
 
-            <!-- CPF ou CNPJ (bloqueado) -->
-            <div class="form-group readonly-select" title="Campo bloqueado 🔒">
-              <label for="cpfCnpj">CPF ou CNPJ:</label>
-              <input type="text" id="cpfCnpj" th:field="*{cpf}" placeholder="Digite CPF ou CNPJ" maxlength="18" readonly style="padding-right: 2rem;" />
-            </div>
+          <!-- Data de nascimento -->
+          <div class="form-group">
+            <label for="dataNascimento">Data de Nascimento:</label>
+            <input type="date" id="dataNascimento" th:field="*{dataNascimento}" />
+          </div>
 
-            <!-- Data de nascimento -->
-            <div class="form-group">
-              <label for="dataNascimento">Data de Nascimento:</label>
-              <input type="date" id="dataNascimento" th:field="*{dataNascimento}" />
-            </div>
+          <!-- CEP -->
+          <div class="form-group">
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep" th:field="*{cep}" placeholder="00000-000" maxlength="9" />
+          </div>
 
-            <!-- CEP -->
-            <div class="form-group">
-              <label for="cep">CEP:</label>
-              <input type="text" id="cep" th:field="*{cep}" placeholder="00000-000" maxlength="9" />
-            </div>
+          <!-- Situação -->
+          <div class="form-group">
+            <label for="status">Situação:</label>
+            <select id="status" th:field="*{status}" required>
+              <option value="" disabled>-- Selecione o status --</option>
+              <option value="ATIVO">Ativo</option>
+              <option value="INATIVO">Inativo</option>
+              <option value="DEMITIDO">Demitido</option>
+            </select>
+          </div>
 
-            <!-- Situação -->
-            <div class="form-group">
-              <label for="status">Situação:</label>
-              <select id="status" th:field="*{status}" required>
-                <option value="" disabled>-- Selecione o status --</option>
-                <option value="ATIVO">Ativo</option>
-                <option value="INATIVO">Inativo</option>
-                <option value="DEMITIDO">Demitido</option>
-              </select>
-            </div>
+          <!-- Data de Desligamento -->
+          <div class="form-group" id="campoDesligamento" style="display:none;">
+            <label for="dataDesligamento">Data de Desligamento:</label>
+            <input type="date" id="dataDesligamento" th:field="*{dataDesligamento}" />
+          </div>
 
-            <!-- Data de Desligamento -->
-            <div class="form-group" id="campoDesligamento" style="display:none;">
-              <label for="dataDesligamento">Data de Desligamento:</label>
-              <input type="date" id="dataDesligamento" th:field="*{dataDesligamento}" />
-            </div>
+          <!-- Endereço -->
+          <div class="form-group full-width">
+            <label for="endereco">Endereço:</label>
+            <input type="text" id="endereco" th:field="*{endereco}" placeholder="Rua, número, complemento" />
+          </div>
 
-            <!-- Endereço -->
-            <div class="form-group full-width">
-              <label for="endereco">Endereço:</label>
-              <input type="text" id="endereco" th:field="*{endereco}" placeholder="Rua, número, complemento" />
-            </div>
+          <!-- Cidade -->
+          <div class="form-group">
+            <label for="cidade">Cidade:</label>
+            <input type="text" id="cidade" th:field="*{cidade}" />
+          </div>
 
-            <!-- Cidade -->
-            <div class="form-group">
-              <label for="cidade">Cidade:</label>
-              <input type="text" id="cidade" th:field="*{cidade}" />
-            </div>
+          <!-- Estado -->
+          <div class="form-group">
+            <label for="estado">Estado:</label>
+            <input type="text" id="estado" th:field="*{estado}" maxlength="2" placeholder="UF" />
+          </div>
 
-            <!-- Estado -->
-            <div class="form-group">
-              <label for="estado">Estado:</label>
-              <input type="text" id="estado" th:field="*{estado}" maxlength="2" placeholder="UF" />
-            </div>
+          <!-- Perfil -->
+          <div class="form-group">
+            <label for="perfilId">Perfil:</label>
+            <select id="perfilId" name="perfilId" required th:disabled="${usuario.email == 'admin@teste.com'}">
+              <option value="" disabled>-- Selecione um perfil --</option>
+              <option th:each="perfil : ${perfis}" th:value="${perfil.id}" th:text="${perfil.nome}"
+                th:selected="${usuario.perfis.contains(perfil)}"></option>
+            </select>
+          </div>
 
-            <!-- Perfil -->
-            <div class="form-group">
-              <label for="perfilId">Perfil:</label>
-              <select id="perfilId" name="perfilId" required th:disabled="${usuario.email == 'admin@teste.com'}">
-                <option value="" disabled>-- Selecione um perfil --</option>
-                <option th:each="perfil : ${perfis}" th:value="${perfil.id}" th:text="${perfil.nome}" th:selected="${usuario.perfis.contains(perfil)}"></option>
-              </select>
-            </div>
+          <!-- Cargo (bloqueado) -->
+          <div class="form-group readonly-select" title="Campo bloqueado 🔒">
+            <label for="cargoId">Cargo:</label>
+            <select id="cargoId" name="cargoId" class="readonly-simulado" tabindex="-1" aria-disabled="true">
+              <option value="" disabled>-- Selecione o cargo --</option>
+              <option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nome}"
+                th:selected="${usuario.cargo != null} ? ${usuario.cargo.id} == ${cargo.id} : false"></option>
+            </select>
+          </div>
 
-            <!-- Cargo (bloqueado) -->
-            <div class="form-group readonly-select" title="Campo bloqueado 🔒">
-              <label for="cargoId">Cargo:</label>
-              <select id="cargoId" name="cargoId" class="readonly-simulado" tabindex="-1" aria-disabled="true">
-                <option value="" disabled>-- Selecione o cargo --</option>
-                <option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nome}" th:selected="${usuario.cargo != null} ? ${usuario.cargo.id} == ${cargo.id} : false"></option>
-              </select>
-            </div>
+          <!-- Departamento (bloqueado) -->
+          <div class="form-group readonly-select" title="Campo bloqueado 🔒">
+            <label for="departamentoId">Departamento:</label>
+            <select id="departamentoId" name="departamentoId" class="readonly-simulado" tabindex="-1"
+              aria-disabled="true" required>
+              <option value="" disabled>-- Selecione o departamento --</option>
+              <option th:each="dep : ${departamentos}" th:value="${dep.id}" th:text="${dep.nome}"
+                th:selected="${usuario.departamento != null} ? ${usuario.departamento.id} == ${dep.id} : false">
+              </option>
+            </select>
+          </div>
 
-            <!-- Departamento (bloqueado) -->
-            <div class="form-group readonly-select" title="Campo bloqueado 🔒">
-              <label for="departamentoId">Departamento:</label>
-              <select id="departamentoId" name="departamentoId" class="readonly-simulado" tabindex="-1" aria-disabled="true" required>
-                <option value="" disabled>-- Selecione o departamento --</option>
-                <option th:each="dep : ${departamentos}" th:value="${dep.id}" th:text="${dep.nome}" th:selected="${usuario.departamento != null} ? ${usuario.departamento.id} == ${dep.id} : false"></option>
-              </select>
-            </div>
+          <!-- Gênero -->
+          <div class="form-group">
+            <label for="genero">Gênero:</label>
+            <select id="genero" th:field="*{genero}">
+              <option value="" disabled>-- Selecione o gênero --</option>
+              <option th:each="gen : ${generos}" th:value="${gen}" th:text="${gen}"></option>
+            </select>
+          </div>
 
-            <!-- Gênero -->
-            <div class="form-group">
-              <label for="genero">Gênero:</label>
-              <select id="genero" th:field="*{genero}">
-                <option value="" disabled>-- Selecione o gênero --</option>
-                <option th:each="gen : ${generos}" th:value="${gen}" th:text="${gen}"></option>
-              </select>
-            </div>
+          <!-- Nível de Acesso (bloqueado) -->
+          <div class="form-group readonly-select" title="Campo bloqueado 🔒">
+            <label for="nivelAcesso">Nível de Acesso:</label>
+            <select id="nivelAcesso" name="nivelAcesso" class="readonly-simulado" tabindex="-1" aria-disabled="true"
+              required>
+              <option value="" disabled>-- Selecione o nível de acesso --</option>
+              <option value="ADMIN" th:selected="${usuario.nivelAcesso == 'ADMIN'}">Administrador</option>
+              <option value="USER" th:selected="${usuario.nivelAcesso == 'USER'}">Usuário</option>
+              <option value="GUEST" th:selected="${usuario.nivelAcesso == 'GUEST'}">Visitante</option>
+            </select>
+          </div>
 
-            <!-- Nível de Acesso (bloqueado) -->
-            <div class="form-group readonly-select" title="Campo bloqueado 🔒">
-              <label for="nivelAcesso">Nível de Acesso:</label>
-              <select id="nivelAcesso" name="nivelAcesso" class="readonly-simulado" tabindex="-1" aria-disabled="true" required>
-                <option value="" disabled>-- Selecione o nível de acesso --</option>
-                <option value="ADMIN" th:selected="${usuario.nivelAcesso == 'ADMIN'}">Administrador</option>
-                <option value="USER" th:selected="${usuario.nivelAcesso == 'USER'}">Usuário</option>
-                <option value="GUEST" th:selected="${usuario.nivelAcesso == 'GUEST'}">Visitante</option>
-              </select>
-            </div>
+          <!-- Data de Admissão -->
+          <div class="form-group">
+            <label for="dataAdmissao">Data de Admissão:</label>
+            <input type="date" id="dataAdmissao" th:field="*{dataAdmissao}" readonly title="Campo bloqueado 🔒" />
+          </div>
 
-            <!-- Data de Admissão -->
-            <div class="form-group">
-              <label for="dataAdmissao">Data de Admissão:</label>
-              <input type="date" id="dataAdmissao" th:field="*{dataAdmissao}" readonly title="Campo bloqueado 🔒" />
-            </div>
+          <!-- Botões -->
+          <div class="form-group buttons">
+            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+            <a th:href="@{/dashboard}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
+          </div>
 
-            <!-- Botões -->
-            <div class="form-group buttons">
-              <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
-              <a th:href="@{/dashboard}" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
-            </div>
+        </form>
+      </section>
 
-          </form>
-        </section>
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
 
-        <footer th:replace="~{components/footer :: footer}"></footer>
-      </main>
-    </div>
+  <!-- Scripts -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const status = document.getElementById("status");
+      const campoDesligamento = document.getElementById("campoDesligamento");
+      const dataDesligamento = document.getElementById("dataDesligamento");
 
-    <!-- Scripts -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const status = document.getElementById("status");
-        const campoDesligamento = document.getElementById("campoDesligamento");
-        const dataDesligamento = document.getElementById("dataDesligamento");
+      function verificarStatus() {
+        if (status.value === "DEMITIDO") {
+          campoDesligamento.style.display = "block";
+        } else {
+          campoDesligamento.style.display = "none";
+          if (dataDesligamento) {
+            dataDesligamento.value = "";
+          }
+        }
+      }
 
-        function verificarStatus() {
-          if (status.value === "DEMITIDO") {
-            campoDesligamento.style.display = "block";
-          } else {
-            campoDesligamento.style.display = "none";
-            if (dataDesligamento) {
-              dataDesligamento.value = "";
+      status.addEventListener("change", verificarStatus);
+      verificarStatus();
+    });
+  </script>
+
+  <script>
+    document.getElementById('cep').addEventListener('blur', function () {
+      let cep = this.value.replace(/\D/g, '');
+      if (cep.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+          .then(response => response.json())
+          .then(data => {
+            if (!data.erro) {
+              document.getElementById('endereco').value = data.logradouro || '';
+              document.getElementById('cidade').value = data.localidade || '';
+              document.getElementById('estado').value = data.uf || '';
+            } else {
+              alert('CEP não encontrado.');
             }
-          }
+          })
+          .catch(() => alert('Erro ao consultar o CEP.'));
+      }
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const telefoneInput = document.getElementById("telefone");
+
+      telefoneInput.addEventListener("input", function (e) {
+        let v = e.target.value.replace(/\D/g, "");
+        if (v.length > 11) v = v.slice(0, 11);
+
+        if (v.length > 10) {
+          v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+        } else if (v.length > 6) {
+          v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+        } else if (v.length > 2) {
+          v = v.replace(/(\d{2})(\d{0,5})/, "($1) $2");
+        } else {
+          v = v.replace(/(\d*)/, "($1");
         }
 
-        status.addEventListener("change", verificarStatus);
-        verificarStatus();
+        e.target.value = v;
       });
-    </script>
+    });
+  </script>
+</body>
 
-    <script>
-      document.getElementById('cep').addEventListener('blur', function () {
-        let cep = this.value.replace(/\D/g, '');
-        if (cep.length === 8) {
-          fetch(`https://viacep.com.br/ws/${cep}/json/`)
-            .then(response => response.json())
-            .then(data => {
-              if (!data.erro) {
-                document.getElementById('endereco').value = data.logradouro || '';
-                document.getElementById('cidade').value = data.localidade || '';
-                document.getElementById('estado').value = data.uf || '';
-              } else {
-                alert('CEP não encontrado.');
-              }
-            })
-            .catch(() => alert('Erro ao consultar o CEP.'));
-        }
-      });
-    </script>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const telefoneInput = document.getElementById("telefone");
-
-        telefoneInput.addEventListener("input", function (e) {
-          let v = e.target.value.replace(/\D/g, "");
-          if (v.length > 11) v = v.slice(0, 11);
-
-          if (v.length > 10) {
-            v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-          } else if (v.length > 6) {
-            v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-          } else if (v.length > 2) {
-            v = v.replace(/(\d{2})(\d{0,5})/, "($1) $2");
-          } else {
-            v = v.replace(/(\d*)/, "($1");
-          }
-
-          e.target.value = v;
-        });
-      });
-    </script>
-  </body>
 </html>

@@ -10,6 +10,7 @@ import com.jaasielsilva.portalceo.service.VendaService;
 import com.lowagie.text.Cell;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Paragraph;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 @Controller
@@ -110,60 +112,107 @@ public class VendaController {
 }
 
 
-    // metodo pra imprimir o comprovante PDF da comprarealizada
     @GetMapping("/{id}/pdf")
-    public ResponseEntity<byte[]> gerarPdfVenda(@PathVariable Long id) throws DocumentException {
+public ResponseEntity<byte[]> gerarPdfVenda(@PathVariable Long id) throws DocumentException {
     Venda venda = vendaService.buscarPorId(id)
             .orElseThrow(() -> new IllegalArgumentException("Venda não encontrada"));
 
     Document document = new Document();
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
     PdfWriter.getInstance(document, baos);
     document.open();
 
-    Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+    // Fonts
+    Font tituloGrande = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+    Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
     Font normal = FontFactory.getFont(FontFactory.HELVETICA, 12);
-
-    document.add(new Paragraph("Detalhes da Venda", titulo));
-    document.add(new Paragraph("Cliente: " + venda.getCliente().getNome(), normal));
-    document.add(new Paragraph("Data da Venda: " + venda.getDataVenda().toString(), normal));
-    document.add(new Paragraph("Forma de Pagamento: " + venda.getFormaPagamento(), normal));
-    document.add(new Paragraph("Status: " + venda.getStatus(), normal));
-    document.add(new Paragraph("Observações: " + (venda.getObservacoes() == null ? "" : venda.getObservacoes()), normal));
-    document.add(new Paragraph("\n"));
-
-    PdfPTable tabela = new PdfPTable(5);
-    tabela.setWidthPercentage(100);
-    tabela.setWidths(new int[]{4, 2, 2, 2, 2});
-
-    tabela.addCell(new PdfPCell(new Paragraph("Produto", titulo)));
-    tabela.addCell(new PdfPCell(new Paragraph("EAN", titulo)));
-    tabela.addCell(new PdfPCell(new Paragraph("Quantidade", titulo)));
-    tabela.addCell(new PdfPCell(new Paragraph("Preço Unit.", titulo)));
-    tabela.addCell(new PdfPCell(new Paragraph("Subtotal", titulo)));
+    Font pequeno = FontFactory.getFont(FontFactory.HELVETICA, 10);
 
     NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
+    // Linha de separação (usando Paragraph)
+    Paragraph linhaSeparadora = new Paragraph("---------------------------------------------------", normal);
+    linhaSeparadora.setAlignment(Element.ALIGN_CENTER);
+
+    // Cabeçalho
+    document.add(linhaSeparadora);
+    Paragraph cabecalho = new Paragraph("NOTA FISCAL DE VENDA", tituloGrande);
+    cabecalho.setAlignment(Element.ALIGN_CENTER);
+    document.add(cabecalho);
+    document.add(linhaSeparadora);
+
+    // Número e data da venda
+    document.add(new Paragraph("Número da Venda: " + venda.getId(), normal));
+    document.add(new Paragraph("Data da Emissão: " + venda.getDataVenda().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")), normal));
+    document.add(new Paragraph("\n"));
+
+    // Dados do Cliente
+    Cliente cliente = venda.getCliente();
+    document.add(new Paragraph("Cliente:", titulo));
+    document.add(new Paragraph("Nome/Razão Social: " + cliente.getNome(), normal));
+    document.add(new Paragraph("CPF/CNPJ: " + cliente.getCpfCnpj(), normal));
+    document.add(new Paragraph("Endereço: " + cliente.getLogradouro() + ", " + cliente.getNumero() + (cliente.getComplemento() != null ? " - " + cliente.getComplemento() : ""), normal));
+    document.add(new Paragraph("Bairro: " + cliente.getBairro(), normal));
+    document.add(new Paragraph("Cidade/UF: " + cliente.getCidade() + "/" + cliente.getEstado(), normal));
+    document.add(new Paragraph("CEP: " + cliente.getCep(), normal));
+    document.add(new Paragraph("Telefone: " + cliente.getTelefone(), normal));
+    document.add(new Paragraph("E-mail: " + cliente.getEmail(), normal));
+    document.add(linhaSeparadora);
+
+    // Itens da venda - tabela simples com 4 colunas (Qtde, Descrição, Valor Unit., Total)
+    PdfPTable tabela = new PdfPTable(4);
+    tabela.setWidthPercentage(100);
+    tabela.setWidths(new float[]{1.5f, 6f, 3f, 3f});
+
+    // Cabeçalho da tabela
+    tabela.addCell(new PdfPCell(new Paragraph("Qtde", titulo)));
+    tabela.addCell(new PdfPCell(new Paragraph("Descrição", titulo)));
+    tabela.addCell(new PdfPCell(new Paragraph("Valor Unitário", titulo)));
+    tabela.addCell(new PdfPCell(new Paragraph("Total", titulo)));
+
+    // Itens
     for (VendaItem item : venda.getItens()) {
-        tabela.addCell(new PdfPCell(new Paragraph(item.getProduto().getNome(), normal)));
-        tabela.addCell(new PdfPCell(new Paragraph(item.getProduto().getEan(), normal)));
         tabela.addCell(new PdfPCell(new Paragraph(String.valueOf(item.getQuantidade()), normal)));
+        tabela.addCell(new PdfPCell(new Paragraph(item.getProduto().getNome(), normal)));
         tabela.addCell(new PdfPCell(new Paragraph(nf.format(item.getPrecoUnitario()), normal)));
         tabela.addCell(new PdfPCell(new Paragraph(nf.format(item.getSubtotal()), normal)));
     }
 
     document.add(tabela);
     document.add(new Paragraph("\n"));
-    document.add(new Paragraph("Total da Venda: " + nf.format(venda.getTotal()), titulo));
+
+    // Forma de pagamento, status e observações
+    document.add(new Paragraph("Forma de Pagamento: " + venda.getFormaPagamento(), normal));
+    document.add(new Paragraph("Status: " + venda.getStatus(), normal));
+    document.add(new Paragraph("Observações: " + (venda.getObservacoes() == null ? "---" : venda.getObservacoes()), normal));
+    document.add(linhaSeparadora);
+
+    // Total da venda
+    Paragraph totalVenda = new Paragraph("Valor Total da Venda: " + nf.format(venda.getTotal()), titulo);
+    totalVenda.setAlignment(Element.ALIGN_CENTER);
+    document.add(totalVenda);
+    document.add(linhaSeparadora);
+
+    // Dados do emitente fixos
+    document.add(new Paragraph("Emitente: Seu Nome ou Empresa Ltda.", normal));
+    document.add(new Paragraph("CNPJ Emitente: XX.XXX.XXX/0001-XX", normal));
+    document.add(new Paragraph("Endereço Emitente: Rua Exemplo, 123 - Cidade - Estado", normal));
+    document.add(new Paragraph("Telefone Emitente: (XX) XXXX-XXXX", normal));
+    document.add(linhaSeparadora);
+
+    // Agradecimento
+    Paragraph agradecimento = new Paragraph("Obrigado pela preferência!", titulo);
+    agradecimento.setAlignment(Element.ALIGN_CENTER);
+    document.add(agradecimento);
+    document.add(linhaSeparadora);
 
     document.close();
 
     byte[] pdfBytes = baos.toByteArray();
 
     return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=venda_" + id + ".pdf")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=venda_" + venda.getId() + ".pdf")
             .contentType(MediaType.APPLICATION_PDF)
             .body(pdfBytes);
-}
+    }
 }

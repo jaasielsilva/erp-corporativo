@@ -34,10 +34,10 @@
             <td th:text="${produto.id}"></td>
             <td th:text="${produto.nome}"></td>
             <td th:text="${produto.ean}"></td>
-            <td th:text="${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}"></td>
+            <td th:text="${produto.preco != null ? #numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA') : '0,00'}"></td>
             <td th:text="${produto.estoque}"></td>
             <td th:text="${produto.categoria?.nome}"></td>
-            <span th:text="${produto.fornecedor != null} ? ${produto.fornecedor.nome} : 'Sem fornecedor'"></span>
+            <span th:text="${produto.fornecedor != null ? produto.fornecedor.razaoSocial : 'Sem fornecedor'}"></span>
           </tr>
         </tbody>
       </table>

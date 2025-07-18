@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title th:text="${cliente.id == null} ? 'Cadastrar Cliente' : 'Editar Cliente'">Cadastrar Cliente - Painel do CEO</title>
+  <title th:text="${cliente.id == null} ? 'Cadastrar Cliente' : 'Editar Cliente'">Cadastrar Cliente - Painel do CEO
+  </title>
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
@@ -14,6 +16,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/bindings/inputmask.binding.min.js"></script>
   <script th:src="@{/js/cliente-cadastro.js}"></script>
 </head>
+
 <body>
   <div class="app-container">
     <aside th:replace="components/sidebar :: sidebar"></aside>
@@ -22,147 +25,156 @@
       <header th:replace="components/topbar :: topbar"></header>
 
       <section class="content-area">
-        <h1><i class="fas fa-user"></i> <span th:text="${cliente.id == null} ? 'Cadastrar Novo Cliente' : 'Editar Cliente'"></span></h1>
+        <h1><i class="fas fa-user"></i> <span
+            th:text="${cliente.id == null} ? 'Cadastrar Novo Cliente' : 'Editar Cliente'"></span></h1>
 
-        <form th:action="${cliente.id == null} ? @{/clientes/salvar} : @{/clientes/editar}"
-      method="post" th:object="${cliente}" class="form-cliente">
+        <form th:action="${cliente.id == null} ? @{/clientes/salvar} : @{/clientes/editar}" method="post"
+          th:object="${cliente}" class="form-cliente">
 
-  <input type="hidden" th:if="${cliente.id != null}" th:field="*{id}" />
+          <input type="hidden" th:if="${cliente.id != null}" th:field="*{id}" />
 
-  <fieldset>
-    <!-- Nome Completo / Razão Social -->
-    <div class="form-group">
-      <label for="nome">Nome Completo / Razão Social:</label>
-      <input type="text" id="nome" th:field="*{nome}" placeholder="Digite o nome completo ou razão social" required />
-    </div>
+          <fieldset>
+            <!-- Nome Completo / Razão Social -->
+            <div class="form-group">
+              <label for="nome">Nome Completo / Razão Social:</label>
+              <input type="text" id="nome" th:field="*{nome}" placeholder="Digite o nome completo ou razão social"
+                required />
+            </div>
 
-    <!-- Tipo Cliente -->
-    <div class="form-group">
-      <label for="tipoCliente">Tipo Cliente:</label>
-      <select id="tipoCliente" th:field="*{tipoCliente}" required>
-        <option value="" disabled th:selected="${cliente.tipoCliente == null}">-- Selecione o tipo --</option>
-        <option value="PF" th:selected="${cliente.tipoCliente == 'PF'}">Pessoa Física</option>
-        <option value="PJ" th:selected="${cliente.tipoCliente == 'PJ'}">Pessoa Jurídica</option>
-      </select>
-    </div>
+            <!-- Tipo Cliente -->
+            <div class="form-group">
+              <label for="tipoCliente">Tipo Cliente:</label>
+              <select id="tipoCliente" th:field="*{tipoCliente}" required>
+                <option value="" disabled th:selected="${cliente.tipoCliente == null}">-- Selecione o tipo --</option>
+                <option value="PF" th:selected="${cliente.tipoCliente == 'PF'}">Pessoa Física</option>
+                <option value="PJ" th:selected="${cliente.tipoCliente == 'PJ'}">Pessoa Jurídica</option>
+              </select>
+            </div>
 
-    <!-- Nome Fantasia -->
-    <div class="form-group">
-      <label for="nomeFantasia">Nome Fantasia:</label>
-      <input type="text" id="nomeFantasia" th:field="*{nomeFantasia}" placeholder="Digite o nome fantasia" th:disabled="${cliente.tipoCliente != 'PJ'}" />
-    </div>
+            <!-- Nome Fantasia -->
+            <div class="form-group">
+              <label for="nomeFantasia">Nome Fantasia:</label>
+              <input type="text" id="nomeFantasia" th:field="*{nomeFantasia}" placeholder="Digite o nome fantasia"
+                th:disabled="${cliente.tipoCliente != 'PJ'}" />
+            </div>
 
-    <!-- Email -->
-    <div class="form-group">
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" th:field="*{email}" placeholder="Digite o e-mail" required />
-    </div>
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email">E-mail:</label>
+              <input type="email" id="email" th:field="*{email}" placeholder="Digite o e-mail" required />
+            </div>
 
-    <!-- Telefone -->
-    <div class="form-group">
-      <label for="telefone">Telefone:</label>
-      <input type="text" id="telefone" th:field="*{telefone}" placeholder="(xx) xxxx-xxxx ou (xx) xxxxx-xxxx" maxlength="15" />
-    </div>
+            <!-- Telefone -->
+            <div class="form-group">
+              <label for="telefone">Telefone:</label>
+              <input type="text" id="telefone" th:field="*{telefone}" placeholder="(xx) xxxx-xxxx ou (xx) xxxxx-xxxx"
+                maxlength="15" />
+            </div>
 
-    <!-- Celular -->
-    <div class="form-group">
-      <label for="celular">Celular:</label>
-      <input type="text" id="celular" th:field="*{celular}" placeholder="(xx) xxxxx-xxxx" maxlength="15" />
-    </div>
+            <!-- Celular -->
+            <div class="form-group">
+              <label for="celular">Celular:</label>
+              <input type="text" id="celular" th:field="*{celular}" placeholder="(xx) xxxxx-xxxx" maxlength="15" />
+            </div>
 
-    <!-- CPF/CNPJ -->
-    <div class="form-group">
-      <label for="cpfCnpj">CPF ou CNPJ:</label>
-      <input type="text" id="cpfCnpj" th:field="*{cpfCnpj}" placeholder="Digite CPF ou CNPJ" maxlength="18" required />
-    </div>
+            <!-- CPF/CNPJ -->
+            <div class="form-group">
+              <label for="cpfCnpj">CPF ou CNPJ:</label>
+              <input type="text" id="cpfCnpj" th:field="*{cpfCnpj}" placeholder="Digite CPF ou CNPJ" maxlength="18"
+                required />
+            </div>
 
-    <!-- Inscrição Estadual -->
-    <div class="form-group">
-      <label for="inscricaoEstadual">Inscrição Estadual:</label>
-      <input type="text" id="inscricaoEstadual" th:field="*{inscricaoEstadual}" placeholder="Digite a inscrição estadual" th:disabled="${cliente.tipoCliente == 'PF'}" />
-    </div>
+            <!-- Inscrição Estadual -->
+            <div class="form-group">
+              <label for="inscricaoEstadual">Inscrição Estadual:</label>
+              <input type="text" id="inscricaoEstadual" th:field="*{inscricaoEstadual}"
+                placeholder="Digite a inscrição estadual" th:disabled="${cliente.tipoCliente == 'PF'}" />
+            </div>
 
-    <!-- Inscrição Municipal -->
-    <div class="form-group">
-      <label for="inscricaoMunicipal">Inscrição Municipal:</label>
-      <input type="text" id="inscricaoMunicipal" th:field="*{inscricaoMunicipal}" placeholder="Digite a inscrição municipal" th:disabled="${cliente.tipoCliente == 'PF'}" />
-    </div>
+            <!-- Inscrição Municipal -->
+            <div class="form-group">
+              <label for="inscricaoMunicipal">Inscrição Municipal:</label>
+              <input type="text" id="inscricaoMunicipal" th:field="*{inscricaoMunicipal}"
+                placeholder="Digite a inscrição municipal" th:disabled="${cliente.tipoCliente == 'PF'}" />
+            </div>
 
-    <!-- CEP -->
-    <div class="form-group">
-      <label for="cep">CEP:</label>
-      <input type="text" id="cep" th:field="*{cep}" placeholder="00000-000" maxlength="9" />
-    </div>
+            <!-- CEP -->
+            <div class="form-group">
+              <label for="cep">CEP:</label>
+              <input type="text" id="cep" th:field="*{cep}" placeholder="00000-000" maxlength="9" />
+            </div>
 
-    <!-- Logradouro -->
-    <div class="form-group full-width">
-      <label for="logradouro">Logradouro:</label>
-      <input type="text" id="logradouro" th:field="*{logradouro}" placeholder="Rua, avenida, etc." />
-    </div>
+            <!-- Logradouro -->
+            <div class="form-group full-width">
+              <label for="logradouro">Logradouro:</label>
+              <input type="text" id="logradouro" th:field="*{logradouro}" placeholder="Rua, avenida, etc." />
+            </div>
 
-    <!-- Número -->
-    <div class="form-group">
-      <label for="numero">Número:</label>
-      <input type="text" id="numero" th:field="*{numero}" placeholder="Número" />
-    </div>
+            <!-- Número -->
+            <div class="form-group">
+              <label for="numero">Número:</label>
+              <input type="text" id="numero" th:field="*{numero}" placeholder="Número" />
+            </div>
 
-    <!-- Complemento -->
-    <div class="form-group">
-      <label for="complemento">Complemento:</label>
-      <input type="text" id="complemento" th:field="*{complemento}" placeholder="Apartamento, bloco, etc." />
-    </div>
+            <!-- Complemento -->
+            <div class="form-group">
+              <label for="complemento">Complemento:</label>
+              <input type="text" id="complemento" th:field="*{complemento}" placeholder="Apartamento, bloco, etc." />
+            </div>
 
-    <!-- Bairro -->
-    <div class="form-group">
-      <label for="bairro">Bairro:</label>
-      <input type="text" id="bairro" th:field="*{bairro}" placeholder="Bairro" />
-    </div>
+            <!-- Bairro -->
+            <div class="form-group">
+              <label for="bairro">Bairro:</label>
+              <input type="text" id="bairro" th:field="*{bairro}" placeholder="Bairro" />
+            </div>
 
-    <!-- Cidade -->
-    <div class="form-group">
-      <label for="cidade">Cidade:</label>
-      <input type="text" id="cidade" th:field="*{cidade}" placeholder="Cidade" />
-    </div>
+            <!-- Cidade -->
+            <div class="form-group">
+              <label for="cidade">Cidade:</label>
+              <input type="text" id="cidade" th:field="*{cidade}" placeholder="Cidade" />
+            </div>
 
-    <!-- Estado -->
-    <div class="form-group">
-      <label for="estado">Estado:</label>
-      <input type="text" id="estado" th:field="*{estado}" maxlength="2" placeholder="UF" />
-    </div>
+            <!-- Estado -->
+            <div class="form-group">
+              <label for="estado">Estado:</label>
+              <input type="text" id="estado" th:field="*{estado}" maxlength="2" placeholder="UF" />
+            </div>
 
-    <!-- Status -->
-    <div class="form-group">
-      <label for="status">Status:</label>
-      <select id="status" th:field="*{status}" required>
-        <option value="" disabled th:selected="${cliente.status == null}">-- Selecione o status --</option>
-        <option value="Ativo" th:selected="${cliente.status == 'Ativo'}">Ativo</option>
-        <option value="Inativo" th:selected="${cliente.status == 'Inativo'}">Inativo</option>
-      </select>
-    </div>
+            <!-- Status -->
+            <div class="form-group">
+              <label for="status">Status:</label>
+              <select id="status" th:field="*{status}" required>
+                <option value="" disabled th:selected="${cliente.status == null}">-- Selecione o status --</option>
+                <option value="Ativo" th:selected="${cliente.status == 'Ativo'}">Ativo</option>
+                <option value="Inativo" th:selected="${cliente.status == 'Inativo'}">Inativo</option>
+              </select>
+            </div>
 
-    <!-- Pessoa para Contato -->
-    <div class="form-group">
-      <label for="pessoaContato">Pessoa para Contato:</label>
-      <input type="text" id="pessoaContato" th:field="*{pessoaContato}" placeholder="Nome da pessoa para contato" />
-    </div>
+            <!-- Pessoa para Contato -->
+            <div class="form-group">
+              <label for="pessoaContato">Pessoa para Contato:</label>
+              <input type="text" id="pessoaContato" th:field="*{pessoaContato}"
+                placeholder="Nome da pessoa para contato" />
+            </div>
 
-    <!-- Observações -->
-    <div class="form-group full-width">
-      <label for="observacoes">Observações:</label>
-      <textarea id="observacoes" th:field="*{observacoes}" rows="4" placeholder="Observações adicionais"></textarea>
-    </div>
-  </fieldset>
+            <!-- Observações -->
+            <div class="form-group full-width">
+              <label for="observacoes">Observações:</label>
+              <textarea id="observacoes" th:field="*{observacoes}" rows="4"
+                placeholder="Observações adicionais"></textarea>
+            </div>
+          </fieldset>
 
-  <!-- Botões -->
-  <div class="form-group buttons full-width">
-    <button type="submit" class="btn-salvar"><i class="fas fa-save"></i> Salvar</button>
-    <a th:href="@{/clientes}" class="btn-cancelar"><i class="fas fa-times"></i> Cancelar</a>
-  </div>
+          <!-- Botões -->
+          <div class="form-group buttons full-width">
+            <button type="submit" class="btn-salvar"><i class="fas fa-save"></i> Salvar</button>
+            <a th:href="@{/clientes}" class="btn-cancelar"><i class="fas fa-times"></i> Cancelar</a>
+          </div>
 
-  <!-- Erro -->
-  <div class="error full-width" th:if="${erro}" th:text="${erro}"></div>
+          <!-- Erro -->
+          <div class="error full-width" th:if="${erro}" th:text="${erro}"></div>
 
-</form>
+        </form>
 
       </section>
 
@@ -170,4 +182,5 @@
     </main>
   </div>
 </body>
+
 </html>

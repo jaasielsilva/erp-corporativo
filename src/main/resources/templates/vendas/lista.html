@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Vendas - Painel do CEO</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  
+
   <link rel="stylesheet" th:href="@{/css/listagem-venda-cliente.css}" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
+
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -38,14 +40,8 @@
         <!-- Formulário de filtro por CPF ou CNPJ -->
         <form method="get" action="#" class="filter-form" style="margin-bottom: 1em;">
           <label for="cpfCnpj">Buscar por CPF ou CNPJ:</label>
-          <input 
-            type="text" 
-            id="cpfCnpj" 
-            name="cpfCnpj" 
-            placeholder="Digite CPF ou CNPJ" 
-            th:value="${cpfCnpj}" 
-            style="padding: 0.5em; margin-left: 0.5em;"
-          />
+          <input type="text" id="cpfCnpj" name="cpfCnpj" placeholder="Digite CPF ou CNPJ" th:value="${cpfCnpj}"
+            style="padding: 0.5em; margin-left: 0.5em;" />
           <button type="submit" class="button primary" style="margin-left: 0.5em;">
             <i class="fas fa-search"></i> Buscar
           </button>
@@ -58,35 +54,34 @@
         <article class="card mt-3">
           <h3>Lista de Vendas</h3>
           <table class="table-list">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Cliente</th>
-      <th>CPF/CNPJ</th>
-      <th>Data</th>
-      <th>Valor</th>
-      <th>Status</th>
-      <th>Ações</th> <!-- nova coluna -->
-    </tr>
-  </thead>
-  <tbody>
-    <tr th:each="venda : ${vendas}">
-      <td th:text="${venda.id}"></td>
-      <td th:text="${venda.cliente.nome}"></td>
-      <td th:text="${venda.cliente.cpfCnpj}"></td>
-      <td th:text="${#temporals.format(venda.dataVenda, 'dd/MM/yyyy HH:mm')}"></td>
-      <td th:text="${#numbers.formatCurrency(venda.total)}"></td>
-      <td th:text="${venda.status}">-</td>
-      <td>
-        <a th:href="@{/vendas/{id}/pdf(id=${venda.id})}" 
-           class="button small primary" target="_blank" 
-           title="Imprimir Venda">
-          <i class="fas fa-print"></i> Imprimir
-        </a>
-      </td>
-    </tr>
-  </tbody>
-</table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>CPF/CNPJ</th>
+                <th>Data</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Ações</th> <!-- nova coluna -->
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="venda : ${vendas}">
+                <td th:text="${venda.id}"></td>
+                <td th:text="${venda.cliente.nome}"></td>
+                <td th:text="${venda.cliente.cpfCnpj}"></td>
+                <td th:text="${#temporals.format(venda.dataVenda, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${#numbers.formatCurrency(venda.total)}"></td>
+                <td th:text="${venda.status}">-</td>
+                <td>
+                  <a th:href="@{/vendas/{id}/pdf(id=${venda.id})}" class="button small primary" target="_blank"
+                    title="Imprimir Venda">
+                    <i class="fas fa-print"></i> Imprimir
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
         </article>
 
@@ -103,4 +98,5 @@
 
   <script th:src="@{/js/script.js}"></script>
 </body>
+
 </html>

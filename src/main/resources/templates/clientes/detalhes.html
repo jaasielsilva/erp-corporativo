@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,6 +9,7 @@
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/cliente-detalhe.css}" />
 </head>
+
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
@@ -45,38 +47,39 @@
           <p th:text="${cliente.observacoes}"></p>
 
           <!-- Novas Ações -->
-<div class="acoes-detalhes" role="group" aria-label="Ações do cliente">
+          <div class="acoes-detalhes" role="group" aria-label="Ações do cliente">
 
-  <!-- Enviar Email -->
-  <a th:href="'mailto:' + ${cliente.email}" class="btn-email" title="Enviar Email">
-    <i class="fas fa-envelope"></i> Enviar Email
-  </a>
+            <!-- Enviar Email -->
+            <a th:href="'mailto:' + ${cliente.email}" class="btn-email" title="Enviar Email">
+              <i class="fas fa-envelope"></i> Enviar Email
+            </a>
 
-  <!-- Exportar para PDF -->
-  <button type="button" class="btn-pdf" title="Exportar Detalhes para PDF" onclick="exportarPDF()">
-    <i class="fas fa-file-pdf"></i> Exportar PDF
-  </button>
-  
-  <!-- Imprimir detalhes -->
-  <button type="button" class="btn-print" title="Imprimir detalhes" onclick="window.print()">
-    <i class="fas fa-print"></i> Imprimir
-  </button>
+            <!-- Exportar para PDF -->
+            <button type="button" class="btn-pdf" title="Exportar Detalhes para PDF" onclick="exportarPDF()">
+              <i class="fas fa-file-pdf"></i> Exportar PDF
+            </button>
 
-  <!-- Emitir Nota Fiscal -->
-  <button type="button" class="btn-invoice" title="Emitir Nota Fiscal" th:onclick="|emitirNotaFiscal(${cliente.id})|">
-    <i class="fas fa-file-invoice"></i> Emitir Nota Fiscal
-  </button>
-</div>
+            <!-- Imprimir detalhes -->
+            <button type="button" class="btn-print" title="Imprimir detalhes" onclick="window.print()">
+              <i class="fas fa-print"></i> Imprimir
+            </button>
 
-         <div class="botoes-acoes">
-  <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" class="btn-editar">
-    <i class="fas fa-edit"></i> Editar
-  </a>
-  <a th:href="@{/clientes}" class="btn-voltar">Voltar</a>
-</div>
+            <!-- Emitir Nota Fiscal -->
+            <button type="button" class="btn-invoice" title="Emitir Nota Fiscal"
+              th:onclick="|emitirNotaFiscal(${cliente.id})|">
+              <i class="fas fa-file-invoice"></i> Emitir Nota Fiscal
+            </button>
+          </div>
 
-</div>
-          
+          <div class="botoes-acoes">
+            <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" class="btn-editar">
+              <i class="fas fa-edit"></i> Editar
+            </a>
+            <a th:href="@{/clientes}" class="btn-voltar">Voltar</a>
+          </div>
+
+        </div>
+
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
@@ -129,4 +132,5 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
+
 </html>

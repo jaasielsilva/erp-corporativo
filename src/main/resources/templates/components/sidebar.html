@@ -1,10 +1,8 @@
 <div class="sidebar" th:fragment="sidebar">
   <div>
     <div class="user-panel">
-      <img th:if="${usuarioLogado != null}"
-           th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}" 
-           alt="Foto do usuário" 
-           class="user-avatar" />
+      <img th:if="${usuarioLogado != null}" th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}"
+        alt="Foto do usuário" class="user-avatar" />
       <div class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Nome do Usuário</div>
     </div>
 
@@ -12,7 +10,7 @@
       <ul>
         <!-- Itens comuns - essenciais -->
         <li><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-        
+
         <li>
           <a th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}">
             <i class="fas fa-user-cog"></i> Meu Perfil
@@ -24,7 +22,16 @@
         <li><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
         <li><a href="/produtos"><i class="fas fa-boxes"></i> Produtos</a></li>
         <li><a href="/estoque"><i class="fas fa-warehouse"></i> Estoque</a></li>
-        
+        <li class="has-submenu">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-tags"></i> Categorias <i class="fas fa-chevron-down submenu-icon"></i>
+          </a>
+          <ul class="submenu" style="display: none;">
+            <li><a href="/categorias"><i class="fas fa-list"></i> Listar Categorias</a></li>
+            <li><a href="/categorias/nova"><i class="fas fa-plus-circle"></i> Nova Categoria</a></li>
+          </ul>
+        </li>
+
 
         <!-- Itens financeiros comuns -->
         <li><a href="/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
@@ -61,4 +68,5 @@
       </ul>
     </nav>
   </div>
+  <script th:src="@{/js/sidebar.js}"></script>
 </div>

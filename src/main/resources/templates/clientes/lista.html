@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Clientes - Painel do CEO</title>
-  
+
   <!-- Toastr CSS e JS (se quiser notificação estilo toast) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  
+
   <!-- Seu CSS padrão -->
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/cliente-lista.css}" />
 
 </head>
+
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
@@ -29,7 +31,8 @@
 
         <div class="toolbar">
           <form class="search-form" th:action="@{/clientes}" method="get">
-            <input type="text" name="busca" placeholder="Buscar por nome, email ou telefone" th:value="${param.busca}" />
+            <input type="text" name="busca" placeholder="Buscar por nome, email ou telefone"
+              th:value="${param.busca}" />
             <button type="submit"><i class="fas fa-search"></i> Buscar</button>
           </form>
 
@@ -57,9 +60,9 @@
               <td th:text="${cliente.telefone}">(00) 00000-0000</td>
               <td>
                 <span class="badge"
-                      th:classappend="${#strings.toUpperCase(cliente.status)} == 'ATIVO' ? ' badge-ativo' : 
+                  th:classappend="${#strings.toUpperCase(cliente.status)} == 'ATIVO' ? ' badge-ativo' : 
                                       (${#strings.toUpperCase(cliente.status)} == 'PENDENTE' ? ' badge-pendente' : ' badge-inativo')"
-                      th:text="${cliente.status != null} ? ${cliente.status} : 'Sem status'">
+                  th:text="${cliente.status != null} ? ${cliente.status} : 'Sem status'">
                 </span>
               </td>
 
@@ -103,97 +106,98 @@
     let clienteIdParaExcluir = null;
 
     function abrirModalExcluir(id) {
-  clienteIdParaExcluir = id;
-  const modal = document.getElementById('modal-excluir');
-  modal.style.display = 'flex';
+      clienteIdParaExcluir = id;
+      const modal = document.getElementById('modal-excluir');
+      modal.style.display = 'flex';
 
-  const matriculaInput = document.getElementById('matriculaInput');
-  matriculaInput.value = '';
+      const matriculaInput = document.getElementById('matriculaInput');
+      matriculaInput.value = '';
 
-  const msgErro = document.getElementById('msgErroMatricula');
-  const msgSucesso = document.getElementById('msgSucessoExcluir');
-  msgErro.style.display = 'none';
-  msgErro.textContent = '';
-  msgSucesso.style.display = 'none';
-  msgSucesso.textContent = '';
+      const msgErro = document.getElementById('msgErroMatricula');
+      const msgSucesso = document.getElementById('msgSucessoExcluir');
+      msgErro.style.display = 'none';
+      msgErro.textContent = '';
+      msgSucesso.style.display = 'none';
+      msgSucesso.textContent = '';
 
-  // Habilitar o botão confirmar
-  document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
-}
-
-function fecharModal() {
-  clienteIdParaExcluir = null;
-  const modal = document.getElementById('modal-excluir');
-  modal.style.display = 'none';
-
-  const matriculaInput = document.getElementById('matriculaInput');
-  matriculaInput.value = '';
-
-  const msgErro = document.getElementById('msgErroMatricula');
-  const msgSucesso = document.getElementById('msgSucessoExcluir');
-  msgErro.style.display = 'none';
-  msgErro.textContent = '';
-  msgSucesso.style.display = 'none';
-  msgSucesso.textContent = '';
-
-  // Habilitar o botão confirmar (caso esteja desabilitado)
-  document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
-}
-
-async function validarEExcluir() {
-  const matricula = document.getElementById('matriculaInput').value.trim();
-  const msgErro = document.getElementById('msgErroMatricula');
-  const msgSucesso = document.getElementById('msgSucessoExcluir');
-  const btnConfirmar = document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]');
-
-  // Reset mensagens
-  msgErro.style.display = 'none';
-  msgErro.textContent = '';
-  msgSucesso.style.display = 'none';
-  msgSucesso.textContent = '';
-
-  if (!matricula) {
-    msgErro.textContent = 'Digite a matrícula do administrador.';
-    msgErro.style.display = 'block';
-    return;
-  }
-
-  btnConfirmar.disabled = true;
-
-  try {
-    const response = await fetch('/clientes/' + clienteIdParaExcluir + '/excluir', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Matricula': matricula
-      }
-    });
-
-    if (response.ok) {
-      msgSucesso.textContent = 'Cliente excluído com sucesso!';
-      msgSucesso.style.display = 'block';
-
-      setTimeout(() => {
-        fecharModal();
-        window.location.href = '/clientes';
-      }, 1500);
-    } else {
-      let errorText = 'Erro ao excluir cliente. Contate o ADMINISTRADOR DO SISTEMA.';
-      try {
-        const errorData = await response.json();
-        if (errorData.erro) errorText = errorData.erro;
-      } catch {}
-
-      msgErro.textContent = errorText;
-      msgErro.style.display = 'block';
-      btnConfirmar.disabled = false;
+      // Habilitar o botão confirmar
+      document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
     }
-  } catch (error) {
-    msgErro.textContent = 'Erro de rede ou servidor: ' + error.message;
-    msgErro.style.display = 'block';
-    btnConfirmar.disabled = false;
-  }
-}
+
+    function fecharModal() {
+      clienteIdParaExcluir = null;
+      const modal = document.getElementById('modal-excluir');
+      modal.style.display = 'none';
+
+      const matriculaInput = document.getElementById('matriculaInput');
+      matriculaInput.value = '';
+
+      const msgErro = document.getElementById('msgErroMatricula');
+      const msgSucesso = document.getElementById('msgSucessoExcluir');
+      msgErro.style.display = 'none';
+      msgErro.textContent = '';
+      msgSucesso.style.display = 'none';
+      msgSucesso.textContent = '';
+
+      // Habilitar o botão confirmar (caso esteja desabilitado)
+      document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
+    }
+
+    async function validarEExcluir() {
+      const matricula = document.getElementById('matriculaInput').value.trim();
+      const msgErro = document.getElementById('msgErroMatricula');
+      const msgSucesso = document.getElementById('msgSucessoExcluir');
+      const btnConfirmar = document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]');
+
+      // Reset mensagens
+      msgErro.style.display = 'none';
+      msgErro.textContent = '';
+      msgSucesso.style.display = 'none';
+      msgSucesso.textContent = '';
+
+      if (!matricula) {
+        msgErro.textContent = 'Digite a matrícula do administrador.';
+        msgErro.style.display = 'block';
+        return;
+      }
+
+      btnConfirmar.disabled = true;
+
+      try {
+        const response = await fetch('/clientes/' + clienteIdParaExcluir + '/excluir', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Matricula': matricula
+          }
+        });
+
+        if (response.ok) {
+          msgSucesso.textContent = 'Cliente excluído com sucesso!';
+          msgSucesso.style.display = 'block';
+
+          setTimeout(() => {
+            fecharModal();
+            window.location.href = '/clientes';
+          }, 1500);
+        } else {
+          let errorText = 'Erro ao excluir cliente. Contate o ADMINISTRADOR DO SISTEMA.';
+          try {
+            const errorData = await response.json();
+            if (errorData.erro) errorText = errorData.erro;
+          } catch { }
+
+          msgErro.textContent = errorText;
+          msgErro.style.display = 'block';
+          btnConfirmar.disabled = false;
+        }
+      } catch (error) {
+        msgErro.textContent = 'Erro de rede ou servidor: ' + error.message;
+        msgErro.style.display = 'block';
+        btnConfirmar.disabled = false;
+      }
+    }
   </script>
 </body>
+
 </html>

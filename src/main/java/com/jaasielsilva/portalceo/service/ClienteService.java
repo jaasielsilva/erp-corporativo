@@ -96,6 +96,7 @@ public class ClienteService {
         return repository.findAll();
     }
     
+    // metodo pra validar a permissão do usuario para excluir um cliente ou usuario
     public boolean validarPermissaoExcluir(String matriculaAdmin) {
     Optional<Usuario> usuarioOpt = usuarioService.buscarPorMatricula(matriculaAdmin);
     if (usuarioOpt.isEmpty()) {
@@ -104,28 +105,29 @@ public class ClienteService {
     Usuario usuario = usuarioOpt.get();
     // Exemplo: só admins podem excluir
     return usuario.getNivelAcesso() == NivelAcesso.ADMIN; // ou outro critério
-}
+    }
     public List<Cliente> listarClientesAtivos() {
     return repository.findByAtivoTrue();
-}
+    }
 
-public boolean excluirLogicamente(Long clienteId, Usuario usuario) {
-    Optional<Cliente> clienteOpt = repository.findById(clienteId);
+    public boolean excluirLogicamente(Long id, Usuario usuarioExclusao) {
+    Optional<Cliente> clienteOpt = repository.findById(id);
+
     if (clienteOpt.isEmpty()) {
         return false;
     }
 
     Cliente cliente = clienteOpt.get();
 
-    // Exclusão lógica
-    cliente.setAtivo(false);
-    cliente.setStatus("Inativo");
+    cliente.setAtivo(false); // marca como inativo
+    cliente.setStatus("INATIVO");
     cliente.setDataExclusao(LocalDateTime.now());
-    cliente.setUsuarioExclusao(usuario);
+    cliente.setUsuarioExclusao(usuarioExclusao);
 
     repository.save(cliente);
     return true;
     }
+
 
     public List<Cliente> buscarAtivos() {
     return repository.findByStatus("ATIVO");

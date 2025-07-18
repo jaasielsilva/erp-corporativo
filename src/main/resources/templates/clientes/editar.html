@@ -108,9 +108,9 @@
           <div class="form-group">
             <label for="status">Status</label>
             <select id="status" th:field="*{status}">
-              <option value="Ativo" th:selected="${cliente.status == 'Ativo'}">Ativo</option>
-              <option value="Inativo" th:selected="${cliente.status == 'Inativo'}">Inativo</option>
-              <option value="Pendente" th:selected="${cliente.status == 'Pendente'}">Pendente</option>
+              <option value="ATIVO" th:selected="${cliente.status == 'Ativo'}">Ativo</option>
+              <option value="INATIVO" th:selected="${cliente.status == 'Inativo'}">Inativo</option>
+              <option value="PENDENTE" th:selected="${cliente.status == 'Pendente'}">Pendente</option>
             </select>
           </div>
 

@@ -34,7 +34,7 @@ public class ClienteController {
     }
 
     @GetMapping
-public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
+    public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
     List<Cliente> clientes;
 
     if (busca == null || busca.trim().isEmpty()) {
@@ -69,6 +69,22 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
         return "clientes/cadastro";
     }
 
+    // metodo pra editar o cliente 
+    @GetMapping("/{id}/detalhes")
+    public String verDetalhesCliente(@PathVariable Long id, Model model) {
+    Optional<Cliente> clienteOpt = clienteService.buscarPorId(id);
+    
+    if (clienteOpt.isEmpty()) {
+        // Cliente não encontrado, redireciona para lista com erro
+        return "redirect:/clientes?erro=Cliente não encontrado";
+    }
+
+    Cliente cliente = clienteOpt.get();
+    model.addAttribute("cliente", cliente);
+    return "clientes/detalhes"; 
+    }
+
+
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Cliente cliente) {
         clienteService.salvar(cliente);
@@ -83,27 +99,47 @@ public String listarClientes(@RequestParam(value = "busca", required = false) St
     }
 
     @PostMapping("/{id}/editar")
-    public String atualizarCliente(@PathVariable Long id, @ModelAttribute Cliente clienteAtualizado, Principal principal) {
-        Cliente clienteExistente = clienteService.buscarPorId(id)
-            .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+public String atualizarCliente(@PathVariable Long id, @ModelAttribute Cliente clienteAtualizado, Principal principal) {
+    Cliente clienteExistente = clienteService.buscarPorId(id)
+        .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
-        // Atualiza campos conforme seu código anterior...
+    // Copia os campos do objeto atualizado para o objeto existente
+    clienteExistente.setNome(clienteAtualizado.getNome());
+    clienteExistente.setNomeFantasia(clienteAtualizado.getNomeFantasia());
+    clienteExistente.setTipoCliente(clienteAtualizado.getTipoCliente());
+    clienteExistente.setEmail(clienteAtualizado.getEmail());
+    clienteExistente.setTelefone(clienteAtualizado.getTelefone());
+    clienteExistente.setCelular(clienteAtualizado.getCelular());
+    clienteExistente.setCpfCnpj(clienteAtualizado.getCpfCnpj());
+    clienteExistente.setInscricaoEstadual(clienteAtualizado.getInscricaoEstadual());
+    clienteExistente.setInscricaoMunicipal(clienteAtualizado.getInscricaoMunicipal());
+    clienteExistente.setLogradouro(clienteAtualizado.getLogradouro());
+    clienteExistente.setNumero(clienteAtualizado.getNumero());
+    clienteExistente.setComplemento(clienteAtualizado.getComplemento());
+    clienteExistente.setBairro(clienteAtualizado.getBairro());
+    clienteExistente.setCidade(clienteAtualizado.getCidade());
+    clienteExistente.setEstado(clienteAtualizado.getEstado());
+    clienteExistente.setCep(clienteAtualizado.getCep());
+    clienteExistente.setStatus(clienteAtualizado.getStatus());
+    clienteExistente.setPessoaContato(clienteAtualizado.getPessoaContato());
+    clienteExistente.setObservacoes(clienteAtualizado.getObservacoes());
 
-        Usuario usuarioAutenticado = usuarioService.buscarPorEmail(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Usuário autenticado não encontrado"));
+    Usuario usuarioAutenticado = usuarioService.buscarPorEmail(principal.getName())
+        .orElseThrow(() -> new RuntimeException("Usuário autenticado não encontrado"));
 
-        clienteExistente.setEditadoPor(usuarioAutenticado);
-        clienteExistente.setDataUltimaEdicao(java.time.LocalDateTime.now());
+    clienteExistente.setEditadoPor(usuarioAutenticado);
+    clienteExistente.setDataUltimaEdicao(java.time.LocalDateTime.now());
 
-        clienteService.salvar(clienteExistente);
+    clienteService.salvar(clienteExistente);
 
-        return "redirect:/clientes";
-    }
+    return "redirect:/clientes";
+}
+
 
     @PostMapping("/{id}/excluir")
     public ResponseEntity<?> excluirCliente(
         @PathVariable Long id,
-        @RequestParam("matriculaAdmin") String matriculaInformada
+        @RequestHeader("X-Matricula") String matriculaInformada
     ) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String emailLogado = auth.getName();

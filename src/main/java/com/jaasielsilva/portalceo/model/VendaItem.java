@@ -20,7 +20,7 @@ public class VendaItem {
 
     private int quantidade;
 
-    private double precoUnitario;
+    private BigDecimal precoUnitario;
 
     // Relação com venda
     @ManyToOne
@@ -29,12 +29,12 @@ public class VendaItem {
     // Construtores
     public VendaItem() {}
 
-    public VendaItem(Produto produto, int quantidade, double precoUnitario) {
-        this.produto = produto;
-        this.quantidade = quantidade;
-        this.precoUnitario = precoUnitario;
-    }
-    public double getSubtotal() {
-        return precoUnitario * quantidade;
-    }
+    public VendaItem(Produto produto, int quantidade, BigDecimal precoUnitario) {
+    this.produto = produto;
+    this.quantidade = quantidade;
+    this.precoUnitario = precoUnitario;
+}
+    public BigDecimal getSubtotal() {
+    return precoUnitario.multiply(BigDecimal.valueOf(quantidade));
+    }    
 }

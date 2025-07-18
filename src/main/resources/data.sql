@@ -11,12 +11,15 @@ INSERT INTO fornecedor (id, nome, cnpj, email, telefone) VALUES
 (3, 'Fornecedor Gama', '12345678000103', 'contato@gama.com', '(11) 99999-0003');
 
 -- PRODUTOS
-INSERT INTO produto (id, nome, ean, preco, estoque, unidade_medida, ativo, data_cadastro, categoria_id, fornecedor_id) VALUES
+INSERT INTO produto (
+    id, nome, ean, preco_venda, estoque, unidade_medida, ativo, data_cadastro, categoria_id, fornecedor_id
+) VALUES
 (1, 'Caneta Azul', '7891234567890', 2.50, 100, 'UN', true, NOW(), 1, 1),
 (2, 'Caderno 100 folhas', '7891234567891', 12.90, 50, 'UN', true, NOW(), 1, 1),
 (3, 'Mochila Escolar', '7891234567892', 89.90, 20, 'UN', true, NOW(), 2, 2),
 (4, 'Papel Sulfite A4', '7891234567893', 28.00, 60, 'PCT', true, NOW(), 3, 3),
 (5, 'Grampeador', '7891234567894', 25.00, 40, 'UN', true, NOW(), 3, 2);
+
 
 -- CLIENTE
 INSERT INTO cliente (

@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let total = 0;
     tabelaProdutosBody.querySelectorAll('tr').forEach(tr => {
       const subtotalText = tr.querySelector('.subtotal').textContent;
-      const subtotalNum = parseFloat(subtotalText.replace('R$ ', '').replace(',', '.'));
+      // Remove "R$ ", troca vírgula por ponto, e faz parseFloat
+      const subtotalNum = parseFloat(subtotalText.replace('R$ ', '').replace(/\./g, '').replace(',', '.'));
       if (!isNaN(subtotalNum)) total += subtotalNum;
     });
     inputTotal.value = total.toFixed(2);
@@ -41,6 +42,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Função para adicionar o produto na tabela
   function adicionarProdutoNaTabela(produto) {
+    console.log('Produto recebido:', produto);
+
+    // Tentativa de pegar o preço de forma flexível
+    const precoRaw = produto.preco || produto.precoVenda || produto.precoUnitario;
+    if (!precoRaw && precoRaw !== 0) {
+      alert('Erro: preço do produto não encontrado.');
+      return;
+    }
+
+    // Normaliza preço string para número float
+    const preco = parseFloat(typeof precoRaw === 'string' ? precoRaw.replace(/\./g, '').replace(',', '.') : precoRaw);
+    if (isNaN(preco)) {
+      alert('Erro: preço do produto inválido.');
+      return;
+    }
+
     // Verificar se produto já está na tabela
     if ([...tabelaProdutosBody.children].some(row => row.dataset.ean === produto.ean)) {
       alert('Produto já adicionado na lista.');
@@ -54,8 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
       <td>${produto.nome}</td>
       <td>${produto.ean}</td>
       <td><input type="number" min="1" max="${produto.estoque}" value="1" class="quantidade" style="width: 60px;" /></td>
-      <td>R$ ${produto.preco.toFixed(2)}</td>
-      <td class="subtotal">R$ ${produto.preco.toFixed(2)}</td>
+      <td>R$ ${preco.toFixed(2)}</td>
+      <td class="subtotal">R$ ${preco.toFixed(2)}</td>
       <td><button type="button" class="btnRemover" title="Remover produto"><i class="fas fa-trash-alt"></i></button></td>
     `;
 
@@ -64,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputQuantidade = tr.querySelector('.quantidade');
     const tdSubtotal = tr.querySelector('.subtotal');
 
-    // Atualiza subtotal ao alterar quantidade
     inputQuantidade.addEventListener('input', () => {
       let qty = parseInt(inputQuantidade.value);
       if (isNaN(qty) || qty < 1) {
@@ -76,12 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
         inputQuantidade.value = qty;
         alert('Quantidade maior que o estoque disponível.');
       }
-      const subtotal = qty * produto.preco;
+      const subtotal = qty * preco;
       tdSubtotal.textContent = `R$ ${subtotal.toFixed(2)}`;
       atualizarResumoTotal();
     });
 
-    // Remover produto
     tr.querySelector('.btnRemover').addEventListener('click', () => {
       removerLinha(tr);
     });

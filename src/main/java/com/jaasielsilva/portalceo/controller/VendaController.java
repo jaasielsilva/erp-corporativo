@@ -26,7 +26,7 @@ public class VendaController {
     private ClienteService clienteService;
 
     @Autowired
-    private ProdutoService produtoService; // ✅ Faltava isso para buscar os produtos
+    private ProdutoService produtoService;
 
     // 🧾 LISTAR VENDAS
     @GetMapping
@@ -54,13 +54,17 @@ public class VendaController {
 
     // 💾 SALVAR VENDA (com produtos fixos por enquanto)
     @PostMapping("/salvar")
-    public String salvarVenda(@ModelAttribute Venda venda, @RequestParam Long clienteId, Model model) {
+public String salvarVenda(@ModelAttribute Venda venda, @RequestParam Long clienteId, Model model) {
     Cliente cliente = clienteService.buscarPorId(clienteId)
-            .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+        .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
 
     venda.setCliente(cliente);
-    venda.setDataVenda(LocalDateTime.now());
 
+    if (venda.getDataVenda() == null) {
+        venda.setDataVenda(LocalDateTime.now()); // só seta data atual se formulário não enviou
+    }
+
+    // itens fixos (melhor adaptar para itens do form futuramente)
     Produto produto1 = produtoService.buscarPorId(1L).orElseThrow();
     Produto produto2 = produtoService.buscarPorId(2L).orElseThrow();
 
@@ -74,5 +78,6 @@ public class VendaController {
 
     return "redirect:/vendas";
 }
+
 
 }

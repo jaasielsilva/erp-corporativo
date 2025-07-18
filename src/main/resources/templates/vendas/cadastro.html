@@ -22,40 +22,41 @@
         
         <!-- Dados da Venda -->
         <div class="form-section">
-            <!-- Itens da Venda -->
-        <div class="form-section">
-          <h2>Adicionar Produto por EAN</h2>
+          <!-- Itens da Venda -->
+          <div class="form-section">
+            <h2>Adicionar Produto por EAN</h2>
 
-          <div class="form-group ean-group">
-            <label for="ean">Código de Barras (EAN): <span class="tooltip" title="Digite ou escaneie o código de barras do produto">?</span></label>
-            <input type="text" id="ean" name="ean" placeholder="Digite ou escaneie o código de barras" autocomplete="off" />
-            <button type="button" id="btnAdicionarProduto" class="button small primary" style="margin-left: 0.5rem;">
-              <i class="fas fa-plus"></i> Adicionar Produto
-            </button>
+            <div class="form-group ean-group">
+              <label for="ean">Código de Barras (EAN): <span class="tooltip" title="Digite ou escaneie o código de barras do produto">?</span></label>
+              <input type="text" id="ean" name="ean" placeholder="Digite ou escaneie o código de barras" autocomplete="off" />
+              <button type="button" id="btnAdicionarProduto" class="button small primary" style="margin-left: 0.5rem;">
+                <i class="fas fa-plus"></i> Adicionar Produto
+              </button>
+            </div>
+
+            <div id="produtoEncontrado" style="margin-top: 0.5rem; color: green; font-weight: bold;"></div>
+
+            <table id="tabelaProdutos" style="margin-top: 1rem;">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>EAN</th>
+                  <th>Quantidade</th>
+                  <th>Preço Unit.</th>
+                  <th>Subtotal</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Produtos adicionados via JS aqui -->
+              </tbody>
+            </table>
           </div>
 
-          <div id="produtoEncontrado" style="margin-top: 0.5rem; color: green; font-weight: bold;"></div>
-
-          <table id="tabelaProdutos" style="margin-top: 1rem;">
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th>EAN</th>
-                <th>Quantidade</th>
-                <th>Preço Unit.</th>
-                <th>Subtotal</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Produtos adicionados via JS aqui -->
-            </tbody>
-          </table>
-        </div>
-        <h2>Dados da Venda</h2>
+          <h2>Dados da Venda</h2>
           <div class="form-group">
             <label for="cliente">Cliente: <span class="tooltip" title="Selecione o cliente responsável pela compra">?</span></label>
-            <select id="cliente" th:field="*{cliente}" required>
+            <select id="cliente" name="clienteId" required>
               <option value="" disabled selected>Selecione um cliente</option>
               <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}"></option>
             </select>
@@ -63,7 +64,11 @@
 
           <div class="form-group">
             <label for="dataVenda">Data da Venda: <span class="tooltip" title="Data em que a venda foi realizada">?</span></label>
-            <input type="datetime-local" id="dataVenda" th:field="*{dataVenda}" required />
+            <input type="datetime-local" 
+                   id="dataVenda" 
+                   name="dataVenda"
+                   th:value="${venda != null && venda.dataVenda != null} ? ${#dates.format(venda.dataVenda, 'yyyy-MM-dd\'T\'HH:mm')}" 
+                   required />
           </div>
 
           <div class="form-group">
@@ -126,8 +131,6 @@
 </div>
 
 <script th:src="@{/js/cliente-venda.js}"></script>
-
-
 
 </body>
 </html>

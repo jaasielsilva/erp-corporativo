@@ -4,165 +4,196 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Clientes - Painel do CEO</title>
+  
+  <!-- Toastr CSS e JS (se quiser notificação estilo toast) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-  <!-- FontAwesome para ícones -->
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    rel="stylesheet"
-  />
-
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  
   <!-- Seu CSS padrão -->
   <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/cliente-cadastro.css}" />
+  <link rel="stylesheet" th:href="@{/css/cliente-lista.css}" />
+
 </head>
 <body>
   <div class="app-container">
-    <!-- Sidebar fixa (componentizado) -->
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
 
-    <!-- Conteúdo principal -->
     <main class="main-content">
-      <!-- Topbar fixa (componentizado) -->
       <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <!-- Área de conteúdo -->
-      <section class="content-area" role="main" aria-label="Gestão de clientes">
-        <!-- Títulos principais -->
-        <h1 class="page-title">Gestão de Clientes</h1>
-        <h2 class="section-subtitle">Clientes Cadastrados</h2>
+      <section class="content-area">
+        <h2><i class="fas fa-users"></i> Clientes Cadastrados</h2>
 
-        <!-- Cards de estatísticas rápidas (dashboard) -->
-        <div class="dashboard-cards">
-          <div class="card-metric">
-            <h4>Total de Clientes</h4>
-            <p th:text="${totalClientes}">0</p>
-          </div>
-          <div class="card-metric">
-            <h4>Ativos</h4>
-            <p th:text="${ativos}">0</p>
-          </div>
-          <div class="card-metric">
-            <h4>Inativos</h4>
-            <p th:text="${inativos}">0</p>
-          </div>
-          <div class="card-metric">
-            <h4>Pessoas Jurídicas</h4>
-            <p th:text="${pessoasJuridicas}">0</p>
-          </div>
+        <div class="toolbar">
+          <form class="search-form" th:action="@{/clientes}" method="get">
+            <input type="text" name="busca" placeholder="Buscar por nome, email ou telefone" th:value="${param.busca}" />
+            <button type="submit"><i class="fas fa-search"></i> Buscar</button>
+          </form>
+
+          <a th:href="@{/clientes/cadastro}" class="btn-novo">
+            <i class="fas fa-user-plus"></i> Novo Cliente
+          </a>
         </div>
 
-        <!-- Cards VIP com ícones -->
-        <div class="vip-cards" aria-label="Estatísticas detalhadas dos clientes">
-          <div class="vip-card">
-            <i class="fas fa-calendar-alt icon"></i>
-            <h4>Clientes Ativos Últ. 30 dias</h4>
-            <p th:text="${ativosUltimos30}">0</p>
-          </div>
-          <div class="vip-card">
-            <i class="fas fa-users icon"></i>
-            <h4>Clientes Pessoa Física</h4>
-            <p th:text="${clientesPF}">0</p>
-          </div>
-          <div class="vip-card">
-            <i class="fas fa-building icon"></i>
-            <h4>Clientes Pessoa Jurídica</h4>
-            <p th:text="${clientesPJ}">0</p>
-          </div>
-          <div class="vip-card">
-            <i class="fas fa-dollar-sign icon"></i>
-            <h4>Clientes com Pagamentos Pendentes</h4>
-            <p th:text="${clientesPendentes}">0</p>
-          </div>
-          <div class="vip-card">
-            <i class="fas fa-clock icon"></i>
-            <h4>Clientes Inativos (+90 dias)</h4>
-            <p th:text="${clientesInativos90}">0</p>
-          </div>
-          <div class="vip-card">
-            <i class="fas fa-user-check icon"></i>
-            <h4>Clientes Fidelizados</h4>
-            <p th:text="${clientesFidelizados}">0</p>
-          </div>
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nome / Fantasia</th>
+              <th>Tipo</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="cliente : ${clientes}">
+              <td th:text="${cliente.nome}">Cliente Exemplo</td>
+              <td th:text="${cliente.tipoCliente}">PF</td>
+              <td th:text="${cliente.email}">email@exemplo.com</td>
+              <td th:text="${cliente.telefone}">(00) 00000-0000</td>
+              <td>
+                <span class="badge"
+                      th:classappend="${#strings.toUpperCase(cliente.status)} == 'ATIVO' ? ' badge-ativo' : 
+                                      (${#strings.toUpperCase(cliente.status)} == 'PENDENTE' ? ' badge-pendente' : ' badge-inativo')"
+                      th:text="${cliente.status != null} ? ${cliente.status} : 'Sem status'">
+                </span>
+              </td>
 
-        <!-- Filtros rápidos por status -->
-        <div
-          class="filter-buttons"
-          role="group"
-          aria-label="Filtro rápido de clientes por status"
-        >
-          <button type="button" class="btn-filter" data-status="todos">Todos</button>
-          <button type="button" class="btn-filter" data-status="ativo">Ativos</button>
-          <button type="button" class="btn-filter" data-status="inativo">Inativos</button>
-          <button type="button" class="btn-filter" data-status="pendente">Pendentes</button>
-        </div>
 
-        <!-- Busca instantânea -->
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Buscar por nome, email ou CPF/CNPJ"
-          class="search-input"
-          aria-label="Busca de clientes"
-        />
-
-        <!-- Botão flutuante -->
-        <a
-          href="/clientes/cadastro"
-          class="btn-novo"
-          title="Cadastrar novo cliente"
-          aria-label="Cadastrar cliente"
-        >
-          <i class="fas fa-user-plus"></i> Novo Cliente
-        </a>
-
-        <!-- Lista de clientes -->
-        <div class="table-wrapper">
-          <table
-            class="table-list"
-            id="clientesTable"
-            aria-describedby="tabelaDescricao"
-          >
-            <caption id="tabelaDescricao" class="sr-only">
-              Lista de clientes cadastrados com opções de ações
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Nome / Fantasia</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Email</th>
-                <th scope="col">Telefone</th>
-                <th scope="col">Status</th>
-                <th scope="col">Ações</th>
-              </tr>
-            </thead>
-           
-          </table>
-        </div>
+              <td class="acoes">
+                <a th:href="@{'/clientes/' + ${cliente.id} + '/detalhes'}" title="Detalhes">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" th:onclick="'abrirModalExcluir(' + ${cliente.id} + ')'" title="Excluir">
+                  <i class="fas fa-trash-alt" style="color:#dc2626;"></i>
+                </button>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(clientes)}">
+              <td colspan="6" class="table-center">Nenhum cliente encontrado.</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
-      <!-- Modal de confirmação de exclusão -->
-<div id="modal-excluir" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-content">
-    <h2>Confirmar Exclusão</h2>
-    <p>Digite a matrícula do administrador para confirmar:</p>
-    <input id="matriculaInput" type="text" placeholder="Matrícula do administrador" />
-
-    <p id="msgErroMatricula" class="erro hidden" role="alert"></p>
-    <p id="msgSucessoExcluir" class="sucesso hidden" role="status"></p>
-
-    <div class="modal-actions">
-      <button id="btnConfirmarExcluir" class="btn-confirmar">Confirmar</button>
-      <button id="btnCancelarExcluir" class="btn-cancelar">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-      <!-- Rodapé -->
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
-</body>
-<script src="/js/cliente-editar.js" defer></script>
 
+  <!-- Modal Exclusão -->
+  <div id="modal-excluir" class="modal">
+    <div class="modal-content">
+      <h3>Digite sua matrícula de administrador para confirmar:</h3>
+      <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
+      <div id="msgErroMatricula"></div>
+      <div id="msgSucessoExcluir"></div>
+      <button onclick="validarEExcluir()">Confirmar exclusão</button>
+      <button onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <script>
+    let clienteIdParaExcluir = null;
+
+    function abrirModalExcluir(id) {
+  clienteIdParaExcluir = id;
+  const modal = document.getElementById('modal-excluir');
+  modal.style.display = 'flex';
+
+  const matriculaInput = document.getElementById('matriculaInput');
+  matriculaInput.value = '';
+
+  const msgErro = document.getElementById('msgErroMatricula');
+  const msgSucesso = document.getElementById('msgSucessoExcluir');
+  msgErro.style.display = 'none';
+  msgErro.textContent = '';
+  msgSucesso.style.display = 'none';
+  msgSucesso.textContent = '';
+
+  // Habilitar o botão confirmar
+  document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
+}
+
+function fecharModal() {
+  clienteIdParaExcluir = null;
+  const modal = document.getElementById('modal-excluir');
+  modal.style.display = 'none';
+
+  const matriculaInput = document.getElementById('matriculaInput');
+  matriculaInput.value = '';
+
+  const msgErro = document.getElementById('msgErroMatricula');
+  const msgSucesso = document.getElementById('msgSucessoExcluir');
+  msgErro.style.display = 'none';
+  msgErro.textContent = '';
+  msgSucesso.style.display = 'none';
+  msgSucesso.textContent = '';
+
+  // Habilitar o botão confirmar (caso esteja desabilitado)
+  document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
+}
+
+async function validarEExcluir() {
+  const matricula = document.getElementById('matriculaInput').value.trim();
+  const msgErro = document.getElementById('msgErroMatricula');
+  const msgSucesso = document.getElementById('msgSucessoExcluir');
+  const btnConfirmar = document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]');
+
+  // Reset mensagens
+  msgErro.style.display = 'none';
+  msgErro.textContent = '';
+  msgSucesso.style.display = 'none';
+  msgSucesso.textContent = '';
+
+  if (!matricula) {
+    msgErro.textContent = 'Digite a matrícula do administrador.';
+    msgErro.style.display = 'block';
+    return;
+  }
+
+  btnConfirmar.disabled = true;
+
+  try {
+    const response = await fetch('/clientes/' + clienteIdParaExcluir + '/excluir', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Matricula': matricula
+      }
+    });
+
+    if (response.ok) {
+      msgSucesso.textContent = 'Cliente excluído com sucesso!';
+      msgSucesso.style.display = 'block';
+
+      setTimeout(() => {
+        fecharModal();
+        window.location.href = '/clientes';
+      }, 1500);
+    } else {
+      let errorText = 'Erro ao excluir cliente. Contate o ADMINISTRADOR DO SISTEMA.';
+      try {
+        const errorData = await response.json();
+        if (errorData.erro) errorText = errorData.erro;
+      } catch {}
+
+      msgErro.textContent = errorText;
+      msgErro.style.display = 'block';
+      btnConfirmar.disabled = false;
+    }
+  } catch (error) {
+    msgErro.textContent = 'Erro de rede ou servidor: ' + error.message;
+    msgErro.style.display = 'block';
+    btnConfirmar.disabled = false;
+  }
+}
+  </script>
+</body>
 </html>

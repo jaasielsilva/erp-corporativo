@@ -126,4 +126,17 @@ public boolean excluirLogicamente(Long clienteId, Usuario usuario) {
     repository.save(cliente);
     return true;
     }
-}
+
+    public List<Cliente> buscarAtivos() {
+    return repository.findByStatus("ATIVO");
+    }
+
+    public List<Cliente> buscarInativos() {
+        return repository.findByStatus("INATIVO");
+    }
+
+    public List<Cliente> buscarPendentes() {
+        return repository.findByStatus("PENDENTE");
+    }
+
+    }

@@ -95,6 +95,22 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-mail</artifactId>
 	</dependency>
+
+
+	<!-- QR Code -->
+
+<dependency>
+    <groupId>com.google.zxing</groupId>
+    <artifactId>core</artifactId>
+    <version>3.5.0</version> <!-- ou a versão mais recente -->
+</dependency>
+<dependency>
+    <groupId>com.google.zxing</groupId>
+    <artifactId>javase</artifactId>
+    <version>3.5.0</version> <!-- ou a versão mais recente -->
+</dependency>
+
+
 	</dependencies>
 
 	<build>

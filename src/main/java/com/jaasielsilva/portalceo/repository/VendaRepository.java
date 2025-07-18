@@ -33,15 +33,12 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
     // Busca genérica com ordenação por data (pode ser usada com qualquer quantidade via Pageable)
     List<Venda> findAllByOrderByDataVendaDesc(Pageable pageable);
 
-    // Busca as 2 últimas vendas realizadas
-    @Query("SELECT v FROM Venda v ORDER BY v.dataVenda DESC")
-    List<Venda> findTop2ByOrderByDataVendaDesc(Pageable pageable);
+    // método para totalizar vendas por mês desde uma data
+    @Query("SELECT YEAR(v.dataVenda), MONTH(v.dataVenda), SUM(v.total) " +
+           "FROM Venda v " +
+           "WHERE v.dataVenda >= :dataInicio " +
+           "GROUP BY YEAR(v.dataVenda), MONTH(v.dataVenda) " +
+           "ORDER BY YEAR(v.dataVenda), MONTH(v.dataVenda)")
+    List<Object[]> totalVendasPorMesDesde(@Param("dataInicio") LocalDateTime dataInicio);
 
-    // metodo pra totalizar vendas por mês desde uma data
-    @Query("SELECT YEAR(v.dataVenda), MONTH(v.dataVenda), SUM(v.total) "
-     + "FROM Venda v "
-     + "WHERE v.dataVenda >= :dataInicio "
-     + "GROUP BY YEAR(v.dataVenda), MONTH(v.dataVenda) "
-     + "ORDER BY YEAR(v.dataVenda), MONTH(v.dataVenda)")
-List<Object[]> totalVendasPorMesDesde(@Param("dataInicio") LocalDateTime dataInicio);
 }

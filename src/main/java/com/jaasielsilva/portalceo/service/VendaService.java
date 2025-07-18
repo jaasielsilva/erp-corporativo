@@ -89,9 +89,10 @@ public class VendaService {
 
     // Busca as últimas X vendas com paginação
     public List<Venda> buscarUltimasVendas(int quantidade) {
-        Pageable pageable = PageRequest.of(0, quantidade);
-        return vendaRepository.findTop2ByOrderByDataVendaDesc(pageable);
-    }
+    Pageable pageable = PageRequest.of(0, quantidade);
+    return vendaRepository.findAllByOrderByDataVendaDesc(pageable);
+}
+
 
     // Paginação completa de vendas
     public List<Venda> buscarUltimasVendasPaginadas(Pageable pageable) {
@@ -129,4 +130,6 @@ public class VendaService {
     public Optional<Venda> buscarPorId(Long id) {
         return vendaRepository.findById(id);
     }
+
+    
 }

@@ -144,6 +144,7 @@ public SecurityFilterChain filterChain(HttpSecurity http,
                 admin.setStatus(Usuario.Status.ATIVO);
                 admin.setGenero(Genero.MASCULINO);
                 admin.setRamal("1010");
+                admin.setNivelAcesso(NivelAcesso.ADMIN);
 
                 try {
                     ClassPathResource image = new ClassPathResource("static/img/gerente.png");

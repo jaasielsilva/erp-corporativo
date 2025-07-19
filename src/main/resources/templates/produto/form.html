@@ -10,109 +10,112 @@
 </head>
 
 <body>
-  <div th:replace="~{components/sidebar :: sidebar}"></div>
-  <div class="main-content">
-    <div th:replace="~{components/topbar :: topbar}"></div>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <main class="container">
-      <h1 class="form-title"><i class="fas fa-box"></i> Cadastro de Produto</h1>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post" class="form-container">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Nome do Produto:</label>
-            <input type="text" th:field="*{nome}" required placeholder="Ex: Café em pó 500g" />
-          </div>
-          <div class="form-group">
-            <label>EAN (Código de Barras):</label>
-            <input type="text" th:field="*{ean}" required placeholder="Ex: 7891234567890" />
-          </div>
-        </div>
+      <section class="content-area">
+        <h1 class="form-title"><i class="fas fa-box"></i> Cadastro de Produto</h1>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Preço (R$):</label>
-            <input type="number" step="0.01" th:field="*{preco}" required placeholder="Ex: 19.90" />
-          </div>
-          <div class="form-group">
-            <label>Estoque Atual:</label>
-            <input type="number" th:field="*{estoque}" required placeholder="Ex: 100" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Unidade de Medida:</label>
-            <input type="text" th:field="*{unidadeMedida}" placeholder="Ex: un, kg, L" />
-          </div>
-          <div class="form-group">
-            <label>Código Interno (SKU):</label>
-            <input type="text" th:field="*{codigoInterno}" placeholder="Ex: PRD-0001" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Marca:</label>
-            <input type="text" th:field="*{marca}" placeholder="Marca do Produto" />
-          </div>
-          <div class="form-group">
-            <label>Estoque Mínimo:</label>
-            <input type="number" th:field="*{minimoEstoque}" placeholder="Ex: 10" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Peso (kg):</label>
-            <input type="number" step="0.01" th:field="*{peso}" placeholder="Ex: 0.5" />
-          </div>
-          <div class="form-group">
-            <label>Imagem (URL):</label>
-            <input type="text" th:field="*{imagemUrl}" placeholder="https://exemplo.com/imagem.jpg" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Dimensões (cm):</label>
-            <div class="dimension-group">
-              <input type="number" step="0.01" th:field="*{largura}" placeholder="Largura" />
-              <input type="number" step="0.01" th:field="*{altura}" placeholder="Altura" />
-              <input type="number" step="0.01" th:field="*{profundidade}" placeholder="Profundidade" />
+        <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post" class="form-container">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nome do Produto:</label>
+              <input type="text" th:field="*{nome}" required placeholder="Ex: Café em pó 500g" />
+            </div>
+            <div class="form-group">
+              <label>EAN (Código de Barras):</label>
+              <input type="text" th:field="*{ean}" required placeholder="Ex: 7891234567890" />
             </div>
           </div>
-          <div class="form-group">
-            <label>Descrição:</label>
-            <textarea th:field="*{descricao}" rows="3"
-              placeholder="Detalhes técnicos, características, etc."></textarea>
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Categoria:</label>
-            <select th:field="*{categoria}">
-              <option value="" th:if="${#lists.isEmpty(categorias)}">-- Nenhuma categoria disponível --</option>
-              <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nome}"></option>
-            </select>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preço (R$):</label>
+              <input type="number" step="0.01" th:field="*{preco}" required placeholder="Ex: 19.90" />
+            </div>
+            <div class="form-group">
+              <label>Estoque Atual:</label>
+              <input type="number" th:field="*{estoque}" required placeholder="Ex: 100" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Fornecedor:</label>
-            <select th:field="*{fornecedor}">
-              <option value="" th:if="${#lists.isEmpty(fornecedores)}">-- Nenhum fornecedor disponível --</option>
-              <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.razaoSocial}"></option>
-            </select>
-          </div>
-        </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Salvar Produto</button>
-        </div>
-      </form>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Unidade de Medida:</label>
+              <input type="text" th:field="*{unidadeMedida}" placeholder="Ex: un, kg, L" />
+            </div>
+            <div class="form-group">
+              <label>Código Interno (SKU):</label>
+              <input type="text" th:field="*{codigoInterno}" placeholder="Ex: PRD-0001" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Marca:</label>
+              <input type="text" th:field="*{marca}" placeholder="Marca do Produto" />
+            </div>
+            <div class="form-group">
+              <label>Estoque Mínimo:</label>
+              <input type="number" th:field="*{minimoEstoque}" placeholder="Ex: 10" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Peso (kg):</label>
+              <input type="number" step="0.01" th:field="*{peso}" placeholder="Ex: 0.5" />
+            </div>
+            <div class="form-group">
+              <label>Imagem (URL):</label>
+              <input type="text" th:field="*{imagemUrl}" placeholder="https://exemplo.com/imagem.jpg" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Dimensões (cm):</label>
+              <div class="dimension-group">
+                <input type="number" step="0.01" th:field="*{largura}" placeholder="Largura" />
+                <input type="number" step="0.01" th:field="*{altura}" placeholder="Altura" />
+                <input type="number" step="0.01" th:field="*{profundidade}" placeholder="Profundidade" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Descrição:</label>
+              <textarea th:field="*{descricao}" rows="3"
+                placeholder="Detalhes técnicos, características, etc."></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Categoria:</label>
+              <select th:field="*{categoria}">
+                <option value="" th:if="${#lists.isEmpty(categorias)}">-- Nenhuma categoria disponível --</option>
+                <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nome}"></option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fornecedor:</label>
+              <select th:field="*{fornecedor}">
+                <option value="" th:if="${#lists.isEmpty(fornecedores)}">-- Nenhum fornecedor disponível --</option>
+                <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.razaoSocial}"></option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Salvar Produto</button>
+          </div>
+        </form>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
-
-    <div th:replace="~{components/footer :: footer}"></div>
   </div>
 </body>
 

@@ -8,42 +8,47 @@
   <link rel="stylesheet" th:href="@{/css/produto.css}" />
 </head>
 <body>
-  <div th:replace="~{components/sidebar :: sidebar}"></div>
-  <div class="main-content">
-    <div th:replace="~{components/topbar :: topbar}"></div>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <main class="container">
-      <h1>Produtos Cadastrados</h1>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <a class="btn btn-primary" th:href="@{/produtos/novo}">Novo Produto</a>
+      <section class="content-area">
+        <h1>Produtos Cadastrados</h1>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>EAN</th>
-            <th>Preço</th>
-            <th>Estoque</th>
-            <th>Categoria</th>
-            <th>Fornecedor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="produto : ${produtos}">
-            <td th:text="${produto.id}"></td>
-            <td th:text="${produto.nome}"></td>
-            <td th:text="${produto.ean}"></td>
-            <td th:text="${produto.preco != null ? #numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA') : '0,00'}"></td>
-            <td th:text="${produto.estoque}"></td>
-            <td th:text="${produto.categoria?.nome}"></td>
-            <span th:text="${produto.fornecedor != null ? produto.fornecedor.razaoSocial : 'Sem fornecedor'}"></span>
-          </tr>
-        </tbody>
-      </table>
+        <a class="btn btn-primary" th:href="@{/produtos/novo}">Novo Produto</a>
+
+        <article class="card mt-3">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>EAN</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th>Categoria</th>
+                <th>Fornecedor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="produto : ${produtos}">
+                <td th:text="${produto.id}"></td>
+                <td th:text="${produto.nome}"></td>
+                <td th:text="${produto.ean}"></td>
+                <td th:text="${produto.preco != null ? #numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA') : '0,00'}"></td>
+                <td th:text="${produto.estoque}"></td>
+                <td th:text="${produto.categoria?.nome}"></td>
+                <td th:text="${produto.fornecedor != null ? produto.fornecedor.razaoSocial : 'Sem fornecedor'}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
-
-    <footer th:replace="~{components/footer :: footer}"></footer>
   </div>
 </body>
 </html>

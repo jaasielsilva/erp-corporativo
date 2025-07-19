@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Movimentações do Estoque</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/estoque.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Movimentações do Produto: <span th:text="${produto.nome}"></span></h1>
+
+        <a th:href="@{/estoque}" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left"></i> Voltar ao Estoque</a>
+
+        <article class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Motivo</th>
+                <th>Usuário</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="mov : ${movimentacoes}">
+                <td th:text="${#temporals.format(mov.dataHora, 'dd/MM/yyyy HH:mm:ss')}"></td>
+                <td th:text="${mov.tipo}"></td>
+                <td th:text="${mov.quantidade}"></td>
+                <td th:text="${mov.motivo}"></td>
+                <td th:text="${mov.usuario.nome}"></td>
+              </tr>
+              <tr th:if="${movimentacoes.isEmpty()}">
+                <td colspan="5" class="text-center">Nenhuma movimentação encontrada.</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+</body>
+</html>

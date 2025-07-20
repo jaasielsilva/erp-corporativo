@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Relatórios de Estoque')"></head>
+<body>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="fragments/topbar :: topbar"></div>
+<main class="container mt-4">
+    <h2>Relatórios</h2>
+    <p>Selecione o tipo de relatório que deseja gerar:</p>
+    <ul>
+        <li><a th:href="@{/relatorios/estoque}" target="_blank">Relatório Atual de Estoque</a></li>
+        <li><a th:href="@{/relatorios/movimentacoes}" target="_blank">Movimentações de Estoque</a></li>
+        <li><a th:href="@{/relatorios/ajustes}" target="_blank">Ajustes e Inventários</a></li>
+    </ul>
+</main>
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

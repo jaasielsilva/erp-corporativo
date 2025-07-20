@@ -1,13 +1,18 @@
 package com.jaasielsilva.portalceo.controller;
 
+import com.jaasielsilva.portalceo.model.TipoMovimentacao;
+import com.jaasielsilva.portalceo.repository.ProdutoRepository;
+import com.jaasielsilva.portalceo.service.MovimentacaoEstoqueService;
+import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.CategoriaService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
-import com.jaasielsilva.portalceo.service.ProdutoService;
+
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/estoque")
@@ -22,11 +27,102 @@ public class EstoqueController {
     @Autowired
     private FornecedorService fornecedorService;
 
+    @Autowired
+    private MovimentacaoEstoqueService movimentacaoService;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+    
+    // Página principal que lista o estoque, categorias e fornecedores
     @GetMapping
-    public String listarEstoque(Model model) {
-        model.addAttribute("produtos", produtoService.listarTodosProdutos()); 
-        model.addAttribute("categorias", categoriaService.findAll()); 
-        model.addAttribute("fornecedores", fornecedorService.findAll()); 
-        return "estoque/lista";
+    public String listarEstoque(
+    @RequestParam(required = false) String nome,
+    @RequestParam(required = false) Long categoriaId,
+    @RequestParam(required = false) Long fornecedorId,
+    @RequestParam(defaultValue = "1") int page,
+    Model model) {
+
+    model.addAttribute("categorias", categoriaService.findAll());
+    model.addAttribute("fornecedores", fornecedorService.findAll());
+
+    Long estoqueTotal = produtoRepository.somarQuantidadeEstoque();
+    if (estoqueTotal == null) estoqueTotal = 0L;
+    model.addAttribute("totalEstoque", estoqueTotal);
+
+    var pagina = produtoService.filtrarEstoque(nome, categoriaId, fornecedorId, page);
+    model.addAttribute("produtos", pagina.getContent());
+
+    long produtosCriticos = pagina.getContent().stream()
+                                  .filter(p -> p.getEstoque() <= 3)
+                                  .count();
+    model.addAttribute("produtosCriticos", produtosCriticos);
+
+    // Exemplo: contar produtos zerados
+    long produtosZerados = pagina.getContent().stream()
+                                 .filter(p -> p.getEstoque() == 0)
+                                 .count();
+    model.addAttribute("produtosZerados", produtosZerados);
+
+    model.addAttribute("paginaAtual", page);
+    model.addAttribute("totalPaginas", pagina.getTotalPages());
+
+    // Montar dados do gráfico de categorias - exemplo Map<String, Integer>
+    Map<String, Integer> graficoCategorias = produtoService.countProdutosPorCategoria();
+    model.addAttribute("graficoCategorias", graficoCategorias);
+
+    // Adicione outras métricas/relatórios aqui para o dashboard
+
+    return "estoque/lista";
+    }
+
+
+
+
+    // Formulário para entrada de estoque
+    @GetMapping("/entrada")
+    public String formEntrada(Model model) {
+        model.addAttribute("produtos", produtoService.listarTodosProdutos());
+        return "estoque/entrada";
+    }
+
+    // Salva uma entrada de estoque
+    @PostMapping("/entrada")
+    public String salvarEntrada(@RequestParam Long produtoId,
+                                @RequestParam Integer quantidade,
+                                @RequestParam String motivo) {
+        movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.ENTRADA, motivo, "admin");
+        return "redirect:/estoque/entrada?sucesso";
+    }
+
+    // Formulário para saída de estoque
+    @GetMapping("/saida")
+    public String formSaida(Model model) {
+        model.addAttribute("produtos", produtoService.listarTodosProdutos());
+        return "estoque/saida";
+    }
+
+    // Salva uma saída de estoque
+    @PostMapping("/saida")
+    public String salvarSaida(@RequestParam Long produtoId,
+                              @RequestParam Integer quantidade,
+                              @RequestParam String motivo) {
+        movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.SAIDA, motivo, "admin");
+        return "redirect:/estoque/saida?sucesso";
+    }
+
+    // Formulário para ajustes manuais no estoque
+    @GetMapping("/ajustes")
+    public String formAjustes(Model model) {
+        model.addAttribute("produtos", produtoService.listarTodosProdutos());
+        return "estoque/ajustes";
+    }
+
+    // Salva um ajuste manual no estoque
+    @PostMapping("/ajustes")
+    public String salvarAjuste(@RequestParam Long produtoId,
+                               @RequestParam Integer quantidade,
+                               @RequestParam String motivo) {
+        movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.AJUSTE, motivo, "admin");
+        return "redirect:/estoque/ajustes?sucesso";
     }
 }

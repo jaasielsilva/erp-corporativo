@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Inventário de Estoque')"></head>
+<body>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="fragments/topbar :: topbar"></div>
+<main class="container mt-4">
+    <h2>Inventário</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Estoque Atual</th>
+                <th>Quantidade Contada</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="item : ${inventarios}">
+                <td th:text="${item.produto.nome}"></td>
+                <td th:text="${item.estoqueAntes}"></td>
+                <td th:text="${item.quantidadeContada}"></td>
+                <td th:text="${#dates.format(item.data, 'dd/MM/yyyy')}"></td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

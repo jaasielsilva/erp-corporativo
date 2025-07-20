@@ -1,76 +1,201 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <title>Estoque Atual</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/estoque.css}" />
+  <meta charset="UTF-8">
+  <title>Estoque - Visão Geral</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/estoque-lista.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-  <div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+<div class="app-container">
+  <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+  <main class="main-content">
+    <header th:replace="~{components/topbar :: topbar}"></header>
 
-    <main class="main-content">
-      <header th:replace="~{components/topbar :: topbar}"></header>
+    <section class="content-area">
+      <!-- Cabeçalho -->
+      <div class="page-header">
+        <h1>Estoque Corporativo</h1>
+        <p class="subtitulo">Dashboard completo de controle e movimentação de estoque</p>
+      </div>
 
-      <section class="content-area">
-        <h1>Estoque Atual</h1>
+      <!-- Cards de Métricas -->
+      <div class="card-metricas">
+        <div class="card-metrica blue">
+          <i class="fas fa-boxes fa-2x"></i>
+          <div>
+            <h3 th:text="${produtos.size()}">0</h3>
+            <p>Produtos Ativos</p>
+          </div>
+        </div>
+        <div class="card-metrica green">
+          <i class="fas fa-layer-group fa-2x"></i>
+          <div>
+            <h3 th:text="${totalEstoque}">0</h3>
+            <p>Estoque Total</p>
+          </div>
+        </div>
+        <div class="card-metrica orange">
+          <i class="fas fa-triangle-exclamation fa-2x"></i>
+          <div>
+            <h3><span th:text="${quantidadeProdutosEstoqueBaixo}">0</span></h3>
+            <p>Estoque Baixo</p>
+          </div>
+        </div>
+      </div>
+<!-- Ações -->
+<div class="acoes-estoque">
+  <a class="btn btn-success" th:href="@{/estoque/exportar/excel}">
+    <i class="fas fa-file-excel"></i> Excel
+  </a>
+  <a class="btn btn-danger" th:href="@{/estoque/exportar/pdf}">
+    <i class="fas fa-file-pdf"></i> PDF
+  </a>
+  <a class="btn btn-secondary" th:href="@{/estoque/importar}">
+    <i class="fas fa-file-upload"></i> Importar
+  </a>
+  <a class="btn btn-dark" th:href="@{/estoque/backup}">
+    <i class="fas fa-database"></i> Backup
+  </a>
+  <a class="btn btn-primary" th:href="@{/estoque/historico}">
+  <i class="fas fa-history"></i> Histórico
+</a>
 
-        <form method="get" th:action="@{/estoque}" class="form-filtro">
-          <label for="filtroNome">Produto:</label>
-          <input type="text" id="filtroNome" name="nome" th:value="${param.nome}" />
-
-          <label for="filtroCategoria">Categoria:</label>
-          <select id="filtroCategoria" name="categoriaId">
-            <option value="">-- Todas --</option>
-            <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nome}"
-                    th:selected="${param.categoriaId == cat.id}"></option>
-          </select>
-
-          <label for="filtroFornecedor">Fornecedor:</label>
-          <select id="filtroFornecedor" name="fornecedorId">
-            <option value="">-- Todos --</option>
-            <option th:each="forn : ${fornecedores}" th:value="${forn.id}" th:text="${forn.nomeFantasia}"
-                    th:selected="${param.fornecedorId == forn.id}"></option>
-          </select>
-
-          <button type="submit" class="btn btn-primary">Filtrar</button>
-          <a th:href="@{/estoque}" class="btn btn-secondary">Limpar</a>
-        </form>
-
-        <article class="card mt-3">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th>Estoque Atual</th>
-                <th>Categoria</th>
-                <th>Fornecedor</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:each="produto : ${produtos}">
-                <td th:text="${produto.nome}"></td>
-                <td th:text="${produto.estoque}"></td>
-                <td th:text="${produto.categoria != null ? produto.categoria.nome : '-'}"></td>
-                <td th:text="${produto.fornecedor != null ? produto.fornecedor.nomeFantasia : '-'}"></td>
-                <td>
-                  <a th:href="@{'/estoque/' + ${produto.id} + '/movimentacoes'}" class="btn btn-info btn-sm">Ver Movimentações</a>
-                  <a th:href="@{'/estoque/' + ${produto.id} + '/ajustar'}" class="btn btn-warning btn-sm">Ajustar Estoque</a>
-                </td>
-              </tr>
-              <tr th:if="${produtos.isEmpty()}">
-                <td colspan="5" class="text-center">Nenhum produto encontrado.</td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-      </section>
-
-      <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
   </div>
+
+
+      <!-- Filtros -->
+<form method="get" th:action="@{/estoque}" class="form-filtro">
+  <div class="filtros">
+    <input type="text" name="nome" th:value="${param.nome}" placeholder="Nome do Produto">
+    <input type="text" name="ean" th:value="${param.ean}" placeholder="Código EAN">
+    <select name="categoriaId">
+      <option value="">Categoria</option>
+      <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nome}" th:selected="${param.categoriaId == cat.id}"></option>
+    </select>
+    <select name="fornecedorId">
+      <option value="">Fornecedor</option>
+      <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nomeFantasia}" th:selected="${param.fornecedorId == f.id}"></option>
+    </select>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="fas fa-search"></i> Filtrar
+    </button>
+    <a th:href="@{/estoque}" class="btn btn-primary">
+      <i class="fas fa-times"></i> Limpar
+    </a>
+  </div>
+</form>
+
+
+      <!-- Tabela de Estoque -->
+      <div class="card">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Estoque</th>
+              <th>Categoria</th>
+              <th>Fornecedor</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="produto : ${produtos}">
+              <td>
+                <a href="#" th:onclick="|showDetalhes(${produto.id})|" class="produto-link" th:text="${produto.nome}"></a>
+              </td>
+              <td>
+                <span th:classappend="${produto.estoque <= 3} ? ' estoque-baixo' : ''" th:text="${produto.estoque}"></span>
+              </td>
+              <td th:text="${produto.categoria?.nome ?: '-'}"></td>
+              <td th:text="${produto.fornecedor?.nomeFantasia ?: '-'}"></td>
+              <td class="text-center">
+                <a th:href="@{'/estoque/' + ${produto.id} + '/movimentacoes'}" title="Movimentações" class="btn-icon btn-info"><i class="fas fa-list"></i></a>
+                <a th:href="@{'/estoque/entrada?produtoId=' + ${produto.id}}" title="Entrada" class="btn-icon btn-success"><i class="fas fa-plus"></i></a>
+                <a th:href="@{'/estoque/saida?produtoId=' + ${produto.id}}" title="Saída" class="btn-icon btn-danger"><i class="fas fa-minus"></i></a>
+              </td>
+            </tr>
+            <tr th:if="${produtos.isEmpty()}">
+              <td colspan="5" class="text-center">Nenhum produto encontrado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      <nav th:if="${totalPaginas > 1}" class="pagination-nav">
+        <ul>
+          <li th:each="pageNum : ${#numbers.sequence(1, totalPaginas)}">
+            <a th:href="@{|/estoque?page=${pageNum}|}" th:text="${pageNum}" th:classappend="${pageNum == paginaAtual} ? 'active' : ''"></a>
+          </li>
+        </ul>
+      </nav>
+    </section>
+
+    <footer th:replace="~{components/footer :: footer}"></footer>
+  </main>
+</div>
+
+<!-- Modal Detalhes Produto -->
+<div id="produtoModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close" onclick="fecharModal()">&times;</span>
+    <h2>Detalhes do Produto</h2>
+    <div id="produtoDetalhes"></div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  function showDetalhes(id) {
+    fetch('/api/produto/' + id)
+      .then(res => res.json())
+      .then(produto => {
+        document.getElementById('produtoDetalhes').innerHTML = `
+          <p><strong>Nome:</strong> ${produto.nome}</p>
+          <p><strong>EAN:</strong> ${produto.ean}</p>
+          <p><strong>Estoque:</strong> ${produto.estoque}</p>
+          <p><strong>Categoria:</strong> ${produto.categoria?.nome ?? '-'}</p>
+          <p><strong>Fornecedor:</strong> ${produto.fornecedor?.nomeFantasia ?? '-'}</p>
+          <p><strong>Descrição:</strong> ${produto.descricao ?? 'Sem descrição'}</p>
+        `;
+        document.getElementById('produtoModal').style.display = 'block';
+      });
+  }
+
+  function fecharModal() {
+    document.getElementById('produtoModal').style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('produtoModal');
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  };
+
+  const ctx = document.getElementById('graficoCategorias').getContext('2d');
+  const dadosCategorias = /*[[${graficoCategorias}]]*/ {};
+  const chart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(dadosCategorias),
+      datasets: [{
+        data: Object.values(dadosCategorias),
+        backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6610f2']
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+</script>
+
 </body>
 </html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Auditoria de Estoque')"></head>
+<body>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="fragments/topbar :: topbar"></div>
+<main class="container mt-4">
+    <h2>Auditoria</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Usuário</th>
+                <th>Ação</th>
+                <th>Produto</th>
+                <th>Antes</th>
+                <th>Depois</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="log : ${logs}">
+                <td th:text="${log.usuario}"></td>
+                <td th:text="${log.acao}"></td>
+                <td th:text="${log.produto.nome}"></td>
+                <td th:text="${log.estoqueAntes}"></td>
+                <td th:text="${log.estoqueDepois}"></td>
+                <td th:text="${#dates.format(log.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

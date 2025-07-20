@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('Alertas de Estoque')"></head>
+<body>
+<div th:replace="fragments/sidebar :: sidebar"></div>
+<div th:replace="fragments/topbar :: topbar"></div>
+<main class="container mt-4">
+    <h2>Alertas de Estoque Mínimo</h2>
+    <div th:if="${alertas.isEmpty()}">
+        <div class="alert alert-success">Nenhum produto com estoque abaixo do mínimo.</div>
+    </div>
+    <table class="table" th:if="${not #lists.isEmpty(alertas)}">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Estoque Atual</th>
+                <th>Estoque Mínimo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="alerta : ${alertas}">
+                <td th:text="${alerta.produto.nome}"></td>
+                <td th:text="${alerta.estoqueAtual}"></td>
+                <td th:text="${alerta.estoqueMinimo}"></td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrada de Estoque - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/estoque-entrada.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <!-- Área de conteúdo da página -->
+      <section class="content-area">
+        <h1>Entrada de Estoque</h1>
+
+        <article class="card">
+          <form method="post" th:action="@{/estoque/entrada}" class="form-estoque">
+            <div class="form-group">
+              <label for="produto">Produto</label>
+              <select class="form-control" id="produto" name="produtoId" required>
+                <option value="" disabled selected>Selecione um produto</option>
+                <option th:each="produto : ${produtos}" th:value="${produto.id}" th:text="${produto.nome}"></option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="quantidade">Quantidade</label>
+              <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" required />
+            </div>
+
+            <div class="form-group">
+              <label for="motivo">Motivo</label>
+              <input type="text" class="form-control" id="motivo" name="motivo" placeholder="Ex: Compra, devolução, ajuste" />
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-2">
+              <i class="fas fa-plus-circle"></i> Salvar Entrada
+            </button>
+          </form>
+        </article>
+      </section>
+
+      <!-- Footer -->
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+</body>
+
+</html>

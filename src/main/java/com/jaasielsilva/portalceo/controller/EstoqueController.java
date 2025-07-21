@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/estoque")
@@ -110,11 +111,18 @@ public class EstoqueController {
     // Salva uma saída de estoque
     @PostMapping("/saida")
     public String salvarSaida(@RequestParam Long produtoId,
-                              @RequestParam Integer quantidade,
-                              @RequestParam String motivo) {
-        movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.SAIDA, motivo, "admin");
-        return "redirect:/estoque/saida?sucesso";
-    }
+                            @RequestParam Integer quantidade,
+                            @RequestParam String motivo,
+                            RedirectAttributes redirectAttrs) {
+        try {
+            movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.SAIDA, motivo, "admin");
+            redirectAttrs.addFlashAttribute("sucesso", "Saída registrada com sucesso!");
+        } catch (RuntimeException e) {
+            redirectAttrs.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/estoque/saida";
+        }
+        return "redirect:/estoque/saida";
+}
 
     // Formulário para ajustes manuais no estoque
     @GetMapping("/ajustes")

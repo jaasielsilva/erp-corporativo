@@ -4,6 +4,10 @@ import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.repository.MovimentacaoEstoqueRepository;
 import com.jaasielsilva.portalceo.repository.ProdutoRepository;
 import com.jaasielsilva.portalceo.repository.AuditoriaEstoqueRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +19,9 @@ public class MovimentacaoEstoqueService {
 
     @Autowired
     private ProdutoRepository produtoRepo;
+
+    @Autowired
+    private MovimentacaoEstoqueRepository movimentacaoRepository;
 
     @Autowired
     private AuditoriaEstoqueRepository auditoriaRepo;
@@ -53,4 +60,29 @@ public class MovimentacaoEstoqueService {
         auditoria.setUsuario(usuario);
         auditoriaRepo.save(auditoria);
     }
+
+   // Busca todas movimentações de um produto
+    public List<MovimentacaoEstoque> buscarPorProduto(Produto produto) {
+        return movimentacaoRepository.findByProduto(produto);
+    }
+
+    // Busca movimentações paginadas filtrando pelo nome do produto (sem filtro tipo)
+    public Page<MovimentacaoEstoque> buscarPorNomeProduto(String nomeProduto, Pageable pageable) {
+        return movimentacaoRepository.findByProdutoNomeContainingIgnoreCase(nomeProduto, pageable);
+    }
+    
+    public Page<MovimentacaoEstoque> buscarPorNomeProdutoETipo(String nome, String tipoStr, Pageable pageable) {
+        TipoMovimentacao tipo;
+        try {
+            tipo = TipoMovimentacao.valueOf(tipoStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            tipo = null; // ou lançar exceção se preferir
+        }
+
+        if (tipo == null) {
+            return buscarPorNomeProduto(nome, pageable);
+        }
+        return movimentacaoRepository.findByProdutoNomeAndTipo(nome, tipo, pageable);
+    }
+
 }

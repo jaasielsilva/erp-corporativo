@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Histórico Geral de Movimentações</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/estoque.css}" />
+  <style>
+    /* ====== Ajustes específicos para esta página ====== */
+    .filtros-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .input-busca {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e0;
+      width: 280px;
+      font-size: 14px;
+    }
+    .btn-filtro {
+      background-color: #e2e8f0;
+      color: #1a202c;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+      user-select: none;
+    }
+    .btn-filtro:hover, .btn-filtro.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    thead th {
+      background-color: #e2e8f0;
+      font-weight: 700;
+      padding: 12px;
+      text-align: left;
+      border-bottom: 2px solid #94a3b8;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      vertical-align: middle;
+    }
+    .text-center {
+      text-align: center;
+      padding: 20px 0;
+      color: #64748b;
+      font-style: italic;
+    }
+    .paginacao {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .paginacao button {
+      background-color: #e2e8f0;
+      border: none;
+      margin: 0 8px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+    }
+    .paginacao button:hover:not(:disabled) {
+      background-color: #3b82f6;
+      color: white;
+    }
+    .paginacao button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #f1f5f9;
+      color: #94a3b8;
+    }
+    @media (max-width: 720px) {
+      .filtros-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .input-busca {
+        width: 100%;
+        max-width: 100%;
+      }
+      table, thead, tbody, tr, td, th {
+        display: block;
+      }
+      thead tr {
+        display: none;
+      }
+      tbody tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 12px;
+        background-color: white;
+      }
+      tbody td {
+        padding-left: 50%;
+        position: relative;
+        text-align: right;
+        border: none;
+        border-bottom: 1px solid #eee;
+      }
+      tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 12px;
+        top: 12px;
+        font-weight: 700;
+        text-align: left;
+        color: #64748b;
+        width: 40%;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Simbar -->
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <!-- Topbar Simbar -->
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Histórico Geral de Movimentações</h1>
+
+        <a th:href="@{/estoque}" class="btn-voltar">
+          <i class="fas fa-arrow-left"></i> Voltar ao Estoque
+        </a>
+
+        <div class="filtros-container">
+          <input
+            type="text"
+            id="buscaProduto"
+            class="input-busca"
+            placeholder="Buscar por nome do produto..."
+            autocomplete="off"
+          />
+
+          <div>
+            <button class="btn-filtro active" data-tipo="TODOS">Todos</button>
+            <button class="btn-filtro" data-tipo="ENTRADA">Entrada</button>
+            <button class="btn-filtro" data-tipo="SAIDA">Saída</button>
+            <button class="btn-filtro" data-tipo="AJUSTE">Ajuste</button>
+          </div>
+        </div>
+
+        <article class="card">
+          <table id="tabelaHistorico" class="table">
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Produto</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Motivo</th>
+                <th>Usuário</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Linhas geradas via JS -->
+            </tbody>
+          </table>
+        </article>
+
+        <div class="paginacao">
+          <button id="btnPrev" disabled>Anterior</button>
+          <span id="paginaAtual">1</span> / <span id="totalPaginas">1</span>
+          <button id="btnNext">Próximo</button>
+        </div>
+      </section>
+
+      <!-- Footer Simbar -->
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Simulação dos dados, depois substitua pelos seus dados reais do Thymeleaf
+      const movimentacoes = [
+        { dataHora: "2025-07-21T09:15:00", produto: "Produto A", tipo: "ENTRADA", quantidade: 20, motivo: "Compra", usuario: "João" },
+        { dataHora: "2025-07-21T10:45:00", produto: "Produto B", tipo: "SAIDA", quantidade: 5, motivo: "Venda", usuario: "Maria" },
+        { dataHora: "2025-07-20T14:30:00", produto: "Produto C", tipo: "AJUSTE", quantidade: 3, motivo: "Inventário", usuario: "Carlos" },
+        { dataHora: "2025-07-19T08:00:00", produto: "Produto A", tipo: "SAIDA", quantidade: 2, motivo: "Quebra", usuario: "Ana" },
+        { dataHora: "2025-07-19T12:10:00", produto: "Produto D", tipo: "ENTRADA", quantidade: 10, motivo: "Devolução", usuario: "Lucas" },
+        { dataHora: "2025-07-18T16:45:00", produto: "Produto E", tipo: "SAIDA", quantidade: 1, motivo: "Venda", usuario: "Fernanda" },
+      ];
+
+      const linhasPorPagina = 5;
+      let paginaAtual = 1;
+      let filtroTipo = "TODOS";
+      let filtroBusca = "";
+
+      const tbody = document.querySelector("#tabelaHistorico tbody");
+      const btnPrev = document.getElementById("btnPrev");
+      const btnNext = document.getElementById("btnNext");
+      const paginaAtualSpan = document.getElementById("paginaAtual");
+      const totalPaginasSpan = document.getElementById("totalPaginas");
+      const inputBusca = document.getElementById("buscaProduto");
+      const botoesFiltro = document.querySelectorAll(".btn-filtro");
+
+      function formatarData(dataISO) {
+        const d = new Date(dataISO);
+        const dia = String(d.getDate()).padStart(2, "0");
+        const mes = String(d.getMonth() + 1).padStart(2, "0");
+        const ano = d.getFullYear();
+        const hora = String(d.getHours()).padStart(2, "0");
+        const min = String(d.getMinutes()).padStart(2, "0");
+        const seg = String(d.getSeconds()).padStart(2, "0");
+        return `${dia}/${mes}/${ano} ${hora}:${min}:${seg}`;
+      }
+
+      function renderizarTabela() {
+        const dadosFiltrados = movimentacoes.filter((mov) => {
+          const tipoMaiusculo = mov.tipo.toUpperCase();
+          const correspondeTipo = filtroTipo === "TODOS" || tipoMaiusculo === filtroTipo;
+          const correspondeBusca = mov.produto.toLowerCase().includes(filtroBusca.toLowerCase());
+          return correspondeTipo && correspondeBusca;
+        });
+
+        const totalPaginas = Math.max(Math.ceil(dadosFiltrados.length / linhasPorPagina), 1);
+        if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+
+        paginaAtualSpan.textContent = paginaAtual;
+        totalPaginasSpan.textContent = totalPaginas;
+        btnPrev.disabled = paginaAtual <= 1;
+        btnNext.disabled = paginaAtual >= totalPaginas;
+
+        tbody.innerHTML = "";
+
+        if (dadosFiltrados.length === 0) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="6" class="text-center">Nenhuma movimentação encontrada.</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
+
+        const inicio = (paginaAtual - 1) * linhasPorPagina;
+        const fim = inicio + linhasPorPagina;
+        const paginaItens = dadosFiltrados.slice(inicio, fim);
+
+        paginaItens.forEach((mov) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td data-label="Data/Hora">${formatarData(mov.dataHora)}</td>
+            <td data-label="Produto">${mov.produto}</td>
+            <td data-label="Tipo">${mov.tipo.charAt(0).toUpperCase() + mov.tipo.slice(1).toLowerCase()}</td>
+            <td data-label="Quantidade">${mov.quantidade}</td>
+            <td data-label="Motivo">${mov.motivo}</td>
+            <td data-label="Usuário">${mov.usuario}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      btnPrev.addEventListener("click", () => {
+        if (paginaAtual > 1) {
+          paginaAtual--;
+          renderizarTabela();
+        }
+      });
+
+      btnNext.addEventListener("click", () => {
+        paginaAtual++;
+        renderizarTabela();
+      });
+
+      inputBusca.addEventListener("input", (e) => {
+        filtroBusca = e.target.value.trim();
+        paginaAtual = 1;
+        renderizarTabela();
+      });
+
+      botoesFiltro.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          filtroTipo = btn.getAttribute("data-tipo").toUpperCase();
+          paginaAtual = 1;
+          botoesFiltro.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          renderizarTabela();
+        });
+      });
+
+      renderizarTabela();
+    });
+  </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
+import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.TipoMovimentacao;
 import com.jaasielsilva.portalceo.repository.ProdutoRepository;
 import com.jaasielsilva.portalceo.service.MovimentacaoEstoqueService;
@@ -7,6 +8,7 @@ import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.CategoriaService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,10 +54,14 @@ public class EstoqueController {
     var pagina = produtoService.filtrarEstoque(nome, categoriaId, fornecedorId, page);
     model.addAttribute("produtos", pagina.getContent());
 
-    long produtosCriticos = pagina.getContent().stream()
-                                  .filter(p -> p.getEstoque() <= 3)
-                                  .count();
+    // Verifica produtos com estoque abaixo ou igual ao mínimo
+    List<Produto> produtosCriticos = pagina.getContent().stream()
+        .filter(p -> p.getEstoque() <= p.getMinimoEstoque())
+        .toList();
+
     model.addAttribute("produtosCriticos", produtosCriticos);
+    model.addAttribute("quantidadeProdutosEstoqueBaixo", produtosCriticos.size());
+
 
     // Exemplo: contar produtos zerados
     long produtosZerados = pagina.getContent().stream()

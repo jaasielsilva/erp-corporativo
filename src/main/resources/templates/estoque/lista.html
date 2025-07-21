@@ -23,6 +23,13 @@
         <p class="subtitulo">Dashboard completo de controle e movimentação de estoque</p>
       </div>
 
+      <!-- Alerta Estoque Baixo -->
+<div id="alertaEstoqueBaixo" class="alerta-topo-sutil" th:if="${quantidadeProdutosEstoqueBaixo > 0}">
+  <i class="fas fa-exclamation-triangle"></i>
+  <span th:text="'Estoque crítico: ' + ${quantidadeProdutosEstoqueBaixo} + ' produto(s)'"></span>
+</div>
+
+
       <!-- Cards de Métricas -->
       <div class="card-metricas">
         <div class="card-metrica blue">
@@ -110,8 +117,14 @@
                 <a href="#" th:onclick="|showDetalhes(${produto.id})|" class="produto-link" th:text="${produto.nome}"></a>
               </td>
               <td>
-                <span th:classappend="${produto.estoque <= 3} ? ' estoque-baixo' : ''" th:text="${produto.estoque}"></span>
-              </td>
+  <span th:classappend="${produto.estoque &lt;= produto.minimoEstoque} ? 'estoque-baixo' : ''" th:text="${produto.estoque}"></span>
+  
+  <i class="fas fa-exclamation-triangle text-warning"
+     th:if="${produto.estoque &lt;= produto.minimoEstoque}"
+     title="Estoque abaixo do mínimo recomendado"
+     style="margin-left: 6px; color: #dc3545;"></i>
+</td>
+
               <td th:text="${produto.categoria?.nome ?: '-'}"></td>
               <td th:text="${produto.fornecedor?.nomeFantasia ?: '-'}"></td>
               <td class="text-center">
@@ -194,6 +207,15 @@
         legend: { position: 'bottom' }
       }
     }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const alerta = document.getElementById('alertaEstoqueBaixo');
+      if (alerta) alerta.style.display = 'none';
+    }, 5000); // 30 segundos
   });
 </script>
 

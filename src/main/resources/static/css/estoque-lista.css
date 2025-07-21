@@ -4,6 +4,48 @@
   min-height: 100vh;
   overflow: hidden; /* Evita scroll horizontal */
 }
+#alertaEstoqueBaixo {
+  position: fixed;       /* Fixa no canto da tela */
+  bottom: 200px;          /* 20px do rodapé */
+  right: 20px;           /* 20px da direita */
+  background-color: #fff8e1; /* Fundo amarelo claro sutil */
+  color: #856404;        /* Texto em tom dourado escuro */
+  border-left: 5px solid #ffca28; /* Barra vertical amarelo forte */
+  padding: 12px 20px;    /* Espaçamento confortável */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Sombra leve para dar destaque */
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  border-radius: 4px;
+  max-width: 320px;
+  z-index: 9999;         /* Para ficar acima de outros elementos */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeInOut 5s forwards;
+}
+
+/* Ícone do alerta (exemplo usando FontAwesome ou SVG inline) */
+#alertaEstoqueBaixo .icon {
+  font-size: 20px;
+  color: #ffca28;
+}
+
+/* Animação para aparecer e desaparecer suavemente */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  10%, 90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 
 /* Sidebar fixa */
 aside {

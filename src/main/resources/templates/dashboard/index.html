@@ -33,8 +33,11 @@
 
           <div class="card-metric">
             <h4>Produtos no Estoque</h4>
-            <p th:text="${produtosEstoque}">0</p>
+            <p>
+              <span th:text="${#numbers.formatDecimal(produtosEstoque, 0, 'POINT', 0, 'COMMA')}">0</span>
+            </p>
           </div>
+
 
           <div class="card-metric">
             <h4>Projetos em Andamento</h4>

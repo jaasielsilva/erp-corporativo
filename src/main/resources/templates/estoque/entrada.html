@@ -47,6 +47,10 @@
             <button type="submit" class="btn btn-primary mt-2">
               <i class="fas fa-plus-circle"></i> Salvar Entrada
             </button>
+
+            <a href="/estoque" class="btn btn-primary mt-2">
+              <i class="fas fa-minus-circle"></i> Voltar
+            </a>
           </form>
         </article>
       </section>
@@ -55,6 +59,47 @@
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
+
+  <!-- Popup Sucesso -->
+  <div id="popup-sucesso" th:if="${sucesso}" 
+       style="position: fixed; top: 20px; right: 20px; background-color: #28a745; color: white; 
+              padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); 
+              font-weight: 600; z-index: 9999;">
+    <i class="fas fa-check-circle"></i> <span th:text="${sucesso}">Sucesso!</span>
+  </div>
+
+  <!-- Popup Erro -->
+  <div id="popup-erro" th:if="${erro}" 
+       style="position: fixed; top: 20px; right: 20px; background-color: #dc3545; color: white; 
+              padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); 
+              font-weight: 600; z-index: 9999;">
+    <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}">Erro!</span>
+  </div>
+
+ <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var popupSucesso = document.getElementById('popup-sucesso');
+    var popupErro = document.getElementById('popup-erro');
+    
+    if(popupSucesso) {
+      popupSucesso.style.display = 'block';
+      setTimeout(function() {
+        popupSucesso.style.display = 'none';
+        // Redirecionar para lista de estoque após 9 segundos (9000ms)
+        window.location.href = '/estoque';
+      }, 900);  // 9 segundos
+    }
+
+    if(popupErro) {
+      popupErro.style.display = 'block';
+      // Ocultar erro depois de 9 segundos, mas NÃO redireciona
+      setTimeout(function() {
+        popupErro.style.display = 'none';
+      }, 900); // 9 segundos
+    }
+  });
+</script>
+
 
 </body>
 

@@ -23,6 +23,22 @@
   flex-direction: column;
   margin-bottom: 1rem;
 }
+.form-group select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group select:focus {
+  border-color: #0066cc; /* cor do foco igual botão primary */
+  outline: none;
+  box-shadow: 0 0 3px #0066cc;
+}
 
 .form-group label {
   font-weight: 600;

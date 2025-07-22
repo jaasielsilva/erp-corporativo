@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -35,4 +36,9 @@ public class Fornecedor {
 
     @Column(length = 1000)
     private String observacoes;
+
+    @NotNull(message = "O status é obrigatório.")
+    @Column(length = 20)
+    private String status;
+
 }

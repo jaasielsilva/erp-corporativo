@@ -25,7 +25,14 @@ public class FornecedorService {
         return fornecedorRepository.save(fornecedor);
     }
 
-    public Fornecedor buscarPorId(Long id) {
-        return fornecedorRepository.findById(id).orElse(null);
+    public Fornecedor findById(Long id) {
+        return fornecedorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado com id: " + id));
     }
+
+    //metodo pra excluir um fornecedor
+    public void excluir(Long id) {
+    fornecedorRepository.deleteById(id);
+}
+
 }

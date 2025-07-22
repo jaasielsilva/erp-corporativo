@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastrar Contrato - Fornecedor</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, textarea, select, button { margin-top: 5px; padding: 8px; width: 300px; max-width: 100%; }
+    button { width: auto; background-color: #007bff; color: white; border: none; cursor: pointer; margin-top: 20px; }
+    button:hover { background-color: #0056b3; }
+    textarea { height: 100px; resize: vertical; }
+  </style>
+</head>
+<body>
+  <h1 th:text="'Contrato para: ' + ${contrato.fornecedor.nomeFantasia}">Contrato</h1>
+
+  <form th:action="@{/fornecedores/contratos/salvar}" th:object="${contrato}" method="post">
+
+    <input type="hidden" th:field="*{id}" />
+    <input type="hidden" th:field="*{fornecedor.id}" />
+
+    <label for="numeroContrato">Número do Contrato</label>
+    <input type="text" id="numeroContrato" th:field="*{numeroContrato}" placeholder="Número do contrato" required />
+
+    <label for="descricao">Descrição</label>
+    <textarea id="descricao" th:field="*{descricao}" placeholder="Descrição do contrato" required></textarea>
+
+    <label for="dataInicio">Data de Início</label>
+    <input type="date" id="dataInicio" th:field="*{dataInicio}" required />
+
+    <label for="dataFim">Data de Fim</label>
+    <input type="date" id="dataFim" th:field="*{dataFim}" />
+
+    <label for="valor">Valor</label>
+    <input type="number" id="valor" th:field="*{valor}" placeholder="Valor do contrato" step="0.01" min="0" required />
+
+    <label for="status">Status</label>
+    <select id="status" th:field="*{status}" required>
+      <option value="" disabled th:selected="${contrato.status} == null">Selecione o status</option>
+      <option value="Ativo" th:selected="${contrato.status} == 'Ativo'">Ativo</option>
+      <option value="Inativo" th:selected="${contrato.status} == 'Inativo'">Inativo</option>
+      <option value="Cancelado" th:selected="${contrato.status} == 'Cancelado'">Cancelado</option>
+    </select>
+
+    <button type="submit">Salvar Contrato</button>
+  </form>
+</body>
+</html>

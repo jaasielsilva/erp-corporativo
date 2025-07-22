@@ -1,0 +1,152 @@
+/* Container da área de conteúdo */
+.content-area {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.1);
+}
+
+/* Título */
+.content-area h1 {
+  margin-bottom: 30px;
+  font-weight: 700;
+  font-size: 2rem;
+  color: #222;
+  text-align: center;
+}
+
+/* Grid 4 colunas */
+.form-grid-4cols {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px 24px;
+}
+
+/* Campo observações ocupa toda a largura */
+.form-group-fullwidth {
+  grid-column: 1 / -1;
+}
+
+/* Form group padrão */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+/* Asterisco vermelho para obrigatório */
+.required {
+  color: #e74c3c;
+  margin-left: 3px;
+}
+
+/* Inputs, selects, textarea */
+.fornecedor-form input[type="text"],
+.fornecedor-form input[type="email"],
+.fornecedor-form input[type="url"],
+.fornecedor-form select,
+.fornecedor-form textarea {
+  padding: 10px 12px;
+  border: 1.5px solid #bbb;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.fornecedor-form select {
+  background-color: #fff;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D'10'%20height%3D'7'%20viewBox%3D'0%200%2010%207'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M0%200l5%207%205-7z'%20fill%3D'%23999'%20/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px 7px;
+  cursor: pointer;
+}
+
+/* Focus states */
+.fornecedor-form input:focus,
+.fornecedor-form select:focus,
+.fornecedor-form textarea:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Textarea altura */
+.fornecedor-form textarea {
+  min-height: 100px;
+}
+
+/* Botões */
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 25px;
+}
+
+/* Botões principais */
+.button {
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+.button.primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.button.primary:hover {
+  background-color: #0056b3;
+}
+
+.button.secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.button.secondary:hover {
+  background-color: #545b62;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .form-grid-4cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .form-grid-4cols {
+    grid-template-columns: 1fr;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button {
+    width: 100%;
+  }
+}

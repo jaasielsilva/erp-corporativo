@@ -27,9 +27,8 @@ public class ContratoFornecedor {
     @Lob
     private String descricao;
 
-    @ManyToOne
-    @JoinColumn(name = "fornecedor_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fornecedor_id", nullable = false)
     private Fornecedor fornecedor;
 
-    // Getters e setters
 }

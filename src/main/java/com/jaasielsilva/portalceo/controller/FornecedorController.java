@@ -72,6 +72,7 @@ public class FornecedorController {
         return "fornecedor/contratos";
     }
 
+
     // Exibe o formulário para criar um novo contrato para o fornecedor especificado
     // pelo id
     @GetMapping("/{id}/contratos/novo")

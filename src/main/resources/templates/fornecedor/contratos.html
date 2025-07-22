@@ -22,38 +22,42 @@
 
         <article class="card mt-3">
           <table class="table-list">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Fornecedor</th>
-                <th>Número do Contrato</th>
-                <th>Data Início</th>
-                <th>Data Término</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:each="contrato : ${contratos}">
-                <td th:text="${contrato.id}">1</td>
-                <td th:text="${contrato.fornecedor.razaoSocial}">Fornecedor X</td>
-                <td th:text="${contrato.numero}">0001/2025</td>
-                <td th:text="${#dates.format(contrato.dataInicio, 'dd/MM/yyyy')}">01/01/2025</td>
-                <td th:text="${#dates.format(contrato.dataTermino, 'dd/MM/yyyy')}">31/12/2025</td>
-                <td th:text="${#numbers.formatDecimal(contrato.valor, 2, 'COMMA',  '.', '')}">R$ 10.000,00</td>
-                <td th:text="${contrato.status}">Ativo</td>
-                <td>
-                  <a th:href="@{'/contratos/editar/' + ${contrato.id}}" class="btn-acao editar" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="javascript:void(0);" class="btn-acao excluir" title="Excluir" th:attr="data-id=${contrato.id}" onclick="abrirModalExcluir(this)">
-                    <i class="fas fa-trash-alt"></i>
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Fornecedor</th>
+      <th>Número do Contrato</th>
+      <th>Data Início</th>
+      <th>Data Término</th>
+      <th>Valor</th>
+      <th>Status</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr th:each="contrato : ${contratos}">
+    <td th:text="${contrato.id}">1</td>
+    <td th:text="${contrato.fornecedor.razaoSocial}">Fornecedor X</td>
+    <td th:text="${contrato.numeroContrato}">0001/2025</td>
+    <td th:text="${#temporals.format(contrato.dataInicio, 'dd/MM/yyyy')}">01/01/2025</td>
+    <td th:text="${#temporals.format(contrato.dataFim, 'dd/MM/yyyy')}">31/12/2025</td>
+    <td th:text="${contrato.valor}">435.00</td>
+    <td th:text="${contrato.status}">Ativo</td>
+    <td>
+      <a th:href="@{'/fornecedores/contratos/editar/' + ${contrato.id}}" class="btn-acao editar" title="Editar">
+        <i class="fas fa-edit"></i>
+      </a>
+      <a href="javascript:void(0);" class="btn-acao excluir" title="Excluir"
+         th:attr="data-id=${contrato.id}" onclick="abrirModalExcluir(this)">
+        <i class="fas fa-trash-alt"></i>
+      </a>
+    </td>
+  </tr>
+</tbody>
+
+
+</table>
+
         </article>
       </section>
 

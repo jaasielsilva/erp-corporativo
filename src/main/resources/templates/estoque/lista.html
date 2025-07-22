@@ -130,8 +130,10 @@
                 <td th:text="${produto.categoria?.nome ?: '-'}"></td>
                 <td th:text="${produto.fornecedor?.nomeFantasia ?: '-'}"></td>
                 <td class="text-center">
-                  <a th:href="@{'/estoque/' + ${produto.id} + '/movimentacoes'}" title="Movimentações"
-                    class="btn-icon btn-info"><i class="fas fa-list"></i></a>
+                  <a th:href="@{'/estoque/' + ${produto.id} + '/detalhes'}" class="btn-icon btn-info"
+                    title="Ver detalhes">
+                    <i class="fas fa-list"></i>
+                  </a>
                   <a th:href="@{'/estoque/entrada?produtoId=' + ${produto.id}}" title="Entrada"
                     class="btn-icon btn-success"><i class="fas fa-plus"></i></a>
                   <a th:href="@{'/estoque/saida?produtoId=' + ${produto.id}}" title="Saída"

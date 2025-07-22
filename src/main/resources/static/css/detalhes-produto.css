@@ -1,0 +1,130 @@
+/* Container principal do grid */
+.detalhes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px 28px;
+  padding: 20px 0;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Cada item do detalhe */
+.detalhe-item {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 16px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 90px;
+  transition: box-shadow 0.3s ease;
+  cursor: default;
+  word-break: break-word;
+  color: #2c3e50;
+}
+
+/* Hover suave para destaque */
+.detalhe-item:hover {
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.15);
+}
+
+/* Label forte */
+.detalhe-item strong {
+  color: #34495e;
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+/* Valor do campo */
+.detalhe-item span {
+  color: #4a4a4a;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+/* Estilo especial para a imagem */
+.detalhe-imagem span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
+}
+
+.detalhe-imagem img {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 12px;
+  object-fit: contain;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+}
+
+/* Botão voltar com sombra e transição */
+.btn.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  background-color: #3b82f6; /* Azul mais vivo */
+  color: white;
+  padding: 12px 26px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgb(59 130 246 / 0.5);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  margin-top: 32px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn.btn-primary i {
+  margin-right: 10px;
+  font-size: 1.1rem;
+}
+
+.btn.btn-primary:hover {
+  background-color: #2563eb;
+  box-shadow: 0 6px 18px rgb(37 99 235 / 0.6);
+}
+
+/* Subtítulo da página */
+.page-header .subtitulo {
+  color: #7f8c8d;
+  font-weight: 500;
+  margin-top: 6px;
+  margin-bottom: 28px;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .detalhes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+    padding: 16px 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .detalhes-grid {
+    grid-template-columns: 1fr;
+    padding: 12px 8px;
+  }
+
+  .detalhe-item {
+    min-height: auto;
+    padding: 16px 12px;
+  }
+
+  .btn.btn-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 0;
+    font-size: 1.1rem;
+  }
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Estoque - Detalhes do Produto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/detalhes-produto.css}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <section class="content-area">
+                <div class="page-header">
+                    <h1>Detalhes do Produto</h1>
+                    <p class="subtitulo">Informações completas do produto selecionado</p>
+                </div>
+
+                <div class="detalhes-grid">
+                    <div class="detalhe-item"><strong>ID</strong><span th:text="${produto.id}">1</span></div>
+                    <div class="detalhe-item"><strong>Nome</strong><span th:text="${produto.nome}">Produto
+                            Exemplo</span></div>
+                    <div class="detalhe-item"><strong>Código Interno</strong><span
+                            th:text="${produto.codigoInterno}">12345</span></div>
+                    <div class="detalhe-item"><strong>EAN</strong><span th:text="${produto.ean}">0000000000000</span>
+                    </div>
+
+                    <div class="detalhe-item"><strong>Descrição</strong><span
+                            th:text="${produto.descricao != null ? produto.descricao : 'Sem descrição'}">Descrição do
+                            produto</span></div>
+                    <div class="detalhe-item"><strong>Marca</strong><span
+                            th:text="${produto.marca != null ? produto.marca : '-'}">Marca XYZ</span></div>
+                    <div class="detalhe-item"><strong>Estoque</strong><span
+                            th:text="${#numbers.formatDecimal(produto.estoque, 0, 'POINT', 0, 'COMMA')}">0</span></div>
+                    <div class="detalhe-item"><strong>Mínimo Estoque</strong><span
+                            th:text="${produto.minimoEstoque}">0</span></div>
+
+                    <div class="detalhe-item"><strong>Preço</strong><span
+                            th:text="${#numbers.formatDecimal(produto.preco, 2, 'POINT', 2, 'COMMA')}">0,00</span></div>
+                    <div class="detalhe-item"><strong>Unidade de Medida</strong><span
+                            th:text="${produto.unidadeMedida != null ? produto.unidadeMedida : '-'}">UN</span></div>
+                    <div class="detalhe-item"><strong>Altura (cm)</strong><span th:text="${produto.altura}">0.00</span>
+                    </div>
+                    <div class="detalhe-item"><strong>Largura (cm)</strong><span
+                            th:text="${produto.largura}">0.00</span></div>
+
+                    <div class="detalhe-item"><strong>Profundidade (cm)</strong><span
+                            th:text="${produto.profundidade}">0.00</span></div>
+                    <div class="detalhe-item"><strong>Peso (kg)</strong><span th:text="${produto.peso}">0.00</span>
+                    </div>
+                    <div class="detalhe-item"><strong>Ativo</strong><span
+                            th:text="${produto.ativo ? 'Sim' : 'Não'}">Sim</span></div>
+                    <div class="detalhe-item"><strong>Data Última Compra</strong><span
+                            th:text="${#dates.format(dataCadastroDate, 'dd/MM/yyyy HH:mm')}">-</span></div>
+
+                    <div class="detalhe-item"><strong>Categoria</strong><span
+                            th:text="${produto.categoria != null ? produto.categoria.nome : '-'}">Categoria X</span>
+                    </div>
+                    <div class="detalhe-item"><strong>Fornecedor</strong><span
+                            th:text="${produto.fornecedor != null ? produto.fornecedor.nomeFantasia : '-'}">Fornecedor
+                            Y</span></div>
+                   <div class="detalhe-item detalhe-imagem">
+  <strong>Imagem</strong>
+  <span>
+    <img th:if="${produto.imagemUrl != null}" th:src="@{${produto.imagemUrl}}" alt="Imagem do Produto" />
+    <img th:if="${produto.imagemUrl == null}" th:src="@{/img/gerente.png}" alt="Imagem padrão" />
+  </span>
+</div>
+
+                </div>
+
+                <a th:href="@{/estoque}" class="btn btn-primary mt-3">
+                    <i class="fas fa-arrow-left"></i> Voltar para Estoque
+                </a>
+
+    </div>
+    </section>
+
+    <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+    </div>
+</body>
+
+</html>

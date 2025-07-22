@@ -60,16 +60,17 @@ public SecurityFilterChain filterChain(HttpSecurity http,
     http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
+            .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/a81368914c.js").permitAll()
             .anyRequest().authenticated()
         )
+
         .formLogin(form -> form
             .loginPage("/login")
             .loginProcessingUrl("/login")
-            .usernameParameter("username")  // ajuste para o nome do campo do form
+            .usernameParameter("username")
             .passwordParameter("password")
             .defaultSuccessUrl("/dashboard", true)
-            .failureHandler(failureHandler) // usa seu handler customizado
+            .failureHandler(failureHandler)
             .permitAll()
         )
         .logout(logout -> logout.permitAll())

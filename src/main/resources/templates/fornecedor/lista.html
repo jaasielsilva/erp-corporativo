@@ -62,6 +62,10 @@
                     <a th:href="@{'/fornecedores/' + ${f.id} + '/contratos'}" title="Ver Contratos">
                       <i class="fas fa-file-contract"></i>
                     </a>
+                    <a th:href="@{'/fornecedor/' + ${f.id} + '/avaliacoes'}" title="Ver Avaliações">
+                      <i class="fas fa-star"></i>
+                    </a>
+
                     <a href="javascript:void(0);" th:attr="data-id=${f.id}" title="Excluir"
                        onclick="abrirModalExcluir(this)">
                       <i class="fas fa-trash-alt"></i>

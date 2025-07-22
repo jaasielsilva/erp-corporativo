@@ -1,310 +1,255 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
-  <title>Histórico Geral de Movimentações</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <title>Histórico de Movimentações</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/estoque.css}" />
+  <link rel="stylesheet" th:href="@{/css/estoque-lista.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    /* ====== Ajustes específicos para esta página ====== */
-    .filtros-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .input-busca {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e0;
-      width: 280px;
-      font-size: 14px;
-    }
-    .btn-filtro {
-      background-color: #e2e8f0;
-      color: #1a202c;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.2s ease;
-      user-select: none;
-    }
-    .btn-filtro:hover, .btn-filtro.active {
-      background-color: #3b82f6;
-      color: white;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-    thead th {
-      background-color: #e2e8f0;
-      font-weight: 700;
-      padding: 12px;
-      text-align: left;
-      border-bottom: 2px solid #94a3b8;
-    }
-    tbody tr:nth-child(even) {
-      background-color: #f9fafb;
-    }
-    tbody td {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-      vertical-align: middle;
-    }
-    .text-center {
-      text-align: center;
-      padding: 20px 0;
-      color: #64748b;
-      font-style: italic;
-    }
-    .paginacao {
-      text-align: center;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    .paginacao button {
-      background-color: #e2e8f0;
-      border: none;
-      margin: 0 8px;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.2s ease;
-    }
-    .paginacao button:hover:not(:disabled) {
-      background-color: #3b82f6;
-      color: white;
-    }
-    .paginacao button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background-color: #f1f5f9;
-      color: #94a3b8;
-    }
-    @media (max-width: 720px) {
-      .filtros-container {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .input-busca {
-        width: 100%;
-        max-width: 100%;
-      }
-      table, thead, tbody, tr, td, th {
-        display: block;
-      }
-      thead tr {
-        display: none;
-      }
-      tbody tr {
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 12px;
-        background-color: white;
-      }
-      tbody td {
-        padding-left: 50%;
-        position: relative;
-        text-align: right;
-        border: none;
-        border-bottom: 1px solid #eee;
-      }
-      tbody td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 12px;
-        top: 12px;
-        font-weight: 700;
-        text-align: left;
-        color: #64748b;
-        width: 40%;
-        white-space: nowrap;
-      }
-    }
+    /* Remove margens e padding da página e bloqueia scroll na janela inteira */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* remove barra de rolagem da página */
+}
+
+/* Container principal onde o conteúdo rola internamente */
+.content-area {
+  height: calc(100vh - 120px); /* ajuste esse valor conforme altura real do header + footer */
+  overflow-y: auto; /* rolagem vertical interna */
+  padding-right: 15px; /* evita corte ou pulo pela barra de rolagem */
+  box-sizing: border-box; /* inclui padding no cálculo da largura */
+}
+
+/* Estilo da tabela */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+
+
+/* Estilo do formulário de filtros */
+.filtros {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filtros input,
+.filtros select {
+  padding: 6px 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex-grow: 1;
+  min-width: 150px;
+}
+
+.filtros button {
+  padding: 7px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  border: none;
+  background-color: #0d6efd;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.filtros button:hover {
+  background-color: #0b5ed7;
+}
+
+/* Paginação */
+.paginacao {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.paginacao a {
+  padding: 6px 12px;
+  border: 1px solid #0d6efd;
+  color: #0d6efd;
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.paginacao a:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.paginacao span {
+  padding: 6px 12px;
+  line-height: 28px;
+  font-weight: bold;
+  color: #333;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+}
+
+.content-area {
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding-right: 15px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  table-layout: fixed;
+  word-wrap: break-word;
+}
+
+th, td {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  white-space: nowrap; /* Se preferir quebra de linha, mude para normal */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+th {
+  background-color: #f0f0f0;
+  text-align: left;
+}
+
   </style>
 </head>
+
 <body>
   <div class="app-container">
-    <!-- Sidebar Simbar -->
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
     <main class="main-content">
-      <!-- Topbar Simbar -->
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
-        <h1>Histórico Geral de Movimentações</h1>
+        <h1>Histórico de Movimentações</h1>
 
-        <a th:href="@{/estoque}" class="btn-voltar">
-          <i class="fas fa-arrow-left"></i> Voltar ao Estoque
-        </a>
+        <form id="filtrosForm" class="filtros">
+          <input type="text" name="busca" placeholder="Buscar Produto" />
+          <select name="tipo">
+            <option value="TODOS">Todos</option>
+            <option value="ENTRADA">Entrada</option>
+            <option value="SAIDA">Saída</option>
+            <option value="AJUSTE">Ajuste</option>
+          </select>
+          <button type="submit">Filtrar</button>
+           <p>
+          <a th:href="@{/estoque}">Voltar</a>
+        </p>
+        </form>
 
-        <div class="filtros-container">
-          <input
-            type="text"
-            id="buscaProduto"
-            class="input-busca"
-            placeholder="Buscar por nome do produto..."
-            autocomplete="off"
-          />
+        <table>
+          <thead>
+            <tr>
+              <th>Data / Hora</th>
+              <th>Produto</th>
+              <th>Tipo</th>
+              <th>Quantidade</th>
+              <th>Motivo</th>
+              <th>Usuário</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-body">
+            <tr>
+              <td colspan="6" style="text-align:center;">Carregando dados...</td>
+            </tr>
+          </tbody>
+        </table>
 
-          <div>
-            <button class="btn-filtro active" data-tipo="TODOS">Todos</button>
-            <button class="btn-filtro" data-tipo="ENTRADA">Entrada</button>
-            <button class="btn-filtro" data-tipo="SAIDA">Saída</button>
-            <button class="btn-filtro" data-tipo="AJUSTE">Ajuste</button>
-          </div>
-        </div>
+        <div class="paginacao" id="paginacao"></div>
 
-        <article class="card">
-          <table id="tabelaHistorico" class="table">
-            <thead>
-              <tr>
-                <th>Data/Hora</th>
-                <th>Produto</th>
-                <th>Tipo</th>
-                <th>Quantidade</th>
-                <th>Motivo</th>
-                <th>Usuário</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Linhas geradas via JS -->
-            </tbody>
-          </table>
-        </article>
-
-        <div class="paginacao">
-          <button id="btnPrev" disabled>Anterior</button>
-          <span id="paginaAtual">1</span> / <span id="totalPaginas">1</span>
-          <button id="btnNext">Próximo</button>
-        </div>
       </section>
 
-      <!-- Footer Simbar -->
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Simulação dos dados, depois substitua pelos seus dados reais do Thymeleaf
-      const movimentacoes = [
-        { dataHora: "2025-07-21T09:15:00", produto: "Produto A", tipo: "ENTRADA", quantidade: 20, motivo: "Compra", usuario: "João" },
-        { dataHora: "2025-07-21T10:45:00", produto: "Produto B", tipo: "SAIDA", quantidade: 5, motivo: "Venda", usuario: "Maria" },
-        { dataHora: "2025-07-20T14:30:00", produto: "Produto C", tipo: "AJUSTE", quantidade: 3, motivo: "Inventário", usuario: "Carlos" },
-        { dataHora: "2025-07-19T08:00:00", produto: "Produto A", tipo: "SAIDA", quantidade: 2, motivo: "Quebra", usuario: "Ana" },
-        { dataHora: "2025-07-19T12:10:00", produto: "Produto D", tipo: "ENTRADA", quantidade: 10, motivo: "Devolução", usuario: "Lucas" },
-        { dataHora: "2025-07-18T16:45:00", produto: "Produto E", tipo: "SAIDA", quantidade: 1, motivo: "Venda", usuario: "Fernanda" },
-      ];
+    async function carregarHistorico(pagina = 1) {
+      const busca = document.querySelector('input[name="busca"]').value.trim();
+      const tipo = document.querySelector('select[name="tipo"]').value;
 
-      const linhasPorPagina = 5;
-      let paginaAtual = 1;
-      let filtroTipo = "TODOS";
-      let filtroBusca = "";
+      const tbody = document.querySelector('table tbody');
+      const pagDiv = document.querySelector('.paginacao');
 
-      const tbody = document.querySelector("#tabelaHistorico tbody");
-      const btnPrev = document.getElementById("btnPrev");
-      const btnNext = document.getElementById("btnNext");
-      const paginaAtualSpan = document.getElementById("paginaAtual");
-      const totalPaginasSpan = document.getElementById("totalPaginas");
-      const inputBusca = document.getElementById("buscaProduto");
-      const botoesFiltro = document.querySelectorAll(".btn-filtro");
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Carregando dados...</td></tr>`;
+      pagDiv.innerHTML = '';
 
-      function formatarData(dataISO) {
-        const d = new Date(dataISO);
-        const dia = String(d.getDate()).padStart(2, "0");
-        const mes = String(d.getMonth() + 1).padStart(2, "0");
-        const ano = d.getFullYear();
-        const hora = String(d.getHours()).padStart(2, "0");
-        const min = String(d.getMinutes()).padStart(2, "0");
-        const seg = String(d.getSeconds()).padStart(2, "0");
-        return `${dia}/${mes}/${ano} ${hora}:${min}:${seg}`;
-      }
+      try {
+        const response = await fetch(`/estoque/api/historico?pagina=${pagina}&busca=${encodeURIComponent(busca)}&tipo=${tipo}`);
+        if (!response.ok) throw new Error('Erro na requisição');
 
-      function renderizarTabela() {
-        const dadosFiltrados = movimentacoes.filter((mov) => {
-          const tipoMaiusculo = mov.tipo.toUpperCase();
-          const correspondeTipo = filtroTipo === "TODOS" || tipoMaiusculo === filtroTipo;
-          const correspondeBusca = mov.produto.toLowerCase().includes(filtroBusca.toLowerCase());
-          return correspondeTipo && correspondeBusca;
-        });
+        const data = await response.json();
 
-        const totalPaginas = Math.max(Math.ceil(dadosFiltrados.length / linhasPorPagina), 1);
-        if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+        tbody.innerHTML = '';
 
-        paginaAtualSpan.textContent = paginaAtual;
-        totalPaginasSpan.textContent = totalPaginas;
-        btnPrev.disabled = paginaAtual <= 1;
-        btnNext.disabled = paginaAtual >= totalPaginas;
-
-        tbody.innerHTML = "";
-
-        if (dadosFiltrados.length === 0) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td colspan="6" class="text-center">Nenhuma movimentação encontrada.</td>`;
-          tbody.appendChild(tr);
-          return;
+        if (!data.content || data.content.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Nenhuma movimentação encontrada.</td></tr>`;
+        } else {
+          data.content.forEach(mov => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${mov.dataFormatada || ''}</td>
+                <td>${mov.produtoNome || ''}</td>
+                <td>${mov.tipo || ''}</td>
+                <td>${mov.quantidade || ''}</td>
+                <td>${mov.motivo || ''}</td>
+                <td>${mov.usuarioNome || ''}</td>
+              </tr>`;
+          });
         }
 
-        const inicio = (paginaAtual - 1) * linhasPorPagina;
-        const fim = inicio + linhasPorPagina;
-        const paginaItens = dadosFiltrados.slice(inicio, fim);
+        // Paginação
+        const paginaAtual = data.number + 1; // zero-based to 1-based
+        const totalPaginas = data.totalPages;
 
-        paginaItens.forEach((mov) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td data-label="Data/Hora">${formatarData(mov.dataHora)}</td>
-            <td data-label="Produto">${mov.produto}</td>
-            <td data-label="Tipo">${mov.tipo.charAt(0).toUpperCase() + mov.tipo.slice(1).toLowerCase()}</td>
-            <td data-label="Quantidade">${mov.quantidade}</td>
-            <td data-label="Motivo">${mov.motivo}</td>
-            <td data-label="Usuário">${mov.usuario}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      btnPrev.addEventListener("click", () => {
         if (paginaAtual > 1) {
-          paginaAtual--;
-          renderizarTabela();
+          pagDiv.innerHTML += `<a href="#" onclick="carregarHistorico(${paginaAtual - 1}); return false;">Anterior</a>`;
         }
-      });
 
-      btnNext.addEventListener("click", () => {
-        paginaAtual++;
-        renderizarTabela();
-      });
+        pagDiv.innerHTML += `<span>Página ${paginaAtual} de ${totalPaginas}</span>`;
 
-      inputBusca.addEventListener("input", (e) => {
-        filtroBusca = e.target.value.trim();
-        paginaAtual = 1;
-        renderizarTabela();
-      });
+        if (paginaAtual < totalPaginas) {
+          pagDiv.innerHTML += `<a href="#" onclick="carregarHistorico(${paginaAtual + 1}); return false;">Próximo</a>`;
+        }
 
-      botoesFiltro.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          filtroTipo = btn.getAttribute("data-tipo").toUpperCase();
-          paginaAtual = 1;
-          botoesFiltro.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          renderizarTabela();
-        });
-      });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Erro ao carregar dados.</td></tr>`;
+        console.error(err);
+      }
+    }
 
-      renderizarTabela();
+    window.onload = () => carregarHistorico();
+
+    document.querySelector('form.filtros').addEventListener('submit', event => {
+      event.preventDefault();
+      carregarHistorico(1);
     });
   </script>
+
 </body>
+
 </html>

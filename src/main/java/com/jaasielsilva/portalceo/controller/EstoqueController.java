@@ -2,11 +2,10 @@ package com.jaasielsilva.portalceo.controller;
 
 import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.TipoMovimentacao;
-import com.jaasielsilva.portalceo.repository.ProdutoRepository;
-import com.jaasielsilva.portalceo.service.MovimentacaoEstoqueService;
-import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.CategoriaService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
+import com.jaasielsilva.portalceo.service.MovimentacaoEstoqueService;
+import com.jaasielsilva.portalceo.service.ProdutoService;
 
 import java.util.List;
 import java.util.Map;
@@ -33,9 +32,6 @@ public class EstoqueController {
     @Autowired
     private MovimentacaoEstoqueService movimentacaoService;
 
-    @Autowired
-    private ProdutoRepository produtoRepository;
-
     // Página principal que lista o estoque, categorias e fornecedores
     @GetMapping
     public String listarEstoque(
@@ -48,36 +44,32 @@ public class EstoqueController {
         model.addAttribute("categorias", categoriaService.findAll());
         model.addAttribute("fornecedores", fornecedorService.findAll());
 
-        Long estoqueTotal = produtoRepository.somarQuantidadeEstoque();
-        if (estoqueTotal == null)
+        Long estoqueTotal = produtoService.somarQuantidadeEstoque();
+        if (estoqueTotal == null) {
             estoqueTotal = 0L;
+        }
         model.addAttribute("totalEstoque", estoqueTotal);
 
         var pagina = produtoService.filtrarEstoque(nome, categoriaId, fornecedorId, page);
         model.addAttribute("produtos", pagina.getContent());
 
-        // Verifica produtos com estoque abaixo ou igual ao mínimo
         List<Produto> produtosCriticos = pagina.getContent().stream()
-                .filter(p -> p.getEstoque() <= p.getMinimoEstoque())
+                .filter(p -> p.getEstoque() != null && p.getMinimoEstoque() != null && p.getEstoque() <= p.getMinimoEstoque())
                 .toList();
 
         model.addAttribute("produtosCriticos", produtosCriticos);
         model.addAttribute("quantidadeProdutosEstoqueBaixo", produtosCriticos.size());
 
-        // Exemplo: contar produtos zerados
         long produtosZerados = pagina.getContent().stream()
-                .filter(p -> p.getEstoque() == 0)
+                .filter(p -> p.getEstoque() != null && p.getEstoque() == 0)
                 .count();
         model.addAttribute("produtosZerados", produtosZerados);
 
         model.addAttribute("paginaAtual", page);
         model.addAttribute("totalPaginas", pagina.getTotalPages());
 
-        // Montar dados do gráfico de categorias - exemplo Map<String, Integer>
         Map<String, Integer> graficoCategorias = produtoService.countProdutosPorCategoria();
         model.addAttribute("graficoCategorias", graficoCategorias);
-
-        // Adicione outras métricas/relatórios aqui para o dashboard
 
         return "estoque/lista";
     }
@@ -90,23 +82,21 @@ public class EstoqueController {
     }
 
     // Salva uma entrada de estoque
-   @PostMapping("/entrada")
-    public String salvarEntrada(@RequestParam Long produtoId,
-                            @RequestParam Integer quantidade,
-                            @RequestParam String motivo,
-                            RedirectAttributes redirectAttrs) {
-    try {
-        movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.ENTRADA, motivo, "admin");
-        redirectAttrs.addFlashAttribute("sucesso", "Entrada registrada com sucesso!");
-    } catch (RuntimeException e) {
-        redirectAttrs.addFlashAttribute("erro", e.getMessage());
-        return "redirect:/estoque/entrada"; // mantém na página entrada em caso de erro
+    @PostMapping("/entrada")
+    public String salvarEntrada(
+            @RequestParam Long produtoId,
+            @RequestParam Integer quantidade,
+            @RequestParam String motivo,
+            RedirectAttributes redirectAttrs) {
+        try {
+            movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.ENTRADA, motivo, "admin");
+            redirectAttrs.addFlashAttribute("sucesso", "Entrada registrada com sucesso!");
+        } catch (RuntimeException e) {
+            redirectAttrs.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/estoque/entrada"; // permanece no formulário em caso de erro
+        }
+        return "redirect:/estoque"; // redireciona para a lista principal após sucesso
     }
-    // redireciona para a página entrada para exibir popup e depois redirecionar via JS para /estoque
-    return "redirect:/estoque/entrada"; 
-}
-
-
 
     // Formulário para saída de estoque
     @GetMapping("/saida")
@@ -117,38 +107,19 @@ public class EstoqueController {
 
     // Salva uma saída de estoque
     @PostMapping("/saida")
-    public String salvarSaida(@RequestParam Long produtoId,
+    public String salvarSaida(
+            @RequestParam Long produtoId,
             @RequestParam Integer quantidade,
             @RequestParam String motivo,
-            Model model) {
+            RedirectAttributes redirectAttrs) {
         try {
             movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.SAIDA, motivo, "admin");
-            model.addAttribute("sucesso", "Saída registrada com sucesso!");
+            redirectAttrs.addFlashAttribute("sucesso", "Saída registrada com sucesso!");
         } catch (RuntimeException e) {
-            model.addAttribute("erro", e.getMessage());
-            // Retorna para o formulário mostrando erro
-            model.addAttribute("produtos", produtoService.listarTodosProdutos());
-            return "estoque/saida";
+            redirectAttrs.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/estoque/saida"; // mantém no formulário em caso de erro
         }
-        // Carrega produtos para o formulário (mesmo que já estejam no model)
-        model.addAttribute("produtos", produtoService.listarTodosProdutos());
-
-        return "estoque/saida";
+        return "redirect:/estoque"; // redireciona para lista principal após sucesso
     }
-
-    // Formulário para ajustes manuais no estoque
-    @GetMapping("/ajustes")
-    public String formAjustes(Model model) {
-        model.addAttribute("produtos", produtoService.listarTodosProdutos());
-        return "estoque/ajustes";
-    }
-
-    // Salva um ajuste manual no estoque
-    @PostMapping("/ajustes")
-    public String salvarAjuste(@RequestParam Long produtoId,
-            @RequestParam Integer quantidade,
-            @RequestParam String motivo) {
-        movimentacaoService.registrarMovimentacao(produtoId, quantidade, TipoMovimentacao.AJUSTE, motivo, "admin");
-        return "redirect:/estoque/ajustes?sucesso";
-    }
+    
 }

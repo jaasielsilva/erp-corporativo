@@ -4,8 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Data
@@ -35,5 +36,13 @@ public class MovimentacaoEstoque {
     public void prePersist() {
         this.dataHora = LocalDateTime.now();
     }
+
+    public String getDataFormatada() {
+    if (this.dataHora == null) {
+        return "";
+    }
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    return this.dataHora.format(formatter);
+}
 }
 

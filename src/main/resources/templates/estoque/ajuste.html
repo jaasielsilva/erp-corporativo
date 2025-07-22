@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ajuste de Estoque - Painel do CEO</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <!-- Estilo exclusivo para o formulário de ajuste -->
+  <link rel="stylesheet" th:href="@{/css/ajuste-estoque.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Ajuste de Estoque</h1>
+
+        <div class="card ajuste-form-card mt-3">
+          <form method="post" th:action="@{/estoque/ajuste}" class="ajuste-form">
+            <div class="form-group">
+              <label for="produto">Produto</label>
+              <select class="form-control" id="produto" name="produtoId" required>
+                <option value="">Selecione um produto</option>
+                <option th:each="produto : ${produtos}" th:value="${produto.id}" th:text="${produto.nome}"></option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="quantidade">Quantidade</label>
+              <input type="number" class="form-control" id="quantidade" name="quantidade" required min="1" />
+            </div>
+
+            <div class="form-group">
+              <label for="motivo">Motivo</label>
+              <input type="text" class="form-control" id="motivo" name="motivo" placeholder="Descreva o motivo do ajuste" />
+            </div>
+
+            <!-- Popup Alerta para sucesso -->
+            <div id="popup-sucesso"
+              style="display:none; position: fixed; top: 20px; right: 20px; background-color: #28a745; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); font-weight: 600; z-index: 9999;">
+              <i class="fas fa-check-circle"></i> <span th:text="${sucesso}">Sucesso!</span>
+            </div>
+
+            <button type="submit" class="btn-ajuste">
+              <i class="fas fa-sync-alt"></i> Registrar Ajuste
+            </button>
+
+            <a href="/estoque" class="btn-ajuste">
+              <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+          </form>
+        </div>
+
+        <div class="info-section mt-4">
+          <div class="card-tips">
+            <strong>Dica:</strong> Registre o motivo do ajuste para manter o histórico de movimentações claro e auditável.
+          </div>
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Popup Alerta para sucesso -->
+  <div id="popup-sucesso"
+    style="display:none; position: fixed; top: 20px; right: 20px; background-color: #28a745; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); font-weight: 600; z-index: 9999;">
+    <i class="fas fa-check-circle"></i> <span th:text="${sucesso}">Sucesso!</span>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var popup = document.getElementById('popup-sucesso');
+      if (popup && popup.textContent.trim() !== '' && popup.textContent.trim() !== 'Sucesso!') {
+        popup.style.display = 'block';
+
+        // Esconder o popup após 4 segundos
+        setTimeout(function () {
+          popup.style.display = 'none';
+
+          // Redirecionar para /estoque após esconder popup
+          window.location.href = /*[[@{/estoque}]]*/ '/estoque';
+        }, 900);
+      }
+    });
+  </script>
+</body>
+
+</html>

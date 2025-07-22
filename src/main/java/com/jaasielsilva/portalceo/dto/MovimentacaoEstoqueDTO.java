@@ -10,23 +10,23 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 public class MovimentacaoEstoqueDTO {
 
-    private String dataHora;          // formatada como "dd/MM/yyyy HH:mm"
-    private String produto;           // nome do produto
-    private String tipo;              // ENTRADA, SAIDA, AJUSTE
+    private String dataFormatada;
+    private String produtoNome;
+    private String tipo;
     private Integer quantidade;
     private String motivo;
-    private String usuario;
+    private String usuarioNome;
 
     public static MovimentacaoEstoqueDTO fromEntity(MovimentacaoEstoque entity) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
         return new MovimentacaoEstoqueDTO(
-                entity.getDataHora().format(formatter),
-                entity.getProduto().getNome(),              // supondo que Produto tem getNome()
-                entity.getTipo().toString(),
+                entity.getDataHora() != null ? entity.getDataHora().format(formatter) : "-",
+                entity.getProduto() != null ? entity.getProduto().getNome() : "-",
+                entity.getTipo() != null ? entity.getTipo().toString() : "-",
                 entity.getQuantidade(),
                 entity.getMotivo(),
-                entity.getUsuarioResponsavel()
+                entity.getUsuarioResponsavel() != null ? entity.getUsuarioResponsavel() : "-"
         );
     }
 }

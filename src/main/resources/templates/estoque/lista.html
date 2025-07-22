@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8">
   <title>Estoque - Visão Geral</title>
@@ -11,165 +12,176 @@
 </head>
 
 <body>
-<div class="app-container">
-  <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-  <main class="main-content">
-    <header th:replace="~{components/topbar :: topbar}"></header>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
 
-    <section class="content-area">
-      <!-- Cabeçalho -->
-      <div class="page-header">
-        <h1>Estoque Corporativo</h1>
-        <p class="subtitulo">Dashboard completo de controle e movimentação de estoque</p>
-      </div>
+      <section class="content-area">
+        <!-- Cabeçalho -->
+        <div class="page-header">
+          <h1>Estoque Corporativo</h1>
+          <p class="subtitulo">Dashboard completo de controle e movimentação de estoque</p>
+        </div>
 
-      <!-- Alerta Estoque Baixo -->
-      <div id="alertaEstoqueBaixo" class="alerta-topo-sutil" th:if="${quantidadeProdutosEstoqueBaixo > 0}">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span th:text="'Estoque crítico: ' + ${quantidadeProdutosEstoqueBaixo} + ' produto(s)'"></span>
-      </div>
+        <!-- Alerta Estoque Baixo -->
+        <div id="alertaEstoqueBaixo" class="alerta-topo-sutil" th:if="${quantidadeProdutosEstoqueBaixo > 0}">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span th:text="'Estoque crítico: ' + ${quantidadeProdutosEstoqueBaixo} + ' produto(s)'"></span>
+        </div>
 
-      <!-- Cards de Métricas -->
-      <div class="card-metricas">
-        <div class="card-metrica blue">
-          <i class="fas fa-boxes fa-2x"></i>
-          <div>
-            <h3 th:text="${#numbers.formatDecimal(produtos.size(), 0, 'POINT', 0, 'COMMA')}">0</h3>
-            <p>Produtos Ativos</p>
+        <!-- Cards de Métricas -->
+        <div class="card-metricas">
+          <div class="card-metrica blue">
+            <i class="fas fa-boxes fa-2x"></i>
+            <div>
+              <h3 th:text="${#numbers.formatDecimal(produtos.size(), 0, 'POINT', 0, 'COMMA')}">0</h3>
+              <p>Produtos Ativos</p>
+            </div>
+          </div>
+          <div class="card-metrica green">
+            <i class="fas fa-layer-group fa-2x"></i>
+            <div>
+              <h3 th:text="${#numbers.formatDecimal(totalEstoque, 0, 'POINT', 0, 'COMMA')}">0</h3>
+              <p>Estoque Total</p>
+            </div>
+          </div>
+          <div class="card-metrica orange">
+            <i class="fas fa-triangle-exclamation fa-2x"></i>
+            <div>
+              <h3><span th:text="${quantidadeProdutosEstoqueBaixo}">0</span></h3>
+              <p>Estoque Baixo</p>
+            </div>
           </div>
         </div>
-        <div class="card-metrica green">
-          <i class="fas fa-layer-group fa-2x"></i>
-          <div>
-            <h3 th:text="${#numbers.formatDecimal(totalEstoque, 0, 'POINT', 0, 'COMMA')}">0</h3>
-            <p>Estoque Total</p>
-          </div>
-        </div>
-        <div class="card-metrica orange">
-          <i class="fas fa-triangle-exclamation fa-2x"></i>
-          <div>
-            <h3><span th:text="${quantidadeProdutosEstoqueBaixo}">0</span></h3>
-            <p>Estoque Baixo</p>
-          </div>
-        </div>
-      </div>
 
-      <!-- Ações -->
-      <div class="acoes-estoque">
-        <a class="btn btn-success" th:href="@{/estoque/exportar/excel}">
-          <i class="fas fa-file-excel"></i> Excel
-        </a>
-        <a class="btn btn-danger" th:href="@{/estoque/exportar/pdf}">
-          <i class="fas fa-file-pdf"></i> PDF
-        </a>
-        <a class="btn btn-secondary" th:href="@{/estoque/importar}">
-          <i class="fas fa-file-upload"></i> Importar
-        </a>
-        <a class="btn btn-dark" th:href="@{/estoque/backup}">
-          <i class="fas fa-database"></i> Backup
-        </a>
-        <a class="btn btn-primary" th:href="@{/estoque/historico}">
-          <i class="fas fa-history"></i> Histórico
-        </a>
-      </div>
-
-      <!-- Filtros -->
-      <form method="get" th:action="@{/estoque}" class="form-filtro">
-        <div class="filtros">
-          <input type="text" name="nome" th:value="${param.nome}" placeholder="Nome do Produto">
-          <input type="text" name="ean" th:value="${param.ean}" placeholder="Código EAN">
-          <select name="categoriaId">
-            <option value="">Categoria</option>
-            <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nome}" th:selected="${param.categoriaId == cat.id}"></option>
-          </select>
-          <select name="fornecedorId">
-            <option value="">Fornecedor</option>
-            <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nomeFantasia}" th:selected="${param.fornecedorId == f.id}"></option>
-          </select>
-
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-search"></i> Filtrar
-          </button>
-          <a th:href="@{/estoque}" class="btn btn-primary">
-            <i class="fas fa-times"></i> Limpar
+        <!-- Ações -->
+        <div class="acoes-estoque">
+          <a class="btn btn-success" th:href="@{/estoque/exportar/excel}">
+            <i class="fas fa-file-excel"></i> Excel
           </a>
+          <a class="btn btn-danger" th:href="@{/estoque/exportar/pdf}">
+            <i class="fas fa-file-pdf"></i> PDF
+          </a>
+          <a class="btn btn-secondary" th:href="@{/estoque/importar}">
+            <i class="fas fa-file-upload"></i> Importar
+          </a>
+          <a class="btn btn-dark" th:href="@{/estoque/backup}">
+            <i class="fas fa-database"></i> Backup
+          </a>
+          <a class="btn btn-primary" th:href="@{/estoque/historico}">
+            <i class="fas fa-history"></i> Histórico
+          </a>
+
         </div>
-      </form>
 
-      <!-- Tabela de Estoque -->
-      <div class="card">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Estoque</th>
-              <th>Categoria</th>
-              <th>Fornecedor</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:each="produto : ${produtos}">
-              <td>
-                <a href="#" th:onclick="|showDetalhes(${produto.id})|" class="produto-link" th:text="${produto.nome}"></a>
-              </td>
-              <td>
-                <span
-                  th:classappend="${produto.estoque &lt;= produto.minimoEstoque} ? 'estoque-baixo' : ''"
-                  th:text="${#numbers.formatDecimal(produto.estoque, 0, 'POINT', 0, 'COMMA')}"></span>
+        <!-- Filtros -->
+        <form method="get" th:action="@{/estoque}" class="form-filtro">
+          <div class="filtros">
+            <input type="text" name="nome" th:value="${param.nome}" placeholder="Nome do Produto">
+            <input type="text" name="ean" th:value="${param.ean}" placeholder="Código EAN">
+            <select name="categoriaId">
+              <option value="">Categoria</option>
+              <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nome}"
+                th:selected="${param.categoriaId == cat.id}"></option>
+            </select>
+            <select name="fornecedorId">
+              <option value="">Fornecedor</option>
+              <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.nomeFantasia}"
+                th:selected="${param.fornecedorId == f.id}"></option>
+            </select>
 
-                <i class="fas fa-exclamation-triangle text-warning"
-                   th:if="${produto.estoque &lt;= produto.minimoEstoque}"
-                   title="Estoque abaixo do mínimo recomendado"
-                   style="margin-left: 6px; color: #dc3545;"></i>
-              </td>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search"></i> Filtrar
+            </button>
+            <a th:href="@{/estoque}" class="btn btn-primary">
+              <i class="fas fa-times"></i> Limpar
+            </a>
+          </div>
+        </form>
 
-              <td th:text="${produto.categoria?.nome ?: '-'}"></td>
-              <td th:text="${produto.fornecedor?.nomeFantasia ?: '-'}"></td>
-              <td class="text-center">
-                <a th:href="@{'/estoque/' + ${produto.id} + '/movimentacoes'}" title="Movimentações" class="btn-icon btn-info" aria-label="Movimentações do produto"><i class="fas fa-list"></i></a>
-                <a th:href="@{'/estoque/entrada?produtoId=' + ${produto.id}}" title="Entrada" class="btn-icon btn-success" aria-label="Entrada no estoque"><i class="fas fa-plus"></i></a>
-                <a th:href="@{'/estoque/saida?produtoId=' + ${produto.id}}" title="Saída" class="btn-icon btn-danger" aria-label="Saída do estoque"><i class="fas fa-minus"></i></a>
-              </td>
-            </tr>
-            <tr th:if="${produtos.isEmpty()}">
-              <td colspan="5" class="text-center">Nenhum produto encontrado.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <!-- Tabela de Estoque -->
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Estoque</th>
+                <th>Categoria</th>
+                <th>Fornecedor</th>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="produto : ${produtos}">
+                <td>
+                  <a href="#" th:onclick="|showDetalhes(${produto.id})|" class="produto-link"
+                    th:text="${produto.nome}"></a>
+                </td>
+                <td>
+                  <span th:classappend="${produto.estoque &lt;= produto.minimoEstoque} ? 'estoque-baixo' : ''"
+                    th:text="${#numbers.formatDecimal(produto.estoque, 0, 'POINT', 0, 'COMMA')}"></span>
 
-      <!-- Paginação -->
-      <nav th:if="${totalPaginas > 1}" class="pagination-nav">
-        <ul>
-          <li th:each="pageNum : ${#numbers.sequence(1, totalPaginas)}">
-            <a th:href="@{|/estoque?page=${pageNum}|}" th:text="${pageNum}" th:classappend="${pageNum == paginaAtual} ? 'active' : ''"></a>
-          </li>
-        </ul>
-      </nav>
-    </section>
+                  <i class="fas fa-exclamation-triangle text-warning"
+                    th:if="${produto.estoque &lt;= produto.minimoEstoque}" title="Estoque abaixo do mínimo recomendado"
+                    style="margin-left: 6px; color: #dc3545;"></i>
+                </td>
 
-    <footer th:replace="~{components/footer :: footer}"></footer>
-  </main>
-</div>
+                <td th:text="${produto.categoria?.nome ?: '-'}"></td>
+                <td th:text="${produto.fornecedor?.nomeFantasia ?: '-'}"></td>
+                <td class="text-center">
+                  <a th:href="@{'/estoque/' + ${produto.id} + '/movimentacoes'}" title="Movimentações"
+                    class="btn-icon btn-info"><i class="fas fa-list"></i></a>
+                  <a th:href="@{'/estoque/entrada?produtoId=' + ${produto.id}}" title="Entrada"
+                    class="btn-icon btn-success"><i class="fas fa-plus"></i></a>
+                  <a th:href="@{'/estoque/saida?produtoId=' + ${produto.id}}" title="Saída"
+                    class="btn-icon btn-danger"><i class="fas fa-minus"></i></a>
+                  <a th:href="@{/estoque/ajuste}" title="Ajuste" class="btn-icon btn-secondary">
+                    <i class="fas fa-sliders-h"></i>
+                  </a>
 
-<!-- Modal Detalhes Produto -->
-<div id="produtoModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <span class="close" onclick="fecharModal()">&times;</span>
-    <h2>Detalhes do Produto</h2>
-    <div id="produtoDetalhes"></div>
+
+                </td>
+              </tr>
+              <tr th:if="${produtos.isEmpty()}">
+                <td colspan="5" class="text-center">Nenhum produto encontrado.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginação -->
+        <nav th:if="${totalPaginas > 1}" class="pagination-nav">
+          <ul>
+            <li th:each="pageNum : ${#numbers.sequence(1, totalPaginas)}">
+              <a th:href="@{|/estoque?page=${pageNum}|}" th:text="${pageNum}"
+                th:classappend="${pageNum == paginaAtual} ? 'active' : ''"></a>
+            </li>
+          </ul>
+        </nav>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
   </div>
-</div>
 
-<script th:inline="javascript">
-  function showDetalhes(id) {
-    fetch('/api/produto/' + id)
-      .then(res => res.json())
-      .then(produto => {
-        // Formata estoque no modal para brasileiro
-        const estoqueFormatado = produto.estoque != null ? produto.estoque.toLocaleString('pt-BR') : '0';
-        document.getElementById('produtoDetalhes').innerHTML = `
+  <!-- Modal Detalhes Produto -->
+  <div id="produtoModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="fecharModal()">&times;</span>
+      <h2>Detalhes do Produto</h2>
+      <div id="produtoDetalhes"></div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    function showDetalhes(id) {
+      fetch('/api/produto/' + id)
+        .then(res => res.json())
+        .then(produto => {
+          // Formata estoque no modal para brasileiro
+          const estoqueFormatado = produto.estoque != null ? produto.estoque.toLocaleString('pt-BR') : '0';
+          document.getElementById('produtoDetalhes').innerHTML = `
           <p><strong>Nome:</strong> ${produto.nome}</p>
           <p><strong>EAN:</strong> ${produto.ean}</p>
           <p><strong>Estoque:</strong> ${estoqueFormatado}</p>
@@ -177,50 +189,51 @@
           <p><strong>Fornecedor:</strong> ${produto.fornecedor?.nomeFantasia ?? '-'}</p>
           <p><strong>Descrição:</strong> ${produto.descricao ?? 'Sem descrição'}</p>
         `;
-        document.getElementById('produtoModal').style.display = 'block';
-      });
-  }
-
-  function fecharModal() {
-    document.getElementById('produtoModal').style.display = 'none';
-  }
-
-  window.onclick = function(event) {
-    const modal = document.getElementById('produtoModal');
-    if (event.target === modal) {
-      modal.style.display = 'none';
+          document.getElementById('produtoModal').style.display = 'block';
+        });
     }
-  };
 
-  const ctx = document.getElementById('graficoCategorias')?.getContext('2d');
-  if(ctx) {
-    const dadosCategorias = /*[[${graficoCategorias}]]*/ {};
-    const chart = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: Object.keys(dadosCategorias),
-        datasets: [{
-          data: Object.values(dadosCategorias),
-          backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6610f2']
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { position: 'bottom' }
-        }
+    function fecharModal() {
+      document.getElementById('produtoModal').style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+      const modal = document.getElementById('produtoModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
       }
-    });
-  }
-</script>
+    };
 
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      const alerta = document.getElementById('alertaEstoqueBaixo');
-      if (alerta) alerta.style.display = 'none';
-    }, 5000); // 5 segundos
-  });
-</script>
+    const ctx = document.getElementById('graficoCategorias')?.getContext('2d');
+    if (ctx) {
+      const dadosCategorias = /*[[${graficoCategorias}]]*/ {};
+      const chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(dadosCategorias),
+          datasets: [{
+            data: Object.values(dadosCategorias),
+            backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6610f2']
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+  </script>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const alerta = document.getElementById('alertaEstoqueBaixo');
+        if (alerta) alerta.style.display = 'none';
+      }, 5000); // 5 segundos
+    });
+  </script>
 
 </body>
+
 </html>

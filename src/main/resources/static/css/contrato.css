@@ -1,0 +1,38 @@
+.status.ativo {
+  color: #007b00;
+  font-weight: bold;
+}
+
+.status.inativo {
+  color: #b30000;
+  font-weight: bold;
+}
+
+.expirado {
+  background-color: #ffe6e6;
+  font-weight: bold;
+  color: #990000;
+}
+
+.filter-form {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-form input,
+.filter-form select {
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.filter-form .btn-secondary {
+  background-color: #007bff;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

@@ -42,18 +42,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr th:each="f : ${fornecedores}">
+              <tr th:each="f : ${pagina.content}">
                 <td th:text="${f.id}">ID</td>
                 <td th:text="${f.razaoSocial}">Razão Social</td>
                 <td th:text="${f.cnpj}">CNPJ</td>
                 <td th:text="${f.telefone}">Telefone</td>
                 <td th:text="${f.email}">Email</td>
                 <td>
-                  <span th:text="${f.status}"
-                        th:classappend="${f.status == 'ATIVO'} ? 'status-ativo' : 'status-inativo'">
+                  <span th:text="${f.ativo} ? 'Ativo' : 'Inativo'"
+                    th:classappend="${f.ativo} ? 'status-ativo' : 'status-inativo'">
                   </span>
-                </td>
 
+                </td>
                 <td>
                   <div class="acoes-btns">
                     <a th:href="@{'/fornecedores/editar/' + ${f.id}}" title="Editar">
@@ -62,12 +62,13 @@
                     <a th:href="@{'/fornecedores/' + ${f.id} + '/contratos'}" title="Ver Contratos">
                       <i class="fas fa-file-contract"></i>
                     </a>
+
+
                     <a th:href="@{'/fornecedor/' + ${f.id} + '/avaliacoes'}" title="Ver Avaliações">
                       <i class="fas fa-star"></i>
                     </a>
-
                     <a href="javascript:void(0);" th:attr="data-id=${f.id}" title="Excluir"
-                       onclick="abrirModalExcluir(this)">
+                      onclick="abrirModalExcluir(this)">
                       <i class="fas fa-trash-alt"></i>
                     </a>
                   </div>
@@ -75,6 +76,22 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Paginação estilizada -->
+          <div class="paginacao mt-3">
+            <a class="button primary" th:if="${pagina.hasPrevious()}"
+              th:href="@{/fornecedores(pagina=${pagina.number - 1}, tamanho=${pagina.size})}">
+              <i class="fas fa-chevron-left"></i> Anterior
+            </a>
+
+            <span style="margin: 0 15px;" th:text="${pagina.number + 1} + ' / ' + ${pagina.totalPages}">Página</span>
+
+            <a class="button primary" th:if="${pagina.hasNext()}"
+              th:href="@{/fornecedores(pagina=${pagina.number + 1}, tamanho=${pagina.size})}">
+              Próximo <i class="fas fa-chevron-right"></i>
+            </a>
+          </div>
+
         </article>
       </section>
 

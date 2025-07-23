@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <title>Lista de Produtos</title>
@@ -7,6 +8,7 @@
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/produto.css}" />
 </head>
+
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -33,17 +35,33 @@
               </tr>
             </thead>
             <tbody>
-              <tr th:each="produto : ${produtos}">
+              <tr th:each="produto : ${pagina.content}">
                 <td th:text="${produto.id}"></td>
                 <td th:text="${produto.nome}"></td>
                 <td th:text="${produto.ean}"></td>
-                <td th:text="${produto.preco != null ? #numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA') : '0,00'}"></td>
+                <td
+                  th:text="${produto.preco != null ? #numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA') : '0,00'}">
+                </td>
                 <td th:text="${produto.estoque}"></td>
                 <td th:text="${produto.categoria?.nome}"></td>
                 <td th:text="${produto.fornecedor != null ? produto.fornecedor.razaoSocial : 'Sem fornecedor'}"></td>
               </tr>
             </tbody>
           </table>
+
+          <!-- Paginação -->
+          <div class="pagination mt-3">
+            <a th:href="@{/produtos(pagina=${pagina.number - 1}, tamanho=${pagina.size})}" th:if="${!pagina.first}"
+              class="btn btn-primary">Anterior</a>
+
+            <span class="mx-2">Página <span th:text="${pagina.number + 1}"></span> de <span
+                th:text="${pagina.totalPages}"></span></span>
+
+            <a th:href="@{/produtos(pagina=${pagina.number + 1}, tamanho=${pagina.size})}" th:if="${!pagina.last}"
+              class="btn btn-primary">Próximo</a>
+          </div>
+
+
         </article>
       </section>
 
@@ -51,4 +69,5 @@
     </main>
   </div>
 </body>
+
 </html>

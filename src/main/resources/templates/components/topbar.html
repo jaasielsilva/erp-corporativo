@@ -4,7 +4,8 @@
     <div class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
     <div class="title">Painel do CEO - ERP Corporativo</div>
     <div class="user-info">
-      <i class="fas fa-user-circle"></i> Jaasiel Silva
-    </div>
+  <i class="fas fa-user-circle"></i>
+  <span th:text="${usuarioLogado.nome}">Usuário</span>
+</div>
   </header>
 </html>

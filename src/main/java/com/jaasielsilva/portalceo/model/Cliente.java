@@ -63,6 +63,10 @@ public class Cliente {
     @OneToMany(mappedBy = "cliente")
     private List<Venda> vendas;
 
+    // Relacionamento com contratos vinculados a este cliente
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Contrato> contratos;
+
     // Auditoria de exclusão
     @ManyToOne
     @JoinColumn(name = "usuario_exclusao_id")

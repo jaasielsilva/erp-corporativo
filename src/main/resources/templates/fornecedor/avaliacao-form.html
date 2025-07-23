@@ -17,7 +17,7 @@
       <section class="content-area">
         <h1 th:text="${avaliacao.id != null} ? 'Editar Avaliação' : 'Nova Avaliação'">Avaliação</h1>
 
-        <form th:action="@{/fornecedores/{fornecedorId}/avaliacoes/salvar(fornecedorId=${fornecedor.id})}" 
+        <form th:action="@{/fornecedor/{fornecedorId}/avaliacoes/salvar(fornecedorId=${fornecedor.id})}" 
               th:object="${avaliacao}" method="post" class="form-default">
 
           <label for="data">Data:</label>

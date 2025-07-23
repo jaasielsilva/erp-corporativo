@@ -13,7 +13,9 @@ import com.jaasielsilva.portalceo.service.ProdutoService;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -41,15 +43,20 @@ public class ProdutoController {
     private FornecedorService fornecedorService;
 
     @GetMapping
-    public String listar(Model model) {
-        model.addAttribute("produtos", produtoService.listarTodosProdutos());
-        return "produto/lista";
-    }
+    public String listar(@RequestParam(defaultValue = "0") int pagina,
+                     @RequestParam(defaultValue = "10") int tamanho,
+                     Model model) {
+    Pageable pageable = PageRequest.of(pagina, tamanho);
+    Page<Produto> paginaProdutos = produtoService.listarPaginado(pageable);
+    model.addAttribute("pagina", paginaProdutos);
+    return "produto/lista";
+}
+
 
     @GetMapping("/novo")
     public String novoProduto(Model model) {
     List<Categoria> categorias = categoriaService.findAll();
-    List<Fornecedor> fornecedores = fornecedorService.findAll();
+    List<Fornecedor> fornecedores = fornecedorService.listarTodos();
 
     model.addAttribute("categorias", categorias);
     model.addAttribute("fornecedores", fornecedores);

@@ -30,5 +30,10 @@ public class ContratoFornecedorService {
     public void excluir(Long id) {
         contratoRepo.deleteById(id);
     }
+
+    public List<ContratoFornecedor> listarTodos() {
+    return contratoRepo.findAll();
+}
+
 }
 

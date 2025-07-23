@@ -5,6 +5,10 @@
     margin-bottom: 1rem;
     color: #333;
 }
+.button.paginacao {
+  padding: 6px 14px;
+  font-size: 14px;
+}
 
 .table-list {
     width: 100%;

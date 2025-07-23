@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalhes do Contrato</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<div class="app-container">
+  <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+  <main class="main-content">
+    <header th:replace="~{components/topbar :: topbar}"></header>
+    <section class="content-area">
+      <h1>Detalhes do Contrato</h1>
+      <p><strong>ID:</strong> <span th:text="${contrato.id}"></span></p>
+      <p><strong>Fornecedor:</strong> <span th:text="${contrato.fornecedor.razaoSocial}"></span></p>
+      <p><strong>Início:</strong> <span th:text="${#temporals.format(contrato.dataInicio, 'dd/MM/yyyy')}"></span></p>
+      <p><strong>Fim:</strong> <span th:text="${contrato.dataFim != null} ? ${#temporals.format(contrato.dataFim, 'dd/MM/yyyy')} : '—'"></span></p>
+      <p><strong>Valor:</strong> R$ <span th:text="${contrato.valor}"></span></p>
+      <p><strong>Status:</strong> <span th:text="${contrato.status}"></span></p>
+      <p><strong>Descrição:</strong></p>
+      <p th:text="${contrato.descricao}"></p>
+    </section>
+    <footer th:replace="~{components/footer :: footer}"></footer>
+  </main>
+</div>
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

@@ -3,7 +3,6 @@ package com.jaasielsilva.portalceo.service;
 import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.model.VendaItem;
-import com.jaasielsilva.portalceo.repository.ProdutoRepository;
 import com.jaasielsilva.portalceo.repository.VendaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,6 @@ public class VendaService {
 
     @Autowired
     private VendaRepository vendaRepository;
-
-    @Autowired
-    private ProdutoRepository produtoRepository;
     
     @Autowired
     private ProdutoService produtoService;

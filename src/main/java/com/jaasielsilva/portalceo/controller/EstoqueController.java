@@ -42,7 +42,7 @@ public class EstoqueController {
             Model model) {
 
         model.addAttribute("categorias", categoriaService.findAll());
-        model.addAttribute("fornecedores", fornecedorService.findAll());
+        model.addAttribute("fornecedores", fornecedorService.listarTodos());
 
         Long estoqueTotal = produtoService.somarQuantidadeEstoque();
         if (estoqueTotal == null) {

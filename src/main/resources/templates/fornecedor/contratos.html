@@ -15,7 +15,7 @@
 
       <section class="content-area">
         <h1>Contratos de Fornecedores</h1>
-        <a class="button primary mt-3" th:href="@{'/fornecedores/' + ${fornecedor.id} + '/contratos/novo'}">
+       <a class="button primary mt-3" th:href="@{'/fornecedores/' + ${contratos[0].fornecedor.id} + '/contratos/novo'}">
   <i class="fas fa-plus-circle"></i> Novo Contrato
 </a>
 
@@ -41,7 +41,7 @@
     <td th:text="${contrato.numeroContrato}">0001/2025</td>
     <td th:text="${#temporals.format(contrato.dataInicio, 'dd/MM/yyyy')}">01/01/2025</td>
     <td th:text="${#temporals.format(contrato.dataFim, 'dd/MM/yyyy')}">31/12/2025</td>
-    <td th:text="${contrato.valor}">435.00</td>
+    <td th:text="'R$ ' + ${#numbers.formatDecimal(contrato.valor, 1, 'POINT', 2, 'COMMA')}">R$ 1.555.303,00</td>
     <td th:text="${contrato.status}">Ativo</td>
     <td>
       <a th:href="@{'/fornecedores/contratos/editar/' + ${contrato.id}}" class="btn-acao editar" title="Editar">
@@ -91,7 +91,7 @@
 
     document.getElementById("confirmarExcluirBtn").addEventListener("click", () => {
       if (contratoIdParaExcluir) {
-        window.location.href = `/contratos/excluir/${contratoIdParaExcluir}`;
+        window.location.href = `/fornecedores/contratos/excluir/${contratoIdParaExcluir}`;
       }
     });
   </script>

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,7 +23,7 @@ public class Contrato {
     private String numeroContrato;
 
     @Enumerated(EnumType.STRING)
-    private TipoContrato tipo; // FORNECEDOR, CLIENTE, SERVICO, PARCERIA...
+    private TipoContrato tipo;
 
     private LocalDate dataInicio;
     private LocalDate dataFim;
@@ -30,22 +31,25 @@ public class Contrato {
     private BigDecimal valor;
 
     @Enumerated(EnumType.STRING)
-    private StatusContrato status; // ATIVO, EXPIRADO, CANCELADO, EM_RENEGOCIACAO
+    private StatusContrato status;
 
     @Lob
     private String descricao;
 
-    // Relações opcionais para diferentes partes envolvidas
+    // Relações com @ToString.Exclude para evitar ciclo infinito
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fornecedor_id")
+    @ToString.Exclude
     private Fornecedor fornecedor;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id")
+    @ToString.Exclude
     private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prestador_servico_id")
+    @ToString.Exclude
     private PrestadorServico prestadorServico;
 
     // Auditoria
@@ -54,15 +58,16 @@ public class Contrato {
 
     @ManyToOne
     @JoinColumn(name = "usuario_edicao_id")
+    @ToString.Exclude
     private Usuario editadoPor;
 
     @ManyToOne
     @JoinColumn(name = "usuario_exclusao_id")
+    @ToString.Exclude
     private Usuario usuarioExclusao;
 
     private LocalDateTime ultimaAtualizacao;
 
-    // Callbacks para definir datas automaticamente
     @PrePersist
     public void onPrePersist() {
         dataCriacao = LocalDateTime.now();

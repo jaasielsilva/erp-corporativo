@@ -26,4 +26,7 @@ public class PrestadorServico {
 
     private String email;
 
+    @Column(nullable = false)
+    private boolean ativo = true;  // novo campo para indicar ativo/inativo
+
 }

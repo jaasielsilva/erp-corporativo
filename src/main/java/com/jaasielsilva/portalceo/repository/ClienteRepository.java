@@ -71,5 +71,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     List<Cliente> findByStatus(String status);
 
+    List<Cliente> findByAtivoTrueAndTipoCliente(String tipoCliente);
 
     }

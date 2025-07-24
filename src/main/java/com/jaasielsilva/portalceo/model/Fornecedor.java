@@ -49,7 +49,9 @@ public class Fornecedor {
 
     // Relacionamento com contratos vinculados a este fornecedor
     @OneToMany(mappedBy = "fornecedor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private List<Contrato> contratos;
+
 
     // Auditoria de criação
     private LocalDateTime dataCriacao;

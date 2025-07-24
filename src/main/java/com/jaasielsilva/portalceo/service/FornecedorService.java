@@ -40,9 +40,8 @@ public class FornecedorService {
      * Busca fornecedor por ID, ou lança exceção se não encontrado.
      */
     public Fornecedor findById(Long id) {
-        return fornecedorRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado com id: " + id));
-    }
+    return fornecedorRepository.findById(id).orElse(null);
+}
 
     /**
      * Marca o fornecedor como inativo (exclusão lógica).
@@ -73,5 +72,5 @@ public class FornecedorService {
     Pageable pageable = PageRequest.of(pagina, tamanho);
     return fornecedorRepository.findAll(pageable); // traz TODOS (ativos e inativos)
 }
-
+    
 }

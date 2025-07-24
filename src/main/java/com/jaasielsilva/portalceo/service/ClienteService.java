@@ -141,4 +141,11 @@ public class ClienteService {
         return repository.findByStatus("PENDENTE");
     }
 
+    public List<Cliente> listarAtivosPorTipo(String tipoCliente) {
+    return repository.findByAtivoTrueAndTipoCliente(tipoCliente);
+    }
+
+    public Cliente findById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
     }

@@ -12,90 +12,99 @@
 </head>
 
 <body>
-<div class="app-container">
-  <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-  <main class="main-content">
-    <header th:replace="~{components/topbar :: topbar}"></header>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
 
-    <section class="content-area">
-      <div class="header-section">
-        <h1>Contratos Corporativos</h1>
-        <a href="/contratos/novo" class="btn-primary" title="Cadastrar novo contrato" aria-label="Cadastrar novo contrato">
-          <i class="fas fa-plus"></i> Novo Contrato
-        </a>
-      </div>
+      <section class="content-area">
+        <div class="header-section">
+          <h1>Contratos Corporativos</h1>
+          <a href="/contratos/novo" class="btn-primary" title="Cadastrar novo contrato"
+            aria-label="Cadastrar novo contrato">
+            <i class="fas fa-plus"></i> Novo Contrato
+          </a>
+        </div>
 
-      <!-- FILTRO -->
-      <form class="filter-form" method="get" action="/contratos">
-        <input type="text" name="parteEnvolvida" placeholder="Parte Envolvida" th:value="${param.parteEnvolvida}" />
-        <select name="categoria">
-          <option value="">Todas as Categorias</option>
-          <option value="Fornecedor" th:selected="${param.categoria == 'Fornecedor'}">Fornecedor</option>
-          <option value="Cliente" th:selected="${param.categoria == 'Cliente'}">Cliente</option>
-        </select>
-        <select name="status">
-          <option value="">Todos os Status</option>
-          <option value="Ativo" th:selected="${param.status == 'Ativo'}">Ativo</option>
-          <option value="Inativo" th:selected="${param.status == 'Inativo'}">Inativo</option>
-        </select>
-        <button type="submit" class="btn-secondary" title="Filtrar" aria-label="Filtrar">
-          <i class="fas fa-filter"></i> Filtrar
-        </button>
-      </form>
+        <!-- FILTRO -->
+        <form class="filter-form" method="get" action="/contratos">
+          <input type="text" name="parteEnvolvida" placeholder="Parte Envolvida" th:value="${param.parteEnvolvida}" />
+          <select name="categoria">
+            <option value="">Todas as Categorias</option>
+            <option value="Fornecedor" th:selected="${param.categoria == 'Fornecedor'}">Fornecedor</option>
+            <option value="Cliente" th:selected="${param.categoria == 'Cliente'}">Cliente</option>
+          </select>
+          <select name="status">
+            <option value="">Todos os Status</option>
+            <option value="Ativo" th:selected="${param.status == 'Ativo'}">Ativo</option>
+            <option value="Inativo" th:selected="${param.status == 'Inativo'}">Inativo</option>
+          </select>
+          <button type="submit" class="btn-secondary" title="Filtrar" aria-label="Filtrar">
+            <i class="fas fa-filter"></i> Filtrar
+          </button>
+        </form>
 
-      <!-- TABELA DE CONTRATOS -->
-      <article class="card mt-3">
-        <table class="table-list">
-          <thead>
-          <tr>
-            <th>ID</th>
-            <th>Categoria</th>
-            <th>Parte Envolvida</th>
-            <th>Início</th>
-            <th>Fim</th>
-            <th>Status</th>
-            <th>Valor</th>
-            <th>Ações</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr th:each="contrato : ${contratos}">
-            <td th:text="${contrato.id}"></td>
-            <td th:text="${contrato.categoria}"></td>
-            <td th:text="${contrato.parteEnvolvida}"></td>
-            <td th:text="${#temporals.format(contrato.dataInicio, 'dd/MM/yyyy')}"></td>
-            <td th:text="${contrato.dataFim != null} ? ${#temporals.format(contrato.dataFim, 'dd/MM/yyyy')} : '—'"
-                th:classappend="${contrato.dataFim != null and contrato.dataFim.isBefore(T(java.time.LocalDate).now())} ? 'expirado' : ''">
-            </td>
-            <td>
-              <span class="status" th:classappend="${contrato.status} == 'Ativo' ? 'ativo' : 'inativo'"
-                    th:text="${contrato.status}">Ativo</span>
-            </td>
-            <td th:text="${#numbers.formatCurrency(contrato.valor)}">R$ 0,00</td>
-            <td>
-              <a th:href="@{'/contratos/' + ${contrato.id} + '/detalhes'}" title="Ver detalhes" aria-label="Ver detalhes">
-                <i class="fas fa-eye"></i></a>
-              <a th:href="@{'/contratos/editar/' + ${contrato.id}}" title="Editar contrato" aria-label="Editar contrato">
-                <i class="fas fa-edit"></i></a>
-              <a th:href="@{'/contratos/excluir/' + ${contrato.id}}" 
-                 title="Excluir contrato" aria-label="Excluir contrato" 
-                 onclick="return confirm('Excluir este contrato?')">
-                <i class="fas fa-trash-alt"></i></a>
-            </td>
-          </tr>
-          <tr th:if="${#lists.isEmpty(contratos)}">
-            <td colspan="8" style="text-align:center;">Nenhum contrato encontrado.</td>
-          </tr>
-          </tbody>
-        </table>
-      </article>
-    </section>
+        <!-- TABELA DE CONTRATOS -->
+        <article class="card mt-3">
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Categoria</th>
+                <th>Parte Envolvida</th>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Status</th>
+                <th>Valor</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="contrato : ${contratos}">
+                <td th:text="${contrato.id}">1</td>
+                <td th:text="${contrato.tipo}">CLIENTE</td>
+                <td>
+                  <span th:if="${contrato.fornecedor != null}" th:text="${contrato.fornecedor.razaoSocial}">Fornecedor</span>
+                  <span th:if="${contrato.cliente != null}"
+                    th:text="${contrato.cliente.nomeFantasia != null && contrato.cliente.nomeFantasia != '' ? contrato.cliente.nomeFantasia : contrato.cliente.nome}">Cliente</span>
+                  <span th:if="${contrato.prestadorServico != null}"
+                    th:text="${contrato.prestadorServico.nome}">Prestador Serviço</span>
+                  <span
+                    th:if="${contrato.fornecedor == null and contrato.cliente == null and contrato.prestadorServico == null}">—</span>
+                <td
+                  th:text="${contrato.dataInicio != null ? #temporals.format(contrato.dataInicio, 'dd/MM/yyyy') : '-'}">
+                  01/01/2025</td>
+                <td th:text="${contrato.dataFim != null ? #temporals.format(contrato.dataFim, 'dd/MM/yyyy') : '-'}">
+                  01/01/2026</td>
+                <td th:text="${contrato.status}">ATIVO</td>
+                <td th:text="${#numbers.formatDecimal(contrato.valor, 2, 2)}">R$ 1.000,00</td>
+                <td>
+                <a th:href="@{'/contratos/' + ${contrato.id} + '/detalhes'}" title="Detalhes" class="btn btn-info btn-sm">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a th:href="@{'/contratos/' + ${contrato.id} + '/editar'}" title="Editar" class="btn btn-warning btn-sm">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a th:href="@{'/contratos/excluir/' + ${contrato.id}}" title="Excluir" class="btn btn-danger btn-sm"
+                   th:onclick="|return confirm('Deseja realmente excluir o contrato #' + ${contrato.id} + '?');|">
+                  <i class="fas fa-trash-alt"></i>
+                </a>
+              </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(contratos)}">
+                <td colspan="8" class="text-center">Nenhum contrato encontrado.</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
 
-    <footer th:replace="~{components/footer :: footer}"></footer>
-  </main>
-</div>
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
 
-<script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/script.js}"></script>
 </body>
+
 </html>

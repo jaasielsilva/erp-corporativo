@@ -29,4 +29,10 @@ public class ContratoService {
     public void deleteById(Long id) {
         contratoRepository.deleteById(id);
     }
+
+    // metodo pra salvar um contrato
+    public Contrato salvar(Contrato contrato) {
+        return contratoRepository.save(contrato);
+    }
+
 }

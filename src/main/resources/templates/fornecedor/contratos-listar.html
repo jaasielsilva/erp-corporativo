@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contratos do Fornecedor - Painel do CEO</title>
+
+  <!-- Ícones e estilos -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/fornecedor.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Contratos do Fornecedor <span th:text="${fornecedor.razaoSocial}">Fornecedor</span></h1>
+
+        <a class="button primary mt-3" th:href="@{'/fornecedores/' + ${fornecedor.id} + '/contratos/novo'}">
+          <i class="fas fa-plus-circle"></i> Novo Contrato
+        </a>
+         <a class="button mt-3" th:href="@{/fornecedores}">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+        <article class="card mt-3">
+          <h3>Lista de Contratos</h3>
+
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Número</th>
+                <th>Data Início</th>
+                <th>Data Fim</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="contrato : ${contratos}">
+                <td th:text="${contrato.id}"></td>
+                <td th:text="${contrato.numeroContrato}"></td>
+                <td th:text="${contrato.dataInicio}"></td>
+                <td th:text="${contrato.dataFim}"></td>
+                <td th:text="${contrato.valor}"></td>
+
+                <td>
+                  <span th:text="${contrato.status}"
+                    th:classappend="${contrato.status == 'Ativo'} ? 'status-ativo' : 'status-inativo'"></span>
+                </td>
+                <td>
+                  <div class="acoes-btns">
+                    <a th:href="@{'/fornecedores/' + ${fornecedor.id} + '/contratos/editar'(idContrato=${contrato.id})}"
+                      title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="javascript:void(0);" th:attr="data-id=${contrato.id}" title="Excluir"
+                      onclick="abrirModalExcluir(this)">
+                      <i class="fas fa-trash-alt"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(contratos)}">
+                <td colspan="7" style="text-align:center;">Nenhum contrato cadastrado.</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal de Confirmação de Exclusão -->
+  <div id="modal-excluir" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>Tem certeza que deseja excluir este contrato?</h3>
+      <div style="margin-top: 20px; text-align: right;">
+        <button id="confirmarExcluirBtn" class="button danger">Excluir</button>
+        <button onclick="fecharModalExcluir()" class="button">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    let contratoIdParaExcluir = null;
+
+    function abrirModalExcluir(el) {
+      contratoIdParaExcluir = el.getAttribute("data-id");
+      document.getElementById("modal-excluir").style.display = "flex";
+    }
+
+    function fecharModalExcluir() {
+      contratoIdParaExcluir = null;
+      document.getElementById("modal-excluir").style.display = "none";
+    }
+
+    document.getElementById("confirmarExcluirBtn").addEventListener("click", () => {
+      if (contratoIdParaExcluir) {
+        window.location.href = `/fornecedores/contratos/excluir/${contratoIdParaExcluir}`;
+      }
+    });
+  </script>
+</body>
+
+</html>

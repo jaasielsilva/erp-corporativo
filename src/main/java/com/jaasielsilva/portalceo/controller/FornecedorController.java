@@ -1,11 +1,11 @@
 package com.jaasielsilva.portalceo.controller;
 
-import com.jaasielsilva.portalceo.model.Contrato;
 import com.jaasielsilva.portalceo.model.ContratoFornecedor;
 import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.service.ContratoFornecedorService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -27,8 +27,9 @@ public class FornecedorController {
     private ContratoFornecedorService contratoService;
 
     /**
-     * Lista fornecedores ativos para mostrar na tela.
-     * Como usamos exclusão lógica, exibir só os ativos evita confusão.
+     * Lista fornecedores ativos, paginados.
+     * @param pagina Número da página atual (começa em 0)
+     * @param tamanho Quantidade de itens por página
      */
     @GetMapping
     public String listar(
@@ -37,11 +38,11 @@ public class FornecedorController {
             Model model) {
         Page<Fornecedor> paginaFornecedores = fornecedorService.listarTodosPaginado(pagina, tamanho);
         model.addAttribute("pagina", paginaFornecedores);
-        return "fornecedor/listar"; // caminho para o HTML
+        return "fornecedor/listar";
     }
 
     /**
-     * Exibe o formulário para criar um novo fornecedor.
+     * Exibe o formulário para cadastrar um novo fornecedor.
      */
     @GetMapping("/novo")
     public String novoFornecedor(Model model) {
@@ -50,7 +51,7 @@ public class FornecedorController {
     }
 
     /**
-     * Salva um novo fornecedor ou atualiza um existente.
+     * Salva ou atualiza um fornecedor no banco de dados.
      */
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Fornecedor fornecedor) {
@@ -59,7 +60,7 @@ public class FornecedorController {
     }
 
     /**
-     * Exibe o formulário para editar um fornecedor existente pelo id.
+     * Exibe o formulário de edição de um fornecedor pelo ID.
      */
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
@@ -68,73 +69,82 @@ public class FornecedorController {
     }
 
     /**
-     * Exclusão lógica: inativa o fornecedor ao invés de excluir do banco.
-     * Isso evita erros de integridade e mantém histórico.
+     * Realiza a exclusão lógica de um fornecedor (seta como inativo).
      */
     @GetMapping("/excluir/{id}")
     public String excluirFornecedor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         fornecedorService.excluir(id);
         redirectAttributes.addFlashAttribute("msgSucesso", "Fornecedor excluído com sucesso.");
-        return "redirect:/fornecedores?pagina=0&tamanho=10"; // redireciona para a primeira página
+        return "redirect:/fornecedores?pagina=0&tamanho=10";
     }
 
-    // --- Métodos relacionados a contratos ---
+    // --- Contratos ---
 
     /**
-     * Lista os contratos de um fornecedor pelo id do fornecedor.
+     * Lista todos os contratos de um fornecedor específico.
      */
     @GetMapping("/{id}/contratos")
     public String listarContratos(@PathVariable Long id, Model model) {
-    Fornecedor fornecedor = fornecedorService.findById(id);
-    if (fornecedor == null) {
-        return "redirect:/fornecedores?erro=FornecedorNaoEncontrado";
+        Fornecedor fornecedor = fornecedorService.findById(id);
+        if (fornecedor == null) {
+            return "redirect:/fornecedores?erro=FornecedorNaoEncontrado";
+        }
+        List<ContratoFornecedor> contratos = contratoService.findByFornecedor(fornecedor);
+        model.addAttribute("fornecedor", fornecedor);
+        model.addAttribute("contratos", contratos);
+        return "fornecedor/contratos-listar";
     }
-    List<ContratoFornecedor> contratos = contratoService.findByFornecedor(fornecedor);
-    model.addAttribute("fornecedor", fornecedor);
-    model.addAttribute("contratos", contratos);
-    return "contrato/listar"; // view que lista os contratos desse fornecedor
-}
-
-
-    @GetMapping("/contratos")
-    public String listarTodosContratos(Model model) {
-    List<ContratoFornecedor> contratos = contratoService.listarTodos();
-    model.addAttribute("contratos", contratos);
-    return "contrato/listar";
-}
-
 
     /**
-     * Exibe o formulário para criar um novo contrato para o fornecedor especificado
-     * pelo id.
+     * Lista todos os contratos de todos os fornecedores.
+     */
+    @GetMapping("/contratos")
+    public String listarTodosContratos(Model model) {
+        List<ContratoFornecedor> contratos = contratoService.listarTodos();
+        model.addAttribute("contratos", contratos);
+        return "contrato/listar";
+    }
+
+    /**
+     * Exibe o formulário para criar um novo contrato vinculado a um fornecedor.
      */
     @GetMapping("/{id}/contratos/novo")
     public String novoContrato(@PathVariable Long id, Model model) {
         Fornecedor fornecedor = fornecedorService.findById(id);
-
         if (fornecedor == null) {
             return "redirect:/fornecedores?erro=FornecedorNaoEncontrado";
         }
-
         ContratoFornecedor contrato = new ContratoFornecedor();
         contrato.setFornecedor(fornecedor);
         contrato.setDataInicio(LocalDate.now());
-
         model.addAttribute("contrato", contrato);
-        return "contrato/contrato-form"; // usa a view localizada em: templates/contrato/contrato-form.html
+        return "fornecedor/contrato-form";
     }
 
     /**
-     * Salva um novo contrato ou atualiza um contrato existente.
+     * Salva ou atualiza um contrato de fornecedor, com tratamento para valor formatado (ex: R$ 1.000,00).
      */
     @PostMapping("/contratos/salvar")
-    public String salvarContrato(@ModelAttribute ContratoFornecedor contrato) {
-        contratoService.salvar(contrato);
-        return "redirect:/fornecedores/" + contrato.getFornecedor().getId() + "/contratos";
+    public String salvarContrato(
+            @ModelAttribute ContratoFornecedor contrato,
+            @RequestParam(value = "valorFormatado", required = false) String valorFormatado,
+            RedirectAttributes redirectAttributes) {
+        try {
+            if (valorFormatado != null && !valorFormatado.isBlank()) {
+                String cleaned = valorFormatado.replaceAll("[^\\d,]", "").replace(",", ".");
+                contrato.setValor(new BigDecimal(cleaned));
+            }
+            contratoService.salvar(contrato);
+            return "redirect:/fornecedores/" + contrato.getFornecedor().getId() + "/contratos";
+        } catch (Exception e) {
+            e.printStackTrace(); // Substituir por log.error se usar Logger
+            redirectAttributes.addFlashAttribute("msgErro", "Erro ao salvar contrato: " + e.getMessage());
+            return "redirect:/fornecedores/" + contrato.getFornecedor().getId() + "/contratos/novo";
+        }
     }
 
     /**
-     * Exibe o formulário para editar um contrato existente pelo id do contrato.
+     * Exibe o formulário para editar um contrato pelo ID do fornecedor e ID do contrato (via parâmetro).
      */
     @GetMapping("/{fornecedorId}/contratos/editar")
     public String editarContrato(
@@ -143,10 +153,17 @@ public class FornecedorController {
             Model model) {
 
         ContratoFornecedor contrato = contratoService.findById(contratoId);
+        if (contrato == null) {
+            return "redirect:/fornecedores/" + fornecedorId + "/contratos?erro=ContratoNaoEncontrado";
+        }
+
         model.addAttribute("contrato", contrato);
-        return "contrato/contrato-form";
+        return "fornecedor/contrato-form";
     }
 
+    /**
+     * Exibe o formulário para editar um contrato diretamente pelo ID do contrato.
+     */
     @GetMapping("/contratos/editar/{contratoId}")
     public String editarContratoDireto(@PathVariable Long contratoId, Model model) {
         ContratoFornecedor contrato = contratoService.findById(contratoId);
@@ -160,8 +177,7 @@ public class FornecedorController {
     }
 
     /**
-     * Exclui um contrato pelo id e redireciona para a lista de contratos do
-     * fornecedor.
+     * Exclui um contrato pelo ID e redireciona para os contratos do fornecedor.
      */
     @GetMapping("/contratos/excluir/{contratoId}")
     public String excluirContrato(@PathVariable Long contratoId) {

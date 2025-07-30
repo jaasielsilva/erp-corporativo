@@ -68,6 +68,15 @@ public class Contrato {
 
     private LocalDateTime ultimaAtualizacao;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "colaborador_id")
+    @ToString.Exclude
+    private Colaborador colaborador;
+
+    @ManyToOne
+    @JoinColumn(name = "departamento_id")
+    private Departamento departamento;
+
     @PrePersist
     public void onPrePersist() {
         dataCriacao = LocalDateTime.now();

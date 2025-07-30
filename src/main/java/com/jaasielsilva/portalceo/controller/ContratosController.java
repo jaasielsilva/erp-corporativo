@@ -1,22 +1,17 @@
 package com.jaasielsilva.portalceo.controller;
 
-import com.jaasielsilva.portalceo.model.Cliente;
-import com.jaasielsilva.portalceo.model.Contrato;
-import com.jaasielsilva.portalceo.model.Fornecedor;
-import com.jaasielsilva.portalceo.model.PrestadorServico;
-import com.jaasielsilva.portalceo.model.StatusContrato;
-import com.jaasielsilva.portalceo.model.TipoContrato;
-import com.jaasielsilva.portalceo.service.ClienteService;
-import com.jaasielsilva.portalceo.service.ContratoService;
-import com.jaasielsilva.portalceo.service.FornecedorService;
-import com.jaasielsilva.portalceo.service.PrestadorServicoService;
-
+import com.jaasielsilva.portalceo.model.*;
+import com.jaasielsilva.portalceo.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/contratos")
@@ -24,72 +19,146 @@ public class ContratosController {
 
     @Autowired
     private ContratoService contratoService;
-
     @Autowired
     private FornecedorService fornecedorService;
-
     @Autowired
     private ClienteService clienteService;
-
     @Autowired
     private PrestadorServicoService prestadorServicoService;
+    @Autowired
+    private ColaboradorService colaboradorService;
+    @Autowired
+    private DepartamentoService departamentoService;
 
-    /**
-     * Lista todos os contratos cadastrados no banco
-     */
+    private List<TipoContrato> tiposPermitidosPorDepartamento(Usuario usuario) {
+        if (usuario == null || usuario.getDepartamento() == null) {
+            return List.of();
+        }
+
+        String departamento = usuario.getDepartamento().getNome().toUpperCase();
+
+        return switch (departamento) {
+            case "RH" -> List.of(TipoContrato.TRABALHISTA);
+            case "TI" -> List.of(TipoContrato.PRESTADOR_SERVICO, TipoContrato.FORNECEDOR);
+            case "COMPRAS" -> List.of(TipoContrato.FORNECEDOR);
+            case "VENDAS" -> List.of(TipoContrato.CLIENTE);
+            case "ADMIN" -> List.of(TipoContrato.values());
+            default -> List.of();
+        };
+    }
+
     @GetMapping
-    public String listarTodos(Model model) {
-        List<Contrato> contratos = contratoService.findAll();
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public String listarTodos(Model model, @ModelAttribute("usuarioLogado") Usuario usuarioLogado) {
+        if (usuarioLogado == null) {
+            return "redirect:/login";
+        }
+
+        List<TipoContrato> tiposPermitidos = tiposPermitidosPorDepartamento(usuarioLogado);
+
+        List<Contrato> contratos = contratoService.findAll().stream()
+                .filter(c -> tiposPermitidos.contains(c.getTipo()))
+                .collect(Collectors.toList());
+
         model.addAttribute("contratos", contratos);
         return "contrato/listar";
     }
+@GetMapping("/novo")
+public String novoContrato(Model model, @ModelAttribute("usuarioLogado") Usuario usuarioLogado) {
+    Contrato contrato = new Contrato();
+    model.addAttribute("contrato", contrato);
 
-    // Exibe o formulário de novo contrato
-    @GetMapping("/novo")
-    public String novoContrato(Model model) {
-        model.addAttribute("contrato", new Contrato());
+    // Obter departamento e perfil do usuário
+    String departamentoNome = usuarioLogado.getDepartamento() != null ? usuarioLogado.getDepartamento().getNome() : "";
+    boolean isAdmin = usuarioLogado.getPerfis().stream()
+            .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
 
-        model.addAttribute("tiposContrato", TipoContrato.values());
-        model.addAttribute("statusContrato", StatusContrato.values());
+    List<TipoContrato> tiposPermitidos;
 
-        model.addAttribute("fornecedores", fornecedorService.listarAtivos());
-        model.addAttribute("clientes", clienteService.listarAtivosPorTipo("PJ"));
-        model.addAttribute("prestadoresServico", prestadorServicoService.findAllAtivos());
-
-        return "contrato/contrato-form";
-    }
-
-    /**
-     * Salva um contrato (tanto novo quanto edição)
-     */
-    @PostMapping("/salvar")
-public String salvarContrato(@ModelAttribute("contrato") Contrato contrato) {
-
-    if (contrato.getCliente() != null && contrato.getCliente().getId() != null) {
-        Cliente cliente = clienteService.findById(contrato.getCliente().getId());
-        contrato.setCliente(cliente);
+    if (isAdmin) {
+        switch (departamentoNome) {
+            case "RH":
+                tiposPermitidos = List.of(TipoContrato.TRABALHISTA);
+                break;
+            case "TI":
+                tiposPermitidos = List.of(TipoContrato.PRESTADOR_SERVICO, TipoContrato.FORNECEDOR);
+                break;
+            case "COMPRAS":
+                tiposPermitidos = List.of(TipoContrato.FORNECEDOR);
+                break;
+            case "VENDAS":
+                tiposPermitidos = List.of(TipoContrato.CLIENTE);
+                break;
+            case "ADMIN":
+                tiposPermitidos = Arrays.asList(TipoContrato.values());
+                break;
+            default:
+                tiposPermitidos = List.of();
+                break;
+        }
     } else {
-        contrato.setCliente(null);
+        return "redirect:/acesso-negado";
     }
 
-    if (contrato.getFornecedor() != null && contrato.getFornecedor().getId() != null) {
-        Fornecedor fornecedor = fornecedorService.findById(contrato.getFornecedor().getId());
-        contrato.setFornecedor(fornecedor);
-    } else {
-        contrato.setFornecedor(null);
-    }
+    model.addAttribute("tiposContrato", tiposPermitidos); // ✅ Mantém esta
+    model.addAttribute("statusContrato", StatusContrato.values());
+    model.addAttribute("fornecedores", fornecedorService.listarAtivos());
+    model.addAttribute("clientes", clienteService.listarAtivosPorTipo("PJ"));
+    model.addAttribute("prestadoresServico", prestadorServicoService.findAllAtivos());
+    model.addAttribute("departamentoUsuario", usuarioLogado.getDepartamento());
+    model.addAttribute("colaboradores", colaboradorService.listarAtivos());
 
-    if (contrato.getPrestadorServico() != null && contrato.getPrestadorServico().getId() != null) {
-        PrestadorServico prestador = prestadorServicoService.findById(contrato.getPrestadorServico().getId());
-        contrato.setPrestadorServico(prestador);
-    } else {
-        contrato.setPrestadorServico(null);
-    }
-
-    contratoService.salvar(contrato);
-    return "redirect:/contratos";
+    return "contrato/contrato-form";
 }
 
+
+    @PostMapping("/salvar")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public String salvarContrato(@ModelAttribute("contrato") Contrato contrato,
+            @ModelAttribute("usuarioLogado") Usuario usuarioLogado) {
+        if (usuarioLogado == null) {
+            return "redirect:/login";
+        }
+
+        // Verifica se o tipo de contrato é permitido para o departamento do usuário
+        List<TipoContrato> tiposPermitidos = tiposPermitidosPorDepartamento(usuarioLogado);
+        if (!tiposPermitidos.contains(contrato.getTipo())) {
+            throw new IllegalStateException("Tipo de contrato não permitido para seu departamento.");
+        }
+
+        // Atualiza as referências completas para entidades relacionadas
+        if (contrato.getCliente() != null && contrato.getCliente().getId() != null) {
+            Cliente cliente = clienteService.findById(contrato.getCliente().getId());
+            contrato.setCliente(cliente);
+        } else {
+            contrato.setCliente(null);
+        }
+
+        if (contrato.getFornecedor() != null && contrato.getFornecedor().getId() != null) {
+            Fornecedor fornecedor = fornecedorService.findById(contrato.getFornecedor().getId());
+            contrato.setFornecedor(fornecedor);
+        } else {
+            contrato.setFornecedor(null);
+        }
+
+        if (contrato.getPrestadorServico() != null && contrato.getPrestadorServico().getId() != null) {
+            PrestadorServico prestador = prestadorServicoService.findById(contrato.getPrestadorServico().getId());
+            contrato.setPrestadorServico(prestador);
+        } else {
+            contrato.setPrestadorServico(null);
+        }
+
+        if (contrato.getColaborador() != null && contrato.getColaborador().getId() != null) {
+            Colaborador col = colaboradorService.findById(contrato.getColaborador().getId());
+            contrato.setColaborador(col);
+        } else {
+            contrato.setColaborador(null);
+        }
+
+        contratoService.salvar(contrato);
+
+        return "redirect:/contratos";
+    }
 
     /**
      * Carrega o contrato existente para edição

@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.Contrato;
+import com.jaasielsilva.portalceo.model.TipoContrato;
 import com.jaasielsilva.portalceo.repository.ContratoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,5 +35,9 @@ public class ContratoService {
     public Contrato salvar(Contrato contrato) {
         return contratoRepository.save(contrato);
     }
+
+    public List<Contrato> findByTipo(TipoContrato tipo) {
+    return contratoRepository.findByTipo(tipo);
+}
 
 }

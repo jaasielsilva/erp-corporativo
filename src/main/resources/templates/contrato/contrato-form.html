@@ -1,95 +1,159 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8" />
   <title th:text="${contrato.id != null} ? 'Editar Contrato' : 'Novo Contrato'">Contrato</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
+
 <body>
-<div class="container mt-4">
-  <h2 th:text="${contrato.id != null} ? 'Editar Contrato' : 'Novo Contrato'"></h2>
-  <form th:action="@{/contratos/salvar}" th:object="${contrato}" method="post">
-    
-    <div class="mb-3">
-      <label for="numeroContrato" class="form-label">Número do Contrato</label>
-      <input type="text" class="form-control" id="numeroContrato" th:field="*{numeroContrato}" />
-    </div>
+  <div class="container mt-4">
+    <h2 th:text="${contrato.id != null} ? 'Editar Contrato' : 'Novo Contrato'"></h2>
+    <form th:action="@{/contratos/salvar}" th:object="${contrato}" method="post">
 
-    <div class="mb-3">
-      <label for="tipo" class="form-label">Tipo de Contrato</label>
-      <select class="form-select" id="tipo" th:field="*{tipo}">
-        <option th:each="tipo : ${tiposContrato}"
-                th:value="${tipo}"
-                th:text="${tipo}">Tipo</option>
-      </select>
-    </div>
+      <!-- Informações Gerais -->
+      <fieldset class="border p-3 mb-4">
+        <legend class="w-auto px-2">Informações Gerais</legend>
 
-    <div class="mb-3">
-      <label for="dataInicio" class="form-label">Data Início</label>
-      <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" />
-    </div>
+        <div class="mb-3">
+          <label for="numeroContrato" class="form-label">Número do Contrato</label>
+          <input type="text" class="form-control" id="numeroContrato" th:field="*{numeroContrato}" />
+        </div>
 
-    <div class="mb-3">
-      <label for="dataFim" class="form-label">Data Fim</label>
-      <input type="date" class="form-control" id="dataFim" th:field="*{dataFim}" />
-    </div>
+        <div class="mb-3">
+          <label for="tipo" class="form-label">Tipo de Contrato</label>
+          <select class="form-select" id="tipo" th:field="*{tipo}">
+            <option value="">-- Selecione --</option>
+            <option th:each="tipo : ${tiposContrato}" th:value="${tipo}" th:text="${tipo}"></option>
+          </select>
+        </div>
 
-    <div class="mb-3">
-      <label for="valor" class="form-label">Valor</label>
-      <input type="number" step="0.01" class="form-control" id="valor" th:field="*{valor}" />
-    </div>
-
-    <div class="mb-3">
-      <label for="status" class="form-label">Status</label>
-      <select class="form-select" id="status" th:field="*{status}">
-        <option th:each="status : ${statusContrato}"
-                th:value="${status}"
-                th:text="${status}">Status</option>
-      </select>
-    </div>
-
-    <div class="mb-3">
-      <label for="descricao" class="form-label">Descrição</label>
-      <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="4"></textarea>
-    </div>
-
-   <!-- Select para Fornecedor -->
-<div class="mb-3">
-  <label for="fornecedor" class="form-label">Fornecedor</label>
-  <select class="form-select" id="fornecedor" th:field="*{fornecedor}">
-    <option value="">-- Nenhum --</option>
-    <option th:each="f : ${fornecedores}" 
-            th:value="${f.id}" 
-            th:text="${f.razaoSocial}"></option>
-  </select>
-</div>
-
-<!-- Select para Cliente -->
-<div class="mb-3">
-  <label for="cliente" class="form-label">Cliente</label>
-  <select class="form-select" id="cliente" th:field="*{cliente}">
-    <option value="">-- Nenhum --</option>
-    <option th:each="c : ${clientes}" 
-            th:value="${c.id}" 
-            th:text="${c.nomeFantasia != null && !#strings.isEmpty(c.nomeFantasia) ? c.nomeFantasia : c.nome}"></option>
-  </select>
-</div>
-
-<!-- Select para Prestador de Serviço -->
-<div class="mb-3">
-  <label for="prestadorServico" class="form-label">Prestador de Serviço</label>
-  <select class="form-select" id="prestadorServico" th:field="*{prestadorServico}">
-    <option value="">-- Nenhum --</option>
-    <option th:each="p : ${prestadoresServico}" 
-            th:value="${p.id}" 
-            th:text="${p.nome}"></option>
-  </select>
-</div>
+        <div class="mb-3">
+          <label for="valor" class="form-label" id="label-valor">Valor</label>
+          <input type="number" step="0.01" class="form-control" id="valor" th:field="*{valor}" />
+        </div>
 
 
-    <button type="submit" class="btn btn-primary">Salvar</button>
-    <a th:href="@{/contratos}" class="btn btn-secondary ms-2">Cancelar</a>
-  </form>
-</div>
+        <div class="mb-3">
+          <label class="form-label">Departamento Responsável</label>
+          <input type="text" class="form-control" th:value="${departamentoUsuario.nome}" readonly />
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="dataInicio" class="form-label">Data Início</label>
+            <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="dataFim" class="form-label">Data Fim</label>
+            <input type="date" class="form-control" id="dataFim" th:field="*{dataFim}" />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="status" class="form-label">Status</label>
+          <select class="form-select" id="status" th:field="*{status}">
+            <option th:each="status : ${statusContrato}" th:value="${status}" th:text="${status}">Status</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="descricao" class="form-label">Descrição</label>
+          <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="4"></textarea>
+        </div>
+      </fieldset>
+
+      <!-- Vinculações Condicionais -->
+      <fieldset class="border p-3 mb-4">
+        <legend class="w-auto px-2">Vinculações</legend>
+
+        <!-- Fornecedor -->
+        <div class="mb-3 vinculo" id="vinculo-fornecedor" style="display:none;">
+          <label for="fornecedor" class="form-label">Fornecedor</label>
+          <select class="form-select" id="fornecedor" th:field="*{fornecedor}">
+            <option value="">-- Nenhum --</option>
+            <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.razaoSocial}"></option>
+          </select>
+        </div>
+
+        <!-- Cliente -->
+        <div class="mb-3 vinculo" id="vinculo-cliente" style="display:none;">
+          <label for="cliente" class="form-label">Cliente</label>
+          <select class="form-select" id="cliente" th:field="*{cliente}">
+            <option value="">-- Nenhum --</option>
+            <option th:each="c : ${clientes}" th:value="${c.id}"
+              th:text="${c.nomeFantasia != null ? c.nomeFantasia : c.nome}"></option>
+          </select>
+        </div>
+
+        <!-- Prestador de Serviço -->
+        <div class="mb-3 vinculo" id="vinculo-prestador" style="display:none;">
+          <label for="prestadorServico" class="form-label">Prestador de Serviço</label>
+          <select class="form-select" id="prestadorServico" th:field="*{prestadorServico}">
+            <option value="">-- Nenhum --</option>
+            <option th:each="p : ${prestadoresServico}" th:value="${p.id}" th:text="${p.nome}"></option>
+          </select>
+        </div>
+
+        <!-- Colaborador -->
+        <div class="mb-3 vinculo" id="vinculo-colaborador" style="display:none;">
+          <label for="colaborador" class="form-label">Colaborador</label>
+          <select class="form-select" id="colaborador" th:field="*{colaborador}">
+            <option value="">-- Nenhum --</option>
+            <option th:each="col : ${colaboradores}" th:value="${col.id}" th:text="${col.nome}"></option>
+          </select>
+        </div>
+
+      </fieldset>
+
+      <button type="submit" class="btn btn-primary">Salvar</button>
+      <a th:href="@{/contratos}" class="btn btn-secondary ms-2">Cancelar</a>
+    </form>
+  </div>
+
+  <script>
+    function ajustarVisibilidade() {
+      const tipo = document.getElementById('tipo').value;
+      const valorInput = document.getElementById('valor');
+      const labelValor = document.getElementById('label-valor');
+
+      // Esconder todos os blocos
+      document.querySelectorAll('.vinculo').forEach(div => div.style.display = 'none');
+
+      switch (tipo) {
+        case 'FORNECEDOR':
+          document.getElementById('vinculo-fornecedor').style.display = 'block';
+          valorInput.readOnly = true;
+          labelValor.textContent = 'Valor';
+          break;
+        case 'CLIENTE':
+          document.getElementById('vinculo-cliente').style.display = 'block';
+          valorInput.readOnly = true;
+          labelValor.textContent = 'Valor';
+          break;
+        case 'PRESTACAO_SERVICO':
+          document.getElementById('vinculo-prestador').style.display = 'block';
+          valorInput.readOnly = true;
+          labelValor.textContent = 'Valor';
+          break;
+        case 'TRABALHISTA':
+          document.getElementById('vinculo-colaborador').style.display = 'block';
+          valorInput.readOnly = false;
+          labelValor.textContent = 'Salário';
+          break;
+        default:
+          valorInput.readOnly = true;
+          labelValor.textContent = 'Valor';
+          break;
+      }
+    }
+
+    document.getElementById('tipo').addEventListener('change', ajustarVisibilidade);
+    window.addEventListener('DOMContentLoaded', ajustarVisibilidade);
+  </script>
+
+
 </body>
+
 </html>

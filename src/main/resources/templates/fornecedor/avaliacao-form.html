@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-br">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,6 +8,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
+
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -17,8 +19,10 @@
       <section class="content-area">
         <h1 th:text="${avaliacao.id != null} ? 'Editar Avaliação' : 'Nova Avaliação'">Avaliação</h1>
 
-        <form th:action="@{/fornecedor/{fornecedorId}/avaliacoes/salvar(fornecedorId=${fornecedor.id})}" 
-              th:object="${avaliacao}" method="post" class="form-default">
+        <form th:action="@{/fornecedor/{fornecedorId}/avaliacoes/salvar(fornecedorId=${fornecedor.id})}"
+          th:object="${avaliacao}" method="post" class="form-default">
+
+          <input type="hidden" th:field="*{id}" />
 
           <label for="data">Data:</label>
           <input type="date" id="data" th:field="*{data}" required />
@@ -36,6 +40,7 @@
             <a th:href="@{/fornecedor/{id}/avaliacoes(id=${fornecedor.id})}" class="button secondary">Voltar</a>
           </div>
         </form>
+
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
@@ -44,4 +49,5 @@
 
   <script th:src="@{/js/script.js}"></script>
 </body>
+
 </html>

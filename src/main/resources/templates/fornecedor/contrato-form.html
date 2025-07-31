@@ -27,8 +27,8 @@
           <input type="hidden" th:field="*{fornecedor.id}" />
 
           <label for="numeroContrato">Número do Contrato:</label>
-          <input id="numeroContrato" type="text" th:field="*{numeroContrato}" pattern="\d*" title="Somente números" required
-            oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+          <input id="numeroContrato" type="text" th:field="*{numeroContrato}" pattern="\d*" title="Somente números"
+            required oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
 
           <label for="dataInicio">Data Início:</label>
           <input id="dataInicio" type="date" th:field="*{dataInicio}" required />
@@ -37,8 +37,7 @@
           <input id="dataFim" type="date" th:field="*{dataFim}" />
 
           <label>Valor:</label>
-<input type="text" id="valorFormatado" name="valorFormatado"
-       th:value="${contrato.valor}" />
+          <input type="text" id="valorFormatado" name="valorFormatado" th:value="${contrato.valor}" />
 
 
           <label for="status">Status:</label>

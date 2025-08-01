@@ -1,0 +1,31 @@
+package com.jaasielsilva.portalceo.service;
+
+import com.jaasielsilva.portalceo.model.Cargo;
+import com.jaasielsilva.portalceo.repository.CargoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CargoService {
+
+    @Autowired
+    private CargoRepository cargoRepository;
+
+    public List<Cargo> listarTodos() {
+        return cargoRepository.findAll();
+    }
+
+    public Cargo findById(Long id) {
+        return cargoRepository.findById(id).orElse(null);
+    }
+
+    public Cargo salvar(Cargo cargo) {
+        return cargoRepository.save(cargo);
+    }
+
+    public void excluir(Long id) {
+        cargoRepository.deleteById(id);
+    }
+}

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gerar Folha de Pagamento - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Gerar Folha de Pagamento</h1>
+        <h2>Processamento da folha mensal</h2>
+
+        <div class="action-buttons">
+          <a href="/rh/folha-pagamento/relatorios" class="btn btn-secondary">
+            <i class="fas fa-chart-bar"></i> Ver Relatórios
+          </a>
+          <a href="/rh/folha-pagamento/historico" class="btn btn-info">
+            <i class="fas fa-history"></i> Histórico
+          </a>
+        </div>
+
+        <!-- Configurações da Folha -->
+        <article class="card">
+          <h3><i class="fas fa-cog"></i> Configurações da Folha</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="mesReferencia">Mês de Referência *</label>
+                <select id="mesReferencia" name="mesReferencia" required class="form-control">
+                  <option value="">Selecione o mês...</option>
+                  <option value="01">Janeiro</option>
+                  <option value="02">Fevereiro</option>
+                  <option value="03">Março</option>
+                  <option value="04">Abril</option>
+                  <option value="05">Maio</option>
+                  <option value="06">Junho</option>
+                  <option value="07">Julho</option>
+                  <option value="08">Agosto</option>
+                  <option value="09">Setembro</option>
+                  <option value="10">Outubro</option>
+                  <option value="11" selected>Novembro</option>
+                  <option value="12">Dezembro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="anoReferencia">Ano de Referência *</label>
+                <select id="anoReferencia" name="anoReferencia" required class="form-control">
+                  <option value="2022">2022</option>
+                  <option value="2023" selected>2023</option>
+                  <option value="2024">2024</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="departamento">Departamento</label>
+                <select id="departamento" name="departamento" class="form-control">
+                  <option value="">Todos os departamentos</option>
+                  <option value="ti">TI</option>
+                  <option value="vendas">Vendas</option>
+                  <option value="financeiro">Financeiro</option>
+                  <option value="rh">RH</option>
+                  <option value="marketing">Marketing</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="tipoFolha">Tipo de Folha</label>
+                <select id="tipoFolha" name="tipoFolha" class="form-control">
+                  <option value="normal" selected>Folha Normal</option>
+                  <option value="complementar">Folha Complementar</option>
+                  <option value="decimo_terceiro">13º Salário</option>
+                  <option value="ferias">Férias</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" onclick="calcularFolha()" class="btn btn-primary">
+                <i class="fas fa-calculator"></i> Calcular Folha
+              </button>
+            </div>
+          </form>
+        </article>
+
+        <!-- Resumo dos Colaboradores -->
+        <article class="card">
+          <h3><i class="fas fa-users"></i> Colaboradores Incluídos</h3>
+          <div class="colaboradores-resumo">
+            <div class="resumo-stats">
+              <div class="stat-item">
+                <span class="stat-number">15</span>
+                <span class="stat-label">Total de Colaboradores</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">12</span>
+                <span class="stat-label">CLT</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">2</span>
+                <span class="stat-label">PJ</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">1</span>
+                <span class="stat-label">Estagiário</span>
+              </div>
+            </div>
+          </div>
+
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Cargo</th>
+                <th>Departamento</th>
+                <th>Salário Base</th>
+                <th>Dias Trabalhados</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>João Silva</td>
+                <td>Desenvolvedor Senior</td>
+                <td>TI</td>
+                <td>R$ 8.500,00</td>
+                <td>22/22</td>
+                <td><span class="status-badge status-ativo">Incluído</span></td>
+                <td>
+                  <button class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>Maria Santos</td>
+                <td>Analista de Vendas</td>
+                <td>Vendas</td>
+                <td>R$ 6.000,00</td>
+                <td>15/22</td>
+                <td><span class="status-badge status-ferias">Férias Parciais</span></td>
+                <td>
+                  <button class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>Carlos Oliveira</td>
+                <td>Gerente Financeiro</td>
+                <td>Financeiro</td>
+                <td>R$ 12.000,00</td>
+                <td>22/22</td>
+                <td><span class="status-badge status-ativo">Incluído</span></td>
+                <td>
+                  <button class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <!-- Resumo Financeiro -->
+        <article class="card">
+          <h3><i class="fas fa-money-bill-wave"></i> Resumo Financeiro</h3>
+          <div class="resumo-financeiro">
+            <div class="resumo-grid">
+              <div class="resumo-item proventos">
+                <h4><i class="fas fa-plus-circle"></i> Proventos</h4>
+                <div class="valor-principal">R$ 145.750,00</div>
+                <div class="detalhes">
+                  <span>Salários: R$ 132.500,00</span>
+                  <span>Horas Extras: R$ 8.250,00</span>
+                  <span>Comissões: R$ 5.000,00</span>
+                </div>
+              </div>
+              
+              <div class="resumo-item descontos">
+                <h4><i class="fas fa-minus-circle"></i> Descontos</h4>
+                <div class="valor-principal">R$ 32.450,00</div>
+                <div class="detalhes">
+                  <span>INSS: R$ 18.200,00</span>
+                  <span>IRRF: R$ 12.750,00</span>
+                  <span>Outros: R$ 1.500,00</span>
+                </div>
+              </div>
+              
+              <div class="resumo-item liquido">
+                <h4><i class="fas fa-hand-holding-usd"></i> Valor Líquido</h4>
+                <div class="valor-principal">R$ 113.300,00</div>
+                <div class="detalhes">
+                  <span>Valor a pagar aos colaboradores</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Ações da Folha -->
+        <article class="card">
+          <h3><i class="fas fa-tasks"></i> Ações da Folha</h3>
+          <div class="acoes-folha">
+            <div class="acao-item">
+              <div class="acao-info">
+                <h4>1. Calcular Folha</h4>
+                <p>Processar cálculos de salários, descontos e benefícios</p>
+              </div>
+              <button onclick="calcularFolha()" class="btn btn-primary">
+                <i class="fas fa-calculator"></i> Calcular
+              </button>
+            </div>
+            
+            <div class="acao-item">
+              <div class="acao-info">
+                <h4>2. Revisar Cálculos</h4>
+                <p>Verificar e validar todos os cálculos realizados</p>
+              </div>
+              <button onclick="revisarCalculos()" class="btn btn-warning" disabled>
+                <i class="fas fa-search"></i> Revisar
+              </button>
+            </div>
+            
+            <div class="acao-item">
+              <div class="acao-info">
+                <h4>3. Gerar Holerites</h4>
+                <p>Criar holerites individuais para cada colaborador</p>
+              </div>
+              <button onclick="gerarHolerites()" class="btn btn-info" disabled>
+                <i class="fas fa-file-invoice"></i> Gerar Holerites
+              </button>
+            </div>
+            
+            <div class="acao-item">
+              <div class="acao-info">
+                <h4>4. Aprovar Folha</h4>
+                <p>Aprovar a folha para processamento final</p>
+              </div>
+              <button onclick="aprovarFolha()" class="btn btn-success" disabled>
+                <i class="fas fa-check"></i> Aprovar
+              </button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    let etapaAtual = 0;
+    
+    function calcularFolha() {
+      // Simular processamento
+      const btn = event.target;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...';
+      btn.disabled = true;
+      
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check"></i> Calculado';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        
+        // Habilitar próxima etapa
+        document.querySelector('button[onclick="revisarCalculos()"]').disabled = false;
+        etapaAtual = 1;
+        
+        alert('Folha calculada com sucesso!');
+      }, 3000);
+    }
+    
+    function revisarCalculos() {
+      if (etapaAtual >= 1) {
+        alert('Cálculos revisados e aprovados!');
+        document.querySelector('button[onclick="gerarHolerites()"]').disabled = false;
+        etapaAtual = 2;
+      }
+    }
+    
+    function gerarHolerites() {
+      if (etapaAtual >= 2) {
+        alert('Holerites gerados com sucesso!');
+        document.querySelector('button[onclick="aprovarFolha()"]').disabled = false;
+        etapaAtual = 3;
+      }
+    }
+    
+    function aprovarFolha() {
+      if (etapaAtual >= 3) {
+        if (confirm('Tem certeza que deseja aprovar a folha de pagamento? Esta ação não pode ser desfeita.')) {
+          alert('Folha de pagamento aprovada e processada!');
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

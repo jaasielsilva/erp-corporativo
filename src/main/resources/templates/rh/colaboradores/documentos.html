@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Documentos do Colaborador - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Documentos do Colaborador</h1>
+        <h2>João Silva - Desenvolvedor Senior</h2>
+
+        <div class="action-buttons">
+          <a href="/rh/colaboradores/listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar à Lista
+          </a>
+          <a href="/rh/colaboradores/ficha/1" class="btn btn-info">
+            <i class="fas fa-eye"></i> Ver Ficha
+          </a>
+          <button onclick="abrirModalUpload()" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Enviar Documento
+          </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters">
+          <select class="filter-select">
+            <option value="">Todos os tipos</option>
+            <option value="pessoal">Documentos Pessoais</option>
+            <option value="contrato">Contratuais</option>
+            <option value="beneficio">Benefícios</option>
+            <option value="treinamento">Treinamentos</option>
+            <option value="avaliacao">Avaliações</option>
+          </select>
+          <input type="text" placeholder="Buscar documento..." class="search-input">
+        </div>
+
+        <!-- Documentos Pessoais -->
+        <article class="card">
+          <h3><i class="fas fa-id-card"></i> Documentos Pessoais</h3>
+          <div class="documentos-grid">
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="documento-info">
+                <h4>CPF</h4>
+                <p>Cadastro de Pessoa Física</p>
+                <small>Enviado em: 15/03/2022</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+                <button class="btn-icon" title="Excluir">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="documento-info">
+                <h4>RG</h4>
+                <p>Registro Geral</p>
+                <small>Enviado em: 15/03/2022</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+                <button class="btn-icon" title="Excluir">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="documento-info">
+                <h4>Comprovante de Residência</h4>
+                <p>Conta de luz - Novembro/2023</p>
+                <small>Enviado em: 01/11/2023</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+                <button class="btn-icon" title="Excluir">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Documentos Contratuais -->
+        <article class="card">
+          <h3><i class="fas fa-file-contract"></i> Documentos Contratuais</h3>
+          <div class="documentos-grid">
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-file-contract"></i>
+              </div>
+              <div class="documento-info">
+                <h4>Contrato de Trabalho</h4>
+                <p>Contrato CLT assinado</p>
+                <small>Enviado em: 15/03/2022</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <div class="documento-info">
+                <h4>Termo de Confidencialidade</h4>
+                <p>NDA assinado</p>
+                <small>Enviado em: 15/03/2022</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Certificados e Treinamentos -->
+        <article class="card">
+          <h3><i class="fas fa-certificate"></i> Certificados e Treinamentos</h3>
+          <div class="documentos-grid">
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-certificate"></i>
+              </div>
+              <div class="documento-info">
+                <h4>Certificado Spring Boot</h4>
+                <p>Curso avançado de Spring Boot</p>
+                <small>Enviado em: 20/08/2023</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-certificate"></i>
+              </div>
+              <div class="documento-info">
+                <h4>Treinamento de Segurança</h4>
+                <p>Certificado de conclusão</p>
+                <small>Enviado em: 10/06/2023</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Avaliações -->
+        <article class="card">
+          <h3><i class="fas fa-star"></i> Avaliações de Desempenho</h3>
+          <div class="documentos-grid">
+            <div class="documento-item">
+              <div class="documento-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="documento-info">
+                <h4>Avaliação 2023</h4>
+                <p>Avaliação anual de desempenho</p>
+                <small>Criado em: 15/03/2023</small>
+              </div>
+              <div class="documento-actions">
+                <button class="btn-icon" title="Visualizar">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" title="Download">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal de Upload -->
+  <div id="modalUpload" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Enviar Novo Documento</h3>
+        <button class="modal-close" onclick="fecharModalUpload()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="tipoDocumento">Tipo de Documento *</label>
+            <select id="tipoDocumento" name="tipoDocumento" required class="form-control">
+              <option value="">Selecione o tipo...</option>
+              <option value="cpf">CPF</option>
+              <option value="rg">RG</option>
+              <option value="comprovante_residencia">Comprovante de Residência</option>
+              <option value="contrato">Contrato</option>
+              <option value="certificado">Certificado</option>
+              <option value="avaliacao">Avaliação</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="nomeDocumento">Nome do Documento *</label>
+            <input type="text" id="nomeDocumento" name="nomeDocumento" required class="form-control" placeholder="Ex: CPF do colaborador">
+          </div>
+          
+          <div class="form-group">
+            <label for="arquivo">Arquivo *</label>
+            <input type="file" id="arquivo" name="arquivo" required class="form-control" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            <small>Formatos aceitos: PDF, DOC, DOCX, JPG, PNG (máx. 10MB)</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="observacoes">Observações</label>
+            <textarea id="observacoes" name="observacoes" rows="3" class="form-control" placeholder="Observações sobre o documento..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="enviarDocumento()">
+          <i class="fas fa-upload"></i> Enviar Documento
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="fecharModalUpload()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function abrirModalUpload() {
+      document.getElementById('modalUpload').style.display = 'flex';
+    }
+
+    function fecharModalUpload() {
+      document.getElementById('modalUpload').style.display = 'none';
+    }
+
+    function enviarDocumento() {
+      // Aqui seria implementada a lógica de upload
+      alert('Documento enviado com sucesso!');
+      fecharModalUpload();
+    }
+  </script>
+</body>
+
+</html>

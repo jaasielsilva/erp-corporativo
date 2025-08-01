@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Correções de Ponto - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Correções de Ponto</h1>
+        <h2>Solicitações e aprovações de ajustes nos registros</h2>
+
+        <div class="action-buttons">
+          <button onclick="abrirModalCorrecao()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Correção
+          </button>
+          <button onclick="aprovarSelecionadas()" class="btn btn-success">
+            <i class="fas fa-check"></i> Aprovar Selecionadas
+          </button>
+          <button onclick="rejeitarSelecionadas()" class="btn btn-danger">
+            <i class="fas fa-times"></i> Rejeitar Selecionadas
+          </button>
+          <button onclick="exportarRelatorio()" class="btn btn-info">
+            <i class="fas fa-download"></i> Exportar
+          </button>
+        </div>
+
+        <!-- Resumo de Correções -->
+        <article class="card">
+          <h3><i class="fas fa-chart-bar"></i> Resumo de Correções</h3>
+          <div class="resumo-correcoes">
+            <div class="resumo-grid">
+              <div class="resumo-item pendentes">
+                <div class="resumo-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Pendentes</h4>
+                  <div class="resumo-valor">8</div>
+                  <div class="resumo-detalhes">Aguardando aprovação</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item aprovadas">
+                <div class="resumo-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Aprovadas</h4>
+                  <div class="resumo-valor">15</div>
+                  <div class="resumo-detalhes">Este mês</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item rejeitadas">
+                <div class="resumo-icon">
+                  <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Rejeitadas</h4>
+                  <div class="resumo-valor">3</div>
+                  <div class="resumo-detalhes">Este mês</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item tempo-medio">
+                <div class="resumo-icon">
+                  <i class="fas fa-stopwatch"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Tempo Médio</h4>
+                  <div class="resumo-valor">2.5 dias</div>
+                  <div class="resumo-detalhes">Para aprovação</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Filtros -->
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="statusFiltro">Status</label>
+                <select id="statusFiltro" name="status" class="form-control">
+                  <option value="">Todos os status</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="aprovada">Aprovada</option>
+                  <option value="rejeitada">Rejeitada</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="colaboradorFiltro">Colaborador</label>
+                <select id="colaboradorFiltro" name="colaborador" class="form-control">
+                  <option value="">Todos os colaboradores</option>
+                  <option value="1">João Silva</option>
+                  <option value="2">Maria Santos</option>
+                  <option value="3">Carlos Oliveira</option>
+                  <option value="4">Ana Costa</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="tipoCorrecao">Tipo de Correção</label>
+                <select id="tipoCorrecao" name="tipoCorrecao" class="form-control">
+                  <option value="">Todos os tipos</option>
+                  <option value="atraso">Atraso</option>
+                  <option value="falta">Falta</option>
+                  <option value="hora-extra">Hora Extra</option>
+                  <option value="ajuste-horario">Ajuste de Horário</option>
+                  <option value="registro-perdido">Registro Perdido</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="dataInicio">Data Início</label>
+                <input type="date" id="dataInicio" name="dataInicio" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="dataFim">Data Fim</label>
+                <input type="date" id="dataFim" name="dataFim" class="form-control">
+              </div>
+              <div class="form-group">
+                <button type="button" onclick="filtrarCorrecoes()" class="btn btn-primary">
+                  <i class="fas fa-search"></i> Filtrar
+                </button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <!-- Lista de Correções -->
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Solicitações de Correção</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" id="selectAll" onchange="selecionarTodas()">
+                </th>
+                <th>Protocolo</th>
+                <th>Colaborador</th>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Horário Original</th>
+                <th>Horário Solicitado</th>
+                <th>Justificativa</th>
+                <th>Status</th>
+                <th>Solicitado em</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <input type="checkbox" name="correcaoSelecionada" value="1">
+                </td>
+                <td><strong>#COR-001</strong></td>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>João Silva</strong><br>
+                    <small>TI - Mat: 001</small>
+                  </div>
+                </td>
+                <td>28/11/2023</td>
+                <td><span class="tipo-badge atraso">Atraso</span></td>
+                <td>
+                  <div class="horario-original">
+                    <strong>Entrada:</strong> 08:00<br>
+                    <small>Registrado: 08:30</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="horario-solicitado">
+                    <strong>Entrada:</strong> 08:00<br>
+                    <small class="justificativa-horario">Correção solicitada</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="justificativa-resumo">
+                    Problema no transporte público...
+                    <button onclick="verJustificativaCompleta(1)" class="btn-link">
+                      <i class="fas fa-eye"></i> Ver completa
+                    </button>
+                  </div>
+                </td>
+                <td><span class="status-badge status-pendente">Pendente</span></td>
+                <td>
+                  <div class="data-solicitacao">
+                    <strong>29/11/2023</strong><br>
+                    <small>09:15</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="acoes-correcao">
+                    <button onclick="aprovarCorrecao(1)" class="btn-icon btn-success" title="Aprovar">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button onclick="rejeitarCorrecao(1)" class="btn-icon btn-danger" title="Rejeitar">
+                      <i class="fas fa-times"></i>
+                    </button>
+                    <button onclick="editarCorrecao(1)" class="btn-icon" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="verDetalhes(1)" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="checkbox" name="correcaoSelecionada" value="2">
+                </td>
+                <td><strong>#COR-002</strong></td>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Maria Santos</strong><br>
+                    <small>Vendas - Mat: 002</small>
+                  </div>
+                </td>
+                <td>27/11/2023</td>
+                <td><span class="tipo-badge registro-perdido">Registro Perdido</span></td>
+                <td>
+                  <div class="horario-original">
+                    <strong>Saída Almoço:</strong> --<br>
+                    <small>Não registrado</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="horario-solicitado">
+                    <strong>Saída Almoço:</strong> 12:00<br>
+                    <small class="justificativa-horario">Registro manual</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="justificativa-resumo">
+                    Esqueci de registrar a saída...
+                    <button onclick="verJustificativaCompleta(2)" class="btn-link">
+                      <i class="fas fa-eye"></i> Ver completa
+                    </button>
+                  </div>
+                </td>
+                <td><span class="status-badge status-aprovada">Aprovada</span></td>
+                <td>
+                  <div class="data-solicitacao">
+                    <strong>28/11/2023</strong><br>
+                    <small>14:30</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="acoes-correcao">
+                    <button onclick="verDetalhes(2)" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="verAprovacao(2)" class="btn-icon btn-info" title="Ver Aprovação">
+                      <i class="fas fa-info-circle"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="checkbox" name="correcaoSelecionada" value="3">
+                </td>
+                <td><strong>#COR-003</strong></td>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Carlos Oliveira</strong><br>
+                    <small>Financeiro - Mat: 003</small>
+                  </div>
+                </td>
+                <td>26/11/2023</td>
+                <td><span class="tipo-badge hora-extra">Hora Extra</span></td>
+                <td>
+                  <div class="horario-original">
+                    <strong>Saída:</strong> 18:00<br>
+                    <small>Registrado: 20:00</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="horario-solicitado">
+                    <strong>Saída:</strong> 20:00<br>
+                    <small class="justificativa-horario">Hora extra autorizada</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="justificativa-resumo">
+                    Fechamento mensal urgente...
+                    <button onclick="verJustificativaCompleta(3)" class="btn-link">
+                      <i class="fas fa-eye"></i> Ver completa
+                    </button>
+                  </div>
+                </td>
+                <td><span class="status-badge status-pendente">Pendente</span></td>
+                <td>
+                  <div class="data-solicitacao">
+                    <strong>27/11/2023</strong><br>
+                    <small>08:00</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="acoes-correcao">
+                    <button onclick="aprovarCorrecao(3)" class="btn-icon btn-success" title="Aprovar">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button onclick="rejeitarCorrecao(3)" class="btn-icon btn-danger" title="Rejeitar">
+                      <i class="fas fa-times"></i>
+                    </button>
+                    <button onclick="editarCorrecao(3)" class="btn-icon" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="verDetalhes(3)" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="checkbox" name="correcaoSelecionada" value="4">
+                </td>
+                <td><strong>#COR-004</strong></td>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Pedro Lima</strong><br>
+                    <small>Marketing - Mat: 005</small>
+                  </div>
+                </td>
+                <td>25/11/2023</td>
+                <td><span class="tipo-badge ajuste-horario">Ajuste Horário</span></td>
+                <td>
+                  <div class="horario-original">
+                    <strong>Entrada:</strong> 08:00<br>
+                    <strong>Saída:</strong> 18:00
+                  </div>
+                </td>
+                <td>
+                  <div class="horario-solicitado">
+                    <strong>Entrada:</strong> 09:00<br>
+                    <strong>Saída:</strong> 19:00
+                  </div>
+                </td>
+                <td>
+                  <div class="justificativa-resumo">
+                    Consulta médica agendada...
+                    <button onclick="verJustificativaCompleta(4)" class="btn-link">
+                      <i class="fas fa-eye"></i> Ver completa
+                    </button>
+                  </div>
+                </td>
+                <td><span class="status-badge status-rejeitada">Rejeitada</span></td>
+                <td>
+                  <div class="data-solicitacao">
+                    <strong>24/11/2023</strong><br>
+                    <small>16:45</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="acoes-correcao">
+                    <button onclick="verDetalhes(4)" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="verRejeicao(4)" class="btn-icon btn-warning" title="Ver Motivo da Rejeição">
+                      <i class="fas fa-exclamation-triangle"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <!-- Histórico de Aprovações -->
+        <article class="card">
+          <h3><i class="fas fa-history"></i> Histórico de Aprovações Recentes</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Protocolo</th>
+                <th>Colaborador</th>
+                <th>Tipo</th>
+                <th>Data da Correção</th>
+                <th>Aprovado por</th>
+                <th>Data da Aprovação</th>
+                <th>Observações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>#COR-002</strong></td>
+                <td>Maria Santos</td>
+                <td><span class="tipo-badge registro-perdido">Registro Perdido</span></td>
+                <td>27/11/2023</td>
+                <td>
+                  <div class="aprovador-info">
+                    <strong>Ana Silva</strong><br>
+                    <small>Gerente RH</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-aprovacao">
+                    <strong>29/11/2023</strong><br>
+                    <small>10:30</small>
+                  </div>
+                </td>
+                <td>Justificativa aceita. Registro corrigido automaticamente.</td>
+              </tr>
+              <tr>
+                <td><strong>#COR-001</strong></td>
+                <td>João Silva</td>
+                <td><span class="tipo-badge atraso">Atraso</span></td>
+                <td>26/11/2023</td>
+                <td>
+                  <div class="aprovador-info">
+                    <strong>Ana Silva</strong><br>
+                    <small>Gerente RH</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="data-aprovacao">
+                    <strong>28/11/2023</strong><br>
+                    <small>14:15</small>
+                  </div>
+                </td>
+                <td>Situação excepcional. Atraso justificado.</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal Nova Correção -->
+  <div id="modalCorrecao" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus"></i> Nova Solicitação de Correção</h3>
+        <button onclick="fecharModalCorrecao()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="colaboradorCorrecao">Colaborador *</label>
+            <select id="colaboradorCorrecao" name="colaborador" required class="form-control">
+              <option value="">Selecione um colaborador...</option>
+              <option value="1">João Silva - TI</option>
+              <option value="2">Maria Santos - Vendas</option>
+              <option value="3">Carlos Oliveira - Financeiro</option>
+              <option value="4">Ana Costa - Design</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dataCorrecao">Data da Correção *</label>
+            <input type="date" id="dataCorrecao" name="dataCorrecao" required class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="tipoCorrecaoModal">Tipo de Correção *</label>
+            <select id="tipoCorrecaoModal" name="tipoCorrecao" required class="form-control" onchange="ajustarCamposCorrecao()">
+              <option value="">Selecione...</option>
+              <option value="atraso">Atraso</option>
+              <option value="falta">Falta</option>
+              <option value="hora-extra">Hora Extra</option>
+              <option value="ajuste-horario">Ajuste de Horário</option>
+              <option value="registro-perdido">Registro Perdido</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="camposHorarios" style="display: none;">
+          <h4>Horários</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="horarioOriginal">Horário Original</label>
+              <input type="time" id="horarioOriginal" name="horarioOriginal" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="horarioSolicitado">Horário Solicitado *</label>
+              <input type="time" id="horarioSolicitado" name="horarioSolicitado" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="tipoRegistroCorrecao">Tipo de Registro</label>
+              <select id="tipoRegistroCorrecao" name="tipoRegistro" class="form-control">
+                <option value="entrada">Entrada</option>
+                <option value="saida-almoco">Saída para Almoço</option>
+                <option value="volta-almoco">Volta do Almoço</option>
+                <option value="saida">Saída</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="justificativaCorrecao">Justificativa *</label>
+          <textarea id="justificativaCorrecao" name="justificativa" required class="form-control" rows="4" placeholder="Descreva detalhadamente o motivo da solicitação de correção..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="anexosCorrecao">Anexos (Comprovantes)</label>
+          <input type="file" id="anexosCorrecao" name="anexos" class="form-control" multiple accept=".pdf,.jpg,.jpeg,.png">
+          <small class="form-text">Formatos aceitos: PDF, JPG, PNG. Máximo 5MB por arquivo.</small>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="urgente" name="urgente">
+            Marcar como urgente
+          </label>
+        </div>
+      </form>
+      
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalCorrecao()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarCorrecao()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Solicitar Correção
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function abrirModalCorrecao() {
+      document.getElementById('modalCorrecao').style.display = 'flex';
+    }
+    
+    function fecharModalCorrecao() {
+      document.getElementById('modalCorrecao').style.display = 'none';
+      document.querySelector('#modalCorrecao form').reset();
+      document.getElementById('camposHorarios').style.display = 'none';
+    }
+    
+    function ajustarCamposCorrecao() {
+      const tipo = document.getElementById('tipoCorrecaoModal').value;
+      const camposHorarios = document.getElementById('camposHorarios');
+      
+      if (tipo && tipo !== 'falta') {
+        camposHorarios.style.display = 'block';
+      } else {
+        camposHorarios.style.display = 'none';
+      }
+    }
+    
+    function salvarCorrecao() {
+      const form = document.querySelector('#modalCorrecao form');
+      if (form.checkValidity()) {
+        alert('Solicitação de correção enviada com sucesso!');
+        fecharModalCorrecao();
+        location.reload();
+      } else {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+      }
+    }
+    
+    function selecionarTodas() {
+      const selectAll = document.getElementById('selectAll');
+      const checkboxes = document.querySelectorAll('input[name="correcaoSelecionada"]');
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+      });
+    }
+    
+    function aprovarSelecionadas() {
+      const selecionadas = document.querySelectorAll('input[name="correcaoSelecionada"]:checked');
+      if (selecionadas.length === 0) {
+        alert('Selecione pelo menos uma correção para aprovar.');
+        return;
+      }
+      
+      if (confirm(`Aprovar ${selecionadas.length} correção(ões) selecionada(s)?`)) {
+        alert(`${selecionadas.length} correção(ões) aprovada(s) com sucesso!`);
+        location.reload();
+      }
+    }
+    
+    function rejeitarSelecionadas() {
+      const selecionadas = document.querySelectorAll('input[name="correcaoSelecionada"]:checked');
+      if (selecionadas.length === 0) {
+        alert('Selecione pelo menos uma correção para rejeitar.');
+        return;
+      }
+      
+      const motivo = prompt('Digite o motivo da rejeição:');
+      if (motivo) {
+        alert(`${selecionadas.length} correção(ões) rejeitada(s) com sucesso!`);
+        location.reload();
+      }
+    }
+    
+    function aprovarCorrecao(id) {
+      if (confirm('Aprovar esta correção?')) {
+        alert(`Correção ${id} aprovada com sucesso!`);
+        location.reload();
+      }
+    }
+    
+    function rejeitarCorrecao(id) {
+      const motivo = prompt('Digite o motivo da rejeição:');
+      if (motivo) {
+        alert(`Correção ${id} rejeitada: ${motivo}`);
+        location.reload();
+      }
+    }
+    
+    function editarCorrecao(id) {
+      alert(`Editando correção ${id}`);
+    }
+    
+    function verDetalhes(id) {
+      alert(`Visualizando detalhes da correção ${id}`);
+    }
+    
+    function verJustificativaCompleta(id) {
+      alert(`Visualizando justificativa completa da correção ${id}`);
+    }
+    
+    function verAprovacao(id) {
+      alert(`Visualizando detalhes da aprovação da correção ${id}`);
+    }
+    
+    function verRejeicao(id) {
+      alert(`Visualizando motivo da rejeição da correção ${id}`);
+    }
+    
+    function filtrarCorrecoes() {
+      alert('Aplicando filtros...');
+    }
+    
+    function exportarRelatorio() {
+      alert('Exportando relatório de correções...');
+    }
+  </script>
+  
+  <style>
+    .resumo-correcoes {
+      margin: 20px 0;
+    }
+    
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .resumo-item.pendentes {
+      background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+      color: white;
+    }
+    
+    .resumo-item.aprovadas {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .resumo-item.rejeitadas {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .resumo-item.tempo-medio {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .resumo-icon {
+      font-size: 32px;
+      margin-right: 20px;
+      opacity: 0.9;
+    }
+    
+    .resumo-valor {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .resumo-detalhes {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .colaborador-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .horario-original, .horario-solicitado {
+      font-size: 13px;
+    }
+    
+    .horario-original strong, .horario-solicitado strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .justificativa-horario {
+      color: #007bff;
+      font-style: italic;
+    }
+    
+    .justificativa-resumo {
+      max-width: 200px;
+      font-size: 13px;
+    }
+    
+    .btn-link {
+      background: none;
+      border: none;
+      color: #007bff;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 0;
+      margin-top: 5px;
+    }
+    
+    .btn-link:hover {
+      color: #0056b3;
+    }
+    
+    .data-solicitacao strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .data-aprovacao strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .aprovador-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .acoes-correcao {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    
+    .tipo-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .tipo-badge.atraso {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .tipo-badge.falta {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .tipo-badge.hora-extra {
+      background: #007bff;
+      color: white;
+    }
+    
+    .tipo-badge.ajuste-horario {
+      background: #17a2b8;
+      color: white;
+    }
+    
+    .tipo-badge.registro-perdido {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .status-badge.status-pendente {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .status-badge.status-aprovada {
+      background: #28a745;
+      color: white;
+    }
+    
+    .status-badge.status-rejeitada {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .modal-large {
+      max-width: 800px;
+    }
+    
+    .form-text {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+  </style>
+</body>
+
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relatórios de Folha - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Relatórios de Folha de Pagamento</h1>
+        <h2>Análises e relatórios detalhados</h2>
+
+        <div class="action-buttons">
+          <a href="/rh/folha-pagamento/gerar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </a>
+          <button onclick="exportarTodosRelatorios()" class="btn btn-success">
+            <i class="fas fa-download"></i> Exportar Todos
+          </button>
+        </div>
+
+        <!-- Filtros Gerais -->
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="periodoInicio">Período - Início</label>
+                <input type="month" id="periodoInicio" name="periodoInicio" class="form-control" value="2023-01">
+              </div>
+              <div class="form-group">
+                <label for="periodoFim">Período - Fim</label>
+                <input type="month" id="periodoFim" name="periodoFim" class="form-control" value="2023-11">
+              </div>
+              <div class="form-group">
+                <label for="departamentoRel">Departamento</label>
+                <select id="departamentoRel" name="departamento" class="form-control">
+                  <option value="">Todos os departamentos</option>
+                  <option value="ti">TI</option>
+                  <option value="vendas">Vendas</option>
+                  <option value="financeiro">Financeiro</option>
+                  <option value="rh">RH</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <button type="button" onclick="atualizarRelatorios()" class="btn btn-primary">
+                  <i class="fas fa-sync"></i> Atualizar
+                </button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <!-- Resumo Executivo -->
+        <article class="card">
+          <h3><i class="fas fa-chart-line"></i> Resumo Executivo</h3>
+          <div class="resumo-executivo">
+            <div class="resumo-grid">
+              <div class="resumo-card salarios">
+                <div class="resumo-icon">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Total Salários</h4>
+                  <div class="resumo-valor">R$ 1.597.250,00</div>
+                  <div class="resumo-variacao positiva">
+                    <i class="fas fa-arrow-up"></i> +5.2% vs mês anterior
+                  </div>
+                </div>
+              </div>
+              
+              <div class="resumo-card descontos">
+                <div class="resumo-icon">
+                  <i class="fas fa-minus-circle"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Total Descontos</h4>
+                  <div class="resumo-valor">R$ 356.950,00</div>
+                  <div class="resumo-variacao negativa">
+                    <i class="fas fa-arrow-down"></i> -2.1% vs mês anterior
+                  </div>
+                </div>
+              </div>
+              
+              <div class="resumo-card liquido">
+                <div class="resumo-icon">
+                  <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Folha Líquida</h4>
+                  <div class="resumo-valor">R$ 1.240.300,00</div>
+                  <div class="resumo-variacao positiva">
+                    <i class="fas fa-arrow-up"></i> +7.8% vs mês anterior
+                  </div>
+                </div>
+              </div>
+              
+              <div class="resumo-card colaboradores">
+                <div class="resumo-icon">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Colaboradores</h4>
+                  <div class="resumo-valor">15</div>
+                  <div class="resumo-variacao neutra">
+                    <i class="fas fa-minus"></i> Sem alteração
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Gráficos -->
+        <div class="charts-container">
+          <article class="card chart-card">
+            <h3><i class="fas fa-chart-bar"></i> Evolução da Folha de Pagamento</h3>
+            <canvas id="chartEvolucaoFolha" width="400" height="200"></canvas>
+          </article>
+          
+          <article class="card chart-card">
+            <h3><i class="fas fa-chart-pie"></i> Distribuição por Departamento</h3>
+            <canvas id="chartDepartamentos" width="400" height="200"></canvas>
+          </article>
+        </div>
+
+        <!-- Relatórios Disponíveis -->
+        <article class="card">
+          <h3><i class="fas fa-file-alt"></i> Relatórios Disponíveis</h3>
+          <div class="relatorios-grid">
+            <div class="relatorio-item">
+              <div class="relatorio-icon">
+                <i class="fas fa-file-invoice-dollar"></i>
+              </div>
+              <div class="relatorio-info">
+                <h4>Folha de Pagamento Analítica</h4>
+                <p>Relatório detalhado com todos os colaboradores, proventos e descontos</p>
+                <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('analitica')" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                  <button onclick="gerarRelatorio('analitica', 'excel')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="relatorio-item">
+              <div class="relatorio-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="relatorio-info">
+                <h4>Resumo Gerencial</h4>
+                <p>Visão executiva com totais e indicadores principais</p>
+                <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('gerencial')" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                  <button onclick="gerarRelatorio('gerencial', 'excel')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="relatorio-item">
+              <div class="relatorio-icon">
+                <i class="fas fa-university"></i>
+              </div>
+              <div class="relatorio-info">
+                <h4>Obrigações Trabalhistas</h4>
+                <p>INSS, IRRF, FGTS e demais obrigações por colaborador</p>
+                <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('obrigacoes')" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                  <button onclick="gerarRelatorio('obrigacoes', 'excel')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="relatorio-item">
+              <div class="relatorio-icon">
+                <i class="fas fa-building"></i>
+              </div>
+              <div class="relatorio-info">
+                <h4>Por Departamento</h4>
+                <p>Análise de custos e colaboradores por departamento</p>
+                <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('departamento')" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                  <button onclick="gerarRelatorio('departamento', 'excel')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="relatorio-item">
+              <div class="relatorio-icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="relatorio-info">
+                <h4>Comparativo Mensal</h4>
+                <p>Evolução da folha nos últimos 12 meses</p>
+                <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('comparativo')" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                  <button onclick="gerarRelatorio('comparativo', 'excel')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="relatorio-item">
+              <div class="relatorio-icon">
+                <i class="fas fa-heart"></i>
+              </div>
+              <div class="relatorio-info">
+                <h4>Benefícios</h4>
+                <p>Relatório de benefícios concedidos e seus custos</p>
+                <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('beneficios')" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                  <button onclick="gerarRelatorio('beneficios', 'excel')" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Tabela Detalhada -->
+        <article class="card">
+          <h3><i class="fas fa-table"></i> Detalhamento da Folha Atual</h3>
+          <div class="table-responsive">
+            <table class="table-list">
+              <thead>
+                <tr>
+                  <th>Colaborador</th>
+                  <th>Departamento</th>
+                  <th>Salário Base</th>
+                  <th>Proventos</th>
+                  <th>Descontos</th>
+                  <th>Líquido</th>
+                  <th>% Desconto</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>João Silva</td>
+                  <td>TI</td>
+                  <td>R$ 8.500,00</td>
+                  <td>R$ 9.900,00</td>
+                  <td>R$ 2.708,30</td>
+                  <td>R$ 7.191,70</td>
+                  <td>27.4%</td>
+                  <td>
+                    <button onclick="verDetalhesColaborador(1)" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="gerarHolerite(1)" class="btn-icon" title="Gerar Holerite">
+                      <i class="fas fa-file-invoice"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Maria Santos</td>
+                  <td>Vendas</td>
+                  <td>R$ 6.000,00</td>
+                  <td>R$ 6.820,00</td>
+                  <td>R$ 1.580,00</td>
+                  <td>R$ 5.240,00</td>
+                  <td>23.2%</td>
+                  <td>
+                    <button onclick="verDetalhesColaborador(2)" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="gerarHolerite(2)" class="btn-icon" title="Gerar Holerite">
+                      <i class="fas fa-file-invoice"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Carlos Oliveira</td>
+                  <td>Financeiro</td>
+                  <td>R$ 12.000,00</td>
+                  <td>R$ 13.200,00</td>
+                  <td>R$ 3.240,00</td>
+                  <td>R$ 9.960,00</td>
+                  <td>24.5%</td>
+                  <td>
+                    <button onclick="verDetalhesColaborador(3)" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="gerarHolerite(3)" class="btn-icon" title="Gerar Holerite">
+                      <i class="fas fa-file-invoice"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="2"><strong>TOTAIS</strong></td>
+                  <td><strong>R$ 132.500,00</strong></td>
+                  <td><strong>R$ 145.750,00</strong></td>
+                  <td><strong>R$ 32.450,00</strong></td>
+                  <td><strong>R$ 113.300,00</strong></td>
+                  <td><strong>22.3%</strong></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    // Gráfico de Evolução da Folha
+    const ctxEvolucao = document.getElementById('chartEvolucaoFolha').getContext('2d');
+    new Chart(ctxEvolucao, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov'],
+        datasets: [{
+          label: 'Folha Bruta',
+          data: [120000, 125000, 130000, 128000, 135000, 140000, 138000, 142000, 145000, 143000, 145750],
+          borderColor: '#007bff',
+          backgroundColor: 'rgba(0, 123, 255, 0.1)',
+          tension: 0.4
+        }, {
+          label: 'Folha Líquida',
+          data: [95000, 98000, 102000, 100000, 105000, 108000, 106000, 110000, 112000, 110000, 113300],
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40, 167, 69, 0.1)',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: function(value) {
+                return 'R$ ' + value.toLocaleString('pt-BR');
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Gráfico de Departamentos
+    const ctxDepartamentos = document.getElementById('chartDepartamentos').getContext('2d');
+    new Chart(ctxDepartamentos, {
+      type: 'doughnut',
+      data: {
+        labels: ['TI', 'Vendas', 'Financeiro', 'RH', 'Marketing'],
+        datasets: [{
+          data: [45000, 35000, 25000, 15000, 10000],
+          backgroundColor: [
+            '#007bff',
+            '#28a745',
+            '#ffc107',
+            '#dc3545',
+            '#6f42c1'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'right',
+          }
+        }
+      }
+    });
+
+    function atualizarRelatorios() {
+      alert('Atualizando relatórios com os filtros selecionados...');
+      // Implementar atualização dos dados
+    }
+
+    function gerarRelatorio(tipo, formato = 'pdf') {
+      alert(`Gerando relatório ${tipo} em formato ${formato.toUpperCase()}...`);
+      // Implementar geração de relatório
+    }
+
+    function exportarTodosRelatorios() {
+      if (confirm('Deseja exportar todos os relatórios? Esta operação pode demorar alguns minutos.')) {
+        alert('Iniciando exportação de todos os relatórios...');
+        // Implementar exportação em lote
+      }
+    }
+
+    function verDetalhesColaborador(id) {
+      alert(`Visualizando detalhes do colaborador ${id}`);
+      // Implementar visualização de detalhes
+    }
+
+    function gerarHolerite(id) {
+      alert(`Gerando holerite para o colaborador ${id}`);
+      // Implementar geração de holerite individual
+    }
+  </script>
+  
+  <style>
+    .resumo-executivo {
+      margin: 20px 0;
+    }
+    
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .resumo-card {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    
+    .resumo-card:hover {
+      transform: translateY(-2px);
+    }
+    
+    .resumo-card.salarios {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .resumo-card.descontos {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .resumo-card.liquido {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .resumo-card.colaboradores {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+    }
+    
+    .resumo-icon {
+      font-size: 32px;
+      margin-right: 20px;
+      opacity: 0.9;
+    }
+    
+    .resumo-valor {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .resumo-variacao {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .resumo-variacao.positiva {
+      color: #d4edda;
+    }
+    
+    .resumo-variacao.negativa {
+      color: #f8d7da;
+    }
+    
+    .resumo-variacao.neutra {
+      color: #e2e3e5;
+    }
+    
+    .charts-container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .chart-card {
+      padding: 20px;
+    }
+    
+    .relatorios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .relatorio-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 20px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      background: #f8f9fa;
+      transition: box-shadow 0.2s;
+    }
+    
+    .relatorio-item:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .relatorio-icon {
+      font-size: 24px;
+      color: #007bff;
+      margin-right: 15px;
+      margin-top: 5px;
+    }
+    
+    .relatorio-info h4 {
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .relatorio-info p {
+      margin-bottom: 15px;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .relatorio-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .table-responsive {
+      overflow-x: auto;
+    }
+    
+    .total-row {
+      background: #f8f9fa;
+      font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+      .charts-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .resumo-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .relatorios-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</body>
+
+</html>

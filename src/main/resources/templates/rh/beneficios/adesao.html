@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adesão aos Benefícios - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Adesão aos Benefícios</h1>
+        <h2>Gerenciamento de adesões e cancelamentos de benefícios</h2>
+
+        <div class="action-buttons">
+          <button onclick="abrirModalAdesao()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Adesão
+          </button>
+          <button onclick="processarAdesoes()" class="btn btn-info">
+            <i class="fas fa-cogs"></i> Processar Pendentes
+          </button>
+          <button onclick="exportarRelatorio()" class="btn btn-success">
+            <i class="fas fa-download"></i> Exportar
+          </button>
+        </div>
+
+        <!-- Resumo de Adesões -->
+        <article class="card">
+          <h3><i class="fas fa-chart-pie"></i> Resumo de Adesões</h3>
+          <div class="resumo-adesoes">
+            <div class="resumo-grid">
+              <div class="resumo-item pendentes">
+                <div class="resumo-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Pendentes</h4>
+                  <div class="resumo-valor">3</div>
+                  <div class="resumo-detalhes">Aguardando processamento</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item ativas">
+                <div class="resumo-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Ativas</h4>
+                  <div class="resumo-valor">42</div>
+                  <div class="resumo-detalhes">Benefícios ativos</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item canceladas">
+                <div class="resumo-icon">
+                  <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Canceladas</h4>
+                  <div class="resumo-valor">8</div>
+                  <div class="resumo-detalhes">Este mês</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item economia">
+                <div class="resumo-icon">
+                  <i class="fas fa-piggy-bank"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Economia Fiscal</h4>
+                  <div class="resumo-valor">R$ 2.340</div>
+                  <div class="resumo-detalhes">Mensal estimada</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Benefícios Disponíveis -->
+        <article class="card">
+          <h3><i class="fas fa-gift"></i> Benefícios Disponíveis</h3>
+          <div class="beneficios-container">
+            <div class="beneficio-card">
+              <div class="beneficio-icon">
+                <i class="fas fa-heartbeat"></i>
+              </div>
+              <div class="beneficio-info">
+                <h4>Plano de Saúde</h4>
+                <p>Cobertura médica e hospitalar</p>
+                <div class="beneficio-stats">
+                  <span class="stat"><i class="fas fa-users"></i> 12 aderidos</span>
+                  <span class="stat"><i class="fas fa-money-bill"></i> R$ 180/mês</span>
+                </div>
+              </div>
+              <div class="beneficio-actions">
+                <button onclick="verDetalhes('plano-saude')" class="btn btn-sm btn-outline">
+                  <i class="fas fa-eye"></i> Ver Detalhes
+                </button>
+              </div>
+            </div>
+            
+            <div class="beneficio-card">
+              <div class="beneficio-icon">
+                <i class="fas fa-bus"></i>
+              </div>
+              <div class="beneficio-info">
+                <h4>Vale Transporte</h4>
+                <p>Auxílio para deslocamento</p>
+                <div class="beneficio-stats">
+                  <span class="stat"><i class="fas fa-users"></i> 12 aderidos</span>
+                  <span class="stat"><i class="fas fa-money-bill"></i> R$ 220/mês</span>
+                </div>
+              </div>
+              <div class="beneficio-actions">
+                <button onclick="verDetalhes('vale-transporte')" class="btn btn-sm btn-outline">
+                  <i class="fas fa-eye"></i> Ver Detalhes
+                </button>
+              </div>
+            </div>
+            
+            <div class="beneficio-card">
+              <div class="beneficio-icon">
+                <i class="fas fa-utensils"></i>
+              </div>
+              <div class="beneficio-info">
+                <h4>Vale Refeição</h4>
+                <p>Auxílio alimentação</p>
+                <div class="beneficio-stats">
+                  <span class="stat"><i class="fas fa-users"></i> 14 aderidos</span>
+                  <span class="stat"><i class="fas fa-money-bill"></i> R$ 550/mês</span>
+                </div>
+              </div>
+              <div class="beneficio-actions">
+                <button onclick="verDetalhes('vale-refeicao')" class="btn btn-sm btn-outline">
+                  <i class="fas fa-eye"></i> Ver Detalhes
+                </button>
+              </div>
+            </div>
+            
+            <div class="beneficio-card">
+              <div class="beneficio-icon">
+                <i class="fas fa-tooth"></i>
+              </div>
+              <div class="beneficio-info">
+                <h4>Plano Odontológico</h4>
+                <p>Cobertura odontológica</p>
+                <div class="beneficio-stats">
+                  <span class="stat"><i class="fas fa-users"></i> 8 aderidos</span>
+                  <span class="stat"><i class="fas fa-money-bill"></i> R$ 45/mês</span>
+                </div>
+              </div>
+              <div class="beneficio-actions">
+                <button onclick="verDetalhes('plano-odonto')" class="btn btn-sm btn-outline">
+                  <i class="fas fa-eye"></i> Ver Detalhes
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Filtros -->
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="statusAdesao">Status</label>
+                <select id="statusAdesao" name="status" class="form-control">
+                  <option value="">Todos</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="ativa">Ativa</option>
+                  <option value="cancelada">Cancelada</option>
+                  <option value="suspensa">Suspensa</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="tipoBeneficio">Tipo de Benefício</label>
+                <select id="tipoBeneficio" name="tipoBeneficio" class="form-control">
+                  <option value="">Todos os benefícios</option>
+                  <option value="plano-saude">Plano de Saúde</option>
+                  <option value="vale-transporte">Vale Transporte</option>
+                  <option value="vale-refeicao">Vale Refeição</option>
+                  <option value="plano-odonto">Plano Odontológico</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="departamento">Departamento</label>
+                <select id="departamento" name="departamento" class="form-control">
+                  <option value="">Todos os departamentos</option>
+                  <option value="ti">TI</option>
+                  <option value="vendas">Vendas</option>
+                  <option value="financeiro">Financeiro</option>
+                  <option value="rh">RH</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <button type="button" onclick="filtrarAdesoes()" class="btn btn-primary">
+                  <i class="fas fa-search"></i> Filtrar
+                </button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <!-- Lista de Adesões -->
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Adesões e Cancelamentos</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Benefício</th>
+                <th>Tipo</th>
+                <th>Data Solicitação</th>
+                <th>Data Vigência</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Pedro Lima</strong><br>
+                    <small>Marketing - Mat: 005</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="beneficio-info">
+                    <i class="fas fa-heartbeat"></i>
+                    <strong>Plano de Saúde</strong><br>
+                    <small>Familiar (3 dependentes)</small>
+                  </div>
+                </td>
+                <td><span class="tipo-badge adesao">Adesão</span></td>
+                <td>25/11/2023</td>
+                <td>01/12/2023</td>
+                <td>R$ 540,00</td>
+                <td><span class="status-badge status-pendente">Pendente</span></td>
+                <td>
+                  <button onclick="aprovarAdesao(1)" class="btn-icon btn-success" title="Aprovar">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button onclick="rejeitarAdesao(1)" class="btn-icon btn-danger" title="Rejeitar">
+                    <i class="fas fa-times"></i>
+                  </button>
+                  <button onclick="verDetalhesAdesao(1)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Lucia Fernandes</strong><br>
+                    <small>RH - Mat: 006</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="beneficio-info">
+                    <i class="fas fa-utensils"></i>
+                    <strong>Vale Refeição</strong><br>
+                    <small>R$ 35,00/dia</small>
+                  </div>
+                </td>
+                <td><span class="tipo-badge adesao">Adesão</span></td>
+                <td>23/11/2023</td>
+                <td>01/12/2023</td>
+                <td>R$ 770,00</td>
+                <td><span class="status-badge status-pendente">Pendente</span></td>
+                <td>
+                  <button onclick="aprovarAdesao(2)" class="btn-icon btn-success" title="Aprovar">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button onclick="rejeitarAdesao(2)" class="btn-icon btn-danger" title="Rejeitar">
+                    <i class="fas fa-times"></i>
+                  </button>
+                  <button onclick="verDetalhesAdesao(2)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Roberto Santos</strong><br>
+                    <small>Estagiário - Mat: 007</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="beneficio-info">
+                    <i class="fas fa-bus"></i>
+                    <strong>Vale Transporte</strong><br>
+                    <small>4 viagens/dia</small>
+                  </div>
+                </td>
+                <td><span class="tipo-badge adesao">Adesão</span></td>
+                <td>20/11/2023</td>
+                <td>01/12/2023</td>
+                <td>R$ 387,20</td>
+                <td><span class="status-badge status-pendente">Pendente</span></td>
+                <td>
+                  <button onclick="aprovarAdesao(3)" class="btn-icon btn-success" title="Aprovar">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button onclick="rejeitarAdesao(3)" class="btn-icon btn-danger" title="Rejeitar">
+                    <i class="fas fa-times"></i>
+                  </button>
+                  <button onclick="verDetalhesAdesao(3)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>João Silva</strong><br>
+                    <small>TI - Mat: 001</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="beneficio-info">
+                    <i class="fas fa-heartbeat"></i>
+                    <strong>Plano de Saúde</strong><br>
+                    <small>Individual</small>
+                  </div>
+                </td>
+                <td><span class="tipo-badge ativa">Ativa</span></td>
+                <td>15/10/2023</td>
+                <td>01/11/2023</td>
+                <td>R$ 180,00</td>
+                <td><span class="status-badge status-ativa">Ativa</span></td>
+                <td>
+                  <button onclick="cancelarBeneficio(4)" class="btn-icon btn-warning" title="Cancelar">
+                    <i class="fas fa-ban"></i>
+                  </button>
+                  <button onclick="verDetalhesAdesao(4)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Maria Santos</strong><br>
+                    <small>Vendas - Mat: 002</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="beneficio-info">
+                    <i class="fas fa-tooth"></i>
+                    <strong>Plano Odontológico</strong><br>
+                    <small>Familiar</small>
+                  </div>
+                </td>
+                <td><span class="tipo-badge cancelamento">Cancelamento</span></td>
+                <td>18/11/2023</td>
+                <td>31/11/2023</td>
+                <td>R$ 90,00</td>
+                <td><span class="status-badge status-cancelada">Cancelada</span></td>
+                <td>
+                  <button onclick="verDetalhesAdesao(5)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <!-- Histórico de Processamentos -->
+        <article class="card">
+          <h3><i class="fas fa-history"></i> Histórico de Processamentos</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Valor Total</th>
+                <th>Usuário</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01/11/2023 09:00</td>
+                <td>Processamento Mensal</td>
+                <td>15 adesões</td>
+                <td>R$ 8.450,00</td>
+                <td>Sistema</td>
+                <td><span class="status-badge status-ativa">Concluído</span></td>
+              </tr>
+              <tr>
+                <td>28/10/2023 14:30</td>
+                <td>Adesão Manual</td>
+                <td>3 adesões</td>
+                <td>R$ 1.200,00</td>
+                <td>Admin RH</td>
+                <td><span class="status-badge status-ativa">Concluído</span></td>
+              </tr>
+              <tr>
+                <td>25/10/2023 16:45</td>
+                <td>Cancelamento</td>
+                <td>2 cancelamentos</td>
+                <td>R$ 360,00</td>
+                <td>Admin RH</td>
+                <td><span class="status-badge status-ativa">Concluído</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal Nova Adesão -->
+  <div id="modalAdesao" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus"></i> Nova Adesão de Benefício</h3>
+        <button onclick="fecharModalAdesao()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="colaborador">Colaborador *</label>
+            <select id="colaborador" name="colaborador" required class="form-control">
+              <option value="">Selecione um colaborador...</option>
+              <option value="5">Pedro Lima - Marketing</option>
+              <option value="6">Lucia Fernandes - RH</option>
+              <option value="7">Roberto Santos - Estagiário</option>
+              <option value="8">Ana Paula - Financeiro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tipoBeneficioModal">Tipo de Benefício *</label>
+            <select id="tipoBeneficioModal" name="tipoBeneficio" required class="form-control" onchange="carregarOpcoesBeneficio()">
+              <option value="">Selecione...</option>
+              <option value="plano-saude">Plano de Saúde</option>
+              <option value="vale-transporte">Vale Transporte</option>
+              <option value="vale-refeicao">Vale Refeição</option>
+              <option value="plano-odonto">Plano Odontológico</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dataVigencia">Data de Vigência *</label>
+            <input type="date" id="dataVigencia" name="dataVigencia" required class="form-control">
+            <small class="form-text">Data de início do benefício</small>
+          </div>
+          <div class="form-group">
+            <label for="tipoAdesao">Tipo de Adesão *</label>
+            <select id="tipoAdesao" name="tipoAdesao" required class="form-control">
+              <option value="">Selecione...</option>
+              <option value="adesao">Nova Adesão</option>
+              <option value="alteracao">Alteração</option>
+              <option value="cancelamento">Cancelamento</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Seção específica do benefício (será preenchida dinamicamente) -->
+        <div id="opcoesBeneficio" style="display: none;">
+          <!-- Conteúdo será inserido via JavaScript -->
+        </div>
+        
+        <div class="form-group">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre a adesão..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="processarImediatamente" name="processarImediatamente">
+            Processar imediatamente (não aguardar processamento em lote)
+          </label>
+        </div>
+      </form>
+      
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalAdesao()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarAdesao()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Salvar Adesão
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function abrirModalAdesao() {
+      document.getElementById('modalAdesao').style.display = 'flex';
+    }
+    
+    function fecharModalAdesao() {
+      document.getElementById('modalAdesao').style.display = 'none';
+      document.querySelector('#modalAdesao form').reset();
+      document.getElementById('opcoesBeneficio').style.display = 'none';
+    }
+    
+    function carregarOpcoesBeneficio() {
+      const tipo = document.getElementById('tipoBeneficioModal').value;
+      const container = document.getElementById('opcoesBeneficio');
+      
+      if (!tipo) {
+        container.style.display = 'none';
+        return;
+      }
+      
+      let html = '';
+      
+      switch(tipo) {
+        case 'plano-saude':
+          html = `
+            <h4><i class="fas fa-heartbeat"></i> Opções do Plano de Saúde</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="tipoPlano">Tipo de Plano *</label>
+                <select id="tipoPlano" name="tipoPlano" required class="form-control">
+                  <option value="">Selecione...</option>
+                  <option value="individual">Individual - R$ 180,00</option>
+                  <option value="familiar">Familiar - R$ 540,00</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="dependentes">Número de Dependentes</label>
+                <input type="number" id="dependentes" name="dependentes" class="form-control" min="0" max="10" value="0">
+              </div>
+            </div>
+          `;
+          break;
+          
+        case 'vale-transporte':
+          html = `
+            <h4><i class="fas fa-bus"></i> Opções do Vale Transporte</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="viagensDia">Viagens por Dia *</label>
+                <select id="viagensDia" name="viagensDia" required class="form-control">
+                  <option value="">Selecione...</option>
+                  <option value="2">2 viagens - R$ 193,60</option>
+                  <option value="4">4 viagens - R$ 387,20</option>
+                  <option value="6">6 viagens - R$ 580,80</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="trajeto">Trajeto</label>
+                <input type="text" id="trajeto" name="trajeto" class="form-control" placeholder="Ex: Casa → Trabalho">
+              </div>
+            </div>
+          `;
+          break;
+          
+        case 'vale-refeicao':
+          html = `
+            <h4><i class="fas fa-utensils"></i> Opções do Vale Refeição</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="valorDiario">Valor Diário</label>
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input type="number" id="valorDiario" name="valorDiario" class="form-control" value="35.00" step="0.01" readonly>
+                </div>
+                <small class="form-text">Valor padrão da empresa</small>
+              </div>
+              <div class="form-group">
+                <label for="fornecedor">Fornecedor</label>
+                <select id="fornecedor" name="fornecedor" class="form-control">
+                  <option value="alelo">Alelo Refeição</option>
+                </select>
+              </div>
+            </div>
+          `;
+          break;
+          
+        case 'plano-odonto':
+          html = `
+            <h4><i class="fas fa-tooth"></i> Opções do Plano Odontológico</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="tipoPlanoOdonto">Tipo de Plano *</label>
+                <select id="tipoPlanoOdonto" name="tipoPlanoOdonto" required class="form-control">
+                  <option value="">Selecione...</option>
+                  <option value="individual">Individual - R$ 45,00</option>
+                  <option value="familiar">Familiar - R$ 90,00</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="dependentesOdonto">Número de Dependentes</label>
+                <input type="number" id="dependentesOdonto" name="dependentesOdonto" class="form-control" min="0" max="10" value="0">
+              </div>
+            </div>
+          `;
+          break;
+      }
+      
+      container.innerHTML = html;
+      container.style.display = 'block';
+    }
+    
+    function salvarAdesao() {
+      const form = document.querySelector('#modalAdesao form');
+      if (form.checkValidity()) {
+        alert('Adesão salva com sucesso!');
+        fecharModalAdesao();
+        location.reload();
+      } else {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+      }
+    }
+    
+    function processarAdesoes() {
+      if (confirm('Deseja processar todas as adesões pendentes? Esta ação não pode ser desfeita.')) {
+        alert('Processando adesões...');
+        // Simular processamento
+        setTimeout(() => {
+          alert('Processamento concluído com sucesso!');
+          location.reload();
+        }, 3000);
+      }
+    }
+    
+    function aprovarAdesao(id) {
+      if (confirm('Tem certeza que deseja aprovar esta adesão?')) {
+        alert(`Adesão ${id} aprovada com sucesso!`);
+        location.reload();
+      }
+    }
+    
+    function rejeitarAdesao(id) {
+      const motivo = prompt('Motivo da rejeição:');
+      if (motivo) {
+        alert(`Adesão ${id} rejeitada. Motivo: ${motivo}`);
+        location.reload();
+      }
+    }
+    
+    function cancelarBeneficio(id) {
+      const motivo = prompt('Motivo do cancelamento:');
+      if (motivo) {
+        const dataFim = prompt('Data de fim do benefício (DD/MM/AAAA):');
+        if (dataFim) {
+          alert(`Benefício ${id} cancelado. Motivo: ${motivo}. Data fim: ${dataFim}`);
+          location.reload();
+        }
+      }
+    }
+    
+    function verDetalhes(tipo) {
+      alert(`Visualizando detalhes do benefício: ${tipo}`);
+    }
+    
+    function verDetalhesAdesao(id) {
+      alert(`Visualizando detalhes da adesão ${id}`);
+    }
+    
+    function filtrarAdesoes() {
+      alert('Aplicando filtros...');
+    }
+    
+    function exportarRelatorio() {
+      alert('Exportando relatório de adesões...');
+    }
+  </script>
+  
+  <style>
+    .resumo-adesoes {
+      margin: 20px 0;
+    }
+    
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .resumo-item.pendentes {
+      background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+      color: white;
+    }
+    
+    .resumo-item.ativas {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .resumo-item.canceladas {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .resumo-item.economia {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .resumo-icon {
+      font-size: 32px;
+      margin-right: 20px;
+      opacity: 0.9;
+    }
+    
+    .resumo-valor {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .resumo-detalhes {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    /* Estilos para os cards de benefícios */
+    .beneficios-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .beneficio-card {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      background: #fff;
+    }
+    
+    .beneficio-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    
+    .beneficio-icon {
+      font-size: 40px;
+      color: #007bff;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    .beneficio-info {
+      flex-grow: 1;
+      text-align: center;
+    }
+    
+    .beneficio-info h4 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+    
+    .beneficio-info p {
+      margin: 0 0 15px 0;
+      color: #6c757d;
+      font-size: 14px;
+    }
+    
+    .beneficio-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 15px;
+    }
+    
+    .stat {
+      font-size: 12px;
+      color: #6c757d;
+    }
+    
+    .stat i {
+      margin-right: 4px;
+    }
+    
+    .beneficio-actions {
+      text-align: center;
+    }
+    
+    .colaborador-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .beneficio-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .tipo-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .tipo-badge.adesao {
+      background: #28a745;
+      color: white;
+    }
+    
+    .tipo-badge.ativa {
+      background: #007bff;
+      color: white;
+    }
+    
+    .tipo-badge.cancelamento {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .status-badge.status-pendente {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .status-badge.status-ativa {
+      background: #28a745;
+      color: white;
+    }
+    
+    .status-badge.status-cancelada {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .modal-large {
+      max-width: 800px;
+    }
+    
+    .input-group {
+      display: flex;
+    }
+    
+    .input-group-text {
+      background: #e9ecef;
+      border: 1px solid #ced4da;
+      border-right: none;
+      padding: 8px 12px;
+      border-radius: 4px 0 0 4px;
+    }
+    
+    .input-group .form-control {
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+    }
+    
+    .form-text {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 4px;
+    }
+    
+    #opcoesBeneficio {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+    }
+    
+    #opcoesBeneficio h4 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #495057;
+    }
+  </style>
+</body>
+
+</html>

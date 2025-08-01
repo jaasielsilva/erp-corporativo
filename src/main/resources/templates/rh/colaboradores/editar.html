@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editar Colaborador - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Editar Colaborador</h1>
+        <h2>Atualize os dados do colaborador</h2>
+
+        <div class="action-buttons">
+          <a href="/rh/colaboradores/listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar à Lista
+          </a>
+          <a href="/rh/colaboradores/ficha/1" class="btn btn-info">
+            <i class="fas fa-eye"></i> Ver Ficha Completa
+          </a>
+        </div>
+
+        <form class="form-container" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="id" value="1">
+          
+          <div class="form-grid">
+            <!-- Dados Pessoais -->
+            <div class="form-section">
+              <h3><i class="fas fa-user"></i> Dados Pessoais</h3>
+              
+              <div class="form-group">
+                <label for="foto">Foto do Colaborador</label>
+                <div class="current-photo">
+                  <img src="/images/avatar-placeholder.png" alt="Foto atual" class="avatar-preview">
+                  <span>Foto atual</span>
+                </div>
+                <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
+                <small>Deixe em branco para manter a foto atual</small>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="nome">Nome Completo *</label>
+                  <input type="text" id="nome" name="nome" value="João Silva" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="cpf">CPF *</label>
+                  <input type="text" id="cpf" name="cpf" value="123.456.789-00" required class="form-control" readonly>
+                  <small>CPF não pode ser alterado</small>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="rg">RG</label>
+                  <input type="text" id="rg" name="rg" value="12.345.678-9" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="dataNascimento">Data de Nascimento</label>
+                  <input type="date" id="dataNascimento" name="dataNascimento" value="1990-05-15" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="estadoCivil">Estado Civil</label>
+                  <select id="estadoCivil" name="estadoCivil" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="solteiro" selected>Solteiro(a)</option>
+                    <option value="casado">Casado(a)</option>
+                    <option value="divorciado">Divorciado(a)</option>
+                    <option value="viuvo">Viúvo(a)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="sexo">Sexo</label>
+                  <select id="sexo" name="sexo" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="masculino" selected>Masculino</option>
+                    <option value="feminino">Feminino</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contato -->
+            <div class="form-section">
+              <h3><i class="fas fa-phone"></i> Contato</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">E-mail *</label>
+                  <input type="email" id="email" name="email" value="joao.silva@empresa.com" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="telefone">Telefone</label>
+                  <input type="text" id="telefone" name="telefone" value="(11) 99999-9999" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="endereco">Endereço Completo</label>
+                <textarea id="endereco" name="endereco" rows="3" class="form-control">Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</textarea>
+              </div>
+            </div>
+
+            <!-- Dados Profissionais -->
+            <div class="form-section">
+              <h3><i class="fas fa-briefcase"></i> Dados Profissionais</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="cargo">Cargo *</label>
+                  <input type="text" id="cargo" name="cargo" value="Desenvolvedor Senior" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="departamento">Departamento *</label>
+                  <select id="departamento" name="departamento" required class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="ti" selected>TI</option>
+                    <option value="vendas">Vendas</option>
+                    <option value="financeiro">Financeiro</option>
+                    <option value="rh">RH</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="operacional">Operacional</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="dataAdmissao">Data de Admissão *</label>
+                  <input type="date" id="dataAdmissao" name="dataAdmissao" value="2022-03-15" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="salario">Salário</label>
+                  <input type="number" id="salario" name="salario" value="8500.00" step="0.01" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tipoContrato">Tipo de Contrato</label>
+                  <select id="tipoContrato" name="tipoContrato" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="clt" selected>CLT</option>
+                    <option value="pj">PJ</option>
+                    <option value="estagio">Estágio</option>
+                    <option value="terceirizado">Terceirizado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="cargaHoraria">Carga Horária Semanal</label>
+                  <input type="number" id="cargaHoraria" name="cargaHoraria" value="40" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="supervisor">Supervisor Direto</label>
+                  <select id="supervisor" name="supervisor" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="1" selected>João Silva - Gerente de TI</option>
+                    <option value="2">Maria Santos - Gerente de Vendas</option>
+                    <option value="3">Carlos Oliveira - Gerente Financeiro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="status">Status</label>
+                  <select id="status" name="status" class="form-control">
+                    <option value="ativo" selected>Ativo</option>
+                    <option value="inativo">Inativo</option>
+                    <option value="ferias">Em Férias</option>
+                    <option value="licenca">Em Licença</option>
+                    <option value="afastado">Afastado</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Observações -->
+            <div class="form-section">
+              <h3><i class="fas fa-sticky-note"></i> Observações</h3>
+              
+              <div class="form-group">
+                <label for="observacoes">Observações Gerais</label>
+                <textarea id="observacoes" name="observacoes" rows="4" class="form-control">Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot.</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Salvar Alterações
+            </button>
+            <button type="button" class="btn btn-warning" onclick="confirmarDesligamento()">
+              <i class="fas fa-user-times"></i> Desligar Colaborador
+            </button>
+            <a href="/rh/colaboradores/listar" class="btn btn-secondary">
+              <i class="fas fa-times"></i> Cancelar
+            </a>
+          </div>
+        </form>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function confirmarDesligamento() {
+      if (confirm('Tem certeza que deseja desligar este colaborador? Esta ação não pode ser desfeita.')) {
+        // Aqui seria feita a requisição para desligar o colaborador
+        alert('Funcionalidade de desligamento será implementada.');
+      }
+    }
+  </script>
+</body>
+
+</html>

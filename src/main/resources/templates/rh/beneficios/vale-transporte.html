@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vale Transporte - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Vale Transporte</h1>
+        <h2>Gerenciamento de vale transporte dos colaboradores</h2>
+
+        <div class="action-buttons">
+          <button onclick="abrirModalSolicitacao()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Solicitação
+          </button>
+          <button onclick="calcularVales()" class="btn btn-info">
+            <i class="fas fa-calculator"></i> Calcular Mês
+          </button>
+          <button onclick="exportarRelatorio()" class="btn btn-success">
+            <i class="fas fa-download"></i> Exportar
+          </button>
+        </div>
+
+        <!-- Resumo do Vale Transporte -->
+        <article class="card">
+          <h3><i class="fas fa-chart-pie"></i> Resumo Mensal</h3>
+          <div class="resumo-vt">
+            <div class="resumo-grid">
+              <div class="resumo-item total">
+                <div class="resumo-icon">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Colaboradores Ativos</h4>
+                  <div class="resumo-valor">12</div>
+                  <div class="resumo-detalhes">de 15 colaboradores</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item custo">
+                <div class="resumo-icon">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Custo Total</h4>
+                  <div class="resumo-valor">R$ 2.640,00</div>
+                  <div class="resumo-detalhes">Novembro/2023</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item desconto">
+                <div class="resumo-icon">
+                  <i class="fas fa-minus-circle"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Desconto Colaboradores</h4>
+                  <div class="resumo-valor">R$ 1.584,00</div>
+                  <div class="resumo-detalhes">60% do total</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item empresa">
+                <div class="resumo-icon">
+                  <i class="fas fa-building"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Custo Empresa</h4>
+                  <div class="resumo-valor">R$ 1.056,00</div>
+                  <div class="resumo-detalhes">40% do total</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Configurações -->
+        <article class="card">
+          <h3><i class="fas fa-cogs"></i> Configurações do Vale Transporte</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="percentualDesconto">Percentual de Desconto do Colaborador</label>
+                <div class="input-group">
+                  <input type="number" id="percentualDesconto" name="percentualDesconto" class="form-control" value="6" min="0" max="100" step="0.1">
+                  <span class="input-group-text">%</span>
+                </div>
+                <small class="form-text">Máximo legal: 6% do salário base</small>
+              </div>
+              <div class="form-group">
+                <label for="valorPassagem">Valor da Passagem</label>
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input type="number" id="valorPassagem" name="valorPassagem" class="form-control" value="4.40" step="0.01">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="diasUteis">Dias Úteis do Mês</label>
+                <input type="number" id="diasUteis" name="diasUteis" class="form-control" value="22" min="1" max="31">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" onclick="salvarConfiguracoes()" class="btn btn-primary">
+                <i class="fas fa-save"></i> Salvar Configurações
+              </button>
+            </div>
+          </form>
+        </article>
+
+        <!-- Filtros -->
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="mesReferencia">Mês de Referência</label>
+                <input type="month" id="mesReferencia" name="mesReferencia" class="form-control" value="2023-11">
+              </div>
+              <div class="form-group">
+                <label for="statusVT">Status</label>
+                <select id="statusVT" name="status" class="form-control">
+                  <option value="">Todos</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="suspenso">Suspenso</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="departamentoVT">Departamento</label>
+                <select id="departamentoVT" name="departamento" class="form-control">
+                  <option value="">Todos os departamentos</option>
+                  <option value="ti">TI</option>
+                  <option value="vendas">Vendas</option>
+                  <option value="financeiro">Financeiro</option>
+                  <option value="rh">RH</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <button type="button" onclick="filtrarVales()" class="btn btn-primary">
+                  <i class="fas fa-search"></i> Filtrar
+                </button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <!-- Lista de Colaboradores -->
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Vale Transporte por Colaborador</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Departamento</th>
+                <th>Trajeto</th>
+                <th>Viagens/Dia</th>
+                <th>Dias Úteis</th>
+                <th>Valor Total</th>
+                <th>Desconto (6%)</th>
+                <th>Valor Líquido</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>João Silva</strong><br>
+                    <small>Matrícula: 001</small>
+                  </div>
+                </td>
+                <td>TI</td>
+                <td>
+                  <div class="trajeto-info">
+                    <strong>Casa → Trabalho</strong><br>
+                    <small>2 linhas de ônibus</small>
+                  </div>
+                </td>
+                <td class="text-center">4</td>
+                <td class="text-center">22</td>
+                <td><strong>R$ 387,20</strong></td>
+                <td>R$ 232,32</td>
+                <td>R$ 154,88</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="editarVT(1)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(1)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="suspenderVT(1)" class="btn-icon btn-warning" title="Suspender">
+                    <i class="fas fa-pause"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Maria Santos</strong><br>
+                    <small>Matrícula: 002</small>
+                  </div>
+                </td>
+                <td>Vendas</td>
+                <td>
+                  <div class="trajeto-info">
+                    <strong>Casa → Trabalho</strong><br>
+                    <small>1 linha de metrô</small>
+                  </div>
+                </td>
+                <td class="text-center">2</td>
+                <td class="text-center">22</td>
+                <td><strong>R$ 193,60</strong></td>
+                <td>R$ 116,16</td>
+                <td>R$ 77,44</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="editarVT(2)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(2)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="suspenderVT(2)" class="btn-icon btn-warning" title="Suspender">
+                    <i class="fas fa-pause"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Carlos Oliveira</strong><br>
+                    <small>Matrícula: 003</small>
+                  </div>
+                </td>
+                <td>Financeiro</td>
+                <td>
+                  <div class="trajeto-info">
+                    <strong>Não utiliza</strong><br>
+                    <small>Veículo próprio</small>
+                  </div>
+                </td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+                <td><strong>R$ 0,00</strong></td>
+                <td>R$ 0,00</td>
+                <td>R$ 0,00</td>
+                <td><span class="status-badge status-cancelado">Não Utiliza</span></td>
+                <td>
+                  <button onclick="ativarVT(3)" class="btn-icon btn-success" title="Ativar">
+                    <i class="fas fa-play"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Ana Costa</strong><br>
+                    <small>Matrícula: 004</small>
+                  </div>
+                </td>
+                <td>Design</td>
+                <td>
+                  <div class="trajeto-info">
+                    <strong>Casa → Trabalho</strong><br>
+                    <small>1 linha de ônibus</small>
+                  </div>
+                </td>
+                <td class="text-center">2</td>
+                <td class="text-center">15</td>
+                <td><strong>R$ 132,00</strong></td>
+                <td>R$ 79,20</td>
+                <td>R$ 52,80</td>
+                <td><span class="status-badge status-suspenso">Suspenso</span></td>
+                <td>
+                  <button onclick="editarVT(4)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(4)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="reativarVT(4)" class="btn-icon btn-success" title="Reativar">
+                    <i class="fas fa-play"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="5"><strong>TOTAIS</strong></td>
+                <td><strong>R$ 712,80</strong></td>
+                <td><strong>R$ 427,68</strong></td>
+                <td><strong>R$ 285,12</strong></td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </article>
+
+        <!-- Histórico de Alterações -->
+        <article class="card">
+          <h3><i class="fas fa-history"></i> Histórico de Alterações</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Colaborador</th>
+                <th>Ação</th>
+                <th>Detalhes</th>
+                <th>Usuário</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>28/11/2023 14:30</td>
+                <td>Ana Costa</td>
+                <td><span class="acao-badge suspensao">Suspensão</span></td>
+                <td>Férias de 15/11 a 30/11</td>
+                <td>Admin RH</td>
+              </tr>
+              <tr>
+                <td>15/11/2023 09:15</td>
+                <td>Pedro Lima</td>
+                <td><span class="acao-badge ativacao">Ativação</span></td>
+                <td>Início do vale transporte</td>
+                <td>Admin RH</td>
+              </tr>
+              <tr>
+                <td>10/11/2023 16:45</td>
+                <td>Maria Santos</td>
+                <td><span class="acao-badge alteracao">Alteração</span></td>
+                <td>Mudança de trajeto: 4 → 2 viagens</td>
+                <td>Admin RH</td>
+              </tr>
+              <tr>
+                <td>01/11/2023 08:00</td>
+                <td>Todos</td>
+                <td><span class="acao-badge calculo">Cálculo</span></td>
+                <td>Cálculo mensal de novembro</td>
+                <td>Sistema</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal Nova Solicitação -->
+  <div id="modalSolicitacao" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus"></i> Nova Solicitação de Vale Transporte</h3>
+        <button onclick="fecharModalSolicitacao()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="colaboradorVT">Colaborador *</label>
+            <select id="colaboradorVT" name="colaborador" required class="form-control">
+              <option value="">Selecione um colaborador...</option>
+              <option value="5">Pedro Lima - Analista Marketing</option>
+              <option value="6">Lucia Fernandes - Assistente RH</option>
+              <option value="7">Roberto Santos - Estagiário</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dataInicioVT">Data de Início *</label>
+            <input type="date" id="dataInicioVT" name="dataInicio" required class="form-control">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="enderecoResidencia">Endereço de Residência *</label>
+          <textarea id="enderecoResidencia" name="enderecoResidencia" required class="form-control" rows="2" placeholder="Rua, número, bairro, cidade..."></textarea>
+        </div>
+        
+        <h4><i class="fas fa-route"></i> Trajeto</h4>
+        <div class="trajeto-section">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoTransporte1">Tipo de Transporte 1 *</label>
+              <select id="tipoTransporte1" name="tipoTransporte1" required class="form-control">
+                <option value="">Selecione...</option>
+                <option value="onibus">Ônibus</option>
+                <option value="metro">Metrô</option>
+                <option value="trem">Trem</option>
+                <option value="van">Van</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="linha1">Linha/Número</label>
+              <input type="text" id="linha1" name="linha1" class="form-control" placeholder="Ex: 123, Linha Azul">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="temIntegracao" name="temIntegracao" onchange="toggleIntegracao()">
+              Possui integração/baldeação
+            </label>
+          </div>
+          
+          <div id="integracaoSection" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="tipoTransporte2">Tipo de Transporte 2</label>
+                <select id="tipoTransporte2" name="tipoTransporte2" class="form-control">
+                  <option value="">Selecione...</option>
+                  <option value="onibus">Ônibus</option>
+                  <option value="metro">Metrô</option>
+                  <option value="trem">Trem</option>
+                  <option value="van">Van</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="linha2">Linha/Número</label>
+                <input type="text" id="linha2" name="linha2" class="form-control" placeholder="Ex: 456, Linha Verde">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="viagensDia">Viagens por Dia *</label>
+            <select id="viagensDia" name="viagensDia" required class="form-control">
+              <option value="">Selecione...</option>
+              <option value="2">2 viagens (ida e volta)</option>
+              <option value="4">4 viagens (ida, volta + integração)</option>
+              <option value="6">6 viagens (ida, volta + 2 integrações)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="valorDiario">Valor Diário Calculado</label>
+            <div class="input-group">
+              <span class="input-group-text">R$</span>
+              <input type="text" id="valorDiario" name="valorDiario" class="form-control" readonly>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="observacoesVT">Observações</label>
+          <textarea id="observacoesVT" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre o trajeto..."></textarea>
+        </div>
+      </form>
+      
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalSolicitacao()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarSolicitacao()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Salvar Solicitação
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function abrirModalSolicitacao() {
+      document.getElementById('modalSolicitacao').style.display = 'flex';
+    }
+    
+    function fecharModalSolicitacao() {
+      document.getElementById('modalSolicitacao').style.display = 'none';
+      document.querySelector('#modalSolicitacao form').reset();
+      document.getElementById('integracaoSection').style.display = 'none';
+    }
+    
+    function toggleIntegracao() {
+      const checkbox = document.getElementById('temIntegracao');
+      const section = document.getElementById('integracaoSection');
+      section.style.display = checkbox.checked ? 'block' : 'none';
+      calcularValorDiario();
+    }
+    
+    function calcularValorDiario() {
+      const viagens = document.getElementById('viagensDia').value;
+      const valorPassagem = 4.40; // Valor configurado
+      
+      if (viagens) {
+        const valorDiario = viagens * valorPassagem;
+        document.getElementById('valorDiario').value = valorDiario.toFixed(2);
+      }
+    }
+    
+    function salvarSolicitacao() {
+      const form = document.querySelector('#modalSolicitacao form');
+      if (form.checkValidity()) {
+        alert('Solicitação salva com sucesso!');
+        fecharModalSolicitacao();
+        location.reload();
+      } else {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+      }
+    }
+    
+    function salvarConfiguracoes() {
+      alert('Configurações salvas com sucesso!');
+    }
+    
+    function calcularVales() {
+      if (confirm('Deseja calcular os vales transporte para o mês atual? Esta ação irá recalcular todos os valores.')) {
+        alert('Calculando vales transporte...');
+        // Simular processamento
+        setTimeout(() => {
+          alert('Cálculo concluído com sucesso!');
+          location.reload();
+        }, 2000);
+      }
+    }
+    
+    function editarVT(id) {
+      alert(`Editando vale transporte do colaborador ${id}`);
+    }
+    
+    function verDetalhes(id) {
+      alert(`Visualizando detalhes do vale transporte ${id}`);
+    }
+    
+    function suspenderVT(id) {
+      const motivo = prompt('Motivo da suspensão:');
+      if (motivo) {
+        alert(`Vale transporte ${id} suspenso. Motivo: ${motivo}`);
+      }
+    }
+    
+    function reativarVT(id) {
+      if (confirm('Tem certeza que deseja reativar este vale transporte?')) {
+        alert(`Vale transporte ${id} reativado com sucesso!`);
+      }
+    }
+    
+    function ativarVT(id) {
+      if (confirm('Deseja ativar o vale transporte para este colaborador?')) {
+        abrirModalSolicitacao();
+        // Pré-selecionar o colaborador
+        document.getElementById('colaboradorVT').value = id;
+      }
+    }
+    
+    function filtrarVales() {
+      alert('Aplicando filtros...');
+    }
+    
+    function exportarRelatorio() {
+      alert('Exportando relatório de vale transporte...');
+    }
+    
+    // Event listeners
+    document.getElementById('viagensDia').addEventListener('change', calcularValorDiario);
+  </script>
+  
+  <style>
+    .resumo-vt {
+      margin: 20px 0;
+    }
+    
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .resumo-item.total {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .resumo-item.custo {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .resumo-item.desconto {
+      background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+      color: white;
+    }
+    
+    .resumo-item.empresa {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .resumo-icon {
+      font-size: 32px;
+      margin-right: 20px;
+      opacity: 0.9;
+    }
+    
+    .resumo-valor {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .resumo-detalhes {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .colaborador-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .trajeto-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .total-row {
+      background: #f8f9fa;
+      font-weight: bold;
+    }
+    
+    .acao-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .acao-badge.suspensao {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .acao-badge.ativacao {
+      background: #28a745;
+      color: white;
+    }
+    
+    .acao-badge.alteracao {
+      background: #007bff;
+      color: white;
+    }
+    
+    .acao-badge.calculo {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .input-group {
+      display: flex;
+    }
+    
+    .input-group-text {
+      background: #e9ecef;
+      border: 1px solid #ced4da;
+      border-right: none;
+      padding: 8px 12px;
+      border-radius: 4px 0 0 4px;
+    }
+    
+    .input-group .form-control {
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+    }
+    
+    .trajeto-section {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+    }
+    
+    .form-text {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 4px;
+    }
+  </style>
+</body>
+
+</html>

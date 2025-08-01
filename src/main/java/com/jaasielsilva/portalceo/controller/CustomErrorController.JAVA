@@ -32,5 +32,8 @@ public class CustomErrorController implements ErrorController {
             } else {
                 return "errors/generic";
             }
-
+        }
+        
+        return "errors/generic";
+    }
 }

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ficha do Colaborador - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Ficha do Colaborador</h1>
+        <h2>Informações completas do colaborador</h2>
+
+        <div class="action-buttons">
+          <a href="/rh/colaboradores/listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar à Lista
+          </a>
+          <a href="/rh/colaboradores/editar/1" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Editar
+          </a>
+          <a href="/rh/colaboradores/documentos/1" class="btn btn-info">
+            <i class="fas fa-file-alt"></i> Documentos
+          </a>
+          <button onclick="imprimirFicha()" class="btn btn-success">
+            <i class="fas fa-print"></i> Imprimir
+          </button>
+        </div>
+
+        <div class="ficha-container">
+          <!-- Cabeçalho da Ficha -->
+          <div class="ficha-header">
+            <div class="colaborador-foto">
+              <img src="/images/avatar-placeholder.png" alt="Foto do Colaborador" class="avatar-large">
+            </div>
+            <div class="colaborador-info">
+              <h2>João Silva</h2>
+              <p class="cargo">Desenvolvedor Senior</p>
+              <p class="departamento">Departamento de TI</p>
+              <span class="status-badge status-ativo">Ativo</span>
+            </div>
+            <div class="colaborador-stats">
+              <div class="stat-item">
+                <span class="stat-label">Tempo na Empresa</span>
+                <span class="stat-value">1 ano e 8 meses</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Último Acesso</span>
+                <span class="stat-value">Hoje, 14:30</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dados Pessoais -->
+          <div class="ficha-section">
+            <h3><i class="fas fa-user"></i> Dados Pessoais</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Nome Completo:</label>
+                <span>João Silva</span>
+              </div>
+              <div class="info-item">
+                <label>CPF:</label>
+                <span>123.456.789-00</span>
+              </div>
+              <div class="info-item">
+                <label>RG:</label>
+                <span>12.345.678-9</span>
+              </div>
+              <div class="info-item">
+                <label>Data de Nascimento:</label>
+                <span>15/05/1990 (33 anos)</span>
+              </div>
+              <div class="info-item">
+                <label>Estado Civil:</label>
+                <span>Solteiro</span>
+              </div>
+              <div class="info-item">
+                <label>Sexo:</label>
+                <span>Masculino</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contato -->
+          <div class="ficha-section">
+            <h3><i class="fas fa-phone"></i> Informações de Contato</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>E-mail:</label>
+                <span>joao.silva@empresa.com</span>
+              </div>
+              <div class="info-item">
+                <label>Telefone:</label>
+                <span>(11) 99999-9999</span>
+              </div>
+              <div class="info-item full-width">
+                <label>Endereço:</label>
+                <span>Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dados Profissionais -->
+          <div class="ficha-section">
+            <h3><i class="fas fa-briefcase"></i> Dados Profissionais</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Cargo:</label>
+                <span>Desenvolvedor Senior</span>
+              </div>
+              <div class="info-item">
+                <label>Departamento:</label>
+                <span>TI</span>
+              </div>
+              <div class="info-item">
+                <label>Data de Admissão:</label>
+                <span>15/03/2022</span>
+              </div>
+              <div class="info-item">
+                <label>Tipo de Contrato:</label>
+                <span>CLT</span>
+              </div>
+              <div class="info-item">
+                <label>Carga Horária:</label>
+                <span>40h semanais</span>
+              </div>
+              <div class="info-item">
+                <label>Supervisor:</label>
+                <span>Maria Santos - Gerente de TI</span>
+              </div>
+              <div class="info-item">
+                <label>Salário:</label>
+                <span>R$ 8.500,00</span>
+              </div>
+              <div class="info-item">
+                <label>Status:</label>
+                <span class="status-badge status-ativo">Ativo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Benefícios -->
+          <div class="ficha-section">
+            <h3><i class="fas fa-gift"></i> Benefícios</h3>
+            <div class="beneficios-list">
+              <div class="beneficio-item ativo">
+                <i class="fas fa-heartbeat"></i>
+                <span>Plano de Saúde - Unimed</span>
+                <span class="status">Ativo</span>
+              </div>
+              <div class="beneficio-item ativo">
+                <i class="fas fa-bus"></i>
+                <span>Vale Transporte - R$ 220,00/mês</span>
+                <span class="status">Ativo</span>
+              </div>
+              <div class="beneficio-item ativo">
+                <i class="fas fa-utensils"></i>
+                <span>Vale Refeição - R$ 600,00/mês</span>
+                <span class="status">Ativo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Histórico Recente -->
+          <div class="ficha-section">
+            <h3><i class="fas fa-history"></i> Histórico Recente</h3>
+            <div class="historico-timeline">
+              <div class="timeline-item">
+                <div class="timeline-date">15/11/2023</div>
+                <div class="timeline-content">
+                  <h4>Promoção para Desenvolvedor Senior</h4>
+                  <p>Promovido de Desenvolvedor Pleno para Senior devido ao excelente desempenho.</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-date">01/07/2023</div>
+                <div class="timeline-content">
+                  <h4>Férias</h4>
+                  <p>Período de férias de 30 dias - 01/07/2023 a 30/07/2023</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-date">15/03/2023</div>
+                <div class="timeline-content">
+                  <h4>Avaliação de Desempenho</h4>
+                  <p>Avaliação anual - Nota: 9.2/10 - Excelente desempenho</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Observações -->
+          <div class="ficha-section">
+            <h3><i class="fas fa-sticky-note"></i> Observações</h3>
+            <div class="observacoes-content">
+              <p>Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot. Demonstra liderança técnica e capacidade de mentoria para desenvolvedores juniores. Participou de projetos estratégicos da empresa com excelentes resultados.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function imprimirFicha() {
+      window.print();
+    }
+  </script>
+</body>
+
+</html>

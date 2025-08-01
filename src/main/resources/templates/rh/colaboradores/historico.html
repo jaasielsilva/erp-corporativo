@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Histórico do Colaborador - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Histórico do Colaborador</h1>
+        <h2>João Silva - Desenvolvedor Senior</h2>
+
+        <div class="action-buttons">
+          <a href="/rh/colaboradores/listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar à Lista
+          </a>
+          <a href="/rh/colaboradores/ficha/1" class="btn btn-info">
+            <i class="fas fa-eye"></i> Ver Ficha
+          </a>
+          <button onclick="exportarHistorico()" class="btn btn-success">
+            <i class="fas fa-file-export"></i> Exportar Histórico
+          </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters">
+          <select class="filter-select">
+            <option value="">Todos os tipos</option>
+            <option value="promocao">Promoções</option>
+            <option value="transferencia">Transferências</option>
+            <option value="ferias">Férias</option>
+            <option value="licenca">Licenças</option>
+            <option value="treinamento">Treinamentos</option>
+            <option value="avaliacao">Avaliações</option>
+            <option value="disciplinar">Ações Disciplinares</option>
+          </select>
+          <input type="date" class="filter-date" placeholder="Data inicial">
+          <input type="date" class="filter-date" placeholder="Data final">
+          <button class="btn btn-primary">Filtrar</button>
+        </div>
+
+        <!-- Timeline do Histórico -->
+        <div class="historico-timeline">
+          <!-- 2023 -->
+          <div class="timeline-year">
+            <h3>2023</h3>
+            
+            <div class="timeline-item promocao">
+              <div class="timeline-marker">
+                <i class="fas fa-arrow-up"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Promoção para Desenvolvedor Senior</h4>
+                  <span class="timeline-date">15/11/2023</span>
+                </div>
+                <p>Promovido de Desenvolvedor Pleno para Desenvolvedor Senior devido ao excelente desempenho e liderança técnica demonstrada nos projetos.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Salário anterior:</strong> R$ 7.000,00</span>
+                  <span class="detail-item"><strong>Novo salário:</strong> R$ 8.500,00</span>
+                  <span class="detail-item"><strong>Aprovado por:</strong> Maria Santos - Gerente de TI</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item avaliacao">
+              <div class="timeline-marker">
+                <i class="fas fa-star"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Avaliação de Desempenho Semestral</h4>
+                  <span class="timeline-date">15/09/2023</span>
+                </div>
+                <p>Avaliação semestral com nota 9.5/10. Destaque em liderança técnica e capacidade de mentoria.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Nota geral:</strong> 9.5/10</span>
+                  <span class="detail-item"><strong>Pontos fortes:</strong> Liderança, Técnica, Comunicação</span>
+                  <span class="detail-item"><strong>Avaliador:</strong> Maria Santos</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item treinamento">
+              <div class="timeline-marker">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Conclusão do Curso Spring Boot Avançado</h4>
+                  <span class="timeline-date">20/08/2023</span>
+                </div>
+                <p>Concluído com sucesso o curso de Spring Boot Avançado com carga horária de 40 horas.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Instituição:</strong> Tech Academy</span>
+                  <span class="detail-item"><strong>Carga horária:</strong> 40 horas</span>
+                  <span class="detail-item"><strong>Nota:</strong> 95/100</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item ferias">
+              <div class="timeline-marker">
+                <i class="fas fa-umbrella-beach"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Período de Férias</h4>
+                  <span class="timeline-date">01/07/2023 - 30/07/2023</span>
+                </div>
+                <p>Férias de 30 dias aprovadas e usufruídas integralmente.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Período:</strong> 30 dias</span>
+                  <span class="detail-item"><strong>Aprovado por:</strong> Maria Santos</span>
+                  <span class="detail-item"><strong>Abono pecuniário:</strong> Não</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item treinamento">
+              <div class="timeline-marker">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Treinamento de Segurança da Informação</h4>
+                  <span class="timeline-date">10/06/2023</span>
+                </div>
+                <p>Participação obrigatória no treinamento anual de segurança da informação.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Carga horária:</strong> 8 horas</span>
+                  <span class="detail-item"><strong>Modalidade:</strong> Presencial</span>
+                  <span class="detail-item"><strong>Certificado:</strong> Emitido</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item avaliacao">
+              <div class="timeline-marker">
+                <i class="fas fa-star"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Avaliação de Desempenho Anual</h4>
+                  <span class="timeline-date">15/03/2023</span>
+                </div>
+                <p>Avaliação anual com excelente desempenho. Recomendado para promoção.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Nota geral:</strong> 9.2/10</span>
+                  <span class="detail-item"><strong>Recomendação:</strong> Promoção</span>
+                  <span class="detail-item"><strong>Avaliador:</strong> Maria Santos</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2022 -->
+          <div class="timeline-year">
+            <h3>2022</h3>
+            
+            <div class="timeline-item promocao">
+              <div class="timeline-marker">
+                <i class="fas fa-arrow-up"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Promoção para Desenvolvedor Pleno</h4>
+                  <span class="timeline-date">15/09/2022</span>
+                </div>
+                <p>Promovido de Desenvolvedor Junior para Pleno após 6 meses de excelente desempenho.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Salário anterior:</strong> R$ 4.500,00</span>
+                  <span class="detail-item"><strong>Novo salário:</strong> R$ 7.000,00</span>
+                  <span class="detail-item"><strong>Aprovado por:</strong> Maria Santos</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item treinamento">
+              <div class="timeline-marker">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Programa de Integração</h4>
+                  <span class="timeline-date">15/03/2022 - 15/04/2022</span>
+                </div>
+                <p>Participação no programa de integração para novos colaboradores.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Duração:</strong> 30 dias</span>
+                  <span class="detail-item"><strong>Mentor:</strong> Carlos Silva</span>
+                  <span class="detail-item"><strong>Avaliação:</strong> Excelente</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item admissao">
+              <div class="timeline-marker">
+                <i class="fas fa-user-plus"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h4>Admissão na Empresa</h4>
+                  <span class="timeline-date">15/03/2022</span>
+                </div>
+                <p>Contratado como Desenvolvedor Junior para o departamento de TI.</p>
+                <div class="timeline-details">
+                  <span class="detail-item"><strong>Cargo inicial:</strong> Desenvolvedor Junior</span>
+                  <span class="detail-item"><strong>Salário inicial:</strong> R$ 4.500,00</span>
+                  <span class="detail-item"><strong>Tipo de contrato:</strong> CLT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumo Estatístico -->
+        <article class="card">
+          <h3><i class="fas fa-chart-bar"></i> Resumo Estatístico</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="stat-info">
+                <h4>Tempo na Empresa</h4>
+                <p>1 ano e 8 meses</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-arrow-up"></i>
+              </div>
+              <div class="stat-info">
+                <h4>Promoções</h4>
+                <p>2 promoções</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <div class="stat-info">
+                <h4>Treinamentos</h4>
+                <p>3 concluídos</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-star"></i>
+              </div>
+              <div class="stat-info">
+                <h4>Média de Avaliações</h4>
+                <p>9.3/10</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function exportarHistorico() {
+      alert('Funcionalidade de exportação será implementada.');
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plano de Saúde - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Plano de Saúde</h1>
+        <h2>Gerenciamento de planos de saúde dos colaboradores</h2>
+
+        <div class="action-buttons">
+          <button onclick="abrirModalAdesao()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Adesão
+          </button>
+          <button onclick="importarDados()" class="btn btn-info">
+            <i class="fas fa-upload"></i> Importar Dados
+          </button>
+          <button onclick="exportarRelatorio()" class="btn btn-success">
+            <i class="fas fa-download"></i> Exportar
+          </button>
+        </div>
+
+        <!-- Resumo dos Planos -->
+        <article class="card">
+          <h3><i class="fas fa-chart-pie"></i> Resumo dos Planos</h3>
+          <div class="resumo-planos">
+            <div class="resumo-grid">
+              <div class="resumo-item total">
+                <div class="resumo-icon">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Total de Beneficiários</h4>
+                  <div class="resumo-valor">28</div>
+                  <div class="resumo-detalhes">15 titulares + 13 dependentes</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item custo">
+                <div class="resumo-icon">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Custo Mensal</h4>
+                  <div class="resumo-valor">R$ 4.850,00</div>
+                  <div class="resumo-detalhes">Empresa + Colaboradores</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item empresa">
+                <div class="resumo-icon">
+                  <i class="fas fa-building"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Custo Empresa</h4>
+                  <div class="resumo-valor">R$ 2.920,00</div>
+                  <div class="resumo-detalhes">60% do total</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item colaborador">
+                <div class="resumo-icon">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Desconto Colaboradores</h4>
+                  <div class="resumo-valor">R$ 1.930,00</div>
+                  <div class="resumo-detalhes">40% do total</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Filtros -->
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="operadora">Operadora</label>
+                <select id="operadora" name="operadora" class="form-control">
+                  <option value="">Todas as operadoras</option>
+                  <option value="unimed">Unimed</option>
+                  <option value="bradesco">Bradesco Saúde</option>
+                  <option value="amil">Amil</option>
+                  <option value="sulamerica">SulAmérica</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="planoTipo">Tipo de Plano</label>
+                <select id="planoTipo" name="planoTipo" class="form-control">
+                  <option value="">Todos os tipos</option>
+                  <option value="basico">Básico</option>
+                  <option value="intermediario">Intermediário</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="statusPlano">Status</label>
+                <select id="statusPlano" name="status" class="form-control">
+                  <option value="">Todos</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="suspenso">Suspenso</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <button type="button" onclick="filtrarPlanos()" class="btn btn-primary">
+                  <i class="fas fa-search"></i> Filtrar
+                </button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <!-- Lista de Colaboradores com Plano -->
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Colaboradores com Plano de Saúde</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Operadora</th>
+                <th>Plano</th>
+                <th>Dependentes</th>
+                <th>Valor Total</th>
+                <th>Empresa</th>
+                <th>Colaborador</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>João Silva</strong><br>
+                    <small>Matrícula: 001</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="operadora-info">
+                    <img src="/images/unimed-logo.png" alt="Unimed" style="width: 30px; height: 20px; object-fit: contain;">
+                    <span>Unimed</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="plano-badge premium">Premium</span><br>
+                  <small>Código: UNI-PREM-001</small>
+                </td>
+                <td>
+                  <div class="dependentes-info">
+                    <span class="dependentes-count">3</span>
+                    <small>Cônjuge + 2 filhos</small>
+                  </div>
+                </td>
+                <td><strong>R$ 580,00</strong></td>
+                <td>R$ 348,00 (60%)</td>
+                <td>R$ 232,00 (40%)</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="verDetalhes(1)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="editarPlano(1)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="gerenciarDependentes(1)" class="btn-icon" title="Dependentes">
+                    <i class="fas fa-users"></i>
+                  </button>
+                  <button onclick="suspenderPlano(1)" class="btn-icon btn-warning" title="Suspender">
+                    <i class="fas fa-pause"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Maria Santos</strong><br>
+                    <small>Matrícula: 002</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="operadora-info">
+                    <img src="/images/bradesco-logo.png" alt="Bradesco" style="width: 30px; height: 20px; object-fit: contain;">
+                    <span>Bradesco</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="plano-badge intermediario">Intermediário</span><br>
+                  <small>Código: BRA-INT-002</small>
+                </td>
+                <td>
+                  <div class="dependentes-info">
+                    <span class="dependentes-count">1</span>
+                    <small>1 filho</small>
+                  </div>
+                </td>
+                <td><strong>R$ 320,00</strong></td>
+                <td>R$ 192,00 (60%)</td>
+                <td>R$ 128,00 (40%)</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="verDetalhes(2)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="editarPlano(2)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="gerenciarDependentes(2)" class="btn-icon" title="Dependentes">
+                    <i class="fas fa-users"></i>
+                  </button>
+                  <button onclick="suspenderPlano(2)" class="btn-icon btn-warning" title="Suspender">
+                    <i class="fas fa-pause"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="colaborador-info">
+                    <strong>Carlos Oliveira</strong><br>
+                    <small>Matrícula: 003</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="operadora-info">
+                    <img src="/images/amil-logo.png" alt="Amil" style="width: 30px; height: 20px; object-fit: contain;">
+                    <span>Amil</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="plano-badge basico">Básico</span><br>
+                  <small>Código: AMI-BAS-003</small>
+                </td>
+                <td>
+                  <div class="dependentes-info">
+                    <span class="dependentes-count">0</span>
+                    <small>Sem dependentes</small>
+                  </div>
+                </td>
+                <td><strong>R$ 180,00</strong></td>
+                <td>R$ 108,00 (60%)</td>
+                <td>R$ 72,00 (40%)</td>
+                <td><span class="status-badge status-suspenso">Suspenso</span></td>
+                <td>
+                  <button onclick="verDetalhes(3)" class="btn-icon" title="Ver Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="editarPlano(3)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="gerenciarDependentes(3)" class="btn-icon" title="Dependentes">
+                    <i class="fas fa-users"></i>
+                  </button>
+                  <button onclick="reativarPlano(3)" class="btn-icon btn-success" title="Reativar">
+                    <i class="fas fa-play"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <!-- Planos Disponíveis -->
+        <article class="card">
+          <h3><i class="fas fa-clipboard-list"></i> Planos Disponíveis</h3>
+          <div class="planos-disponiveis">
+            <div class="planos-grid">
+              <div class="plano-card basico">
+                <div class="plano-header">
+                  <h4><i class="fas fa-shield-alt"></i> Plano Básico</h4>
+                  <div class="plano-preco">R$ 180,00/mês</div>
+                </div>
+                <div class="plano-beneficios">
+                  <ul>
+                    <li><i class="fas fa-check"></i> Consultas médicas</li>
+                    <li><i class="fas fa-check"></i> Exames básicos</li>
+                    <li><i class="fas fa-check"></i> Emergência 24h</li>
+                    <li><i class="fas fa-times"></i> Cirurgias eletivas</li>
+                    <li><i class="fas fa-times"></i> Quarto privativo</li>
+                  </ul>
+                </div>
+                <div class="plano-operadoras">
+                  <small>Disponível: Unimed, Amil</small>
+                </div>
+              </div>
+              
+              <div class="plano-card intermediario">
+                <div class="plano-header">
+                  <h4><i class="fas fa-shield-alt"></i> Plano Intermediário</h4>
+                  <div class="plano-preco">R$ 320,00/mês</div>
+                </div>
+                <div class="plano-beneficios">
+                  <ul>
+                    <li><i class="fas fa-check"></i> Consultas médicas</li>
+                    <li><i class="fas fa-check"></i> Exames completos</li>
+                    <li><i class="fas fa-check"></i> Emergência 24h</li>
+                    <li><i class="fas fa-check"></i> Cirurgias eletivas</li>
+                    <li><i class="fas fa-times"></i> Quarto privativo</li>
+                  </ul>
+                </div>
+                <div class="plano-operadoras">
+                  <small>Disponível: Unimed, Bradesco, Amil</small>
+                </div>
+              </div>
+              
+              <div class="plano-card premium">
+                <div class="plano-header">
+                  <h4><i class="fas fa-crown"></i> Plano Premium</h4>
+                  <div class="plano-preco">R$ 580,00/mês</div>
+                </div>
+                <div class="plano-beneficios">
+                  <ul>
+                    <li><i class="fas fa-check"></i> Consultas médicas</li>
+                    <li><i class="fas fa-check"></i> Exames completos</li>
+                    <li><i class="fas fa-check"></i> Emergência 24h</li>
+                    <li><i class="fas fa-check"></i> Cirurgias eletivas</li>
+                    <li><i class="fas fa-check"></i> Quarto privativo</li>
+                  </ul>
+                </div>
+                <div class="plano-operadoras">
+                  <small>Disponível: Unimed, SulAmérica</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal Nova Adesão -->
+  <div id="modalAdesao" class="modal" style="display: none;">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus"></i> Nova Adesão ao Plano de Saúde</h3>
+        <button onclick="fecharModalAdesao()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="colaboradorAdesao">Colaborador *</label>
+            <select id="colaboradorAdesao" name="colaborador" required class="form-control">
+              <option value="">Selecione um colaborador...</option>
+              <option value="4">Ana Costa - Designer</option>
+              <option value="5">Pedro Lima - Analista Marketing</option>
+              <option value="6">Lucia Fernandes - Assistente RH</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="operadoraAdesao">Operadora *</label>
+            <select id="operadoraAdesao" name="operadora" required class="form-control">
+              <option value="">Selecione a operadora...</option>
+              <option value="unimed">Unimed</option>
+              <option value="bradesco">Bradesco Saúde</option>
+              <option value="amil">Amil</option>
+              <option value="sulamerica">SulAmérica</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tipoPlanoAdesao">Tipo de Plano *</label>
+            <select id="tipoPlanoAdesao" name="tipoPlano" required class="form-control">
+              <option value="">Selecione o plano...</option>
+              <option value="basico">Básico - R$ 180,00</option>
+              <option value="intermediario">Intermediário - R$ 320,00</option>
+              <option value="premium">Premium - R$ 580,00</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dataInicioAdesao">Data de Início *</label>
+            <input type="date" id="dataInicioAdesao" name="dataInicio" required class="form-control">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="incluirDependentes" name="incluirDependentes" onchange="toggleDependentes()">
+            Incluir dependentes
+          </label>
+        </div>
+        
+        <div id="dependentesSection" style="display: none;">
+          <h4><i class="fas fa-users"></i> Dependentes</h4>
+          <div id="dependentesList">
+            <div class="dependente-item">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nome do Dependente</label>
+                  <input type="text" name="dependente_nome[]" class="form-control" placeholder="Nome completo">
+                </div>
+                <div class="form-group">
+                  <label>Parentesco</label>
+                  <select name="dependente_parentesco[]" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="conjuge">Cônjuge</option>
+                    <option value="filho">Filho(a)</option>
+                    <option value="pai">Pai</option>
+                    <option value="mae">Mãe</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Data de Nascimento</label>
+                  <input type="date" name="dependente_nascimento[]" class="form-control">
+                </div>
+                <div class="form-group">
+                  <button type="button" onclick="removerDependente(this)" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="button" onclick="adicionarDependente()" class="btn btn-secondary btn-sm">
+            <i class="fas fa-plus"></i> Adicionar Dependente
+          </button>
+        </div>
+        
+        <div class="form-group">
+          <label for="observacoesAdesao">Observações</label>
+          <textarea id="observacoesAdesao" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre a adesão..."></textarea>
+        </div>
+      </form>
+      
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalAdesao()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarAdesao()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Salvar Adesão
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function abrirModalAdesao() {
+      document.getElementById('modalAdesao').style.display = 'flex';
+    }
+    
+    function fecharModalAdesao() {
+      document.getElementById('modalAdesao').style.display = 'none';
+      document.querySelector('#modalAdesao form').reset();
+      document.getElementById('dependentesSection').style.display = 'none';
+    }
+    
+    function toggleDependentes() {
+      const checkbox = document.getElementById('incluirDependentes');
+      const section = document.getElementById('dependentesSection');
+      section.style.display = checkbox.checked ? 'block' : 'none';
+    }
+    
+    function adicionarDependente() {
+      const list = document.getElementById('dependentesList');
+      const newItem = list.firstElementChild.cloneNode(true);
+      // Limpar valores dos inputs
+      newItem.querySelectorAll('input, select').forEach(input => input.value = '');
+      list.appendChild(newItem);
+    }
+    
+    function removerDependente(btn) {
+      const list = document.getElementById('dependentesList');
+      if (list.children.length > 1) {
+        btn.closest('.dependente-item').remove();
+      }
+    }
+    
+    function salvarAdesao() {
+      const form = document.querySelector('#modalAdesao form');
+      if (form.checkValidity()) {
+        alert('Adesão salva com sucesso!');
+        fecharModalAdesao();
+        location.reload();
+      } else {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+      }
+    }
+    
+    function verDetalhes(id) {
+      alert(`Visualizando detalhes do plano ${id}`);
+    }
+    
+    function editarPlano(id) {
+      alert(`Editando plano ${id}`);
+    }
+    
+    function gerenciarDependentes(id) {
+      alert(`Gerenciando dependentes do colaborador ${id}`);
+    }
+    
+    function suspenderPlano(id) {
+      if (confirm('Tem certeza que deseja suspender este plano?')) {
+        alert(`Plano ${id} suspenso com sucesso!`);
+      }
+    }
+    
+    function reativarPlano(id) {
+      if (confirm('Tem certeza que deseja reativar este plano?')) {
+        alert(`Plano ${id} reativado com sucesso!`);
+      }
+    }
+    
+    function filtrarPlanos() {
+      alert('Aplicando filtros...');
+    }
+    
+    function importarDados() {
+      alert('Abrindo importação de dados...');
+    }
+    
+    function exportarRelatorio() {
+      alert('Exportando relatório de planos de saúde...');
+    }
+  </script>
+  
+  <style>
+    .resumo-planos {
+      margin: 20px 0;
+    }
+    
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .resumo-item.total {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .resumo-item.custo {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .resumo-item.empresa {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .resumo-item.colaborador {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+    }
+    
+    .resumo-icon {
+      font-size: 32px;
+      margin-right: 20px;
+      opacity: 0.9;
+    }
+    
+    .resumo-valor {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .resumo-detalhes {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .colaborador-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .operadora-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .plano-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .plano-badge.basico {
+      background: #28a745;
+      color: white;
+    }
+    
+    .plano-badge.intermediario {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .plano-badge.premium {
+      background: #6f42c1;
+      color: white;
+    }
+    
+    .dependentes-info {
+      text-align: center;
+    }
+    
+    .dependentes-count {
+      display: inline-block;
+      background: #007bff;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    
+    .planos-disponiveis {
+      margin: 20px 0;
+    }
+    
+    .planos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .plano-card {
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 20px;
+      background: white;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .plano-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    
+    .plano-card.basico {
+      border-color: #28a745;
+    }
+    
+    .plano-card.intermediario {
+      border-color: #ffc107;
+    }
+    
+    .plano-card.premium {
+      border-color: #6f42c1;
+    }
+    
+    .plano-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .plano-preco {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      margin-top: 8px;
+    }
+    
+    .plano-beneficios ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .plano-beneficios li {
+      padding: 8px 0;
+      border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .plano-beneficios li:last-child {
+      border-bottom: none;
+    }
+    
+    .plano-beneficios .fas {
+      margin-right: 8px;
+      width: 16px;
+    }
+    
+    .plano-beneficios .fa-check {
+      color: #28a745;
+    }
+    
+    .plano-beneficios .fa-times {
+      color: #dc3545;
+    }
+    
+    .plano-operadoras {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e9ecef;
+      text-align: center;
+    }
+    
+    .dependente-item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    
+    .modal-content.large {
+      max-width: 800px;
+    }
+  </style>
+</body>
+
+</html>

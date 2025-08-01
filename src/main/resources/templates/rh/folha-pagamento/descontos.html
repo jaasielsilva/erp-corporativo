@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Descontos - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Descontos</h1>
+        <h2>Gerenciamento de descontos da folha de pagamento</h2>
+
+        <div class="action-buttons">
+          <button onclick="abrirModalDesconto()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Desconto
+          </button>
+          <a href="/rh/folha-pagamento/gerar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </a>
+          <button onclick="exportarDescontos()" class="btn btn-info">
+            <i class="fas fa-download"></i> Exportar
+          </button>
+        </div>
+
+        <!-- Filtros -->
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <form class="form-container">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="colaboradorFiltro">Colaborador</label>
+                <select id="colaboradorFiltro" name="colaborador" class="form-control">
+                  <option value="">Todos os colaboradores</option>
+                  <option value="1">João Silva</option>
+                  <option value="2">Maria Santos</option>
+                  <option value="3">Carlos Oliveira</option>
+                  <option value="4">Ana Costa</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="tipoDesconto">Tipo de Desconto</label>
+                <select id="tipoDesconto" name="tipoDesconto" class="form-control">
+                  <option value="">Todos os tipos</option>
+                  <option value="obrigatorio">Obrigatórios</option>
+                  <option value="beneficio">Benefícios</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="statusDesconto">Status</label>
+                <select id="statusDesconto" name="status" class="form-control">
+                  <option value="">Todos</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                  <option value="temporario">Temporário</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <button type="button" onclick="filtrarDescontos()" class="btn btn-primary">
+                  <i class="fas fa-search"></i> Filtrar
+                </button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <!-- Resumo de Descontos -->
+        <article class="card">
+          <h3><i class="fas fa-chart-pie"></i> Resumo de Descontos</h3>
+          <div class="resumo-descontos">
+            <div class="resumo-grid">
+              <div class="resumo-item obrigatorios">
+                <div class="resumo-icon">
+                  <i class="fas fa-gavel"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Descontos Obrigatórios</h4>
+                  <div class="resumo-valor">R$ 28.450,00</div>
+                  <div class="resumo-detalhes">INSS, IRRF, FGTS</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item beneficios">
+                <div class="resumo-icon">
+                  <i class="fas fa-heart"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Benefícios</h4>
+                  <div class="resumo-valor">R$ 3.200,00</div>
+                  <div class="resumo-detalhes">Plano de Saúde, Seguro</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item outros">
+                <div class="resumo-icon">
+                  <i class="fas fa-minus-circle"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Outros Descontos</h4>
+                  <div class="resumo-valor">R$ 800,00</div>
+                  <div class="resumo-detalhes">Empréstimos, Faltas</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item total">
+                <div class="resumo-icon">
+                  <i class="fas fa-calculator"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Total Geral</h4>
+                  <div class="resumo-valor">R$ 32.450,00</div>
+                  <div class="resumo-detalhes">Todos os descontos</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Lista de Descontos -->
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Descontos Cadastrados</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Tipo de Desconto</th>
+                <th>Descrição</th>
+                <th>Valor/Percentual</th>
+                <th>Valor Calculado</th>
+                <th>Vigência</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>João Silva</td>
+                <td><span class="tipo-badge obrigatorio">INSS</span></td>
+                <td>Contribuição INSS</td>
+                <td>11%</td>
+                <td>R$ 935,00</td>
+                <td>Permanente</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="editarDesconto(1)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(1)" class="btn-icon" title="Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>João Silva</td>
+                <td><span class="tipo-badge obrigatorio">IRRF</span></td>
+                <td>Imposto de Renda</td>
+                <td>15%</td>
+                <td>R$ 756,30</td>
+                <td>Permanente</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="editarDesconto(2)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(2)" class="btn-icon" title="Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>João Silva</td>
+                <td><span class="tipo-badge beneficio">Plano de Saúde</span></td>
+                <td>Unimed Empresarial</td>
+                <td>R$ 180,00</td>
+                <td>R$ 180,00</td>
+                <td>01/01/2023 - 31/12/2023</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="editarDesconto(3)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(3)" class="btn-icon" title="Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="inativarDesconto(3)" class="btn-icon btn-danger" title="Inativar">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>Maria Santos</td>
+                <td><span class="tipo-badge outros">Empréstimo</span></td>
+                <td>Empréstimo Consignado</td>
+                <td>R$ 250,00</td>
+                <td>R$ 250,00</td>
+                <td>01/06/2023 - 01/06/2024</td>
+                <td><span class="status-badge status-ativo">Ativo</span></td>
+                <td>
+                  <button onclick="editarDesconto(4)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(4)" class="btn-icon" title="Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="inativarDesconto(4)" class="btn-icon btn-danger" title="Inativar">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>Carlos Oliveira</td>
+                <td><span class="tipo-badge beneficio">Seguro de Vida</span></td>
+                <td>Seguro de Vida em Grupo</td>
+                <td>R$ 45,00</td>
+                <td>R$ 45,00</td>
+                <td>Permanente</td>
+                <td><span class="status-badge status-inativo">Inativo</span></td>
+                <td>
+                  <button onclick="editarDesconto(5)" class="btn-icon" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="verDetalhes(5)" class="btn-icon" title="Detalhes">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button onclick="ativarDesconto(5)" class="btn-icon btn-success" title="Ativar">
+                    <i class="fas fa-check"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+
+        <!-- Configurações de Descontos Automáticos -->
+        <article class="card">
+          <h3><i class="fas fa-cogs"></i> Configurações de Descontos Automáticos</h3>
+          <div class="config-descontos">
+            <div class="config-grid">
+              <div class="config-item">
+                <h4><i class="fas fa-percentage"></i> INSS</h4>
+                <div class="config-details">
+                  <p><strong>Faixa 1:</strong> Até R$ 1.320,00 - 7,5%</p>
+                  <p><strong>Faixa 2:</strong> R$ 1.320,01 a R$ 2.571,29 - 9%</p>
+                  <p><strong>Faixa 3:</strong> R$ 2.571,30 a R$ 5.645,80 - 12%</p>
+                  <p><strong>Faixa 4:</strong> Acima de R$ 5.645,80 - 14%</p>
+                </div>
+                <button onclick="editarConfigINSS()" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-edit"></i> Editar
+                </button>
+              </div>
+              
+              <div class="config-item">
+                <h4><i class="fas fa-percentage"></i> IRRF</h4>
+                <div class="config-details">
+                  <p><strong>Isento:</strong> Até R$ 1.903,98</p>
+                  <p><strong>7,5%:</strong> R$ 1.903,99 a R$ 2.826,65</p>
+                  <p><strong>15%:</strong> R$ 2.826,66 a R$ 3.751,05</p>
+                  <p><strong>22,5%:</strong> R$ 3.751,06 a R$ 4.664,68</p>
+                  <p><strong>27,5%:</strong> Acima de R$ 4.664,68</p>
+                </div>
+                <button onclick="editarConfigIRRF()" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-edit"></i> Editar
+                </button>
+              </div>
+              
+              <div class="config-item">
+                <h4><i class="fas fa-home"></i> FGTS</h4>
+                <div class="config-details">
+                  <p><strong>Alíquota:</strong> 8% sobre o salário</p>
+                  <p><strong>Aplicação:</strong> Todos os colaboradores CLT</p>
+                  <p><strong>Base de cálculo:</strong> Salário bruto</p>
+                </div>
+                <button onclick="editarConfigFGTS()" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-edit"></i> Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal Novo Desconto -->
+  <div id="modalDesconto" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus"></i> Novo Desconto</h3>
+        <button onclick="fecharModalDesconto()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="colaboradorDesconto">Colaborador *</label>
+            <select id="colaboradorDesconto" name="colaborador" required class="form-control">
+              <option value="">Selecione um colaborador...</option>
+              <option value="1">João Silva</option>
+              <option value="2">Maria Santos</option>
+              <option value="3">Carlos Oliveira</option>
+              <option value="4">Ana Costa</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tipoDescontoNovo">Tipo de Desconto *</label>
+            <select id="tipoDescontoNovo" name="tipo" required class="form-control">
+              <option value="">Selecione o tipo...</option>
+              <option value="beneficio">Benefício</option>
+              <option value="emprestimo">Empréstimo</option>
+              <option value="falta">Desconto por Falta</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="descricaoDesconto">Descrição *</label>
+            <input type="text" id="descricaoDesconto" name="descricao" required class="form-control" placeholder="Ex: Plano de Saúde Familiar">
+          </div>
+          <div class="form-group">
+            <label for="formaCalculo">Forma de Cálculo *</label>
+            <select id="formaCalculo" name="formaCalculo" required class="form-control" onchange="alterarFormaCalculo()">
+              <option value="">Selecione...</option>
+              <option value="valor_fixo">Valor Fixo</option>
+              <option value="percentual">Percentual do Salário</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="valorDesconto">Valor/Percentual *</label>
+            <input type="number" id="valorDesconto" name="valor" required class="form-control" step="0.01" placeholder="0,00">
+          </div>
+          <div class="form-group">
+            <label for="recorrencia">Recorrência</label>
+            <select id="recorrencia" name="recorrencia" class="form-control">
+              <option value="mensal">Mensal</option>
+              <option value="unica">Única vez</option>
+              <option value="parcelas">Parcelado</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row" id="parcelasRow" style="display: none;">
+          <div class="form-group">
+            <label for="numeroParcelas">Número de Parcelas</label>
+            <input type="number" id="numeroParcelas" name="parcelas" class="form-control" min="1" max="60">
+          </div>
+          <div class="form-group">
+            <label for="parcelaAtual">Parcela Atual</label>
+            <input type="number" id="parcelaAtual" name="parcelaAtual" class="form-control" min="1" value="1">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dataInicio">Data de Início</label>
+            <input type="date" id="dataInicio" name="dataInicio" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="dataFim">Data de Fim</label>
+            <input type="date" id="dataFim" name="dataFim" class="form-control">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre o desconto..."></textarea>
+        </div>
+      </form>
+      
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalDesconto()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarDesconto()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Salvar Desconto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function abrirModalDesconto() {
+      document.getElementById('modalDesconto').style.display = 'flex';
+    }
+    
+    function fecharModalDesconto() {
+      document.getElementById('modalDesconto').style.display = 'none';
+      // Limpar formulário
+      document.querySelector('#modalDesconto form').reset();
+    }
+    
+    function alterarFormaCalculo() {
+      const forma = document.getElementById('formaCalculo').value;
+      const valorInput = document.getElementById('valorDesconto');
+      
+      if (forma === 'percentual') {
+        valorInput.placeholder = '0,00 %';
+        valorInput.max = '100';
+      } else {
+        valorInput.placeholder = 'R$ 0,00';
+        valorInput.removeAttribute('max');
+      }
+    }
+    
+    function salvarDesconto() {
+      // Validar formulário
+      const form = document.querySelector('#modalDesconto form');
+      if (form.checkValidity()) {
+        alert('Desconto salvo com sucesso!');
+        fecharModalDesconto();
+        // Recarregar lista
+        location.reload();
+      } else {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+      }
+    }
+    
+    function editarDesconto(id) {
+      alert(`Editando desconto ${id}`);
+      // Implementar edição
+    }
+    
+    function verDetalhes(id) {
+      alert(`Visualizando detalhes do desconto ${id}`);
+      // Implementar visualização de detalhes
+    }
+    
+    function inativarDesconto(id) {
+      if (confirm('Tem certeza que deseja inativar este desconto?')) {
+        alert(`Desconto ${id} inativado com sucesso!`);
+        // Implementar inativação
+      }
+    }
+    
+    function ativarDesconto(id) {
+      if (confirm('Tem certeza que deseja ativar este desconto?')) {
+        alert(`Desconto ${id} ativado com sucesso!`);
+        // Implementar ativação
+      }
+    }
+    
+    function filtrarDescontos() {
+      // Implementar filtros
+      alert('Aplicando filtros...');
+    }
+    
+    function exportarDescontos() {
+      alert('Exportando relatório de descontos...');
+      // Implementar exportação
+    }
+    
+    function editarConfigINSS() {
+      alert('Abrindo configurações do INSS...');
+    }
+    
+    function editarConfigIRRF() {
+      alert('Abrindo configurações do IRRF...');
+    }
+    
+    function editarConfigFGTS() {
+      alert('Abrindo configurações do FGTS...');
+    }
+    
+    // Mostrar/ocultar campos de parcelas
+    document.getElementById('recorrencia').addEventListener('change', function() {
+      const parcelasRow = document.getElementById('parcelasRow');
+      if (this.value === 'parcelas') {
+        parcelasRow.style.display = 'flex';
+      } else {
+        parcelasRow.style.display = 'none';
+      }
+    });
+  </script>
+  
+  <style>
+    .resumo-descontos {
+      margin: 20px 0;
+    }
+    
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .resumo-item.obrigatorios {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+    }
+    
+    .resumo-item.beneficios {
+      background: linear-gradient(135deg, #4ecdc4, #44a08d);
+      color: white;
+    }
+    
+    .resumo-item.outros {
+      background: linear-gradient(135deg, #feca57, #ff9ff3);
+      color: white;
+    }
+    
+    .resumo-item.total {
+      background: linear-gradient(135deg, #3742fa, #2f3542);
+      color: white;
+    }
+    
+    .resumo-icon {
+      font-size: 24px;
+      margin-right: 15px;
+    }
+    
+    .resumo-valor {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .resumo-detalhes {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .tipo-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .tipo-badge.obrigatorio {
+      background: #ff6b6b;
+      color: white;
+    }
+    
+    .tipo-badge.beneficio {
+      background: #4ecdc4;
+      color: white;
+    }
+    
+    .tipo-badge.outros {
+      background: #feca57;
+      color: #333;
+    }
+    
+    .config-descontos {
+      margin: 20px 0;
+    }
+    
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .config-item {
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+    
+    .config-item h4 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .config-details p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+  </style>
+</body>
+
+</html>

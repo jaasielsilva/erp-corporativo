@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Novo Colaborador - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Cadastro de Novo Colaborador</h1>
+        <h2>Preencha os dados do novo colaborador</h2>
+
+        <div class="action-buttons">
+          <a href="/rh/colaboradores/listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar à Lista
+          </a>
+        </div>
+
+        <form class="form-container" method="post" action="/rh/colaboradores/salvar" enctype="multipart/form-data">
+          <div class="form-grid">
+            <!-- Dados Pessoais -->
+            <div class="form-section">
+              <h3><i class="fas fa-user"></i> Dados Pessoais</h3>
+              
+              <div class="form-group">
+                <label for="foto">Foto do Colaborador</label>
+                <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="nome">Nome Completo *</label>
+                  <input type="text" id="nome" name="nome" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="cpf">CPF *</label>
+                  <input type="text" id="cpf" name="cpf" required class="form-control" placeholder="000.000.000-00">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="rg">RG</label>
+                  <input type="text" id="rg" name="rg" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="dataNascimento">Data de Nascimento</label>
+                  <input type="date" id="dataNascimento" name="dataNascimento" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+  <div class="form-group">
+    <label for="estadoCivil">Estado Civil</label>
+    <select id="estadoCivil" name="estadoCivil" class="form-control">
+      <option value="">Selecione...</option>
+      <option value="SOLTEIRO">Solteiro(a)</option>
+      <option value="CASADO">Casado(a)</option>
+      <option value="DIVORCIADO">Divorciado(a)</option>
+      <option value="VIUVO">Viúvo(a)</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="sexo">Sexo</label>
+    <select id="sexo" name="sexo" class="form-control">
+      <option value="">Selecione...</option>
+      <option value="MASCULINO">Masculino</option>
+      <option value="FEMININO">Feminino</option>
+      <option value="OUTRO">Outro</option>
+    </select>
+  </div>
+</div>
+
+<div class="form-group">
+  <label for="status">Status do Colaborador</label>
+  <select id="status" name="status" class="form-control">
+    <option value="">Selecione...</option>
+    <option value="ATIVO">Ativo</option>
+    <option value="INATIVO">Inativo</option>
+    <option value="SUSPENSO">Suspenso</option>
+  </select>
+</div>
+
+
+            <!-- Contato -->
+            <div class="form-section">
+              <h3><i class="fas fa-phone"></i> Contato</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">E-mail *</label>
+                  <input type="email" id="email" name="email" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="telefone">Telefone</label>
+                  <input type="text" id="telefone" name="telefone" class="form-control" placeholder="(11) 99999-9999">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="endereco">Endereço Completo</label>
+                <textarea id="endereco" name="endereco" rows="3" class="form-control"></textarea>
+              </div>
+            </div>
+
+            <!-- Dados Profissionais -->
+            <div class="form-section">
+              <h3><i class="fas fa-briefcase"></i> Dados Profissionais</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="cargo">Cargo *</label>
+                  <select id="cargo" name="cargo.id" required class="form-control">
+                    <option value="">Selecione...</option>
+                    <option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nome}"></option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="departamento">Departamento *</label>
+                  <select id="departamento" name="departamento.id" required class="form-control">
+                    <option value="">Selecione...</option>
+                    <option th:each="departamento : ${departamentos}" th:value="${departamento.id}" th:text="${departamento.nome}"></option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="dataAdmissao">Data de Admissão *</label>
+                  <input type="date" id="dataAdmissao" name="dataAdmissao" required class="form-control">
+                </div>
+                <div class="form-group">
+                  <label for="salario">Salário</label>
+                  <input type="number" id="salario" name="salario" step="0.01" class="form-control" placeholder="0,00">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tipoContrato">Tipo de Contrato</label>
+                  <select id="tipoContrato" name="tipoContrato" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="clt">CLT</option>
+                    <option value="pj">PJ</option>
+                    <option value="estagio">Estágio</option>
+                    <option value="terceirizado">Terceirizado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="cargaHoraria">Carga Horária Semanal</label>
+                  <input type="number" id="cargaHoraria" name="cargaHoraria" class="form-control" placeholder="40">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="supervisor">Supervisor Direto</label>
+                <select id="supervisor" name="supervisor" class="form-control">
+                  <option value="">Selecione...</option>
+                  <option value="1">João Silva - Gerente de TI</option>
+                  <option value="2">Maria Santos - Gerente de Vendas</option>
+                  <option value="3">Carlos Oliveira - Gerente Financeiro</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Observações -->
+            <div class="form-section">
+              <h3><i class="fas fa-sticky-note"></i> Observações</h3>
+              
+              <div class="form-group">
+                <label for="observacoes">Observações Gerais</label>
+                <textarea id="observacoes" name="observacoes" rows="4" class="form-control" placeholder="Informações adicionais sobre o colaborador..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Salvar Colaborador
+            </button>
+            <button type="reset" class="btn btn-secondary">
+              <i class="fas fa-undo"></i> Limpar Formulário
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+</body>
+
+</html>

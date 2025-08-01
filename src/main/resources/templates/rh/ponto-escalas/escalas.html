@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Escalas de Trabalho - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Escalas de Trabalho</h1>
+        <h2>Gestão de horários e turnos dos colaboradores</h2>
+
+        <div class="action-buttons">
+          <button onclick="abrirModalEscala()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Escala
+          </button>
+          <button onclick="copiarEscala()" class="btn btn-info">
+            <i class="fas fa-copy"></i> Copiar Escala
+          </button>
+          <button onclick="gerarEscalaAutomatica()" class="btn btn-success">
+            <i class="fas fa-magic"></i> Gerar Automática
+          </button>
+          <button onclick="exportarEscala()" class="btn btn-warning">
+            <i class="fas fa-download"></i> Exportar
+          </button>
+        </div>
+
+        <!-- Seletor de Período -->
+        <article class="card">
+          <h3><i class="fas fa-calendar"></i> Período da Escala</h3>
+          <div class="periodo-selector">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="mesEscala">Mês</label>
+                <select id="mesEscala" name="mesEscala" class="form-control" onchange="carregarEscala()">
+                  <option value="11">Novembro 2023</option>
+                  <option value="12">Dezembro 2023</option>
+                  <option value="1">Janeiro 2024</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="departamentoEscala">Departamento</label>
+                <select id="departamentoEscala" name="departamentoEscala" class="form-control" onchange="carregarEscala()">
+                  <option value="">Todos os departamentos</option>
+                  <option value="ti">TI</option>
+                  <option value="vendas">Vendas</option>
+                  <option value="financeiro">Financeiro</option>
+                  <option value="rh">RH</option>
+                  <option value="operacional">Operacional</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="turnoEscala">Turno</label>
+                <select id="turnoEscala" name="turnoEscala" class="form-control" onchange="carregarEscala()">
+                  <option value="">Todos os turnos</option>
+                  <option value="manha">Manhã (08:00-17:00)</option>
+                  <option value="tarde">Tarde (14:00-23:00)</option>
+                  <option value="noite">Noite (22:00-07:00)</option>
+                  <option value="comercial">Comercial (08:00-18:00)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Resumo da Escala -->
+        <article class="card">
+          <h3><i class="fas fa-chart-pie"></i> Resumo da Escala - Novembro 2023</h3>
+          <div class="resumo-escala">
+            <div class="resumo-grid">
+              <div class="resumo-item colaboradores">
+                <div class="resumo-icon">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Colaboradores</h4>
+                  <div class="resumo-valor">15</div>
+                  <div class="resumo-detalhes">Escalados</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item turnos">
+                <div class="resumo-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Turnos</h4>
+                  <div class="resumo-valor">3</div>
+                  <div class="resumo-detalhes">Ativos</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item horas-mes">
+                <div class="resumo-icon">
+                  <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Horas/Mês</h4>
+                  <div class="resumo-valor">2.640h</div>
+                  <div class="resumo-detalhes">Total planejado</div>
+                </div>
+              </div>
+              
+              <div class="resumo-item cobertura">
+                <div class="resumo-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="resumo-info">
+                  <h4>Cobertura</h4>
+                  <div class="resumo-valor">98%</div>
+                  <div class="resumo-detalhes">Dos horários</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Calendário de Escalas -->
+        <article class="card">
+          <h3><i class="fas fa-calendar-alt"></i> Calendário de Escalas - Novembro 2023</h3>
+          <div class="calendario-escala">
+            <div class="calendario-header">
+              <button onclick="mesAnterior()" class="btn-nav">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <h4>Novembro 2023</h4>
+              <button onclick="proximoMes()" class="btn-nav">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            
+            <div class="calendario-grid">
+              <div class="calendario-dias-semana">
+                <div class="dia-semana">Dom</div>
+                <div class="dia-semana">Seg</div>
+                <div class="dia-semana">Ter</div>
+                <div class="dia-semana">Qua</div>
+                <div class="dia-semana">Qui</div>
+                <div class="dia-semana">Sex</div>
+                <div class="dia-semana">Sáb</div>
+              </div>
+              
+              <div class="calendario-dias">
+                <!-- Dias do mês -->
+                <div class="dia-calendario dia-outro-mes">29</div>
+                <div class="dia-calendario dia-outro-mes">30</div>
+                <div class="dia-calendario dia-outro-mes">31</div>
+                <div class="dia-calendario" onclick="verDetalheDia(1)">1
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(2)">2
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(3)">3
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(4)">4
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 2</span>
+                  </div>
+                </div>
+                
+                <!-- Semana 2 -->
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(5)">5
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 2</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(6)">6
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(7)">7
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(8)">8
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(9)">9
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(10)">10
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(11)">11
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 2</span>
+                  </div>
+                </div>
+                
+                <!-- Continuar com mais dias... -->
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(12)">12</div>
+                <div class="dia-calendario" onclick="verDetalheDia(13)">13</div>
+                <div class="dia-calendario" onclick="verDetalheDia(14)">14</div>
+                <div class="dia-calendario feriado" onclick="verDetalheDia(15)">15
+                  <div class="feriado-label">Proclamação</div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(16)">16</div>
+                <div class="dia-calendario" onclick="verDetalheDia(17)">17</div>
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(18)">18</div>
+                
+                <!-- Mais dias... -->
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(19)">19</div>
+                <div class="dia-calendario" onclick="verDetalheDia(20)">20</div>
+                <div class="dia-calendario" onclick="verDetalheDia(21)">21</div>
+                <div class="dia-calendario" onclick="verDetalheDia(22)">22</div>
+                <div class="dia-calendario" onclick="verDetalheDia(23)">23</div>
+                <div class="dia-calendario" onclick="verDetalheDia(24)">24</div>
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(25)">25</div>
+                
+                <!-- Última semana -->
+                <div class="dia-calendario fim-semana" onclick="verDetalheDia(26)">26</div>
+                <div class="dia-calendario" onclick="verDetalheDia(27)">27</div>
+                <div class="dia-calendario" onclick="verDetalheDia(28)">28</div>
+                <div class="dia-calendario hoje" onclick="verDetalheDia(29)">29
+                  <div class="escalas-dia">
+                    <span class="escala-turno manha">M: 5</span>
+                    <span class="escala-turno tarde">T: 3</span>
+                  </div>
+                </div>
+                <div class="dia-calendario" onclick="verDetalheDia(30)">30</div>
+                <div class="dia-calendario dia-outro-mes">1</div>
+                <div class="dia-calendario dia-outro-mes">2</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Lista de Colaboradores por Turno -->
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Colaboradores por Turno - 29/11/2023</h3>
+          
+          <div class="turnos-container">
+            <!-- Turno Manhã -->
+            <div class="turno-card">
+              <div class="turno-header manha">
+                <h4><i class="fas fa-sun"></i> Turno Manhã (08:00 - 17:00)</h4>
+                <span class="turno-count">5 colaboradores</span>
+              </div>
+              <div class="turno-colaboradores">
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>João Silva</strong>
+                    <small>TI - Mat: 001</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(1)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Maria Santos</strong>
+                    <small>Vendas - Mat: 002</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(2)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Carlos Oliveira</strong>
+                    <small>Financeiro - Mat: 003</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(3)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Ana Costa</strong>
+                    <small>Design - Mat: 004</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge ferias">Férias</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(4)" class="btn-icon" title="Trocar Turno" disabled>
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Pedro Lima</strong>
+                    <small>Marketing - Mat: 005</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(5)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Turno Tarde -->
+            <div class="turno-card">
+              <div class="turno-header tarde">
+                <h4><i class="fas fa-sun"></i> Turno Tarde (14:00 - 23:00)</h4>
+                <span class="turno-count">3 colaboradores</span>
+              </div>
+              <div class="turno-colaboradores">
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Lucas Ferreira</strong>
+                    <small>Suporte - Mat: 006</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(6)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Fernanda Souza</strong>
+                    <small>Atendimento - Mat: 007</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(7)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Roberto Alves</strong>
+                    <small>Segurança - Mat: 008</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(8)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Turno Noite -->
+            <div class="turno-card">
+              <div class="turno-header noite">
+                <h4><i class="fas fa-moon"></i> Turno Noite (22:00 - 07:00)</h4>
+                <span class="turno-count">2 colaboradores</span>
+              </div>
+              <div class="turno-colaboradores">
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Marcos Silva</strong>
+                    <small>Segurança - Mat: 009</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(9)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="colaborador-turno">
+                  <div class="colaborador-info">
+                    <strong>Juliana Costa</strong>
+                    <small>Limpeza - Mat: 010</small>
+                  </div>
+                  <div class="colaborador-status">
+                    <span class="status-badge presente">Presente</span>
+                  </div>
+                  <div class="colaborador-acoes">
+                    <button onclick="trocarTurno(10)" class="btn-icon" title="Trocar Turno">
+                      <i class="fas fa-exchange-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Conflitos e Alertas -->
+        <article class="card">
+          <h3><i class="fas fa-exclamation-triangle"></i> Conflitos e Alertas</h3>
+          <table class="table-list">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Descrição</th>
+                <th>Colaborador</th>
+                <th>Data</th>
+                <th>Prioridade</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="alerta-badge cobertura">Cobertura</span></td>
+                <td>Turno da manhã com apenas 4 colaboradores (mínimo: 5)</td>
+                <td>-</td>
+                <td>30/11/2023</td>
+                <td><span class="prioridade-badge alta">Alta</span></td>
+                <td>
+                  <button onclick="resolverConflito(1)" class="btn-icon btn-warning" title="Resolver">
+                    <i class="fas fa-tools"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="alerta-badge conflito">Conflito</span></td>
+                <td>João Silva escalado em dois turnos no mesmo dia</td>
+                <td>João Silva</td>
+                <td>02/12/2023</td>
+                <td><span class="prioridade-badge critica">Crítica</span></td>
+                <td>
+                  <button onclick="resolverConflito(2)" class="btn-icon btn-danger" title="Resolver">
+                    <i class="fas fa-tools"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="alerta-badge ausencia">Ausência</span></td>
+                <td>Ana Costa em férias - substituição necessária</td>
+                <td>Ana Costa</td>
+                <td>15/11 - 30/11</td>
+                <td><span class="prioridade-badge media">Média</span></td>
+                <td>
+                  <button onclick="resolverConflito(3)" class="btn-icon btn-info" title="Resolver">
+                    <i class="fas fa-tools"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal Nova Escala -->
+  <div id="modalEscala" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus"></i> Nova Escala de Trabalho</h3>
+        <button onclick="fecharModalEscala()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nomeEscala">Nome da Escala *</label>
+            <input type="text" id="nomeEscala" name="nomeEscala" required class="form-control" placeholder="Ex: Escala Dezembro 2023">
+          </div>
+          <div class="form-group">
+            <label for="tipoEscala">Tipo de Escala *</label>
+            <select id="tipoEscala" name="tipoEscala" required class="form-control">
+              <option value="">Selecione...</option>
+              <option value="mensal">Mensal</option>
+              <option value="semanal">Semanal</option>
+              <option value="quinzenal">Quinzenal</option>
+              <option value="personalizada">Personalizada</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dataInicioEscala">Data Início *</label>
+            <input type="date" id="dataInicioEscala" name="dataInicioEscala" required class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="dataFimEscala">Data Fim *</label>
+            <input type="date" id="dataFimEscala" name="dataFimEscala" required class="form-control">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="departamentosEscala">Departamentos</label>
+          <select id="departamentosEscala" name="departamentosEscala" multiple class="form-control">
+            <option value="ti">TI</option>
+            <option value="vendas">Vendas</option>
+            <option value="financeiro">Financeiro</option>
+            <option value="rh">RH</option>
+            <option value="operacional">Operacional</option>
+          </select>
+          <small class="form-text">Segure Ctrl para selecionar múltiplos departamentos</small>
+        </div>
+        
+        <div class="form-group">
+          <label>Turnos Disponíveis</label>
+          <div class="turnos-checkbox">
+            <label>
+              <input type="checkbox" name="turnos" value="manha" checked>
+              Manhã (08:00 - 17:00)
+            </label>
+            <label>
+              <input type="checkbox" name="turnos" value="tarde">
+              Tarde (14:00 - 23:00)
+            </label>
+            <label>
+              <input type="checkbox" name="turnos" value="noite">
+              Noite (22:00 - 07:00)
+            </label>
+            <label>
+              <input type="checkbox" name="turnos" value="comercial">
+              Comercial (08:00 - 18:00)
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="minimoColaboradores">Mínimo de Colaboradores por Turno</label>
+            <input type="number" id="minimoColaboradores" name="minimoColaboradores" class="form-control" value="3" min="1">
+          </div>
+          <div class="form-group">
+            <label for="maximoColaboradores">Máximo de Colaboradores por Turno</label>
+            <input type="number" id="maximoColaboradores" name="maximoColaboradores" class="form-control" value="10" min="1">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="observacoesEscala">Observações</label>
+          <textarea id="observacoesEscala" name="observacoesEscala" class="form-control" rows="3" placeholder="Observações sobre a escala..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="gerarAutomatico" name="gerarAutomatico">
+            Gerar escala automaticamente baseada nas preferências dos colaboradores
+          </label>
+        </div>
+      </form>
+      
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalEscala()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarEscala()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Criar Escala
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script>
+    function abrirModalEscala() {
+      document.getElementById('modalEscala').style.display = 'flex';
+    }
+    
+    function fecharModalEscala() {
+      document.getElementById('modalEscala').style.display = 'none';
+      document.querySelector('#modalEscala form').reset();
+    }
+    
+    function salvarEscala() {
+      const form = document.querySelector('#modalEscala form');
+      if (form.checkValidity()) {
+        alert('Escala criada com sucesso!');
+        fecharModalEscala();
+        location.reload();
+      } else {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+      }
+    }
+    
+    function carregarEscala() {
+      alert('Carregando escala...');
+    }
+    
+    function mesAnterior() {
+      alert('Navegando para o mês anterior...');
+    }
+    
+    function proximoMes() {
+      alert('Navegando para o próximo mês...');
+    }
+    
+    function verDetalheDia(dia) {
+      alert(`Visualizando detalhes do dia ${dia}`);
+    }
+    
+    function trocarTurno(colaboradorId) {
+      alert(`Iniciando troca de turno para colaborador ${colaboradorId}`);
+    }
+    
+    function resolverConflito(conflito) {
+      alert(`Resolvendo conflito ${conflito}`);
+    }
+    
+    function copiarEscala() {
+      alert('Copiando escala de outro período...');
+    }
+    
+    function gerarEscalaAutomatica() {
+      if (confirm('Gerar escala automaticamente? Isso substituirá a escala atual.')) {
+        alert('Gerando escala automaticamente...');
+        setTimeout(() => {
+          alert('Escala gerada com sucesso!');
+          location.reload();
+        }, 2000);
+      }
+    }
+    
+    function exportarEscala() {
+      alert('Exportando escala...');
+    }
+  </script>
+  
+  <style>
+    .periodo-selector {
+      margin: 20px 0;
+    }
+    
+    .resumo-escala {
+      margin: 20px 0;
+    }
+    
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .resumo-item.colaboradores {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .resumo-item.turnos {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .resumo-item.horas-mes {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .resumo-item.cobertura {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+    }
+    
+    .resumo-icon {
+      font-size: 32px;
+      margin-right: 20px;
+      opacity: 0.9;
+    }
+    
+    .resumo-valor {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    
+    .resumo-detalhes {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .calendario-escala {
+      margin: 20px 0;
+    }
+    
+    .calendario-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+    
+    .btn-nav {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .btn-nav:hover {
+      background: #0056b3;
+    }
+    
+    .calendario-grid {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .calendario-dias-semana {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: #f8f9fa;
+    }
+    
+    .dia-semana {
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      border-right: 1px solid #ddd;
+    }
+    
+    .dia-semana:last-child {
+      border-right: none;
+    }
+    
+    .calendario-dias {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+    
+    .dia-calendario {
+      min-height: 80px;
+      padding: 8px;
+      border-right: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .dia-calendario:hover {
+      background: #f8f9fa;
+    }
+    
+    .dia-calendario.hoje {
+      background: #e3f2fd;
+      font-weight: bold;
+    }
+    
+    .dia-calendario.fim-semana {
+      background: #fff3e0;
+    }
+    
+    .dia-calendario.feriado {
+      background: #ffebee;
+    }
+    
+    .dia-calendario.dia-outro-mes {
+      color: #ccc;
+      background: #f5f5f5;
+    }
+    
+    .escalas-dia {
+      margin-top: 5px;
+    }
+    
+    .escala-turno {
+      display: block;
+      font-size: 10px;
+      padding: 2px 4px;
+      margin: 1px 0;
+      border-radius: 3px;
+      text-align: center;
+    }
+    
+    .escala-turno.manha {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .escala-turno.tarde {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .escala-turno.noite {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .feriado-label {
+      font-size: 10px;
+      color: #dc3545;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    
+    .turnos-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+    
+    .turno-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .turno-header {
+      padding: 15px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .turno-header.manha {
+      background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+    }
+    
+    .turno-header.tarde {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .turno-header.noite {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .turno-count {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    
+    .turno-colaboradores {
+      padding: 15px;
+    }
+    
+    .colaborador-turno {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #eee;
+      border-radius: 6px;
+    }
+    
+    .colaborador-info strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .status-badge.presente {
+      background: #28a745;
+      color: white;
+    }
+    
+    .status-badge.ferias {
+      background: #17a2b8;
+      color: white;
+    }
+    
+    .alerta-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .alerta-badge.cobertura {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .alerta-badge.conflito {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .alerta-badge.ausencia {
+      background: #17a2b8;
+      color: white;
+    }
+    
+    .prioridade-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .prioridade-badge.baixa {
+      background: #28a745;
+      color: white;
+    }
+    
+    .prioridade-badge.media {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .prioridade-badge.alta {
+      background: #fd7e14;
+      color: white;
+    }
+    
+    .prioridade-badge.critica {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .turnos-checkbox {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .turnos-checkbox label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .modal-large {
+      max-width: 800px;
+    }
+    
+    .form-text {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+  </style>
+</body>
+
+</html>

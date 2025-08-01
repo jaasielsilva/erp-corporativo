@@ -53,6 +53,10 @@ public class Colaborador {
     @JoinColumn(name = "departamento_id")
     private Departamento departamento;
 
+    @OneToOne
+    @JoinColumn(name = "colaborador_id")
+    private Colaborador colaborador;
+
     private LocalDateTime dataUltimaEdicao;
 
     @PrePersist

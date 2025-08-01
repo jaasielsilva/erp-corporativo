@@ -18,9 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.CargoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
+import com.jaasielsilva.portalceo.service.UsuarioService;
 
 /**
  * Controller responsável pelo módulo de Recursos Humanos (RH)
@@ -38,6 +40,9 @@ public class RhController {
 
     @Autowired
     private CargoService cargoService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     /**
      * Redireciona para a página principal do módulo RH
@@ -61,17 +66,18 @@ public class RhController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             Model model) {
-        
+
         Pageable pageable = PageRequest.of(page, size);
         Page<Colaborador> colaboradoresPage = colaboradorService.listarTodosPaginado(pageable);
-        
+        List<Usuario> usuarios = usuarioService.findAll();
+        model.addAttribute("usuarios", usuarios);
         model.addAttribute("colaboradores", colaboradoresPage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", colaboradoresPage.getTotalPages());
         model.addAttribute("totalElements", colaboradoresPage.getTotalElements());
         model.addAttribute("hasNext", colaboradoresPage.hasNext());
         model.addAttribute("hasPrevious", colaboradoresPage.hasPrevious());
-        
+
         return "rh/colaboradores/listar";
     }
 
@@ -193,10 +199,10 @@ public class RhController {
                 redirectAttributes.addFlashAttribute("erro", "Colaborador não encontrado.");
                 return "redirect:/rh/colaboradores/listar";
             }
-            
+
             colaboradorService.excluir(id);
-            redirectAttributes.addFlashAttribute("mensagem", 
-                "Colaborador " + colaborador.getNome() + " foi desligado com sucesso!");
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Colaborador " + colaborador.getNome() + " foi desligado com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao desligar colaborador: " + e.getMessage());
         }

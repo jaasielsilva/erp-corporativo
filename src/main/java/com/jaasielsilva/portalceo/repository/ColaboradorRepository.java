@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> {
     List<Colaborador> findByAtivoTrue();
+
+    
 }

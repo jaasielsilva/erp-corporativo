@@ -132,6 +132,11 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
+    // Método que retorna todos os usuários
+    public List<Usuario> findAll() {
+        return usuarioRepository.findAll();
+    }
+    
     public Optional<Usuario> buscarPorCpf(String cpf) {
         return usuarioRepository.findByCpf(cpf);
     }

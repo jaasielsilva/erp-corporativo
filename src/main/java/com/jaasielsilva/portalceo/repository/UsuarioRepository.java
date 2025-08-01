@@ -30,5 +30,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Outra consulta para verificar se há pelo menos um admin diferente de um dado usuário
     @Query("select count(u) from Usuario u join u.perfis p where p.nome = :perfilNome and u.id <> :userId")
     long countByPerfilNomeExcludingUser(@Param("perfilNome") String perfilNome, @Param("userId") Long userId);
+
+   Optional<Usuario> findByColaborador_Id(Long colaboradorId);
     
 }

@@ -18,6 +18,9 @@ public class Usuario {
 
     @Column(length = 30, unique = true)
     private String matricula;
+    
+    @ManyToOne
+    private Colaborador colaborador;
 
     @Column(nullable = false)
     private String nome;

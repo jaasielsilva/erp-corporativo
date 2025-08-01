@@ -3,6 +3,8 @@ package com.jaasielsilva.portalceo.service;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,6 +27,13 @@ public class ColaboradorService {
         return colaboradorRepository.save(colaborador);
     }
 
+    public List<Colaborador> listarTodos() {
+        return colaboradorRepository.findAll();
+    }
+
+    public Page<Colaborador> listarTodosPaginado(Pageable pageable) {
+        return colaboradorRepository.findAll(pageable);
+    }
     public void excluir(Long id) {
         Colaborador col = findById(id);
         if (col != null) {

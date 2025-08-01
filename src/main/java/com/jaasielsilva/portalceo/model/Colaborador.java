@@ -32,6 +32,9 @@ public class Colaborador {
 
     private LocalDate dataNascimento;
 
+    @Column(name = "data_admissao")
+    private LocalDate dataAdmissao;
+
     @Enumerated(EnumType.STRING)
     private EstadoCivil estadoCivil;
 

@@ -19,6 +19,17 @@
       <section class="content-area">
         <h1>Gestão de Colaboradores</h1>
         <h2>Lista de todos os colaboradores da empresa</h2>
+        
+        <!-- Mensagens de Sucesso e Erro -->
+        <div th:if="${mensagem}" class="alert alert-success">
+          <i class="fas fa-check-circle"></i>
+          <span th:text="${mensagem}"></span>
+        </div>
+        
+        <div th:if="${erro}" class="alert alert-error">
+          <i class="fas fa-exclamation-circle"></i>
+          <span th:text="${erro}"></span>
+        </div>
 
         <div class="action-buttons">
           <a href="/rh/colaboradores/novo" class="btn btn-primary">
@@ -52,7 +63,6 @@
           <table class="table-list">
             <thead>
               <tr>
-                <th>Foto</th>
                 <th>Nome</th>
                 <th>Cargo</th>
                 <th>Departamento</th>
@@ -62,71 +72,67 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><img src="/images/avatar-placeholder.png" alt="Foto" class="avatar-small"></td>
-                <td>João Silva</td>
-                <td>Desenvolvedor Senior</td>
-                <td>TI</td>
-                <td>15/03/2022</td>
-                <td><span class="status-badge status-ativo">Ativo</span></td>
+              <tr th:each="colaborador : ${colaboradores}">
+                <td th:text="${colaborador.nome}">Nome</td>
+                <td th:text="${colaborador.cargo != null ? colaborador.cargo.nome : '-'}">Cargo</td>
+                <td th:text="${colaborador.departamento != null ? colaborador.departamento.nome : '-'}">Departamento</td>
+                <td th:text="${colaborador.dataAdmissao != null ? #temporals.format(colaborador.dataAdmissao, 'dd/MM/yyyy') : '-'}">Admissão</td>
                 <td>
-                  <a href="/rh/colaboradores/ficha/1" class="btn-icon" title="Ver Ficha">
+                  <span th:class="'status-badge status-' + ${colaborador.status.name().toLowerCase()}" 
+                        th:text="${colaborador.status.name()}">Status</span>
+                </td>
+                <td class="actions">
+                  <a th:href="@{/rh/colaboradores/ficha/{id}(id=${colaborador.id})}" 
+                     class="btn btn-sm btn-info" title="Ver Ficha">
                     <i class="fas fa-eye"></i>
                   </a>
-                  <a href="/rh/colaboradores/editar/1" class="btn-icon" title="Editar">
+                  <a th:href="@{/rh/colaboradores/editar/{id}(id=${colaborador.id})}" 
+                     class="btn btn-sm btn-warning" title="Editar">
                     <i class="fas fa-edit"></i>
                   </a>
-                  <a href="/rh/colaboradores/documentos/1" class="btn-icon" title="Documentos">
-                    <i class="fas fa-file-alt"></i>
-                  </a>
+                  <button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador"
+                          th:data-colaborador-id="${colaborador.id}"
+                          th:data-colaborador-nome="${colaborador.nome}"
+                          onclick="openDesligamentoModal(this.dataset.colaboradorId, this.dataset.colaboradorNome)">
+                    <i class="fas fa-user-times"></i>
+                  </button>
                 </td>
               </tr>
-              <tr>
-                <td><img src="/images/avatar-placeholder.png" alt="Foto" class="avatar-small"></td>
-                <td>Maria Santos</td>
-                <td>Analista de Vendas</td>
-                <td>Vendas</td>
-                <td>08/01/2023</td>
-                <td><span class="status-badge status-ferias">Em Férias</span></td>
-                <td>
-                  <a href="/rh/colaboradores/ficha/2" class="btn-icon" title="Ver Ficha">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <a href="/rh/colaboradores/editar/2" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="/rh/colaboradores/documentos/2" class="btn-icon" title="Documentos">
-                    <i class="fas fa-file-alt"></i>
-                  </a>
-                </td>
-              </tr>
-              <tr>
-                <td><img src="/images/avatar-placeholder.png" alt="Foto" class="avatar-small"></td>
-                <td>Carlos Oliveira</td>
-                <td>Gerente Financeiro</td>
-                <td>Financeiro</td>
-                <td>22/11/2021</td>
-                <td><span class="status-badge status-ativo">Ativo</span></td>
-                <td>
-                  <a href="/rh/colaboradores/ficha/3" class="btn-icon" title="Ver Ficha">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <a href="/rh/colaboradores/editar/3" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <a href="/rh/colaboradores/documentos/3" class="btn-icon" title="Documentos">
-                    <i class="fas fa-file-alt"></i>
-                  </a>
-                </td>
+              <tr th:if="${#lists.isEmpty(colaboradores)}">
+                <td colspan="6" class="text-center">Nenhum colaborador encontrado</td>
               </tr>
             </tbody>
           </table>
+
         </article>
 
-        <div class="pagination">
-          <button class="btn btn-secondary">Anterior</button>
-          <span>Página 1 de 5</span>
-          <button class="btn btn-secondary">Próxima</button>
+        <div class="pagination" th:if="${totalPages > 1}">
+          <a th:href="@{/rh/colaboradores/listar(page=${currentPage - 1})}" 
+             th:class="'btn btn-secondary' + (${!hasPrevious} ? ' disabled' : '')"
+             th:if="${hasPrevious}">
+            <i class="fas fa-chevron-left"></i> Anterior
+          </a>
+          <span class="btn btn-secondary disabled" th:unless="${hasPrevious}">
+            <i class="fas fa-chevron-left"></i> Anterior
+          </span>
+          
+          <span class="pagination-info">
+            Página <span th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">1</span>
+            (<span th:text="${totalElements}">0</span> colaboradores)
+          </span>
+          
+          <a th:href="@{/rh/colaboradores/listar(page=${currentPage + 1})}" 
+             th:class="'btn btn-secondary' + (${!hasNext} ? ' disabled' : '')"
+             th:if="${hasNext}">
+            Próxima <i class="fas fa-chevron-right"></i>
+          </a>
+          <span class="btn btn-secondary disabled" th:unless="${hasNext}">
+            Próxima <i class="fas fa-chevron-right"></i>
+          </span>
+        </div>
+        
+        <div class="pagination-summary" th:if="${totalPages <= 1}">
+          <span th:text="${totalElements}">0</span> colaborador(es) encontrado(s)
         </div>
       </section>
 
@@ -134,7 +140,71 @@
     </main>
   </div>
 
+  <!-- Modal de Confirmação de Desligamento -->
+  <div id="desligamentoModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content-desligamento">
+      <div class="modal-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> Confirmar Desligamento</h3>
+        <button type="button" class="modal-close" onclick="closeDesligamentoModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="warning-message">
+          <i class="fas fa-user-times warning-icon"></i>
+          <div class="warning-text">
+            <h4>Tem certeza que deseja desligar este colaborador?</h4>
+            <p>Colaborador: <strong id="colaboradorNome"></strong></p>
+            <p class="warning-note">
+              <i class="fas fa-info-circle"></i>
+              Esta ação não pode ser desfeita. O colaborador será marcado como inativo no sistema.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeDesligamentoModal()">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <form id="desligamentoForm" method="post" style="display: inline;">
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-user-times"></i> Confirmar Desligamento
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script th:src="@{/js/script.js}"></script>
+  <script>
+    function openDesligamentoModal(colaboradorId, colaboradorNome) {
+      document.getElementById('colaboradorNome').textContent = colaboradorNome;
+      document.getElementById('desligamentoForm').action = '/rh/colaboradores/desativar/' + colaboradorId;
+      document.getElementById('desligamentoModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeDesligamentoModal() {
+      document.getElementById('desligamentoModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Fechar modal ao clicar fora dele
+    document.getElementById('desligamentoModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDesligamentoModal();
+      }
+    });
+    
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeDesligamentoModal();
+      }
+    });
+  </script>
 </body>
 
 </html>

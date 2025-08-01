@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -58,6 +59,12 @@ public class Colaborador {
     private Colaborador colaborador;
 
     private LocalDateTime dataUltimaEdicao;
+
+    @Column(name = "rg")
+    private String rg;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal salario;
 
     @PrePersist
     public void onPrePersist() {

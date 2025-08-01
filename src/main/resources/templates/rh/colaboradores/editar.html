@@ -31,12 +31,12 @@
 
         <form class="form-container" method="post" enctype="multipart/form-data">
           <input type="hidden" name="id" value="1">
-          
+
           <div class="form-grid">
             <!-- Dados Pessoais -->
             <div class="form-section">
               <h3><i class="fas fa-user"></i> Dados Pessoais</h3>
-              
+
               <div class="form-group">
                 <label for="foto">Foto do Colaborador</label>
                 <div class="current-photo">
@@ -50,11 +50,11 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="nome">Nome Completo *</label>
-                  <input type="text" id="nome" name="nome" value="João Silva" required class="form-control">
+                  <input type="text" id="nome" name="nome" th:value="${colaborador.nome}" required class="form-control">
                 </div>
                 <div class="form-group">
                   <label for="cpf">CPF *</label>
-                  <input type="text" id="cpf" name="cpf" value="123.456.789-00" required class="form-control" readonly>
+                  <input type="text" id="cpf" name="cpf" th:value="${colaborador.cpf}" readonly class="form-control">
                   <small>CPF não pode ser alterado</small>
                 </div>
               </div>
@@ -62,11 +62,14 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="rg">RG</label>
-                  <input type="text" id="rg" name="rg" value="12.345.678-9" class="form-control">
+                  <input type="text" id="rg" name="rg" th:value="${colaborador.rg}" class="form-control" />
                 </div>
+
                 <div class="form-group">
                   <label for="dataNascimento">Data de Nascimento</label>
-                  <input type="date" id="dataNascimento" name="dataNascimento" value="1990-05-15" class="form-control">
+                  <input type="date" id="dataNascimento" name="dataNascimento"
+                    th:value="${colaborador.dataNascimento != null ? #temporals.format(colaborador.dataNascimento, 'yyyy-MM-dd') : ''}"
+                    class="form-control">
                 </div>
               </div>
 
@@ -74,20 +77,24 @@
                 <div class="form-group">
                   <label for="estadoCivil">Estado Civil</label>
                   <select id="estadoCivil" name="estadoCivil" class="form-control">
-                    <option value="">Selecione...</option>
-                    <option value="solteiro" selected>Solteiro(a)</option>
-                    <option value="casado">Casado(a)</option>
-                    <option value="divorciado">Divorciado(a)</option>
-                    <option value="viuvo">Viúvo(a)</option>
+                    <option value="" span th:text="${colaborador.estadoCivil}">valor aqui</span></p>
+                    </option>
+                    <option value="SOLTEIRO" th:selected="${colaborador.estadoCivil == 'SOLTEIRO'}">Solteiro(a)</option>
+                    <option value="CASADO" th:selected="${colaborador.estadoCivil == 'CASADO'}">Casado(a)</option>
+                    <option value="DIVORCIADO" th:selected="${colaborador.estadoCivil == 'DIVORCIADO'}">Divorciado(a)
+                    </option>
+                    <option value="VIUVO" th:selected="${colaborador.estadoCivil == 'VIUVO'}">Viúvo(a)</option>
                   </select>
                 </div>
+
+
                 <div class="form-group">
                   <label for="sexo">Sexo</label>
                   <select id="sexo" name="sexo" class="form-control">
-                    <option value="">Selecione...</option>
-                    <option value="masculino" selected>Masculino</option>
-                    <option value="feminino">Feminino</option>
-                    <option value="outro">Outro</option>
+                    <option value="" th:text="${colaborador.sexo}">Selecione...</option>
+                    <option value="MASCULINO" th:selected="${colaborador.sexo == 'MASCULINO'}">Masculino</option>
+                    <option value="FEMININO" th:selected="${colaborador.sexo == 'FEMININO'}">Feminino</option>
+                    <option value="OUTRO" th:selected="${colaborador.sexo == 'OUTRO'}">Outro</option>
                   </select>
                 </div>
               </div>
@@ -96,56 +103,67 @@
             <!-- Contato -->
             <div class="form-section">
               <h3><i class="fas fa-phone"></i> Contato</h3>
-              
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="email">E-mail *</label>
-                  <input type="email" id="email" name="email" value="joao.silva@empresa.com" required class="form-control">
+                  <input type="email" id="email" name="email" th:value="${colaborador.email}" class="form-control">
                 </div>
                 <div class="form-group">
                   <label for="telefone">Telefone</label>
-                  <input type="text" id="telefone" name="telefone" value="(11) 99999-9999" class="form-control">
+                  <input type="text" id="telefone" name="telefone" th:value="${colaborador.telefone}"
+                    class="form-control" />
                 </div>
+
               </div>
 
               <div class="form-group">
                 <label for="endereco">Endereço Completo</label>
-                <textarea id="endereco" name="endereco" rows="3" class="form-control">Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</textarea>
+                <textarea id="endereco" name="endereco" rows="3"
+                  class="form-control">Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</textarea>
               </div>
             </div>
 
             <!-- Dados Profissionais -->
             <div class="form-section">
               <h3><i class="fas fa-briefcase"></i> Dados Profissionais</h3>
-              
+
               <div class="form-row">
                 <div class="form-group">
-                  <label for="cargo">Cargo *</label>
-                  <input type="text" id="cargo" name="cargo" value="Desenvolvedor Senior" required class="form-control">
+                  <label for="cargo">Cargo</label>
+                  <input type="text" id="cargo" name="cargo" th:value="${colaborador.cargo.nome}" class="form-control"
+                    readonly>
                 </div>
+
+
                 <div class="form-group">
                   <label for="departamento">Departamento *</label>
-                  <select id="departamento" name="departamento" required class="form-control">
+                  <select id="departamento" name="departamento" class="form-control" required>
                     <option value="">Selecione...</option>
-                    <option value="ti" selected>TI</option>
-                    <option value="vendas">Vendas</option>
-                    <option value="financeiro">Financeiro</option>
-                    <option value="rh">RH</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="operacional">Operacional</option>
+                    <option th:each="departamento : ${departamentos}" th:value="${departamento.id}"
+                      th:text="${departamento.nome}"
+                      th:selected="${colaborador.departamento != null and colaborador.departamento.id == departamento.id}">
+                    </option>
                   </select>
                 </div>
+
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label for="dataAdmissao">Data de Admissão *</label>
-                  <input type="date" id="dataAdmissao" name="dataAdmissao" value="2022-03-15" required class="form-control">
+                  <input type="date" id="dataAdmissao" name="dataAdmissao"
+                    th:value="${colaborador.dataAdmissao != null ? #temporals.format(colaborador.dataAdmissao, 'yyyy-MM-dd') : ''}"
+                    class="form-control">
+
                 </div>
                 <div class="form-group">
                   <label for="salario">Salário</label>
-                  <input type="number" id="salario" name="salario" value="8500.00" step="0.01" class="form-control">
+                  <input type="text" id="salario" name="salario"
+                    th:value="${#numbers.formatDecimal(colaborador.salario, 1, 'COMMA', 2, 'POINT')}"
+                    class="form-control" placeholder="0.00">
                 </div>
+
               </div>
 
               <div class="form-row">
@@ -191,10 +209,11 @@
             <!-- Observações -->
             <div class="form-section">
               <h3><i class="fas fa-sticky-note"></i> Observações</h3>
-              
+
               <div class="form-group">
                 <label for="observacoes">Observações Gerais</label>
-                <textarea id="observacoes" name="observacoes" rows="4" class="form-control">Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot.</textarea>
+                <textarea id="observacoes" name="observacoes" rows="4"
+                  class="form-control">Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot.</textarea>
               </div>
             </div>
           </div>

@@ -129,6 +129,7 @@ public class RhController {
     @GetMapping("/colaboradores/editar/{id}")
     public String editarColaborador(@PathVariable Long id, Model model) {
         Colaborador colaborador = colaboradorService.findById(id);
+
         if (colaborador == null) {
             return "redirect:/rh/colaboradores/listar";
         }

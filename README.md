@@ -55,14 +55,15 @@ Componentes reutilizáveis (header, sidebar, footer) para manter consistência v
 ## Estrutura dos Templates Thymeleaf
 
 ```
+
 templates/
 ├── components/
-│   ├── header.html            # Cabeçalho reutilizável (topbar)
-│   ├── sidebar.html           # Menu lateral (sidebar) principal
-│   └── footer.html            # Rodapé comum
+│   ├── header.html
+│   ├── sidebar.html
+│   └── footer.html
 │
 ├── dashboard/
-│   ├── index.html             # Tela principal do dashboard
+│   ├── index.html
 │   ├── notificacoes.html
 │   ├── estatisticas.html
 │   └── alertas.html
@@ -82,77 +83,212 @@ templates/
 │   └── atribuir.html
 │
 ├── clientes/
-│   ├── listar.html
-│   ├── novo.html
-│   ├── editar.html
-│   ├── detalhes.html
-│   ├── historico.html
-│   ├── busca-avancada.html
-│   └── contratos.html
+│   ├── geral/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   │   └── detalhes.html
+│   ├── contratos/
+│   │   ├── listar.html
+│   │   └── detalhes.html
+│   ├── historico/
+│   │   ├── interacoes.html
+│   │   └── pedidos.html
+│   └── avancado/
+│       ├── busca.html
+│       └── relatorios.html
 │
 ├── fornecedores/
-│   ├── listar.html
-│   ├── novo.html
-│   ├── editar.html
-│   ├── contratos.html
-│   ├── avaliacoes.html
-│   └── pagamentos.html
+│   ├── geral/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   ├── contratos/
+│   │   ├── listar.html
+│   │   └── detalhes.html
+│   ├── avaliacoes/
+│   │   ├── listar.html
+│   │   └── nova.html
+│   └── pagamentos/
+│       ├── listar.html
+│       └── historico.html
 │
 ├── produtos/
-│   ├── listar.html
-│   ├── novo.html
-│   ├── editar.html
-│   ├── categorias.html
-│   ├── detalhes.html
-│   ├── importacao.html
-│   ├── exportacao.html
-│   ├── precificacao.html
-│   └── fornecedores.html
+│   ├── geral/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   │   └── detalhes.html
+│   ├── categorias/
+│   │   ├── listar.html
+│   │   └── nova.html
+│   ├── precificacao/
+│   │   ├── definir.html
+│   │   └── simulador.html
+│   ├── integracoes/
+│   │   ├── importacao.html
+│   │   └── exportacao.html
+│   └── fornecedores/
+│       └── vincular.html
 │
 ├── estoque/
-│   ├── inventario.html
-│   ├── entrada.html
-│   ├── saida.html
-│   ├── ajustes.html
-│   ├── transferencias.html
-│   ├── alertas.html
-│   ├── relatorios.html
-│   └── auditoria.html
+│   ├── inventario/
+│   │   ├── listar.html
+│   │   └── gerar.html
+│   ├── movimentacao/
+│   │   ├── entrada.html
+│   │   ├── saida.html
+│   │   └── ajustes.html
+│   ├── transferencias/
+│   │   ├── nova.html
+│   │   ├── listar.html
+│   │   └── historico.html
+│   ├── alertas/
+│   │   ├── baixa.html
+│   │   └── vencimento.html
+│   ├── auditoria/
+│   │   └── registros.html
+│   └── relatorios/
+│       └── gerais.html
 │
 ├── vendas/
-│   ├── listar.html
-│   ├── novo.html
-│   ├── editar.html
-│   ├── detalhes.html
-│   ├── relatorio-mensal.html
-│   ├── relatorio-anual.html
-│   ├── devolucoes.html
-│   ├── comissoes.html
-│   ├── dashboards.html
-│   └── faturamento.html
+│   ├── pedidos/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   │   └── detalhes.html
+│   ├── relatorios/
+│   │   ├── mensal.html
+│   │   ├── anual.html
+│   ├── comissoes/
+│   │   ├── vendedores.html
+│   │   └── calculo.html
+│   ├── devolucoes/
+│   │   ├── listar.html
+│   │   └── registrar.html
+│   ├── dashboards/
+│   │   └── indicadores.html
+│   └── faturamento/
+│       └── listar.html
 │
 ├── compras/
-│   ├── listar.html
-│   ├── novo.html
-│   ├── editar.html
-│   ├── fornecedores.html
-│   ├── historico.html
-│   ├── relatorios.html
-│   ├── pedidos.html
-│   └── aprovacoes.html
+│   ├── pedidos/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   ├── fornecedores/
+│   │   └── vincular.html
+│   ├── historico/
+│   │   └── movimentacoes.html
+│   ├── aprovacoes/
+│   │   └── pendentes.html
+│   └── relatorios/
+│       └── geral.html
 │
 ├── financeiro/
-│   ├── dashboard.html
-│   ├── contas-pagar.html
-│   ├── contas-receber.html
-│   ├── fluxo-caixa.html
-│   ├── balanco.html
-│   ├── receitas.html
-│   ├── despesas.html
-│   ├── orcamentos.html
-│   ├── pagamentos.html
-│   ├── conciliacao.html
-│   └── relatorios.html
+│   ├── dashboard/
+│   │   └── index.html
+│   ├── contas-pagar/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   │   ├── agendamentos.html
+│   │   ├── comprovantes.html
+│   │   └── categorias.html
+│   ├── contas-receber/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   │   ├── boletos.html
+│   │   ├── notificacoes.html
+│   │   └── categorias.html
+│   ├── fluxo-caixa/
+│   │   ├── visualizar.html
+│   │   ├── entradas.html
+│   │   ├── saidas.html
+│   │   └── relatorio.html
+│   ├── balanco/
+│   │   ├── patrimonial.html
+│   │   ├── dre.html
+│   │   └── consolidado.html
+│   ├── orcamentos/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   │   └── acompanhamento.html
+│   ├── despesas/
+│   │   ├── listar.html
+│   │   ├── nova.html
+│   │   ├── editar.html
+│   │   ├── fixas.html
+│   │   ├── variaveis.html
+│   │   └── categorias.html
+│   ├── receitas/
+│   │   ├── listar.html
+│   │   ├── nova.html
+│   │   ├── editar.html
+│   │   └── recorrentes.html
+│   ├── pagamentos/
+│   │   ├── listar.html
+│   │   ├── efetuar.html
+│   │   ├── comprovante.html
+│   │   └── historico.html
+│   ├── conciliacao/
+│   │   ├── bancarias.html
+│   │   ├── cartao.html
+│   │   └── relatorio.html
+│   └── relatorios/
+│       ├── gerais.html
+│       ├── por-periodo.html
+│       ├── por-categoria.html
+│       └── personalizados.html
+│
+├── rh/
+│   ├── colaboradores/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   │   ├── ficha.html
+│   │   ├── documentos.html
+│   │   └── historico.html
+│   ├── folha-pagamento/
+│   │   ├── gerar.html
+│   │   ├── holerite.html
+│   │   ├── descontos.html
+│   │   └── relatorios.html
+│   ├── beneficios/
+│   │   ├── plano-saude.html
+│   │   ├── vale-transporte.html
+│   │   ├── vale-refeicao.html
+│   │   └── adesao.html
+│   ├── ponto-escalas/
+│   │   ├── registros.html
+│   │   ├── correcoes.html
+│   │   ├── escalas.html
+│   │   └── relatorios.html
+│   ├── ferias/
+│   │   ├── solicitar.html
+│   │   ├── aprovar.html
+│   │   ├── planejamento.html
+│   │   └── calendario.html
+│   ├── avaliacao/
+│   │   ├── periodicidade.html
+│   │   ├── feedbacks.html
+│   │   └── relatorios.html
+│   ├── treinamentos/
+│   │   ├── cadastro.html
+│   │   ├── inscricao.html
+│   │   └── certificado.html
+│   ├── recrutamento/
+│   │   ├── vagas.html
+│   │   ├── triagem.html
+│   │   ├── entrevistas.html
+│   │   └── historico.html
+│   └── relatorios/
+│       ├── turnover.html
+│       ├── absenteismo.html
+│       ├── headcount.html
+│       └── indicadores.html
 │
 ├── transferencias/
 │   ├── listar.html
@@ -160,11 +296,14 @@ templates/
 │   └── historico.html
 │
 ├── servicos/
-│   ├── listar.html
-│   ├── novo.html
-│   ├── editar.html
-│   ├── contratos.html
-│   └── faturamento.html
+│   ├── geral/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   └── editar.html
+│   ├── contratos/
+│   │   └── listar.html
+│   └── faturamento/
+│       └── listar.html
 │
 ├── agenda/
 │   ├── calendario.html
@@ -174,13 +313,19 @@ templates/
 │   └── configuracoes.html
 │
 ├── projetos/
-│   ├── listar.html
-│   ├── novo.html
-│   ├── editar.html
-│   ├── tarefas.html
-│   ├── equipes.html
-│   ├── cronograma.html
-│   └── relatorios.html
+│   ├── geral/
+│   │   ├── listar.html
+│   │   ├── novo.html
+│   │   ├── editar.html
+│   ├── tarefas/
+│   │   ├── listar.html
+│   │   └── atribuicoes.html
+│   ├── equipes/
+│   │   └── membros.html
+│   ├── cronograma/
+│   │   └── visualizar.html
+│   └── relatorios/
+│       └── desempenho.html
 │
 ├── relatorios/
 │   ├── vendas.html
@@ -189,18 +334,6 @@ templates/
 │   ├── rh.html
 │   ├── clientes.html
 │   └── customizados.html
-│
-├── rh/
-│   ├── colaboradores.html
-│   ├── folha-pagamento.html
-│   ├── beneficios.html
-│   ├── horarios.html
-│   ├── ferias.html
-│   ├── treinamentos.html
-│   ├── avaliacao-desempenho.html
-│   ├── recrutamento.html
-│   ├── relatorios.html
-│   └── ponto-eletronico.html
 │
 ├── perfil/
 │   ├── editar.html

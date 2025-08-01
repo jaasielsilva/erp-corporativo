@@ -190,17 +190,59 @@ templates/
 │   ├── clientes.html
 │   └── customizados.html
 │
-├── rh/
-│   ├── colaboradores.html
-│   ├── folha-pagamento.html
-│   ├── beneficios.html
-│   ├── horarios.html
-│   ├── ferias.html
-│   ├── treinamentos.html
-│   ├── avaliacao-desempenho.html
-│   ├── recrutamento.html
-│   ├── relatorios.html
-│   └── ponto-eletronico.html
+Módulo RH
+├── Colaboradores
+│   ├── Listar colaboradores
+│   ├── Cadastrar/editar colaborador
+│   ├── Visualizar ficha completa
+│   ├── Documentos e contrato
+│   └── Histórico do colaborador
+│
+├── Folha de Pagamento
+│   ├── Gerar folha mensal
+│   ├── Visualizar holerite
+│   ├── Lançar descontos e adicionais
+│   └── Relatórios salariais
+│
+├── Benefícios
+│   ├── Plano de saúde
+│   ├── Vale-transporte
+│   ├── Vale-refeição
+│   └── Cadastro e controle de adesão
+│
+├── Ponto e Escalas
+│   ├── Registros de ponto
+│   ├── Correções manuais
+│   ├── Cadastro de escalas e turnos
+│   └── Relatórios de frequência
+│
+├── Férias
+│   ├── Solicitar férias
+│   ├── Aprovar férias
+│   ├── Planejamento e períodos aquisitivos
+│   └── Calendário de férias
+│
+├── Avaliação de Desempenho
+│   ├── Avaliações periódicas
+│   ├── Feedbacks e metas
+│   └── Relatório de desempenho
+│
+├── Treinamentos
+│   ├── Cadastro de treinamentos
+│   ├── Inscrição de colaboradores
+│   └── Emissão de certificado
+│
+├── Recrutamento & Seleção
+│   ├── Cadastro de vagas
+│   ├── Triagem de candidatos
+│   ├── Agendamento de entrevistas
+│   └── Histórico de processos seletivos
+│
+└── Relatórios RH
+    ├── Turnover
+    ├── Absenteísmo
+    ├── Headcount
+    └── Indicadores personalizados
 │
 ├── perfil/
 │   ├── editar.html

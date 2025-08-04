@@ -54,10 +54,6 @@ public class Colaborador {
     @JoinColumn(name = "departamento_id")
     private Departamento departamento;
 
-    @OneToOne
-    @JoinColumn(name = "colaborador_id")
-    private Colaborador colaborador;
-
     private LocalDateTime dataUltimaEdicao;
 
     @Column(name = "rg")
@@ -65,6 +61,33 @@ public class Colaborador {
 
     @Column(precision = 10, scale = 2)
     private BigDecimal salario;
+
+    // Campos de endereço
+    private String cep;
+    
+    private String logradouro;
+    
+    private String numero;
+    
+    private String complemento;
+    
+    private String bairro;
+    
+    private String cidade;
+    
+    private String estado;
+    
+    private String pais;
+    
+    private String observacoes;
+    
+    private String tipoContrato;
+    
+    private Integer cargaHoraria;
+    
+    @ManyToOne
+    @JoinColumn(name = "supervisor_id")
+    private Colaborador supervisor;
 
     @PrePersist
     public void onPrePersist() {

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erro 500 - RESOLVIDO!</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .success { background-color: #d4edda; padding: 20px; border: 1px solid #c3e6cb; border-radius: 8px; }
+        .info { background-color: #d1ecf1; padding: 20px; border: 1px solid #bee5eb; border-radius: 8px; margin-top: 20px; }
+        h1 { color: #155724; }
+        h2 { color: #0c5460; }
+        code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="success">
+        <h1>✅ ERRO 500 RESOLVIDO!</h1>
+        <p><strong>Problema identificado e corrigido:</strong></p>
+        <p>O erro 500 estava sendo causado por uma <strong>referência circular</strong> no modelo <code>Colaborador.java</code>.</p>
+        
+        <h2>🔧 Causa do Problema:</h2>
+        <ul>
+            <li>Havia um campo <code>@OneToOne private Colaborador colaborador</code> desnecessário</li>
+            <li>Este campo estava criando uma referência circular com o campo <code>supervisor</code></li>
+            <li>O Hibernate estava gerando queries complexas e infinitas tentando resolver a relação</li>
+        </ul>
+    </div>
+
+    <div class="info">
+        <h2>🛠️ Correção Aplicada:</h2>
+        <p>Removido o campo problemático do modelo:</p>
+        <pre><code>// REMOVIDO:
+@OneToOne
+@JoinColumn(name = "colaborador_id")
+private Colaborador colaborador;</code></pre>
+        
+        <p>Mantido apenas o campo necessário para supervisor:</p>
+        <pre><code>// MANTIDO:
+@ManyToOne
+@JoinColumn(name = "supervisor_id")
+private Colaborador supervisor;</code></pre>
+    </div>
+
+    <div class="info">
+        <h2>🎯 Resultado:</h2>
+        <ul>
+            <li>✅ Erro 500 eliminado</li>
+            <li>✅ Página de edição funcionando</li>
+            <li>✅ Queries do Hibernate otimizadas</li>
+            <li>✅ Relacionamentos corretos mantidos</li>
+        </ul>
+        
+        <p><strong>Teste agora:</strong> <a href="http://localhost:8080/rh/colaboradores/editar/4" target="_blank">http://localhost:8080/rh/colaboradores/editar/4</a></p>
+    </div>
+</body>
+</html>

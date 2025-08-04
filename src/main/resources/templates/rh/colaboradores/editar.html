@@ -7,6 +7,7 @@
   <title>Editar Colaborador - ERP Corporativo</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/colaborador-form.css}" />
 </head>
 
 <body>
@@ -29,8 +30,8 @@
           </a>
         </div>
 
-        <form class="form-container" method="post" enctype="multipart/form-data">
-          <input type="hidden" name="id" value="1">
+        <form class="form-container" method="post" action="/rh/colaboradores/atualizar" enctype="multipart/form-data">
+          <input type="hidden" name="id" th:value="${colaborador.id}">
 
           <div class="form-grid">
             <!-- Dados Pessoais -->
@@ -40,7 +41,6 @@
               <div class="form-group">
                 <label for="foto">Foto do Colaborador</label>
                 <div class="current-photo">
-                  <img src="/images/avatar-placeholder.png" alt="Foto atual" class="avatar-preview">
                   <span>Foto atual</span>
                 </div>
                 <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
@@ -62,7 +62,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="rg">RG</label>
-                  <input type="text" id="rg" name="rg" th:value="${colaborador.rg}" class="form-control" />
+                  <input type="text" id="rg" name="rg" th:value="${colaborador.rg}" class="form-control" placeholder="00.000.000-0" />
                 </div>
 
                 <div class="form-group">
@@ -77,8 +77,7 @@
                 <div class="form-group">
                   <label for="estadoCivil">Estado Civil</label>
                   <select id="estadoCivil" name="estadoCivil" class="form-control">
-                    <option value="" span th:text="${colaborador.estadoCivil}">valor aqui</span></p>
-                    </option>
+                    <option value="">Selecione...</option>
                     <option value="SOLTEIRO" th:selected="${colaborador.estadoCivil == 'SOLTEIRO'}">Solteiro(a)</option>
                     <option value="CASADO" th:selected="${colaborador.estadoCivil == 'CASADO'}">Casado(a)</option>
                     <option value="DIVORCIADO" th:selected="${colaborador.estadoCivil == 'DIVORCIADO'}">Divorciado(a)
@@ -107,20 +106,56 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="email">E-mail *</label>
-                  <input type="email" id="email" name="email" th:value="${colaborador.email}" class="form-control">
+                  <input type="email" id="email" name="email" th:value="${colaborador.email}" class="form-control" placeholder="exemplo@empresa.com">
                 </div>
                 <div class="form-group">
                   <label for="telefone">Telefone</label>
                   <input type="text" id="telefone" name="telefone" th:value="${colaborador.telefone}"
-                    class="form-control" />
+                    class="form-control" placeholder="(11) 99999-9999" />
                 </div>
-
               </div>
 
-              <div class="form-group">
-                <label for="endereco">Endereço Completo</label>
-                <textarea id="endereco" name="endereco" rows="3"
-                  class="form-control">Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</textarea>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="cep">CEP</label>
+                  <input type="text" id="cep" name="cep" th:value="${colaborador.cep}" class="form-control" placeholder="00000-000">
+                  <div class="loading-indicator" id="cep-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Buscando endereço...
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="logradouro">Logradouro</label>
+                  <input type="text" id="logradouro" name="logradouro" th:value="${colaborador.logradouro}" class="form-control" placeholder="Rua, Avenida, etc.">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="numero">Número</label>
+                  <input type="text" id="numero" name="numero" th:value="${colaborador.numero}" class="form-control" placeholder="123">
+                </div>
+                <div class="form-group">
+                  <label for="complemento">Complemento</label>
+                  <input type="text" id="complemento" name="complemento" th:value="${colaborador.complemento}" class="form-control" placeholder="Apto, Sala, etc.">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bairro">Bairro</label>
+                  <input type="text" id="bairro" name="bairro" th:value="${colaborador.bairro}" class="form-control" placeholder="Nome do bairro">
+                </div>
+                <div class="form-group">
+                  <label for="cidade">Cidade</label>
+                  <input type="text" id="cidade" name="cidade" th:value="${colaborador.cidade}" class="form-control" placeholder="Nome da cidade">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="estado">Estado</label>
+                  <input type="text" id="estado" name="estado" th:value="${colaborador.estado}" class="form-control" placeholder="SP">
+                </div>
               </div>
             </div>
 
@@ -130,15 +165,20 @@
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="cargo">Cargo</label>
-                  <input type="text" id="cargo" name="cargo" th:value="${colaborador.cargo.nome}" class="form-control"
-                    readonly>
+                  <label for="cargo">Cargo *</label>
+                  <select id="cargo" name="cargo.id" class="form-control" required>
+                    <option value="">Selecione...</option>
+                    <option th:each="cargo : ${cargos}" th:value="${cargo.id}"
+                      th:text="${cargo.nome}"
+                      th:selected="${colaborador.cargo != null and colaborador.cargo.id == cargo.id}">
+                    </option>
+                  </select>
                 </div>
 
 
                 <div class="form-group">
                   <label for="departamento">Departamento *</label>
-                  <select id="departamento" name="departamento" class="form-control" required>
+                  <select id="departamento" name="departamento.id" class="form-control" required>
                     <option value="">Selecione...</option>
                     <option th:each="departamento : ${departamentos}" th:value="${departamento.id}"
                       th:text="${departamento.nome}"
@@ -160,8 +200,8 @@
                 <div class="form-group">
                   <label for="salario">Salário</label>
                   <input type="text" id="salario" name="salario"
-                    th:value="${#numbers.formatDecimal(colaborador.salario, 1, 'COMMA', 2, 'POINT')}"
-                    class="form-control" placeholder="0.00">
+                    th:value="${colaborador.salario != null ? 'R$ ' + #numbers.formatDecimal(colaborador.salario, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}"
+                    class="form-control" placeholder="R$ 0,00">
                 </div>
 
               </div>
@@ -171,36 +211,37 @@
                   <label for="tipoContrato">Tipo de Contrato</label>
                   <select id="tipoContrato" name="tipoContrato" class="form-control">
                     <option value="">Selecione...</option>
-                    <option value="clt" selected>CLT</option>
-                    <option value="pj">PJ</option>
-                    <option value="estagio">Estágio</option>
-                    <option value="terceirizado">Terceirizado</option>
+                    <option value="clt" th:selected="${colaborador.tipoContrato == 'clt'}">CLT</option>
+                    <option value="pj" th:selected="${colaborador.tipoContrato == 'pj'}">PJ</option>
+                    <option value="estagio" th:selected="${colaborador.tipoContrato == 'estagio'}">Estágio</option>
+                    <option value="terceirizado" th:selected="${colaborador.tipoContrato == 'terceirizado'}">Terceirizado</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label for="cargaHoraria">Carga Horária Semanal</label>
-                  <input type="number" id="cargaHoraria" name="cargaHoraria" value="40" class="form-control">
+                  <input type="number" id="cargaHoraria" name="cargaHoraria" th:value="${colaborador.cargaHoraria != null ? colaborador.cargaHoraria : 40}" class="form-control">
                 </div>
               </div>
 
               <div class="form-row">
-                <div class="form-group">
-                  <label for="supervisor">Supervisor Direto</label>
-                  <select id="supervisor" name="supervisor" class="form-control">
-                    <option value="">Selecione...</option>
-                    <option value="1" selected>João Silva - Gerente de TI</option>
-                    <option value="2">Maria Santos - Gerente de Vendas</option>
-                    <option value="3">Carlos Oliveira - Gerente Financeiro</option>
-                  </select>
-                </div>
-                <div class="form-group">
+                <div class="form-group form-group-quarter">
                   <label for="status">Status</label>
                   <select id="status" name="status" class="form-control">
-                    <option value="ativo" selected>Ativo</option>
-                    <option value="inativo">Inativo</option>
-                    <option value="ferias">Em Férias</option>
-                    <option value="licenca">Em Licença</option>
-                    <option value="afastado">Afastado</option>
+                    <option value="ATIVO" th:selected="${colaborador.status == 'ATIVO'}">Ativo</option>
+                    <option value="INATIVO" th:selected="${colaborador.status == 'INATIVO'}">Inativo</option>
+                    <option value="SUSPENSO" th:selected="${colaborador.status == 'SUSPENSO'}">Suspenso</option>
+                  </select>
+                </div>
+                <div class="form-group form-group-quarter">
+                  <label for="supervisor">Supervisor Direto</label>
+                  <select id="supervisor" name="supervisor.id" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option th:each="col : ${colaboradores}" 
+                            th:if="${col.id != colaborador.id}"
+                            th:value="${col.id}" 
+                            th:text="${col.nome + ' - ' + (col.cargo != null ? col.cargo.nome : 'Sem cargo')}"
+                            th:selected="${colaborador.supervisor != null and colaborador.supervisor.id == col.id}">
+                    </option>
                   </select>
                 </div>
               </div>
@@ -213,7 +254,7 @@
               <div class="form-group">
                 <label for="observacoes">Observações Gerais</label>
                 <textarea id="observacoes" name="observacoes" rows="4"
-                  class="form-control">Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot.</textarea>
+                  class="form-control" th:text="${colaborador.observacoes}"></textarea>
               </div>
             </div>
           </div>
@@ -237,14 +278,7 @@
   </div>
 
   <script th:src="@{/js/script.js}"></script>
-  <script>
-    function confirmarDesligamento() {
-      if (confirm('Tem certeza que deseja desligar este colaborador? Esta ação não pode ser desfeita.')) {
-        // Aqui seria feita a requisição para desligar o colaborador
-        alert('Funcionalidade de desligamento será implementada.');
-      }
-    }
-  </script>
+  <script th:src="@{/js/colaborador-edit-form.js}"></script>
 </body>
 
 </html>

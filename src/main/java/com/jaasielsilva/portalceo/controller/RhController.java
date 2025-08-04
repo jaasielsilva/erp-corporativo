@@ -136,6 +136,8 @@ public class RhController {
 
         model.addAttribute("colaborador", colaborador);
         model.addAttribute("departamentos", departamentoService.listarTodos());
+        model.addAttribute("cargos", cargoService.listarTodos());
+        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         return "rh/colaboradores/editar";
     }
 

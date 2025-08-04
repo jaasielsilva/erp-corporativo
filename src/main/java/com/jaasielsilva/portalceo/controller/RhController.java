@@ -145,18 +145,12 @@ public class RhController {
      * Processa o formulário de edição de colaborador
      */
     @PostMapping("/colaboradores/atualizar")
-    public String atualizarColaborador(@ModelAttribute Colaborador colaborador,
-            @RequestParam(value = "foto", required = false) MultipartFile foto,
-            RedirectAttributes redirectAttributes) {
+    public String atualizarColaborador(@ModelAttribute Colaborador colaborador, RedirectAttributes redirectAttributes) {
+        System.out.println("Recebido para salvar: " + colaborador);
         try {
-            // Lógica para processar a foto do colaborador seria implementada aqui
-            if (foto != null && !foto.isEmpty()) {
-                // Processar upload da foto quando implementado
-            }
-
             colaboradorService.salvar(colaborador);
             redirectAttributes.addFlashAttribute("mensagem", "Colaborador atualizado com sucesso!");
-            return "redirect:/rh/colaboradores/ficha/" + colaborador.getId();
+            return "redirect:/rh/colaboradores/listar";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao atualizar colaborador: " + e.getMessage());
             return "redirect:/rh/colaboradores/editar/" + colaborador.getId();

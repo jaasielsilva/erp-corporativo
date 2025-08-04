@@ -30,7 +30,7 @@
           </a>
         </div>
 
-        <form class="form-container" method="post" action="/rh/colaboradores/atualizar" enctype="multipart/form-data">
+        <form th:action="@{/rh/colaboradores/atualizar}" method="post">
           <input type="hidden" name="id" th:value="${colaborador.id}">
 
           <div class="form-grid">
@@ -40,11 +40,7 @@
 
               <div class="form-group">
                 <label for="foto">Foto do Colaborador</label>
-                <div class="current-photo">
-                  <span>Foto atual</span>
-                </div>
-                <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
-                <small>Deixe em branco para manter a foto atual</small>
+
               </div>
 
               <div class="form-row">

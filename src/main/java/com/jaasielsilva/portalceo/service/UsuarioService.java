@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
+import com.jaasielsilva.portalceo.model.NivelAcesso;
 import com.jaasielsilva.portalceo.model.PasswordResetToken;
 import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
@@ -47,8 +48,14 @@ public class UsuarioService {
     public void salvarUsuario(Usuario usuario) throws Exception {
         if (usuario.getId() != null) {
             Optional<Usuario> existente = usuarioRepository.findById(usuario.getId());
-            if (existente.isPresent() && "admin@teste.com".equalsIgnoreCase(existente.get().getEmail())) {
-                throw new IllegalStateException("O usuário administrador principal não pode ser alterado.");
+            if (existente.isPresent()) {
+                Usuario usuarioExistente = existente.get();
+                // Protege usuário MASTER e admin principal
+                if (usuarioExistente.getNivelAcesso() == NivelAcesso.MASTER || 
+                    "admin@teste.com".equalsIgnoreCase(usuarioExistente.getEmail()) ||
+                    "master@sistema.com".equalsIgnoreCase(usuarioExistente.getEmail())) {
+                    throw new IllegalStateException("Este usuário é protegido e não pode ser alterado.");
+                }
             }
         }
 
@@ -206,8 +213,11 @@ public class UsuarioService {
     Usuario usuario = usuarioRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
 
-    if ("admin@teste.com".equalsIgnoreCase(usuario.getEmail())) {
-        throw new IllegalStateException("Este usuário administrador não pode ser excluído.");
+    // Protege usuário MASTER e admin principal
+    if (usuario.getNivelAcesso() == NivelAcesso.MASTER || 
+        "admin@teste.com".equalsIgnoreCase(usuario.getEmail()) ||
+        "master@sistema.com".equalsIgnoreCase(usuario.getEmail())) {
+        throw new IllegalStateException("Este usuário é protegido e não pode ser excluído.");
     }
 
     if (usuario.getMatricula().equalsIgnoreCase(matriculaSolicitante)) {

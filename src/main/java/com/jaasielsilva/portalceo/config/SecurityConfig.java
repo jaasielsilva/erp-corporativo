@@ -171,7 +171,7 @@ public SecurityFilterChain filterChain(HttpSecurity http,
                     return perfilRepository.save(p);
                 });
 
-            perfilRepository.findByNome("USER")
+            Perfil userPerfil = perfilRepository.findByNome("USER")
                 .orElseGet(() -> {
                     Perfil p = new Perfil();
                     p.setNome("USER");
@@ -265,42 +265,120 @@ public SecurityFilterChain filterChain(HttpSecurity http,
             // Cargo Administrador (mantido para compatibilidade)
             Cargo cargoAdmin = criarCargo("Administrador");
 
-            // Criação do usuário admin
-            if (usuarioRepository.findByEmail("admin@teste.com").isEmpty()) {
-                Usuario admin = new Usuario();
-                admin.setNome("Administrador");
-                admin.setEmail("admin@teste.com");
-                admin.setSenha(passwordEncoder.encode("12345"));
-                admin.setPerfis(Set.of(adminPerfil));
-                admin.setMatricula("ADM001");
-                admin.setCpf("00000000000");
-                admin.setTelefone("(11) 99999-9999");
-                admin.setDataNascimento(java.time.LocalDate.of(1980, 1, 1));
-                admin.setDepartamento(departamentoTI);
-                admin.setCargo(cargoAdmin);
-                admin.setDataAdmissao(java.time.LocalDate.of(2020, 1, 1));
-                admin.setEndereco("Rua Exemplo, 123");
-                admin.setCidade("São Paulo");
-                admin.setEstado("SP");
-                admin.setCep("01000-000");
-                admin.setStatus(Usuario.Status.ATIVO);
-                admin.setGenero(Genero.MASCULINO);
-                admin.setRamal("1010");
-                admin.setNivelAcesso(NivelAcesso.ADMIN);
-
+            // Criar usuário MASTER se não existir
+            if (usuarioRepository.findByEmail("master@sistema.com").isEmpty()) {
+                Usuario master = new Usuario();
+                master.setMatricula("MST001");
+                master.setNome("Master do Sistema");
+                master.setEmail("master@sistema.com");
+                master.setSenha(passwordEncoder.encode("master123"));
+                master.setCpf("11111111111");
+                master.setTelefone("(11) 99999-0000");
+                master.setDataNascimento(java.time.LocalDate.of(1975, 1, 1));
+                master.setGenero(Genero.MASCULINO);
+                master.setNivelAcesso(NivelAcesso.MASTER);
+                master.setStatus(Usuario.Status.ATIVO);
+                master.setDepartamento(departamentoTI);
+                master.setCargo(cargoAdmin);
+                master.setDataAdmissao(java.time.LocalDate.of(2020, 1, 1));
+                master.setEndereco("Rua Master, 1");
+                master.setCidade("São Paulo");
+                master.setEstado("SP");
+                master.setCep("01000-001");
+                master.setRamal("1000");
+                master.setPerfis(Set.of(adminPerfil));
+                
                 try {
                     ClassPathResource image = new ClassPathResource("static/img/gerente.png");
                     byte[] imageBytes = Files.readAllBytes(image.getFile().toPath());
-                    admin.setFotoPerfil(imageBytes);
+                    master.setFotoPerfil(imageBytes);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    admin.setFotoPerfil(null);
+                    master.setFotoPerfil(null);
                 }
+                
+                usuarioRepository.save(master);
+                System.out.println("Usuário master criado: master@sistema.com / master123");
+            }
 
-                usuarioRepository.save(admin);
-                System.out.println("Usuário administrador criado: admin@teste.com / 12345");
-            } else {
-                System.out.println("Usuário administrador já existe.");
+            
+
+            // Criar usuário gerente de RH se não existir
+            if (usuarioRepository.findByEmail("rh@empresa.com").isEmpty()) {
+                Usuario gerenteRH = new Usuario();
+                gerenteRH.setMatricula("RH001");
+                gerenteRH.setNome("Gerente de RH");
+                gerenteRH.setEmail("rh@empresa.com");
+                gerenteRH.setSenha(passwordEncoder.encode("rh123"));
+                gerenteRH.setCpf("22222222222");
+                gerenteRH.setTelefone("(11) 88888-8888");
+                gerenteRH.setDataNascimento(java.time.LocalDate.of(1985, 5, 15));
+                gerenteRH.setGenero(Genero.FEMININO);
+                gerenteRH.setNivelAcesso(NivelAcesso.GERENTE);
+                gerenteRH.setStatus(Usuario.Status.ATIVO);
+                gerenteRH.setDepartamento(departamentoRH);
+                gerenteRH.setCargo(cargoGerenteRH);
+                gerenteRH.setDataAdmissao(java.time.LocalDate.of(2021, 3, 1));
+                gerenteRH.setEndereco("Rua RH, 456");
+                gerenteRH.setCidade("São Paulo");
+                gerenteRH.setEstado("SP");
+                gerenteRH.setCep("01000-002");
+                gerenteRH.setRamal("2020");
+                gerenteRH.setPerfis(Set.of(adminPerfil));
+                usuarioRepository.save(gerenteRH);
+                System.out.println("Usuário gerente RH criado: rh@empresa.com / rh123");
+            }
+
+            // Criar usuário coordenador se não existir
+            if (usuarioRepository.findByEmail("coordenador@empresa.com").isEmpty()) {
+                Usuario coordenador = new Usuario();
+                coordenador.setMatricula("COORD001");
+                coordenador.setNome("Coordenador de Vendas");
+                coordenador.setEmail("coordenador@empresa.com");
+                coordenador.setSenha(passwordEncoder.encode("coord123"));
+                coordenador.setCpf("33333333333");
+                coordenador.setTelefone("(11) 77777-7777");
+                coordenador.setDataNascimento(java.time.LocalDate.of(1990, 8, 20));
+                coordenador.setGenero(Genero.MASCULINO);
+                coordenador.setNivelAcesso(NivelAcesso.COORDENADOR);
+                coordenador.setStatus(Usuario.Status.ATIVO);
+                coordenador.setDepartamento(departamentoVendas);
+                coordenador.setCargo(cargoCoordenadorVendas);
+                coordenador.setDataAdmissao(java.time.LocalDate.of(2022, 1, 15));
+                coordenador.setEndereco("Rua Vendas, 789");
+                coordenador.setCidade("São Paulo");
+                coordenador.setEstado("SP");
+                coordenador.setCep("01000-003");
+                coordenador.setRamal("3030");
+                coordenador.setPerfis(Set.of(userPerfil));
+                usuarioRepository.save(coordenador);
+                System.out.println("Usuário coordenador criado: coordenador@empresa.com / coord123");
+            }
+
+            // Criar usuário operacional se não existir
+            if (usuarioRepository.findByEmail("operacional@empresa.com").isEmpty()) {
+                Usuario operacional = new Usuario();
+                operacional.setMatricula("OP001");
+                operacional.setNome("Operador de Sistema");
+                operacional.setEmail("operacional@empresa.com");
+                operacional.setSenha(passwordEncoder.encode("op123"));
+                operacional.setCpf("44444444444");
+                operacional.setTelefone("(11) 66666-6666");
+                operacional.setDataNascimento(java.time.LocalDate.of(1995, 12, 10));
+                operacional.setGenero(Genero.FEMININO);
+                operacional.setNivelAcesso(NivelAcesso.OPERACIONAL);
+                operacional.setStatus(Usuario.Status.ATIVO);
+                operacional.setDepartamento(departamentoOperacoes);
+                operacional.setCargo(cargoAssistenteAdministrativo);
+                operacional.setDataAdmissao(java.time.LocalDate.of(2023, 6, 1));
+                operacional.setEndereco("Rua Operações, 321");
+                operacional.setCidade("São Paulo");
+                operacional.setEstado("SP");
+                operacional.setCep("01000-004");
+                operacional.setRamal("4040");
+                operacional.setPerfis(Set.of(userPerfil));
+                usuarioRepository.save(operacional);
+                System.out.println("Usuário operacional criado: operacional@empresa.com / op123");
             }
             
             // ===============================

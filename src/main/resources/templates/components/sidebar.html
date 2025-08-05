@@ -4,6 +4,7 @@
       <img th:if="${usuarioLogado != null}" th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}"
         alt="Foto do usuário" class="user-avatar" />
       <div class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Nome do Usuário</div>
+      <div class="user-level" th:text="${nivelAcesso}" style="font-size: 0.8em; color: #888; margin-top: 2px;">Nível de Acesso</div>
     </div>
 
     <nav>
@@ -17,12 +18,14 @@
           </a>
         </li>
 
+        <!-- Itens operacionais básicos - todos podem acessar -->
         <li><a href="/clientes"><i class="fas fa-address-book"></i> Clientes</a></li>
         <li><a href="/vendas"><i class="fas fa-cash-register"></i> Vendas</a></li>
         <li><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
         <li><a href="/contratos"><i class="fas fa-file-contract"></i> Contratos</a></li>
         <li><a href="/produtos"><i class="fas fa-boxes"></i> Produtos</a></li>
         <li><a href="/estoque"><i class="fas fa-warehouse"></i> Estoque</a></li>
+        
         <li class="has-submenu">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-tags"></i> Categorias <i class="fas fa-chevron-down submenu-icon"></i>
@@ -33,8 +36,8 @@
           </ul>
         </li>
 
-        <!-- Módulo RH -->
-        <li class="has-submenu">
+        <!-- Módulo RH - Apenas níveis gerenciais ou específicos de RH -->
+        <li class="has-submenu" th:if="${podeGerenciarRH or isGerencial}">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-users"></i> Recursos Humanos <i class="fas fa-chevron-down submenu-icon"></i>
           </a>
@@ -45,13 +48,15 @@
               </a>
               <ul class="submenu" style="display: none;">
                 <li><a href="/rh/colaboradores/listar"><i class="fas fa-list"></i> Listar</a></li>
-                <li><a href="/rh/colaboradores/novo"><i class="fas fa-plus"></i> Novo</a></li>
+                <li th:if="${podeGerenciarRH}"><a href="/rh/colaboradores/novo"><i class="fas fa-plus"></i> Novo</a></li>
                 <li><a href="/rh/colaboradores/ficha"><i class="fas fa-id-card"></i> Ficha</a></li>
                 <li><a href="/rh/colaboradores/documentos"><i class="fas fa-file-alt"></i> Documentos</a></li>
                 <li><a href="/rh/colaboradores/historico"><i class="fas fa-history"></i> Histórico</a></li>
               </ul>
             </li>
-            <li class="has-submenu">
+            
+            <!-- Folha de Pagamento - Apenas RH e níveis superiores -->
+            <li class="has-submenu" th:if="${podeGerenciarRH}">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-money-bill-wave"></i> Folha de Pagamento <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
@@ -62,7 +67,9 @@
                 <li><a href="/rh/folha-pagamento/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
               </ul>
             </li>
-            <li class="has-submenu">
+            
+            <!-- Benefícios - Todos os níveis gerenciais -->
+            <li class="has-submenu" th:if="${isGerencial}">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-gift"></i> Benefícios <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
@@ -73,49 +80,59 @@
                 <li><a href="/rh/beneficios/adesao"><i class="fas fa-check-circle"></i> Adesão</a></li>
               </ul>
             </li>
+            
+            <!-- Ponto e Escalas -->
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-clock"></i> Ponto e Escalas <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
               <ul class="submenu" style="display: none;">
                 <li><a href="/rh/ponto-escalas/registros"><i class="fas fa-fingerprint"></i> Registros</a></li>
-                <li><a href="/rh/ponto-escalas/correcoes"><i class="fas fa-edit"></i> Correções</a></li>
-                <li><a href="/rh/ponto-escalas/escalas"><i class="fas fa-calendar-alt"></i> Escalas</a></li>
-                <li><a href="/rh/ponto-escalas/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+                <li th:if="${isGerencial}"><a href="/rh/ponto-escalas/correcoes"><i class="fas fa-edit"></i> Correções</a></li>
+                <li th:if="${isGerencial}"><a href="/rh/ponto-escalas/escalas"><i class="fas fa-calendar-alt"></i> Escalas</a></li>
+                <li th:if="${podeGerenciarRH}"><a href="/rh/ponto-escalas/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
               </ul>
             </li>
+            
+            <!-- Férias -->
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-umbrella-beach"></i> Férias <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
               <ul class="submenu" style="display: none;">
                 <li><a href="/rh/ferias/solicitar"><i class="fas fa-paper-plane"></i> Solicitar</a></li>
-                <li><a href="/rh/ferias/aprovar"><i class="fas fa-check"></i> Aprovar</a></li>
-                <li><a href="/rh/ferias/planejamento"><i class="fas fa-calendar-check"></i> Planejamento</a></li>
+                <li th:if="${isGerencial}"><a href="/rh/ferias/aprovar"><i class="fas fa-check"></i> Aprovar</a></li>
+                <li th:if="${podeGerenciarRH}"><a href="/rh/ferias/planejamento"><i class="fas fa-calendar-check"></i> Planejamento</a></li>
                 <li><a href="/rh/ferias/calendario"><i class="fas fa-calendar"></i> Calendário</a></li>
               </ul>
             </li>
-            <li class="has-submenu">
+            
+            <!-- Avaliação -->
+            <li class="has-submenu" th:if="${isGerencial}">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-star"></i> Avaliação <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
               <ul class="submenu" style="display: none;">
                 <li><a href="/rh/avaliacao/periodicidade"><i class="fas fa-calendar-week"></i> Periodicidade</a></li>
                 <li><a href="/rh/avaliacao/feedbacks"><i class="fas fa-comments"></i> Feedbacks</a></li>
-                <li><a href="/rh/avaliacao/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
+                <li th:if="${podeGerenciarRH}"><a href="/rh/avaliacao/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
               </ul>
             </li>
+            
+            <!-- Treinamentos -->
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-graduation-cap"></i> Treinamentos <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
               <ul class="submenu" style="display: none;">
-                <li><a href="/rh/treinamentos/cadastro"><i class="fas fa-plus-square"></i> Cadastro</a></li>
+                <li th:if="${podeGerenciarRH}"><a href="/rh/treinamentos/cadastro"><i class="fas fa-plus-square"></i> Cadastro</a></li>
                 <li><a href="/rh/treinamentos/inscricao"><i class="fas fa-user-plus"></i> Inscrição</a></li>
                 <li><a href="/rh/treinamentos/certificado"><i class="fas fa-certificate"></i> Certificado</a></li>
               </ul>
             </li>
-            <li class="has-submenu">
+            
+            <!-- Recrutamento - Apenas RH -->
+            <li class="has-submenu" th:if="${podeGerenciarRH}">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-search"></i> Recrutamento <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
@@ -126,7 +143,9 @@
                 <li><a href="/rh/recrutamento/historico"><i class="fas fa-history"></i> Histórico</a></li>
               </ul>
             </li>
-            <li class="has-submenu">
+            
+            <!-- Relatórios RH - Apenas RH -->
+            <li class="has-submenu" th:if="${podeGerenciarRH}">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-chart-bar"></i> Relatórios RH <i class="fas fa-chevron-down submenu-icon"></i>
               </a>
@@ -140,36 +159,36 @@
           </ul>
         </li>
 
-
-        <!-- Itens financeiros comuns -->
-        <li><a href="/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
-        <li><a href="/contas-receber"><i class="fas fa-file-invoice-dollar"></i> Contas a Receber</a></li>
+        <!-- Itens financeiros - Baseado em permissões -->
+        <li th:if="${podeAcessarFinanceiro}"><a href="/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
+        <li th:if="${podeAcessarFinanceiro}"><a href="/contas-receber"><i class="fas fa-file-invoice-dollar"></i> Contas a Receber</a></li>
 
         <!-- Itens operacionais -->
         <li><a href="/servicos"><i class="fas fa-tools"></i> Serviços</a></li>
         <li><a href="/agenda"><i class="fas fa-calendar-check"></i> Agenda</a></li>
 
-        <!-- Itens ADMIN -->
-        <li th:if="${isAdmin}"><a href="/usuarios/index"><i class="fas fa-user-friends"></i> Usuários</a></li>
-        <li th:if="${isAdmin}"><a href="/permissoes"><i class="fas fa-user-shield"></i> Perfis e Permissões</a></li>
-        <li th:if="${isAdmin}"><a href="/financeiro"><i class="fas fa-wallet"></i> Financeiro</a></li>
-        <li th:if="${isAdmin}"><a href="/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
-        <li th:if="${isAdmin}"><a href="/documentos"><i class="fas fa-file-alt"></i> Documentos</a></li>
-        <li th:if="${isAdmin}"><a href="/suporte"><i class="fas fa-life-ring"></i> Suporte</a></li>
-        <li th:if="${isAdmin}"><a href="/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
-        <li th:if="${isAdmin}"><a href="/metas"><i class="fas fa-bullseye"></i> Metas</a></li>
-        <li th:if="${isAdmin}"><a href="/transferencias"><i class="fas fa-exchange-alt"></i> Transferências</a></li>
+        <!-- Seção Administrativa - Baseada em permissões específicas -->
+        <li th:if="${podeGerenciarUsuarios}"><a href="/usuarios/index"><i class="fas fa-user-friends"></i> Usuários</a></li>
+        <li th:if="${isAdmin or isMaster}"><a href="/permissoes"><i class="fas fa-user-shield"></i> Perfis e Permissões</a></li>
+        <li th:if="${podeAcessarFinanceiro}"><a href="/financeiro"><i class="fas fa-wallet"></i> Financeiro</a></li>
+        <li th:if="${isGerencial}"><a href="/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
+        <li th:if="${isAdmin or isMaster}"><a href="/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
+        <li th:if="${isGerencial}"><a href="/metas"><i class="fas fa-bullseye"></i> Metas</a></li>
+        <li th:if="${podeAcessarFinanceiro}"><a href="/transferencias"><i class="fas fa-exchange-alt"></i> Transferências</a></li>
 
-        <!-- Itens USER -->
-        <li th:if="${!isAdmin}"><a href="/chat"><i class="fas fa-comments"></i> Chat</a></li>
-        <li th:if="${!isAdmin}"><a href="/ajuda"><i class="fas fa-question-circle"></i> Central de Ajuda</a></li>
-        <li th:if="${!isAdmin}"><a href="/termos"><i class="fas fa-file-contract"></i> Termos de Uso</a></li>
-        <li th:if="${!isAdmin}"><a href="/meus-pedidos"><i class="fas fa-clipboard-list"></i> Meus Pedidos</a></li>
-        <li th:if="${!isAdmin}"><a href="/meus-servicos"><i class="fas fa-concierge-bell"></i> Meus Serviços</a></li>
-        <li th:if="${!isAdmin}"><a href="/favoritos"><i class="fas fa-star"></i> Favoritos</a></li>
-        <li th:if="${!isAdmin}"><a href="/recomendacoes"><i class="fas fa-thumbs-up"></i> Recomendados</a></li>
-        <li th:if="${!isAdmin}"><a href="/documentos"><i class="fas fa-file-alt"></i> Documentos</a></li>
-        <li th:if="${!isAdmin}"><a href="/suporte"><i class="fas fa-life-ring"></i> Suporte</a></li>
+        <!-- Itens para usuários não gerenciais -->
+        <li th:if="${!isGerencial}"><a href="/chat"><i class="fas fa-comments"></i> Chat</a></li>
+        <li th:if="${!isGerencial}"><a href="/ajuda"><i class="fas fa-question-circle"></i> Central de Ajuda</a></li>
+        <li th:if="${!isGerencial}"><a href="/termos"><i class="fas fa-file-contract"></i> Termos de Uso</a></li>
+        <li th:if="${!isGerencial}"><a href="/meus-pedidos"><i class="fas fa-clipboard-list"></i> Meus Pedidos</a></li>
+        <li th:if="${!isGerencial}"><a href="/meus-servicos"><i class="fas fa-concierge-bell"></i> Meus Serviços</a></li>
+        <li th:if="${!isGerencial}"><a href="/favoritos"><i class="fas fa-star"></i> Favoritos</a></li>
+        <li th:if="${!isGerencial}"><a href="/recomendacoes"><i class="fas fa-thumbs-up"></i> Recomendados</a></li>
+        
+        <!-- Documentos e Suporte - Acesso diferenciado -->
+        <li th:if="${isGerencial}"><a href="/documentos"><i class="fas fa-file-alt"></i> Documentos Gerenciais</a></li>
+        <li th:if="${!isGerencial}"><a href="/documentos"><i class="fas fa-file-alt"></i> Meus Documentos</a></li>
+        <li><a href="/suporte"><i class="fas fa-life-ring"></i> Suporte</a></li>
 
         <!-- Logout sempre no fim -->
         <li><a href="/logout"><i class="fas fa-power-off"></i> Sair</a></li>

@@ -3,8 +3,12 @@ package com.jaasielsilva.portalceo.config;
 import com.jaasielsilva.portalceo.security.CustomAuthenticationFailureHandler;
 import com.jaasielsilva.portalceo.security.UsuarioDetailsService;
 import com.jaasielsilva.portalceo.model.*;
+import com.jaasielsilva.portalceo.model.CargoHierarquia;
+import com.jaasielsilva.portalceo.model.CargoDepartamentoAssociacao;
 import com.jaasielsilva.portalceo.repository.*;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
+import com.jaasielsilva.portalceo.repository.CargoHierarquiaRepository;
+import com.jaasielsilva.portalceo.repository.CargoDepartamentoAssociacaoRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,19 +32,25 @@ public class SecurityConfig {
     private final CargoRepository cargoRepository;
     private final DepartamentoRepository departamentoRepository;
     private final ColaboradorRepository colaboradorRepository;
+    private final CargoHierarquiaRepository cargoHierarquiaRepository;
+    private final CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository;
 
     public SecurityConfig(UsuarioRepository usuarioRepository,
                           PerfilRepository perfilRepository,
                           PermissaoRepository permissaoRepository,
                           CargoRepository cargoRepository,
                           DepartamentoRepository departamentoRepository,
-                          ColaboradorRepository colaboradorRepository) {
+                          ColaboradorRepository colaboradorRepository,
+                          CargoHierarquiaRepository cargoHierarquiaRepository,
+                          CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.perfilRepository = perfilRepository;
         this.permissaoRepository = permissaoRepository;
         this.cargoRepository = cargoRepository;
         this.departamentoRepository = departamentoRepository;
         this.colaboradorRepository = colaboradorRepository;
+        this.cargoHierarquiaRepository = cargoHierarquiaRepository;
+        this.cargoDepartamentoAssociacaoRepository = cargoDepartamentoAssociacaoRepository;
     }
 
     @Bean
@@ -84,6 +94,64 @@ public SecurityFilterChain filterChain(HttpSecurity http,
 }
 
 
+    /**
+     * Método auxiliar para criar departamentos
+     */
+    private Departamento criarDepartamento(String nome) {
+        return departamentoRepository.findByNome(nome)
+            .orElseGet(() -> {
+                Departamento d = new Departamento();
+                d.setNome(nome);
+                return departamentoRepository.save(d);
+            });
+    }
+    
+    /**
+     * Método auxiliar para criar cargos
+     */
+    private Cargo criarCargo(String nome) {
+        return cargoRepository.findByNome(nome)
+            .orElseGet(() -> {
+                Cargo c = new Cargo();
+                c.setNome(nome);
+                return cargoRepository.save(c);
+            });
+    }
+    
+    /**
+     * Método auxiliar para criar hierarquia se não existir
+     */
+    private void criarHierarquiaSeNaoExistir(Cargo cargoSuperior, Cargo cargoSubordinado, Integer nivel, String descricao) {
+        boolean existe = cargoHierarquiaRepository.findByCargoSuperiorAndCargoSubordinadoAndAtivoTrue(cargoSuperior, cargoSubordinado).isPresent();
+        
+        if (!existe) {
+            CargoHierarquia hierarquia = new CargoHierarquia();
+            hierarquia.setCargoSuperior(cargoSuperior);
+            hierarquia.setCargoSubordinado(cargoSubordinado);
+            hierarquia.setNivelHierarquico(nivel);
+            hierarquia.setDescricao(descricao);
+            hierarquia.setAtivo(true);
+            cargoHierarquiaRepository.save(hierarquia);
+        }
+    }
+    
+    /**
+     * Método auxiliar para criar associação cargo-departamento se não existir
+     */
+    private void criarAssociacaoSeNaoExistir(Cargo cargo, Departamento departamento, boolean obrigatorio, String observacoes) {
+        boolean existe = cargoDepartamentoAssociacaoRepository.findByCargoAndDepartamentoAndAtivoTrue(cargo, departamento).isPresent();
+        
+        if (!existe) {
+            CargoDepartamentoAssociacao associacao = new CargoDepartamentoAssociacao();
+            associacao.setCargo(cargo);
+            associacao.setDepartamento(departamento);
+            associacao.setObrigatorio(obrigatorio);
+            associacao.setObservacoes(observacoes);
+            associacao.setAtivo(true);
+            cargoDepartamentoAssociacaoRepository.save(associacao);
+        }
+    }
+
     @Bean
     public CommandLineRunner createInitialData(BCryptPasswordEncoder passwordEncoder) {
         return args -> {
@@ -112,21 +180,90 @@ public SecurityFilterChain filterChain(HttpSecurity http,
                     return perfilRepository.save(p);
                 });
 
-            // Cargo "Administrador"
-            Cargo cargoAdmin = cargoRepository.findByNome("Administrador")
-                .orElseGet(() -> {
-                    Cargo c = new Cargo();
-                    c.setNome("Administrador");
-                    return cargoRepository.save(c);
-                });
+            // ===============================
+            // CRIAÇÃO DOS DEPARTAMENTOS
+            // ===============================
+            
+            // Departamentos essenciais
+            Departamento departamentoTI = criarDepartamento("TI");
+            Departamento departamentoRH = criarDepartamento("Recursos Humanos");
+            Departamento departamentoFinanceiro = criarDepartamento("Financeiro");
+            Departamento departamentoVendas = criarDepartamento("Vendas");
+            Departamento departamentoMarketing = criarDepartamento("Marketing");
+            Departamento departamentoOperacoes = criarDepartamento("Operações");
+            Departamento departamentoJuridico = criarDepartamento("Jurídico");
+            Departamento departamentoContabilidade = criarDepartamento("Contabilidade");
+            Departamento departamentoAdministrativo = criarDepartamento("Administrativo");
+            Departamento departamentoCompras = criarDepartamento("Compras");
+            Departamento departamentoQualidade = criarDepartamento("Qualidade");
+            Departamento departamentoLogistica = criarDepartamento("Logística");
 
-            // Departamento "TI"
-            Departamento departamentoTI = departamentoRepository.findByNome("TI")
-                .orElseGet(() -> {
-                    Departamento d = new Departamento();
-                    d.setNome("TI");
-                    return departamentoRepository.save(d);
-                });
+            // ===============================
+            // CRIAÇÃO DOS CARGOS
+            // ===============================
+            
+            // Nível Executivo
+            Cargo cargoDirectorGeral = criarCargo("Diretor Geral");
+            Cargo cargoDirectorFinanceiro = criarCargo("Diretor Financeiro");
+            Cargo cargoDirectorTecnologia = criarCargo("Diretor de Tecnologia");
+            Cargo cargoDirectorRH = criarCargo("Diretor de Recursos Humanos");
+            Cargo cargoDirectorComercial = criarCargo("Diretor Comercial");
+            Cargo cargoDirectorOperacoes = criarCargo("Diretor de Operações");
+            
+            // Nível Gerencial
+            Cargo cargoGerenteTI = criarCargo("Gerente de TI");
+            Cargo cargoGerenteRH = criarCargo("Gerente de RH");
+            Cargo cargoGerenteFinanceiro = criarCargo("Gerente Financeiro");
+            Cargo cargoGerenteVendas = criarCargo("Gerente de Vendas");
+            Cargo cargoGerenteMarketing = criarCargo("Gerente de Marketing");
+            Cargo cargoGerenteOperacoes = criarCargo("Gerente de Operações");
+            Cargo cargoGerenteCompras = criarCargo("Gerente de Compras");
+            Cargo cargoGerenteQualidade = criarCargo("Gerente de Qualidade");
+            
+            // Nível de Coordenação
+            Cargo cargoCoordenadorProjetos = criarCargo("Coordenador de Projetos");
+            Cargo cargoCoordenadorVendas = criarCargo("Coordenador de Vendas");
+            Cargo cargoCoordenadorMarketing = criarCargo("Coordenador de Marketing");
+            Cargo cargoCoordenadorRH = criarCargo("Coordenador de RH");
+            Cargo cargoCoordenadorFinanceiro = criarCargo("Coordenador Financeiro");
+            Cargo cargoCoordenadorProducao = criarCargo("Coordenador de Produção");
+            
+            // Nível Técnico/Especialista
+            Cargo cargoAnalistaSistemas = criarCargo("Analista de Sistemas");
+            Cargo cargoDesenvolvedorSenior = criarCargo("Desenvolvedor Senior");
+            Cargo cargoDesenvolvedorPleno = criarCargo("Desenvolvedor Pleno");
+            Cargo cargoDesenvolvedorJunior = criarCargo("Desenvolvedor Junior");
+            Cargo cargoAnalistaFinanceiro = criarCargo("Analista Financeiro");
+            Cargo cargoAnalistaRH = criarCargo("Analista de RH");
+            Cargo cargoAnalistaMarketing = criarCargo("Analista de Marketing");
+            Cargo cargoAnalistaVendas = criarCargo("Analista de Vendas");
+            Cargo cargoAnalistaQualidade = criarCargo("Analista de Qualidade");
+            Cargo cargoContador = criarCargo("Contador");
+            Cargo cargoAdvogado = criarCargo("Advogado");
+            Cargo cargoDesigner = criarCargo("Designer");
+            Cargo cargoEspecialistaSEO = criarCargo("Especialista em SEO");
+            
+            // Nível Operacional
+            Cargo cargoAssistenteAdministrativo = criarCargo("Assistente Administrativo");
+            Cargo cargoAssistenteFinanceiro = criarCargo("Assistente Financeiro");
+            Cargo cargoAssistenteRH = criarCargo("Assistente de RH");
+            Cargo cargoAssistenteMarketing = criarCargo("Assistente de Marketing");
+            Cargo cargoAuxiliarProducao = criarCargo("Auxiliar de Produção");
+            Cargo cargoRecepcionista = criarCargo("Recepcionista");
+            Cargo cargoOperadorMaquinas = criarCargo("Operador de Máquinas");
+            Cargo cargoTecnicoSuporte = criarCargo("Técnico de Suporte");
+            Cargo cargoVendedor = criarCargo("Vendedor");
+            Cargo cargoRepresentanteComercial = criarCargo("Representante Comercial");
+            
+            // Nível de Apoio
+            Cargo cargoEstagiario = criarCargo("Estagiário");
+            Cargo cargoTrainee = criarCargo("Trainee");
+            Cargo cargoTerceirizado = criarCargo("Terceirizado");
+            Cargo cargoConsultor = criarCargo("Consultor");
+            Cargo cargoFreelancer = criarCargo("Freelancer");
+            
+            // Cargo Administrador (mantido para compatibilidade)
+            Cargo cargoAdmin = criarCargo("Administrador");
 
             // Criação do usuário admin
             if (usuarioRepository.findByEmail("admin@teste.com").isEmpty()) {
@@ -165,6 +302,51 @@ public SecurityFilterChain filterChain(HttpSecurity http,
             } else {
                 System.out.println("Usuário administrador já existe.");
             }
+            
+            // ===============================
+            // CRIAÇÃO DE HIERARQUIAS DE EXEMPLO
+            // ===============================
+            
+            // Hierarquia Executiva -> Gerencial
+            criarHierarquiaSeNaoExistir(cargoDirectorGeral, cargoGerenteTI, 1, "Diretor Geral supervisiona Gerente de TI");
+            criarHierarquiaSeNaoExistir(cargoDirectorGeral, cargoGerenteRH, 1, "Diretor Geral supervisiona Gerente de RH");
+            criarHierarquiaSeNaoExistir(cargoDirectorFinanceiro, cargoGerenteFinanceiro, 1, "Diretor Financeiro supervisiona Gerente Financeiro");
+            criarHierarquiaSeNaoExistir(cargoDirectorComercial, cargoGerenteVendas, 1, "Diretor Comercial supervisiona Gerente de Vendas");
+            
+            // Hierarquia Gerencial -> Coordenação
+            criarHierarquiaSeNaoExistir(cargoGerenteTI, cargoCoordenadorProjetos, 2, "Gerente de TI supervisiona Coordenador de Projetos");
+            criarHierarquiaSeNaoExistir(cargoGerenteRH, cargoCoordenadorRH, 2, "Gerente de RH supervisiona Coordenador de RH");
+            criarHierarquiaSeNaoExistir(cargoGerenteVendas, cargoCoordenadorVendas, 2, "Gerente de Vendas supervisiona Coordenador de Vendas");
+            
+            // Hierarquia Coordenação -> Técnico/Especialista
+            criarHierarquiaSeNaoExistir(cargoCoordenadorProjetos, cargoAnalistaSistemas, 3, "Coordenador de Projetos supervisiona Analista de Sistemas");
+            criarHierarquiaSeNaoExistir(cargoAnalistaSistemas, cargoDesenvolvedorSenior, 4, "Analista de Sistemas supervisiona Desenvolvedor Senior");
+            criarHierarquiaSeNaoExistir(cargoDesenvolvedorSenior, cargoDesenvolvedorPleno, 5, "Desenvolvedor Senior supervisiona Desenvolvedor Pleno");
+            criarHierarquiaSeNaoExistir(cargoDesenvolvedorPleno, cargoDesenvolvedorJunior, 6, "Desenvolvedor Pleno supervisiona Desenvolvedor Junior");
+            
+            // ===============================
+            // CRIAÇÃO DE ASSOCIAÇÕES CARGO-DEPARTAMENTO DE EXEMPLO
+            // ===============================
+            
+            // Associações obrigatórias (cargos específicos de departamento)
+            criarAssociacaoSeNaoExistir(cargoGerenteTI, departamentoTI, true, "Gerente de TI só pode atuar no departamento de TI");
+            criarAssociacaoSeNaoExistir(cargoAnalistaSistemas, departamentoTI, true, "Analista de Sistemas específico para TI");
+            criarAssociacaoSeNaoExistir(cargoDesenvolvedorSenior, departamentoTI, false, "Desenvolvedor Senior pode atuar em TI");
+            criarAssociacaoSeNaoExistir(cargoDesenvolvedorPleno, departamentoTI, false, "Desenvolvedor Pleno pode atuar em TI");
+            criarAssociacaoSeNaoExistir(cargoDesenvolvedorJunior, departamentoTI, false, "Desenvolvedor Junior pode atuar em TI");
+            criarAssociacaoSeNaoExistir(cargoTecnicoSuporte, departamentoTI, false, "Técnico de Suporte pode atuar em TI");
+            
+            // Associações de RH
+            criarAssociacaoSeNaoExistir(cargoGerenteRH, departamentoRH, true, "Gerente de RH específico para RH");
+            criarAssociacaoSeNaoExistir(cargoAnalistaRH, departamentoRH, true, "Analista de RH específico para RH");
+            criarAssociacaoSeNaoExistir(cargoAssistenteRH, departamentoRH, false, "Assistente de RH pode atuar em RH");
+            
+            // Associações flexíveis (cargos que podem atuar em múltiplos departamentos)
+            criarAssociacaoSeNaoExistir(cargoAssistenteAdministrativo, departamentoAdministrativo, false, "Assistente Administrativo no departamento administrativo");
+            criarAssociacaoSeNaoExistir(cargoAssistenteAdministrativo, departamentoRH, false, "Assistente Administrativo pode apoiar RH");
+            criarAssociacaoSeNaoExistir(cargoAssistenteAdministrativo, departamentoFinanceiro, false, "Assistente Administrativo pode apoiar Financeiro");
+            
+            System.out.println("Hierarquias e associações de exemplo criadas com sucesso!");
         };
     }
 }

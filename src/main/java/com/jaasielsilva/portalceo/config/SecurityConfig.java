@@ -64,7 +64,7 @@ public SecurityFilterChain filterChain(HttpSecurity http,
     http
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/a81368914c.js").permitAll()
+            .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/a81368914c.js", "/esqueci-senha", "/resetar-senha").permitAll()
             .anyRequest().authenticated()
         )
 

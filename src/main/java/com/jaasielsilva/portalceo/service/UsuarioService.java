@@ -19,7 +19,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -265,24 +268,48 @@ public class UsuarioService {
         String token = gerarTokenRedefinicao(usuario);
         String url = "http://localhost:8080/resetar-senha?token=" + token;
 
-        String html = "<html><body>"
-                + "<h3>Olá " + usuario.getNome() + ",</h3>"
-                + "<p>Recebemos sua solicitação para redefinição de senha.</p>"
-                + "<p><a href=\"" + url + "\">Clique aqui para redefinir sua senha</a></p>"
-                + "<p><small>O link expira em 1 hora.</small></p>"
-                + "</body></html>";
-
         try {
+            // Carrega o template HTML personalizado
+            String templatePath = "src/main/resources/templates/email/recuperacao-senha.html";
+            String html = carregarTemplateEmail(templatePath, usuario.getNome(), email, url);
+
             MimeMessage mensagem = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensagem, true, "UTF-8");
             helper.setTo(email);
-            helper.setSubject("Redefinição de senha - Painel do CEO");
+            helper.setSubject("🔐 Redefinição de Senha - ERP Corporativo");
             helper.setText(html, true);
             mailSender.send(mensagem);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * Carrega e processa o template de email substituindo os placeholders.
+     */
+    private String carregarTemplateEmail(String templatePath, String nomeUsuario, String emailUsuario, String linkRedefinicao) {
+        try {
+            // Lê o arquivo de template
+            Path path = Paths.get(templatePath);
+            String template = Files.readString(path, StandardCharsets.UTF_8);
+            
+            // Substitui os placeholders
+            template = template.replace("{{NOME_USUARIO}}", nomeUsuario);
+            template = template.replace("{{EMAIL_USUARIO}}", emailUsuario);
+            template = template.replace("{{LINK_REDEFINICAO}}", linkRedefinicao);
+            
+            return template;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Fallback para HTML simples em caso de erro
+            return "<html><body>"
+                    + "<h3>Olá " + nomeUsuario + ",</h3>"
+                    + "<p>Recebemos sua solicitação para redefinição de senha.</p>"
+                    + "<p><a href=\"" + linkRedefinicao + "\">Clique aqui para redefinir sua senha</a></p>"
+                    + "<p><small>O link expira em 1 hora.</small></p>"
+                    + "</body></html>";
         }
     }
 

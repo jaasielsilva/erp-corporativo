@@ -56,15 +56,17 @@
     <p id="modalDesc" style="color:#dbeafe; text-align:center; margin-bottom:1.5rem; user-select:none;">
       Digite seu e-mail cadastrado para receber instruções de recuperação.
     </p>
-    <form id="forgotPasswordForm" action="@{/resetar-senha}" method="post" novalidate>
+    <form id="forgotPasswordForm" novalidate>
       <div class="input-group">
         <input type="email" id="emailRecovery" name="emailRecovery" placeholder=" " required autocomplete="email"
           aria-label="Email para recuperação de senha" />
         <label for="emailRecovery">E-mail</label>
         <span class="input-icon"><i class="fas fa-envelope"></i></span>
       </div>
+      
+      <div id="messageContainer" style="display: none; margin: 1rem 0; padding: 0.75rem; border-radius: 6px; text-align: center;"></div>
 
-      <button type="submit">Enviar</button>
+      <button type="submit" id="submitBtn">Enviar</button>
     </form>
   </div>
 
@@ -186,6 +188,7 @@
       forgotPasswordBtn.focus();
       document.body.style.overflow = ''; // desbloqueia scroll
       document.getElementById('forgotPasswordForm').reset();
+      hideMessage();
     }
 
     forgotPasswordBtn.addEventListener('click', () => {
@@ -210,13 +213,64 @@
       }
     });
 
-    // Aqui você pode adicionar tratamento de envio do formulário de recuperação
+    // Tratamento do formulário de recuperação de senha
     const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-    forgotPasswordForm.addEventListener('submit', (e) => {
+    const submitBtn = document.getElementById('submitBtn');
+    const messageContainer = document.getElementById('messageContainer');
+    
+    function showMessage(message, isSuccess = true) {
+      messageContainer.style.display = 'block';
+      messageContainer.textContent = message;
+      messageContainer.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
+      messageContainer.style.color = isSuccess ? '#155724' : '#721c24';
+      messageContainer.style.border = isSuccess ? '1px solid #c3e6cb' : '1px solid #f5c6cb';
+    }
+    
+    function hideMessage() {
+      messageContainer.style.display = 'none';
+    }
+    
+    forgotPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // Simular envio
-      alert(`Instruções de recuperação enviadas para: ${emailInput.value}`);
-      closeModal();
+      
+      const email = emailInput.value.trim();
+      if (!email) {
+        showMessage('Por favor, digite um e-mail válido.', false);
+        return;
+      }
+      
+      // Desabilitar botão durante o envio
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+      hideMessage();
+      
+      try {
+         const response = await fetch('/esqueci-senha', {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/x-www-form-urlencoded',
+           },
+           body: `email=${encodeURIComponent(email)}`
+         });
+         
+         const data = await response.json();
+         
+         if (response.ok && data.status === 'sucesso') {
+           showMessage(data.mensagem, true);
+           setTimeout(() => {
+             closeModal();
+           }, 3000);
+         } else {
+           showMessage(data.mensagem || 'Erro ao enviar e-mail. Tente novamente.', false);
+         }
+       } catch (error) {
+         console.error('Erro:', error);
+         showMessage('Erro de conexão. Verifique sua internet e tente novamente.', false);
+       } finally {
+         // Reabilitar botão
+         submitBtn.disabled = false;
+         submitBtn.textContent = 'Enviar';
+       }
     });
   </script>
 </body>

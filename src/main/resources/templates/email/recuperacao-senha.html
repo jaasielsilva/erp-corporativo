@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Recuperação de Senha - ERP Corporativo</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style>
+        /* Reset CSS para compatibilidade com clientes de email */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+        
+        /* Estilos principais */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            min-width: 100%;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.05) 0,
+                rgba(255, 255, 255, 0.05) 1px,
+                transparent 1px,
+                transparent 8px
+            );
+            pointer-events: none;
+        }
+        
+        .logo {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 0.5px;
+        }
+        
+        .logo-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 5px 0 0 0;
+            font-weight: 400;
+        }
+        
+        /* Conteúdo principal */
+        .content {
+            padding: 50px 40px;
+            background-color: #ffffff;
+        }
+        
+        .greeting {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+        
+        .message {
+            font-size: 16px;
+            color: #34495e;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+        
+        /* Botão de ação */
+        .cta-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Seção de segurança */
+        .security-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .security-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .security-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .security-list li {
+            font-size: 14px;
+            color: #5a6c7d;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .security-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        /* Link alternativo */
+        .alternative-link {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .alternative-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .alternative-url {
+            font-size: 12px;
+            color: #6c757d;
+            word-break: break-all;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #2c3e50;
+            color: #bdc3c7;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .footer-links {
+            margin: 20px 0;
+        }
+        
+        .footer-links a {
+            color: #3498db;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 14px;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-disclaimer {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #34495e;
+        }
+        
+        /* Responsividade */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+                margin: 0 !important;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .footer {
+                padding: 20px;
+            }
+            
+            .greeting {
+                font-size: 24px;
+            }
+            
+            .cta-button {
+                padding: 16px 30px;
+                font-size: 15px;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .email-container {
+                background-color: #1a1a1a;
+            }
+            
+            .content {
+                background-color: #1a1a1a;
+            }
+            
+            .greeting {
+                color: #ffffff;
+            }
+            
+            .message {
+                color: #e0e0e0;
+            }
+            
+            .subtitle {
+                color: #b0b0b0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1 class="logo-text">ERP Corporativo</h1>
+                <p class="logo-subtitle">Sistema de Gestão Empresarial</p>
+            </div>
+        </div>
+        
+        <!-- Conteúdo Principal -->
+        <div class="content">
+            <h2 class="greeting">Olá, {{NOME_USUARIO}}!</h2>
+            <p class="subtitle">Recebemos uma solicitação para redefinir sua senha</p>
+            
+            <div class="message">
+                <p>Você solicitou a redefinição da sua senha para acessar o <strong>ERP Corporativo</strong>. Para sua segurança, criamos um link temporário que permitirá que você defina uma nova senha.</p>
+                
+                <p>Clique no botão abaixo para redefinir sua senha de forma segura:</p>
+            </div>
+            
+            <!-- Botão de Ação -->
+            <div class="cta-container">
+                <a href="{{LINK_REDEFINICAO}}" class="cta-button">
+                    🔐 Redefinir Minha Senha
+                </a>
+            </div>
+            
+            <!-- Informações de Segurança -->
+            <div class="security-info">
+                <div class="security-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22S8 18 8 13V6L12 4L16 6V13C16 18 12 22 12 22Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Informações Importantes de Segurança
+                </div>
+                <ul class="security-list">
+                    <li>Este link é válido por apenas <strong>1 hora</strong> após o envio</li>
+                    <li>O link pode ser usado apenas <strong>uma vez</strong></li>
+                    <li>Se você não solicitou esta redefinição, ignore este email</li>
+                    <li>Nunca compartilhe este link com outras pessoas</li>
+                    <li>Escolha uma senha forte com pelo menos 8 caracteres</li>
+                </ul>
+            </div>
+            
+            <!-- Link Alternativo -->
+            <div class="alternative-link">
+                <div class="alternative-title">Problemas com o botão? Use o link abaixo:</div>
+                <div class="alternative-url">{{LINK_REDEFINICAO}}</div>
+            </div>
+            
+            <div class="message">
+                <p><strong>Não solicitou esta redefinição?</strong></p>
+                <p>Se você não solicitou a redefinição de senha, pode ignorar este email com segurança. Sua conta permanecerá protegida e nenhuma alteração será feita.</p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <p><strong>ERP Corporativo</strong> - Sistema de Gestão Empresarial</p>
+                <p>Este é um email automático, por favor não responda.</p>
+            </div>
+            
+            <div class="footer-links">
+                <a href="http://localhost:8080/login">Acessar Sistema</a>
+                <a href="#">Suporte Técnico</a>
+                <a href="#">Política de Privacidade</a>
+            </div>
+            
+            <div class="footer-disclaimer">
+                <p>© 2024 ERP Corporativo. Todos os direitos reservados.</p>
+                <p>Este email foi enviado para {{EMAIL_USUARIO}} porque uma redefinição de senha foi solicitada.</p>
+                <p>Se você tem dúvidas sobre a segurança da sua conta, entre em contato com o suporte técnico.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

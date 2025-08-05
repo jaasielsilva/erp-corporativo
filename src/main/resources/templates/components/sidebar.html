@@ -18,15 +18,19 @@
           </a>
         </li>
 
-        <!-- Itens operacionais básicos - todos podem acessar -->
-        <li><a href="/clientes"><i class="fas fa-address-book"></i> Clientes</a></li>
-        <li><a href="/vendas"><i class="fas fa-cash-register"></i> Vendas</a></li>
-        <li><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
-        <li><a href="/contratos"><i class="fas fa-file-contract"></i> Contratos</a></li>
-        <li><a href="/produtos"><i class="fas fa-boxes"></i> Produtos</a></li>
-        <li><a href="/estoque"><i class="fas fa-warehouse"></i> Estoque</a></li>
+        <!-- Módulo Vendas - Apenas área comercial e gerencial -->
+        <li th:if="${podeAcessarVendas}"><a href="/clientes"><i class="fas fa-address-book"></i> Clientes</a></li>
+        <li th:if="${podeAcessarVendas}"><a href="/vendas"><i class="fas fa-cash-register"></i> Vendas</a></li>
+        <li th:if="${podeAcessarVendas}"><a href="/contratos"><i class="fas fa-file-contract"></i> Contratos</a></li>
         
-        <li class="has-submenu">
+        <!-- Módulo Compras e Fornecedores - Apenas área de compras e gerencial -->
+        <li th:if="${podeAcessarCompras}"><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
+        
+        <!-- Módulo Estoque e Produtos - Apenas área de estoque/logística e gerencial -->
+        <li th:if="${podeAcessarEstoque}"><a href="/produtos"><i class="fas fa-boxes"></i> Produtos</a></li>
+        <li th:if="${podeAcessarEstoque}"><a href="/estoque"><i class="fas fa-warehouse"></i> Estoque</a></li>
+        
+        <li class="has-submenu" th:if="${podeAcessarEstoque}">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-tags"></i> Categorias <i class="fas fa-chevron-down submenu-icon"></i>
           </a>
@@ -36,8 +40,8 @@
           </ul>
         </li>
 
-        <!-- Módulo RH - Apenas níveis gerenciais ou específicos de RH -->
-        <li class="has-submenu" th:if="${podeGerenciarRH or isGerencial}">
+        <!-- Módulo RH - Apenas área de RH e níveis gerenciais -->
+        <li class="has-submenu" th:if="${podeAcessarRH}">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-users"></i> Recursos Humanos <i class="fas fa-chevron-down submenu-icon"></i>
           </a>
@@ -159,22 +163,68 @@
           </ul>
         </li>
 
-        <!-- Itens financeiros - Baseado em permissões -->
-        <li th:if="${podeAcessarFinanceiro}"><a href="/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
-        <li th:if="${podeAcessarFinanceiro}"><a href="/contas-receber"><i class="fas fa-file-invoice-dollar"></i> Contas a Receber</a></li>
+        <!-- Módulo Financeiro - Apenas área financeira e gerencial -->
+        <li class="has-submenu" th:if="${podeAcessarFinanceiro}">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-dollar-sign"></i> Financeiro <i class="fas fa-chevron-down submenu-icon"></i>
+          </a>
+          <ul class="submenu" style="display: none;">
+            <li><a href="/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
+            <li><a href="/contas-receber"><i class="fas fa-file-invoice-dollar"></i> Contas a Receber</a></li>
+            <li><a href="/financeiro"><i class="fas fa-wallet"></i> Fluxo de Caixa</a></li>
+            <li><a href="/transferencias"><i class="fas fa-exchange-alt"></i> Transferências</a></li>
+          </ul>
+        </li>
 
-        <!-- Itens operacionais -->
+        <!-- Módulo Marketing - Apenas área de marketing e gerencial -->
+        <li class="has-submenu" th:if="${podeAcessarMarketing}">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-bullhorn"></i> Marketing <i class="fas fa-chevron-down submenu-icon"></i>
+          </a>
+          <ul class="submenu" style="display: none;">
+            <li><a href="/marketing/campanhas"><i class="fas fa-ad"></i> Campanhas</a></li>
+            <li><a href="/marketing/leads"><i class="fas fa-user-plus"></i> Leads</a></li>
+            <li><a href="/marketing/eventos"><i class="fas fa-calendar-alt"></i> Eventos</a></li>
+            <li><a href="/marketing/materiais"><i class="fas fa-images"></i> Materiais</a></li>
+          </ul>
+        </li>
+
+        <!-- Módulo TI - Apenas área de TI e administradores -->
+        <li class="has-submenu" th:if="${podeAcessarTI}">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-laptop-code"></i> Tecnologia <i class="fas fa-chevron-down submenu-icon"></i>
+          </a>
+          <ul class="submenu" style="display: none;">
+            <li><a href="/ti/sistemas"><i class="fas fa-server"></i> Sistemas</a></li>
+            <li><a href="/ti/suporte"><i class="fas fa-headset"></i> Suporte</a></li>
+            <li><a href="/ti/backup"><i class="fas fa-hdd"></i> Backup</a></li>
+            <li><a href="/ti/seguranca"><i class="fas fa-shield-alt"></i> Segurança</a></li>
+          </ul>
+        </li>
+
+        <!-- Módulo Jurídico - Apenas área jurídica e gerencial -->
+        <li class="has-submenu" th:if="${podeAcessarJuridico}">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-balance-scale"></i> Jurídico <i class="fas fa-chevron-down submenu-icon"></i>
+          </a>
+          <ul class="submenu" style="display: none;">
+            <li><a href="/juridico/contratos"><i class="fas fa-file-signature"></i> Contratos</a></li>
+            <li><a href="/juridico/processos"><i class="fas fa-gavel"></i> Processos</a></li>
+            <li><a href="/juridico/compliance"><i class="fas fa-check-circle"></i> Compliance</a></li>
+            <li><a href="/juridico/documentos"><i class="fas fa-folder-open"></i> Documentos</a></li>
+          </ul>
+        </li>
+
+        <!-- Itens operacionais básicos - todos podem acessar -->
         <li><a href="/servicos"><i class="fas fa-tools"></i> Serviços</a></li>
         <li><a href="/agenda"><i class="fas fa-calendar-check"></i> Agenda</a></li>
 
         <!-- Seção Administrativa - Baseada em permissões específicas -->
         <li th:if="${podeGerenciarUsuarios}"><a href="/usuarios/index"><i class="fas fa-user-friends"></i> Usuários</a></li>
         <li th:if="${isAdmin or isMaster}"><a href="/permissoes"><i class="fas fa-user-shield"></i> Perfis e Permissões</a></li>
-        <li th:if="${podeAcessarFinanceiro}"><a href="/financeiro"><i class="fas fa-wallet"></i> Financeiro</a></li>
         <li th:if="${isGerencial}"><a href="/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
         <li th:if="${isAdmin or isMaster}"><a href="/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
         <li th:if="${isGerencial}"><a href="/metas"><i class="fas fa-bullseye"></i> Metas</a></li>
-        <li th:if="${podeAcessarFinanceiro}"><a href="/transferencias"><i class="fas fa-exchange-alt"></i> Transferências</a></li>
 
         <!-- Itens para usuários não gerenciais -->
         <li th:if="${!isGerencial}"><a href="/chat"><i class="fas fa-comments"></i> Chat</a></li>

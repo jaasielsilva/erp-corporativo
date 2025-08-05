@@ -1,9 +1,12 @@
 package com.jaasielsilva.portalceo.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.hibernate.validator.constraints.br.CPF;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,20 +23,34 @@ public class Colaborador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Nome é obrigatório")
+    @Size(min = 2, max = 100, message = "Nome deve ter entre 2 e 100 caracteres")
+    @Column(nullable = false, length = 100)
     private String nome;
 
+    @CPF(message = "CPF deve ter formato válido")
+    @NotBlank(message = "CPF é obrigatório")
+    @Column(unique = true, nullable = false, length = 14)
     private String cpf;
 
+    @Email(message = "Email deve ter formato válido")
+    @NotBlank(message = "Email é obrigatório")
+    @Column(unique = true, nullable = false)
     private String email;
 
+    @Pattern(regexp = "^\\([1-9]{2}\\) (?:[2-8]|9[1-9])[0-9]{3}-[0-9]{4}$", message = "Telefone deve ter formato válido")
     private String telefone;
 
     @Enumerated(EnumType.STRING)
     private Sexo sexo;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataNascimento;
 
-    @Column(name = "data_admissao")
+    @Column(name = "data_admissao", nullable = false)
+    @NotNull(message = "Data de admissão é obrigatória")
+    @PastOrPresent(message = "Data de admissão não pode ser futura")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataAdmissao;
 
     @Enumerated(EnumType.STRING)
@@ -60,9 +77,12 @@ public class Colaborador {
     private String rg;
 
     @Column(precision = 10, scale = 2)
+    @DecimalMin(value = "0.0", inclusive = false, message = "Salário deve ser maior que zero")
+    @Digits(integer = 8, fraction = 2, message = "Salário deve ter no máximo 8 dígitos inteiros e 2 decimais")
     private BigDecimal salario;
 
     // Campos de endereço
+    @Pattern(regexp = "^[0-9]{5}-?[0-9]{3}$", message = "CEP deve ter formato válido")
     private String cep;
     
     private String logradouro;
@@ -83,6 +103,8 @@ public class Colaborador {
     
     private String tipoContrato;
     
+    @Min(value = 1, message = "Carga horária deve ser maior que zero")
+    @Max(value = 60, message = "Carga horária não pode exceder 60 horas semanais")
     private Integer cargaHoraria;
     
     @ManyToOne

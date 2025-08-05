@@ -27,6 +27,17 @@
           </a>
         </div>
 
+        <!-- Mensagens de Sucesso e Erro -->
+        <div th:if="${mensagem}" class="alert alert-success">
+          <i class="fas fa-check-circle"></i>
+          <span th:text="${mensagem}"></span>
+        </div>
+        
+        <div th:if="${erro}" class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span th:text="${erro}"></span>
+        </div>
+
         <form class="form-container" method="post" action="/rh/colaboradores/salvar">
           <div class="form-grid">
             <!-- Dados Pessoais -->

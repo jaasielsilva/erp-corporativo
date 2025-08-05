@@ -78,8 +78,8 @@
                 <td th:text="${colaborador.departamento != null ? colaborador.departamento.nome : '-'}">Departamento</td>
                 <td th:text="${colaborador.dataAdmissao != null ? #temporals.format(colaborador.dataAdmissao, 'dd/MM/yyyy') : '-'}">Admissão</td>
                 <td>
-                  <span th:class="'status-badge status-' + ${colaborador.status.name().toLowerCase()}" 
-                        th:text="${colaborador.status.name()}">Status</span>
+                  <span th:class="'status-badge status-' + ${colaborador.status != null ? colaborador.status.name().toLowerCase() : 'inativo'}" 
+                        th:text="${colaborador.status != null ? colaborador.status.name() : 'INATIVO'}">Status</span>
                 </td>
                 <td class="actions">
                   <a th:href="@{/rh/colaboradores/ficha/{id}(id=${colaborador.id})}" 

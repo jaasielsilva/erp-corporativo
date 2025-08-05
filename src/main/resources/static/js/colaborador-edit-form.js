@@ -1,5 +1,7 @@
 // Máscaras de entrada para formulário de edição de colaborador
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('colaborador-edit-form.js carregado');
+    
     // Aplicar máscaras nos campos
     aplicarMascaras();
     
@@ -11,6 +13,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar conversão de salário antes do envio
     configurarConversaoSalario();
+    
+    // Configurar conversão de datas
+    configurarConversaoDatas();
+    
+    // Configurar validações client-side
+    configurarValidacoesClientSide();
+    
+    // Melhorar UX do formulário
+    melhorarUXFormulario();
 });
 
 function aplicarMascaras() {
@@ -169,26 +180,88 @@ function configurarConversaoSalario() {
     const salarioInput = document.getElementById('salario');
     
     if (form && salarioInput) {
+        // Formatar salário ao carregar a página se já houver valor
+        if (salarioInput.value && !salarioInput.value.includes('R$')) {
+            const valorNumerico = parseFloat(salarioInput.value);
+            if (!isNaN(valorNumerico)) {
+                salarioInput.value = 'R$ ' + valorNumerico.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        }
+        
         form.addEventListener('submit', function(e) {
+            console.log('=== FORMULÁRIO SENDO ENVIADO ===');
+            console.log('Action:', form.action);
+            console.log('Method:', form.method);
+            
             // Converte o salário para formato numérico antes do envio
             let salarioValue = salarioInput.value;
             
-            // Remove R$, espaços e pontos (separadores de milhares)
-            salarioValue = salarioValue.replace(/R\$\s?/g, '')
-                                     .replace(/\./g, '')
-                                     .replace(/,/g, '.');
+            if (salarioValue && salarioValue.trim() !== '') {
+                // Remove R$, espaços e pontos (separadores de milhares)
+                salarioValue = salarioValue.replace(/R\$\s?/g, '')
+                                         .replace(/\./g, '')
+                                         .replace(/,/g, '.');
+                
+                // Verifica se é um número válido
+                if (isNaN(parseFloat(salarioValue))) {
+                    salarioValue = '0';
+                }
+            } else {
+                salarioValue = '0';
+            }
             
-            // Cria um input hidden com o valor numérico
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'salario';
-            hiddenInput.value = salarioValue;
+            // Atualiza o valor do input original diretamente
+            salarioInput.value = salarioValue;
             
-            // Remove o name do input original para evitar conflito
-            salarioInput.removeAttribute('name');
+            console.log('Salário convertido:', salarioValue);
+            console.log('Formulário será enviado...');
             
-            // Adiciona o input hidden ao formulário
-            form.appendChild(hiddenInput);
+            // Validação final antes do envio
+            if (!validarFormularioCompleto()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    } else {
+        console.error('Form ou salarioInput não encontrados!');
+    }
+}
+
+function configurarConversaoDatas() {
+    const form = document.querySelector('form');
+    const dataAdmissaoInput = document.getElementById('dataAdmissao');
+    const dataNascimentoInput = document.getElementById('dataNascimento');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Converter data de admissão se necessário
+            if (dataAdmissaoInput && dataAdmissaoInput.value) {
+                const dataAdmissao = dataAdmissaoInput.value;
+                if (dataAdmissao.includes('/')) {
+                    // Converter de dd/mm/yyyy para yyyy-mm-dd
+                    const partes = dataAdmissao.split('/');
+                    if (partes.length === 3) {
+                        const dataISO = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                        dataAdmissaoInput.value = dataISO;
+                    }
+                }
+            }
+            
+            // Converter data de nascimento se necessário
+            if (dataNascimentoInput && dataNascimentoInput.value) {
+                const dataNascimento = dataNascimentoInput.value;
+                if (dataNascimento.includes('/')) {
+                    // Converter de dd/mm/yyyy para yyyy-mm-dd
+                    const partes = dataNascimento.split('/');
+                    if (partes.length === 3) {
+                        const dataISO = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                        dataNascimentoInput.value = dataISO;
+                    }
+                }
+            }
         });
     }
 }
@@ -196,6 +269,297 @@ function configurarConversaoSalario() {
 function formatarCPF(cpf) {
     const numericCPF = cpf.replace(/\D/g, '');
     return numericCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+// Configurar validações client-side
+function configurarValidacoesClientSide() {
+    const form = document.getElementById('colaboradorForm');
+    if (!form) return;
+    
+    // Validação de CPF
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('blur', function() {
+            validarCPF(this.value, this);
+        });
+    }
+    
+    // Validação de email
+    const emailInput = document.getElementById('email');
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            validarEmail(this.value, this);
+        });
+    }
+    
+    // Validação de data de admissão
+    const dataAdmissaoInput = document.getElementById('dataAdmissao');
+    if (dataAdmissaoInput) {
+        dataAdmissaoInput.addEventListener('change', function() {
+            validarDataAdmissao(this.value, this);
+        });
+    }
+    
+    // Validação de salário
+    const salarioInput = document.getElementById('salario');
+    if (salarioInput) {
+        salarioInput.addEventListener('blur', function() {
+            validarSalario(this.value, this);
+        });
+    }
+}
+
+// Melhorar UX do formulário
+function melhorarUXFormulario() {
+    // Adicionar indicadores de carregamento
+    const form = document.getElementById('colaboradorForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            }
+        });
+    }
+    
+    // Adicionar tooltips informativos
+    adicionarTooltips();
+    
+    // Configurar auto-save (opcional)
+    // configurarAutoSave();
+}
+
+// Validação completa do formulário
+function validarFormularioCompleto() {
+    let isValid = true;
+    const errors = [];
+    
+    // Validar campos obrigatórios
+    const requiredFields = [
+        { id: 'nome', name: 'Nome' },
+        { id: 'cpf', name: 'CPF' },
+        { id: 'email', name: 'Email' },
+        { id: 'cargo', name: 'Cargo' },
+        { id: 'departamento', name: 'Departamento' },
+        { id: 'dataAdmissao', name: 'Data de Admissão' },
+        { id: 'salario', name: 'Salário' }
+    ];
+    
+    requiredFields.forEach(field => {
+        const input = document.getElementById(field.id);
+        if (input && !input.value.trim()) {
+            isValid = false;
+            errors.push(`${field.name} é obrigatório`);
+            marcarCampoInvalido(input);
+        }
+    });
+    
+    // Validações específicas
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput && cpfInput.value && !validarCPF(cpfInput.value)) {
+        isValid = false;
+        errors.push('CPF inválido');
+    }
+    
+    const emailInput = document.getElementById('email');
+    if (emailInput && emailInput.value && !validarEmail(emailInput.value)) {
+        isValid = false;
+        errors.push('Email inválido');
+    }
+    
+    const dataAdmissaoInput = document.getElementById('dataAdmissao');
+    if (dataAdmissaoInput && dataAdmissaoInput.value && !validarDataAdmissao(dataAdmissaoInput.value)) {
+        isValid = false;
+        errors.push('Data de admissão não pode ser futura');
+    }
+    
+    // Exibir erros se houver
+    if (!isValid) {
+        exibirErrosValidacao(errors);
+    }
+    
+    return isValid;
+}
+
+// Validar CPF
+function validarCPF(cpf, inputElement = null) {
+    cpf = cpf.replace(/[^\d]/g, '');
+    
+    if (cpf.length !== 11) {
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF deve ter 11 dígitos');
+        return false;
+    }
+    
+    // Verificar se todos os dígitos são iguais
+    if (/^(\d)\1{10}$/.test(cpf)) {
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido');
+        return false;
+    }
+    
+    // Validar dígitos verificadores
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+        soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    let resto = 11 - (soma % 11);
+    let dv1 = resto < 2 ? 0 : resto;
+    
+    if (parseInt(cpf.charAt(9)) !== dv1) {
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido');
+        return false;
+    }
+    
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+        soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    let dv2 = resto < 2 ? 0 : resto;
+    
+    if (parseInt(cpf.charAt(10)) !== dv2) {
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido');
+        return false;
+    }
+    
+    if (inputElement) marcarCampoValido(inputElement);
+    return true;
+}
+
+// Validar email
+function validarEmail(email, inputElement = null) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValid = emailRegex.test(email);
+    
+    if (inputElement) {
+        if (isValid) {
+            marcarCampoValido(inputElement);
+        } else {
+            marcarCampoInvalido(inputElement, 'Email inválido');
+        }
+    }
+    
+    return isValid;
+}
+
+// Validar data de admissão
+function validarDataAdmissao(data, inputElement = null) {
+    const dataAdmissao = new Date(data);
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999); // Final do dia atual
+    
+    const isValid = dataAdmissao <= hoje;
+    
+    if (inputElement) {
+        if (isValid) {
+            marcarCampoValido(inputElement);
+        } else {
+            marcarCampoInvalido(inputElement, 'Data de admissão não pode ser futura');
+        }
+    }
+    
+    return isValid;
+}
+
+// Validar salário
+function validarSalario(salario, inputElement = null) {
+    const salarioNumerico = parseFloat(salario.replace(/[^\d,]/g, '').replace(',', '.'));
+    const isValid = salarioNumerico > 0;
+    
+    if (inputElement) {
+        if (isValid) {
+            marcarCampoValido(inputElement);
+        } else {
+            marcarCampoInvalido(inputElement, 'Salário deve ser maior que zero');
+        }
+    }
+    
+    return isValid;
+}
+
+// Marcar campo como inválido
+function marcarCampoInvalido(input, mensagem = '') {
+    input.classList.remove('is-valid');
+    input.classList.add('is-invalid');
+    
+    // Remover feedback anterior
+    const feedbackAnterior = input.parentNode.querySelector('.invalid-feedback');
+    if (feedbackAnterior) {
+        feedbackAnterior.remove();
+    }
+    
+    // Adicionar nova mensagem de erro
+    if (mensagem) {
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback';
+        feedback.textContent = mensagem;
+        input.parentNode.appendChild(feedback);
+    }
+}
+
+// Marcar campo como válido
+function marcarCampoValido(input) {
+    input.classList.remove('is-invalid');
+    input.classList.add('is-valid');
+    
+    // Remover mensagem de erro
+    const feedback = input.parentNode.querySelector('.invalid-feedback');
+    if (feedback) {
+        feedback.remove();
+    }
+}
+
+// Exibir erros de validação
+function exibirErrosValidacao(errors) {
+    const alertContainer = document.createElement('div');
+    alertContainer.className = 'alert alert-danger alert-dismissible fade show';
+    alertContainer.innerHTML = `
+        <strong>Erros de validação:</strong>
+        <ul class="mb-0">
+            ${errors.map(error => `<li>${error}</li>`).join('')}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Inserir no topo do formulário
+    const form = document.getElementById('colaboradorForm');
+    if (form) {
+        form.insertBefore(alertContainer, form.firstChild);
+        
+        // Auto-remover após 5 segundos
+        setTimeout(() => {
+            if (alertContainer.parentNode) {
+                alertContainer.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Adicionar tooltips informativos
+function adicionarTooltips() {
+    const tooltips = {
+        'cpf': 'CPF deve conter 11 dígitos válidos',
+        'email': 'Email deve ter formato válido (exemplo@dominio.com)',
+        'dataAdmissao': 'Data não pode ser futura',
+        'salario': 'Valor deve ser maior que zero',
+        'cargaHoraria': 'Carga horária semanal (1-60 horas)'
+    };
+    
+    Object.keys(tooltips).forEach(fieldId => {
+        const input = document.getElementById(fieldId);
+        if (input) {
+            input.setAttribute('title', tooltips[fieldId]);
+            input.setAttribute('data-bs-toggle', 'tooltip');
+        }
+    });
+    
+    // Inicializar tooltips do Bootstrap se disponível
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
 }
 
 // Função para confirmar desligamento

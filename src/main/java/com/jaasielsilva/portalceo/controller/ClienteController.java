@@ -135,7 +135,6 @@ public String atualizarCliente(@PathVariable Long id, @ModelAttribute Cliente cl
     return "redirect:/clientes";
 }
 
-
     @PostMapping("/{id}/excluir")
     public ResponseEntity<?> excluirCliente(
         @PathVariable Long id,

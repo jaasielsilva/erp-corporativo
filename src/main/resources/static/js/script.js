@@ -1,13 +1,15 @@
 
-  /*<![CDATA[*/
+/*<![CDATA[*/
   const labels = /*[[${graficoLabels}]]*/[];
   const data = /*[[${graficoValores}]]*/[];
 
   console.log("Labels recebidos:", labels);
   console.log("Valores recebidos:", data);
 
-  const ctx = document.getElementById('graficoVendas').getContext('2d');
-  const graficoVendas = new Chart(ctx, {
+  const graficoElement = document.getElementById('graficoVendas');
+  if (graficoElement) {
+    const ctx = graficoElement.getContext('2d');
+    const graficoVendas = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
@@ -27,4 +29,5 @@
       }
     }
   });
+  }
   /*]]>*/

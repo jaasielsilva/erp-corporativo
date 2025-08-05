@@ -58,6 +58,23 @@ public class ColaboradorService {
         return colaboradorRepository.findById(id)
                 .orElseThrow(() -> new ColaboradorNotFoundException(id));
     }
+    
+    /**
+     * Busca colaboradores que podem ser supervisores (ativos e com status ATIVO)
+     */
+    public List<Colaborador> buscarSupervisoresPotenciais() {
+        return colaboradorRepository.findPotentialSupervisors();
+    }
+    
+    /**
+     * Busca colaboradores que podem ser supervisores, excluindo um colaborador específico
+     */
+    public List<Colaborador> buscarSupervisoresPotenciais(Long excludeId) {
+        if (excludeId == null) {
+            return buscarSupervisoresPotenciais();
+        }
+        return colaboradorRepository.findPotentialSupervisorsExcluding(excludeId);
+    }
 
     @Transactional
     public Colaborador salvar(Colaborador colaborador) {

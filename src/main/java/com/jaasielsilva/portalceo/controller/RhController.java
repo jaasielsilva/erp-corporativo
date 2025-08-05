@@ -99,6 +99,7 @@ public class RhController {
         model.addAttribute("colaborador", new Colaborador());
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("cargos", cargoService.listarTodos());
+        model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
         return "rh/colaboradores/novo";
     }
 
@@ -121,7 +122,7 @@ public class RhController {
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
-            model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
             
             // Adicionar mensagens de erro
             StringBuilder errorMessages = new StringBuilder();
@@ -148,7 +149,7 @@ public class RhController {
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
-            model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
             model.addAttribute("erro", e.getMessage());
             
             return "rh/colaboradores/novo";
@@ -160,7 +161,7 @@ public class RhController {
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
-            model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
             model.addAttribute("erro", e.getMessage());
             
             return "rh/colaboradores/novo";
@@ -173,7 +174,7 @@ public class RhController {
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
-            model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
             model.addAttribute("erro", 
                 "Erro interno do sistema. Tente novamente ou contate o suporte.");
             
@@ -209,7 +210,7 @@ public class RhController {
         model.addAttribute("colaborador", colaborador);
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("cargos", cargoService.listarTodos());
-        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+        model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(id));
         return "rh/colaboradores/editar";
     }
 
@@ -233,7 +234,7 @@ public class RhController {
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
-            model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
             
             // Adicionar mensagens de erro
             StringBuilder errorMessages = new StringBuilder();
@@ -255,20 +256,41 @@ public class RhController {
             
         } catch (BusinessValidationException e) {
             logger.warn("Erro de validação de negócio: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("erro", e.getMessage());
-            return "redirect:/rh/colaboradores/editar/" + colaborador.getId();
+            
+            // Recarregar dados necessários para o formulário
+            model.addAttribute("colaborador", colaborador);
+            model.addAttribute("cargos", cargoService.listarTodos());
+            model.addAttribute("departamentos", departamentoService.listarTodos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
+            model.addAttribute("erro", e.getMessage());
+            
+            return "rh/colaboradores/editar";
             
         } catch (CargoNotFoundException | DepartamentoNotFoundException | ColaboradorNotFoundException e) {
             logger.error("Entidade não encontrada: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("erro", e.getMessage());
-            return "redirect:/rh/colaboradores/editar/" + colaborador.getId();
+            
+            // Recarregar dados necessários para o formulário
+            model.addAttribute("colaborador", colaborador);
+            model.addAttribute("cargos", cargoService.listarTodos());
+            model.addAttribute("departamentos", departamentoService.listarTodos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
+            model.addAttribute("erro", e.getMessage());
+            
+            return "rh/colaboradores/editar";
             
         } catch (Exception e) {
             logger.error("Erro inesperado ao atualizar colaborador {}: {}", 
                         colaborador.getNome(), e.getMessage(), e);
-            redirectAttributes.addFlashAttribute("erro", 
+            
+            // Recarregar dados necessários para o formulário
+            model.addAttribute("colaborador", colaborador);
+            model.addAttribute("cargos", cargoService.listarTodos());
+            model.addAttribute("departamentos", departamentoService.listarTodos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
+            model.addAttribute("erro", 
                 "Erro interno do sistema. Tente novamente ou contate o suporte.");
-            return "redirect:/rh/colaboradores/editar/" + colaborador.getId();
+            
+            return "rh/colaboradores/editar";
         }
     }
 

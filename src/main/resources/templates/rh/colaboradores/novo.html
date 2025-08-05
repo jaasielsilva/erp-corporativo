@@ -243,11 +243,12 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="supervisor">Supervisor Direto</label>
-                  <select id="supervisor" name="supervisor" class="form-control">
-                    <option value="">Selecione...</option>
-                    <option value="1">João Silva - Gerente de TI</option>
-                    <option value="2">Maria Santos - Gerente de Vendas</option>
-                    <option value="3">Carlos Oliveira - Gerente Financeiro</option>
+                  <select id="supervisor" name="supervisor.id" class="form-control">
+                    <option value="">Nenhum supervisor</option>
+                    <option th:each="colaboradorSupervisor : ${colaboradores}" 
+                            th:value="${colaboradorSupervisor.id}" 
+                            th:text="${colaboradorSupervisor.nome + ' - ' + (colaboradorSupervisor.cargo != null ? colaboradorSupervisor.cargo.nome : 'Sem cargo')}">
+                    </option>
                   </select>
                 </div>
               </div>

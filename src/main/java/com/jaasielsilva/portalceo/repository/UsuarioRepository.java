@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.repository;
 
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.Perfil;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,5 +33,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     long countByPerfilNomeExcludingUser(@Param("perfilNome") String perfilNome, @Param("userId") Long userId);
 
    Optional<Usuario> findByColaborador_Id(Long colaboradorId);
-    
+   
+   // Métodos para gerenciamento de perfis
+   List<Usuario> findByPerfisContaining(Perfil perfil);
+   long countByPerfisContaining(Perfil perfil);
+   
+   @Query("SELECT u FROM Usuario u JOIN u.perfis p WHERE p.id = :perfilId")
+   List<Usuario> findByPerfilId(@Param("perfilId") Long perfilId);
+   
+   @Query("SELECT COUNT(u) FROM Usuario u JOIN u.perfis p WHERE p.id = :perfilId")
+   long countByPerfilId(@Param("perfilId") Long perfilId);
 }

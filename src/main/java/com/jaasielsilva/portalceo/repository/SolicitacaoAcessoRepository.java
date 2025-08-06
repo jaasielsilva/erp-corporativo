@@ -27,6 +27,17 @@ public interface SolicitacaoAcessoRepository extends JpaRepository<SolicitacaoAc
     List<SolicitacaoAcesso> findByStatus(StatusSolicitacao status);
     Page<SolicitacaoAcesso> findByStatus(StatusSolicitacao status, Pageable pageable);
     
+    // Buscar por status com JOIN FETCH para evitar N+1
+    @Query("SELECT DISTINCT s FROM SolicitacaoAcesso s " +
+           "LEFT JOIN FETCH s.colaborador c " +
+           "LEFT JOIN FETCH c.cargo " +
+           "LEFT JOIN FETCH c.departamento " +
+           "LEFT JOIN FETCH s.solicitanteUsuario " +
+           "LEFT JOIN FETCH s.aprovadorUsuario " +
+           "WHERE s.status = :status " +
+           "ORDER BY s.dataSolicitacao DESC")
+    List<SolicitacaoAcesso> findByStatusWithFetch(@Param("status") StatusSolicitacao status);
+    
     // Buscar solicitações pendentes
     List<SolicitacaoAcesso> findByStatusOrderByDataSolicitacaoAsc(StatusSolicitacao status);
     
@@ -118,6 +129,48 @@ public interface SolicitacaoAcessoRepository extends JpaRepository<SolicitacaoAc
            "LOWER(s.protocolo) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
            "LOWER(s.justificativa) LIKE LOWER(CONCAT('%', :texto, '%'))")
     Page<SolicitacaoAcesso> findByTexto(@Param("texto") String texto, Pageable pageable);
+    
+    // Buscar todas as solicitações com JOIN FETCH para listagem otimizada
+    @Query(value = "SELECT DISTINCT s FROM SolicitacaoAcesso s " +
+           "LEFT JOIN FETCH s.colaborador c " +
+           "LEFT JOIN FETCH c.cargo " +
+           "LEFT JOIN FETCH c.departamento " +
+           "LEFT JOIN FETCH s.solicitanteUsuario " +
+           "LEFT JOIN FETCH s.aprovadorUsuario " +
+           "ORDER BY s.dataSolicitacao DESC",
+           countQuery = "SELECT COUNT(s) FROM SolicitacaoAcesso s")
+    Page<SolicitacaoAcesso> findAllWithFetch(Pageable pageable);
+    
+    // Buscar por status com JOIN FETCH para paginação
+    @Query(value = "SELECT DISTINCT s FROM SolicitacaoAcesso s " +
+           "LEFT JOIN FETCH s.colaborador c " +
+           "LEFT JOIN FETCH c.cargo " +
+           "LEFT JOIN FETCH c.departamento " +
+           "LEFT JOIN FETCH s.solicitanteUsuario " +
+           "LEFT JOIN FETCH s.aprovadorUsuario " +
+           "WHERE s.status = :status " +
+           "ORDER BY s.dataSolicitacao DESC",
+           countQuery = "SELECT COUNT(s) FROM SolicitacaoAcesso s WHERE s.status = :status")
+    Page<SolicitacaoAcesso> findByStatusWithFetch(@Param("status") StatusSolicitacao status, Pageable pageable);
+    
+    // Buscar por texto com JOIN FETCH para paginação
+    @Query(value = "SELECT DISTINCT s FROM SolicitacaoAcesso s " +
+           "LEFT JOIN FETCH s.colaborador c " +
+           "LEFT JOIN FETCH c.cargo " +
+           "LEFT JOIN FETCH c.departamento " +
+           "LEFT JOIN FETCH s.solicitanteUsuario " +
+           "LEFT JOIN FETCH s.aprovadorUsuario " +
+           "WHERE LOWER(s.solicitanteNome) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
+           "LOWER(s.colaborador.nome) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
+           "LOWER(s.protocolo) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
+           "LOWER(s.justificativa) LIKE LOWER(CONCAT('%', :texto, '%')) " +
+           "ORDER BY s.dataSolicitacao DESC",
+           countQuery = "SELECT COUNT(s) FROM SolicitacaoAcesso s WHERE " +
+           "LOWER(s.solicitanteNome) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
+           "LOWER(s.colaborador.nome) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
+           "LOWER(s.protocolo) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
+           "LOWER(s.justificativa) LIKE LOWER(CONCAT('%', :texto, '%'))")
+    Page<SolicitacaoAcesso> findByTextoWithFetch(@Param("texto") String texto, Pageable pageable);
     
     // Estatísticas para dashboard
     @Query("SELECT s.status, COUNT(s) FROM SolicitacaoAcesso s GROUP BY s.status")

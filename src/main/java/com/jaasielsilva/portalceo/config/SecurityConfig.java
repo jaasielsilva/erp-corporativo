@@ -164,9 +164,19 @@ public SecurityFilterChain filterChain(HttpSecurity http,
             System.out.println("Iniciando criação de dados iniciais...");
             // Permissões
             Permissao roleAdmin = permissaoRepository.findByNome("ROLE_ADMIN")
-                .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_ADMIN", new HashSet<>())));
+                .orElseGet(() -> {
+                    Permissao p = new Permissao();
+                    p.setNome("ROLE_ADMIN");
+                    p.setCategoria("Administração");
+                    return permissaoRepository.save(p);
+                });
             Permissao roleUser = permissaoRepository.findByNome("ROLE_USER")
-                .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_USER", new HashSet<>())));
+                .orElseGet(() -> {
+                    Permissao p = new Permissao();
+                    p.setNome("ROLE_USER");
+                    p.setCategoria("Usuário");
+                    return permissaoRepository.save(p);
+                });
 
             // Perfis
             Perfil adminPerfil = perfilRepository.findByNome("ADMIN")

@@ -223,8 +223,9 @@
           <ul class="submenu" style="display: none;">
             <li><a href="/solicitacoes/nova"><i class="fas fa-plus"></i> Nova Solicitação</a></li>
             <li><a href="/solicitacoes"><i class="fas fa-list"></i> Minhas Solicitações</a></li>
-                        <li th:if="${podeGerenciarUsuarios}"><a href="/solicitacoes/pendentes"><i class="fas fa-clock"></i> Pendentes</a></li>
-                        <li th:if="${podeGerenciarUsuarios}"><a href="/solicitacoes/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/solicitacoes/todas"><i class="fas fa-list-alt"></i> Todas as Solicitações</a></li>
+            <li th:if="${podeGerenciarUsuarios}"><a href="/solicitacoes/pendentes"><i class="fas fa-clock"></i> Pendentes</a></li>
+            <li th:if="${podeGerenciarUsuarios}"><a href="/solicitacoes/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
           </ul>
         </li>
 
@@ -234,7 +235,18 @@
 
         <!-- Seção Administrativa - Baseada em permissões específicas -->
         <li th:if="${podeGerenciarUsuarios}"><a href="/usuarios/index"><i class="fas fa-user-friends"></i> Usuários</a></li>
-        <li th:if="${isAdmin or isMaster}"><a href="/permissoes"><i class="fas fa-user-shield"></i> Perfis e Permissões</a></li>
+        
+        <!-- Gestão de Acesso -->
+        <li class="has-submenu" th:if="${isAdmin or isMaster}">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-user-shield"></i> Gestão de Acesso <i class="fas fa-chevron-down submenu-icon"></i>
+          </a>
+          <ul class="submenu" style="display: none;">
+            <li><a href="/perfis"><i class="fas fa-user-tag"></i> Perfis</a></li>
+            <li><a href="/permissoes"><i class="fas fa-key"></i> Permissões</a></li>
+          </ul>
+        </li>
+        
         <li th:if="${isGerencial}"><a href="/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
         <li th:if="${isAdmin or isMaster}"><a href="/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
         <li th:if="${isGerencial}"><a href="/metas"><i class="fas fa-bullseye"></i> Metas</a></li>

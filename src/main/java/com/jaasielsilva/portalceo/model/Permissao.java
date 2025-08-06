@@ -19,6 +19,9 @@ public class Permissao {
     @Column(nullable = false, unique = true)
     private String nome; // ex: ROLE_ADMIN, ROLE_USUARIO
 
+    @Column
+    private String categoria; // categoria da permissão
+
     @ManyToMany(mappedBy = "permissoes")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

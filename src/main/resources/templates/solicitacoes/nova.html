@@ -178,6 +178,17 @@
       gap: 0.5rem;
       font-size: 0.9rem;
     }
+
+    /* Garantir que o footer apareça */
+    .main-content {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .content-area {
+      flex: 1;
+    }
   </style>
 </head>
 
@@ -399,11 +410,10 @@
             </button>
           </div>
         </form>
-  </div>
-  </section>
+      </section>
 
-  <footer th:replace="~{components/footer :: footer}"></footer>
-  </main>
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
   </div>
 
   <script>

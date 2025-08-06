@@ -1,320 +1,672 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitações de Acesso - Portal CEO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Solicitações de Acesso - ERP Corporativo</title>
+    <link href="/css/style.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
+
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .filter-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 120px;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 10px 12px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 6px #2563ebaa;
+        }
+
+        .btn-filter {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-filter:hover {
+            background-color: #1d4ed8;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background-color: #f1f5f9;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 2px solid #cbd5e1;
+            font-size: 14px;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .protocol-cell {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .user-info {
+            line-height: 1.4;
+        }
+
+        /* Cor padrão preta */
+        .user-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Quando estiver dentro do sidebar, fica branco */
+        .sidebar .user-name {
+            color: white;
+        }
+        .user-detail {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .level-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-view {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 6px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-approve:hover {
+            background: #059669;
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .pagination-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-link {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .page-link:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .page-link.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .page-link.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Estilos para modais */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h3 {
+            margin: 0 0 1.5rem 0;
+            color: #1e293b;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 6px #2563ebaa;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-submit,
+        .btn-cancel {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-submit:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #4b5563;
+        }
+
+        /* Estilos para toasts */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            min-width: 300px;
+            margin-bottom: 10px;
+        }
+
+        .toast-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .toast-header.bg-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .toast-header.bg-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .toast-body {
+            padding: 12px 16px;
+            color: #374151;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            margin-left: auto;
+            padding: 0;
+            font-size: 18px;
+        }
+
+        .btn-close:hover {
+            opacity: 0.7;
+        }
+
+        .me-2 {
+            margin-right: 0.5rem;
+        }
+
+        .me-auto {
+            margin-right: auto;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .data-table {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px;
+            }
+
+            .modal-content {
+                padding: 1rem;
+                margin: 1rem;
+            }
+
+            .toast-container {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .toast {
+                min-width: 250px;
+            }
+        }
+    </style>
 </head>
+
 <body>
     <div class="app-container">
-        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-        
+        <div th:replace="~{components/sidebar :: sidebar}"></div>
+
         <main class="main-content">
-            <header th:replace="~{components/topbar :: topbar}"></header>
-            
+            <div th:replace="~{components/topbar :: topbar}"></div>
+
             <section class="content-area">
-                <div class="container-fluid py-4">
-        <!-- Header -->
-         
-        <div class="row mb-4">
-            <div class="col-12">
-              
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h2 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Solicitações de Acesso</h2>
-                        <p class="text-muted mb-0">Gerencie todas as solicitações de acesso ao sistema</p>
-                    </div>
-                    <div>
-                        <a href="/solicitacoes/nova" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Nova Solicitação
-                        </a>
-                    </div>
+                <div class="page-header">
+                    <h1 class="page-title">Solicitações de Acesso</h1>
+                    <a href="/solicitacoes/nova" class="btn-novo">
+                        <i class="fas fa-plus"></i> Nova Solicitação
+                    </a>
                 </div>
-            </div>
-        </div>
 
-        <!-- Estatísticas -->
-        <div class="row mb-4" th:if="${estatisticas}">
-            <div class="col-md-3">
-                <div class="card card-stats border-0 h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Total</h6>
-                                <h3 class="mb-0" th:text="${estatisticas.totalPendentes + estatisticas.totalAprovadas + estatisticas.totalRejeitadas}">0</h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="fas fa-clipboard-list fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 h-100" style="border-left: 4px solid #ffc107 !important;">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Pendentes</h6>
-                                <h3 class="mb-0 text-warning" th:text="${estatisticas.totalPendentes}">0</h3>
-                            </div>
-                            <div class="text-warning">
-                                <i class="fas fa-clock fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 h-100" style="border-left: 4px solid #28a745 !important;">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Aprovadas</h6>
-                                <h3 class="mb-0 text-success" th:text="${estatisticas.totalAprovadas}">0</h3>
-                            </div>
-                            <div class="text-success">
-                                <i class="fas fa-check-circle fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 h-100" style="border-left: 4px solid #dc3545 !important;">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="card-title text-muted mb-1">Rejeitadas</h6>
-                                <h3 class="mb-0 text-danger" th:text="${estatisticas.totalRejeitadas}">0</h3>
-                            </div>
-                            <div class="text-danger">
-                                <i class="fas fa-times-circle fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filtros -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <form method="get" action="/solicitacoes">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="busca" class="form-label">Buscar</label>
-                                    <input type="text" class="form-control" id="busca" name="busca" 
-                                           th:value="${busca}" placeholder="Protocolo, nome, email...">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select class="form-select" id="status" name="status">
-                                        <option value="">Todos os status</option>
-                                        <option th:each="statusOpt : ${statusOptions}" 
-                                                th:value="${statusOpt}" 
-                                                th:text="${statusOpt.descricao}"
-                                                th:selected="${statusFiltro == statusOpt.name()}"></option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-outline-primary me-2">
-                                        <i class="fas fa-search me-1"></i>Filtrar
-                                    </button>
-                                    <a href="/solicitacoes" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-1"></i>Limpar
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabela de Solicitações -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Protocolo</th>
-                                        <th>Colaborador</th>
-                                        <th>Solicitante</th>
-                                        <th>Nível</th>
-                                        <th>Status</th>
-                                        <th>Data</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="solicitacao : ${solicitacoes.content}">
-                                        <td>
-                                            <strong th:text="${solicitacao.protocolo}"></strong>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <strong th:text="${solicitacao.colaborador.nome}"></strong>
-                                                <br>
-                                                <small class="text-muted" th:text="${solicitacao.colaborador.email}"></small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <span th:text="${solicitacao.solicitanteNome}"></span>
-                                                <br>
-                                                <small class="text-muted" th:text="${solicitacao.solicitanteEmail}"></small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info" th:text="${solicitacao.nivelSolicitado.descricao}"></span>
-                                        </td>
-                                        <td>
-                                            <span class="badge status-badge"
-                                                  th:classappend="${
-                                                    solicitacao.status.name() == 'PENDENTE' ? 'bg-warning' :
-                                                    solicitacao.status.name() == 'APROVADA' ? 'bg-success' :
-                                                    solicitacao.status.name() == 'REJEITADA' ? 'bg-danger' :
-                                                    'bg-secondary'
-                                                  }"
-                                                  th:text="${solicitacao.status.descricao}"></span>
-                                        </td>
-                                        <td>
-                                            <span th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></span>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a th:href="@{/solicitacoes/{id}(id=${solicitacao.id})}" 
-                                                   class="btn btn-outline-primary btn-action" title="Ver detalhes">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <div th:if="${solicitacao.status.name() == 'PENDENTE'}">
-                                                    <button type="button" class="btn btn-outline-success btn-action" 
-                                                            data-bs-toggle="modal" 
-                                                            th:data-bs-target="'#modalAprovar' + ${solicitacao.id}"
-                                                            title="Aprovar">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-danger btn-action" 
-                                                            data-bs-toggle="modal" 
-                                                            th:data-bs-target="'#modalRejeitar' + ${solicitacao.id}"
-                                                            title="Rejeitar">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Paginação -->
-                        <div class="d-flex justify-content-between align-items-center p-3" th:if="${solicitacoes.totalPages > 1}">
-                            <div>
-                                <small class="text-muted">
-                                    Mostrando <span th:text="${solicitacoes.numberOfElements}"></span> de 
-                                    <span th:text="${solicitacoes.totalElements}"></span> registros
-                                </small>
-                            </div>
-                            <nav>
-                                <ul class="pagination pagination-sm mb-0">
-                                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/solicitacoes(page=${currentPage - 1}, status=${statusFiltro}, busca=${busca})}">Anterior</a>
-                                    </li>
-                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
-                                        th:classappend="${i == currentPage} ? 'active'">
-                                        <a class="page-link" th:href="@{/solicitacoes(page=${i}, status=${statusFiltro}, busca=${busca})}" th:text="${i + 1}"></a>
-                                    </li>
-                                    <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/solicitacoes(page=${currentPage + 1}, status=${statusFiltro}, busca=${busca})}">Próximo</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-                </div>
-            </section>
-
-      <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-  </div>
-
-    <!-- Modais de Aprovação e Rejeição -->
-    <div th:each="solicitacao : ${solicitacoes.content}" th:if="${solicitacao.status.name() == 'PENDENTE'}">
-        <!-- Modal Aprovar -->
-        <div class="modal fade" th:id="'modalAprovar' + ${solicitacao.id}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form th:action="@{/solicitacoes/{id}/aprovar(id=${solicitacao.id})}" method="post">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Aprovar Solicitação</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Nível de Acesso</label>
-                                <select name="nivelAprovado" class="form-select" required>
-                                    <option value="CONSULTA">Consulta</option>
-                                    <option value="OPERACIONAL">Operacional</option>
-                                    <option value="SUPERVISAO">Supervisão</option>
-                                    <option value="COORDENACAO">Coordenação</option>
-                                    <option value="GERENCIAL">Gerencial</option>
-                                    <option value="ADMINISTRATIVO">Administrativo</option>
+                <!-- Filtros -->
+                <div class="filter-card">
+                    <form method="get" action="/solicitacoes">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label class="filter-label">Status</label>
+                                <select name="status" class="filter-select">
+                                    <option value="">Todos os Status</option>
+                                    <option value="PENDENTE" th:selected="${statusFiltro == 'PENDENTE'}">Pendente
+                                    </option>
+                                    <option value="APROVADA" th:selected="${statusFiltro == 'APROVADA'}">Aprovada
+                                    </option>
+                                    <option value="REJEITADA" th:selected="${statusFiltro == 'REJEITADA'}">Rejeitada
+                                    </option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email Corporativo (opcional)</label>
-                                <input type="email" name="emailCorporativo" class="form-control">
+                            <div class="filter-group">
+                                <label class="filter-label">Buscar</label>
+                                <input type="text" name="busca" class="filter-input" th:value="${busca}"
+                                    placeholder="Nome, protocolo, colaborador...">
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Observações</label>
-                                <textarea name="observacoesAprovador" class="form-control" rows="3"></textarea>
+                            <div class="filter-group">
+                                <button type="submit" class="btn-filter">
+                                    <i class="fas fa-search"></i> Filtrar
+                                </button>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-success">Aprovar</button>
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
 
-        <!-- Modal Rejeitar -->
-        <div class="modal fade" th:id="'modalRejeitar' + ${solicitacao.id}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form th:action="@{/solicitacoes/{id}/rejeitar(id=${solicitacao.id})}" method="post">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Rejeitar Solicitação</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <!-- Tabela de Solicitações -->
+                <div class="table-card">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Protocolo</th>
+                                    <th>Colaborador</th>
+                                    <th>Solicitante</th>
+                                    <th>Nível</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="solicitacao : ${solicitacoes.content}">
+                                    <td>
+                                        <span class="protocol-cell" th:text="${solicitacao.protocolo}"></span>
+                                    </td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-name" th:text="${solicitacao.colaborador?.nome ?: 'N/A'}">
+                                            </div>
+                                            <div class="user-detail"
+                                                th:text="${solicitacao.colaborador?.cargo?.nome ?: ''}"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-name"
+                                                th:text="${solicitacao.solicitanteUsuario?.nome ?: 'N/A'}"></div>
+                                            <div class="user-detail"
+                                                th:text="${solicitacao.solicitanteUsuario?.email ?: ''}"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="level-badge"
+                                            th:text="${solicitacao.nivelSolicitado?.getDescricao() ?: 'N/A'}"></span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge" th:classappend="${
+                                                solicitacao.status?.name() == 'PENDENTE' ? 'status-pending' :
+                                                solicitacao.status?.name() == 'APROVADO' ? 'status-approved' :
+                                                solicitacao.status?.name() == 'REJEITADO' ? 'status-rejected' :
+                                                'status-pending'
+                                              }" th:text="${solicitacao.status?.getDescricao() ?: 'N/A'}"></span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></span>
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a th:href="@{/solicitacoes/{id}(id=${solicitacao.id})}" class="btn-view"
+                                                title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <div th:if="${solicitacao.status?.name() == 'PENDENTE'}">
+                                                <button type="button" class="btn-approve"
+                                                    onclick="aprovarSolicitacao(this)" th:data-id="${solicitacao.id}"
+                                                    title="Aprovar">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="btn-reject"
+                                                    onclick="rejeitarSolicitacao(this)" th:data-id="${solicitacao.id}"
+                                                    title="Rejeitar">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginação -->
+                    <div class="pagination-container" th:if="${solicitacoes.totalPages > 1}">
+                        <div class="pagination-info">
+                            Mostrando <span th:text="${solicitacoes.numberOfElements}"></span> de
+                            <span th:text="${solicitacoes.totalElements}"></span> registros
                         </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Motivo da Rejeição *</label>
-                                <textarea name="observacoesAprovador" class="form-control" rows="4" required 
-                                          placeholder="Descreva o motivo da rejeição..."></textarea>
-                            </div>
+                        <div class="pagination-nav">
+                            <a class="page-link" th:classappend="${currentPage == 0} ? 'disabled'"
+                                th:href="@{/solicitacoes(page=${currentPage - 1}, status=${statusFiltro}, busca=${busca})}">Anterior</a>
+                            <a class="page-link"
+                                th:each="i : ${#numbers.sequence(0, totalPages > 0 ? totalPages - 1 : 0)}"
+                                th:classappend="${i == currentPage} ? 'active'" th:if="${totalPages > 0}"
+                                th:href="@{/solicitacoes(page=${i}, status=${statusFiltro}, busca=${busca})}"
+                                th:text="${i + 1}"></a>
+                            <a class="page-link" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"
+                                th:href="@{/solicitacoes(page=${currentPage + 1}, status=${statusFiltro}, busca=${busca})}">Próximo</a>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-danger">Rejeitar</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+    </div>
+    </section>
+    </main>
+
+    <div th:replace="~{components/footer :: footer}"></div>
+    </div>
+
+    <!-- Modal Aprovar -->
+    <div class="modal hidden" id="modalAprovar">
+        <div class="modal-content">
+            <form id="formAprovar" method="post">
+                <h3>Aprovar Solicitação</h3>
+                <div class="form-group">
+                    <label>Nível de Acesso</label>
+                    <select name="nivelAprovado" required>
+                        <option value="CONSULTA">Consulta</option>
+                        <option value="OPERACIONAL">Operacional</option>
+                        <option value="SUPERVISAO">Supervisão</option>
+                        <option value="COORDENACAO">Coordenação</option>
+                        <option value="GERENCIAL">Gerencial</option>
+                        <option value="ADMINISTRATIVO">Administrativo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Email Corporativo (opcional)</label>
+                    <input type="email" name="emailCorporativo">
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea name="observacoesAprovador" rows="3"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="fecharModal('modalAprovar')">Cancelar</button>
+                    <button type="submit" class="btn-submit">Aprovar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Rejeitar -->
+    <div class="modal hidden" id="modalRejeitar">
+        <div class="modal-content">
+            <form id="formRejeitar" method="post">
+                <h3>Rejeitar Solicitação</h3>
+                <div class="form-group">
+                    <label>Motivo da Rejeição *</label>
+                    <textarea name="observacoesAprovador" rows="4" required
+                        placeholder="Descreva o motivo da rejeição..."></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="fecharModal('modalRejeitar')">Cancelar</button>
+                    <button type="submit" class="btn-submit">Rejeitar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -341,16 +693,43 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-hide toasts after 5 seconds
-        setTimeout(function() {
-            var toasts = document.querySelectorAll('.toast');
-            toasts.forEach(function(toast) {
-                var bsToast = new bootstrap.Toast(toast);
-                bsToast.hide();
+        // Auto-hide toasts
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(toast => {
+                toast.style.display = 'none';
             });
         }, 5000);
+
+        // Função para aprovar solicitação
+        function aprovarSolicitacao(button) {
+            const id = button.getAttribute('data-id');
+            document.getElementById('formAprovar').action = `/solicitacoes/${id}/aprovar`;
+            abrirModal('modalAprovar');
+        }
+
+        // Função para rejeitar solicitação
+        function rejeitarSolicitacao(button) {
+            const id = button.getAttribute('data-id');
+            document.getElementById('formRejeitar').action = `/solicitacoes/${id}/rejeitar`;
+            abrirModal('modalRejeitar');
+        }
+
+        function abrirModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function fecharModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Fechar modal ao clicar fora dele
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.add('hidden');
+            }
+        }
     </script>
 </body>
+
 </html>

@@ -43,7 +43,7 @@ public class SolicitacoesController {
      */
     @GetMapping
     public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(defaultValue = "5") int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String busca,
             Principal principal,

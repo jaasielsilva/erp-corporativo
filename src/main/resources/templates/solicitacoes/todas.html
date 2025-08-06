@@ -6,6 +6,8 @@
     <title>Todas as Solicitações - ERP Corporativo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/solicitacoes.css}" />
     <style>
         .filter-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -158,48 +160,73 @@
         
         .pagination-info {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-top: 1rem;
             padding: 1rem;
             background: #f8f9fa;
             border-radius: 8px;
         }
+        
+        .priority-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+        
+        .pagination {
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        
+        .page-link {
+            border-radius: 6px;
+            margin: 0 2px;
+            border: none;
+            color: #667eea;
+        }
+        
+        .page-link:hover {
+            background-color: #667eea;
+            color: white;
+        }
+        
+        .page-item.active .page-link {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
-    <div th:replace="~{fragments/navbar :: navbar}"></div>
-    
-    <div class="container-fluid">
-        <div class="row">
-            <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
             
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <section class="content-area">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">
-                        <i class="fas fa-list-alt me-2"></i>
-                        Todas as Solicitações
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Todas as Solicitações de Acesso
                     </h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-outline-primary" onclick="exportarDados('excel')">
-                                <i class="fas fa-file-excel me-1"></i>
-                                Excel
-                            </button>
-                            <button type="button" class="btn btn-outline-danger" onclick="exportarDados('pdf')">
-                                <i class="fas fa-file-pdf me-1"></i>
-                                PDF
-                            </button>
-                        </div>
-                        <a th:href="@{/solicitacoes/dashboard}" class="btn btn-info me-2">
-                            <i class="fas fa-tachometer-alt me-1"></i>
-                            Dashboard
-                        </a>
-                        <a th:href="@{/solicitacoes/nova}" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>
-                            Nova Solicitação
-                        </a>
-                    </div>
+                    <a th:href="@{/solicitacoes/nova}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        Nova Solicitação
+                    </a>
                 </div>
                 
                 <!-- Estatísticas Rápidas -->
@@ -223,6 +250,8 @@
                         </div>
                     </div>
                 </div>
+                
+
                 
                 <!-- Filtros Avançados -->
                 <div class="filter-section">
@@ -329,18 +358,18 @@
                                     <div class="row mb-2">
                                         <div class="col-md-6">
                                             <strong>Colaborador:</strong>
-                                            <span th:text="${solicitacao.colaborador.nomeCompleto}"></span>
+                                            <span th:text="${solicitacao.colaborador.nome}"></span>
                                         </div>
                                         <div class="col-md-6">
                                             <strong>Departamento:</strong>
-                                            <span th:text="${solicitacao.colaborador.departamento}"></span>
+                                            <span th:text="${solicitacao.colaborador.departamento.nome}"></span>
                                         </div>
                                     </div>
                                     
                                     <div class="row mb-2">
                                         <div class="col-md-6">
                                             <strong>Solicitante:</strong>
-                                            <span th:text="${solicitacao.solicitanteUsuario.nomeCompleto}"></span>
+                                            <span th:text="${solicitacao.solicitanteUsuario.nome}"></span>
                                         </div>
                                         <div class="col-md-6">
                                             <strong>Tipo de Usuário:</strong>
@@ -491,9 +520,11 @@
                         </nav>
                     </div>
                 </div>
-            </main>
-        </div>
+            </section>
+        </main>
     </div>
+    
+    <footer th:replace="~{components/footer :: footer}"></footer>
     
     <!-- Modal de Histórico -->
     <div class="modal fade" id="modalHistorico" tabindex="-1">
@@ -628,5 +659,7 @@
         // Executar ao carregar a página
         document.addEventListener('DOMContentLoaded', destacarBusca);
     </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

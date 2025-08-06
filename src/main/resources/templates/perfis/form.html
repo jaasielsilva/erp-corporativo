@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${perfil.id != null ? 'Editar Perfil - ' + perfil.nome : 'Novo Perfil'} + ' - Portal CEO'">Perfil - Portal CEO</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+    
+    <style>
+        .permission-card {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+        }
+        .permission-card:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .permission-card.selected {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 0.375rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-floating > .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .btn-toggle-all {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            color: white;
+        }
+        .btn-toggle-all:hover {
+            background: linear-gradient(45deg, #218838, #1ea080);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Incluir sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
+    <div class="main-content">
+        <!-- Incluir header -->
+        <div th:replace="~{fragments/header :: header}"></div>
+        
+        <div class="container-fluid px-4">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/perfis">Perfis</a></li>
+                    <li class="breadcrumb-item active" th:text="${perfil.id != null ? 'Editar' : 'Novo'}">Novo</li>
+                </ol>
+            </nav>
+            
+            <!-- Título -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-user-tag"></i> 
+                        <span th:text="${perfil.id != null ? 'Editar Perfil: ' + perfil.nome : 'Novo Perfil'}">Novo Perfil</span>
+                    </h1>
+                    <p class="text-muted mb-0">Configure o perfil e suas permissões</p>
+                </div>
+                <div>
+                    <a href="/perfis" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Alertas -->
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Formulário -->
+            <form th:action="@{${perfil.id != null ? '/perfis/atualizar/' + perfil.id : '/perfis/salvar'}}" 
+                  th:object="${perfil}" method="post" id="perfilForm">
+                
+                <div class="row">
+                    <!-- Informações Básicas -->
+                    <div class="col-lg-4">
+                        <div class="card shadow mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informações Básicas</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Nome do Perfil -->
+                                <div class="form-floating mb-3">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nome" 
+                                           th:field="*{nome}" 
+                                           placeholder="Nome do perfil"
+                                           required
+                                           th:readonly="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}">
+                                    <label for="nome">Nome do Perfil *</label>
+                                    <div class="form-text">Nome único para identificar o perfil</div>
+                                </div>
+                                
+                                <!-- Informações do Sistema -->
+                                <div th:if="${perfil.id != null}" class="mt-4">
+                                    <h6 class="text-muted mb-3">Informações do Sistema</h6>
+                                    
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                                <div class="h5 mb-0" th:text="${usuariosCount ?: 0}">0</div>
+                                                <small class="text-muted">Usuários</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <i class="fas fa-key fa-2x text-success mb-2"></i>
+                                                <div class="h5 mb-0" id="permissoesCount">0</div>
+                                                <small class="text-muted">Permissões</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tipo de Perfil -->
+                                <div class="mt-3">
+                                    <span th:if="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}" 
+                                          class="badge bg-danger fs-6">
+                                        <i class="fas fa-shield-alt"></i> Perfil do Sistema
+                                    </span>
+                                    <span th:unless="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}" 
+                                          class="badge bg-success fs-6">
+                                        <i class="fas fa-user-cog"></i> Perfil Personalizado
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ações Rápidas -->
+                        <div class="card shadow">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-bolt"></i> Ações Rápidas</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-toggle-all" onclick="toggleAllPermissions(true)">
+                                        <i class="fas fa-check-double"></i> Selecionar Todas
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="toggleAllPermissions(false)">
+                                        <i class="fas fa-times"></i> Desmarcar Todas
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" onclick="toggleByCategory()">
+                                        <i class="fas fa-layer-group"></i> Por Categoria
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Permissões -->
+                    <div class="col-lg-8">
+                        <div class="card shadow">
+                            <div class="card-header bg-success text-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-key"></i> Permissões</h5>
+                                    <span class="badge bg-light text-dark" id="selectedCount">0 selecionadas</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Busca de Permissões -->
+                                <div class="mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" id="searchPermissions" 
+                                               placeholder="Buscar permissões...">
+                                    </div>
+                                </div>
+                                
+                                <!-- Lista de Permissões por Categoria -->
+                                <div id="permissionsContainer">
+                                    <div th:each="categoria : ${permissoesPorCategoria}" class="mb-4">
+                                        <div class="category-header">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-folder"></i> 
+                                                    <span th:text="${categoria.key}">Categoria</span>
+                                                </h6>
+                                                <div>
+                                                    <button type="button" class="btn btn-sm btn-light" 
+                                                            th:onclick="'toggleCategory(\'' + ${categoria.key} + '\', true)'">
+                                                        <i class="fas fa-check"></i> Todas
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-light" 
+                                                            th:onclick="'toggleCategory(\'' + ${categoria.key} + '\', false)'">
+                                                        <i class="fas fa-times"></i> Nenhuma
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div th:each="permissao : ${categoria.value}" class="col-md-6 mb-3">
+                                                <div class="permission-card p-3" 
+                                                     th:classappend="${#lists.contains(perfil.permissoes, permissao) ? 'selected' : ''}">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input permission-checkbox" 
+                                                               type="checkbox" 
+                                                               th:id="'perm_' + ${permissao.id}"
+                                                               th:value="${permissao.id}"
+                                                               name="permissaoIds"
+                                                               th:checked="${#lists.contains(perfil.permissoes, permissao)}"
+                                                               th:data-categoria="${categoria.key}">
+                                                        <label class="form-check-label w-100" 
+                                                               th:for="'perm_' + ${permissao.id}">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="fas fa-key text-primary me-2"></i>
+                                                                <div>
+                                                                    <div class="fw-bold" th:text="${permissao.nome}">Permissão</div>
+                                                                    <small class="text-muted" 
+                                                                           th:text="${#strings.replace(permissao.nome, 'ROLE_', '')}">Descrição</small>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Mensagem quando não há permissões -->
+                                <div th:if="${#maps.isEmpty(permissoesPorCategoria)}" class="text-center py-5">
+                                    <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Nenhuma permissão disponível</h5>
+                                    <p class="text-muted">Configure as permissões do sistema primeiro.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botões de Ação -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <a href="/perfis" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times"></i> Cancelar
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-info me-2" onclick="previewPermissions()">
+                                            <i class="fas fa-eye"></i> Visualizar
+                                        </button>
+                                        <button type="submit" class="btn btn-primary" 
+                                                th:unless="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}">
+                                            <i class="fas fa-save"></i> 
+                                            <span th:text="${perfil.id != null ? 'Atualizar' : 'Salvar'}">Salvar</span>
+                                        </button>
+                                        <span th:if="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}" 
+                                              class="text-muted">
+                                            <i class="fas fa-lock"></i> Perfil do sistema não pode ser editado
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Visualização -->
+    <div class="modal fade" id="modalVisualizacao" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-eye"></i> Visualizar Permissões Selecionadas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="previewContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            updatePermissionCount();
+            
+            // Event listeners para checkboxes
+            $('.permission-checkbox').on('change', function() {
+                updatePermissionCount();
+                updateCardSelection(this);
+            });
+            
+            // Busca de permissões
+            $('#searchPermissions').on('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                $('.permission-card').each(function() {
+                    const text = $(this).text().toLowerCase();
+                    $(this).closest('.col-md-6').toggle(text.includes(searchTerm));
+                });
+            });
+            
+            // Validação do formulário
+            $('#perfilForm').on('submit', function(e) {
+                const nome = $('#nome').val().trim();
+                if (!nome) {
+                    e.preventDefault();
+                    alert('Por favor, informe o nome do perfil.');
+                    $('#nome').focus();
+                    return false;
+                }
+            });
+        });
+        
+        function updatePermissionCount() {
+            const checked = $('.permission-checkbox:checked').length;
+            $('#selectedCount').text(checked + ' selecionadas');
+            $('#permissoesCount').text(checked);
+        }
+        
+        function updateCardSelection(checkbox) {
+            const card = $(checkbox).closest('.permission-card');
+            if (checkbox.checked) {
+                card.addClass('selected');
+            } else {
+                card.removeClass('selected');
+            }
+        }
+        
+        function toggleAllPermissions(select) {
+            $('.permission-checkbox').prop('checked', select).each(function() {
+                updateCardSelection(this);
+            });
+            updatePermissionCount();
+        }
+        
+        function toggleCategory(categoria, select) {
+            $('[data-categoria="' + categoria + '"]').prop('checked', select).each(function() {
+                updateCardSelection(this);
+            });
+            updatePermissionCount();
+        }
+        
+        function toggleByCategory() {
+            // Implementar lógica para seleção por categoria
+            alert('Funcionalidade em desenvolvimento');
+        }
+        
+        function previewPermissions() {
+            const selected = [];
+            $('.permission-checkbox:checked').each(function() {
+                const label = $(this).next('label').find('.fw-bold').text();
+                const categoria = $(this).data('categoria');
+                selected.push({ nome: label, categoria: categoria });
+            });
+            
+            let html = '<h6>Permissões Selecionadas (' + selected.length + '):</h6>';
+            
+            if (selected.length === 0) {
+                html += '<p class="text-muted">Nenhuma permissão selecionada.</p>';
+            } else {
+                const grouped = {};
+                selected.forEach(perm => {
+                    if (!grouped[perm.categoria]) {
+                        grouped[perm.categoria] = [];
+                    }
+                    grouped[perm.categoria].push(perm.nome);
+                });
+                
+                Object.keys(grouped).forEach(categoria => {
+                    html += '<div class="mb-3">';
+                    html += '<h6 class="text-primary"><i class="fas fa-folder"></i> ' + categoria + '</h6>';
+                    html += '<ul class="list-unstyled ms-3">';
+                    grouped[categoria].forEach(nome => {
+                        html += '<li><i class="fas fa-key text-success me-2"></i>' + nome + '</li>';
+                    });
+                    html += '</ul></div>';
+                });
+            }
+            
+            $('#previewContent').html(html);
+            new bootstrap.Modal(document.getElementById('modalVisualizacao')).show();
+        }
+        
+        // Auto-hide alerts
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+</body>
+</html>

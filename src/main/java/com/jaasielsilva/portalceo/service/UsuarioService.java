@@ -156,8 +156,21 @@ public class UsuarioService {
     }
 
     public Optional<Usuario> buscarPorMatricula(String matricula) {
-    return usuarioRepository.findByMatricula(matricula);
-}
+        return usuarioRepository.findByMatricula(matricula);
+    }
+
+    /**
+     * Gera uma matrícula única para um novo usuário
+     */
+    public String gerarMatriculaUnica() {
+        long totalUsuarios = usuarioRepository.count();
+        String matricula;
+        do {
+            totalUsuarios++;
+            matricula = String.format("USR%04d", totalUsuarios);
+        } while (usuarioRepository.findByMatricula(matricula).isPresent());
+        return matricula;
+    }
 
     public boolean usuarioTemPermissaoParaExcluir(String matricula) {
         return usuarioRepository.findByMatricula(matricula)

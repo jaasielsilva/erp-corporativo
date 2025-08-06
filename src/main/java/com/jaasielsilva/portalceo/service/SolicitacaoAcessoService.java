@@ -146,6 +146,10 @@ public class SolicitacaoAcessoService {
         novoUsuario.setCargo(solicitacao.getColaborador().getCargo());
         novoUsuario.setDepartamento(solicitacao.getColaborador().getDepartamento());
         novoUsuario.setDataAdmissao(solicitacao.getColaborador().getDataAdmissao());
+        
+        // Gerar matrícula única
+        String matricula = usuarioService.gerarMatriculaUnica();
+        novoUsuario.setMatricula(matricula);
 
         // Definir nível de acesso baseado na aprovação
         NivelAcesso nivelAcesso = mapearNivelAcesso(solicitacao.getNivelAprovado());
@@ -156,6 +160,11 @@ public class SolicitacaoAcessoService {
         novoUsuario.setSenha(senhaTemporaria); // Será criptografada pelo UsuarioService
 
         // Salvar o novo usuário
+        try {
+            usuarioService.salvarUsuario(novoUsuario);
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao salvar novo usuário: " + e.getMessage(), e);
+        }
 
         // Atualizar solicitação
         solicitacao.setUsuarioCriado(novoUsuario);
@@ -238,7 +247,8 @@ public class SolicitacaoAcessoService {
             stats.put("totalAprovadas", solicitacaoAcessoRepository.countByStatus(StatusSolicitacao.APROVADO));
             stats.put("totalRejeitadas", solicitacaoAcessoRepository.countByStatus(StatusSolicitacao.REJEITADO));
             stats.put("totalUrgentes",
-                    solicitacaoAcessoRepository.countByStatusAndPrioridade(StatusSolicitacao.PENDENTE, Prioridade.URGENTE));
+                    solicitacaoAcessoRepository.countByStatusAndPrioridade(StatusSolicitacao.PENDENTE,
+                            Prioridade.URGENTE));
 
             // Usar contadores otimizados em vez de buscar listas completas
             LocalDateTime inicioMes = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
@@ -391,7 +401,7 @@ public class SolicitacaoAcessoService {
             emailService.enviarCredenciais(
                     usuario.getEmail(),
                     usuario.getNome(),
-                    usuario.getEmail(),
+                    usuario.getMatricula(),
                     senhaTemporaria);
         } catch (Exception e) {
             System.err.println("Erro ao enviar credenciais: " + e.getMessage());

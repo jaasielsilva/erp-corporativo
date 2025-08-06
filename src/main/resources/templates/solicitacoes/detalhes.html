@@ -74,8 +74,8 @@
                             <span class="badge status-badge ms-2"
                                   th:classappend="${
                                     solicitacao.status.name() == 'PENDENTE' ? 'bg-warning' :
-                                    solicitacao.status.name() == 'APROVADA' ? 'bg-success' :
-                                    solicitacao.status.name() == 'REJEITADA' ? 'bg-danger' :
+                                    solicitacao.status.name() == 'APROVADO' ? 'bg-success' :
+                                    solicitacao.status.name() == 'REJEITADO' ? 'bg-danger' :
                                     'bg-secondary'
                                   }"
                                   th:text="${solicitacao.status.descricao}"></span>
@@ -86,12 +86,33 @@
                         <a href="/solicitacoes" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Voltar
                         </a>
+                        
+                        <!-- Botões para solicitações pendentes -->
                         <div th:if="${solicitacao.status.name() == 'PENDENTE' && usuarioLogado.podeGerenciarUsuarios()}" class="btn-group ms-2">
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAprovar">
                                 <i class="fas fa-check me-1"></i>Aprovar
                             </button>
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRejeitar">
                                 <i class="fas fa-times me-1"></i>Rejeitar
+                            </button>
+                        </div>
+                        
+                        <!-- Botões para solicitações aprovadas -->
+                        <div th:if="${solicitacao.status.name() == 'APROVADO' && podeGerenciarUsuarios}" class="btn-group ms-2">
+                            <!-- Botão para ver detalhes do usuário (se já foi criado) -->
+                            <a th:if="${solicitacao.usuarioCriado != null}" 
+                               th:href="@{/solicitacoes/detalhes-usuario/{id}(id=${solicitacao.id})}" 
+                               class="btn btn-info">
+                                <i class="fas fa-user me-1"></i>Ver Detalhes do Usuário
+                            </a>
+                            
+                            <!-- Botão para criar usuário (se ainda não foi criado) -->
+                            <button th:if="${solicitacao.usuarioCriado == null}" 
+                                    type="button" 
+                                    class="btn btn-primary" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalCriarUsuario">
+                                <i class="fas fa-user-plus me-1"></i>Criar Usuário
                             </button>
                         </div>
                     </div>
@@ -192,7 +213,7 @@
                                 <span th:text="${solicitacao.dataAprovacao != null ? #temporals.format(solicitacao.dataAprovacao, 'dd/MM/yyyy HH:mm') : 'Não informado'}"></span>
                             </p>
                         </div>
-                        <div class="col-md-6" th:if="${solicitacao.status.name() == 'APROVADA'}">
+                        <div class="col-md-6" th:if="${solicitacao.status.name() == 'APROVADO'}">
                             <p><strong>Nível Aprovado:</strong> 
                                 <span class="badge bg-success" th:text="${solicitacao.nivelAprovado?.descricao ?: 'Não informado'}"></span>
                             </p>
@@ -233,7 +254,7 @@
                             <div th:if="${solicitacao.dataAprovacao != null}" class="timeline-item">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h6 class="mb-1" th:text="${solicitacao.status.name() == 'APROVADA' ? 'Solicitação Aprovada' : 'Solicitação Rejeitada'}"></h6>
+                                        <h6 class="mb-1" th:text="${solicitacao.status.name() == 'APROVADO' ? 'Solicitação Aprovada' : 'Solicitação Rejeitada'}"></h6>
                                         <p class="text-muted mb-0" th:text="${solicitacao.aprovadorNome}"></p>
                                     </div>
                                     <small class="text-muted" th:text="${#temporals.format(solicitacao.dataAprovacao, 'dd/MM HH:mm')}"></small>
@@ -268,8 +289,8 @@
                             <span class="badge"
                                   th:classappend="${
                                     solicitacao.status.name() == 'PENDENTE' ? 'bg-warning' :
-                                    solicitacao.status.name() == 'APROVADA' ? 'bg-success' :
-                                    solicitacao.status.name() == 'REJEITADA' ? 'bg-danger' :
+                                    solicitacao.status.name() == 'APROVADO' ? 'bg-success' :
+                                    solicitacao.status.name() == 'REJEITADO' ? 'bg-danger' :
                                     'bg-secondary'
                                   }"
                                   th:text="${solicitacao.status.descricao}"></span>
@@ -352,6 +373,59 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-danger">Rejeitar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Criar Usuário -->
+    <div class="modal fade" id="modalCriarUsuario" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/solicitacoes/criar-usuario/{id}(id=${solicitacao.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Criar Usuário</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Confirmação:</strong> Deseja criar o usuário para esta solicitação aprovada?
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Colaborador:</strong> <span th:text="${solicitacao.colaborador.nome}"></span></p>
+                                <p><strong>Email:</strong> <span th:text="${solicitacao.emailCorporativo ?: solicitacao.colaborador.email}"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Nível Aprovado:</strong> 
+                                    <span class="badge bg-success" th:text="${solicitacao.nivelAprovado?.descricao}"></span>
+                                </p>
+                                <p><strong>Departamento:</strong> <span th:text="${solicitacao.colaborador.departamento?.nome}"></span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <p><strong>Módulos com Acesso:</strong></p>
+                            <div>
+                                <span th:each="modulo : ${solicitacao.modulos}" 
+                                      class="badge bg-secondary me-1" 
+                                      th:text="${modulo.descricao}"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <small>As credenciais de acesso serão enviadas automaticamente por email para o usuário.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i>Criar Usuário
+                        </button>
                     </div>
                 </form>
             </div>

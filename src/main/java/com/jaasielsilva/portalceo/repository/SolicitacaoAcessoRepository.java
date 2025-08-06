@@ -201,5 +201,5 @@ public interface SolicitacaoAcessoRepository extends JpaRepository<SolicitacaoAc
     List<SolicitacaoAcesso> findSolicitacoesParaRenovacao(@Param("dataLimite") LocalDate dataLimite);
 
     Page<SolicitacaoAcesso> findBySolicitanteUsuarioAndStatus(Usuario usuario, StatusSolicitacao status, Pageable pageable);
-
+       
 }

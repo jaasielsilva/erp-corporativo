@@ -9,11 +9,15 @@ import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 import jakarta.validation.Valid;
 import java.security.Principal;
+import java.time.LocalDate;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -39,11 +43,11 @@ public class SolicitacoesController {
     private UsuarioService usuarioService;
 
     /**
-     * Listar todas as solicitações
+     * Listar todas as solicitações (página principal)
      */
     @GetMapping
     public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String busca,
             Principal principal,
@@ -58,9 +62,14 @@ public class SolicitacoesController {
         Page<SolicitacaoAcesso> solicitacoes;
 
         if (status != null && !status.trim().isEmpty()) {
-            StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status.toUpperCase());
-            solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
-            model.addAttribute("statusFiltro", status);
+            try {
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status.toUpperCase());
+                solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
+                model.addAttribute("statusFiltro", status);
+            } catch (IllegalArgumentException e) {
+                // Status inválido, listar todas
+                solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
+            }
         } else if (busca != null && !busca.trim().isEmpty()) {
             solicitacoes = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
             model.addAttribute("busca", busca);
@@ -72,9 +81,16 @@ public class SolicitacoesController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", solicitacoes.getTotalPages());
         model.addAttribute("statusOptions", StatusSolicitacao.values());
+        model.addAttribute("usuarioLogado", usuarioLogado);
 
-        Map<String, Object> estatisticas = solicitacaoAcessoService.obterEstatisticas();
-        model.addAttribute("estatisticas", estatisticas);
+        // Adicionar estatísticas
+        try {
+            Map<String, Object> estatisticas = solicitacaoAcessoService.obterEstatisticas();
+            model.addAttribute("estatisticas", estatisticas);
+        } catch (Exception e) {
+            // Se houver erro nas estatísticas, continuar sem elas
+            System.out.println("Erro ao obter estatísticas: " + e.getMessage());
+        }
 
         return "solicitacoes/listar";
     }
@@ -82,45 +98,44 @@ public class SolicitacoesController {
     /**
      * Exibir formulário de nova solicitação
      */
-   @GetMapping("/nova")
-public String exibirFormularioNova(Model model, Principal principal) {
-    System.out.println("===== INÍCIO DO MÉTODO /nova =====");
+    @GetMapping("/nova")
+    public String exibirFormularioNova(Model model, Principal principal) {
+        System.out.println("===== INÍCIO DO MÉTODO /nova =====");
 
-    try {
-        if (principal == null || principal.getName() == null) {
-            System.out.println("Principal ou nome do usuário é nulo.");
-            return "redirect:/login";
+        try {
+            if (principal == null || principal.getName() == null) {
+                System.out.println("Principal ou nome do usuário é nulo.");
+                return "redirect:/login";
+            }
+
+            Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            if (usuarioLogado == null) {
+                System.out.println("Usuário não encontrado.");
+                return "redirect:/login";
+            }
+
+            System.out.println("Usuário logado: " + usuarioLogado.getEmail());
+
+            // Cria instância da solicitação para o formulário
+            SolicitacaoAcesso solicitacao = new SolicitacaoAcesso();
+            solicitacao.setColaborador(new Colaborador());
+
+            // Adiciona no model
+            model.addAttribute("solicitacaoAcesso", solicitacao);
+            model.addAttribute("usuarioLogado", usuarioLogado);
+
+            // Não carregar colaboradores na renderização inicial para evitar loop infinito
+            // Os colaboradores serão carregados via AJAX
+            model.addAttribute("colaboradores", java.util.Collections.emptyList());
+
+            return "solicitacoes/nova";
+
+        } catch (Exception e) {
+            System.out.println("##### ERRO AO CARREGAR FORMULÁRIO /nova #####");
+            e.printStackTrace();
+            return "redirect:/solicitacoes?erro=Erro+ao+carregar+formulario";
         }
-
-        Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
-        if (usuarioLogado == null) {
-            System.out.println("Usuário não encontrado.");
-            return "redirect:/login";
-        }
-
-        System.out.println("Usuário logado: " + usuarioLogado.getEmail());
-
-        // Cria instância da solicitação para o formulário
-        SolicitacaoAcesso solicitacao = new SolicitacaoAcesso();
-        solicitacao.setColaborador(new Colaborador());
-
-        // Adiciona no model
-        model.addAttribute("solicitacaoAcesso", solicitacao);
-        model.addAttribute("usuarioLogado", usuarioLogado);
-
-        // Não carregar colaboradores na renderização inicial para evitar loop infinito
-        // Os colaboradores serão carregados via AJAX
-        model.addAttribute("colaboradores", java.util.Collections.emptyList());
-
-        return "solicitacoes/nova";
-
-    } catch (Exception e) {
-        System.out.println("##### ERRO AO CARREGAR FORMULÁRIO /nova #####");
-        e.printStackTrace();
-        return "redirect:/solicitacoes?erro=Erro+ao+carregar+formulario";
     }
-}
-
 
     /**
      * Processar nova solicitação
@@ -194,6 +209,38 @@ public String exibirFormularioNova(Model model, Principal principal) {
         model.addAttribute("usuarioLogado", usuarioLogado);
 
         return "solicitacoes/detalhes";
+    }
+
+    /**
+     * Exibir detalhes de usuário relacionado à solicitação
+     */
+    @GetMapping("/detalhes-usuario/{id}")
+    public String exibirDetalhesUsuario(@PathVariable Long id,
+            Principal principal,
+            Model model) {
+
+        Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+        if (usuarioLogado == null) {
+            return "redirect:/login";
+        }
+
+        Optional<SolicitacaoAcesso> solicitacaoOpt = solicitacaoAcessoService.buscarPorId(id);
+        if (solicitacaoOpt.isEmpty()) {
+            return "redirect:/solicitacoes?erro=Solicitação não encontrada";
+        }
+
+        SolicitacaoAcesso solicitacao = solicitacaoOpt.get();
+        
+        // Verificar se a solicitação tem usuário criado
+        if (solicitacao.getUsuarioCriado() == null) {
+            return "redirect:/solicitacoes/" + id + "?erro=Usuário ainda não foi criado para esta solicitação";
+        }
+
+        model.addAttribute("solicitacao", solicitacao);
+        model.addAttribute("usuario", solicitacao.getUsuarioCriado());
+        model.addAttribute("usuarioLogado", usuarioLogado);
+
+        return "solicitacoes/detalhes-usuario";
     }
 
     /**
@@ -318,9 +365,14 @@ public String exibirFormularioNova(Model model, Principal principal) {
         Page<SolicitacaoAcesso> solicitacoes;
 
         if (status != null && !status.trim().isEmpty()) {
-            StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
-            solicitacoes = solicitacaoAcessoService.listarPorUsuarioEStatus(usuarioLogado, statusEnum, pageable);
-            model.addAttribute("statusFiltro", status);
+            try {
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status.toUpperCase());
+                solicitacoes = solicitacaoAcessoService.listarPorUsuarioEStatus(usuarioLogado, statusEnum, pageable);
+                model.addAttribute("statusFiltro", status);
+            } catch (IllegalArgumentException e) {
+                // Status inválido, listar todas do usuário
+                solicitacoes = solicitacaoAcessoService.listarPorUsuario(usuarioLogado, pageable);
+            }
         } else {
             solicitacoes = solicitacaoAcessoService.listarPorUsuario(usuarioLogado, pageable);
         }
@@ -329,6 +381,7 @@ public String exibirFormularioNova(Model model, Principal principal) {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", solicitacoes.getTotalPages());
         model.addAttribute("statusOptions", StatusSolicitacao.values());
+        model.addAttribute("usuarioLogado", usuarioLogado);
 
         return "solicitacoes/minhas";
     }
@@ -365,6 +418,7 @@ public String exibirFormularioNova(Model model, Principal principal) {
         model.addAttribute("solicitacoes", solicitacoes);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", solicitacoes.getTotalPages());
+        model.addAttribute("usuarioLogado", usuarioLogado);
 
         return "solicitacoes/pendentes";
     }
@@ -505,22 +559,34 @@ public String exibirFormularioNova(Model model, Principal principal) {
             return "redirect:/dashboard?erro=Acesso negado";
         }
 
-        // Obter estatísticas
-        Map<String, Object> estatisticas = solicitacaoAcessoService.obterEstatisticas();
-        model.addAttribute("estatisticas", estatisticas);
+        try {
+            // Obter estatísticas
+            Map<String, Object> estatisticas = solicitacaoAcessoService.obterEstatisticas();
+            model.addAttribute("estatisticas", estatisticas);
 
-        // Solicitações urgentes
-        List<SolicitacaoAcesso> urgentes = solicitacaoAcessoService.buscarUrgentes();
-        model.addAttribute("solicitacoesUrgentes", urgentes);
+            // Solicitações urgentes
+            List<SolicitacaoAcesso> urgentes = solicitacaoAcessoService.buscarUrgentes();
+            model.addAttribute("solicitacoesUrgentes", urgentes);
 
-        // Solicitações que precisam de atenção
-        List<SolicitacaoAcesso> atencao = solicitacaoAcessoService.buscarQueNecessitamAtencao();
-        model.addAttribute("solicitacoesAtencao", atencao);
+            // Solicitações que precisam de atenção
+            List<SolicitacaoAcesso> atencao = solicitacaoAcessoService.buscarQueNecessitamAtencao();
+            model.addAttribute("solicitacoesAtencao", atencao);
 
-        // Últimas atividades
-        Pageable pageable = PageRequest.of(0, 10, Sort.by("dataSolicitacao").descending());
-        Page<SolicitacaoAcesso> ultimasAtividades = solicitacaoAcessoService.listarTodas(pageable);
-        model.addAttribute("ultimasAtividades", ultimasAtividades.getContent());
+            // Últimas atividades
+            Pageable pageable = PageRequest.of(0, 10, Sort.by("dataSolicitacao").descending());
+            Page<SolicitacaoAcesso> ultimasAtividades = solicitacaoAcessoService.listarTodas(pageable);
+            model.addAttribute("ultimasAtividades", ultimasAtividades.getContent());
+
+        } catch (Exception e) {
+            System.out.println("Erro ao carregar dashboard: " + e.getMessage());
+            // Adicionar valores padrão em caso de erro
+            model.addAttribute("estatisticas", new java.util.HashMap<>());
+            model.addAttribute("solicitacoesUrgentes", new java.util.ArrayList<>());
+            model.addAttribute("solicitacoesAtencao", new java.util.ArrayList<>());
+            model.addAttribute("ultimasAtividades", new java.util.ArrayList<>());
+        }
+
+        model.addAttribute("usuarioLogado", usuarioLogado);
 
         return "solicitacoes/dashboard";
     }
@@ -552,9 +618,14 @@ public String exibirFormularioNova(Model model, Principal principal) {
             solicitacoes = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
             model.addAttribute("busca", busca);
         } else if (status != null && !status.trim().isEmpty()) {
-            StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
-            solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
-            model.addAttribute("statusFiltro", status);
+            try {
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status.toUpperCase());
+                solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
+                model.addAttribute("statusFiltro", status);
+            } catch (IllegalArgumentException e) {
+                // Status inválido, listar todas
+                solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
+            }
         } else {
             solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
         }
@@ -563,6 +634,7 @@ public String exibirFormularioNova(Model model, Principal principal) {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", solicitacoes.getTotalPages());
         model.addAttribute("statusOptions", StatusSolicitacao.values());
+        model.addAttribute("usuarioLogado", usuarioLogado);
 
         return "solicitacoes/todas";
     }

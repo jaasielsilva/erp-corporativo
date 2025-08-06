@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class Usuario {
     private String matricula;
     
     @ManyToOne
+    @JsonIgnoreProperties({"supervisor", "cargo", "departamento", "usuario"})
     private Colaborador colaborador;
 
     @Column(nullable = false)
@@ -83,10 +85,12 @@ public class Usuario {
     // Relacionamento ManyToOne para Cargo e Departamento
     @ManyToOne
     @JoinColumn(name = "cargo_id")
+    @JsonIgnoreProperties({"colaboradores", "departamentos"})
     private Cargo cargo;
 
     @ManyToOne
     @JoinColumn(name = "departamento_id")
+    @JsonIgnoreProperties({"colaboradores", "cargos"})
     private Departamento departamento;
 
     @Column(name = "data_nascimento")
@@ -97,5 +101,10 @@ public class Usuario {
 
     @Column(name = "data_desligamento")
     private LocalDate dataDesligamento;
+
+    // Métodos de conveniência
+    public boolean podeGerenciarUsuarios() {
+        return nivelAcesso != null && nivelAcesso.podeGerenciarUsuarios();
+    }
 
 }

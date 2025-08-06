@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprovar Solicitação - ERP Corporativo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .info-card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .modulo-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .modulo-card.selected {
+            border-color: #0d6efd;
+            background-color: #e7f3ff;
+        }
+        
+        .modulo-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            margin-right: 0.75rem;
+            font-size: 0.8rem;
+        }
+        
+        .modulo-rh { background-color: #e74c3c; }
+        .modulo-financeiro { background-color: #27ae60; }
+        .modulo-vendas { background-color: #3498db; }
+        .modulo-compras { background-color: #9b59b6; }
+        .modulo-estoque { background-color: #f39c12; }
+        .modulo-marketing { background-color: #e67e22; }
+        .modulo-ti { background-color: #34495e; }
+        .modulo-juridico { background-color: #2c3e50; }
+        
+        .decision-card {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .decision-card:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .decision-card.selected {
+            border-color: #0d6efd;
+            background-color: #e7f3ff;
+        }
+        
+        .decision-card.aprovado {
+            border-color: #198754;
+            background-color: #d1e7dd;
+        }
+        
+        .decision-card.rejeitado {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        
+        .decision-card.aprovado_parcial {
+            border-color: #fd7e14;
+            background-color: #fff3cd;
+        }
+        
+        .nivel-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .nivel-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .nivel-badge.selected {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        }
+        
+        .form-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .success-box {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .danger-box {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+            
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-gavel me-2"></i>
+                        Analisar Solicitação de Acesso
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a th:href="@{/usuarios/solicitacao/{id}(id=${solicitacao.id})}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>
+                            Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Alertas -->
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:text="${erro}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <!-- Resumo da Solicitação -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card info-card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Resumo da Solicitação
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>Protocolo:</strong> <span th:text="${solicitacao.protocolo}"></span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Colaborador:</strong> <span th:text="${solicitacao.colaborador.nomeCompleto}"></span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Cargo:</strong> <span th:text="${solicitacao.colaborador.cargo}"></span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Departamento:</strong> <span th:text="${solicitacao.colaborador.departamento}"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>Solicitante:</strong> <span th:text="${solicitacao.solicitanteUsuario.nomeCompleto}"></span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Data da Solicitação:</strong> 
+                                            <span th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Prioridade:</strong> 
+                                            <span class="badge bg-warning" th:text="${solicitacao.prioridade.getDescricao()}"></span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Tipo de Usuário:</strong> 
+                                            <span class="badge bg-info" th:text="${solicitacao.tipoUsuario.getDescricao()}"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <strong class="d-block mb-2">Módulos Solicitados:</strong>
+                                    <div class="row">
+                                        <div th:each="modulo : ${solicitacao.modulos}" class="col-md-6 mb-2">
+                                            <div class="modulo-card d-flex align-items-center">
+                                                <div class="modulo-icon" th:classappend="'modulo-' + ${modulo.name().toLowerCase()}">
+                                                    <i class="fas fa-cube"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0" th:text="${modulo.getDescricao()}"></h6>
+                                                    <small class="text-muted">Nível: <span th:text="${solicitacao.nivelAcesso.getDescricao()}"></span></small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div th:if="${solicitacao.justificativa}" class="mt-3">
+                                    <strong>Justificativa:</strong>
+                                    <div class="bg-light p-3 rounded mt-2">
+                                        <p class="mb-0" th:text="${solicitacao.justificativa}"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formulário de Decisão -->
+                <form method="post" th:action="@{/solicitacoes/aprovar/{id}(id=${solicitacao.id})}" id="formAprovacao">
+                    <!-- Seleção de Decisão -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card info-card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-balance-scale me-2"></i>
+                                        Decisão
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="decision-card" data-decision="APROVADO">
+                                                <div class="text-center">
+                                                    <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+                                                    <h5 class="text-success">Aprovar</h5>
+                                                    <p class="text-muted mb-0">Conceder acesso conforme solicitado</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="decision-card" data-decision="APROVADO_PARCIAL">
+                                                <div class="text-center">
+                                                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+                                                    <h5 class="text-warning">Aprovar Parcialmente</h5>
+                                                    <p class="text-muted mb-0">Conceder acesso com restrições</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="decision-card" data-decision="REJEITADO">
+                                                <div class="text-center">
+                                                    <i class="fas fa-times-circle fa-3x text-danger mb-2"></i>
+                                                    <h5 class="text-danger">Rejeitar</h5>
+                                                    <p class="text-muted mb-0">Negar acesso ao sistema</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="decisao" id="decisao" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seção de Aprovação -->
+                    <div class="form-section" id="secaoAprovacao">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card info-card">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-cogs me-2"></i>
+                                            Configurações de Acesso
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="success-box">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Importante:</strong> Defina o nível de acesso e o email corporativo que será criado para o usuário.
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">
+                                                        <i class="fas fa-layer-group me-1"></i>
+                                                        <strong>Nível de Acesso *</strong>
+                                                    </label>
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <span class="nivel-badge bg-success" data-nivel="LEITURA">
+                                                            <i class="fas fa-eye me-1"></i>
+                                                            Leitura
+                                                        </span>
+                                                        <span class="nivel-badge bg-warning" data-nivel="ESCRITA">
+                                                            <i class="fas fa-edit me-1"></i>
+                                                            Escrita
+                                                        </span>
+                                                        <span class="nivel-badge bg-danger" data-nivel="ADMINISTRADOR">
+                                                            <i class="fas fa-crown me-1"></i>
+                                                            Administrador
+                                                        </span>
+                                                    </div>
+                                                    <input type="hidden" name="nivelAprovado" id="nivelAprovado" required>
+                                                    <small class="form-text text-muted mt-2">
+                                                        <strong>Leitura:</strong> Visualizar dados | 
+                                                        <strong>Escrita:</strong> Criar e editar | 
+                                                        <strong>Administrador:</strong> Controle total
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="emailCorporativo" class="form-label">
+                                                        <i class="fas fa-envelope me-1"></i>
+                                                        <strong>Email Corporativo *</strong>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="email" 
+                                                               class="form-control" 
+                                                               id="emailCorporativo" 
+                                                               name="emailCorporativo" 
+                                                               th:value="${#strings.toLowerCase(#strings.replace(solicitacao.colaborador.nomeCompleto, ' ', '.')) + '@empresa.com.br'}"
+                                                               required>
+                                                        <button type="button" class="btn btn-outline-secondary" onclick="gerarEmail()">
+                                                            <i class="fas fa-magic"></i>
+                                                        </button>
+                                                    </div>
+                                                    <small class="form-text text-muted">Este será o email de login do usuário</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seção de Rejeição -->
+                    <div class="form-section" id="secaoRejeicao">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card info-card">
+                                    <div class="card-header bg-danger text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-times-circle me-2"></i>
+                                            Motivo da Rejeição
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="danger-box">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <strong>Atenção:</strong> Informe claramente o motivo da rejeição para que o solicitante possa entender a decisão.
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="motivoRejeicao" class="form-label">
+                                                <strong>Motivo da Rejeição *</strong>
+                                            </label>
+                                            <textarea class="form-control" 
+                                                      id="motivoRejeicao" 
+                                                      rows="4" 
+                                                      placeholder="Descreva detalhadamente o motivo da rejeição...">
+                                            </textarea>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6>Motivos Comuns:</h6>
+                                                <div class="list-group list-group-flush">
+                                                    <button type="button" class="list-group-item list-group-item-action" onclick="adicionarMotivo('Colaborador não possui necessidade de acesso aos módulos solicitados.')">
+                                                        <i class="fas fa-ban me-2"></i>Acesso desnecessário
+                                                    </button>
+                                                    <button type="button" class="list-group-item list-group-item-action" onclick="adicionarMotivo('Nível de acesso solicitado é incompatível com o cargo/função.')">
+                                                        <i class="fas fa-user-times me-2"></i>Nível incompatível
+                                                    </button>
+                                                    <button type="button" class="list-group-item list-group-item-action" onclick="adicionarMotivo('Documentação ou justificativa insuficiente.')">
+                                                        <i class="fas fa-file-times me-2"></i>Documentação insuficiente
+                                                    </button>
+                                                    <button type="button" class="list-group-item list-group-item-action" onclick="adicionarMotivo('Necessária aprovação adicional do gestor direto.')">
+                                                        <i class="fas fa-user-check me-2"></i>Aprovação adicional necessária
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Observações Gerais -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card info-card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-comment me-2"></i>
+                                        Observações do Aprovador
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="observacoesAprovador" class="form-label">Observações Adicionais</label>
+                                        <textarea class="form-control" 
+                                                  id="observacoesAprovador" 
+                                                  name="observacoesAprovador" 
+                                                  rows="3" 
+                                                  placeholder="Adicione observações relevantes sobre esta decisão (opcional)..."></textarea>
+                                        <small class="form-text text-muted">Estas observações serão visíveis para o solicitante e ficarão registradas no histórico.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botões de Ação -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card info-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i>
+                                            Voltar
+                                        </a>
+                                        <div>
+                                            <button type="button" class="btn btn-outline-primary me-2" onclick="salvarRascunho()">
+                                                <i class="fas fa-save me-1"></i>
+                                                Salvar Rascunho
+                                            </button>
+                                            <button type="submit" class="btn btn-primary" id="btnSubmit" disabled>
+                                                <i class="fas fa-gavel me-1"></i>
+                                                Confirmar Decisão
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let decisaoSelecionada = null;
+        let nivelSelecionado = null;
+        
+        // Seleção de decisão
+        document.querySelectorAll('.decision-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove seleção anterior
+                document.querySelectorAll('.decision-card').forEach(c => {
+                    c.classList.remove('selected', 'aprovado', 'rejeitado', 'aprovado_parcial');
+                });
+                
+                // Adiciona seleção atual
+                this.classList.add('selected');
+                decisaoSelecionada = this.getAttribute('data-decision');
+                document.getElementById('decisao').value = decisaoSelecionada;
+                
+                // Adiciona classe específica
+                this.classList.add(decisaoSelecionada.toLowerCase());
+                
+                // Mostra/esconde seções
+                document.querySelectorAll('.form-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                if (decisaoSelecionada === 'APROVADO' || decisaoSelecionada === 'APROVADO_PARCIAL') {
+                    document.getElementById('secaoAprovacao').classList.add('active');
+                } else if (decisaoSelecionada === 'REJEITADO') {
+                    document.getElementById('secaoRejeicao').classList.add('active');
+                }
+                
+                validarFormulario();
+            });
+        });
+        
+        // Seleção de nível
+        document.querySelectorAll('.nivel-badge').forEach(badge => {
+            badge.addEventListener('click', function() {
+                document.querySelectorAll('.nivel-badge').forEach(b => {
+                    b.classList.remove('selected');
+                });
+                
+                this.classList.add('selected');
+                nivelSelecionado = this.getAttribute('data-nivel');
+                document.getElementById('nivelAprovado').value = nivelSelecionado;
+                
+                validarFormulario();
+            });
+        });
+        
+        // Validação do formulário
+        function validarFormulario() {
+            const btnSubmit = document.getElementById('btnSubmit');
+            let valido = false;
+            
+            if (decisaoSelecionada === 'APROVADO' || decisaoSelecionada === 'APROVADO_PARCIAL') {
+                const email = document.getElementById('emailCorporativo').value;
+                valido = nivelSelecionado && email.trim() !== '';
+            } else if (decisaoSelecionada === 'REJEITADO') {
+                const motivo = document.getElementById('motivoRejeicao').value;
+                valido = motivo.trim() !== '';
+            }
+            
+            btnSubmit.disabled = !valido;
+        }
+        
+        // Gerar email automático
+        function gerarEmail() {
+            const nomeCompleto = '[[${solicitacao.colaborador.nomeCompleto}]]';
+            const email = nomeCompleto.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s+/g, '.')
+                .replace(/[^a-z.]/g, '') + '@empresa.com.br';
+            
+            document.getElementById('emailCorporativo').value = email;
+            validarFormulario();
+        }
+        
+        // Adicionar motivo pré-definido
+        function adicionarMotivo(motivo) {
+            const textarea = document.getElementById('motivoRejeicao');
+            if (textarea.value.trim() === '') {
+                textarea.value = motivo;
+            } else {
+                textarea.value += '\n\n' + motivo;
+            }
+            validarFormulario();
+        }
+        
+        // Salvar rascunho
+        function salvarRascunho() {
+            const dados = {
+                decisao: decisaoSelecionada,
+                nivel: nivelSelecionado,
+                email: document.getElementById('emailCorporativo').value,
+                observacoes: document.getElementById('observacoesAprovador').value,
+                motivo: document.getElementById('motivoRejeicao').value
+            };
+            
+            localStorage.setItem('rascunho_aprovacao_[[${solicitacao.id}]]', JSON.stringify(dados));
+            
+            // Mostrar feedback
+            const btn = event.target;
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Salvo!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-primary');
+            
+            setTimeout(() => {
+                btn.innerHTML = textoOriginal;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        }
+        
+        // Carregar rascunho
+        function carregarRascunho() {
+            const rascunho = localStorage.getItem('rascunho_aprovacao_[[${solicitacao.id}]]');
+            if (rascunho) {
+                const dados = JSON.parse(rascunho);
+                
+                if (dados.decisao) {
+                    const card = document.querySelector(`[data-decision="${dados.decisao}"]`);
+                    if (card) card.click();
+                }
+                
+                if (dados.nivel) {
+                    const badge = document.querySelector(`[data-nivel="${dados.nivel}"]`);
+                    if (badge) badge.click();
+                }
+                
+                if (dados.email) {
+                    document.getElementById('emailCorporativo').value = dados.email;
+                }
+                
+                if (dados.observacoes) {
+                    document.getElementById('observacoesAprovador').value = dados.observacoes;
+                }
+                
+                if (dados.motivo) {
+                    document.getElementById('motivoRejeicao').value = dados.motivo;
+                }
+            }
+        }
+        
+        // Eventos de validação
+        document.getElementById('emailCorporativo').addEventListener('input', validarFormulario);
+        document.getElementById('motivoRejeicao').addEventListener('input', validarFormulario);
+        
+        // Confirmação antes de enviar
+        document.getElementById('formAprovacao').addEventListener('submit', function(e) {
+            const decisao = decisaoSelecionada;
+            let mensagem = '';
+            
+            if (decisao === 'APROVADO') {
+                mensagem = 'Tem certeza que deseja APROVAR esta solicitação?';
+            } else if (decisao === 'APROVADO_PARCIAL') {
+                mensagem = 'Tem certeza que deseja APROVAR PARCIALMENTE esta solicitação?';
+            } else if (decisao === 'REJEITADO') {
+                mensagem = 'Tem certeza que deseja REJEITAR esta solicitação?';
+            }
+            
+            if (!confirm(mensagem + '\n\nEsta ação não pode ser desfeita.')) {
+                e.preventDefault();
+            } else {
+                // Limpar rascunho após confirmação
+                localStorage.removeItem('rascunho_aprovacao_[[${solicitacao.id}]]');
+            }
+        });
+        
+        // Carregar rascunho ao inicializar
+        document.addEventListener('DOMContentLoaded', carregarRascunho);
+        
+        // Copiar observações para motivo de rejeição quando necessário
+        document.getElementById('motivoRejeicao').addEventListener('focus', function() {
+            if (this.value.trim() === '') {
+                const observacoes = document.getElementById('observacoesAprovador').value;
+                if (observacoes.trim() !== '') {
+                    this.value = observacoes;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

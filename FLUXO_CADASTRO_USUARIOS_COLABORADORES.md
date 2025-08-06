@@ -64,7 +64,7 @@ Este documento define o fluxo empresarial para cadastro de **Usuários** (acesso
 #### **Etapa 2: Criação do Usuário (TI/Admin)**
 - ✅ **Responsável:** Administradores ou TI
 - ✅ **Acesso:** Apenas usuários com `podeGerenciarUsuarios = true`
-- ✅ **Tela:** `/usuarios/novo`
+- ✅ **Tela:** `/solicitacoes/nova` (solicitação) → `/usuarios/novo` (criação)
 - ✅ **Dados Necessários:**
   - Email (login único)
   - Senha temporária

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.br.CPF;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -65,10 +67,12 @@ public class Colaborador {
 
     @ManyToOne
     @JoinColumn(name = "cargo_id")
+    @JsonIgnoreProperties({"colaboradores", "departamentos"})
     private Cargo cargo;
 
     @ManyToOne
     @JoinColumn(name = "departamento_id")
+    @JsonIgnoreProperties({"colaboradores", "cargos"})
     private Departamento departamento;
 
     private LocalDateTime dataUltimaEdicao;
@@ -109,6 +113,7 @@ public class Colaborador {
     
     @ManyToOne
     @JoinColumn(name = "supervisor_id")
+    @JsonIgnoreProperties({"supervisor", "cargo", "departamento"})
     private Colaborador supervisor;
 
     @PrePersist
@@ -134,5 +139,10 @@ public class Colaborador {
 
     public enum StatusColaborador {
         ATIVO, INATIVO, SUSPENSO
+    }
+
+    public Colaborador orElseThrow(Object object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'orElseThrow'");
     }
 }

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Solicitação - Portal CEO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .info-card h5 {
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #007bff;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #007bff;
+        }
+        .modulo-badge {
+            display: inline-block;
+            margin: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            background: #e9ecef;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">
+                            <i class="fas fa-file-alt me-2"></i>Detalhes da Solicitação
+                            <span class="badge status-badge ms-2"
+                                  th:classappend="${
+                                    solicitacao.status.name() == 'PENDENTE' ? 'bg-warning' :
+                                    solicitacao.status.name() == 'APROVADA' ? 'bg-success' :
+                                    solicitacao.status.name() == 'REJEITADA' ? 'bg-danger' :
+                                    'bg-secondary'
+                                  }"
+                                  th:text="${solicitacao.status.descricao}"></span>
+                        </h2>
+                        <p class="text-muted mb-0">Protocolo: <strong th:text="${solicitacao.protocolo}"></strong></p>
+                    </div>
+                    <div>
+                        <a href="/solicitacoes" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Voltar
+                        </a>
+                        <div th:if="${solicitacao.status.name() == 'PENDENTE' && usuarioLogado.podeGerenciarUsuarios()}" class="btn-group ms-2">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAprovar">
+                                <i class="fas fa-check me-1"></i>Aprovar
+                            </button>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRejeitar">
+                                <i class="fas fa-times me-1"></i>Rejeitar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Informações Principais -->
+            <div class="col-lg-8">
+                <!-- Dados do Colaborador -->
+                <div class="info-card">
+                    <h5><i class="fas fa-user me-2"></i>Colaborador</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nome:</strong> <span th:text="${solicitacao.colaborador.nome}"></span></p>
+                            <p><strong>Email:</strong> <span th:text="${solicitacao.colaborador.email}"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Departamento:</strong> <span th:text="${solicitacao.colaborador.departamento?.nome ?: 'Não informado'}"></span></p>
+                            <p><strong>Cargo:</strong> <span th:text="${solicitacao.colaborador.cargo?.nome ?: 'Não informado'}"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dados da Solicitação -->
+                <div class="info-card">
+                    <h5><i class="fas fa-clipboard-list me-2"></i>Detalhes da Solicitação</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nível Solicitado:</strong> 
+                                <span class="badge bg-info" th:text="${solicitacao.nivelSolicitado.descricao}"></span>
+                            </p>
+                            <p><strong>Prioridade:</strong> 
+                                <span class="badge"
+                                      th:classappend="${
+                                        solicitacao.prioridade.name() == 'URGENTE' ? 'bg-danger' :
+                                        solicitacao.prioridade.name() == 'ALTA' ? 'bg-warning' :
+                                        'bg-secondary'
+                                      }"
+                                      th:text="${solicitacao.prioridade.descricao}"></span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Acesso Temporário:</strong> 
+                                <span th:text="${solicitacao.temporario ? 'Sim' : 'Não'}"></span>
+                            </p>
+                            <div th:if="${solicitacao.temporario}">
+                                <p><strong>Período:</strong> 
+                                    <span th:text="${#temporals.format(solicitacao.dataInicio, 'dd/MM/yyyy')}"></span> até 
+                                    <span th:text="${#temporals.format(solicitacao.dataFim, 'dd/MM/yyyy')}"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <p><strong>Módulos Solicitados:</strong></p>
+                        <div>
+                            <span th:each="modulo : ${solicitacao.modulos}" 
+                                  class="modulo-badge" 
+                                  th:text="${modulo.descricao}"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <p><strong>Justificativa:</strong></p>
+                        <div class="bg-white p-3 rounded border">
+                            <p th:text="${solicitacao.justificativa}" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dados do Solicitante -->
+                <div class="info-card">
+                    <h5><i class="fas fa-user-tie me-2"></i>Solicitante</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nome:</strong> <span th:text="${solicitacao.solicitanteNome}"></span></p>
+                            <p><strong>Email:</strong> <span th:text="${solicitacao.solicitanteEmail}"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Departamento:</strong> <span th:text="${solicitacao.solicitanteDepartamento ?: 'Não informado'}"></span></p>
+                            <p><strong>Data da Solicitação:</strong> 
+                                <span th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aprovação/Rejeição -->
+                <div th:if="${solicitacao.status.name() != 'PENDENTE'}" class="info-card">
+                    <h5><i class="fas fa-gavel me-2"></i>Decisão</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Aprovador:</strong> <span th:text="${solicitacao.aprovadorNome ?: 'Não informado'}"></span></p>
+                            <p><strong>Data da Decisão:</strong> 
+                                <span th:text="${solicitacao.dataAprovacao != null ? #temporals.format(solicitacao.dataAprovacao, 'dd/MM/yyyy HH:mm') : 'Não informado'}"></span>
+                            </p>
+                        </div>
+                        <div class="col-md-6" th:if="${solicitacao.status.name() == 'APROVADA'}">
+                            <p><strong>Nível Aprovado:</strong> 
+                                <span class="badge bg-success" th:text="${solicitacao.nivelAprovado?.descricao ?: 'Não informado'}"></span>
+                            </p>
+                            <p th:if="${solicitacao.emailCorporativo}">
+                                <strong>Email Corporativo:</strong> <span th:text="${solicitacao.emailCorporativo}"></span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${solicitacao.observacoesAprovador}" class="mt-3">
+                        <p><strong>Observações do Aprovador:</strong></p>
+                        <div class="bg-white p-3 rounded border">
+                            <p th:text="${solicitacao.observacoesAprovador}" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Timeline -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-history me-2"></i>Histórico</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">Solicitação Criada</h6>
+                                        <p class="text-muted mb-0" th:text="${solicitacao.solicitanteNome}"></p>
+                                    </div>
+                                    <small class="text-muted" th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM HH:mm')}"></small>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${solicitacao.dataAprovacao != null}" class="timeline-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1" th:text="${solicitacao.status.name() == 'APROVADA' ? 'Solicitação Aprovada' : 'Solicitação Rejeitada'}"></h6>
+                                        <p class="text-muted mb-0" th:text="${solicitacao.aprovadorNome}"></p>
+                                    </div>
+                                    <small class="text-muted" th:text="${#temporals.format(solicitacao.dataAprovacao, 'dd/MM HH:mm')}"></small>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${solicitacao.usuarioCriado}" class="timeline-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">Usuário Criado</h6>
+                                        <p class="text-muted mb-0">Sistema</p>
+                                    </div>
+                                    <small class="text-muted">Automático</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações Adicionais -->
+                <div class="card border-0 shadow-sm mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Protocolo:</span>
+                            <strong th:text="${solicitacao.protocolo}"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Status:</span>
+                            <span class="badge"
+                                  th:classappend="${
+                                    solicitacao.status.name() == 'PENDENTE' ? 'bg-warning' :
+                                    solicitacao.status.name() == 'APROVADA' ? 'bg-success' :
+                                    solicitacao.status.name() == 'REJEITADA' ? 'bg-danger' :
+                                    'bg-secondary'
+                                  }"
+                                  th:text="${solicitacao.status.descricao}"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Prioridade:</span>
+                            <span class="badge"
+                                  th:classappend="${
+                                    solicitacao.prioridade.name() == 'URGENTE' ? 'bg-danger' :
+                                    solicitacao.prioridade.name() == 'ALTA' ? 'bg-warning' :
+                                    'bg-secondary'
+                                  }"
+                                  th:text="${solicitacao.prioridade.descricao}"></span>
+                        </div>
+                        <div th:if="${solicitacao.dataLimite}" class="d-flex justify-content-between">
+                            <span>Data Limite:</span>
+                            <strong th:text="${#temporals.format(solicitacao.dataLimite, 'dd/MM/yyyy')}"></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aprovar -->
+    <div class="modal fade" id="modalAprovar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/solicitacoes/{id}/aprovar(id=${solicitacao.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Aprovar Solicitação</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nível de Acesso Aprovado</label>
+                            <select name="nivelAprovado" class="form-select" required>
+                                <option value="CONSULTA">Consulta</option>
+                                <option value="OPERACIONAL">Operacional</option>
+                                <option value="SUPERVISAO">Supervisão</option>
+                                <option value="COORDENACAO">Coordenação</option>
+                                <option value="GERENCIAL">Gerencial</option>
+                                <option value="ADMINISTRATIVO">Administrativo</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email Corporativo (opcional)</label>
+                            <input type="email" name="emailCorporativo" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea name="observacoesAprovador" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Aprovar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Rejeitar -->
+    <div class="modal fade" id="modalRejeitar" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/solicitacoes/{id}/rejeitar(id=${solicitacao.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Rejeitar Solicitação</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Motivo da Rejeição *</label>
+                            <textarea name="observacoesAprovador" class="form-control" rows="4" required 
+                                      placeholder="Descreva o motivo da rejeição..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Rejeitar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

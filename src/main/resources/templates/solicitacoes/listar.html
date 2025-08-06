@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitações de Acesso - Portal CEO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .card-stats {
+            border-left: 4px solid #007bff;
+        }
+        .table-responsive {
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Solicitações de Acesso</h2>
+                        <p class="text-muted mb-0">Gerencie todas as solicitações de acesso ao sistema</p>
+                    </div>
+                    <div>
+                        <a href="/solicitacoes/nova" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Nova Solicitação
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="row mb-4" th:if="${estatisticas}">
+            <div class="col-md-3">
+                <div class="card card-stats border-0 h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title text-muted mb-1">Total</h6>
+                                <h3 class="mb-0" th:text="${estatisticas.totalPendentes + estatisticas.totalAprovadas + estatisticas.totalRejeitadas}">0</h3>
+                            </div>
+                            <div class="text-primary">
+                                <i class="fas fa-clipboard-list fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 h-100" style="border-left: 4px solid #ffc107 !important;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title text-muted mb-1">Pendentes</h6>
+                                <h3 class="mb-0 text-warning" th:text="${estatisticas.totalPendentes}">0</h3>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 h-100" style="border-left: 4px solid #28a745 !important;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title text-muted mb-1">Aprovadas</h6>
+                                <h3 class="mb-0 text-success" th:text="${estatisticas.totalAprovadas}">0</h3>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 h-100" style="border-left: 4px solid #dc3545 !important;">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title text-muted mb-1">Rejeitadas</h6>
+                                <h3 class="mb-0 text-danger" th:text="${estatisticas.totalRejeitadas}">0</h3>
+                            </div>
+                            <div class="text-danger">
+                                <i class="fas fa-times-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <form method="get" action="/solicitacoes">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="busca" class="form-label">Buscar</label>
+                                    <input type="text" class="form-control" id="busca" name="busca" 
+                                           th:value="${busca}" placeholder="Protocolo, nome, email...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="">Todos os status</option>
+                                        <option th:each="statusOpt : ${statusOptions}" 
+                                                th:value="${statusOpt}" 
+                                                th:text="${statusOpt.descricao}"
+                                                th:selected="${statusFiltro == statusOpt.name()}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-outline-primary me-2">
+                                        <i class="fas fa-search me-1"></i>Filtrar
+                                    </button>
+                                    <a href="/solicitacoes" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-1"></i>Limpar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Solicitações -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Protocolo</th>
+                                        <th>Colaborador</th>
+                                        <th>Solicitante</th>
+                                        <th>Nível</th>
+                                        <th>Status</th>
+                                        <th>Data</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="solicitacao : ${solicitacoes.content}">
+                                        <td>
+                                            <strong th:text="${solicitacao.protocolo}"></strong>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong th:text="${solicitacao.colaborador.nome}"></strong>
+                                                <br>
+                                                <small class="text-muted" th:text="${solicitacao.colaborador.email}"></small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <span th:text="${solicitacao.solicitanteNome}"></span>
+                                                <br>
+                                                <small class="text-muted" th:text="${solicitacao.solicitanteEmail}"></small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info" th:text="${solicitacao.nivelSolicitado.descricao}"></span>
+                                        </td>
+                                        <td>
+                                            <span class="badge status-badge"
+                                                  th:classappend="${
+                                                    solicitacao.status.name() == 'PENDENTE' ? 'bg-warning' :
+                                                    solicitacao.status.name() == 'APROVADA' ? 'bg-success' :
+                                                    solicitacao.status.name() == 'REJEITADA' ? 'bg-danger' :
+                                                    'bg-secondary'
+                                                  }"
+                                                  th:text="${solicitacao.status.descricao}"></span>
+                                        </td>
+                                        <td>
+                                            <span th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a th:href="@{/solicitacoes/{id}(id=${solicitacao.id})}" 
+                                                   class="btn btn-outline-primary btn-action" title="Ver detalhes">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <div th:if="${solicitacao.status.name() == 'PENDENTE'}">
+                                                    <button type="button" class="btn btn-outline-success btn-action" 
+                                                            data-bs-toggle="modal" 
+                                                            th:data-bs-target="'#modalAprovar' + ${solicitacao.id}"
+                                                            title="Aprovar">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger btn-action" 
+                                                            data-bs-toggle="modal" 
+                                                            th:data-bs-target="'#modalRejeitar' + ${solicitacao.id}"
+                                                            title="Rejeitar">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Paginação -->
+                        <div class="d-flex justify-content-between align-items-center p-3" th:if="${solicitacoes.totalPages > 1}">
+                            <div>
+                                <small class="text-muted">
+                                    Mostrando <span th:text="${solicitacoes.numberOfElements}"></span> de 
+                                    <span th:text="${solicitacoes.totalElements}"></span> registros
+                                </small>
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/solicitacoes(page=${currentPage - 1}, status=${statusFiltro}, busca=${busca})}">Anterior</a>
+                                    </li>
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                                        th:classappend="${i == currentPage} ? 'active'">
+                                        <a class="page-link" th:href="@{/solicitacoes(page=${i}, status=${statusFiltro}, busca=${busca})}" th:text="${i + 1}"></a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/solicitacoes(page=${currentPage + 1}, status=${statusFiltro}, busca=${busca})}">Próximo</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais de Aprovação e Rejeição -->
+    <div th:each="solicitacao : ${solicitacoes.content}" th:if="${solicitacao.status.name() == 'PENDENTE'}">
+        <!-- Modal Aprovar -->
+        <div class="modal fade" th:id="'modalAprovar' + ${solicitacao.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form th:action="@{/solicitacoes/{id}/aprovar(id=${solicitacao.id})}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Aprovar Solicitação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Nível de Acesso</label>
+                                <select name="nivelAprovado" class="form-select" required>
+                                    <option value="CONSULTA">Consulta</option>
+                                    <option value="OPERACIONAL">Operacional</option>
+                                    <option value="SUPERVISAO">Supervisão</option>
+                                    <option value="COORDENACAO">Coordenação</option>
+                                    <option value="GERENCIAL">Gerencial</option>
+                                    <option value="ADMINISTRATIVO">Administrativo</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email Corporativo (opcional)</label>
+                                <input type="email" name="emailCorporativo" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Observações</label>
+                                <textarea name="observacoesAprovador" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Aprovar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Rejeitar -->
+        <div class="modal fade" th:id="'modalRejeitar' + ${solicitacao.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form th:action="@{/solicitacoes/{id}/rejeitar(id=${solicitacao.id})}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Rejeitar Solicitação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Motivo da Rejeição *</label>
+                                <textarea name="observacoesAprovador" class="form-control" rows="4" required 
+                                          placeholder="Descreva o motivo da rejeição..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Rejeitar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensagens -->
+    <div th:if="${mensagem}" class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-success text-white">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong class="me-auto">Sucesso</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" th:text="${mensagem}"></div>
+        </div>
+    </div>
+
+    <div th:if="${erro}" class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-danger text-white">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong class="me-auto">Erro</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" th:text="${erro}"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-hide toasts after 5 seconds
+        setTimeout(function() {
+            var toasts = document.querySelectorAll('.toast');
+            toasts.forEach(function(toast) {
+                var bsToast = new bootstrap.Toast(toast);
+                bsToast.hide();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

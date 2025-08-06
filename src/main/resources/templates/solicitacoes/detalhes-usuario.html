@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Solicitação - ERP Corporativo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        .status-pendente { background-color: #ffc107; color: #000; }
+        .status-aprovado { background-color: #198754; color: #fff; }
+        .status-rejeitado { background-color: #dc3545; color: #fff; }
+        .status-aprovado_parcial { background-color: #fd7e14; color: #fff; }
+        .status-usuario_criado { background-color: #0d6efd; color: #fff; }
+        
+        .info-card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background-color: #6c757d;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 3px #dee2e6;
+        }
+        
+        .timeline-item.completed::before {
+            background-color: #198754;
+        }
+        
+        .timeline-item.current::before {
+            background-color: #0d6efd;
+            animation: pulse 2s infinite;
+        }
+        
+        .timeline-item.rejected::before {
+            background-color: #dc3545;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 3px #dee2e6, 0 0 0 6px rgba(13, 110, 253, 0.3); }
+            50% { box-shadow: 0 0 0 3px #dee2e6, 0 0 0 10px rgba(13, 110, 253, 0.1); }
+            100% { box-shadow: 0 0 0 3px #dee2e6, 0 0 0 6px rgba(13, 110, 253, 0.3); }
+        }
+        
+        .modulo-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .modulo-card:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .modulo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            margin-right: 1rem;
+        }
+        
+        .modulo-rh { background-color: #e74c3c; }
+        .modulo-financeiro { background-color: #27ae60; }
+        .modulo-vendas { background-color: #3498db; }
+        .modulo-compras { background-color: #9b59b6; }
+        .modulo-estoque { background-color: #f39c12; }
+        .modulo-marketing { background-color: #e67e22; }
+        .modulo-ti { background-color: #34495e; }
+        .modulo-juridico { background-color: #2c3e50; }
+        
+        .observacao-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .aprovacao-box {
+            background-color: #d1edff;
+            border-left: 4px solid #0d6efd;
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .rejeicao-box {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .print-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .container-fluid {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .card {
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}" class="no-print"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div th:replace="~{fragments/sidebar :: sidebar}" class="no-print"></div>
+            
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom no-print">
+                    <h1 class="h2">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Detalhes da Solicitação
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button onclick="window.print()" class="btn btn-outline-secondary">
+                                <i class="fas fa-print me-1"></i>
+                                Imprimir
+                            </button>
+                            <a href="javascript:history.back()" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Voltar
+                            </a>
+                        </div>
+                        <div th:if="${podeAprovar && solicitacao.status.name() == 'PENDENTE'}" class="btn-group">
+                            <a th:href="@{/solicitacoes/aprovar/{id}(id=${solicitacao.id})}" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>
+                                Analisar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alertas -->
+                <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show no-print" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${mensagem}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show no-print" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:text="${erro}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <!-- Cabeçalho da Solicitação -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card info-card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-hashtag me-2"></i>
+                                            Protocolo: <span th:text="${solicitacao.protocolo}"></span>
+                                        </h3>
+                                        <p class="text-muted mb-0">
+                                            Solicitado em <span th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy')}"></span> 
+                                            às <span th:text="${#temporals.format(solicitacao.dataSolicitacao, 'HH:mm')}"></span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <span class="badge status-badge"
+                                              th:classappend="'status-' + ${solicitacao.status.name().toLowerCase()}"
+                                              th:text="${solicitacao.status.getDescricao()}"></span>
+                                        <div class="mt-2">
+                                            <span class="badge bg-secondary"
+                                                  th:text="${solicitacao.prioridade.getDescricao()}"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Informações do Colaborador e Solicitante -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card info-card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    Dados do Colaborador
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Nome:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.colaborador.nomeCompleto}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>CPF:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.colaborador.cpf}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>E-mail:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.colaborador.email}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Cargo:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.colaborador.cargo}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Departamento:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.colaborador.departamento}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Admissão:</strong></div>
+                                    <div class="col-sm-8" th:text="${#temporals.format(solicitacao.colaborador.dataAdmissao, 'dd/MM/yyyy')}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card info-card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    Dados do Solicitante
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Nome:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.solicitanteUsuario.nomeCompleto}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>E-mail:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.solicitanteUsuario.email}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Cargo:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.solicitanteUsuario.cargo}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Departamento:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.solicitanteUsuario.departamento}"></div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Telefone:</strong></div>
+                                    <div class="col-sm-8" th:text="${solicitacao.solicitanteUsuario.telefone}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalhes da Solicitação -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card info-card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cubes me-2"></i>
+                                    Módulos e Permissões Solicitadas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><strong>Tipo de Usuário:</strong></div>
+                                    <div class="col-sm-8">
+                                        <span class="badge bg-info" th:text="${solicitacao.tipoUsuario.getDescricao()}"></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-sm-4"><strong>Nível Solicitado:</strong></div>
+                                    <div class="col-sm-8">
+                                        <span class="badge bg-warning" th:text="${solicitacao.nivelAcesso.getDescricao()}"></span>
+                                    </div>
+                                </div>
+                                
+                                <div th:if="${solicitacao.prazoAcesso}" class="row mb-3">
+                                    <div class="col-sm-4"><strong>Prazo de Acesso:</strong></div>
+                                    <div class="col-sm-8">
+                                        <span class="badge bg-secondary" th:text="${solicitacao.prazoAcesso.getDescricao()}"></span>
+                                        <span th:if="${solicitacao.dataLimite}" class="ms-2 text-muted">
+                                            (até <span th:text="${#temporals.format(solicitacao.dataLimite, 'dd/MM/yyyy')}"></span>)
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong class="d-block mb-2">Módulos Solicitados:</strong>
+                                    <div th:each="modulo : ${solicitacao.modulos}" class="modulo-card d-flex align-items-center">
+                                        <div class="modulo-icon" th:classappend="'modulo-' + ${modulo.name().toLowerCase()}">
+                                            <i class="fas fa-cube"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0" th:text="${modulo.getDescricao()}"></h6>
+                                            <small class="text-muted" th:text="${modulo.getDetalhes()}"></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card info-card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Timeline
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="timeline">
+                                    <div class="timeline-item completed">
+                                        <h6 class="mb-1">Solicitação Criada</h6>
+                                        <p class="text-muted mb-0" th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></p>
+                                        <small class="text-muted" th:text="'por ' + ${solicitacao.solicitanteUsuario.nomeCompleto}"></small>
+                                    </div>
+                                    
+                                    <div th:if="${solicitacao.dataAprovacao}" 
+                                         class="timeline-item"
+                                         th:classappend="${solicitacao.status.name() == 'APROVADO' || solicitacao.status.name() == 'APROVADO_PARCIAL'} ? 'completed' : 'rejected'">
+                                        <h6 class="mb-1" th:text="${solicitacao.status.getDescricao()}"></h6>
+                                        <p class="text-muted mb-0" th:text="${#temporals.format(solicitacao.dataAprovacao, 'dd/MM/yyyy HH:mm')}"></p>
+                                        <small class="text-muted" th:text="'por ' + ${solicitacao.aprovadorUsuario.nomeCompleto}"></small>
+                                    </div>
+                                    
+                                    <div th:if="${solicitacao.dataCriacaoUsuario}" class="timeline-item completed">
+                                        <h6 class="mb-1">Usuário Criado</h6>
+                                        <p class="text-muted mb-0" th:text="${#temporals.format(solicitacao.dataCriacaoUsuario, 'dd/MM/yyyy HH:mm')}"></p>
+                                        <small class="text-muted">Sistema automatizado</small>
+                                    </div>
+                                    
+                                    <div th:if="${solicitacao.status.name() == 'PENDENTE'}" class="timeline-item current">
+                                        <h6 class="mb-1">Aguardando Aprovação</h6>
+                                        <p class="text-muted mb-0">Em análise</p>
+                                        <small class="text-muted">
+                                            Há <span th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(solicitacao.dataSolicitacao, T(java.time.LocalDateTime).now())}"></span> dias
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Justificativa -->
+                <div th:if="${solicitacao.justificativa}" class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card info-card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-comment me-2"></i>
+                                    Justificativa
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="observacao-box">
+                                    <p class="mb-0" th:text="${solicitacao.justificativa}"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Observações do Aprovador -->
+                <div th:if="${solicitacao.observacoesAprovador}" class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card info-card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-check me-2"></i>
+                                    Observações do Aprovador
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div th:class="${solicitacao.status.name() == 'REJEITADO'} ? 'rejeicao-box' : 'aprovacao-box'">
+                                    <p class="mb-2">
+                                        <strong th:text="${solicitacao.aprovadorUsuario.nomeCompleto}"></strong>
+                                        <small class="text-muted ms-2" th:text="${#temporals.format(solicitacao.dataAprovacao, 'dd/MM/yyyy HH:mm')}"></small>
+                                    </p>
+                                    <p class="mb-0" th:text="${solicitacao.observacoesAprovador}"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configurações Aprovadas -->
+                <div th:if="${solicitacao.nivelAprovado || solicitacao.emailCorporativo}" class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card info-card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cogs me-2"></i>
+                                    Configurações Aprovadas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div th:if="${solicitacao.nivelAprovado}" class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>Nível de Acesso Aprovado:</strong>
+                                            <span class="badge bg-success ms-2" th:text="${solicitacao.nivelAprovado.getDescricao()}"></span>
+                                        </div>
+                                    </div>
+                                    <div th:if="${solicitacao.emailCorporativo}" class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>E-mail Corporativo:</strong>
+                                            <span class="ms-2" th:text="${solicitacao.emailCorporativo}"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ações -->
+                <div th:if="${podeAprovar && solicitacao.status.name() == 'APROVADO' && !solicitacao.dataCriacaoUsuario}" class="row mb-4 no-print">
+                    <div class="col-md-12">
+                        <div class="card info-card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Criar Usuário
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-3">A solicitação foi aprovada. Clique no botão abaixo para criar o usuário no sistema.</p>
+                                <form method="post" th:action="@{/usuarios/criar-usuario/{id}(id=${solicitacao.id})}" 
+                                      onsubmit="return confirm('Tem certeza que deseja criar o usuário? Esta ação não pode ser desfeita.')">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-user-plus me-1"></i>
+                                        Criar Usuário Agora
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Botão de Impressão Flutuante -->
+    <button onclick="window.print()" class="btn btn-primary print-button no-print">
+        <i class="fas fa-print"></i>
+    </button>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configurar impressão
+        window.addEventListener('beforeprint', function() {
+            document.title = `Solicitação ${document.querySelector('[th\\:text*="protocolo"]')?.textContent || 'Detalhes'}`;
+        });
+        
+        // Adicionar detalhes dos módulos
+        const modulosDetalhes = {
+            'RH': 'Gestão de colaboradores, folha de pagamento, benefícios',
+            'FINANCEIRO': 'Contas a pagar/receber, fluxo de caixa, relatórios financeiros',
+            'VENDAS': 'CRM, propostas, contratos, comissões',
+            'COMPRAS': 'Fornecedores, cotações, pedidos de compra',
+            'ESTOQUE': 'Controle de estoque, movimentações, inventário',
+            'MARKETING': 'Campanhas, leads, análise de mercado',
+            'TI': 'Infraestrutura, suporte, desenvolvimento',
+            'JURIDICO': 'Contratos, processos, compliance'
+        };
+        
+        // Adicionar tooltips aos módulos
+        document.addEventListener('DOMContentLoaded', function() {
+            const moduloCards = document.querySelectorAll('.modulo-card');
+            moduloCards.forEach(card => {
+                const moduloNome = card.querySelector('h6').textContent;
+                const detalhes = Object.values(modulosDetalhes).find(d => 
+                    Object.keys(modulosDetalhes).some(k => 
+                        modulosDetalhes[k] === d && moduloNome.includes(k)
+                    )
+                );
+                
+                if (detalhes) {
+                    card.setAttribute('title', detalhes);
+                    card.style.cursor = 'help';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

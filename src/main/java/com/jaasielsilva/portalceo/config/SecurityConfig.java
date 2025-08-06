@@ -155,6 +155,13 @@ public SecurityFilterChain filterChain(HttpSecurity http,
     @Bean
     public CommandLineRunner createInitialData(BCryptPasswordEncoder passwordEncoder) {
         return args -> {
+            // Verificação para evitar execução múltipla durante inicialização
+            if (usuarioRepository.count() > 0) {
+                System.out.println("Dados iniciais já existem. Pulando inicialização.");
+                return;
+            }
+            
+            System.out.println("Iniciando criação de dados iniciais...");
             // Permissões
             Permissao roleAdmin = permissaoRepository.findByNome("ROLE_ADMIN")
                 .orElseGet(() -> permissaoRepository.save(new Permissao(null, "ROLE_ADMIN", new HashSet<>())));
@@ -425,6 +432,7 @@ public SecurityFilterChain filterChain(HttpSecurity http,
             criarAssociacaoSeNaoExistir(cargoAssistenteAdministrativo, departamentoFinanceiro, false, "Assistente Administrativo pode apoiar Financeiro");
             
             System.out.println("Hierarquias e associações de exemplo criadas com sucesso!");
+            System.out.println("=== INICIALIZAÇÃO DE DADOS CONCLUÍDA COM SUCESSO ===");
         };
     }
 }

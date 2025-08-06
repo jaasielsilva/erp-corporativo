@@ -32,4 +32,7 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     
     @Query("SELECT c FROM Colaborador c WHERE c.ativo = true AND c.status = 'ATIVO' AND c.id != :excludeId ORDER BY c.nome")
     List<Colaborador> findPotentialSupervisorsExcluding(@Param("excludeId") Long excludeId);
+    
+    @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true ORDER BY c.nome")
+    List<Colaborador> findBasicInfoForSelection();
 }

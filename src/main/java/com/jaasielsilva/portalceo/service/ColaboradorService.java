@@ -128,7 +128,15 @@ public class ColaboradorService {
     }
 
     public List<Colaborador> listarTodos() {
-        return colaboradorRepository.findAll();
+        logger.debug("Buscando todos os colaboradores");
+        try {
+            List<Colaborador> colaboradores = colaboradorRepository.findBasicInfoForSelection();
+            logger.debug("Encontrados {} colaboradores ativos", colaboradores.size());
+            return colaboradores;
+        } catch (Exception e) {
+            logger.error("Erro ao buscar colaboradores: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     public Page<Colaborador> listarTodosPaginado(Pageable pageable) {

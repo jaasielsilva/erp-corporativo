@@ -1,357 +1,535 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Solicitação de Acesso - Portal CEO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .form-section {
-            background: #f8f9fa;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .form-section h5 {
-            color: #495057;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.5rem;
-        }
-        .checkbox-item {
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 0.75rem;
-            transition: all 0.2s;
-        }
-        .checkbox-item:hover {
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-        .checkbox-item input:checked + label {
-            color: #007bff;
-            font-weight: 500;
-        }
-        .required-field::after {
-            content: " *";
-            color: #dc3545;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nova Solicitação de Acesso - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <style>
+    .form-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+    }
+
+    .form-section h3 {
+      color: #1f2937;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #3b82f6;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: white;
+      transition: all 0.2s;
+    }
+
+    .checkbox-item:hover {
+      border-color: #3b82f6;
+      background: #f0f9ff;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      margin-right: 0.75rem;
+      transform: scale(1.2);
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .alert-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .required::after {
+      content: " *";
+      color: #ef4444;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .colaborador-info {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .colaborador-info h4 {
+      color: #0369a1;
+      margin-bottom: 0.5rem;
+    }
+
+    .colaborador-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container-fluid py-4">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h2 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Nova Solicitação de Acesso</h2>
-                        <p class="text-muted mb-0">Solicite acesso ao sistema para um colaborador</p>
-                    </div>
-                    <div>
-                        <a href="/solicitacoes" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Voltar
-                        </a>
-                    </div>
-                </div>
-            </div>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1>Nova Solicitação de Acesso</h1>
+        <h2>Preencha os dados para solicitar acesso ao sistema</h2>
+
+        <div class="action-buttons">
+          <a href="/solicitacoes" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar às Solicitações
+          </a>
         </div>
 
-        <!-- Formulário -->
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <form th:action="@{/solicitacoes/nova}" th:object="${solicitacaoAcesso}" method="post">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            
-                            <!-- Informações do Colaborador -->
-                            <div class="form-section">
-                                <h5><i class="fas fa-user me-2"></i>Informações do Colaborador</h5>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <label for="colaborador" class="form-label required-field">Colaborador</label>
-                                        <select th:field="*{colaborador.id}" class="form-select" id="colaborador" required>
-                                            <option value="">Selecione um colaborador</option>
-                                            <option th:each="colaborador : ${colaboradores}" 
-                                                    th:value="${colaborador.id}" 
-                                                    th:text="${colaborador.nome + ' - ' + colaborador.email}"
-                                                    th:data-email="${colaborador.email}"
-                                                    th:data-departamento="${colaborador.departamento?.nome}"
-                                                    th:data-cargo="${colaborador.cargo?.nome}"></option>
-                                        </select>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('colaborador')}" th:errors="*{colaborador}"></div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Email do Colaborador</label>
-                                        <input type="email" class="form-control" id="colaboradorEmail" readonly>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Departamento</label>
-                                        <input type="text" class="form-control" id="colaboradorDepartamento" readonly>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Cargo</label>
-                                        <input type="text" class="form-control" id="colaboradorCargo" readonly>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Nível de Acesso -->
-                            <div class="form-section">
-                                <h5><i class="fas fa-key me-2"></i>Nível de Acesso Solicitado</h5>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <label for="tipoUsuario" class="form-label required-field">Tipo de Usuário</label>
-                                        <select th:field="*{tipoUsuario}" class="form-select" id="tipoUsuario" required>
-                                            <option value="">Selecione...</option>
-                                            <option value="FUNCIONARIO">Funcionário CLT</option>
-                                            <option value="TERCEIRIZADO">Terceirizado</option>
-                                            <option value="ESTAGIARIO">Estagiário</option>
-                                            <option value="CONSULTOR">Consultor</option>
-                                            <option value="REPRESENTANTE">Representante</option>
-                                        </select>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('tipoUsuario')}" th:errors="*{tipoUsuario}"></div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="nivelSolicitado" class="form-label required-field">Nível de Acesso</label>
-                                        <select th:field="*{nivelSolicitado}" class="form-select" id="nivelSolicitado" required>
-                                            <option value="">Selecione o nível</option>
-                                            <option value="CONSULTA">Consulta - Apenas visualização</option>
-                                            <option value="OPERACIONAL">Operacional - Operações básicas</option>
-                                            <option value="SUPERVISAO">Supervisão - Supervisão de equipe</option>
-                                            <option value="COORDENACAO">Coordenação - Coordenação de área</option>
-                                            <option value="GERENCIAL">Gerencial - Gestão completa</option>
-                                            <option value="ADMINISTRATIVO">Administrativo - Acesso total</option>
-                                        </select>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('nivelSolicitado')}" th:errors="*{nivelSolicitado}"></div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="prioridade" class="form-label">Prioridade</label>
-                                        <select th:field="*{prioridade}" class="form-select" id="prioridade">
-                                            <option value="NORMAL">Normal</option>
-                                            <option value="ALTA">Alta</option>
-                                            <option value="URGENTE">Urgente</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Módulos do Sistema -->
-                            <div class="form-section">
-                                <h5><i class="fas fa-puzzle-piece me-2"></i>Módulos do Sistema</h5>
-                                <p class="text-muted mb-3">Selecione os módulos que o colaborador terá acesso:</p>
-                                <div class="checkbox-grid">
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="RH" id="modulo_rh">
-                                            <label class="form-check-label" for="modulo_rh">
-                                                <i class="fas fa-users me-2"></i>Recursos Humanos
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="FINANCEIRO" id="modulo_financeiro">
-                                            <label class="form-check-label" for="modulo_financeiro">
-                                                <i class="fas fa-dollar-sign me-2"></i>Financeiro
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="VENDAS" id="modulo_vendas">
-                                            <label class="form-check-label" for="modulo_vendas">
-                                                <i class="fas fa-chart-line me-2"></i>Vendas
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="COMPRAS" id="modulo_compras">
-                                            <label class="form-check-label" for="modulo_compras">
-                                                <i class="fas fa-shopping-cart me-2"></i>Compras
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="ESTOQUE" id="modulo_estoque">
-                                            <label class="form-check-label" for="modulo_estoque">
-                                                <i class="fas fa-boxes me-2"></i>Estoque
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="MARKETING" id="modulo_marketing">
-                                            <label class="form-check-label" for="modulo_marketing">
-                                                <i class="fas fa-bullhorn me-2"></i>Marketing
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="TI" id="modulo_ti">
-                                            <label class="form-check-label" for="modulo_ti">
-                                                <i class="fas fa-laptop me-2"></i>TI
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="modulos" value="JURIDICO" id="modulo_juridico">
-                                            <label class="form-check-label" for="modulo_juridico">
-                                                <i class="fas fa-gavel me-2"></i>Jurídico
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-danger mt-2" th:if="${#fields.hasErrors('modulos')}" th:errors="*{modulos}"></div>
-                            </div>
-
-                            <!-- Acesso Temporário -->
-                            <div class="form-section">
-                                <h5><i class="fas fa-clock me-2"></i>Configurações de Acesso</h5>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="temporario" onchange="toggleTemporario()">
-                            <label class="form-check-label" for="temporario">
-                                Acesso temporário (com data de expiração)
-                            </label>
-                        </div>
-                        <input type="hidden" th:field="*{prazoAcesso}" id="prazoAcesso" value="PERMANENTE">
-                                    </div>
-                                </div>
-                                <div class="row" id="datasTemporario" style="display: none;">
-                                    <div class="col-md-6">
-                                        <label for="dataInicio" class="form-label">Data de Início</label>
-                                        <input type="date" th:field="*{dataInicio}" class="form-control" id="dataInicio">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="dataFim" class="form-label">Data de Fim</label>
-                                        <input type="date" th:field="*{dataFim}" class="form-control" id="dataFim">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Justificativa -->
-                            <div class="form-section">
-                                <h5><i class="fas fa-comment me-2"></i>Justificativa</h5>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <label for="justificativa" class="form-label required-field">Justificativa da Solicitação</label>
-                                        <textarea th:field="*{justificativa}" class="form-control" id="justificativa" rows="4" 
-                                                  placeholder="Descreva o motivo da solicitação de acesso..." required></textarea>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('justificativa')}" th:errors="*{justificativa}"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Botões -->
-                            <div class="d-flex justify-content-end gap-2">
-                                <a href="/solicitacoes" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times me-1"></i>Cancelar
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane me-1"></i>Enviar Solicitação
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <!-- Mensagens de Sucesso e Erro -->
+        <div th:if="${mensagem}" class="alert alert-success">
+          <i class="fas fa-check-circle"></i>
+          <span th:text="${mensagem}"></span>
         </div>
-    </div>
 
-    <!-- Mensagens -->
-    <div th:if="${erro}" class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div class="toast show" role="alert">
-            <div class="toast-header bg-danger text-white">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <strong class="me-auto">Erro</strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body" th:text="${erro}"></div>
+        <div th:if="${erro}" class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span th:text="${erro}"></span>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Atualizar informações do colaborador
-        document.getElementById('colaborador').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            
-            document.getElementById('colaboradorEmail').value = selectedOption.dataset.email || '';
-            document.getElementById('colaboradorDepartamento').value = selectedOption.dataset.departamento || '';
-            document.getElementById('colaboradorCargo').value = selectedOption.dataset.cargo || '';
+        <form class="form-container" method="post" action="/solicitacoes/nova" th:object="${solicitacaoAcesso}">
+
+          <!-- Informações do Colaborador -->
+          <div class="form-section">
+            <h3><i class="fas fa-user"></i> Informações do Colaborador</h3>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="colaborador" class="required">Colaborador</label>
+                <select id="colaborador" name="colaborador.id" class="form-control" required>
+                  <option value="">Selecione o colaborador...</option>
+                  <!-- Colaboradores serão carregados via AJAX -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="tipoUsuario" class="required">Tipo de Usuário</label>
+                <select id="tipoUsuario" name="tipoUsuario" class="form-control" required>
+                  <option value="">Selecione o tipo...</option>
+                  <option value="FUNCIONARIO">Funcionário CLT</option>
+                  <option value="TERCEIRIZADO">Terceirizado</option>
+                  <option value="ESTAGIARIO">Estagiário</option>
+                  <option value="CONSULTOR">Consultor</option>
+                  <option value="REPRESENTANTE">Representante</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Informações do colaborador selecionado -->
+            <div id="colaboradorInfo" class="colaborador-info hidden">
+              <h4><i class="fas fa-info-circle"></i> Dados do Colaborador</h4>
+              <div class="colaborador-details">
+                <div><strong>Nome:</strong> <span id="colaboradorNome"></span></div>
+                <div><strong>Email:</strong> <span id="colaboradorEmail"></span></div>
+                <div><strong>CPF:</strong> <span id="colaboradorCpf"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Módulos de Acesso -->
+          <div class="form-section">
+            <h3><i class="fas fa-th-large"></i> Módulos de Acesso</h3>
+            <p>Selecione os módulos que o usuário deve ter acesso:</p>
+
+            <div class="checkbox-group">
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_RH" name="modulos" value="RH">
+                <label for="modulo_RH">
+                  <i class="fas fa-users"></i> Recursos Humanos
+                </label>
+              </div>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_FINANCEIRO" name="modulos" value="FINANCEIRO">
+                <label for="modulo_FINANCEIRO">
+                  <i class="fas fa-dollar-sign"></i> Financeiro
+                </label>
+              </div>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_VENDAS" name="modulos" value="VENDAS">
+                <label for="modulo_VENDAS">
+                  <i class="fas fa-chart-line"></i> Vendas
+                </label>
+              </div>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_COMPRAS" name="modulos" value="COMPRAS">
+                <label for="modulo_COMPRAS">
+                  <i class="fas fa-shopping-cart"></i> Compras
+                </label>
+              </div>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_ESTOQUE" name="modulos" value="ESTOQUE">
+                <label for="modulo_ESTOQUE">
+                  <i class="fas fa-warehouse"></i> Estoque
+                </label>
+              </div>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_MARKETING" name="modulos" value="MARKETING">
+                <label for="modulo_MARKETING">
+                  <i class="fas fa-bullhorn"></i> Marketing
+                </label>
+              </div>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_TI" name="modulos" value="TI">
+                <label for="modulo_TI">
+                  <i class="fas fa-laptop-code"></i> TI
+                </label>
+              </div>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="modulo_JURIDICO" name="modulos" value="JURIDICO">
+                <label for="modulo_JURIDICO">
+                  <i class="fas fa-balance-scale"></i> Jurídico
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nível de Acesso e Configurações -->
+          <div class="form-section">
+            <h3><i class="fas fa-key"></i> Configurações de Acesso</h3>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="nivelSolicitado" class="required">Nível de Acesso</label>
+                <select id="nivelSolicitado" name="nivelSolicitado" class="form-control" required>
+                  <option value="">Selecione o nível...</option>
+                  <option value="CONSULTA">Consulta</option>
+                  <option value="OPERACIONAL">Operacional</option>
+                  <option value="SUPERVISAO">Supervisão</option>
+                  <option value="COORDENACAO">Coordenação</option>
+                  <option value="GERENCIAL">Gerencial</option>
+                  <option value="ADMINISTRATIVO">Administrativo</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="prazoAcesso">Prazo de Acesso</label>
+                <select id="prazoAcesso" name="prazoAcesso" class="form-control">
+                  <option value="PERMANENTE">Permanente</option>
+                  <option value="TEMPORARIO">Temporário</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Campos para acesso temporário -->
+            <div id="camposTemporarios" class="form-row hidden">
+              <div class="form-group">
+                <label for="dataInicio">Data de Início</label>
+                <input type="date" id="dataInicio" name="dataInicio" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="dataFim">Data de Fim</label>
+                <input type="date" id="dataFim" name="dataFim" class="form-control">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prioridade">Prioridade</label>
+                <select id="prioridade" name="prioridade" class="form-control">
+                  <option value="BAIXA">Baixa</option>
+                  <option value="MEDIA" selected>Média</option>
+                  <option value="ALTA">Alta</option>
+                  <option value="URGENTE">Urgente</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="dataLimite">Data Limite (se urgente)</label>
+                <input type="date" id="dataLimite" name="dataLimite" class="form-control">
+              </div>
+            </div>
+          </div>
+
+          <!-- Justificativa -->
+          <div class="form-section">
+            <h3><i class="fas fa-comment-alt"></i> Justificativa</h3>
+
+            <div class="form-group">
+              <label for="justificativa" class="required">Justificativa Detalhada</label>
+              <textarea id="justificativa" name="justificativa" class="form-control" rows="5"
+                placeholder="Descreva detalhadamente a necessidade de acesso, as atividades que serão realizadas e a importância para o trabalho do colaborador. Mínimo de 50 caracteres."
+                required minlength="50"></textarea>
+              <small class="text-muted">Mínimo de 50 caracteres</small>
+            </div>
+
+            <div class="form-group">
+              <label for="sistemasEspecificos">Sistemas Específicos (opcional)</label>
+              <textarea id="sistemasEspecificos" name="sistemasEspecificos" class="form-control" rows="3"
+                placeholder="Se necessário, especifique sistemas, relatórios ou funcionalidades específicas que o usuário precisa acessar."></textarea>
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+            <a href="/solicitacoes" class="btn btn-secondary">
+              <i class="fas fa-times"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-paper-plane"></i> Enviar Solicitação
+            </button>
+          </div>
+        </form>
+  </div>
+  </section>
+
+  <footer th:replace="~{components/footer :: footer}"></footer>
+  </main>
+  </div>
+
+  <script>
+    // Carregar colaboradores via AJAX
+    document.addEventListener('DOMContentLoaded', function () {
+      carregarColaboradores();
+      configurarEventListeners();
+    });
+
+    function carregarColaboradores() {
+      fetch('/solicitacoes/colaboradores')
+        .then(response => response.json())
+        .then(colaboradores => {
+          const select = document.getElementById('colaborador');
+          colaboradores.forEach(colaborador => {
+            const option = document.createElement('option');
+            option.value = colaborador.id;
+            option.textContent = colaborador.nome;
+            option.dataset.email = colaborador.email;
+            option.dataset.cpf = colaborador.cpf;
+            select.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Erro ao carregar colaboradores:', error);
         });
+    }
 
-        // Função para controlar acesso temporário
-        function toggleTemporario() {
-            const checkbox = document.getElementById('temporario');
-            const datasDiv = document.getElementById('datasTemporario');
-            const prazoAcessoInput = document.getElementById('prazoAcesso');
-            
-            if (checkbox.checked) {
-                datasDiv.style.display = 'block';
-                document.getElementById('dataInicio').required = true;
-                document.getElementById('dataFim').required = true;
-                prazoAcessoInput.value = 'TEMPORARIO';
-            } else {
-                datasDiv.style.display = 'none';
-                document.getElementById('dataInicio').required = false;
-                document.getElementById('dataFim').required = false;
-                prazoAcessoInput.value = 'PERMANENTE';
-            }
+    function configurarEventListeners() {
+      // Mostrar informações do colaborador selecionado
+      document.getElementById('colaborador').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const infoDiv = document.getElementById('colaboradorInfo');
+
+        if (selectedOption.value) {
+          document.getElementById('colaboradorNome').textContent = selectedOption.textContent;
+          document.getElementById('colaboradorEmail').textContent = selectedOption.dataset.email || 'N/A';
+          document.getElementById('colaboradorCpf').textContent = selectedOption.dataset.cpf || 'N/A';
+          infoDiv.classList.remove('hidden');
+        } else {
+          infoDiv.classList.add('hidden');
+        }
+      });
+
+      // Mostrar/ocultar campos de acesso temporário
+      document.getElementById('prazoAcesso').addEventListener('change', function () {
+        const camposTemporarios = document.getElementById('camposTemporarios');
+        if (this.value === 'TEMPORARIO') {
+          camposTemporarios.classList.remove('hidden');
+          document.getElementById('dataInicio').required = true;
+          document.getElementById('dataFim').required = true;
+        } else {
+          camposTemporarios.classList.add('hidden');
+          document.getElementById('dataInicio').required = false;
+          document.getElementById('dataFim').required = false;
+        }
+      });
+
+      // Validação de datas
+      document.getElementById('dataInicio').addEventListener('change', function () {
+        const dataFim = document.getElementById('dataFim');
+        if (this.value) {
+          dataFim.min = this.value;
+        }
+      });
+
+      // Contador de caracteres para justificativa
+      document.getElementById('justificativa').addEventListener('input', function () {
+        const minLength = 50;
+        const currentLength = this.value.length;
+        const small = this.nextElementSibling;
+
+        if (currentLength < minLength) {
+          small.textContent = `Mínimo de 50 caracteres (${currentLength}/${minLength})`;
+          small.style.color = '#ef4444';
+        } else {
+          small.textContent = `${currentLength} caracteres`;
+          small.style.color = '#10b981';
+        }
+      });
+
+      // Validação do formulário antes do envio
+      document.querySelector('form').addEventListener('submit', function (e) {
+        const colaborador = document.getElementById('colaborador').value;
+        const modulos = document.querySelectorAll('input[name="modulos"]:checked');
+        const justificativa = document.getElementById('justificativa').value;
+
+        if (!colaborador) {
+          alert('Por favor, selecione um colaborador.');
+          e.preventDefault();
+          return;
         }
 
-        // Validar datas
-        document.getElementById('dataInicio').addEventListener('change', function() {
-            const dataFim = document.getElementById('dataFim');
-            dataFim.min = this.value;
-        });
+        if (modulos.length === 0) {
+          alert('Por favor, selecione pelo menos um módulo de acesso.');
+          e.preventDefault();
+          return;
+        }
 
-        // Auto-hide toasts
-        setTimeout(function() {
-            var toasts = document.querySelectorAll('.toast');
-            toasts.forEach(function(toast) {
-                var bsToast = new bootstrap.Toast(toast);
-                bsToast.hide();
-            });
-        }, 5000);
-        
-        // Debug do formulário
-        document.querySelector('form').addEventListener('submit', function(e) {
-            console.log('=== FORMULARIO SENDO ENVIADO ===');
-            
-            // Verificar se pelo menos um módulo foi selecionado
-            const modulosSelecionados = document.querySelectorAll('input[name="modulos"]:checked');
-            console.log('Módulos selecionados:', modulosSelecionados.length);
-            
-            // Verificar campos obrigatórios
-            const colaboradorId = document.getElementById('colaborador').value;
-            const tipoUsuario = document.getElementById('tipoUsuario').value;
-            const nivelSolicitado = document.getElementById('nivelSolicitado').value;
-            const justificativa = document.getElementById('justificativa').value;
-            
-            console.log('Colaborador ID:', colaboradorId);
-            console.log('Tipo Usuario:', tipoUsuario);
-            console.log('Nivel Solicitado:', nivelSolicitado);
-            console.log('Justificativa:', justificativa);
-            
-            console.log('Formulário sendo enviado...');
-        });
-    </script>
+        if (justificativa.length < 50) {
+          alert('A justificativa deve ter pelo menos 50 caracteres.');
+          e.preventDefault();
+          return;
+        }
+
+        // Validação para acesso temporário
+        const prazoAcesso = document.getElementById('prazoAcesso').value;
+        if (prazoAcesso === 'TEMPORARIO') {
+          const dataInicio = document.getElementById('dataInicio').value;
+          const dataFim = document.getElementById('dataFim').value;
+
+          if (!dataInicio || !dataFim) {
+            alert('Para acesso temporário, as datas de início e fim são obrigatórias.');
+            e.preventDefault();
+            return;
+          }
+
+          if (new Date(dataInicio) >= new Date(dataFim)) {
+            alert('A data de fim deve ser posterior à data de início.');
+            e.preventDefault();
+            return;
+          }
+        }
+      });
+    }
+  </script>
 </body>
+
 </html>

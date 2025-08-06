@@ -20,6 +20,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Colaborador {
+    
+    // Construtor para consultas otimizadas
+    public Colaborador(Long id, String nome, String email, String cpf) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.cpf = cpf;
+        this.ativo = true;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

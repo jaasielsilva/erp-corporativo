@@ -72,7 +72,7 @@
     
     <div class="container-fluid">
         <div class="row">
-            <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+            <div th:replace="~{components/sidebar :: sidebar}"></div>
             
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -229,13 +229,13 @@
                                                 <div class="col-md-6">
                                                     <small class="text-muted">
                                                         <i class="fas fa-user me-1"></i>
-                                                        <strong>Colaborador:</strong> <span th:text="${solicitacao.colaborador.nome}"></span>
+                                                        <strong>Colaborador:</strong> <span th:text="${solicitacao.colaboradorNome}"></span>
                                                     </small>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <small class="text-muted">
                                                         <i class="fas fa-user-tie me-1"></i>
-                                                        <strong>Cargo:</strong> <span th:text="${solicitacao.colaborador.cargo}"></span>
+                                                        <strong>Cargo:</strong> <span th:text="${solicitacao.colaborador?.cargo ?: 'N/A'}"></span>
                                                     </small>
                                                 </div>
                                             </div>
@@ -244,13 +244,13 @@
                                                 <div class="col-md-6">
                                                     <small class="text-muted">
                                                         <i class="fas fa-building me-1"></i>
-                                                        <strong>Departamento:</strong> <span th:text="${solicitacao.colaborador.departamento}"></span>
+                                                        <strong>Departamento:</strong> <span th:text="${solicitacao.colaborador?.departamento ?: 'N/A'}"></span>
                                                     </small>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <small class="text-muted">
                                                         <i class="fas fa-paper-plane me-1"></i>
-                                                        <strong>Solicitante:</strong> <span th:text="${solicitacao.solicitanteUsuario.nomeCompleto}"></span>
+                                                        <strong>Solicitante:</strong> <span th:text="${solicitacao.solicitanteNome}"></span>
                                                     </small>
                                                 </div>
                                             </div>
@@ -259,7 +259,7 @@
                                                 <div class="col-md-6">
                                                     <small class="text-muted">
                                                         <i class="fas fa-user-tag me-1"></i>
-                                                        <strong>Tipo:</strong> <span th:text="${solicitacao.tipoUsuario.getDescricao()}"></span>
+                                                        <strong>Status:</strong> <span class="badge bg-warning">Pendente</span>
                                                     </small>
                                                 </div>
                                                 <div class="col-md-6">
@@ -287,13 +287,11 @@
                                             
                                             <div class="mb-2">
                                                 <small class="text-muted d-block mb-1">
-                                                    <i class="fas fa-cubes me-1"></i>
-                                                    <strong>Módulos Solicitados:</strong>
+                                                    <i class="fas fa-shield-alt me-1"></i>
+                                                    <strong>Nível Solicitado:</strong>
                                                 </small>
                                                 <div>
-                                                    <span th:each="modulo : ${solicitacao.modulos}" 
-                                                          class="modulo-tag"
-                                                          th:text="${modulo.getDescricao()}"></span>
+                                                    <span class="badge bg-primary" th:text="${solicitacao.nivelSolicitado?.descricao ?: 'N/A'}"></span>
                                                 </div>
                                             </div>
                                             

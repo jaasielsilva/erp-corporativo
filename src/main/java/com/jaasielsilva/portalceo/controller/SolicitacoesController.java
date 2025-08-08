@@ -4,6 +4,7 @@ import com.jaasielsilva.portalceo.model.SolicitacaoAcesso;
 import com.jaasielsilva.portalceo.model.SolicitacaoAcesso.StatusSolicitacao;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.repository.SolicitacaoAcessoRepository;
 import com.jaasielsilva.portalceo.service.SolicitacaoAcessoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
@@ -13,9 +14,13 @@ import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import com.jaasielsilva.portalceo.dto.SolicitacaoSimpleDTO;
+import java.util.stream.Collectors;
+import java.util.List;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -37,63 +42,83 @@ public class SolicitacoesController {
     private SolicitacaoAcessoService solicitacaoAcessoService;
 
     @Autowired
-    private ColaboradorService colaboradorService;
+    private SolicitacaoAcessoRepository solicitacaoAcessoRepository;
 
     @Autowired
     private UsuarioService usuarioService;
 
-    /**
-     * Listar todas as solicitações (página principal)
-     */
-    @GetMapping
-    public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String busca,
-            Principal principal,
-            Model model) {
+    @Autowired
+    private ColaboradorService colaboradorService;
 
-        Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
-        if (usuarioLogado == null) {
-            return "redirect:/login";
-        }
+   /**
+ * Listar todas as solicitações (página principal)
+ */
+@GetMapping
+public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String status,
+        @RequestParam(required = false) String busca,
+        Principal principal,
+        Model model) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("dataSolicitacao").descending());
-        Page<SolicitacaoAcesso> solicitacoes;
+    Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+    if (usuarioLogado == null) {
+        return "redirect:/login";
+    }
 
-        if (status != null && !status.trim().isEmpty()) {
-            try {
-                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status.toUpperCase());
+    Pageable pageable = PageRequest.of(page, size, Sort.by("dataSolicitacao").descending());
+    Page<SolicitacaoAcesso> solicitacoes;
+
+    try {
+            // Filtrar por status e busca
+            if (status != null && !status.isEmpty() && busca != null && !busca.isEmpty()) {
+                // Para combinar status e busca, primeiro buscar por texto e depois filtrar por status
+                Page<SolicitacaoAcesso> todasPorTexto = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
+                List<SolicitacaoAcesso> filtradas = todasPorTexto.getContent().stream()
+                    .filter(s -> s.getStatus() == statusEnum)
+                    .collect(Collectors.toList());
+                solicitacoes = new PageImpl<>(filtradas, pageable, filtradas.size());
+            } else if (status != null && !status.isEmpty()) {
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
                 solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
-                model.addAttribute("statusFiltro", status);
-            } catch (IllegalArgumentException e) {
-                // Status inválido, listar todas
+            } else if (busca != null && !busca.isEmpty()) {
+                solicitacoes = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+            } else {
                 solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
             }
-        } else if (busca != null && !busca.trim().isEmpty()) {
-            solicitacoes = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
-            model.addAttribute("busca", busca);
-        } else {
-            solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
-        }
-
-        model.addAttribute("solicitacoes", solicitacoes);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", solicitacoes.getTotalPages());
-        model.addAttribute("statusOptions", StatusSolicitacao.values());
-        model.addAttribute("usuarioLogado", usuarioLogado);
-
-        // Adicionar estatísticas
-        try {
-            Map<String, Object> estatisticas = solicitacaoAcessoService.obterEstatisticas();
-            model.addAttribute("estatisticas", estatisticas);
-        } catch (Exception e) {
-            // Se houver erro nas estatísticas, continuar sem elas
-            System.out.println("Erro ao obter estatísticas: " + e.getMessage());
-        }
-
-        return "solicitacoes/listar";
+        
+    } catch (Exception e) {
+        System.err.println("Erro ao buscar solicitações: " + e.getMessage());
+        e.printStackTrace();
+        solicitacoes = new PageImpl<>(java.util.Collections.emptyList(), pageable, 0);
     }
+
+    model.addAttribute("solicitacoes", solicitacoes);
+    model.addAttribute("currentPage", page);
+    model.addAttribute("totalPages", solicitacoes.getTotalPages());
+    model.addAttribute("statusFiltro", status);
+    model.addAttribute("busca", busca);
+    model.addAttribute("statusOptions", StatusSolicitacao.values());
+    model.addAttribute("usuarioLogado", usuarioLogado);
+
+    // Obter estatísticas com tratamento de erro
+    Map<String, Object> estatisticas;
+    try {
+        estatisticas = solicitacaoAcessoService.obterEstatisticas();
+    } catch (Exception e) {
+        System.err.println("Erro ao obter estatísticas: " + e.getMessage());
+        // Usar estatísticas padrão em caso de erro
+        estatisticas = new java.util.HashMap<>();
+        estatisticas.put("solicitacoesMes", 0L);
+        estatisticas.put("totalPendentes", 0L);
+        estatisticas.put("totalAprovadas", 0L);
+        estatisticas.put("totalRejeitadas", 0L);
+    }
+    model.addAttribute("estatisticas", estatisticas);
+
+    return "solicitacoes/listar";
+}
 
     /**
      * Exibir formulário de nova solicitação
@@ -396,13 +421,20 @@ public class SolicitacoesController {
             Principal principal,
             Model model) {
 
-        Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
-        if (usuarioLogado == null) {
-            return "redirect:/login";
-        }
+        // Verificação de usuário otimizada
+        Usuario usuarioLogado;
+        try {
+            usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            if (usuarioLogado == null) {
+                return "redirect:/login";
+            }
 
-        if (!usuarioLogado.podeGerenciarUsuarios()) {
-            return "redirect:/dashboard?erro=Acesso negado";
+            if (!usuarioLogado.podeGerenciarUsuarios()) {
+                return "redirect:/dashboard?erro=Acesso negado";
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar usuário: " + e.getMessage());
+            return "redirect:/login";
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("dataSolicitacao").ascending());
@@ -592,6 +624,41 @@ public class SolicitacoesController {
     }
 
     /**
+     * Listar acessos temporários que estão expirando
+     */
+    @GetMapping("/expirando")
+    public String listarAcessosExpirando(Principal principal, Model model) {
+        Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+        if (usuarioLogado == null) {
+            return "redirect:/login";
+        }
+
+        // Verificar se o usuário tem permissão
+        if (!usuarioLogado.podeGerenciarUsuarios()) {
+            return "redirect:/dashboard";
+        }
+
+        try {
+            // Buscar acessos temporários que expiram nos próximos 7 dias
+            LocalDate inicio = LocalDate.now();
+            LocalDate fim = inicio.plusDays(7);
+            List<SolicitacaoAcesso> acessosExpirando = solicitacaoAcessoRepository.findAcessosTemporariosExpirando(inicio, fim);
+            model.addAttribute("acessosExpirando", acessosExpirando);
+
+            // Buscar solicitações que precisam de renovação
+            List<SolicitacaoAcesso> paraRenovacao = solicitacaoAcessoService.buscarParaRenovacao();
+            model.addAttribute("paraRenovacao", paraRenovacao);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar acessos expirando: " + e.getMessage());
+            model.addAttribute("erro", "Erro ao carregar dados");
+        }
+
+        model.addAttribute("usuarioLogado", usuarioLogado);
+        return "solicitacoes/expirando";
+    }
+
+    /**
      * Listar todas as solicitações (para administradores)
      */
     @GetMapping("/todas")
@@ -612,22 +679,41 @@ public class SolicitacoesController {
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("dataSolicitacao").descending());
-        Page<SolicitacaoAcesso> solicitacoes;
+        Page<SolicitacaoSimpleDTO> solicitacoes;
 
-        if (busca != null && !busca.trim().isEmpty()) {
-            solicitacoes = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
-            model.addAttribute("busca", busca);
-        } else if (status != null && !status.trim().isEmpty()) {
-            try {
-                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status.toUpperCase());
-                solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
-                model.addAttribute("statusFiltro", status);
-            } catch (IllegalArgumentException e) {
-                // Status inválido, listar todas
-                solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
+        try {
+            // Usar paginação padrão do JPA em vez de consulta nativa
+            Page<SolicitacaoAcesso> solicitacoesPage;
+            
+            if (status != null && !status.isEmpty()) {
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
+                if (busca != null && !busca.isEmpty()) {
+                    // Buscar por texto primeiro e depois filtrar por status
+                    Page<SolicitacaoAcesso> resultadoBusca = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+                    List<SolicitacaoAcesso> filtrados = resultadoBusca.getContent().stream()
+                        .filter(s -> s.getStatus() == statusEnum)
+                        .collect(Collectors.toList());
+                    solicitacoesPage = new PageImpl<>(filtrados, pageable, filtrados.size());
+                } else {
+                    solicitacoesPage = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
+                }
+            } else if (busca != null && !busca.isEmpty()) {
+                solicitacoesPage = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+            } else {
+                solicitacoesPage = solicitacaoAcessoService.listarTodas(pageable);
             }
-        } else {
-            solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
+            
+            // Converter para DTOs se necessário
+             List<SolicitacaoSimpleDTO> solicitacoesDTO = solicitacoesPage.getContent().stream()
+                 .map(SolicitacaoSimpleDTO::new)
+                 .collect(Collectors.toList());
+            
+            solicitacoes = new PageImpl<>(solicitacoesDTO, pageable, solicitacoesPage.getTotalElements());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar solicitações: " + e.getMessage());
+            e.printStackTrace();
+            solicitacoes = new PageImpl<>(java.util.Collections.emptyList(), pageable, 0);
         }
 
         model.addAttribute("solicitacoes", solicitacoes);
@@ -635,6 +721,21 @@ public class SolicitacoesController {
         model.addAttribute("totalPages", solicitacoes.getTotalPages());
         model.addAttribute("statusOptions", StatusSolicitacao.values());
         model.addAttribute("usuarioLogado", usuarioLogado);
+
+        // Obter estatísticas com tratamento de erro
+        Map<String, Object> estatisticas;
+        try {
+            estatisticas = solicitacaoAcessoService.obterEstatisticas();
+        } catch (Exception e) {
+            System.err.println("Erro ao obter estatísticas: " + e.getMessage());
+            // Usar estatísticas padrão em caso de erro
+            estatisticas = new java.util.HashMap<>();
+            estatisticas.put("solicitacoesMes", 0L);
+            estatisticas.put("totalPendentes", 0L);
+            estatisticas.put("totalAprovadas", 0L);
+            estatisticas.put("totalRejeitadas", 0L);
+        }
+        model.addAttribute("estatisticas", estatisticas);
 
         return "solicitacoes/todas";
     }

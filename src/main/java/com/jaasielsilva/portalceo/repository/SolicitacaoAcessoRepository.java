@@ -199,6 +199,19 @@ public interface SolicitacaoAcessoRepository extends JpaRepository<SolicitacaoAc
            "s.dataFim <= :dataLimite AND " +
            "s.status = 'USUARIO_CRIADO'")
     List<SolicitacaoAcesso> findSolicitacoesParaRenovacao(@Param("dataLimite") LocalDate dataLimite);
+    
+    // Consulta simples sem JOIN para listagem básica (método não utilizado)
+    @Query(value = "SELECT s.id, s.protocolo, s.solicitante_nome, s.status, s.prioridade, " +
+           "s.data_solicitacao, s.data_limite, s.justificativa, " +
+           "COALESCE(c.nome, 'N/A') as colaborador_nome " +
+           "FROM solicitacoes_acesso s " +
+           "LEFT JOIN colaboradores c ON s.colaborador_id = c.id " +
+           "ORDER BY s.data_solicitacao DESC", nativeQuery = true)
+    List<Object[]> findSolicitacoesSimples();
+    
+    // Contar total de solicitações para paginação
+    @Query(value = "SELECT COUNT(*) FROM solicitacoes_acesso", nativeQuery = true)
+    long countAllSolicitacoes();
 
     Page<SolicitacaoAcesso> findBySolicitanteUsuarioAndStatus(Usuario usuario, StatusSolicitacao status, Pageable pageable);
        

@@ -1,665 +1,486 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todas as Solicitações - ERP Corporativo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
-    <link rel="stylesheet" th:href="@{/css/solicitacoes.css}" />
+
     <style>
-        .filter-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .filter-section .form-control,
-        .filter-section .form-select {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-        
-        .filter-section .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .filter-section .form-control:focus,
-        .filter-section .form-select:focus {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
-            color: white;
-        }
-        
-        .solicitacao-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.2s;
-            margin-bottom: 1rem;
-        }
-        
-        .solicitacao-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-        
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 500;
-            font-size: 0.8rem;
-        }
-        
-        .priority-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-weight: 500;
-            font-size: 0.7rem;
-        }
-        
-        .modulo-tag {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            margin: 0.1rem;
-            background: #e9ecef;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            color: #495057;
-        }
-        
-        .timeline-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 0.5rem;
-        }
-        
-        .timeline-indicator.pendente {
-            background: #ffc107;
-        }
-        
-        .timeline-indicator.aprovado {
-            background: #198754;
-        }
-        
-        .timeline-indicator.rejeitado {
-            background: #dc3545;
-        }
-        
-        .timeline-indicator.concluido {
-            background: #0d6efd;
-        }
-        
-        .quick-stats {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .stat-item {
-            text-align: center;
-            padding: 0.5rem;
-        }
-        
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 0;
-        }
-        
-        .stat-label {
-            font-size: 0.8rem;
-            color: #6c757d;
-            margin: 0;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .btn-action {
-            padding: 0.375rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            border: none;
-            transition: all 0.2s;
-        }
-        
-        .btn-action:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .search-highlight {
-            background-color: #fff3cd;
-            padding: 0.1rem 0.2rem;
-            border-radius: 3px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-        }
-        
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-        
-        .pagination-info {
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
         }
-        
-        .priority-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-        
-        .table th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
+
+        .page-title {
+            font-size: 28px;
             font-weight: 600;
-            color: #495057;
+            color: #1e293b;
+            margin: 0;
         }
-        
-        .table td {
-            vertical-align: middle;
-            padding: 0.75rem;
+
+        .filter-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        .pagination {
-            justify-content: center;
-            margin-top: 1.5rem;
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 120px;
+            gap: 20px;
+            align-items: end;
         }
-        
-        .page-link {
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 10px 12px;
+            border: 1.5px solid #cbd5e1;
             border-radius: 6px;
-            margin: 0 2px;
-            border: none;
-            color: #667eea;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
         }
-        
-        .page-link:hover {
-            background-color: #667eea;
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 6px #2563ebaa;
+        }
+
+        .btn-filter {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-filter:hover {
+            background-color: #1d4ed8;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background-color: #f1f5f9;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 2px solid #cbd5e1;
+            font-size: 14px;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .protocol-cell {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .user-info {
+            line-height: 1.4;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .sidebar .user-name {
             color: white;
         }
-        
-        .page-item.active .page-link {
-            background-color: #667eea;
-            border-color: #667eea;
+
+        .user-detail {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .level-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-view {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 6px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-approve:hover {
+            background: #059669;
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+
+        .pagination a:hover {
+            background: #f3f4f6;
+        }
+
+        .pagination .current {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #cbd5e1;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 5px;
         }
     </style>
 </head>
-<body>
-    <div class="app-container">
-        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-        
-        <main class="main-content">
-            <header th:replace="~{components/topbar :: topbar}"></header>
-            
-            <section class="content-area">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">
-                        <i class="fas fa-clipboard-list me-2"></i>
-                        Todas as Solicitações de Acesso
-                    </h1>
-                    <a th:href="@{/solicitacoes/nova}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>
-                        Nova Solicitação
-                    </a>
-                </div>
-                
-                <!-- Estatísticas Rápidas -->
-                <div class="quick-stats">
-                    <div class="row">
-                        <div class="col-md-3 stat-item">
-                            <p class="stat-number text-primary" th:text="${page.totalElements}">0</p>
-                            <p class="stat-label">Total</p>
-                        </div>
-                        <div class="col-md-3 stat-item">
-                            <p class="stat-number text-warning" th:text="${estatisticas.pendentes}">0</p>
-                            <p class="stat-label">Pendentes</p>
-                        </div>
-                        <div class="col-md-3 stat-item">
-                            <p class="stat-number text-success" th:text="${estatisticas.aprovadas}">0</p>
-                            <p class="stat-label">Aprovadas</p>
-                        </div>
-                        <div class="col-md-3 stat-item">
-                            <p class="stat-number text-danger" th:text="${estatisticas.urgentes}">0</p>
-                            <p class="stat-label">Urgentes</p>
-                        </div>
-                    </div>
-                </div>
-                
 
-                
-                <!-- Filtros Avançados -->
-                <div class="filter-section">
-                    <h5 class="mb-3">
-                        <i class="fas fa-filter me-2"></i>
-                        Filtros Avançados
-                    </h5>
-                    <form method="get" th:action="@{/solicitacoes}" id="filtroForm">
-                        <div class="row">
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Buscar</label>
-                                <input type="text" class="form-control" name="busca" th:value="${param.busca}" 
-                                       placeholder="Protocolo, nome, email...">
-                            </div>
-                            <div class="col-md-2 mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select" name="status">
-                                    <option value="">Todos</option>
-                                    <option value="PENDENTE" th:selected="${param.status == 'PENDENTE'}">Pendente</option>
-                                    <option value="APROVADO" th:selected="${param.status == 'APROVADO'}">Aprovado</option>
-                                    <option value="REJEITADO" th:selected="${param.status == 'REJEITADO'}">Rejeitado</option>
-                                    <option value="CONCLUIDO" th:selected="${param.status == 'CONCLUIDO'}">Concluído</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2 mb-3">
-                                <label class="form-label">Prioridade</label>
-                                <select class="form-select" name="prioridade">
-                                    <option value="">Todas</option>
-                                    <option value="BAIXA" th:selected="${param.prioridade == 'BAIXA'}">Baixa</option>
-                                    <option value="MEDIA" th:selected="${param.prioridade == 'MEDIA'}">Média</option>
-                                    <option value="ALTA" th:selected="${param.prioridade == 'ALTA'}">Alta</option>
-                                    <option value="URGENTE" th:selected="${param.prioridade == 'URGENTE'}">Urgente</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2 mb-3">
-                                <label class="form-label">Departamento</label>
-                                <select class="form-select" name="departamento">
-                                    <option value="">Todos</option>
-                                    <option value="RH" th:selected="${param.departamento == 'RH'}">RH</option>
-                                    <option value="TI" th:selected="${param.departamento == 'TI'}">TI</option>
-                                    <option value="Financeiro" th:selected="${param.departamento == 'Financeiro'}">Financeiro</option>
-                                    <option value="Vendas" th:selected="${param.departamento == 'Vendas'}">Vendas</option>
-                                    <option value="Marketing" th:selected="${param.departamento == 'Marketing'}">Marketing</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Período</label>
-                                <div class="input-group">
-                                    <input type="date" class="form-control" name="dataInicio" th:value="${param.dataInicio}">
-                                    <input type="date" class="form-control" name="dataFim" th:value="${param.dataFim}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-light me-2">
-                                    <i class="fas fa-search me-1"></i>
-                                    Filtrar
-                                </button>
-                                <button type="button" class="btn btn-outline-light" onclick="limparFiltros()">
-                                    <i class="fas fa-times me-1"></i>
-                                    Limpar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+<body>
+    <div th:replace="~{components/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- Cabeçalho da Página -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-list-alt"></i>
+                    Todas as Solicitações
+                </h1>
+                <a href="/solicitacoes/nova" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Nova Solicitação
+                </a>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-row" th:if="${estatisticas}">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${estatisticas.solicitacoesMes ?: 0}">0</div>
+                    <div class="stat-label">Solicitações do Mês</div>
                 </div>
-                
-                <!-- Lista de Solicitações -->
-                <div th:if="${page.content.empty}" class="empty-state">
-                    <i class="fas fa-search"></i>
-                    <h4>Nenhuma solicitação encontrada</h4>
-                    <p>Tente ajustar os filtros ou criar uma nova solicitação.</p>
-                    <a th:href="@{/solicitacoes/nova}" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i>
-                        Nova Solicitação
-                    </a>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${estatisticas.totalPendentes ?: 0}">0</div>
+                    <div class="stat-label">Pendentes</div>
                 </div>
-                
-                <div th:each="solicitacao : ${page.content}" class="solicitacao-card">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="timeline-indicator" th:classappend="${solicitacao.status.name().toLowerCase()}"></span>
-                                        <h5 class="mb-0 me-3">
-                                            <a th:href="@{/usuarios/solicitacao/{id}(id=${solicitacao.id})}" 
-                                               class="text-decoration-none" 
-                                               th:text="${solicitacao.protocolo}"></a>
-                                        </h5>
-                                        <span class="status-badge" 
-                                              th:classappend="'bg-' + ${solicitacao.status.name().toLowerCase() == 'pendente' ? 'warning' : 
-                                                             (solicitacao.status.name().toLowerCase() == 'aprovado' ? 'success' : 
-                                                             (solicitacao.status.name().toLowerCase() == 'rejeitado' ? 'danger' : 'info'))}"
-                                              th:text="${solicitacao.status.getDescricao()}"></span>
-                                        <span class="priority-badge ms-2" 
-                                              th:classappend="'bg-' + ${solicitacao.prioridade.name().toLowerCase() == 'urgente' ? 'danger' : 
-                                                             (solicitacao.prioridade.name().toLowerCase() == 'alta' ? 'warning' : 
-                                                             (solicitacao.prioridade.name().toLowerCase() == 'media' ? 'info' : 'secondary'))}"
-                                              th:text="${solicitacao.prioridade.getDescricao()}"></span>
-                                    </div>
-                                    
-                                    <div class="row mb-2">
-                                        <div class="col-md-6">
-                                            <strong>Colaborador:</strong>
-                                            <span th:text="${solicitacao.colaborador.nome}"></span>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>Departamento:</strong>
-                                            <span th:text="${solicitacao.colaborador.departamento.nome}"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row mb-2">
-                                        <div class="col-md-6">
-                                            <strong>Solicitante:</strong>
-                                            <span th:text="${solicitacao.solicitanteUsuario.nome}"></span>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>Tipo de Usuário:</strong>
-                                            <span class="badge bg-info" th:text="${solicitacao.tipoUsuario.getDescricao()}"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-2">
-                                        <strong>Módulos:</strong>
-                                        <div class="mt-1">
-                                            <span th:each="modulo : ${solicitacao.modulos}" 
-                                                  class="modulo-tag" 
-                                                  th:text="${modulo.getDescricao()}"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <small class="text-muted">
-                                                <i class="fas fa-calendar me-1"></i>
-                                                <span th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></span>
-                                            </small>
-                                        </div>
-                                        <div class="col-md-6" th:if="${solicitacao.dataLimite}">
-                                            <small class="text-muted">
-                                                <i class="fas fa-clock me-1"></i>
-                                                Prazo: <span th:text="${#temporals.format(solicitacao.dataLimite, 'dd/MM/yyyy')}"></span>
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4 text-end">
-                                    <div class="action-buttons">
-                                        <a th:href="@{/usuarios/solicitacao/{id}(id=${solicitacao.id})}" 
-                                           class="btn btn-outline-primary btn-action">
-                                            <i class="fas fa-eye me-1"></i>
-                                            Detalhes
-                                        </a>
-                                        
-                                        <a th:if="${solicitacao.status.name() == 'PENDENTE'}" 
-                                           th:href="@{/solicitacoes/aprovar/{id}(id=${solicitacao.id})}" 
-                                           class="btn btn-outline-success btn-action">
-                                            <i class="fas fa-gavel me-1"></i>
-                                            Analisar
-                                        </a>
-                                        
-                                        <button th:if="${solicitacao.status.name() == 'APROVADO' and solicitacao.usuarioCriado == null}" 
-                                                type="button" 
-                                                class="btn btn-outline-warning btn-action"
-                                                th:onclick="'criarUsuario(' + ${solicitacao.id} + ')'">
-                                            <i class="fas fa-user-plus me-1"></i>
-                                            Criar Usuário
-                                        </button>
-                                        
-                                        <button type="button" 
-                                                class="btn btn-outline-info btn-action"
-                                                th:onclick="'verHistorico(' + ${solicitacao.id} + ')'">
-                                            <i class="fas fa-history me-1"></i>
-                                            Histórico
-                                        </button>
-                                        
-                                        <div class="dropdown">
-                                            <button class="btn btn-outline-secondary btn-action dropdown-toggle" 
-                                                    type="button" 
-                                                    data-bs-toggle="dropdown">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item" href="#" th:onclick="'duplicarSolicitacao(' + ${solicitacao.id} + ')'">
-                                                        <i class="fas fa-copy me-2"></i>
-                                                        Duplicar
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="#" th:onclick="'imprimirSolicitacao(' + ${solicitacao.id} + ')'">
-                                                        <i class="fas fa-print me-2"></i>
-                                                        Imprimir
-                                                    </a>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li>
-                                                    <a class="dropdown-item text-danger" href="#" th:onclick="'arquivarSolicitacao(' + ${solicitacao.id} + ')'">
-                                                        <i class="fas fa-archive me-2"></i>
-                                                        Arquivar
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mt-2" th:if="${solicitacao.observacoesAprovador}">
-                                        <small class="text-muted">
-                                            <i class="fas fa-comment me-1"></i>
-                                            <span th:text="${#strings.abbreviate(solicitacao.observacoesAprovador, 50)}"></span>
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${estatisticas.totalAprovadas ?: 0}">0</div>
+                    <div class="stat-label">Aprovadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${estatisticas.totalRejeitadas ?: 0}">0</div>
+                    <div class="stat-label">Rejeitadas</div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-card">
+                <form method="get" action="/solicitacoes/todas">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">Status:</label>
+                            <select name="status" class="filter-select">
+                                <option value="">Todos os Status</option>
+                                <option th:each="statusOption : ${statusOptions}"
+                                        th:value="${statusOption}"
+                                        th:text="${statusOption.name()}"
+                                        th:selected="${param.status != null and param.status[0] == statusOption.name()}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Buscar:</label>
+                            <input type="text" name="busca" class="filter-input"
+                                   placeholder="Protocolo, colaborador, solicitante..."
+                                   th:value="${param.busca != null ? param.busca[0] : ''}">
+                        </div>
+                        <div class="filter-group">
+                            <button type="submit" class="btn-filter">
+                                <i class="fas fa-search"></i>
+                                Filtrar
+                            </button>
                         </div>
                     </div>
+                </form>
+            </div>
+
+            <!-- Tabela de Solicitações -->
+            <div class="table-card">
+                <div class="table-container">
+                    <table class="data-table" th:if="${solicitacoes != null and solicitacoes.hasContent()}">
+                        <thead>
+                            <tr>
+                                <th>Protocolo</th>
+                                <th>Colaborador</th>
+                                <th>Solicitante</th>
+                                <th>Nível Solicitado</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Prioridade</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="solicitacao : ${solicitacoes.content}">
+                                <td class="protocol-cell" th:text="${solicitacao.protocolo}"></td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-name" th:text="${solicitacao.colaboradorNome}"></div>
+                                        <div class="user-detail">-</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-name" th:text="${solicitacao.solicitanteNome}"></div>
+                                        <div class="user-detail">-</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="level-badge" th:text="${solicitacao.nivelSolicitado}">-</span>
+                                </td>
+                                <td>
+                                    <span class="level-badge"
+                                          th:classappend="${
+                                              solicitacao.status == 'PENDENTE' ? 'status-pending' :
+                                              solicitacao.status == 'APROVADO' ? 'status-approved' :
+                                              solicitacao.status == 'REJEITADO' ? 'status-rejected' : ''
+                                          }"
+                                          th:text="${solicitacao.status}"></span>
+                                </td>
+                                <td th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <span class="level-badge"
+                                          th:classappend="${
+                                              solicitacao.prioridade == 'URGENTE' ? 'status-rejected' :
+                                              solicitacao.prioridade == 'ALTA' ? 'status-pending' : ''
+                                          }"
+                                          th:text="${solicitacao.prioridade}"></span>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        <a th:href="@{/solicitacoes/{id}(id=${solicitacao.id})}"
+                                           class="btn-view"
+                                           title="Ver Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <div th:if="${usuarioLogado.podeGerenciarUsuarios() and solicitacao.status == 'PENDENTE'}">
+                                            <a th:href="@{/solicitacoes/aprovar/{id}(id=${solicitacao.id})}"
+                                               class="btn-approve"
+                                               title="Aprovar">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Estado Vazio -->
+                    <div class="empty-state" th:if="${solicitacoes == null or !solicitacoes.hasContent()}">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Nenhuma solicitação encontrada</h3>
+                        <p>Não há solicitações que correspondam aos filtros aplicados.</p>
+                    </div>
                 </div>
-                
+
                 <!-- Paginação -->
-                <div th:if="${page.totalPages > 1}" class="pagination-info">
-                    <div class="d-flex justify-content-between align-items-center w-100">
-                        <div>
-                            <small class="text-muted">
-                                Mostrando <span th:text="${page.number * page.size + 1}"></span> a 
-                                <span th:text="${page.number * page.size + page.numberOfElements}"></span> de 
-                                <span th:text="${page.totalElements}"></span> registros
-                            </small>
-                        </div>
-                        
-                        <nav>
-                            <ul class="pagination pagination-sm mb-0">
-                                <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/solicitacoes(page=0, size=${page.size})}">
-                                        <i class="fas fa-angle-double-left"></i>
-                                    </a>
-                                </li>
-                                <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/solicitacoes(page=${page.number - 1}, size=${page.size})}">
-                                        <i class="fas fa-angle-left"></i>
-                                    </a>
-                                </li>
-                                
-                                <li th:each="pageNum : ${#numbers.sequence(0, page.totalPages - 1)}" 
-                                    class="page-item" 
-                                    th:classappend="${pageNum == page.number} ? 'active'">
-                                    <a class="page-link" 
-                                       th:href="@{/solicitacoes(page=${pageNum}, size=${page.size})}" 
-                                       th:text="${pageNum + 1}"></a>
-                                </li>
-                                
-                                <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/solicitacoes(page=${page.number + 1}, size=${page.size})}">
-                                        <i class="fas fa-angle-right"></i>
-                                    </a>
-                                </li>
-                                <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/solicitacoes(page=${page.totalPages - 1}, size=${page.size})}">
-                                        <i class="fas fa-angle-double-right"></i>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-    
-    <footer th:replace="~{components/footer :: footer}"></footer>
-    
-    <!-- Modal de Histórico -->
-    <div class="modal fade" id="modalHistorico" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-history me-2"></i>
-                        Histórico da Solicitação
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="conteudoHistorico">
-                    <!-- Conteúdo carregado via AJAX -->
+                <div class="pagination" th:if="${solicitacoes != null and solicitacoes.totalPages > 1}">
+                    <a th:if="${currentPage > 0}"
+                       th:href="@{/solicitacoes/todas(page=${currentPage - 1}, status=${param.status}, busca=${param.busca})}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+
+                    <span th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                          th:if="${pageNum >= currentPage - 2 and pageNum <= currentPage + 2}">
+                        <a th:if="${pageNum != currentPage}"
+                           th:href="@{/solicitacoes/todas(page=${pageNum}, status=${param.status}, busca=${param.busca})}"
+                           th:text="${pageNum + 1}"></a>
+                        <span th:if="${pageNum == currentPage}"
+                              class="current"
+                              th:text="${pageNum + 1}"></span>
+                    </span>
+
+                    <a th:if="${currentPage < totalPages - 1}"
+                       th:href="@{/solicitacoes/todas(page=${currentPage + 1}, status=${param.status}, busca=${param.busca})}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Mensagens de Sucesso/Erro -->
+    <div th:if="${mensagem}" class="alert alert-success" th:text="${mensagem}"></div>
+    <div th:if="${erro != null}" class="alert alert-danger" th:text="${erro}"></div>
+
     <script>
-        function limparFiltros() {
-            window.location.href = '/solicitacoes';
-        }
-        
-        function exportarDados(formato) {
-            const form = document.getElementById('filtroForm');
-            const formData = new FormData(form);
-            const params = new URLSearchParams(formData);
-            params.append('formato', formato);
-            
-            window.open('/usuarios/exportar-solicitacoes?' + params.toString(), '_blank');
-        }
-        
-        function criarUsuario(solicitacaoId) {
-            if (confirm('Tem certeza que deseja criar o usuário para esta solicitação?')) {
-                fetch(`/usuarios/criar-usuario-solicitacao/${solicitacaoId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.sucesso) {
-                        alert('Usuário criado com sucesso!');
-                        location.reload();
-                    } else {
-                        alert('Erro ao criar usuário: ' + data.mensagem);
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('Erro ao criar usuário.');
-                });
-            }
-        }
-        
-        function verHistorico(solicitacaoId) {
-            fetch(`/usuarios/historico-solicitacao/${solicitacaoId}`)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('conteudoHistorico').innerHTML = html;
-                    new bootstrap.Modal(document.getElementById('modalHistorico')).show();
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('Erro ao carregar histórico.');
-                });
-        }
-        
-        function duplicarSolicitacao(solicitacaoId) {
-            if (confirm('Deseja criar uma nova solicitação baseada nesta?')) {
-                window.location.href = `/solicitacoes/nova?duplicar=${solicitacaoId}`;
-            }
-        }
-        
-        function imprimirSolicitacao(solicitacaoId) {
-            window.open(`/usuarios/imprimir-solicitacao/${solicitacaoId}`, '_blank');
-        }
-        
-        function arquivarSolicitacao(solicitacaoId) {
-            if (confirm('Tem certeza que deseja arquivar esta solicitação?')) {
-                fetch(`/usuarios/arquivar-solicitacao/${solicitacaoId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.sucesso) {
-                        alert('Solicitação arquivada com sucesso!');
-                        location.reload();
-                    } else {
-                        alert('Erro ao arquivar solicitação: ' + data.mensagem);
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('Erro ao arquivar solicitação.');
-                });
-            }
-        }
-        
-        // Auto-submit do formulário quando os filtros mudarem
-        document.querySelectorAll('#filtroForm select').forEach(select => {
-            select.addEventListener('change', function() {
-                // Opcional: auto-submit quando selects mudarem
-                // document.getElementById('filtroForm').submit();
+        // Auto-hide alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
             });
-        });
-        
-        // Destacar termos de busca
-        function destacarBusca() {
-            const termoBusca = new URLSearchParams(window.location.search).get('busca');
-            if (termoBusca) {
-                const regex = new RegExp(`(${termoBusca})`, 'gi');
-                document.querySelectorAll('.solicitacao-card').forEach(card => {
-                    const textos = card.querySelectorAll('span, h5, a');
-                    textos.forEach(elemento => {
-                        if (elemento.children.length === 0) {
-                            elemento.innerHTML = elemento.textContent.replace(regex, '<span class="search-highlight">$1</span>');
-                        }
-                    });
-                });
-            }
-        }
-        
-        // Executar ao carregar a página
-        document.addEventListener('DOMContentLoaded', destacarBusca);
+        }, 5000);
     </script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -235,6 +235,23 @@ public class SolicitacaoAcessoService {
     }
 
     /**
+     * Buscar solicitações que precisam de renovação
+     */
+    @Transactional(readOnly = true)
+    public List<SolicitacaoAcesso> buscarParaRenovacao() {
+        LocalDate dataLimite = LocalDate.now().plusDays(7); // 7 dias de antecedência
+        return solicitacaoAcessoRepository.findSolicitacoesParaRenovacao(dataLimite);
+    }
+
+    /**
+     * Buscar solicitações que precisam de renovação com data limite personalizada
+     */
+    @Transactional(readOnly = true)
+    public List<SolicitacaoAcesso> buscarParaRenovacao(LocalDate dataLimite) {
+        return solicitacaoAcessoRepository.findSolicitacoesParaRenovacao(dataLimite);
+    }
+
+    /**
      * Obter estatísticas para dashboard
      */
     @Transactional(readOnly = true)

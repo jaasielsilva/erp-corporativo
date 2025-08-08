@@ -48,7 +48,7 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("isAdmin")
     public boolean isAdmin() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getPerfis() != null) {
             return usuario.getPerfis().stream()
                     .anyMatch(perfil -> "ADMIN".equalsIgnoreCase(perfil.getNome()));
@@ -58,43 +58,43 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("isMaster")
     public boolean isMaster() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         return usuario != null && usuario.getNivelAcesso() == NivelAcesso.MASTER;
     }
 
     @ModelAttribute("isGerencial")
     public boolean isGerencial() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         return usuario != null && usuario.getNivelAcesso().ehGerencial();
     }
 
     @ModelAttribute("podeGerenciarUsuarios")
     public boolean podeGerenciarUsuarios() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         return usuario != null && usuario.getNivelAcesso().podeGerenciarUsuarios();
     }
 
     @ModelAttribute("podeAcessarFinanceiro")
     public boolean podeAcessarFinanceiro() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         return usuario != null && usuario.getNivelAcesso().podeAcessarFinanceiro();
     }
 
     @ModelAttribute("podeGerenciarRH")
     public boolean podeGerenciarRH() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         return usuario != null && usuario.getNivelAcesso().podeGerenciarRH();
     }
 
     @ModelAttribute("nivelAcesso")
     public String nivelAcesso() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         return usuario != null ? usuario.getNivelAcesso().getDescricao() : "Visitante";
     }
 
     @ModelAttribute("nivelAcessoEnum")
     public NivelAcesso nivelAcessoEnum() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         return usuario != null ? usuario.getNivelAcesso() : NivelAcesso.VISITANTE;
     }
 
@@ -102,7 +102,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isRH")
     public boolean isRH() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("rh") || cargoNome.contains("recursos humanos") || 
@@ -113,7 +113,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isFinanceiro")
     public boolean isFinanceiro() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("financeiro") || cargoNome.contains("contabil") || 
@@ -124,7 +124,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isVendas")
     public boolean isVendas() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("vendas") || cargoNome.contains("comercial") || 
@@ -135,7 +135,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isEstoque")
     public boolean isEstoque() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("estoque") || cargoNome.contains("almoxarifado") || 
@@ -146,7 +146,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isCompras")
     public boolean isCompras() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("compras") || cargoNome.contains("suprimentos") || 
@@ -157,7 +157,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isMarketing")
     public boolean isMarketing() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("marketing") || cargoNome.contains("comunicacao") || 
@@ -168,7 +168,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isTI")
     public boolean isTI() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("ti") || cargoNome.contains("tecnologia") || 
@@ -180,7 +180,7 @@ public class GlobalControllerAdvice {
     
     @ModelAttribute("isJuridico")
     public boolean isJuridico() {
-        Usuario usuario = usuarioCache; // Usar cache em vez de chamar usuarioLogado()
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("juridico") || cargoNome.contains("advogado") || 

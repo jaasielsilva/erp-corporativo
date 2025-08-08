@@ -16,10 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Map;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -146,7 +149,7 @@ public class SolicitacaoAcessoService {
         novoUsuario.setCargo(solicitacao.getColaborador().getCargo());
         novoUsuario.setDepartamento(solicitacao.getColaborador().getDepartamento());
         novoUsuario.setDataAdmissao(solicitacao.getColaborador().getDataAdmissao());
-        
+
         // Gerar matrícula única
         String matricula = usuarioService.gerarMatriculaUnica();
         novoUsuario.setMatricula(matricula);
@@ -263,6 +266,7 @@ public class SolicitacaoAcessoService {
             stats.put("totalPendentes", solicitacaoAcessoRepository.countByStatus(StatusSolicitacao.PENDENTE));
             stats.put("totalAprovadas", solicitacaoAcessoRepository.countByStatus(StatusSolicitacao.APROVADO));
             stats.put("totalRejeitadas", solicitacaoAcessoRepository.countByStatus(StatusSolicitacao.REJEITADO));
+            stats.put("totalConcluidas", solicitacaoAcessoRepository.countByStatus(StatusSolicitacao.USUARIO_CRIADO));
             stats.put("totalUrgentes",
                     solicitacaoAcessoRepository.countByStatusAndPrioridade(StatusSolicitacao.PENDENTE,
                             Prioridade.URGENTE));
@@ -282,6 +286,7 @@ public class SolicitacaoAcessoService {
             stats.put("totalPendentes", 0L);
             stats.put("totalAprovadas", 0L);
             stats.put("totalRejeitadas", 0L);
+            stats.put("totalConcluidas", 0L);
             stats.put("totalUrgentes", 0L);
             stats.put("solicitacoesMes", 0L);
             stats.put("prazoVencido", 0L);
@@ -290,6 +295,49 @@ public class SolicitacaoAcessoService {
 
         return stats;
     }
+
+    /**
+     * Obter valores para o gráfico de rosca agrupados por status
+     * Retorna List<Long> com as contagens na ordem: PENDENTE, APROVADO, REJEITADO,
+     * USUARIO_CRIADO
+     */
+    @Transactional(readOnly = true)
+    public List<Long> obterValoresGraficoStatus() {
+        List<Long> valores = new ArrayList<>();
+
+        try {
+            // Buscar contagens para cada status na ordem específica para o gráfico
+            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.PENDENTE));
+            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.APROVADO));
+            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.REJEITADO));
+            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.USUARIO_CRIADO));
+
+        } catch (Exception e) {
+            System.err.println("Erro ao obter valores do gráfico: " + e.getMessage());
+            // Retornar valores padrão em caso de erro
+            valores.add(0L);
+            valores.add(0L);
+            valores.add(0L);
+            valores.add(0L);
+        }
+
+        return valores;
+    }
+
+    // obtem a transação dos ultimos 6 meses
+    @Transactional(readOnly = true)
+    public List<String> obterNomesUltimosMeses(int meses) {
+    List<String> nomesMeses = new ArrayList<>();
+    YearMonth agora = YearMonth.now();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM"); // ex: Jan, Fev, Mar
+
+    for (int i = meses - 1; i >= 0; i--) {
+        YearMonth mes = agora.minusMonths(i);
+        nomesMeses.add(mes.format(formatter));
+    }
+    return nomesMeses;
+}
+
 
     /**
      * Buscar solicitações por texto (otimizado)

@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import com.jaasielsilva.portalceo.dto.SolicitacaoSimpleDTO;
 import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -50,17 +52,19 @@ public class SolicitacoesController {
     @Autowired
     private ColaboradorService colaboradorService;
 
-   /**
+    /**
  * Listar todas as solicitações (página principal)
  */
 @GetMapping
-public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
+public String listarSolicitacoes(
+        @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(required = false) String status,
         @RequestParam(required = false) String busca,
         Principal principal,
         Model model) {
 
+    // Buscar usuário logado
     Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
     if (usuarioLogado == null) {
         return "redirect:/login";
@@ -70,30 +74,58 @@ public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
     Page<SolicitacaoAcesso> solicitacoes;
 
     try {
-            // Filtrar por status e busca
-            if (status != null && !status.isEmpty() && busca != null && !busca.isEmpty()) {
-                // Para combinar status e busca, primeiro buscar por texto e depois filtrar por status
-                Page<SolicitacaoAcesso> todasPorTexto = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
-                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
-                List<SolicitacaoAcesso> filtradas = todasPorTexto.getContent().stream()
+        // Filtros: status + busca, apenas status, apenas busca ou nenhum filtro
+        if (status != null && !status.isEmpty() && busca != null && !busca.isEmpty()) {
+            Page<SolicitacaoAcesso> todasPorTexto = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+            StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
+            List<SolicitacaoAcesso> filtradas = todasPorTexto.getContent().stream()
                     .filter(s -> s.getStatus() == statusEnum)
                     .collect(Collectors.toList());
-                solicitacoes = new PageImpl<>(filtradas, pageable, filtradas.size());
-            } else if (status != null && !status.isEmpty()) {
-                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
-                solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
-            } else if (busca != null && !busca.isEmpty()) {
-                solicitacoes = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
-            } else {
-                solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
-            }
-        
+            solicitacoes = new PageImpl<>(filtradas, pageable, filtradas.size());
+
+        } else if (status != null && !status.isEmpty()) {
+            StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
+            solicitacoes = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
+
+        } else if (busca != null && !busca.isEmpty()) {
+            solicitacoes = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+
+        } else {
+            solicitacoes = solicitacaoAcessoService.listarTodas(pageable);
+        }
     } catch (Exception e) {
         System.err.println("Erro ao buscar solicitações: " + e.getMessage());
         e.printStackTrace();
-        solicitacoes = new PageImpl<>(java.util.Collections.emptyList(), pageable, 0);
+        solicitacoes = new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 
+    // Obter estatísticas gerais
+    Map<String, Object> estatisticas;
+    try {
+        estatisticas = solicitacaoAcessoService.obterEstatisticas();
+    } catch (Exception e) {
+        System.err.println("Erro ao obter estatísticas: " + e.getMessage());
+        estatisticas = new HashMap<>();
+        estatisticas.put("solicitacoesMes", 0L);
+        estatisticas.put("totalPendentes", 0L);
+        estatisticas.put("totalAprovadas", 0L);
+        estatisticas.put("totalRejeitadas", 0L);
+        estatisticas.put("totalConcluidas", 0L);
+    }
+
+    // Extrair valores para gráfico de status
+    Long pendentes = (Long) estatisticas.getOrDefault("totalPendentes", 0L);
+    Long aprovadas = (Long) estatisticas.getOrDefault("totalAprovadas", 0L);
+    Long rejeitadas = (Long) estatisticas.getOrDefault("totalRejeitadas", 0L);
+    Long concluidas = (Long) estatisticas.getOrDefault("totalConcluidas", 0L);
+
+    // Obter dados para gráfico de tempo (últimos 6 meses)
+    List<String> nomesMeses = solicitacaoAcessoService.obterNomesUltimosMeses(6);
+
+    // Adicionar atributos ao model
+    model.addAttribute("valores", List.of(pendentes, aprovadas, rejeitadas, concluidas));
+    model.addAttribute("estatisticas", estatisticas);
+    model.addAttribute("nomesMeses", nomesMeses);
     model.addAttribute("solicitacoes", solicitacoes);
     model.addAttribute("currentPage", page);
     model.addAttribute("totalPages", solicitacoes.getTotalPages());
@@ -102,23 +134,9 @@ public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
     model.addAttribute("statusOptions", StatusSolicitacao.values());
     model.addAttribute("usuarioLogado", usuarioLogado);
 
-    // Obter estatísticas com tratamento de erro
-    Map<String, Object> estatisticas;
-    try {
-        estatisticas = solicitacaoAcessoService.obterEstatisticas();
-    } catch (Exception e) {
-        System.err.println("Erro ao obter estatísticas: " + e.getMessage());
-        // Usar estatísticas padrão em caso de erro
-        estatisticas = new java.util.HashMap<>();
-        estatisticas.put("solicitacoesMes", 0L);
-        estatisticas.put("totalPendentes", 0L);
-        estatisticas.put("totalAprovadas", 0L);
-        estatisticas.put("totalRejeitadas", 0L);
-    }
-    model.addAttribute("estatisticas", estatisticas);
-
     return "solicitacoes/listar";
 }
+
 
     /**
      * Exibir formulário de nova solicitação
@@ -255,7 +273,7 @@ public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
         }
 
         SolicitacaoAcesso solicitacao = solicitacaoOpt.get();
-        
+
         // Verificar se a solicitação tem usuário criado
         if (solicitacao.getUsuarioCriado() == null) {
             return "redirect:/solicitacoes/" + id + "?erro=Usuário ainda não foi criado para esta solicitação";
@@ -609,6 +627,10 @@ public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
             Page<SolicitacaoAcesso> ultimasAtividades = solicitacaoAcessoService.listarTodas(pageable);
             model.addAttribute("ultimasAtividades", ultimasAtividades.getContent());
 
+            // Valores para o gráfico de rosca
+            List<Long> valores = solicitacaoAcessoService.obterValoresGraficoStatus();
+            model.addAttribute("valores", valores);
+
         } catch (Exception e) {
             System.out.println("Erro ao carregar dashboard: " + e.getMessage());
             // Adicionar valores padrão em caso de erro
@@ -642,7 +664,8 @@ public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
             // Buscar acessos temporários que expiram nos próximos 7 dias
             LocalDate inicio = LocalDate.now();
             LocalDate fim = inicio.plusDays(7);
-            List<SolicitacaoAcesso> acessosExpirando = solicitacaoAcessoRepository.findAcessosTemporariosExpirando(inicio, fim);
+            List<SolicitacaoAcesso> acessosExpirando = solicitacaoAcessoRepository
+                    .findAcessosTemporariosExpirando(inicio, fim);
             model.addAttribute("acessosExpirando", acessosExpirando);
 
             // Buscar solicitações que precisam de renovação
@@ -684,15 +707,15 @@ public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
         try {
             // Usar paginação padrão do JPA em vez de consulta nativa
             Page<SolicitacaoAcesso> solicitacoesPage;
-            
+
             if (status != null && !status.isEmpty()) {
                 StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
                 if (busca != null && !busca.isEmpty()) {
                     // Buscar por texto primeiro e depois filtrar por status
                     Page<SolicitacaoAcesso> resultadoBusca = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
                     List<SolicitacaoAcesso> filtrados = resultadoBusca.getContent().stream()
-                        .filter(s -> s.getStatus() == statusEnum)
-                        .collect(Collectors.toList());
+                            .filter(s -> s.getStatus() == statusEnum)
+                            .collect(Collectors.toList());
                     solicitacoesPage = new PageImpl<>(filtrados, pageable, filtrados.size());
                 } else {
                     solicitacoesPage = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
@@ -702,14 +725,14 @@ public String listarSolicitacoes(@RequestParam(defaultValue = "0") int page,
             } else {
                 solicitacoesPage = solicitacaoAcessoService.listarTodas(pageable);
             }
-            
+
             // Converter para DTOs se necessário
-             List<SolicitacaoSimpleDTO> solicitacoesDTO = solicitacoesPage.getContent().stream()
-                 .map(SolicitacaoSimpleDTO::new)
-                 .collect(Collectors.toList());
-            
+            List<SolicitacaoSimpleDTO> solicitacoesDTO = solicitacoesPage.getContent().stream()
+                    .map(SolicitacaoSimpleDTO::new)
+                    .collect(Collectors.toList());
+
             solicitacoes = new PageImpl<>(solicitacoesDTO, pageable, solicitacoesPage.getTotalElements());
-            
+
         } catch (Exception e) {
             System.err.println("Erro ao buscar solicitações: " + e.getMessage());
             e.printStackTrace();

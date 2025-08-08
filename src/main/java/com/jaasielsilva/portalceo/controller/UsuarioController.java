@@ -149,45 +149,7 @@ public class UsuarioController {
 }
 
 
-    /**
-     * Teste para disparar erro HTTP 400 Bad Request.
-     */
-    @GetMapping("/test-error/400")
-    public void error400() {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad Request Teste");
-    }
 
-    /**
-     * Teste para disparar erro HTTP 401 Unauthorized.
-     */
-    @GetMapping("/test-error/401")
-    public void error401() {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized Teste");
-    }
-
-    /**
-     * Teste para disparar erro HTTP 403 Forbidden.
-     */
-    @GetMapping("/test-error/403")
-    public void error403() {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden Teste");
-    }
-
-    /**
-     * Teste para disparar erro HTTP 404 Not Found.
-     */
-    @GetMapping("/test-error/404")
-    public void error404() {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found Teste");
-    }
-
-    /**
-     * Teste para disparar erro HTTP 500 Internal Server Error.
-     */
-    @GetMapping("/test-error/500")
-    public void error500() {
-        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error Teste");
-    }
 
     /**
      * Salva as alterações feitas no usuário após edição.

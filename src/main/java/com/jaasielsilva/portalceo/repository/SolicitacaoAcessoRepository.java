@@ -176,6 +176,10 @@ public interface SolicitacaoAcessoRepository extends JpaRepository<SolicitacaoAc
     @Query("SELECT s.status, COUNT(s) FROM SolicitacaoAcesso s GROUP BY s.status")
     List<Object[]> countByStatusGrouped();
     
+    // Método para buscar apenas as contagens agrupadas por status para o gráfico de rosca
+    @Query("SELECT COUNT(s) FROM SolicitacaoAcesso s WHERE s.status = :status")
+    Long countByStatusForChart(@Param("status") StatusSolicitacao status);
+    
     @Query("SELECT s.prioridade, COUNT(s) FROM SolicitacaoAcesso s WHERE s.status = 'PENDENTE' GROUP BY s.prioridade")
     List<Object[]> countPendentesByPrioridadeGrouped();
     

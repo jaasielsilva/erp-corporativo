@@ -30,6 +30,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.Map;
@@ -679,6 +681,33 @@ public String listarSolicitacoes(
 
         model.addAttribute("usuarioLogado", usuarioLogado);
         return "solicitacoes/expirando";
+    }
+
+    /**
+     * Endpoint REST para obter dados dos últimos 6 meses para o gráfico
+     */
+    @GetMapping("/api/dados-ultimos-meses")
+    @ResponseBody
+    public Map<String, Object> obterDadosUltimosMeses() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<String> labels = solicitacaoAcessoService.obterNomesUltimosMeses(6);
+            List<Long> dados = solicitacaoAcessoService.obterDadosUltimosMeses(6);
+            
+            response.put("labels", labels);
+            response.put("dados", dados);
+            response.put("success", true);
+        } catch (Exception e) {
+            System.err.println("Erro ao obter dados dos últimos meses: " + e.getMessage());
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            // Dados padrão em caso de erro
+            response.put("labels", List.of("Jan", "Fev", "Mar", "Abr", "Mai", "Jun"));
+            response.put("dados", List.of(0, 0, 0, 0, 0, 0));
+        }
+        
+        return response;
     }
 
     /**

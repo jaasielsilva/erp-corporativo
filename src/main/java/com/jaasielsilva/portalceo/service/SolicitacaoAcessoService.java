@@ -327,16 +327,42 @@ public class SolicitacaoAcessoService {
     // obtem a transação dos ultimos 6 meses
     @Transactional(readOnly = true)
     public List<String> obterNomesUltimosMeses(int meses) {
-    List<String> nomesMeses = new ArrayList<>();
-    YearMonth agora = YearMonth.now();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM"); // ex: Jan, Fev, Mar
+        List<String> nomesMeses = new ArrayList<>();
+        YearMonth agora = YearMonth.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM"); // ex: Jan, Fev, Mar
 
-    for (int i = meses - 1; i >= 0; i--) {
-        YearMonth mes = agora.minusMonths(i);
-        nomesMeses.add(mes.format(formatter));
+        for (int i = meses - 1; i >= 0; i--) {
+            YearMonth mes = agora.minusMonths(i);
+            nomesMeses.add(mes.format(formatter));
+        }
+        return nomesMeses;
     }
-    return nomesMeses;
-}
+
+    /**
+     * Obter dados de solicitações dos últimos 6 meses para o gráfico de tempo
+     * Retorna List<Long> com as contagens de solicitações por mês
+     */
+    @Transactional(readOnly = true)
+    public List<Long> obterDadosUltimosMeses(int meses) {
+        List<Long> dadosMeses = new ArrayList<>();
+        YearMonth agora = YearMonth.now();
+
+        for (int i = meses - 1; i >= 0; i--) {
+            YearMonth mes = agora.minusMonths(i);
+            LocalDateTime inicioMes = mes.atDay(1).atStartOfDay();
+            LocalDateTime fimMes = mes.atEndOfMonth().atTime(23, 59, 59);
+            
+            try {
+                Long count = solicitacaoAcessoRepository.countByPeriodo(inicioMes, fimMes);
+                dadosMeses.add(count);
+            } catch (Exception e) {
+                System.err.println("Erro ao obter dados do mês " + mes + ": " + e.getMessage());
+                dadosMeses.add(0L);
+            }
+        }
+        
+        return dadosMeses;
+    }
 
 
     /**

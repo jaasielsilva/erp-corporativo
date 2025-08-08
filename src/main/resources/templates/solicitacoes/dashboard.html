@@ -415,17 +415,36 @@
             }]
         };
 
-        const dadosTempo = {
-            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], // Você pode dinamizar também se quiser
+        // Dados do gráfico de tempo serão carregados via AJAX
+        let dadosTempo = {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
             datasets: [{
                 label: 'Solicitações',
-                data: solicitacoesMes,
+                data: [0, 0, 0, 0, 0, 0],
                 borderColor: '#0d6efd',
                 backgroundColor: 'rgba(13, 110, 253, 0.1)',
                 tension: 0.4,
                 fill: true
             }]
         };
+
+        // Função para carregar dados dos últimos 6 meses
+        async function carregarDadosUltimosMeses() {
+            try {
+                const response = await fetch('/solicitacoes/api/dados-ultimos-meses');
+                const data = await response.json();
+                
+                if (data.success) {
+                    dadosTempo.labels = data.labels;
+                    dadosTempo.datasets[0].data = data.dados;
+                    console.log('Dados dos últimos meses carregados:', data);
+                } else {
+                    console.error('Erro ao carregar dados:', data.error);
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+            }
+        }
 
 
 
@@ -492,9 +511,12 @@
         };
 
         // Inicializar gráficos
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
             console.log('Inicializando gráficos...');
             console.log('Dados do gráfico de status:', dadosStatus);
+
+            // Carregar dados dos últimos 6 meses
+            await carregarDadosUltimosMeses();
 
             // Verificar se há dados para mostrar
             const totalDados = dadosStatus.datasets[0].data.reduce((a, b) => a + b, 0);
@@ -555,8 +577,10 @@
                     console.log('Gráfico de status criado com dados reais do backend');
                 }
 
+                // Criar gráfico de tempo com dados reais carregados
                 new Chart(ctxTempo.getContext('2d'), configTempo);
                 console.log('Gráficos criados com sucesso');
+                console.log('Dados do gráfico de tempo:', dadosTempo);
             } else {
                 console.error('Elementos canvas não encontrados');
             }

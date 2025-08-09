@@ -6,6 +6,11 @@ import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.model.CargoHierarquia;
 import com.jaasielsilva.portalceo.model.CargoDepartamentoAssociacao;
 import com.jaasielsilva.portalceo.repository.*;
+import com.jaasielsilva.portalceo.service.ProdutoService;
+import com.jaasielsilva.portalceo.service.CategoriaService;
+import com.jaasielsilva.portalceo.service.FornecedorService;
+import java.math.BigDecimal;
+import java.util.List;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.CargoHierarquiaRepository;
 import com.jaasielsilva.portalceo.repository.CargoDepartamentoAssociacaoRepository;
@@ -34,6 +39,9 @@ public class SecurityConfig {
     private final ColaboradorRepository colaboradorRepository;
     private final CargoHierarquiaRepository cargoHierarquiaRepository;
     private final CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository;
+    private final ProdutoService produtoService;
+    private final CategoriaService categoriaService;
+    private final FornecedorService fornecedorService;
 
     public SecurityConfig(UsuarioRepository usuarioRepository,
                           PerfilRepository perfilRepository,
@@ -42,7 +50,10 @@ public class SecurityConfig {
                           DepartamentoRepository departamentoRepository,
                           ColaboradorRepository colaboradorRepository,
                           CargoHierarquiaRepository cargoHierarquiaRepository,
-                          CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository) {
+                          CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository,
+                          ProdutoService produtoService,
+                          CategoriaService categoriaService,
+                          FornecedorService fornecedorService) {
         this.usuarioRepository = usuarioRepository;
         this.perfilRepository = perfilRepository;
         this.permissaoRepository = permissaoRepository;
@@ -51,6 +62,9 @@ public class SecurityConfig {
         this.colaboradorRepository = colaboradorRepository;
         this.cargoHierarquiaRepository = cargoHierarquiaRepository;
         this.cargoDepartamentoAssociacaoRepository = cargoDepartamentoAssociacaoRepository;
+        this.produtoService = produtoService;
+        this.categoriaService = categoriaService;
+        this.fornecedorService = fornecedorService;
     }
 
     @Bean
@@ -75,6 +89,7 @@ public SecurityFilterChain filterChain(HttpSecurity http,
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/a81368914c.js", "/esqueci-senha", "/resetar-senha").permitAll()
+            .requestMatchers("/api/produto/**", "/api/processar").permitAll()
             .anyRequest().authenticated()
         )
 

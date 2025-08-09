@@ -5,6 +5,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.jaasielsilva.portalceo.dto.VendaPdvRequest;
+import com.jaasielsilva.portalceo.dto.VendaPdvResponse;
 import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.Venda;
@@ -64,6 +66,81 @@ public class VendaController {
         return "vendas/cadastro";
     }
 
+    // 🏪 PDV - PONTO DE VENDA
+    @GetMapping("/pdv")
+    public String pdv(Model model) {
+        model.addAttribute("clientes", clienteService.buscarTodos());
+        return "vendas/pdv";
+    }
+    
+
+
+    // 🔍 BUSCAR PRODUTO POR EAN (API REST para PDV)
+    @GetMapping("/api/produto/{ean}")
+    @ResponseBody
+    public ResponseEntity<?> buscarProdutoPorEan(@PathVariable String ean) {
+        try {
+            var produto = produtoService.buscarPorEan(ean);
+            if (produto.isPresent()) {
+                return ResponseEntity.ok(produto.get());
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao buscar produto: " + e.getMessage());
+        }
+    }
+
+    // 💳 PROCESSAR VENDA PDV (API REST)
+    @PostMapping("/api/processar")
+    @ResponseBody
+    public ResponseEntity<?> processarVendaPdv(@RequestBody VendaPdvRequest request) {
+        try {
+            Venda venda = new Venda();
+
+            // Definir cliente (se selecionado)
+            if (request.getClienteId() != null) {
+                Cliente cliente = clienteService.buscarPorId(request.getClienteId())
+                        .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+                venda.setCliente(cliente);
+            }
+
+            venda.setDataVenda(LocalDateTime.now());
+            venda.setFormaPagamento(request.getFormaPagamento());
+            venda.setStatus("Finalizada");
+            venda.setObservacoes("Venda realizada via PDV");
+
+            // Processar itens
+            BigDecimal total = BigDecimal.ZERO;
+            for (VendaPdvRequest.ItemRequest itemRequest : request.getItens()) {
+                VendaItem item = new VendaItem();
+
+                Produto produto = produtoService.buscarPorEan(itemRequest.getEan())
+                        .orElseThrow(
+                                () -> new IllegalArgumentException("Produto não encontrado: " + itemRequest.getEan()));
+
+                item.setProduto(produto);
+                item.setQuantidade(itemRequest.getQuantidade());
+                item.setPrecoUnitario(produto.getPreco());
+                item.setSubtotal(produto.getPreco().multiply(BigDecimal.valueOf(itemRequest.getQuantidade())));
+                item.setVenda(venda);
+
+                venda.getItens().add(item);
+                total = total.add(item.getSubtotal());
+            }
+
+            venda.setTotal(total);
+
+            // Salvar venda
+            Venda vendaSalva = vendaService.salvar(venda);
+
+            return ResponseEntity.ok(new VendaPdvResponse(vendaSalva.getId(), "Venda processada com sucesso!", true));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao processar venda: " + e.getMessage());
+        }
+    }
+
     // ✅ SALVAR VENDA
     @PostMapping("/salvar")
     public String salvarVenda(@ModelAttribute Venda venda, @RequestParam Long clienteId, Model model) {
@@ -88,7 +165,7 @@ public class VendaController {
         }
 
         venda.setTotal(total);
-        vendaService.salvar(venda);
+        Venda vendaSalva = vendaService.salvar(venda);
         return "redirect:/vendas";
     }
 
@@ -134,7 +211,7 @@ public class VendaController {
         // Itens da Venda
         PdfPTable tabela = new PdfPTable(4);
         tabela.setWidthPercentage(100);
-        tabela.setWidths(new int[]{2, 6, 3, 3});
+        tabela.setWidths(new int[] { 2, 6, 3, 3 });
 
         tabela.addCell("Qtde");
         tabela.addCell("Descrição");
@@ -152,7 +229,8 @@ public class VendaController {
         document.add(new Paragraph("---------------------------------------------------", titulo));
         document.add(new Paragraph("Forma de Pagamento: " + venda.getFormaPagamento(), normal));
         document.add(new Paragraph("Status: " + venda.getStatus(), normal));
-        document.add(new Paragraph("Observações: " + (venda.getObservacoes() == null ? "---" : venda.getObservacoes()), normal));
+        document.add(new Paragraph("Observações: " + (venda.getObservacoes() == null ? "---" : venda.getObservacoes()),
+                normal));
         document.add(new Paragraph("---------------------------------------------------", titulo));
 
         // Cálculo dos impostos usando BigDecimal para precisão

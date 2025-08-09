@@ -34,7 +34,16 @@ public class VendaItem {
     this.quantidade = quantidade;
     this.precoUnitario = precoUnitario;
 }
+    private BigDecimal subtotal;
+
     public BigDecimal getSubtotal() {
-    return precoUnitario.multiply(BigDecimal.valueOf(quantidade));
-    }    
+        if (subtotal != null) {
+            return subtotal;
+        }
+        return precoUnitario.multiply(BigDecimal.valueOf(quantidade));
+    }
+    
+    public void setSubtotal(BigDecimal subtotal) {
+        this.subtotal = subtotal;
+    }
 }

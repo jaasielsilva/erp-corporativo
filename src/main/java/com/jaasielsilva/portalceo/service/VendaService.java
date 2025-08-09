@@ -30,7 +30,7 @@ public class VendaService {
     private ProdutoService produtoService;
 
     @Transactional
-    public void salvar(Venda venda) {
+    public Venda salvar(Venda venda) {
         for (VendaItem item : venda.getItens()) {
             item.setVenda(venda);
             Produto produto = item.getProduto();
@@ -43,7 +43,7 @@ public class VendaService {
             produto.setEstoque(novaQuantidade);
             produtoService.salvar(produto); // atualiza o estoque no banco
         }
-        vendaRepository.save(venda);
+        return vendaRepository.save(venda);
     }
 
     // Lista todas as vendas

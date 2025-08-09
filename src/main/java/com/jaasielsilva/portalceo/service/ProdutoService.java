@@ -37,6 +37,12 @@ public class ProdutoService {
         return produtoRepository.findById(id);
     }
 
+    // Busca produto pelo EAN
+    public Optional<Produto> buscarPorEan(String ean) {
+        Produto produto = produtoRepository.findByEan(ean);
+        return Optional.ofNullable(produto);
+    }
+
     public Produto salvar(Produto produto) {
     return produtoRepository.save(produto);
     }

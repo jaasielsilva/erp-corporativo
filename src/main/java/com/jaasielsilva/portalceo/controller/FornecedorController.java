@@ -65,7 +65,7 @@ public class FornecedorController {
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("fornecedor", fornecedorService.findById(id));
-        return "fornecedor/editar";
+        return "fornecedor/form";
     }
 
     /**

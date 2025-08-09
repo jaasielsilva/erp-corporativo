@@ -5,9 +5,205 @@
   <meta charset="UTF-8" />
   <title>Nova Venda - Painel do CEO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/cliente-venda.css}" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
+  
+  <style>
+    .modern-card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      border: 1px solid #e9ecef;
+      overflow: hidden;
+    }
+    
+    .card-header-custom {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border: none;
+    }
+    
+    .product-scanner {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      border-radius: 15px;
+      padding: 25px;
+      color: white;
+      margin-bottom: 25px;
+    }
+    
+    .scanner-input {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      color: white;
+      padding: 12px 15px;
+    }
+    
+    .scanner-input::placeholder {
+      color: rgba(255,255,255,0.8);
+    }
+    
+    .scanner-input:focus {
+      background: rgba(255,255,255,0.3);
+      border-color: rgba(255,255,255,0.6);
+      box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+      color: white;
+    }
+    
+    .product-table {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+    }
+    
+    .product-table thead {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .product-table th {
+      border: none;
+      padding: 15px;
+      font-weight: 600;
+    }
+    
+    .product-table td {
+      border: none;
+      padding: 12px 15px;
+      border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .form-floating > label {
+      color: #6c757d;
+    }
+    
+    .btn-modern {
+      border-radius: 10px;
+      padding: 12px 25px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: none;
+    }
+    
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .btn-gradient-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-gradient-success {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+    
+    .btn-gradient-danger {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .summary-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 15px;
+      padding: 25px;
+      color: white;
+      text-align: center;
+    }
+    
+    .product-found {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      border-radius: 10px;
+      padding: 15px;
+      color: white;
+      margin-top: 10px;
+      animation: slideIn 0.3s ease;
+    }
+    
+    .product-error {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 10px;
+      padding: 15px;
+      color: white;
+      margin-top: 10px;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .tooltip-icon {
+      color: #6c757d;
+      cursor: help;
+      margin-left: 5px;
+    }
+    
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+    
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+    
+    .step::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      right: -50%;
+      height: 2px;
+      background: #e9ecef;
+      z-index: 1;
+    }
+    
+    .step:last-child::before {
+      display: none;
+    }
+    
+    .step-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #e9ecef;
+      color: #6c757d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      position: relative;
+      z-index: 2;
+      font-weight: bold;
+    }
+    
+    .step.active .step-circle {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .step.completed .step-circle {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+  </style>
 </head>
 
 <body>
@@ -18,82 +214,179 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
-        <h1>Venda</h1>
+        <div class="container-fluid">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h1 class="main-title mb-4">
+                <i class="fas fa-shopping-cart me-3"></i>Nova Venda
+              </h1>
+              
+              <!-- Indicador de Progresso -->
+              <div class="step-indicator">
+                <div class="step active" id="step1">
+                  <div class="step-circle">1</div>
+                  <div class="step-label">Adicionar Produtos</div>
+                </div>
+                <div class="step" id="step2">
+                  <div class="step-circle">2</div>
+                  <div class="step-label">Dados da Venda</div>
+                </div>
+                <div class="step" id="step3">
+                  <div class="step-circle">3</div>
+                  <div class="step-label">Finalizar</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
         <form th:action="@{/vendas/salvar}" th:object="${venda}" method="post" class="form-grid" novalidate>
+
+          <!-- Seção Scanner de Produtos -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="product-scanner">
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <h4 class="mb-3">
+                      <i class="fas fa-barcode me-2"></i>Scanner de Produtos
+                      <i class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" title="Digite ou escaneie o código EAN do produto"></i>
+                    </h4>
+                    <div class="input-group">
+                      <span class="input-group-text bg-transparent border-0 text-white">
+                        <i class="fas fa-search"></i>
+                      </span>
+                      <input type="text" id="ean" class="form-control scanner-input" 
+                              placeholder="Digite ou escaneie o código EAN..." autocomplete="off" />
+                        <button type="button" id="btnAdicionarProduto" class="btn btn-light btn-modern ms-2">
+                          <i class="fas fa-plus me-2"></i>Adicionar
+                        </button>
+                    </div>
+                  </div>
+                  <div class="col-md-4 text-center">
+                    <div class="scanner-stats">
+                      <div class="h5 mb-1">Produtos Adicionados</div>
+                      <div class="h2 mb-0" id="produtoCount">0</div>
+                    </div>
+                  </div>
+                </div>
+                <div id="produtoEncontrado" style="display: none;"></div>
+              </div>
+            </div>
+          </div>
 
           <!-- Dados da Venda -->
           <div class="form-section">
             <!-- Itens da Venda -->
             <div class="form-section">
-              <h2>Adicionar Produto por EAN</h2>
 
-              <div class="form-group ean-group">
-                <label for="ean">Código de Barras (EAN): <span class="tooltip"
-                    title="Digite ou escaneie o código de barras do produto">?</span></label>
-                <input type="text" id="ean" name="ean" placeholder="Digite ou escaneie o código de barras"
-                  autocomplete="off" />
-                <button type="button" id="btnAdicionarProduto" class="button small primary"
-                  style="margin-left: 0.5rem;">
-                  <i class="fas fa-plus"></i> Adicionar Produto
-                </button>
+              <div class="modern-card mb-4">
+                <div class="card-header-custom">
+                  <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Produtos da Venda
+                  </h5>
+                </div>
+                <div class="table-responsive">
+                  <table class="table product-table mb-0" id="tabelaProdutos">
+                    <thead>
+                      <tr>
+                        <th><i class="fas fa-box me-2"></i>Produto</th>
+                        <th><i class="fas fa-barcode me-2"></i>EAN</th>
+                        <th><i class="fas fa-sort-numeric-up me-2"></i>Qtd</th>
+                        <th><i class="fas fa-tag me-2"></i>Preço Unit.</th>
+                        <th><i class="fas fa-calculator me-2"></i>Subtotal</th>
+                        <th><i class="fas fa-cogs me-2"></i>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corpoTabelaProdutos">
+                      <tr id="emptyRow">
+                        <td colspan="6" class="text-center text-muted py-4">
+                          <i class="fas fa-shopping-cart fa-2x mb-3 d-block"></i>
+                          Nenhum produto adicionado ainda
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-
-              <div id="produtoEncontrado" style="margin-top: 0.5rem; color: green; font-weight: bold;"></div>
-
-              <table id="tabelaProdutos" style="margin-top: 1rem;">
-                <thead>
-                  <tr>
-                    <th>Produto</th>
-                    <th>EAN</th>
-                    <th>Quantidade</th>
-                    <th>Preço Unit.</th>
-                    <th>Subtotal</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Produtos adicionados via JS aqui -->
-                </tbody>
-              </table>
             </div>
 
-            <h2>Dados da Venda</h2>
-            <div class="form-group">
-              <label for="cliente">Cliente: <span class="tooltip"
-                  title="Selecione o cliente responsável pela compra">?</span></label>
-              <select id="cliente" name="clienteId" required>
-                <option value="" disabled selected>Selecione um cliente</option>
-                <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}"></option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="dataVenda">Data da Venda: <span class="tooltip"
-                  title="Data em que a venda foi realizada">?</span></label>
-              <input type="datetime-local" id="dataVenda" name="dataVenda"
-                th:value="${venda != null && venda.dataVenda != null} ? ${#dates.format(venda.dataVenda, 'yyyy-MM-dd\'T\'HH:mm')}"
-                required />
-            </div>
-
-            <div class="form-group">
-              <label for="total">Valor Total (R$): <span class="tooltip"
-                  title="Informe o valor total da venda">?</span></label>
-              <input type="number" id="total" step="0.01" min="0" th:field="*{total}" placeholder="0.00" required
-                readonly />
-            </div>
-
-            <div class="form-group">
-              <label for="formaPagamento">Forma de Pagamento: <span class="tooltip"
-                  title="Selecione a forma de pagamento">?</span></label>
-              <select id="formaPagamento" th:field="*{formaPagamento}" required>
-                <option value="" disabled selected>Selecione uma forma</option>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Cartão de Crédito">Cartão de Crédito</option>
-                <option value="Cartão de Débito">Cartão de Débito</option>
-                <option value="Pix">Pix</option>
-                <option value="Cheque">Cheque</option>
-              </select>
+            <!-- Dados da Venda -->
+            <div class="row mb-4">
+              <div class="col-lg-8">
+                <div class="modern-card">
+                  <div class="card-header-custom">
+                    <h5 class="mb-0">
+                      <i class="fas fa-file-invoice me-2"></i>Dados da Venda
+                    </h5>
+                  </div>
+                  <div class="card-body p-4">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                          <select id="cliente" name="clienteId" class="form-select" required>
+                            <option value="" disabled selected>Selecione um cliente</option>
+                            <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome}"></option>
+                          </select>
+                          <label for="cliente">
+                            <i class="fas fa-user me-2"></i>Cliente
+                          </label>
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                          <input type="datetime-local" id="dataVenda" name="dataVenda" class="form-control"
+                            th:value="${venda != null && venda.dataVenda != null} ? ${#dates.format(venda.dataVenda, 'yyyy-MM-dd\'T\'HH:mm')}"
+                            required />
+                          <label for="dataVenda">
+                            <i class="fas fa-calendar me-2"></i>Data da Venda
+                          </label>
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                          <select id="formaPagamento" th:field="*{formaPagamento}" class="form-select" required>
+                            <option value="" disabled selected>Selecione uma forma</option>
+                            <option value="Dinheiro">💵 Dinheiro</option>
+                            <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                            <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                            <option value="Pix">📱 Pix</option>
+                            <option value="Cheque">📄 Cheque</option>
+                          </select>
+                          <label for="formaPagamento">
+                            <i class="fas fa-credit-card me-2"></i>Forma de Pagamento
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="summary-card">
+                  <h5 class="mb-3">
+                    <i class="fas fa-receipt me-2"></i>Resumo da Venda
+                  </h5>
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Itens:</span>
+                      <span id="totalItens">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Quantidade:</span>
+                      <span id="totalQuantidade">0</span>
+                    </div>
+                    <hr class="my-3" style="border-color: rgba(255,255,255,0.3);">
+                    <div class="d-flex justify-content-between">
+                      <strong>Total:</strong>
+                      <strong>
+                        <input type="text" id="valorTotal" th:field="*{valorTotal}" 
+                                class="form-control bg-transparent border-0 text-white text-end fw-bold" 
+                                style="font-size: 1.2rem;" readonly />
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -126,14 +419,26 @@
 
 
 
-          <!-- Botões -->
-          <div class="form-actions full-width">
-            <button type="submit" class="button primary">
-              <i class="fas fa-save"></i> Salvar Venda
-            </button>
-            <a th:href="@{/vendas}" class="button secondary">
-              <i class="fas fa-arrow-left"></i> Voltar
-            </a>
+          <!-- Botões de Ação -->
+          <div class="row">
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center">
+                <a th:href="@{/vendas}" class="btn btn-modern btn-gradient-danger">
+                  <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <div class="d-flex gap-3">
+                  <button type="button" id="limparVenda" class="btn btn-modern btn-outline-secondary">
+                    <i class="fas fa-trash me-2"></i>Limpar Tudo
+                  </button>
+                  <button type="button" id="salvarRascunho" class="btn btn-modern btn-outline-primary">
+                    <i class="fas fa-save me-2"></i>Salvar Rascunho
+                  </button>
+                  <button type="submit" id="salvarVenda" class="btn btn-modern btn-gradient-success" disabled>
+                    <i class="fas fa-check me-2"></i>Finalizar Venda
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </form>
       </section>
@@ -142,8 +447,142 @@
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/cliente-venda.js}"></script>
-
+  
+  <script>
+    // Inicializar tooltips do Bootstrap
+    document.addEventListener('DOMContentLoaded', function() {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+      
+      // Atualizar contador de produtos
+      updateProductCount();
+      
+      // Configurar data atual
+      const dataVenda = document.getElementById('dataVenda');
+      if (!dataVenda.value) {
+        const now = new Date();
+        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        dataVenda.value = localDateTime;
+      }
+      
+      // Configurar indicadores de progresso
+      updateStepIndicator();
+    });
+    
+    // Função para atualizar contador de produtos
+    function updateProductCount() {
+      const tbody = document.getElementById('corpoTabelaProdutos');
+      const rows = tbody.querySelectorAll('tr:not(#emptyRow)');
+      const count = rows.length;
+      
+      document.getElementById('produtoCount').textContent = count;
+      document.getElementById('totalItens').textContent = count;
+      
+      // Mostrar/ocultar linha vazia
+      const emptyRow = document.getElementById('emptyRow');
+      if (count > 0) {
+        emptyRow.style.display = 'none';
+      } else {
+        emptyRow.style.display = '';
+      }
+      
+      // Atualizar quantidade total
+      let totalQuantidade = 0;
+      rows.forEach(row => {
+        const qtdInput = row.querySelector('input[name$=".quantidade"]');
+        if (qtdInput) {
+          totalQuantidade += parseInt(qtdInput.value) || 0;
+        }
+      });
+      document.getElementById('totalQuantidade').textContent = totalQuantidade;
+      
+      updateStepIndicator();
+    }
+    
+    // Função para atualizar indicadores de progresso
+    function updateStepIndicator() {
+      const step1 = document.getElementById('step1');
+      const step2 = document.getElementById('step2');
+      const step3 = document.getElementById('step3');
+      
+      const hasProducts = document.getElementById('corpoTabelaProdutos').querySelectorAll('tr:not(#emptyRow)').length > 0;
+      const hasClient = document.getElementById('cliente').value !== '';
+      const hasPayment = document.getElementById('formaPagamento').value !== '';
+      
+      // Reset classes
+      [step1, step2, step3].forEach(step => {
+        step.classList.remove('active', 'completed');
+      });
+      
+      if (hasProducts) {
+        step1.classList.add('completed');
+        step2.classList.add('active');
+        
+        if (hasClient && hasPayment) {
+          step2.classList.remove('active');
+          step2.classList.add('completed');
+          step3.classList.add('active');
+        }
+      } else {
+        step1.classList.add('active');
+      }
+    }
+    
+    // Função para limpar venda
+    document.getElementById('limparVenda').addEventListener('click', function() {
+      if (confirm('Tem certeza que deseja limpar todos os dados da venda?')) {
+        // Limpar tabela de produtos
+        const tbody = document.getElementById('corpoTabelaProdutos');
+        const rows = tbody.querySelectorAll('tr:not(#emptyRow)');
+        rows.forEach(row => row.remove());
+        
+        // Limpar campos
+         document.getElementById('cliente').value = '';
+         document.getElementById('formaPagamento').value = '';
+         document.getElementById('valorTotal').value = 'R$ 0,00';
+         document.getElementById('ean').value = '';
+        
+        // Atualizar contadores
+        updateProductCount();
+        updateStepIndicator();
+        
+        // Desabilitar botão salvar
+        document.getElementById('salvarVenda').disabled = true;
+      }
+    });
+    
+    // Função para salvar rascunho
+    document.getElementById('salvarRascunho').addEventListener('click', function() {
+      // Implementar salvamento de rascunho
+      alert('Funcionalidade de rascunho será implementada em breve!');
+    });
+    
+    // Observar mudanças nos campos para atualizar indicadores
+    document.getElementById('cliente').addEventListener('change', updateStepIndicator);
+    document.getElementById('formaPagamento').addEventListener('change', updateStepIndicator);
+    
+    // Sobrescrever função original se existir
+    const originalUpdateTotal = window.atualizarTotalVenda;
+    window.atualizarTotalVenda = function() {
+      if (originalUpdateTotal) {
+        originalUpdateTotal();
+      }
+      updateProductCount();
+    };
+    
+    // Sobrescrever função de adicionar produto
+    const originalAddProduct = window.adicionarProdutoNaTabela;
+    window.adicionarProdutoNaTabela = function(produto) {
+      if (originalAddProduct) {
+        originalAddProduct(produto);
+      }
+      updateProductCount();
+    };
+  </script>
 </body>
 
 </html>

@@ -32,6 +32,11 @@ public class ProdutoService {
         return produtoRepository.somarQuantidadeEstoque();
     }
 
+    // Conta produtos com estoque crítico (estoque <= minimoEstoque)
+    public long contarProdutosCriticos() {
+        return produtoRepository.countEstoqueCritico();
+    }
+
     // Busca produto pelo ID
     public Optional<Produto> buscarPorId(Long id) {
         return produtoRepository.findById(id);

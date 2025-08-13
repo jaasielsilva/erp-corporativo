@@ -47,6 +47,15 @@ public class ColaboradorService {
     public List<Colaborador> listarAtivos() {
         return colaboradorRepository.findByAtivoTrue();
     }
+    
+    public long contarAtivos() {
+        return colaboradorRepository.findByAtivoTrue().size();
+    }
+    
+    public long contarContratacaosPorPeriodo(int meses) {
+        LocalDate dataInicio = LocalDate.now().minusMonths(meses);
+        return colaboradorRepository.countContratacoesPorPeriodo(dataInicio);
+    }
 
     // Método findAll que retorna todos os colaboradores
     public List<Colaborador> findAll() {

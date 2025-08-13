@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,4 +36,7 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     
     @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true ORDER BY c.nome")
     List<Colaborador> findBasicInfoForSelection();
+    
+    @Query("SELECT COUNT(c) FROM Colaborador c WHERE c.dataAdmissao >= :dataInicio AND c.ativo = true")
+    long countContratacoesPorPeriodo(@Param("dataInicio") LocalDate dataInicio);
 }

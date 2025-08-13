@@ -127,5 +127,66 @@ public class VendaService {
         return vendaRepository.findById(id);
     }
 
+    // Calcula o número de vendas do mês atual
+    public long contarVendasMesAtual() {
+        LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
+        LocalDateTime inicioMesDateTime = inicioMes.atStartOfDay();
+        return vendaRepository.countByDataVendaGreaterThanEqual(inicioMesDateTime);
+    }
+
+    // Calcula o número de vendas do mês anterior
+    public long contarVendasMesAnterior() {
+        LocalDate inicioMesAnterior = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+        LocalDate fimMesAnterior = LocalDate.now().withDayOfMonth(1).minusDays(1);
+        LocalDateTime inicioMesAnteriorDateTime = inicioMesAnterior.atStartOfDay();
+        LocalDateTime fimMesAnteriorDateTime = fimMesAnterior.atTime(23, 59, 59);
+        return vendaRepository.countByDataVendaBetween(inicioMesAnteriorDateTime, fimMesAnteriorDateTime);
+    }
+
+    // Calcula o percentual de crescimento de vendas vs mês anterior
+    public String calcularCrescimentoVendas() {
+        long vendasMesAtual = contarVendasMesAtual();
+        long vendasMesAnterior = contarVendasMesAnterior();
+        
+        if (vendasMesAnterior == 0) {
+            return vendasMesAtual > 0 ? "+100%" : "0%";
+        }
+        
+        double crescimento = ((double) (vendasMesAtual - vendasMesAnterior) / vendasMesAnterior) * 100;
+        return String.format("%+.1f%%", crescimento);
+    }
+
+    // Calcula o faturamento dos últimos 12 meses
+    public BigDecimal calcularFaturamentoUltimos12Meses() {
+        LocalDate dataInicio = LocalDate.now().minusMonths(12).withDayOfMonth(1);
+        LocalDateTime dataInicioDateTime = dataInicio.atStartOfDay();
+        return vendaRepository.calcularFaturamentoPorPeriodo(dataInicioDateTime, LocalDateTime.now()).orElse(BigDecimal.ZERO);
+    }
+
+    // Calcula o faturamento dos 12 meses anteriores (para comparação)
+    public BigDecimal calcularFaturamento12MesesAnteriores() {
+        LocalDate dataInicio = LocalDate.now().minusMonths(24).withDayOfMonth(1);
+        LocalDate dataFim = LocalDate.now().minusMonths(12).withDayOfMonth(1).minusDays(1);
+        LocalDateTime dataInicioDateTime = dataInicio.atStartOfDay();
+        LocalDateTime dataFimDateTime = dataFim.atTime(23, 59, 59);
+        return vendaRepository.calcularFaturamentoPorPeriodo(dataInicioDateTime, dataFimDateTime).orElse(BigDecimal.ZERO);
+    }
+
+    // Calcula o percentual de crescimento do faturamento dos últimos 12 meses vs 12 meses anteriores
+    public String calcularCrescimentoFaturamento() {
+        BigDecimal faturamentoUltimos12Meses = calcularFaturamentoUltimos12Meses();
+        BigDecimal faturamento12MesesAnteriores = calcularFaturamento12MesesAnteriores();
+        
+        if (faturamento12MesesAnteriores.compareTo(BigDecimal.ZERO) == 0) {
+            return faturamentoUltimos12Meses.compareTo(BigDecimal.ZERO) > 0 ? "+100%" : "0%";
+        }
+        
+        BigDecimal crescimento = faturamentoUltimos12Meses.subtract(faturamento12MesesAnteriores)
+                .divide(faturamento12MesesAnteriores, 4, BigDecimal.ROUND_HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+        
+        return String.format("%+.1f%%", crescimento.doubleValue());
+    }
+
     
 }

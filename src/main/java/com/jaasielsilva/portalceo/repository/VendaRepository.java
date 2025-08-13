@@ -41,4 +41,14 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
            "ORDER BY YEAR(v.dataVenda), MONTH(v.dataVenda)")
     List<Object[]> totalVendasPorMesDesde(@Param("dataInicio") LocalDateTime dataInicio);
 
+    // Conta vendas a partir de uma data específica
+    long countByDataVendaGreaterThanEqual(LocalDateTime dataInicio);
+
+    // Conta vendas entre duas datas
+    long countByDataVendaBetween(LocalDateTime dataInicio, LocalDateTime dataFim);
+
+    // Calcula o faturamento (soma dos totais) entre duas datas
+    @Query("SELECT SUM(v.total) FROM Venda v WHERE v.dataVenda BETWEEN :dataInicio AND :dataFim")
+    Optional<BigDecimal> calcularFaturamentoPorPeriodo(@Param("dataInicio") LocalDateTime dataInicio, @Param("dataFim") LocalDateTime dataFim);
+
 }

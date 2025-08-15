@@ -1,0 +1,92 @@
+/* sidebar.css */
+
+/* Container do sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #1e293b;
+    color: #ffffff;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    transition: width 0.3s ease;
+}
+
+/* Logo ou topo do sidebar */
+.sidebar .sidebar-header {
+    padding: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Lista principal */
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Itens do menu */
+.sidebar ul li {
+    position: relative;
+}
+
+.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #334155;
+    color: #ffffff;
+}
+
+/* Ícone do menu */
+.sidebar ul li a i {
+    margin-right: 15px;
+    font-size: 1.2rem;
+}
+
+/* Submenu oculto */
+.sidebar ul li ul.submenu {
+    display: none;
+    flex-direction: column;
+    background-color: #334155;
+}
+
+/* Submenu ativo */
+.sidebar ul li.active ul.submenu {
+    display: flex;
+}
+
+/* Itens do submenu */
+.sidebar ul li ul.submenu li a {
+    padding: 12px 40px;
+    font-size: 0.95rem;
+    color: #cbd5e1;
+}
+
+/* Hover no submenu */
+.sidebar ul li ul.submenu li a:hover {
+    background-color: #475569;
+    color: #ffffff;
+}
+
+/* Setinha de submenu */
+.sidebar ul li a .submenu-icon {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+/* Girar setinha quando submenu ativo */
+.sidebar ul li.active > a .submenu-icon {
+    transform: rotate(90deg);
+}

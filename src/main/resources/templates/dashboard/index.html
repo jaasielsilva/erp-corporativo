@@ -159,25 +159,25 @@
                     <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
                     <div class="stat-number" th:text="${faturamentoMensal}">R$ 2.847.350</div>
                     <div class="stat-label">Faturamento Últimos 12 Meses</div>
-                    <div class="stat-change" th:class="${crescimentoFaturamento.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}" th:text="${crescimentoFaturamento} + ' vs 12 meses anteriores'">+12.5% vs 12 meses anteriores</div>
+                    <div class="stat-change" th:class="${crescimentoFaturamento.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}" th:text="${crescimentoFaturamento} + ' vs mês anterior'">+12.5% vs mês anterior</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
                     <div class="stat-number" th:text="${totalVendas}">1.247</div>
-                    <div class="stat-label">Vendas Realizadas</div>
+                    <div class="stat-label">Quantidade de Vendas</div>
                     <div class="stat-change" th:class="${crescimentoVendas.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}" th:text="${crescimentoVendas} + ' vs mês anterior'">+8.3% vs mês anterior</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-users"></i></div>
                     <div class="stat-number" th:text="${totalClientes}">3.892</div>
                     <div class="stat-label">Clientes Ativos</div>
-                    <div class="stat-change positive">+156 novos clientes</div>
+                    <div class="stat-change positive" th:text="'+' + ${novosClientes30Dias} + ' novos nos últimos 30 dias'">+156 novos nos últimos 30 dias</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-boxes"></i></div>
                     <div class="stat-number" th:text="${totalProdutos}">847</div>
                     <div class="stat-label">Produtos em Estoque</div>
-                    <div class="stat-change negative" th:text="'-' + ${produtosCriticos} + ' produtos críticos'">-23 produtos críticos</div>
+                    <div class="stat-change negative" th:text="'-' + ${produtosCriticos} + ' produto crítico'">-23 produtos críticos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
@@ -185,12 +185,7 @@
                     <div class="stat-label">Funcionários Ativos</div>
                     <div class="stat-change positive" th:text="'+' + ${contratacoes12Meses} + ' contratações nos últimos 12 meses'">+5 contratações nos últimos 12 meses</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                    <div class="stat-number" th:text="${solicitacoesPendentes}">47</div>
-                    <div class="stat-label">Solicitações Pendentes</div>
-                    <div class="stat-change negative">12 atrasadas</div>
-                </div>
+
             </div>
 
             <!-- Gráficos Principais -->
@@ -219,8 +214,8 @@
             <div class="secondary-charts">
                 <div class="chart-card">
                     <div class="chart-title">
-                        <i class="fas fa-tasks"></i>
-                        Status das Solicitações
+                        <i class="fas fa-user-lock"></i>
+                        Solicitações de Acesso ao Sistema
                     </div>
                     <div class="chart-container-small">
                         <canvas id="graficoSolicitacoes"></canvas>

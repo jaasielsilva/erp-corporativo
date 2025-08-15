@@ -188,5 +188,38 @@ public class VendaService {
         return String.format("%+.1f%%", crescimento.doubleValue());
     }
 
+    // Obtém vendas por categoria com dados reais
+    public Map<String, BigDecimal> getVendasPorCategoria() {
+        Map<String, BigDecimal> vendasPorCategoria = new LinkedHashMap<>();
+        List<Object[]> resultados = vendaRepository.calcularVendasPorCategoria();
+        
+        for (Object[] resultado : resultados) {
+            String categoria = (String) resultado[0];
+            BigDecimal valor = (BigDecimal) resultado[1];
+            vendasPorCategoria.put(categoria, valor != null ? valor : BigDecimal.ZERO);
+        }
+        
+        return vendasPorCategoria;
+    }
+
+    // Conta o total de vendas (quantidade de vendas realizadas)
+    public long contarTotalVendas() {
+        return vendaRepository.count();
+    }
+    
+    // Calcula performance de vendas baseada no crescimento mensal
+    public int calcularPerformanceVendas() {
+        String crescimento = calcularCrescimentoVendas();
+        // Remove o símbolo % e converte para número
+        String numeroStr = crescimento.replace("%", "").replace("+", "");
+        try {
+            double percentual = Double.parseDouble(numeroStr);
+            // Normaliza para uma escala de 0-100, considerando 20% como 100%
+            int performance = (int) Math.min(100, Math.max(0, 50 + (percentual * 2.5)));
+            return performance;
+        } catch (NumberFormatException e) {
+            return 75; // Valor padrão se houver erro
+        }
+    }
     
 }

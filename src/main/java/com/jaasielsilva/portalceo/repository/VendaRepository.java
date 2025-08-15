@@ -51,4 +51,14 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
     @Query("SELECT SUM(v.total) FROM Venda v WHERE v.dataVenda BETWEEN :dataInicio AND :dataFim")
     Optional<BigDecimal> calcularFaturamentoPorPeriodo(@Param("dataInicio") LocalDateTime dataInicio, @Param("dataFim") LocalDateTime dataFim);
 
+    // Calcula vendas por categoria (nome da categoria e valor total vendido)
+    @Query("SELECT p.categoria.nome, SUM(vi.subtotal) " +
+           "FROM VendaItem vi " +
+           "JOIN vi.produto p " +
+           "JOIN vi.venda v " +
+           "WHERE p.ativo = true " +
+           "GROUP BY p.categoria.nome " +
+           "ORDER BY SUM(vi.subtotal) DESC")
+    List<Object[]> calcularVendasPorCategoria();
+
 }

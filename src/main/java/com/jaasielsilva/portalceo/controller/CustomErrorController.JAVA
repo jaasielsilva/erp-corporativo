@@ -20,20 +20,20 @@ public class CustomErrorController implements ErrorController {
             model.addAttribute("codigoErro", statusCode);
 
             if (statusCode == HttpStatus.NOT_FOUND.value()) {
-                return "errors/404";
+                return "error/404";
             } else if (statusCode == HttpStatus.FORBIDDEN.value()) {
-                return "errors/403";
+                return "error/403";
             } else if (statusCode == HttpStatus.BAD_REQUEST.value()) {
-                return "errors/400";
+                return "error/400";
             } else if (statusCode == HttpStatus.UNAUTHORIZED.value()) {
-                return "errors/401";
+                return "error/401";
             } else if (statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value()) {
-                return "errors/500";
+                return "error/500";
             } else {
-                return "errors/generic";
+                return "error/generic";
             }
         }
         
-        return "errors/generic";
+        return "error/generic";
     }
 }

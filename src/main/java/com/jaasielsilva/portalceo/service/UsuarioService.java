@@ -391,4 +391,24 @@ public class UsuarioService {
         return token;
     }
     
+    // Calcula performance financeira baseada na eficiência de gestão de usuários
+    public int calcularPerformanceFinanceiro() {
+        long totalUsuarios = totalUsuarios();
+        long usuariosAtivos = totalAtivos();
+        long usuariosBloqueados = totalBloqueados();
+        
+        if (totalUsuarios == 0) {
+            return 85; // Valor padrão
+        }
+        
+        // Calcula percentual de usuários ativos (menos bloqueados = melhor gestão)
+        double percentualAtivos = ((double) usuariosAtivos / totalUsuarios) * 100;
+        double percentualBloqueados = ((double) usuariosBloqueados / totalUsuarios) * 100;
+        
+        // Performance baseada em usuários ativos e poucos bloqueados
+        double performance = percentualAtivos - (percentualBloqueados * 0.5);
+        
+        return (int) Math.min(100, Math.max(0, performance));
+    }
+    
 }

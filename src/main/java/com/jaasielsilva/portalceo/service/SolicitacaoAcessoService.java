@@ -255,6 +255,22 @@ public class SolicitacaoAcessoService {
     }
 
     /**
+     * Contar solicitações pendentes
+     */
+    @Transactional(readOnly = true)
+    public long contarSolicitacoesPendentes() {
+        return solicitacaoAcessoRepository.countByStatus(StatusSolicitacao.PENDENTE);
+    }
+    
+    /**
+     * Contar solicitações atrasadas (com prazo vencido)
+     */
+    @Transactional(readOnly = true)
+    public long contarSolicitacoesAtrasadas() {
+        return solicitacaoAcessoRepository.findSolicitacoesComPrazoVencido().size();
+    }
+
+    /**
      * Obter estatísticas para dashboard
      */
     @Transactional(readOnly = true)
@@ -520,6 +536,23 @@ public class SolicitacaoAcessoService {
     public Page<SolicitacaoAcesso> listarPorUsuarioEStatus(Usuario usuario, StatusSolicitacao status,
             Pageable pageable) {
         return solicitacaoAcessoRepository.findBySolicitanteUsuarioAndStatus(usuario, status, pageable);
+    }
+    
+    // Calcula performance de atendimento baseada na eficiência de resolução
+    public int calcularPerformanceAtendimento() {
+        long totalSolicitacoes = solicitacaoAcessoRepository.count();
+        long solicitacoesPendentes = contarSolicitacoesPendentes();
+        long solicitacoesAtrasadas = contarSolicitacoesAtrasadas();
+        
+        if (totalSolicitacoes == 0) {
+            return 90; // Valor padrão para sistema sem solicitações
+        }
+        
+        // Calcula percentual de eficiência (menos pendentes e atrasadas = melhor)
+        double percentualResolvidas = ((double)(totalSolicitacoes - solicitacoesPendentes - solicitacoesAtrasadas) / totalSolicitacoes) * 100;
+        
+        // Ajusta para escala de performance
+        return (int) Math.min(100, Math.max(0, percentualResolvidas));
     }
 
 }

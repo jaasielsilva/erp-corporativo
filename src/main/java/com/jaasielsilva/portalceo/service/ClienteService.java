@@ -76,6 +76,11 @@ public class ClienteService {
         return repository.countAtivosUltimos30Dias(dataLimite);
     }
 
+    public long contarNovosPorPeriodo(int dias) {
+        LocalDate dataLimite = LocalDate.now().minusDays(dias);
+        return repository.countAtivosUltimos30Dias(dataLimite);
+    }
+
     public long contarFidelizados() {
         return repository.countFidelizados();
     }
@@ -147,5 +152,25 @@ public class ClienteService {
 
     public Cliente findById(Long id) {
         return repository.findById(id).orElse(null);
+    }
+    
+    // Calcula performance de qualidade baseada na satisfação e retenção de clientes
+    public int calcularPerformanceQualidade() {
+        long totalClientes = contarTotal();
+        long clientesAtivos = contarAtivos();
+        long clientesFidelizados = contarFidelizados();
+        
+        if (totalClientes == 0) {
+            return 80; // Valor padrão
+        }
+        
+        // Calcula percentual de clientes ativos e fidelizados
+        double percentualAtivos = ((double) clientesAtivos / totalClientes) * 100;
+        double percentualFidelizados = totalClientes > 0 ? ((double) clientesFidelizados / totalClientes) * 100 : 0;
+        
+        // Média ponderada (60% ativos, 40% fidelizados)
+        double performance = (percentualAtivos * 0.6) + (percentualFidelizados * 0.4);
+        
+        return (int) Math.min(100, Math.max(0, performance));
     }
     }

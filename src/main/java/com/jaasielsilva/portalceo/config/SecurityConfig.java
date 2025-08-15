@@ -90,6 +90,7 @@ public SecurityFilterChain filterChain(HttpSecurity http,
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/a81368914c.js", "/esqueci-senha", "/resetar-senha").permitAll()
             .requestMatchers("/api/produto/**", "/api/processar").permitAll()
+            .requestMatchers("/error", "/error/**").permitAll()
             .anyRequest().authenticated()
         )
 

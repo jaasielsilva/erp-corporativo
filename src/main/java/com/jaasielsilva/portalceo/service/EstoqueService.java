@@ -54,4 +54,20 @@ public class EstoqueService {
 
         auditoriaEstoqueRepository.save(auditoria);
     }
+    
+    // Calcula performance de logística baseada na eficiência do estoque
+    public int calcularPerformanceLogistica() {
+        long totalProdutos = produtoRepository.count();
+        long produtosCriticos = produtoRepository.countEstoqueCritico();
+        
+        if (totalProdutos == 0) {
+            return 85; // Valor padrão
+        }
+        
+        // Calcula percentual de produtos com estoque adequado
+        double percentualAdequado = ((double)(totalProdutos - produtosCriticos) / totalProdutos) * 100;
+        
+        // Converte para escala de performance (0-100)
+        return (int) Math.min(100, Math.max(0, percentualAdequado));
+    }
 }

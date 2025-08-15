@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,7 +18,9 @@ import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
+import com.jaasielsilva.portalceo.service.EstoqueService;
 import com.jaasielsilva.portalceo.service.ProdutoService;
+import com.jaasielsilva.portalceo.service.SolicitacaoAcessoService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.service.VendaService;
 
@@ -39,7 +40,13 @@ public class DashboardController {
     private ProdutoService produtoService;
     
     @Autowired
-    private ColaboradorService colaboradorService; 
+    private ColaboradorService colaboradorService;
+    
+    @Autowired
+    private SolicitacaoAcessoService solicitacaoAcessoService;
+    
+    @Autowired
+    private EstoqueService estoqueService; 
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
@@ -55,8 +62,11 @@ public class DashboardController {
         // Total de clientes ativos
         long totalClientes = clienteService.contarTotal();
         
-        // Total de vendas (soma de valores)
-        BigDecimal totalVendas = vendaService.getTotalVendas();
+        // Novos clientes nos últimos 30 dias
+        long novosClientes30Dias = clienteService.contarNovosPorPeriodo(30);
+        
+        // Total de vendas (quantidade de vendas realizadas)
+        long totalVendas = vendaService.contarTotalVendas();
         
         // Crescimento de vendas vs mês anterior
         String crescimentoVendas = vendaService.calcularCrescimentoVendas();
@@ -67,8 +77,8 @@ public class DashboardController {
         // Faturamento dos últimos 12 meses
         BigDecimal faturamentoMensal = vendaService.calcularFaturamentoUltimos12Meses();
         
-        // Crescimento do faturamento vs mês anterior
-        String crescimentoFaturamento = vendaService.calcularCrescimentoFaturamento();
+        // Crescimento do faturamento vs mês anterior (padronizado)
+        String crescimentoFaturamento = vendaService.calcularCrescimentoVendas(); // Usando crescimento mensal ao invés de 12 meses
         
         // Produtos críticos (produtos com estoque <= minimoEstoque)
         long produtosCriticos = produtoService.contarProdutosCriticos();
@@ -79,11 +89,11 @@ public class DashboardController {
         // Contratações nos últimos 12 meses
         long contratacoes12Meses = colaboradorService.contarContratacaosPorPeriodo(12);
         
-        // Solicitações pendentes (simulado)
-        long solicitacoesPendentes = 47L;
+        // Solicitações pendentes (dados reais)
+        long solicitacoesPendentes = solicitacaoAcessoService.contarSolicitacoesPendentes();
         
-        // Solicitações atrasadas (simulado)
-        long solicitacoesAtrasadas = 12L;
+        // Solicitações atrasadas (dados reais)
+        long solicitacoesAtrasadas = solicitacaoAcessoService.contarSolicitacoesAtrasadas();
         
         // Percentual da meta (simulado)
         String percentualMeta = "87%";
@@ -109,20 +119,26 @@ public class DashboardController {
         }
 
         // ===== DADOS PARA GRÁFICOS ADICIONAIS =====
-        // Vendas por categoria (simulado)
-        List<String> categoriasLabels = Arrays.asList(
-            "Eletrônicos", "Roupas", "Casa & Jardim", "Esportes", "Livros", "Beleza"
-        );
-        List<BigDecimal> categoriasValores = Arrays.asList(
-            new BigDecimal("450000"), new BigDecimal("320000"), new BigDecimal("280000"),
-            new BigDecimal("180000"), new BigDecimal("120000"), new BigDecimal("95000")
-        );
+        // Vendas por categoria (dados reais)
+        Map<String, BigDecimal> vendasPorCategoriaMap = vendaService.getVendasPorCategoria();
+        List<String> categoriasLabels = new ArrayList<>(vendasPorCategoriaMap.keySet());
+        List<BigDecimal> categoriasValores = new ArrayList<>(vendasPorCategoriaMap.values());
         
-        // Status das solicitações (simulado)
-        List<Integer> solicitacoesStatus = Arrays.asList(47, 234, 18, 23); // Pendentes, Aprovadas, Rejeitadas, Em Análise
+        // Status das solicitações (dados reais)
+        List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();
+        List<Integer> solicitacoesStatus = new ArrayList<>();
+        for (Long valor : solicitacoesStatusLong) {
+            solicitacoesStatus.add(valor.intValue());
+        }
         
-        // Performance por área (simulado)
-        List<Integer> performanceIndicadores = Arrays.asList(87, 92, 78, 85, 90); // Vendas, Atendimento, Logística, Qualidade, Financeiro
+        // Performance por área (dados reais)
+        List<Integer> performanceIndicadores = Arrays.asList(
+            vendaService.calcularPerformanceVendas(),
+            solicitacaoAcessoService.calcularPerformanceAtendimento(),
+            estoqueService.calcularPerformanceLogistica(),
+            clienteService.calcularPerformanceQualidade(),
+            usuarioService.calcularPerformanceFinanceiro()
+        ); // Vendas, Atendimento, Logística, Qualidade, Financeiro
 
         // ===== MÉTRICAS FINANCEIRAS =====
         String margemLucro = "23.5%";
@@ -148,9 +164,10 @@ public class DashboardController {
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("faturamentoMensal", String.format("R$ %,.0f", faturamentoMensal));
         model.addAttribute("crescimentoFaturamento", crescimentoFaturamento);
-        model.addAttribute("totalVendas", String.format("%,d", totalVendas.longValue()));
+        model.addAttribute("totalVendas", String.format("%,d", totalVendas));
         model.addAttribute("crescimentoVendas", crescimentoVendas);
         model.addAttribute("totalClientes", String.format("%,d", totalClientes));
+        model.addAttribute("novosClientes30Dias", novosClientes30Dias);
         model.addAttribute("totalProdutos", String.format("%,d", produtosEstoque));
         model.addAttribute("totalFuncionarios", String.format("%,d", totalFuncionarios));
         model.addAttribute("contratacoes12Meses", contratacoes12Meses);

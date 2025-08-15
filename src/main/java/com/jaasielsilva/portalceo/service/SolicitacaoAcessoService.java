@@ -39,6 +39,9 @@ public class SolicitacaoAcessoService {
 
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * Criar nova solicitação de acesso
@@ -460,11 +463,23 @@ public class SolicitacaoAcessoService {
      */
     private void enviarNotificacaoNovaSolicitacao(SolicitacaoAcesso solicitacao) {
         try {
+            // Enviar email
             emailService.enviarNotificacaoNovaSolicitacao(
                     "admin@empresa.com",
                     solicitacao.getProtocolo(),
                     solicitacao.getSolicitanteNome(),
                     solicitacao.getColaborador().getNome());
+            
+            // Criar notificação no sistema para administradores
+            List<Usuario> admins = usuarioService.buscarUsuariosComPermissaoGerenciarUsuarios();
+            for (Usuario admin : admins) {
+                notificationService.notifyNewAccessRequest(
+                    admin, 
+                    solicitacao.getProtocolo(), 
+                    solicitacao.getSolicitanteNome()
+                );
+            }
+            
         } catch (Exception e) {
             System.err.println("Erro ao enviar notificação de nova solicitação: " + e.getMessage());
         }
@@ -475,11 +490,19 @@ public class SolicitacaoAcessoService {
      */
     private void enviarNotificacaoAprovacao(SolicitacaoAcesso solicitacao) {
         try {
+            // Enviar email
             emailService.enviarNotificacaoAprovacao(
                     solicitacao.getSolicitanteEmail(),
                     solicitacao.getProtocolo(),
                     solicitacao.getColaborador().getNome(),
                     solicitacao.getAprovadorNome());
+            
+            // Criar notificação no sistema para o solicitante (se for usuário do sistema)
+            usuarioService.buscarPorEmail(solicitacao.getSolicitanteEmail())
+                .ifPresent(usuario -> {
+                    notificationService.notifyAccessRequestApproved(usuario, solicitacao.getProtocolo());
+                });
+                
         } catch (Exception e) {
             System.err.println("Erro ao enviar notificação de aprovação: " + e.getMessage());
         }
@@ -490,11 +513,23 @@ public class SolicitacaoAcessoService {
      */
     private void enviarNotificacaoRejeicao(SolicitacaoAcesso solicitacao) {
         try {
+            // Enviar email
             emailService.enviarNotificacaoRejeicao(
                     solicitacao.getSolicitanteEmail(),
                     solicitacao.getProtocolo(),
                     solicitacao.getColaborador().getNome(),
                     solicitacao.getObservacoesAprovador());
+            
+            // Criar notificação no sistema para o solicitante (se for usuário do sistema)
+            usuarioService.buscarPorEmail(solicitacao.getSolicitanteEmail())
+                .ifPresent(usuario -> {
+                    notificationService.notifyAccessRequestRejected(
+                        usuario, 
+                        solicitacao.getProtocolo(), 
+                        solicitacao.getObservacoesAprovador()
+                    );
+                });
+                
         } catch (Exception e) {
             System.err.println("Erro ao enviar notificação de rejeição: " + e.getMessage());
         }

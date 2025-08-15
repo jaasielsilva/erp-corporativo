@@ -6,30 +6,5 @@
     <p class="mb-0">&copy; 2024 Painel do CEO - Todos os direitos reservados.</p>
   </div>
 
-  <!-- Script do Chatwoot -->
-  <script th:inline="javascript">
-    (function(d,t) {
-      var BASE_URL = "https://app.chatwoot.com";
-      var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-      g.src = BASE_URL + "/packs/js/sdk.js";
-      g.async = true;
-      s.parentNode.insertBefore(g, s);
 
-      g.onload = function() {
-        try {
-          var isLogged = /*[[${usuarioLogado != null}]]*/ false;
-          var email = isLogged ? "admin@teste.com" : null;
-          var nome = isLogged ? "administrador" : null;
-
-          window.chatwootSDK.run({
-            websiteToken: "Sgou12nX9gvrqM3VaCAS2nFZ",
-            baseUrl: BASE_URL,
-            ...(isLogged && email && nome ? { user: { email, name: nome } } : {})
-          });
-        } catch (e) {
-          console.error("Erro ao iniciar Chatwoot SDK:", e);
-        }
-      };
-    })(document, "script");
-  </script>
 </footer>

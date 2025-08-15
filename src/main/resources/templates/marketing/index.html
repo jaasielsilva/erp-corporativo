@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/layout :: layout}">
+<head>
+    <title>Marketing - ERP Corporativo</title>
+</head>
+<body>
+    <div th:fragment="content" class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-header mb-4">
+                    <h1><i class="fas fa-bullhorn text-primary"></i> Marketing</h1>
+                    <p class="text-muted">Gerencie campanhas, leads e estrat√©gias de marketing</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-rocket fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Campanhas</h5>
+                                <p class="card-text">Gerencie suas campanhas de marketing</p>
+                                <a href="/marketing/campanhas" class="btn btn-primary">Acessar</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-success mb-3"></i>
+                                <h5 class="card-title">Leads</h5>
+                                <p class="card-text">Controle e qualifique seus leads</p>
+                                <a href="/marketing/leads" class="btn btn-success">Acessar</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-alt fa-3x text-warning mb-3"></i>
+                                <h5 class="card-title">Eventos</h5>
+                                <p class="card-text">Organize eventos e webinars</p>
+                                <a href="/marketing/eventos" class="btn btn-warning">Acessar</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-3 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-image fa-3x text-info mb-3"></i>
+                                <h5 class="card-title">Materiais</h5>
+                                <p class="card-text">Biblioteca de materiais de marketing</p>
+                                <a href="/marketing/materiais" class="btn btn-info">Acessar</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  <!-- Script de notificaÁıes -->  <!-- jQuery necess·rio para o sistema de notificaÁıes -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+
+
+  <script th:src="@{/js/notifications.js}"></script>
+  <!-- jQuery necess·rio para o sistema de notificaÁıes -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  
+  <!-- Script de notificaÁıes -->  <!-- jQuery necess·rio para o sistema de notificaÁıes -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+
+
+  <script th:src="@{/js/notifications.js}"></script>
+
+</body>
+</html>

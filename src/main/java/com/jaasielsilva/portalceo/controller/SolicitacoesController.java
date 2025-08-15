@@ -8,6 +8,7 @@ import com.jaasielsilva.portalceo.repository.SolicitacaoAcessoRepository;
 import com.jaasielsilva.portalceo.service.SolicitacaoAcessoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
+import com.jaasielsilva.portalceo.service.NotificationService;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.time.LocalDate;
@@ -53,6 +54,9 @@ public class SolicitacoesController {
 
     @Autowired
     private ColaboradorService colaboradorService;
+    
+    @Autowired
+    private NotificationService notificationService;
 
     /**
  * Listar todas as solicitações (página principal)
@@ -541,8 +545,31 @@ public String listarSolicitacoes(
                 }
 
                 SolicitacaoAcesso.NivelAcesso nivel = SolicitacaoAcesso.NivelAcesso.valueOf(nivelAprovado);
-                solicitacaoAcessoService.aprovarSolicitacao(id, usuarioLogado, nivel, emailCorporativo,
+                SolicitacaoAcesso solicitacao = solicitacaoAcessoService.aprovarSolicitacao(id, usuarioLogado, nivel, emailCorporativo,
                         observacoesAprovador);
+                
+                // Enviar notificação para o solicitante
+                if (solicitacao != null && solicitacao.getColaborador() != null && solicitacao.getColaborador().getEmail() != null) {
+                    // Buscar usuário pelo email do colaborador (se existir)
+                    usuarioService.buscarPorEmail(solicitacao.getColaborador().getEmail())
+                        .ifPresent(usuario -> {
+                            notificationService.notifyAccessRequestApproved(usuario, solicitacao.getProtocolo());
+                        });
+                }
+                
+                // Notificar administradores sobre a aprovação
+                List<Usuario> admins = usuarioService.buscarUsuariosComPermissaoGerenciarUsuarios();
+                for (Usuario admin : admins) {
+                    if (!admin.equals(usuarioLogado)) { // Não notificar quem aprovou
+                        notificationService.createNotification(
+                            "access_request_approved",
+                            "Solicitação Aprovada",
+                            String.format("Solicitação %s foi aprovada por %s", solicitacao.getProtocolo(), usuarioLogado.getNome()),
+                            com.jaasielsilva.portalceo.model.Notification.Priority.MEDIUM,
+                            admin
+                        );
+                    }
+                }
 
                 redirectAttributes.addFlashAttribute("mensagem", "Solicitação aprovada com sucesso!");
 
@@ -552,7 +579,30 @@ public String listarSolicitacoes(
                     return "redirect:/solicitacoes/aprovar/" + id;
                 }
 
-                solicitacaoAcessoService.rejeitarSolicitacao(id, usuarioLogado, observacoesAprovador);
+                SolicitacaoAcesso solicitacaoRejeitada = solicitacaoAcessoService.rejeitarSolicitacao(id, usuarioLogado, observacoesAprovador);
+                
+                // Enviar notificação para o solicitante
+                if (solicitacaoRejeitada != null && solicitacaoRejeitada.getColaborador() != null && solicitacaoRejeitada.getColaborador().getEmail() != null) {
+                    // Buscar usuário pelo email do colaborador (se existir)
+                    usuarioService.buscarPorEmail(solicitacaoRejeitada.getColaborador().getEmail())
+                        .ifPresent(usuario -> {
+                            notificationService.notifyAccessRequestRejected(usuario, solicitacaoRejeitada.getProtocolo(), observacoesAprovador);
+                        });
+                }
+                
+                // Notificar administradores sobre a rejeição
+                List<Usuario> admins = usuarioService.buscarUsuariosComPermissaoGerenciarUsuarios();
+                for (Usuario admin : admins) {
+                    if (!admin.equals(usuarioLogado)) { // Não notificar quem rejeitou
+                        notificationService.createNotification(
+                            "access_request_rejected",
+                            "Solicitação Rejeitada",
+                            String.format("Solicitação %s foi rejeitada por %s", solicitacaoRejeitada.getProtocolo(), usuarioLogado.getNome()),
+                            com.jaasielsilva.portalceo.model.Notification.Priority.MEDIUM,
+                            admin
+                        );
+                    }
+                }
 
                 redirectAttributes.addFlashAttribute("mensagem", "Solicitação rejeitada");
             }
@@ -585,6 +635,35 @@ public String listarSolicitacoes(
 
         try {
             Usuario novoUsuario = solicitacaoAcessoService.criarUsuarioAposAprovacao(id);
+            
+            // Buscar a solicitação para obter informações
+            Optional<SolicitacaoAcesso> solicitacaoOpt = solicitacaoAcessoService.buscarPorId(id);
+            if (solicitacaoOpt.isPresent()) {
+                SolicitacaoAcesso solicitacao = solicitacaoOpt.get();
+                
+                // Notificar o novo usuário sobre a criação da conta
+                notificationService.createNotification(
+                    "user_account_created",
+                    "Conta Criada com Sucesso!",
+                    String.format("Sua conta foi criada! Protocolo: %s. Verifique seu email para as credenciais de acesso.", solicitacao.getProtocolo()),
+                    com.jaasielsilva.portalceo.model.Notification.Priority.HIGH,
+                    novoUsuario
+                );
+                
+                // Notificar administradores sobre a criação do usuário
+                List<Usuario> admins = usuarioService.buscarUsuariosComPermissaoGerenciarUsuarios();
+                for (Usuario admin : admins) {
+                    if (!admin.equals(usuarioLogado)) { // Não notificar quem criou
+                        notificationService.createNotification(
+                            "user_created_by_admin",
+                            "Novo Usuário Criado",
+                            String.format("Usuário %s foi criado por %s (Protocolo: %s)", novoUsuario.getNome(), usuarioLogado.getNome(), solicitacao.getProtocolo()),
+                            com.jaasielsilva.portalceo.model.Notification.Priority.MEDIUM,
+                            admin
+                        );
+                    }
+                }
+            }
 
             redirectAttributes.addFlashAttribute("mensagem",
                     "Usuário criado com sucesso! Credenciais enviadas por email para: " + novoUsuario.getEmail());

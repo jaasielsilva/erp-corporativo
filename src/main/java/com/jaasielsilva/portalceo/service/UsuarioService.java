@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService {
@@ -177,6 +178,15 @@ public class UsuarioService {
             .map(usuario -> usuario.getPerfis().stream()
                 .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN")))
             .orElse(false);
+    }
+    
+    /**
+     * Busca usuários que podem gerenciar outros usuários (ADMIN, MASTER, etc.)
+     */
+    public List<Usuario> buscarUsuariosComPermissaoGerenciarUsuarios() {
+        return usuarioRepository.findAll().stream()
+            .filter(usuario -> usuario.getNivelAcesso() != null && usuario.getNivelAcesso().podeGerenciarUsuarios())
+            .collect(Collectors.toList());
     }
 
     // ===============================

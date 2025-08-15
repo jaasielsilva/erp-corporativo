@@ -124,7 +124,7 @@ html, body {
    Área principal do conteúdo, ao lado da sidebar
 --------------------------------------------- */
 .main-content {
-  margin-left: 280px;   /* Espaço para sidebar fixa */
+  margin-left: 240px;   /* Espaço reduzido para sidebar compacta */
   height: 100vh;
   background: #fff;     /* Fundo branco */
   flex-grow: 1;

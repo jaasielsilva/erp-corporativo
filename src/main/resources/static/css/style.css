@@ -33,7 +33,7 @@ html, body {
   top: 0;
   left: 0;
   height: 100vh;       /* Ocupa toda a altura da janela */
-  width: 280px;        /* Largura fixa */
+  width: 240px;        /* Largura reduzida para monitores menores */
   background-color: #1f2937; /* Fundo escuro */
   color: #fff;         /* Texto claro */
   display: flex;
@@ -42,8 +42,10 @@ html, body {
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
   overflow-y: auto;    /* Scroll interno se conteúdo maior */
   z-index: 1000;       /* Fica sobreposto a outros elementos */
-  transition: left 0.3s ease; /* Animação para abrir/fechar */
+  transition: all 0.3s ease; /* Animação suave para todas as propriedades */
 }
+
+
 
 /* --------------------------------------------
    Painel de usuário no topo da sidebar
@@ -52,28 +54,99 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;      /* Centraliza horizontalmente */
-  padding: 30px 20px 20px;  /* Espaçamento interno */
+  padding: 20px 15px 15px;  /* Espaçamento reduzido */
   border-bottom: 1px solid #334155; /* Linha separadora */
   flex-shrink: 0;           /* Não reduz */
 }
 
 /* Avatar do usuário */
 .user-avatar {
-  width: 80px;
-  height: 80px;
+  width: 60px;              /* Tamanho reduzido */
+  height: 60px;
   border-radius: 50%;       /* Torna circular */
   object-fit: cover;        /* Cobre o container sem distorcer */
-  border: 3px solid #3b82f6; /* Borda azul */
-  margin-bottom: 10px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2); /* Sombra leve */
+  border: 2px solid #3b82f6; /* Borda mais fina */
+  margin-bottom: 8px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2); /* Sombra reduzida */
+}
+
+/* Informações do usuário */
+.user-info {
+  text-align: center;
+  margin-bottom: 12px;
 }
 
 /* Nome do usuário */
 .user-name {
-  font-size: 16px;
+  font-size: 14px;          /* Fonte menor */
   font-weight: 500;
   color: #e2e8f0; /* Cinza claro */
   text-align: center;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+/* Nível de acesso do usuário */
+.user-level {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Ações do usuário (notificações e perfil) */
+.user-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Botões de ação */
+.action-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background-color: #374151;
+  color: #cbd5e1;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 1px solid #4b5563;
+}
+
+.action-btn:hover {
+  background-color: #4b5563;
+  color: #fff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.action-btn i {
+  font-size: 14px;
+}
+
+/* Badge de notificação */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1;
+  animation: pulse 2s infinite;
+}
+
+.notification-badge.hidden {
+  display: none;
 }
 
 /* --------------------------------------------
@@ -82,7 +155,7 @@ html, body {
 .sidebar nav {
   flex-grow: 1;        /* Ocupa todo espaço vertical restante */
   overflow-y: auto;    /* Scroll caso muitos itens */
-  padding: 20px 0;
+  padding: 15px 0;
 }
 
 .sidebar nav ul {
@@ -119,17 +192,219 @@ html, body {
 }
 
 /* --------------------------------------------
+   Busca na sidebar
+--------------------------------------------- */
+.sidebar-search {
+  padding: 12px 15px;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 8px;
+}
+
+.sidebar-search input {
+  width: 100%;
+  padding: 6px 10px;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 4px;
+  color: #e5e7eb;
+  font-size: 13px;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.sidebar-search input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #1f2937;
+}
+
+.sidebar-search input::placeholder {
+  color: #9ca3af;
+}
+
+/* --------------------------------------------
+   Submenus com animações e hierarquia
+--------------------------------------------- */
+.sidebar nav ul li.has-submenu > a {
+  position: relative;
+}
+
+.sidebar nav ul li.has-submenu > a .submenu-icon {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+  font-size: 12px;
+}
+
+.sidebar nav ul li.has-submenu.open > a .submenu-icon {
+  transform: rotate(180deg);
+}
+
+.sidebar nav ul li .submenu {
+  background-color: #0f172a;
+  border-left: 2px solid #3b82f6;
+  margin-left: 20px;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.sidebar nav ul li.open .submenu {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.sidebar nav ul li .submenu li a {
+  padding: 12px 25px 12px 45px;
+  font-size: 14px;
+  color: #94a3b8;
+  border-left: 2px solid transparent;
+}
+
+.sidebar nav ul li .submenu li a:hover {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border-left: 2px solid #60a5fa;
+}
+
+.sidebar nav ul li .submenu li a.active {
+  background-color: #1e293b;
+  color: #fff;
+  border-left: 2px solid #3b82f6;
+}
+
+/* Submenus aninhados (terceiro nível) */
+.sidebar nav ul li .submenu li.has-submenu .submenu {
+  background-color: #020617;
+  margin-left: 15px;
+  border-left: 1px solid #475569;
+}
+
+.sidebar nav ul li .submenu li .submenu li a {
+  padding: 10px 20px 10px 35px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.sidebar nav ul li .submenu li .submenu li a:hover {
+  background-color: #0f172a;
+  color: #cbd5e1;
+}
+
+/* --------------------------------------------
+   Badges de notificação
+--------------------------------------------- */
+.nav-badge {
+  background-color: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  min-width: 18px;
+  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+.nav-badge.success {
+  background-color: #10b981;
+}
+
+.nav-badge.warning {
+  background-color: #f59e0b;
+}
+
+.nav-badge.info {
+  background-color: #3b82f6;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* --------------------------------------------
+   Indicação de página ativa
+--------------------------------------------- */
+.sidebar nav ul li a.current-page {
+  background-color: #1e40af;
+  color: #fff;
+  border-left: 4px solid #60a5fa;
+  font-weight: 600;
+}
+
+.sidebar nav ul li a.current-page::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #fff;
+}
+
+/* --------------------------------------------
+   Estados de hover melhorados
+--------------------------------------------- */
+.sidebar nav ul li a {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar nav ul li a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s;
+}
+
+.sidebar nav ul li a:hover::before {
+  left: 100%;
+}
+
+/* --------------------------------------------
+   Seções da sidebar com divisores
+--------------------------------------------- */
+.sidebar-section {
+  margin: 16px 0;
+}
+
+.sidebar-section-title {
+  padding: 8px 20px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 8px;
+}
+
+/* --------------------------------------------
    Área principal do conteúdo, ao lado da sidebar
 --------------------------------------------- */
 .main-content {
-  margin-left: 280px;   /* Espaço para sidebar fixa */
-  height: 100vh;
+  margin-left: 240px;   /* Espaço reduzido para sidebar compacta */
+  min-height: 100vh;
   background: #fff;     /* Fundo branco */
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;     /* Scroll interno */
+  transition: margin-left 0.3s ease; /* Animação suave */
 }
+
+
 
 /* --------------------------------------------
    Topbar fixa no topo da área principal
@@ -145,30 +420,94 @@ html, body {
   flex-shrink: 0;
 }
 
-.topbar .title {
+/* Título da topbar */
+.topbar-title h1 {
   font-size: 20px;
   font-weight: 600;
   color: #1e293b;
+  margin: 0;
 }
 
-/* Informações do usuário no topbar */
-.topbar .user-info {
-  font-size: 14px;
-  color: #64748b;
+/* Ações da topbar (notificações + usuário) */
+.topbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.topbar .user-info i {
-  color: #3b82f6;
-  font-size: 18px;
+/* Botão de notificação na topbar */
+.topbar-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #fff;
+  color: #64748b;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.topbar-btn:hover {
+  background-color: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.topbar-btn i {
+  font-size: 16px;
+}
+
+/* Nome do usuário na topbar */
+.topbar .user-name {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+/* Inicial do usuário */
+.user-initial {
+  width: 36px;
+  height: 36px;
+  background-color: #3b82f6;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.user-initial:hover {
+  background-color: #1e40af;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
 }
 
 /* Botão para abrir o menu lateral no mobile (inicialmente oculto) */
 .topbar .menu-toggle {
   display: none;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.topbar .menu-toggle:hover {
+  background-color: #e5e7eb;
 }
 
 /* --------------------------------------------
@@ -375,27 +714,70 @@ html, body {
 /* --------------------------------------------
    Responsividade para telas pequenas (até 768px)
 --------------------------------------------- */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .sidebar {
-    left: -280px; /* Sidebar esconde à esquerda */
-  }
-  .sidebar.open {
-    left: 0; /* Abre a sidebar */
-  }
-  .topbar .menu-toggle {
-    display: block; /* Mostra botão do menu */
+    width: 220px;        /* Ainda menor para laptops */
   }
   .main-content {
-    margin-left: 0; /* Remove margem para sidebar */
+    margin-left: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    left: -240px;        /* Sidebar esconde à esquerda */
+    width: 240px;
+  }
+  .sidebar.open {
+    left: 0;             /* Sidebar aparece */
+  }
+  .topbar .menu-toggle {
+    display: block;      /* Mostra botão do menu */
+  }
+  .main-content {
+    margin-left: 0;      /* Remove margem para sidebar */
   }
   .dashboard-cards {
     grid-template-columns: 1fr; /* Cards empilhados */
   }
   .action-buttons a {
-    flex: 1 1 100%; /* Botões ocupam toda largura */
+    flex: 1 1 100%;      /* Botões ocupam toda largura */
   }
   .content-area {
     padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100vw;        /* Largura total em telas muito pequenas */
+    left: -100vw;
+  }
+  .sidebar.open {
+    left: 0;
+  }
+  
+  /* Compactar ainda mais o conteúdo */
+  .user-panel {
+    padding: 15px 10px 10px;
+  }
+  
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .user-name {
+    font-size: 12px;
+  }
+  
+  .sidebar-section-title {
+    font-size: 9px;
+    padding: 6px 15px 3px;
+  }
+  
+  .sidebar nav {
+    padding: 10px 0;
   }
 }
 

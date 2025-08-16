@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Menu com Submenus</title>
+  <style>
+    /* ----- RESET BÁSICO ----- */
+    body {
+      font-family: Arial, sans-serif;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    a {
+      text-decoration: none;
+      display: block;
+      padding: 8px 12px;
+      color: #333;
+      cursor: pointer;
+    }
+
+    /* ----- ESTILOS DO MENU ----- */
+    .sidebar {
+      width: 250px;
+      border: 1px solid #ddd;
+    }
+    .has-submenu > a {
+      background: #f0f0f0;
+    }
+    .submenu {
+      display: none;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: #fafafa;
+    }
+    .has-submenu.open > .submenu {
+      display: block;
+      max-height: 1000px;
+    }
+    /* Indicador (seta) */
+    .submenu-toggle::after {
+      content: " ▼";
+      float: right;
+      transition: transform 0.3s;
+    }
+    .has-submenu.open > .submenu-toggle::after {
+      transform: rotate(-90deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <ul>
+      <li class="has-submenu">
+        <a href="javascript:void(0);" class="submenu-toggle">Recursos Humanos</a>
+        <ul class="submenu">
+          <li class="has-submenu">
+            <a href="javascript:void(0);" class="submenu-toggle">Colaboradores</a>
+            <ul class="submenu">
+              <li><a href="#">Listar Colaboradores</a></li>
+              <li><a href="#">Novo Colaborador</a></li>
+            </ul>
+          </li>
+          <li class="has-submenu">
+            <a href="javascript:void(0);" class="submenu-toggle">Folha</a>
+            <ul class="submenu">
+              <li><a href="#">Ver Folha</a></li>
+              <li><a href="#">Cadastrar Folha</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    function initializeSubmenus() {
+      const submenuToggles = document.querySelectorAll('.submenu-toggle');
+
+      submenuToggles.forEach(item => {
+        item.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const li = item.closest('.has-submenu');
+          if (!li) return;
+
+          // Fecha irmãos no mesmo nível
+          const parentUl = li.parentElement;
+          parentUl.querySelectorAll(':scope > .has-submenu.open').forEach(sib => {
+            if (sib !== li) sib.classList.remove('open');
+          });
+
+          // Alterna o atual
+          li.classList.toggle('open');
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeSubmenus);
+  </script>
+</body>
+</html>

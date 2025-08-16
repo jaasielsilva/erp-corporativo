@@ -41,7 +41,7 @@
         
         <li class="has-submenu" th:if="${podeAcessarEstoque}">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-tags"></i> Categorias <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-tags"></i> Categorias
           </a>
           <ul class="submenu">
             <li><a href="/categorias"><i class="fas fa-list"></i> Listar Categorias</a></li>
@@ -52,12 +52,12 @@
         <!-- Módulo RH - Apenas área de RH e níveis gerenciais -->
         <li class="has-submenu" th:if="${podeAcessarRH}">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-users"></i> Recursos Humanos <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-users"></i> Recursos Humanos
           </a>
           <ul class="submenu">
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-user-tie"></i> Colaboradores <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-user-tie"></i> Colaboradores
               </a>
               <ul class="submenu">
                 <li><a href="/rh/colaboradores/listar"><i class="fas fa-list"></i> Listar</a></li>
@@ -71,7 +71,7 @@
             <!-- Folha de Pagamento - Apenas RH e níveis superiores -->
             <li class="has-submenu" th:if="${podeGerenciarRH}">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-money-bill-wave"></i> Folha de Pagamento <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-money-bill-wave"></i> Folha de Pagamento
               </a>
               <ul class="submenu">
                 <li><a href="/rh/folha-pagamento/gerar"><i class="fas fa-calculator"></i> Gerar</a></li>
@@ -84,7 +84,7 @@
             <!-- Benefícios - Todos os níveis gerenciais -->
             <li class="has-submenu" th:if="${isGerencial}">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-gift"></i> Benefícios <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-gift"></i> Benefícios
               </a>
               <ul class="submenu">
                 <li><a href="/rh/beneficios/plano-saude"><i class="fas fa-heartbeat"></i> Plano de Saúde</a></li>
@@ -97,7 +97,7 @@
             <!-- Ponto e Escalas -->
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-clock"></i> Ponto e Escalas <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-clock"></i> Ponto e Escalas
               </a>
               <ul class="submenu">
                 <li><a href="/rh/ponto-escalas/registros"><i class="fas fa-fingerprint"></i> Registros</a></li>
@@ -110,7 +110,7 @@
             <!-- Férias -->
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-umbrella-beach"></i> Férias <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-umbrella-beach"></i> Férias
               </a>
               <ul class="submenu" >
                 <li><a href="/rh/ferias/solicitar"><i class="fas fa-paper-plane"></i> Solicitar</a></li>
@@ -123,7 +123,7 @@
             <!-- Avaliação -->
             <li class="has-submenu" th:if="${isGerencial}">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-star"></i> Avaliação <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-star"></i> Avaliação
               </a>
               <ul class="submenu" >
                 <li><a href="/rh/avaliacao/periodicidade"><i class="fas fa-calendar-week"></i> Periodicidade</a></li>
@@ -135,7 +135,7 @@
             <!-- Treinamentos -->
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-graduation-cap"></i> Treinamentos <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-graduation-cap"></i> Treinamentos
               </a>
               <ul class="submenu" >
                 <li th:if="${podeGerenciarRH}"><a href="/rh/treinamentos/cadastro"><i class="fas fa-plus-square"></i> Cadastro</a></li>
@@ -147,7 +147,7 @@
             <!-- Recrutamento - Apenas RH -->
             <li class="has-submenu" th:if="${podeGerenciarRH}">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-search"></i> Recrutamento <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-search"></i> Recrutamento
               </a>
               <ul class="submenu" >
                 <li><a href="/rh/recrutamento/vagas"><i class="fas fa-briefcase"></i> Vagas</a></li>
@@ -160,7 +160,7 @@
             <!-- Relatórios RH - Apenas RH -->
             <li class="has-submenu" th:if="${podeGerenciarRH}">
               <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-chart-bar"></i> Relatórios RH <i class="fas fa-chevron-down submenu-icon"></i>
+                <i class="fas fa-chart-bar"></i> Relatórios RH
               </a>
               <ul class="submenu" >
                 <li><a href="/rh/relatorios/turnover"><i class="fas fa-exchange-alt"></i> Turnover</a></li>
@@ -180,7 +180,7 @@
         <!-- Módulo Financeiro -->
         <li class="has-submenu" th:if="${podeAcessarFinanceiro}">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-dollar-sign"></i> Financeiro <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-dollar-sign"></i> Financeiro
           </a>
           <ul class="submenu" >
             <li><a href="/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
@@ -193,7 +193,7 @@
         <!-- Módulo Marketing -->
         <li class="has-submenu" th:if="${podeAcessarMarketing}">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-bullhorn"></i> Marketing <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-bullhorn"></i> Marketing
           </a>
           <ul class="submenu" >
             <li><a href="/marketing/campanhas"><i class="fas fa-ad"></i> Campanhas</a></li>
@@ -206,7 +206,7 @@
         <!-- Módulo TI -->
         <li class="has-submenu" th:if="${podeAcessarTI}">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-laptop-code"></i> Tecnologia <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-laptop-code"></i> Tecnologia
           </a>
           <ul class="submenu" >
             <li><a href="/ti/sistemas"><i class="fas fa-server"></i> Sistemas</a></li>
@@ -219,7 +219,7 @@
         <!-- Módulo Jurídico -->
         <li class="has-submenu" th:if="${podeAcessarJuridico}">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-balance-scale"></i> Jurídico <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-balance-scale"></i> Jurídico
           </a>
           <ul class="submenu" >
             <li><a href="/juridico/contratos"><i class="fas fa-file-signature"></i> Contratos</a></li>
@@ -236,7 +236,7 @@
         
         <li class="has-submenu">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-file-alt"></i> Solicitações <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-file-alt"></i> Solicitações
           </a>
           <ul class="submenu" >
             <li><a href="/solicitacoes/nova"><i class="fas fa-plus"></i> Nova Solicitação</a></li>
@@ -260,7 +260,7 @@
         <!-- Gestão de Acesso -->
         <li class="has-submenu" th:if="${isAdmin or isMaster}">
           <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-user-shield"></i> Gestão de Acesso <i class="fas fa-chevron-down submenu-icon"></i>
+            <i class="fas fa-user-shield"></i> Gestão de Acesso
           </a>
           <ul class="submenu" >
             <li><a href="/perfis"><i class="fas fa-user-tag"></i> Perfis</a></li>

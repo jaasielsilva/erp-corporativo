@@ -55,16 +55,29 @@
     font-size: 1.2rem;
 }
 
-/* Submenu oculto */
-.sidebar ul li ul.submenu {
+/* =========================
+   Submenus animados
+========================= */
+
+/* Submenus fechados por padrão */
+.sidebar .submenu {
     display: none;
-    flex-direction: column;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
     background-color: #334155;
 }
 
-/* Submenu ativo */
-.sidebar ul li.active ul.submenu {
-    display: flex;
+/* Abre apenas o submenu FILHO DIRETO do <li> aberto */
+.has-submenu.open > .submenu {
+    display: block;
+    max-height: 1000px; /* valor grande suficiente para caber o conteúdo */
+}
+
+/* Sub-submenus também seguem a mesma lógica */
+.has-submenu .has-submenu.open > .submenu {
+    display: block;
+    max-height: 1000px;
 }
 
 /* Itens do submenu */
@@ -74,24 +87,40 @@
     color: #cbd5e1;
 }
 
+/* Itens do sub-submenu (terceiro nível) */
+.sidebar ul li ul.submenu li ul.submenu li a {
+    padding: 10px 60px;
+    font-size: 0.9rem;
+    color: #a1a1aa;
+    background-color: transparent;
+}
+
 /* Hover no submenu */
 .sidebar ul li ul.submenu li a:hover {
     background-color: #475569;
     color: #ffffff;
 }
 
-/* Setinha de submenu */
-.sidebar ul li a .submenu-icon {
-    margin-left: auto;
+/* Hover no sub-submenu */
+.sidebar ul li ul.submenu li ul.submenu li a:hover {
+    background-color: #64748b;
+    color: #ffffff;
+}
+
+/* Setinha de submenu - usando ::after como no exemplo */
+.submenu-toggle::after {
+    content: " ▼";
+    float: right;
     transition: transform 0.3s ease;
+    margin-left: auto;
 }
 
 /* Girar setinha quando submenu ativo */
-.sidebar ul li.active > a .submenu-icon {
-    transform: rotate(90deg);
+.has-submenu.open > .submenu-toggle::after {
+    transform: rotate(-90deg);
 }
 
-/*Faz a setinha do submenu abaixar e aparecer os itens*/
-.has-submenu.open .submanu{
-    display: block;
+/* Remover ícone chevron antigo se existir */
+.sidebar ul li a .submenu-icon {
+    display: none;
 }

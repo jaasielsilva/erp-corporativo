@@ -21,47 +21,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Controle de submenus com animações
 function initializeSubmenus() {
-  console.log('Inicializando submenus...');
   const submenuToggles = document.querySelectorAll('.submenu-toggle');
-  console.log('Encontrados', submenuToggles.length, 'elementos .submenu-toggle');
-  
-  if (submenuToggles.length === 0) {
-    console.error('Nenhum elemento .submenu-toggle encontrado!');
-    return;
-  }
-  
-  submenuToggles.forEach((item, index) => {
-    console.log('Configurando listener para item', index, item);
-    item.addEventListener('click', event => {
-      console.log('CLIQUE DETECTADO no submenu toggle!', event.target);
-      event.preventDefault();
-      event.stopPropagation();
-      
-      const parentLi = item.parentElement;
-      const submenu = parentLi.querySelector('.submenu');
-      
-      console.log('Parent LI:', parentLi);
-      console.log('Submenu encontrado:', submenu);
-      
-      // Fecha outros submenus do mesmo nível
-      const siblings = parentLi.parentElement.children;
-      Array.from(siblings).forEach(sibling => {
-        if (sibling !== parentLi && sibling.classList.contains('has-submenu')) {
-          sibling.classList.remove('open');
-        }
+  if (submenuToggles.length === 0) return;
+
+  submenuToggles.forEach(item => {
+    item.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const li = item.closest('.has-submenu');
+      if (!li) return;
+
+      // Fecha irmãos no mesmo nível
+      const parentUl = li.parentElement;
+      parentUl.querySelectorAll(':scope > .has-submenu.open').forEach(sib => {
+        if (sib !== li) sib.classList.remove('open');
       });
-      
-      // Toggle do submenu atual
-      if (parentLi.classList.contains('open')) {
-        console.log('Fechando submenu');
-        parentLi.classList.remove('open');
-      } else {
-        console.log('Abrindo submenu');
-        parentLi.classList.add('open');
-      }
+
+      // Alterna o atual
+      li.classList.toggle('open');
     });
   });
 }
+
   
 // Funcionalidade de busca
 function initializeSearch() {
@@ -71,41 +53,47 @@ function initializeSearch() {
       const searchTerm = this.value.toLowerCase();
       const navItems = document.querySelectorAll('.sidebar nav ul li');
       
+      // Reset all items first
+      if (!searchTerm) {
+        navItems.forEach(item => {
+          item.style.display = 'block';
+          // Não remove a classe 'open', mantém o estado atual dos menus
+        });
+        return;
+      }
+      
       navItems.forEach(item => {
         const link = item.querySelector('a');
         if (link && !link.classList.contains('submenu-toggle')) {
           const text = link.textContent.toLowerCase();
-          const parent = item.closest('.has-submenu');
           
           if (text.includes(searchTerm)) {
             item.style.display = 'block';
-            // Mostra o submenu pai se o item está dentro de um
-            if (parent) {
-              parent.style.display = 'block';
-              parent.classList.add('open');
+            // Apenas torna visível os pais necessários, sem abrir
+            let currentParent = item.closest('.has-submenu');
+            while (currentParent) {
+              currentParent.style.display = 'block';
+              currentParent = currentParent.parentElement.closest('.has-submenu');
             }
           } else {
             // Só esconde se não for um item pai com filhos visíveis
             if (!item.classList.contains('has-submenu')) {
-              item.style.display = searchTerm ? 'none' : 'block';
+              item.style.display = 'none';
             }
           }
         }
       });
       
       // Esconde submenus vazios
-        document.querySelectorAll('.has-submenu').forEach(parent => {
-          const submenu = parent.querySelector('.submenu');
-          if (submenu) {
-            const visibleItems = submenu.querySelectorAll('li[style*="block"], li:not([style*="none"])');
-            if (searchTerm && visibleItems.length === 0) {
-              parent.style.display = 'none';
-              parent.classList.remove('open');
-            } else {
-              parent.style.display = 'block';
-            }
+      document.querySelectorAll('.has-submenu').forEach(parent => {
+        const submenu = parent.querySelector('.submenu');
+        if (submenu) {
+          const visibleItems = submenu.querySelectorAll('li[style*="block"], li:not([style*="none"])');
+          if (visibleItems.length === 0) {
+            parent.style.display = 'none';
           }
-        });
+        }
+      });
     });
   }
 }

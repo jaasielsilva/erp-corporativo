@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('TransferÃªncia de Estoque')"></head>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TransferÃªncia de Estoque</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+</head>
 <body>
 <div th:replace="components/sidebar :: sidebar"></div>
 <div th:replace="fragments/topbar :: topbar"></div>
@@ -25,21 +32,22 @@
     </form>
 </main>
 <div th:replace="fragments/footer :: footer"></div>
-  <!-- Script de notificações -->  <!-- jQuery necessário para o sistema de notificações -->
+  <!-- Script de notificaï¿½ï¿½es -->  <!-- jQuery necessï¿½rio para o sistema de notificaï¿½ï¿½es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
 
   <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necessário para o sistema de notificações -->
+  <!-- jQuery necessï¿½rio para o sistema de notificaï¿½ï¿½es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   
-  <!-- Script de notificações -->  <!-- jQuery necessário para o sistema de notificações -->
+  <!-- Script de notificaï¿½ï¿½es -->  <!-- jQuery necessï¿½rio para o sistema de notificaï¿½ï¿½es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
 
   <script th:src="@{/js/notifications.js}"></script>
+  <script th:src="@{/js/sidebar.js}"></script>
 
 </body>
 </html>

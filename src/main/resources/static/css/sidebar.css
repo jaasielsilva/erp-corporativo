@@ -90,3 +90,8 @@
 .sidebar ul li.active > a .submenu-icon {
     transform: rotate(90deg);
 }
+
+/*Faz a setinha do submenu abaixar e aparecer os itens*/
+.has-submenu.open .submanu{
+    display: block;
+}

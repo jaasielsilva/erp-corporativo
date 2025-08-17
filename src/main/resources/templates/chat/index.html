@@ -8,6 +8,7 @@
     <!-- CSS padrão do ERP -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -50,9 +51,11 @@
     </main>
 </div>
 
-<!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="/js/sidebar.js" defer></script>
+<!-- jQuery necessário -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<!-- Seu JS de notificações -->
 <script th:src="@{/js/notifications.js}"></script>
 </body>
 </html>

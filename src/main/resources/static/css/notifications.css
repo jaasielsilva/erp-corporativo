@@ -20,6 +20,10 @@
     z-index: 10;
     transition: all 0.2s ease;
 }
+.notification-trigger i,
+.notification-trigger span {
+    pointer-events: none;
+}
 
 /* Badge ativo com notificações não lidas */
 .notification-badge.has-unread {

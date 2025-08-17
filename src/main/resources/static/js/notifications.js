@@ -1,5 +1,4 @@
 $(document).ready(function() {
-    const $trigger = $('#notificationTrigger');
     const $center = $('<div class="notification-center"></div>').appendTo('body');
     const $overlay = $('<div class="notification-overlay"></div>').appendTo('body');
 
@@ -17,9 +16,10 @@ $(document).ready(function() {
     const $list = $center.find('.notification-list');
     const $badge = $('#notificationBadge');
 
-    // Abrir/fechar central
-    $trigger.on('click', function(e){
+    // Abrir/fechar central - usando delegação para cobrir qualquer clique
+    $(document).on('click', '#notificationTrigger', function(e){
         e.preventDefault();
+        e.stopPropagation(); // evita conflitos
         $center.toggleClass('show');
         $overlay.toggleClass('show');
         if ($center.hasClass('show')) loadNotifications();

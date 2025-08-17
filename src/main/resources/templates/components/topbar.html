@@ -1,18 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <header class="topbar" th:fragment="topbar">
-    <div class="topbar-title">
-      <h1>Sistema ERP Corporativo</h1>
+<header class="topbar" th:fragment="topbar">
+  <div class="topbar-title">
+    <h1>Sistema ERP Corporativo</h1>
+  </div>
+  <div class="topbar-actions">
+    <!-- Notificações -->
+    <a href="#" class="notification-trigger topbar-btn" title="Notificações" id="notificationTrigger">
+      <i class="fas fa-bell"></i>
+      <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+    </a>
+
+    <!-- Dropdown das notificações -->
+    <div id="notificationDropdown" class="notification-dropdown" style="display: none;">
+      <ul id="notificationList">
+        <!-- Notificações serão injetadas via JS -->
+      </ul>
+      <button id="markAllReadBtn">Marcar todas como lidas</button>
     </div>
-    <div class="topbar-actions">
-      <!-- Notificações -->
-      <a href="#" class="notification-trigger topbar-btn" title="Notificações">
-        <i class="fas fa-bell"></i>
-        <span class="notification-badge" style="display: none;">0</span>
-      </a>
-      <!-- Usuário -->
-      <a th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}" class="user-initial" title="Meu Perfil" th:text="${usuarioLogado != null ? usuarioLogado.nome.substring(0,1).toUpperCase() : 'U'}">U</a>
-      <span class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Usuário</span>
-    </div>
-  </header>
+
+
+    <!-- Usuário -->
+    <a th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}" class="user-initial" title="Meu Perfil"
+      th:text="${usuarioLogado != null ? usuarioLogado.nome.substring(0,1).toUpperCase() : 'U'}">U</a>
+    <span class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Usuário</span>
+  </div>
+</header>
+
 </html>

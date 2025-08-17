@@ -2,11 +2,27 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Backup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backup - TI - ERP Corporativo</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Backup</h1>
-
-
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area text-center py-5">
+            <h1 class="display-6 text-muted"><i class="fas fa-database"></i> Backup</h1>
+            <p class="text-muted">Gerencie status de backups, agendamentos e restaurações.</p>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
 </body>
 </html>

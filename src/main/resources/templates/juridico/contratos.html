@@ -1,12 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>Contratos Jurídicos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contratos Jurídicos - ERP Corporativo</title>
+    
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Contratos Jurídicos</h1>
-    <p>Bem-vindo à seção de contratos jurídicos. Aqui você encontrará informações sobre os contratos disponíveis.</p>
 
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid text-center py-5">
+                    <h1 class="display-6 text-muted"><i class="fas fa-file-contract"></i> Contratos Jurídicos</h1>
+                    <p class="text-muted">Bem-vindo à seção de contratos jurídicos. Aqui você encontrará informações sobre os contratos disponíveis.</p>
+                </div>
+            </section>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
 </html>

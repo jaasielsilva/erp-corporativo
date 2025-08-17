@@ -1,11 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Recomendados - ERP Corporativo</title>
+
+    <!-- CSS padrão -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
-<h1>Pagina principal de recomendados</h1>
+<body>
+    <div class="app-container">
 
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Conteúdo da página Recomendados -->
+            <section class="content-area">
+                <div class="container-fluid text-center py-5">
+                    <h1 class="display-6 text-muted"><i class="fas fa-thumbs-up"></i> Recomendados</h1>
+                    <p class="text-muted">Aqui você encontrará recomendações personalizadas dentro do ERP.</p>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
+
 </html>

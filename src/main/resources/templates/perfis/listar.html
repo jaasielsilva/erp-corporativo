@@ -1,329 +1,50 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Perfis - Portal CEO</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
+    <title>Gerenciar Perfis - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    
-    <style>
-        .card-stats {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-        }
-        .card-stats .card-body {
-            padding: 1.5rem;
-        }
-        .stats-icon {
-            font-size: 2.5rem;
-            opacity: 0.8;
-        }
-        .badge-sistema {
-            background-color: #dc3545;
-        }
-        .badge-custom {
-            background-color: #28a745;
-        }
-        .table-hover tbody tr:hover {
-            background-color: rgba(0,123,255,.075);
-        }
-        .btn-action {
-            margin: 0 2px;
-        }
-    </style>
 </head>
+
 <body>
-    <!-- Incluir sidebar -->
-    <div th:replace="~{components/sidebar :: sidebar}"></div>
-    
-    <div class="main-content">
-        <!-- Incluir header -->
-        <div th:replace="~{fragments/header :: header}"></div>
-        
-        <div class="container-fluid px-4">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li class="breadcrumb-item active">Perfis</li>
-                </ol>
-            </nav>
-            
-            <!-- Título e Ações -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 mb-0"><i class="fas fa-user-tag"></i> Gerenciar Perfis</h1>
-                    <p class="text-muted mb-0">Configure perfis e suas permissões</p>
-                </div>
-                <div>
-                    <a href="/perfis/novo" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Novo Perfil
-                    </a>
-                    <a href="/perfis/relatorios" class="btn btn-outline-info">
-                        <i class="fas fa-chart-bar"></i> Relatórios
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Alertas -->
-            <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle"></i> <span th:text="${sucesso}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            
-            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            
-            <!-- Cards de Estatísticas -->
-            <div class="row mb-4" th:if="${estatisticas}">
-                <div class="col-md-3">
-                    <div class="card card-stats">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h5 class="card-title text-uppercase text-muted mb-0">Total de Perfis</h5>
-                                    <span class="h2 font-weight-bold mb-0" th:text="${estatisticas.totalPerfis}">0</span>
-                                </div>
-                                <div class="col-auto">
-                                    <div class="stats-icon">
-                                        <i class="fas fa-user-tag"></i>
-                                    </div>
-                                </div>
-                            </div>
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Conteúdo da página Gerenciar Perfis -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12 text-center py-5">
+                            <h1 class="display-6 text-muted"><i class="fas fa-user-tag"></i> Gerenciar Perfis</h1>
+                            <p class="text-muted">Conteúdo ainda não implementado.</p>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-3">
-                    <div class="card card-stats">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h5 class="card-title text-uppercase text-muted mb-0">Total de Usuários</h5>
-                                    <span class="h2 font-weight-bold mb-0" th:text="${estatisticas.totalUsuarios}">0</span>
-                                </div>
-                                <div class="col-auto">
-                                    <div class="stats-icon">
-                                        <i class="fas fa-users"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <div class="card card-stats">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h5 class="card-title text-uppercase text-muted mb-0">Perfis Mais Usado</h5>
-                                    <span class="h6 font-weight-bold mb-0" th:if="${estatisticas.usuariosPorPerfil}">
-                                        <span th:each="entry, iterStat : ${estatisticas.usuariosPorPerfil}" 
-                                              th:if="${iterStat.first}" 
-                                              th:text="${entry.key}">-</span>
-                                    </span>
-                                </div>
-                                <div class="col-auto">
-                                    <div class="stats-icon">
-                                        <i class="fas fa-crown"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <div class="card card-stats">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h5 class="card-title text-uppercase text-muted mb-0">Média Permissões</h5>
-                                    <span class="h2 font-weight-bold mb-0" th:if="${estatisticas.permissoesPorPerfil}">
-                                        <span th:with="total=${#aggregates.sum(estatisticas.permissoesPorPerfil.values())}, count=${#lists.size(estatisticas.permissoesPorPerfil)}" 
-                                              th:text="${count > 0 ? #numbers.formatDecimal(total/count, 1, 1) : '0'}">0</span>
-                                    </span>
-                                </div>
-                                <div class="col-auto">
-                                    <div class="stats-icon">
-                                        <i class="fas fa-key"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Tabela de Perfis -->
-            <div class="card shadow">
-                <div class="card-header bg-white">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h5 class="mb-0"><i class="fas fa-list"></i> Lista de Perfis</h5>
-                        </div>
-                        <div class="col-auto">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="searchInput" placeholder="Buscar perfis...">
-                                <button class="btn btn-outline-secondary" type="button">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="perfisTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Usuários</th>
-                                    <th>Permissões</th>
-                                    <th>Tipo</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="perfil : ${perfis}">
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
-                                                <i class="fas fa-user-tag text-white"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0" th:text="${perfil.nome}">Nome do Perfil</h6>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info" 
-                                              th:text="${estatisticas.usuariosPorPerfil[perfil.nome] ?: 0} + ' usuário(s)'">0 usuários</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary" 
-                                              th:text="${estatisticas.permissoesPorPerfil[perfil.nome] ?: 0} + ' permissão(ões)'">0 permissões</span>
-                                    </td>
-                                    <td>
-                                        <span th:if="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}" 
-                                              class="badge badge-sistema">Sistema</span>
-                                        <span th:unless="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}" 
-                                              class="badge badge-custom">Personalizado</span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <a th:href="@{/perfis/detalhes/{id}(id=${perfil.id})}" 
-                                               class="btn btn-sm btn-outline-info btn-action" 
-                                               title="Ver Detalhes">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            
-                                            <a th:href="@{/perfis/editar/{id}(id=${perfil.id})}" 
-                                               class="btn btn-sm btn-outline-warning btn-action" 
-                                               title="Editar"
-                                               th:unless="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger btn-action" 
-                                                    title="Excluir"
-                                                    th:unless="${#lists.contains({'ADMIN', 'USER', 'MASTER', 'GERENTE'}, perfil.nome)}"
-                                                    onclick="confirmarExclusao(this)" 
-                                                    th:data-id="${perfil.id}" 
-                                                    th:data-nome="${perfil.nome}">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+
+        </main>
     </div>
-    
-    <!-- Modal de Confirmação de Exclusão -->
-    <div class="modal fade" id="modalExclusao" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning"></i> Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Tem certeza que deseja excluir o perfil <strong id="nomePerfilExclusao"></strong>?</p>
-                    <p class="text-muted small">Esta ação não pode ser desfeita.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="formExclusao" method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Excluir
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    
-    <script>
-        $(document).ready(function() {
-            // Inicializar DataTable
-            $('#perfisTable').DataTable({
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
-                },
-                pageLength: 10,
-                order: [[0, 'asc']],
-                columnDefs: [
-                    { orderable: false, targets: [4] } // Coluna de ações não ordenável
-                ]
-            });
-            
-            // Busca personalizada
-            $('#searchInput').on('keyup', function() {
-                $('#perfisTable').DataTable().search(this.value).draw();
-            });
-        });
-        
-        function confirmarExclusao(button) {
-            const perfilId = button.getAttribute('data-id');
-            const perfilNome = button.getAttribute('data-nome');
-            
-            document.getElementById('nomePerfilExclusao').textContent = perfilNome;
-            document.getElementById('formExclusao').action = '/perfis/excluir/' + perfilId;
-            
-            new bootstrap.Modal(document.getElementById('modalExclusao')).show();
-        }
-        
-        // Auto-hide alerts
-        setTimeout(function() {
-            $('.alert').fadeOut('slow');
-        }, 5000);
-    </script>
-  <!-- Script de notifica��es -->
-
-  <script th:src="@{/js/notifications.js}"></script>
-
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
+
 </html>

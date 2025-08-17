@@ -1,27 +1,52 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>TransferÃªncias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TransferÃªncias - ERP Corporativo</title>
+    
+    <!-- CSS padrÃ£o -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
-    <h1>TransferÃªncias</h1>
-    <!-- TODO: Implementar conteÃºdo de transferÃªncias -->
-  <!-- Script de notificações -->  <!-- jQuery necessário para o sistema de notificações -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <div class="app-container">
 
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
+        <!-- Main Content -->
+        <main class="main-content">
 
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necessário para o sistema de notificações -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notificações -->  <!-- jQuery necessário para o sistema de notificações -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
+            <!-- ConteÃºdo da pÃ¡gina TransferÃªncias -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12 text-center py-5">
+                            <h1 class="display-6 text-muted"><i class="fas fa-exchange-alt"></i> TransferÃªncias</h1>
+                            <p class="text-muted">Gerencie todas as transferÃªncias financeiras da empresa aqui.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
 
-  <script th:src="@{/js/notifications.js}"></script>
+        </main>
+    </div>
 
+    <!-- Scripts -->
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
+
 </html>

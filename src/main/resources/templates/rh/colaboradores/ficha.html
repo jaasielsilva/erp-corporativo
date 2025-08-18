@@ -107,7 +107,7 @@
             </div>
           </div>
 
-          <h1>ATÉ AQUI DADOS REAIS DO BANCO DE DADOS</h1>
+
 
           <!-- Contato -->
           <div class="ficha-section">
@@ -115,19 +115,23 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>E-mail:</label>
-                <span>joao.silva@empresa.com</span>
+                <span th:text="${colaborador.email}">E-mail</span>
               </div>
               <div class="info-item">
                 <label>Telefone:</label>
-                <span>(11) 99999-9999</span>
+                <span th:text="${colaborador.telefone}">Telefone</span>
               </div>
               <div class="info-item full-width">
                 <label>Endereço:</label>
-                <span>Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</span>
+                <span th:text="|, ${colaborador.numero} - ${colaborador.bairro} - ${colaborador.cidade}/${colaborador.estado} - CEP: ${colaborador.cep}|">
+  Endereço completo
+</span>
+
               </div>
             </div>
           </div>
 
+          <h1>ATÉ AQUI DADOS REAIS DO BANCO DE DADOS</h1>
           <!-- Dados Profissionais -->
           <div class="ficha-section">
             <h3><i class="fas fa-briefcase"></i> Dados Profissionais</h3>

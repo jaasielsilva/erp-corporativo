@@ -28,6 +28,7 @@ import com.jaasielsilva.portalceo.exception.ColaboradorNotFoundException;
 import com.jaasielsilva.portalceo.exception.DepartamentoNotFoundException;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.service.BeneficioService;
 import com.jaasielsilva.portalceo.service.CargoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
@@ -54,6 +55,9 @@ public class RhController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private BeneficioService beneficioService;
 
     /**
      * Redireciona para a página principal do módulo RH
@@ -101,6 +105,7 @@ public class RhController {
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("cargos", cargoService.listarTodos());
         model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
+        model.addAttribute("beneficios", beneficioService.listarTodos());
         return "rh/colaboradores/novo";
     }
 
@@ -200,7 +205,6 @@ public class RhController {
         model.addAttribute("ultimoAcesso", colaborador.getUltimoAcesso() != null
                 ? colaborador.getUltimoAcesso().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                 : "Nunca");
-
 
         return "rh/colaboradores/ficha";
     }
@@ -358,9 +362,12 @@ public class RhController {
      * ===============================================
      */
 
-    /**
-     * Exibe a página para gerar folha de pagamento
+     /*
+     * ===============================================
+     * FOLHA DE PAGAMENTO
+     * ===============================================
      */
+
     @GetMapping("/folha-pagamento/gerar")
     public String gerarFolhaPagamento(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
@@ -368,34 +375,23 @@ public class RhController {
         return "rh/folha-pagamento/gerar";
     }
 
-    /**
-     * Exibe a página de holerites
-     */
     @GetMapping("/folha-pagamento/holerite")
     public String holerites() {
         return "rh/folha-pagamento/holerite";
     }
 
-    /**
-     * Exibe um holerite específico
-     */
     @GetMapping("/folha-pagamento/holerite/{id}")
     public String verHolerite(@PathVariable Long id, Model model) {
-        // Aqui seria implementada a lógica para buscar o holerite específico
+        // Futuramente você poderá buscar o holerite pelo ID
+        model.addAttribute("holeriteId", id);
         return "rh/folha-pagamento/holerite";
     }
 
-    /**
-     * Exibe a página de descontos da folha de pagamento
-     */
     @GetMapping("/folha-pagamento/descontos")
     public String descontosFolhaPagamento() {
         return "rh/folha-pagamento/descontos";
     }
 
-    /**
-     * Exibe a página de relatórios da folha de pagamento
-     */
     @GetMapping("/folha-pagamento/relatorios")
     public String relatoriosFolhaPagamento(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
@@ -409,39 +405,31 @@ public class RhController {
      * ===============================================
      */
 
-    /**
-     * Exibe a página de plano de saúde
-     */
     @GetMapping("/beneficios/plano-saude")
     public String planoSaude(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+        model.addAttribute("beneficios", beneficioService.listarTodos());
         return "rh/beneficios/plano-saude";
     }
 
-    /**
-     * Exibe a página de vale transporte
-     */
     @GetMapping("/beneficios/vale-transporte")
     public String valeTransporte(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+        model.addAttribute("beneficios", beneficioService.listarTodos());
         return "rh/beneficios/vale-transporte";
     }
 
-    /**
-     * Exibe a página de vale refeição
-     */
     @GetMapping("/beneficios/vale-refeicao")
     public String valeRefeicao(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+        model.addAttribute("beneficios", beneficioService.listarTodos());
         return "rh/beneficios/vale-refeicao";
     }
 
-    /**
-     * Exibe a página de adesão a benefícios
-     */
     @GetMapping("/beneficios/adesao")
     public String adesaoBeneficios(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+        model.addAttribute("beneficios", beneficioService.listarTodos());
         return "rh/beneficios/adesao";
     }
 
@@ -451,30 +439,40 @@ public class RhController {
      * ===============================================
      */
 
-    /**
-     * Exibe a página de registros de ponto
-     */
     @GetMapping("/ponto-escalas/registros")
     public String registrosPonto(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         return "rh/ponto-escalas/registros";
     }
 
-    /**
-     * Exibe a página de correções de ponto
-     */
     @GetMapping("/ponto-escalas/correcoes")
     public String correcoesPonto(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         return "rh/ponto-escalas/correcoes";
     }
 
-    /**
-     * Exibe a página de escalas de trabalho
-     */
     @GetMapping("/ponto-escalas/escalas")
     public String escalasTrabalho(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         return "rh/ponto-escalas/escalas";
+    }
+
+    /*
+     * ===============================================
+     * COLABORADORES
+     * ===============================================
+     */
+
+    @GetMapping("/colaboradores/relatorio")
+    public String relatoriosColaborador(Model model) {
+        model.addAttribute("colaboradores", colaboradorService.listarTodos());
+        return "rh/colaboradores/relatorios";
+    }
+
+    @GetMapping("/colaboradores/ficha")
+    public String fichaColaborador(Model model) {
+        // Futuramente você poderá buscar um colaborador específico
+        model.addAttribute("colaboradores", colaboradorService.listarTodos());
+        return "rh/colaboradores/fichageral";
     }
 }

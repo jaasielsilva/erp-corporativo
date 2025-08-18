@@ -202,4 +202,21 @@ public class DashboardController {
         return "dashboard/index";
     }
 
+
+    @GetMapping("/dashboard/notificacoes")
+    public String dashboardNotificacoes(Model model) {
+        return "dashboard/notificacoes";
+    }
+
+    @GetMapping("/dashboard/estatisticas")
+    public String dashboardEstatisticas(Model model) {
+        return "dashboard/estatisticas";
+    }
+
+    @GetMapping("/dashboard/alertas")
+    public String dashboardAlertas(Model model) {
+        return "dashboard/alertas";
+    }
+
+
 }

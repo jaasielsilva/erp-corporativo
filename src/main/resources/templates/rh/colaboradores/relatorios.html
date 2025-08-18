@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - ERP Corporativo</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Conteúdo principal -->
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <section class="content-area">
+                <!-- Aqui você poderá adicionar os relatórios futuramente -->
+                 <h1>Aqui sera pagina de Relatorios a ser implementada</h1>
+            </section>
+
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- jQuery necessário -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+    <!-- JS de notificações -->
+    <script th:src="@{/js/notifications.js}" defer></script>
+
+    <!-- JS da sidebar -->
+    <script th:src="@{/js/sidebar.js}" defer></script>
+</body>
+</html>

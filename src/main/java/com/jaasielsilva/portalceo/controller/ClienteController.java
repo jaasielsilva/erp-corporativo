@@ -35,55 +35,61 @@ public class ClienteController {
 
     @GetMapping
     public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
-    List<Cliente> clientes;
+        List<Cliente> clientes;
 
-    if (busca == null || busca.trim().isEmpty()) {
-        // Busca todos os clientes
-        clientes = clienteService.buscarTodos(); 
-    } else {
-        // Busca clientes pelo nome ou email (ignora case)
-        clientes = clienteService.buscarPorNomeOuEmail(busca.trim());
+        if (busca == null || busca.trim().isEmpty()) {
+            // Busca todos os clientes
+            clientes = clienteService.buscarTodos();
+        } else {
+            // Busca clientes pelo nome ou email (ignora case)
+            clientes = clienteService.buscarPorNomeOuEmail(busca.trim());
+        }
+
+        // Adiciona a lista de clientes no model para o Thymeleaf
+        model.addAttribute("clientes", clientes);
+
+        // Estatísticas para exibir na tela
+        model.addAttribute("totalClientes", clienteService.contarTotal());
+        model.addAttribute("ativos", clienteService.contarAtivos());
+        model.addAttribute("inativos", clienteService.contarInativos());
+        model.addAttribute("pessoasJuridicas", clienteService.contarPessoasJuridicas());
+        model.addAttribute("ativosUltimos30", clienteService.contarAtivosUltimos30Dias());
+        model.addAttribute("clientesPF", clienteService.contarClientesPF());
+        model.addAttribute("clientesPJ", clienteService.contarPessoasJuridicas());
+        model.addAttribute("clientesPendentes", clienteService.contarPendentes());
+        model.addAttribute("clientesInativos90", clienteService.contarInativosMais90Dias());
+        model.addAttribute("clientesFidelizados", clienteService.contarFidelizados());
+
+        return "clientes/geral/listar";
     }
-
-    // Adiciona a lista de clientes no model para o Thymeleaf
-    model.addAttribute("clientes", clientes);
-
-    // Estatísticas para exibir na tela
-    model.addAttribute("totalClientes", clienteService.contarTotal());
-    model.addAttribute("ativos", clienteService.contarAtivos());
-    model.addAttribute("inativos", clienteService.contarInativos());
-    model.addAttribute("pessoasJuridicas", clienteService.contarPessoasJuridicas());
-    model.addAttribute("ativosUltimos30", clienteService.contarAtivosUltimos30Dias());
-    model.addAttribute("clientesPF", clienteService.contarClientesPF());
-    model.addAttribute("clientesPJ", clienteService.contarPessoasJuridicas());
-    model.addAttribute("clientesPendentes", clienteService.contarPendentes());
-    model.addAttribute("clientesInativos90", clienteService.contarInativosMais90Dias());
-    model.addAttribute("clientesFidelizados", clienteService.contarFidelizados());
-
-    return "clientes/lista";
-}
 
     @GetMapping("/cadastro")
     public String novoCliente(Model model) {
         model.addAttribute("cliente", new Cliente());
-        return "clientes/cadastro";
+        return "clientes/geral/cadastro";
     }
 
-    // metodo pra editar o cliente 
-    @GetMapping("/{id}/detalhes")
-    public String verDetalhesCliente(@PathVariable Long id, Model model) {
-    Optional<Cliente> clienteOpt = clienteService.buscarPorId(id);
-    
-    if (clienteOpt.isEmpty()) {
-        // Cliente não encontrado, redireciona para lista com erro
-        return "redirect:/clientes?erro=Cliente não encontrado";
-    }
+    // Método para visualizar detalhes do cliente
+    @GetMapping({ "/{id}/detalhes" })
+    public String verDetalhesCliente(@PathVariable(required = false) Long id, Model model) {
+        if (id == null) {
+            // Caso ninguém tenha passado ID, redireciona para a lista
+            return "redirect:/clientes";
+        }
 
-    Cliente cliente = clienteOpt.get();
-    model.addAttribute("cliente", cliente);
-    return "clientes/detalhes"; 
-    }
+        Optional<Cliente> clienteOpt = clienteService.buscarPorId(id);
 
+        if (clienteOpt.isEmpty()) {
+            // Cliente não encontrado, redireciona para lista com mensagem de erro
+            return "redirect:/clientes?erro=Cliente não encontrado";
+        }
+
+        Cliente cliente = clienteOpt.get();
+        model.addAttribute("cliente", cliente);
+
+        // Usa o template geral de detalhes
+        return "clientes/geral/detalhes";
+    }
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Cliente cliente) {
@@ -95,76 +101,76 @@ public class ClienteController {
     public String editar(@PathVariable Long id, Model model) {
         var cliente = clienteService.buscarPorId(id);
         model.addAttribute("cliente", cliente.orElse(new Cliente()));
-        return "clientes/editar";
+        return "clientes/geral/editar";
     }
 
     @PostMapping("/{id}/editar")
-public String atualizarCliente(@PathVariable Long id, @ModelAttribute Cliente clienteAtualizado, Principal principal) {
-    Cliente clienteExistente = clienteService.buscarPorId(id)
-        .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    public String atualizarCliente(@PathVariable Long id, @ModelAttribute Cliente clienteAtualizado,
+            Principal principal) {
+        Cliente clienteExistente = clienteService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
-    // Copia os campos do objeto atualizado para o objeto existente
-    clienteExistente.setNome(clienteAtualizado.getNome());
-    clienteExistente.setNomeFantasia(clienteAtualizado.getNomeFantasia());
-    clienteExistente.setTipoCliente(clienteAtualizado.getTipoCliente());
-    clienteExistente.setEmail(clienteAtualizado.getEmail());
-    clienteExistente.setTelefone(clienteAtualizado.getTelefone());
-    clienteExistente.setCelular(clienteAtualizado.getCelular());
-    clienteExistente.setCpfCnpj(clienteAtualizado.getCpfCnpj());
-    clienteExistente.setInscricaoEstadual(clienteAtualizado.getInscricaoEstadual());
-    clienteExistente.setInscricaoMunicipal(clienteAtualizado.getInscricaoMunicipal());
-    clienteExistente.setLogradouro(clienteAtualizado.getLogradouro());
-    clienteExistente.setNumero(clienteAtualizado.getNumero());
-    clienteExistente.setComplemento(clienteAtualizado.getComplemento());
-    clienteExistente.setBairro(clienteAtualizado.getBairro());
-    clienteExistente.setCidade(clienteAtualizado.getCidade());
-    clienteExistente.setEstado(clienteAtualizado.getEstado());
-    clienteExistente.setCep(clienteAtualizado.getCep());
-    clienteExistente.setStatus(clienteAtualizado.getStatus());
-    clienteExistente.setPessoaContato(clienteAtualizado.getPessoaContato());
-    clienteExistente.setObservacoes(clienteAtualizado.getObservacoes());
+        // Copia os campos do objeto atualizado para o objeto existente
+        clienteExistente.setNome(clienteAtualizado.getNome());
+        clienteExistente.setNomeFantasia(clienteAtualizado.getNomeFantasia());
+        clienteExistente.setTipoCliente(clienteAtualizado.getTipoCliente());
+        clienteExistente.setEmail(clienteAtualizado.getEmail());
+        clienteExistente.setTelefone(clienteAtualizado.getTelefone());
+        clienteExistente.setCelular(clienteAtualizado.getCelular());
+        clienteExistente.setCpfCnpj(clienteAtualizado.getCpfCnpj());
+        clienteExistente.setInscricaoEstadual(clienteAtualizado.getInscricaoEstadual());
+        clienteExistente.setInscricaoMunicipal(clienteAtualizado.getInscricaoMunicipal());
+        clienteExistente.setLogradouro(clienteAtualizado.getLogradouro());
+        clienteExistente.setNumero(clienteAtualizado.getNumero());
+        clienteExistente.setComplemento(clienteAtualizado.getComplemento());
+        clienteExistente.setBairro(clienteAtualizado.getBairro());
+        clienteExistente.setCidade(clienteAtualizado.getCidade());
+        clienteExistente.setEstado(clienteAtualizado.getEstado());
+        clienteExistente.setCep(clienteAtualizado.getCep());
+        clienteExistente.setStatus(clienteAtualizado.getStatus());
+        clienteExistente.setPessoaContato(clienteAtualizado.getPessoaContato());
+        clienteExistente.setObservacoes(clienteAtualizado.getObservacoes());
 
-    Usuario usuarioAutenticado = usuarioService.buscarPorEmail(principal.getName())
-        .orElseThrow(() -> new RuntimeException("Usuário autenticado não encontrado"));
+        Usuario usuarioAutenticado = usuarioService.buscarPorEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário autenticado não encontrado"));
 
-    clienteExistente.setEditadoPor(usuarioAutenticado);
-    clienteExistente.setDataUltimaEdicao(java.time.LocalDateTime.now());
+        clienteExistente.setEditadoPor(usuarioAutenticado);
+        clienteExistente.setDataUltimaEdicao(java.time.LocalDateTime.now());
 
-    clienteService.salvar(clienteExistente);
+        clienteService.salvar(clienteExistente);
 
-    return "redirect:/clientes";
-}
+        return "redirect:/clientes";
+    }
 
     @PostMapping("/{id}/excluir")
     public ResponseEntity<?> excluirCliente(
-        @PathVariable Long id,
-        @RequestHeader("X-Matricula") String matriculaInformada
-    ) {
+            @PathVariable Long id,
+            @RequestHeader("X-Matricula") String matriculaInformada) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String emailLogado = auth.getName();
 
         Optional<Usuario> usuarioLogadoOpt = usuarioService.buscarPorEmail(emailLogado);
         if (usuarioLogadoOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("erro", "Usuário não autenticado."));
+                    .body(Map.of("erro", "Usuário não autenticado."));
         }
 
         Usuario usuarioLogado = usuarioLogadoOpt.get();
 
         if (usuarioLogado.getNivelAcesso() != NivelAcesso.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("erro", "Apenas administradores podem excluir clientes."));
+                    .body(Map.of("erro", "Apenas administradores podem excluir clientes."));
         }
 
         if (!usuarioLogado.getMatricula().equalsIgnoreCase(matriculaInformada)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("erro", "Matrícula incorreta para este usuário."));
+                    .body(Map.of("erro", "Matrícula incorreta para este usuário."));
         }
 
         boolean excluido = clienteService.excluirLogicamente(id, usuarioLogado);
         if (!excluido) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("erro", "Cliente não encontrado."));
+                    .body(Map.of("erro", "Cliente não encontrado."));
         }
 
         return ResponseEntity.ok(Map.of("mensagem", "Cliente excluído logicamente com sucesso."));

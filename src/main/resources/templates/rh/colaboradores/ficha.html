@@ -123,53 +123,55 @@
               </div>
               <div class="info-item full-width">
                 <label>Endereço:</label>
-                <span th:text="|, ${colaborador.numero} - ${colaborador.bairro} - ${colaborador.cidade}/${colaborador.estado} - CEP: ${colaborador.cep}|">
-  Endereço completo
-</span>
+                <span
+                  th:text="|, ${colaborador.numero} - ${colaborador.bairro} - ${colaborador.cidade}/${colaborador.estado} - CEP: ${colaborador.cep}|">
+                  Endereço completo
+                </span>
 
               </div>
             </div>
           </div>
 
-          <h1>ATÉ AQUI DADOS REAIS DO BANCO DE DADOS</h1>
           <!-- Dados Profissionais -->
           <div class="ficha-section">
             <h3><i class="fas fa-briefcase"></i> Dados Profissionais</h3>
             <div class="info-grid">
               <div class="info-item">
                 <label>Cargo:</label>
-                <span>Desenvolvedor Senior</span>
+                <span th:text="${colaborador.cargo.nome}">Cargo</span>
               </div>
               <div class="info-item">
                 <label>Departamento:</label>
-                <span>TI</span>
+                <span th:text="${colaborador.departamento.nome}">Departamento</span>
               </div>
               <div class="info-item">
                 <label>Data de Admissão:</label>
-                <span>15/03/2022</span>
+                <span th:text="${colaborador.dataAdmissao}">1996-07-28</span>
               </div>
               <div class="info-item">
                 <label>Tipo de Contrato:</label>
-                <span>CLT</span>
+                <span th:text="${colaborador.tipoContrato}">CLT</span>
               </div>
               <div class="info-item">
                 <label>Carga Horária:</label>
-                <span>40h semanais</span>
+                <span th:text="${colaborador.cargaHoraria + 'h semanais'}">40h semanais</span>
               </div>
+
               <div class="info-item">
                 <label>Supervisor:</label>
-                <span>Maria Santos - Gerente de TI</span>
+                <span th:text="${colaborador.supervisor.nome}">Maria Santos - Gerente de TI</span>
               </div>
               <div class="info-item">
                 <label>Salário:</label>
-                <span>R$ 8.500,00</span>
+                <span th:text="'R$ ' + ${colaborador.salario}">R$ 8.500,00</span>
               </div>
-              <div class="info-item">
+              <div class="info-item" style="display:flex; gap:10px; align-items:center;">
                 <label>Status:</label>
-                <span class="status-badge status-ativo">Ativo</span>
+                <span class="status-badge status-ativo" th:text="${colaborador.status}">ATIVO</span>
               </div>
             </div>
           </div>
+
 
           <!-- Benefícios -->
           <div class="ficha-section">

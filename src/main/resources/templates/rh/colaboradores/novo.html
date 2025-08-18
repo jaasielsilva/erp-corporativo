@@ -33,7 +33,7 @@
           <i class="fas fa-check-circle"></i>
           <span th:text="${mensagem}"></span>
         </div>
-        
+
         <div th:if="${erro}" class="alert alert-danger">
           <i class="fas fa-exclamation-triangle"></i>
           <span th:text="${erro}"></span>
@@ -52,7 +52,8 @@
                 </div>
                 <div class="form-group required">
                   <label for="cpf">CPF *</label>
-                  <input type="text" id="cpf" name="cpf" required class="form-control" placeholder="000.000.000-00" data-mask="cpf">
+                  <input type="text" id="cpf" name="cpf" required class="form-control" placeholder="000.000.000-00"
+                    data-mask="cpf">
                 </div>
               </div>
 
@@ -68,26 +69,26 @@
               </div>
 
               <div class="form-row">
-  <div class="form-group">
-    <label for="estadoCivil">Estado Civil</label>
-    <select id="estadoCivil" name="estadoCivil" class="form-control">
-      <option value="">Selecione...</option>
-      <option value="SOLTEIRO">Solteiro(a)</option>
-      <option value="CASADO">Casado(a)</option>
-      <option value="DIVORCIADO">Divorciado(a)</option>
-      <option value="VIUVO">Viúvo(a)</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label for="sexo">Sexo</label>
-    <select id="sexo" name="sexo" class="form-control">
-      <option value="">Selecione...</option>
-      <option value="MASCULINO">Masculino</option>
-      <option value="FEMININO">Feminino</option>
-      <option value="OUTRO">Outro</option>
-    </select>
-  </div>
-</div>
+                <div class="form-group">
+                  <label for="estadoCivil">Estado Civil</label>
+                  <select id="estadoCivil" name="estadoCivil" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="SOLTEIRO">Solteiro(a)</option>
+                    <option value="CASADO">Casado(a)</option>
+                    <option value="DIVORCIADO">Divorciado(a)</option>
+                    <option value="VIUVO">Viúvo(a)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="sexo">Sexo</label>
+                  <select id="sexo" name="sexo" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option value="MASCULINO">Masculino</option>
+                    <option value="FEMININO">Feminino</option>
+                    <option value="OUTRO">Outro</option>
+                  </select>
+                </div>
+              </div>
 
               <div class="form-row">
                 <div class="form-group">
@@ -106,7 +107,7 @@
             <!-- Contato -->
             <div class="form-section">
               <h3><i class="fas fa-phone"></i> Contato</h3>
-              
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="email">E-mail *</label>
@@ -114,18 +115,21 @@
                 </div>
                 <div class="form-group">
                   <label for="telefone">Telefone</label>
-                  <input type="text" id="telefone" name="telefone" class="form-control" placeholder="(11) 99999-9999" data-mask="phone">
+                  <input type="text" id="telefone" name="telefone" class="form-control" placeholder="(11) 99999-9999"
+                    data-mask="phone">
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label for="cep">CEP</label>
-                  <input type="text" id="cep" name="cep" class="form-control" placeholder="00000-000" data-mask="cep" data-cep-search="true">
+                  <input type="text" id="cep" name="cep" class="form-control" placeholder="00000-000" data-mask="cep"
+                    data-cep-search="true">
                 </div>
                 <div class="form-group">
                   <label for="logradouro">Logradouro</label>
-                  <input type="text" id="logradouro" name="logradouro" class="form-control" placeholder="Rua, Avenida, etc.">
+                  <input type="text" id="logradouro" name="logradouro" class="form-control"
+                    placeholder="Rua, Avenida, etc.">
                 </div>
               </div>
 
@@ -136,7 +140,8 @@
                 </div>
                 <div class="form-group">
                   <label for="complemento">Complemento</label>
-                  <input type="text" id="complemento" name="complemento" class="form-control" placeholder="Apto, Sala, etc.">
+                  <input type="text" id="complemento" name="complemento" class="form-control"
+                    placeholder="Apto, Sala, etc.">
                 </div>
               </div>
 
@@ -195,7 +200,7 @@
             <!-- Dados Profissionais -->
             <div class="form-section">
               <h3><i class="fas fa-briefcase"></i> Dados Profissionais</h3>
-              
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="cargo">Cargo *</label>
@@ -208,7 +213,8 @@
                   <label for="departamento">Departamento *</label>
                   <select id="departamento" name="departamento.id" required class="form-control">
                     <option value="">Selecione...</option>
-                    <option th:each="departamento : ${departamentos}" th:value="${departamento.id}" th:text="${departamento.nome}"></option>
+                    <option th:each="departamento : ${departamentos}" th:value="${departamento.id}"
+                      th:text="${departamento.nome}"></option>
                   </select>
                 </div>
               </div>
@@ -220,7 +226,8 @@
                 </div>
                 <div class="form-group">
                   <label for="salario">Salário</label>
-                  <input type="text" id="salario" name="salario" class="form-control" placeholder="0,00" data-mask="currency">
+                  <input type="text" id="salario" name="salario" class="form-control" placeholder="0,00"
+                    data-mask="currency">
                 </div>
               </div>
 
@@ -246,10 +253,61 @@
                   <label for="supervisor">Supervisor Direto</label>
                   <select id="supervisor" name="supervisor.id" class="form-control">
                     <option value="">Nenhum supervisor</option>
-                    <option th:each="colaboradorSupervisor : ${colaboradores}" 
-                            th:value="${colaboradorSupervisor.id}" 
-                            th:text="${colaboradorSupervisor.nome + ' - ' + (colaboradorSupervisor.cargo != null ? colaboradorSupervisor.cargo.nome : 'Sem cargo')}">
+                    <option th:each="colaboradorSupervisor : ${colaboradores}" th:value="${colaboradorSupervisor.id}"
+                      th:text="${colaboradorSupervisor.nome + ' - ' + (colaboradorSupervisor.cargo != null ? colaboradorSupervisor.cargo.nome : 'Sem cargo')}">
                     </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <!-- Benefícios -->
+            <div class="form-section">
+              <h3><i class="fas fa-heart"></i> Benefícios</h3>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="beneficioPlanoSaude">Plano de Saúde</label>
+                  <select id="beneficioPlanoSaude" name="beneficios[0].beneficio.id" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option th:each="b : ${beneficios}" th:if="${b.nome == 'Plano de Saúde - Unimed'}"
+                      th:value="${b.id}" th:text="${b.nome}"></option>
+                  </select>
+                  <label>Status</label>
+                  <select name="beneficios[0].status" class="form-control">
+                    <option value="Ativo">Ativo</option>
+                    <option value="Inativo">Inativo</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="beneficioValeTransporte">Vale Transporte</label>
+                  <select id="beneficioValeTransporte" name="beneficios[1].beneficio.id" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option th:each="b : ${beneficios}" th:if="${b.nome == 'Vale Transporte'}" th:value="${b.id}"
+                      th:text="${b.nome}"></option>
+                  </select>
+                  <label>Valor</label>
+                  <input type="text" name="beneficios[1].valor" class="form-control" placeholder="220,00">
+                  <label>Status</label>
+                  <select name="beneficios[1].status" class="form-control">
+                    <option value="Ativo">Ativo</option>
+                    <option value="Inativo">Inativo</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="beneficioValeRefeicao">Vale Refeição</label>
+                  <select id="beneficioValeRefeicao" name="beneficios[2].beneficio.id" class="form-control">
+                    <option value="">Selecione...</option>
+                    <option th:each="b : ${beneficios}" th:if="${b.nome == 'Vale Refeição'}" th:value="${b.id}"
+                      th:text="${b.nome}"></option>
+                  </select>
+                  <label>Valor</label>
+                  <input type="text" name="beneficios[2].valor" class="form-control" placeholder="600,00">
+                  <label>Status</label>
+                  <select name="beneficios[2].status" class="form-control">
+                    <option value="Ativo">Ativo</option>
+                    <option value="Inativo">Inativo</option>
                   </select>
                 </div>
               </div>
@@ -258,10 +316,11 @@
             <!-- Observações -->
             <div class="form-section">
               <h3><i class="fas fa-sticky-note"></i> Observações</h3>
-              
+
               <div class="form-group">
                 <label for="observacoes">Observações Gerais</label>
-                <textarea id="observacoes" name="observacoes" rows="4" class="form-control" placeholder="Informações adicionais sobre o colaborador..."></textarea>
+                <textarea id="observacoes" name="observacoes" rows="4" class="form-control"
+                  placeholder="Informações adicionais sobre o colaborador..."></textarea>
               </div>
             </div>
           </div>
@@ -283,7 +342,7 @@
 
   <script th:src="@{/js/script.js}"></script>
   <script th:src="@{/js/colaborador-form.js}"></script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
@@ -291,8 +350,8 @@
   <script th:src="@{/js/notifications.js}"></script>
   <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+
+  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -182,6 +183,14 @@ public class ColaboradorService {
             logger.error("Erro ao excluir colaborador ID {}: {}", id, e.getMessage(), e);
             throw e;
         }
+    }
+
+
+    // metodo para calcular o tempo na empresa
+    public String calcularTempoNaEmpresa(LocalDate dataAdmissao) {
+        if (dataAdmissao == null) return "";
+        Period periodo = Period.between(dataAdmissao, LocalDate.now());
+        return periodo.getYears() + " ano(s) e " + periodo.getMonths() + " mês(es)";
     }
 
 }

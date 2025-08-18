@@ -40,23 +40,39 @@
           <!-- Cabeçalho da Ficha -->
           <div class="ficha-header">
             <div class="colaborador-foto">
-              <img src="/images/avatar-placeholder.png" alt="Foto do Colaborador" class="avatar-large">
+              <img src="/img/gerente.png" alt="Foto do Colaborador"
+                style="width:80px; height:80px; border-radius:50%; object-fit:cover;">
             </div>
+
             <div class="colaborador-info">
-              <h2>João Silva</h2>
-              <p class="cargo">Desenvolvedor Senior</p>
-              <p class="departamento">Departamento de TI</p>
-              <span class="status-badge status-ativo">Ativo</span>
+              <h2 th:text="${colaborador.nome}">Nome do Colaborador</h2>
+
+              <div class="info-item" style="display:flex; gap:10px; align-items:center;">
+                <label>Cargo:</label>
+                <span class="cargo" th:text="${colaborador.cargo.nome}">Cargo do Colaborador</span>
+              </div>
+
+              <div class="info-item" style="display:flex; gap:10px; align-items:center;">
+                <label>Departamento:</label>
+                <span class="departamento" th:text="${colaborador.departamento.nome}">Departamento do Colaborador</span>
+              </div>
+
+              <div class="info-item" style="display:flex; gap:10px; align-items:center;">
+                <label>Status:</label>
+                <span class="status-badge status-ativo" th:text="${colaborador.status}">ATIVO</span>
+              </div>
             </div>
+
             <div class="colaborador-stats">
               <div class="stat-item">
                 <span class="stat-label">Tempo na Empresa</span>
-                <span class="stat-value">1 ano e 8 meses</span>
+                <span class="stat-value" th:text="${tempoNaEmpresa}">1 ano e 8 meses</span>
               </div>
               <div class="stat-item">
                 <span class="stat-label">Último Acesso</span>
-                <span class="stat-value">Hoje, 14:30</span>
+                <span class="stat-value" th:text="${ultimoAcesso}">Hoje, 14:30</span>
               </div>
+
             </div>
           </div>
 
@@ -66,30 +82,32 @@
             <div class="info-grid">
               <div class="info-item">
                 <label>Nome Completo:</label>
-                <span>João Silva</span>
+                <span th:text="${colaborador.nome}">Nome do Colaborador</span>
               </div>
               <div class="info-item">
                 <label>CPF:</label>
-                <span>123.456.789-00</span>
+                <span th:text="${colaborador.cpf}">000.000.000-00</span>
               </div>
               <div class="info-item">
                 <label>RG:</label>
-                <span>12.345.678-9</span>
+                <span th:text="${colaborador.rg}">00.000.000-0</span>
               </div>
               <div class="info-item">
                 <label>Data de Nascimento:</label>
-                <span>15/05/1990 (33 anos)</span>
+                <span th:text="${colaborador.dataNascimento}">1996-07-28</span>
               </div>
               <div class="info-item">
                 <label>Estado Civil:</label>
-                <span>Solteiro</span>
+                <span th:text="${colaborador.estadoCivil}">Estado Civil</span>
               </div>
               <div class="info-item">
                 <label>Sexo:</label>
-                <span>Masculino</span>
+                <span th:text="${colaborador.sexo}">Sexo</span>
               </div>
             </div>
           </div>
+
+          <h1>ATÉ AQUI DADOS REAIS DO BANCO DE DADOS</h1>
 
           <!-- Contato -->
           <div class="ficha-section">
@@ -203,7 +221,9 @@
           <div class="ficha-section">
             <h3><i class="fas fa-sticky-note"></i> Observações</h3>
             <div class="observacoes-content">
-              <p>Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot. Demonstra liderança técnica e capacidade de mentoria para desenvolvedores juniores. Participou de projetos estratégicos da empresa com excelentes resultados.</p>
+              <p>Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot. Demonstra liderança
+                técnica e capacidade de mentoria para desenvolvedores juniores. Participou de projetos estratégicos da
+                empresa com excelentes resultados.</p>
             </div>
           </div>
         </div>
@@ -219,7 +239,7 @@
       window.print();
     }
   </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
@@ -227,8 +247,8 @@
   <script th:src="@{/js/notifications.js}"></script>
   <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+
+  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 

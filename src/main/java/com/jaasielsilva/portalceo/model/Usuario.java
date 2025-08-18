@@ -47,6 +47,8 @@ public class Usuario {
 
     private String estado;
 
+    private boolean online;
+    
     @Column(length = 10)
     private String ramal;
 

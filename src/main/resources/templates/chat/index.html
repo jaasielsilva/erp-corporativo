@@ -8,54 +8,324 @@
     <!-- CSS padrão do ERP -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
-    <link href="/css/notifications.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .chat-container {
+            display: flex;
+            height: 70vh;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .chat-messages-container {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .chat-message {
+            max-width: 70%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .chat-message.me {
+            align-self: flex-end;
+            background-color: #1e40af;
+            color: #fff;
+            text-align: right;
+        }
+
+        .chat-message.other {
+            align-self: flex-start;
+            color: #111;
+        }
+
+        .chat-message.private {
+            border: 1px dashed #fbbf24;
+        }
+
+        .chat-message .author {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+
+        .chat-input button {
+            padding: 10px 16px;
+            border: none;
+            background-color: #1e40af;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #1e3a8a;
+        }
+
+        .chat-users {
+            flex: 1;
+            padding: 10px;
+            background-color: #f1f5f9;
+            overflow-y: auto;
+        }
+
+        .chat-users h5 {
+            margin-bottom: 10px;
+        }
+
+        .chat-users ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .chat-users li {
+            margin-bottom: 6px;
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .chat-users li:hover {
+            background-color: #e2e8f0;
+        }
+
+        .selected-user {
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .typing-indicator {
+            font-size: 0.9rem;
+            color: #888;
+            margin: 2px 0;
+        }
+
+        .new-message-alert {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e40af;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: none;
+            z-index: 10;
+            box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
+
 <body>
 <div class="app-container">
-
-    <!-- Sidebar -->
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-    <!-- Main Content -->
     <main class="main-content">
-
-        <!-- Topbar -->
         <header th:replace="~{components/topbar :: topbar}"></header>
-
-        <!-- Conteúdo -->
         <section class="content-area">
             <div class="container-fluid">
-
-               
-
-                <!-- Título da Página -->
                 <div class="mb-4">
                     <h1 class="h3"><i class="fas fa-comments"></i> Chat Interno</h1>
                     <p class="text-muted">Converse com membros da equipe dentro do ERP.</p>
                 </div>
 
-                <!-- Área de Chat (vazia por enquanto) -->
                 <div class="card shadow">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">O chat interno ainda não foi implementado.</p>
+                    <div class="card-body d-flex flex-column">
+                        <p th:text="${usuarioLogado != null ? 'Você está logado como: ' + usuarioLogado.nome : 'Você não está logado.'}" class="text-muted mb-3"></p>
+
+                        <div class="chat-container">
+                            <div class="chat-messages-container">
+                                <div class="chat-messages" id="chatMessages">
+                                    <p class="text-muted text-center">Carregando mensagens...</p>
+                                </div>
+                                <div class="typing-indicator" id="typingIndicator" style="display:none;">Alguém está digitando...</div>
+                                <div class="chat-input">
+                                    <input type="text" id="messageInput" placeholder="Digite sua mensagem..." th:disabled="${usuarioLogado == null}">
+                                    <button id="sendMessageBtn" th:disabled="${usuarioLogado == null}">
+                                        <i class="fas fa-paper-plane"></i> Enviar
+                                    </button>
+                                </div>
+                                <div class="new-message-alert" id="newMessageAlert">Nova mensagem!</div>
+                            </div>
+
+                            <div class="chat-users">
+                                <h5>Usuários</h5>
+                                <ul id="userList"></ul>
+                                <p>Destinatário: <span id="selectedUser" class="selected-user">Todos</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
             </div>
         </section>
-
-        <!-- Footer -->
         <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
 </div>
 
-<script src="/js/sidebar.js" defer></script>
-<!-- jQuery necessário -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.2/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
-<!-- Seu JS de notificações -->
-<script th:src="@{/js/notifications.js}"></script>
+<script>
+$(document).ready(function () {
+    const chatMessages = $('#chatMessages');
+    const input = $('#messageInput');
+    const btn = $('#sendMessageBtn');
+    const typingIndicator = $('#typingIndicator');
+    const newMsgAlert = $('#newMessageAlert');
+
+    let destinatarioId = null;
+    const usuarioLogado = 'Você'; // substituir pelo backend
+    const usuarioLogadoId = /*[[${usuarioLogado.id}]]*/ 1;
+
+    const userColors = {
+        'Master do Sistema': '#1e40af',
+        'Gerente de RH': '#047857',
+        'Coordenador de Vendas': '#b45309',
+        'Operador de Sistema': '#9d174d',
+        'Jaasiel Silva': '#0369a1'
+    };
+
+    function playNotificationSound() {
+        // Som suave tipo notifications.js
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        const o = context.createOscillator();
+        const gainNode = context.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(500, context.currentTime);
+        o.connect(gainNode);
+        gainNode.connect(context.destination);
+        gainNode.gain.setValueAtTime(0.15, context.currentTime);
+        o.start();
+        o.stop(context.currentTime + 0.15);
+    }
+
+    const socket = new SockJS('/ws-chat');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function () {
+        console.log("Conectado ao WebSocket!");
+
+        stompClient.subscribe('/topic/public', function (messageOutput) {
+            const msg = JSON.parse(messageOutput.body);
+            const isMe = msg.senderId === usuarioLogadoId;
+            const isPrivate = msg.destinatarioId != null;
+
+            const color = isMe ? '#1e40af' : (userColors[msg.sender] || '#a1a1aa');
+
+            let msgClass = isMe ? 'me' : 'other';
+            if(isPrivate) msgClass += ' private';
+
+            const displayAuthor = isMe ? 'Você' : msg.sender;
+            const displayContent = isPrivate ? `(Privado) ${msg.content}` : msg.content;
+
+            const messageHtml = `<div class="chat-message ${msgClass}" style="background-color:${color};color:${isMe?'#fff':'#111'};">
+                                    <span class="author">${displayAuthor}</span>
+                                    <span class="content">${displayContent}</span>
+                                 </div>`;
+            chatMessages.append(messageHtml);
+            chatMessages.scrollTop(chatMessages[0].scrollHeight);
+
+            if(!isMe){
+                playNotificationSound();
+                newMsgAlert.fadeIn().delay(2000).fadeOut();
+            }
+        });
+
+        stompClient.subscribe('/topic/typing', function (typingMsg) {
+            const msg = JSON.parse(typingMsg.body);
+            if(msg.userId !== usuarioLogadoId){
+                typingIndicator.show();
+                setTimeout(()=> typingIndicator.hide(), 2000);
+            }
+        });
+    });
+
+    function atualizarUsuarios() {
+        $.get('/chat/usuarios', function (data) {
+            const ul = $('#userList');
+            ul.empty();
+            if(data.length===0){
+                ul.append('<li class="text-muted">Nenhum usuário encontrado</li>');
+                return;
+            }
+            data.forEach(u=>{
+                const status = u.online ? '🟢':'⚪';
+                const li = $(`<li>${status} ${u.nome}</li>`);
+                li.click(()=>{
+                    destinatarioId = u.id;
+                    $('#selectedUser').text(u.nome);
+                });
+                ul.append(li);
+            });
+        });
+    }
+
+    function enviarMensagem() {
+        const message = input.val().trim();
+        if(!message) return;
+
+        const msgObj = {
+            sender: usuarioLogado,
+            senderId: usuarioLogadoId,
+            content: message,
+            destinatarioId: destinatarioId
+        };
+
+        stompClient.send("/app/sendMessage", {}, JSON.stringify(msgObj));
+        input.val('');
+
+        stompClient.send("/app/typing", {}, JSON.stringify({userId: usuarioLogadoId}));
+    }
+
+    btn.click(enviarMensagem);
+    input.keypress(function(e){
+        if(e.which===13){
+            enviarMensagem();
+            return false;
+        }
+    });
+
+    atualizarUsuarios();
+    setInterval(atualizarUsuarios,5000);
+});
+</script>
 </body>
 </html>

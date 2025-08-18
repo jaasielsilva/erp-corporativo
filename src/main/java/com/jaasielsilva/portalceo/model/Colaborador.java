@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Colaborador {
-    
+
     // Construtor para consultas otimizadas
     public Colaborador(Long id, String nome, String email, String cpf) {
         this.id = id;
@@ -74,14 +74,18 @@ public class Colaborador {
 
     private LocalDateTime dataCriacao;
 
+    @Column(name = "ultimo_acesso")
+    private LocalDateTime ultimoAcesso;
+
+    
     @ManyToOne
     @JoinColumn(name = "cargo_id")
-    @JsonIgnoreProperties({"colaboradores", "departamentos"})
+    @JsonIgnoreProperties({ "colaboradores", "departamentos" })
     private Cargo cargo;
 
     @ManyToOne
     @JoinColumn(name = "departamento_id")
-    @JsonIgnoreProperties({"colaboradores", "cargos"})
+    @JsonIgnoreProperties({ "colaboradores", "cargos" })
     private Departamento departamento;
 
     private LocalDateTime dataUltimaEdicao;
@@ -97,32 +101,32 @@ public class Colaborador {
     // Campos de endereço
     @Pattern(regexp = "^[0-9]{5}-?[0-9]{3}$", message = "CEP deve ter formato válido")
     private String cep;
-    
+
     private String logradouro;
-    
+
     private String numero;
-    
+
     private String complemento;
-    
+
     private String bairro;
-    
+
     private String cidade;
-    
+
     private String estado;
-    
+
     private String pais;
-    
+
     private String observacoes;
-    
+
     private String tipoContrato;
-    
+
     @Min(value = 1, message = "Carga horária deve ser maior que zero")
     @Max(value = 60, message = "Carga horária não pode exceder 60 horas semanais")
     private Integer cargaHoraria;
-    
+
     @ManyToOne
     @JoinColumn(name = "supervisor_id")
-    @JsonIgnoreProperties({"supervisor", "cargo", "departamento"})
+    @JsonIgnoreProperties({ "supervisor", "cargo", "departamento" })
     private Colaborador supervisor;
 
     @PrePersist

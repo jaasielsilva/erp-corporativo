@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -108,76 +109,76 @@ public class RhController {
      */
     @PostMapping("/colaboradores/salvar")
     public String salvarColaborador(@Valid @ModelAttribute Colaborador colaborador,
-                                   BindingResult result,
-                                   RedirectAttributes redirectAttributes,
-                                   Model model) {
-        
+            BindingResult result,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
         logger.info("Processando cadastro do colaborador: {}", colaborador.getNome());
-        
+
         // Verificar erros de validação
         if (result.hasErrors()) {
             logger.warn("Erros de validação encontrados para colaborador {}", colaborador.getNome());
-            
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
-            
+
             // Adicionar mensagens de erro
             StringBuilder errorMessages = new StringBuilder();
             result.getAllErrors().forEach(error -> {
                 errorMessages.append(error.getDefaultMessage()).append("; ");
             });
-            
+
             model.addAttribute("erro", "Erros de validação: " + errorMessages.toString());
             return "rh/colaboradores/novo";
         }
-        
+
         try {
             Colaborador salvo = colaboradorService.salvar(colaborador);
             logger.info("Colaborador {} cadastrado com sucesso (ID: {})", salvo.getNome(), salvo.getId());
-            
-            redirectAttributes.addFlashAttribute("mensagem", 
-                "Colaborador " + salvo.getNome() + " cadastrado com sucesso!");
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Colaborador " + salvo.getNome() + " cadastrado com sucesso!");
             return "redirect:/rh/colaboradores/listar";
-            
+
         } catch (BusinessValidationException e) {
             logger.warn("Erro de validação de negócio: {}", e.getMessage());
-            
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
             model.addAttribute("erro", e.getMessage());
-            
+
             return "rh/colaboradores/novo";
-            
+
         } catch (CargoNotFoundException | DepartamentoNotFoundException e) {
             logger.error("Entidade não encontrada: {}", e.getMessage());
-            
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
             model.addAttribute("erro", e.getMessage());
-            
+
             return "rh/colaboradores/novo";
-            
+
         } catch (Exception e) {
-            logger.error("Erro inesperado ao cadastrar colaborador {}: {}", 
-                        colaborador.getNome(), e.getMessage(), e);
-            
+            logger.error("Erro inesperado ao cadastrar colaborador {}: {}",
+                    colaborador.getNome(), e.getMessage(), e);
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
-            model.addAttribute("erro", 
-                "Erro interno do sistema. Tente novamente ou contate o suporte.");
-            
+            model.addAttribute("erro",
+                    "Erro interno do sistema. Tente novamente ou contate o suporte.");
+
             return "rh/colaboradores/novo";
         }
     }
@@ -192,7 +193,15 @@ public class RhController {
             return "redirect:/rh/colaboradores/listar";
         }
 
+        // calcula tempo na empresa
+        String tempoNaEmpresa = colaboradorService.calcularTempoNaEmpresa(colaborador.getDataAdmissao());
         model.addAttribute("colaborador", colaborador);
+        model.addAttribute("tempoNaEmpresa", tempoNaEmpresa);
+        model.addAttribute("ultimoAcesso", colaborador.getUltimoAcesso() != null
+                ? colaborador.getUltimoAcesso().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : "Nunca");
+
+
         return "rh/colaboradores/ficha";
     }
 
@@ -206,7 +215,7 @@ public class RhController {
         if (colaborador == null) {
             return "redirect:/rh/colaboradores/listar";
         }
-        
+
         model.addAttribute("colaborador", colaborador);
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("cargos", cargoService.listarTodos());
@@ -218,78 +227,78 @@ public class RhController {
      * Processa o formulário de edição de colaborador
      */
     @PostMapping("/colaboradores/atualizar")
-    public String atualizarColaborador(@Valid @ModelAttribute Colaborador colaborador, 
-                                      BindingResult result,
-                                      RedirectAttributes redirectAttributes,
-                                      Model model) {
-        
-        logger.info("Processando atualização do colaborador: {} (ID: {})", 
-                   colaborador.getNome(), colaborador.getId());
-        
+    public String atualizarColaborador(@Valid @ModelAttribute Colaborador colaborador,
+            BindingResult result,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
+        logger.info("Processando atualização do colaborador: {} (ID: {})",
+                colaborador.getNome(), colaborador.getId());
+
         // Verificar erros de validação
         if (result.hasErrors()) {
             logger.warn("Erros de validação encontrados para colaborador {}", colaborador.getNome());
-            
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
-            
+
             // Adicionar mensagens de erro
             StringBuilder errorMessages = new StringBuilder();
             result.getAllErrors().forEach(error -> {
                 errorMessages.append(error.getDefaultMessage()).append("; ");
             });
-            
+
             model.addAttribute("erro", "Erros de validação: " + errorMessages.toString());
             return "rh/colaboradores/editar";
         }
-        
+
         try {
             Colaborador salvo = colaboradorService.salvar(colaborador);
             logger.info("Colaborador {} atualizado com sucesso (ID: {})", salvo.getNome(), salvo.getId());
-            
-            redirectAttributes.addFlashAttribute("mensagem", 
-                "Colaborador " + salvo.getNome() + " atualizado com sucesso!");
+
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Colaborador " + salvo.getNome() + " atualizado com sucesso!");
             return "redirect:/rh/colaboradores/listar";
-            
+
         } catch (BusinessValidationException e) {
             logger.warn("Erro de validação de negócio: {}", e.getMessage());
-            
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
             model.addAttribute("erro", e.getMessage());
-            
+
             return "rh/colaboradores/editar";
-            
+
         } catch (CargoNotFoundException | DepartamentoNotFoundException | ColaboradorNotFoundException e) {
             logger.error("Entidade não encontrada: {}", e.getMessage());
-            
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
             model.addAttribute("erro", e.getMessage());
-            
+
             return "rh/colaboradores/editar";
-            
+
         } catch (Exception e) {
-            logger.error("Erro inesperado ao atualizar colaborador {}: {}", 
-                        colaborador.getNome(), e.getMessage(), e);
-            
+            logger.error("Erro inesperado ao atualizar colaborador {}: {}",
+                    colaborador.getNome(), e.getMessage(), e);
+
             // Recarregar dados necessários para o formulário
             model.addAttribute("colaborador", colaborador);
             model.addAttribute("cargos", cargoService.listarTodos());
             model.addAttribute("departamentos", departamentoService.listarTodos());
             model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
-            model.addAttribute("erro", 
-                "Erro interno do sistema. Tente novamente ou contate o suporte.");
-            
+            model.addAttribute("erro",
+                    "Erro interno do sistema. Tente novamente ou contate o suporte.");
+
             return "rh/colaboradores/editar";
         }
     }

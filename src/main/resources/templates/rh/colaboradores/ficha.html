@@ -159,8 +159,11 @@
 
               <div class="info-item">
                 <label>Supervisor:</label>
-                <span th:text="${colaborador.supervisor.nome}">Maria Santos - Gerente de TI</span>
+                <span th:text="${colaborador.supervisor != null ? colaborador.supervisor.nome : 'Nenhum'}">
+                  Nenhum
+                </span>
               </div>
+
               <div class="info-item">
                 <label>Salário:</label>
                 <span th:text="'R$ ' + ${colaborador.salario}">R$ 8.500,00</span>
@@ -174,26 +177,27 @@
 
 
           <!-- Benefícios -->
+          <!-- Benefícios -->
           <div class="ficha-section">
             <h3><i class="fas fa-gift"></i> Benefícios</h3>
             <div class="beneficios-list">
-              <div class="beneficio-item ativo">
-                <i class="fas fa-heartbeat"></i>
-                <span>Plano de Saúde - Unimed</span>
-                <span class="status">Ativo</span>
-              </div>
-              <div class="beneficio-item ativo">
-                <i class="fas fa-bus"></i>
-                <span>Vale Transporte - R$ 220,00/mês</span>
-                <span class="status">Ativo</span>
-              </div>
-              <div class="beneficio-item ativo">
-                <i class="fas fa-utensils"></i>
-                <span>Vale Refeição - R$ 600,00/mês</span>
-                <span class="status">Ativo</span>
+              <div th:each="benef : ${colaborador.beneficios}"
+                th:classappend="${benef.status == 'ATIVO'} ? 'ativo' : 'inativo'" class="beneficio-item">
+
+                <!-- Ícone conforme tipo de benefício -->
+                <i th:class="${benef.beneficio.nome.contains('Saúde') ? 'fas fa-heartbeat' :
+                         benef.beneficio.nome.contains('Transporte') ? 'fas fa-bus' :
+                         benef.beneficio.nome.contains('Refeição') ? 'fas fa-utensils' : 'fas fa-gift'}"></i>
+
+                <!-- Nome e status do benefício -->
+                <div class="info-item">
+                  <label th:text="${benef.beneficio.nome}">Plano de Saúde</label>
+                  <span th:text="${benef.status}">Ativo</span>
+                </div>
               </div>
             </div>
           </div>
+
 
           <!-- Histórico Recente -->
           <div class="ficha-section">

@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.controller;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -27,6 +28,7 @@ import com.jaasielsilva.portalceo.exception.CargoNotFoundException;
 import com.jaasielsilva.portalceo.exception.ColaboradorNotFoundException;
 import com.jaasielsilva.portalceo.exception.DepartamentoNotFoundException;
 import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.model.ColaboradorBeneficio;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.BeneficioService;
 import com.jaasielsilva.portalceo.service.CargoService;
@@ -101,11 +103,24 @@ public class RhController {
      */
     @GetMapping("/colaboradores/novo")
     public String novoColaborador(Model model) {
-        model.addAttribute("colaborador", new Colaborador());
+        Colaborador colaborador = new Colaborador();
+
+        // Inicializa a lista se for null
+        if (colaborador.getBeneficios() == null) {
+            colaborador.setBeneficios(new ArrayList<>());
+        }
+
+        // Adiciona 3 benefícios vazios
+        while (colaborador.getBeneficios().size() < 3) {
+            colaborador.getBeneficios().add(new ColaboradorBeneficio());
+        }
+
+        model.addAttribute("colaborador", colaborador);
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("cargos", cargoService.listarTodos());
         model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais());
         model.addAttribute("beneficios", beneficioService.listarTodos());
+
         return "rh/colaboradores/novo";
     }
 
@@ -362,7 +377,7 @@ public class RhController {
      * ===============================================
      */
 
-     /*
+    /*
      * ===============================================
      * FOLHA DE PAGAMENTO
      * ===============================================

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "colaboradores")
@@ -77,11 +78,13 @@ public class Colaborador {
     @Column(name = "ultimo_acesso")
     private LocalDateTime ultimoAcesso;
 
-    
     @ManyToOne
     @JoinColumn(name = "cargo_id")
     @JsonIgnoreProperties({ "colaboradores", "departamentos" })
     private Cargo cargo;
+
+    @OneToMany(mappedBy = "colaborador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ColaboradorBeneficio> beneficios;
 
     @ManyToOne
     @JoinColumn(name = "departamento_id")
@@ -154,8 +157,4 @@ public class Colaborador {
         ATIVO, INATIVO, SUSPENSO
     }
 
-    public Colaborador orElseThrow(Object object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'orElseThrow'");
-    }
 }

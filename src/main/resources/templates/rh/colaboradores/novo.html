@@ -272,10 +272,13 @@
                     <option th:each="b : ${beneficios}" th:if="${b.nome == 'Plano de Saúde - Unimed'}"
                       th:value="${b.id}" th:text="${b.nome}"></option>
                   </select>
+                  <label>Valor</label>
+                  <input type="text" name="beneficios[1].valor" class="form-control" placeholder="120,00">
                   <label>Status</label>
                   <select name="beneficios[0].status" class="form-control">
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
+                    <option value="ATIVO">Ativo</option>
+                    <option value="INATIVO">Inativo</option>
+
                   </select>
                 </div>
 
@@ -290,8 +293,8 @@
                   <input type="text" name="beneficios[1].valor" class="form-control" placeholder="220,00">
                   <label>Status</label>
                   <select name="beneficios[1].status" class="form-control">
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
+                    <option value="ATIVO">Ativo</option>
+                    <option value="INATIVO">Inativo</option>
                   </select>
                 </div>
 
@@ -306,8 +309,8 @@
                   <input type="text" name="beneficios[2].valor" class="form-control" placeholder="600,00">
                   <label>Status</label>
                   <select name="beneficios[2].status" class="form-control">
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
+                    <option value="ATIVO">Ativo</option>
+                    <option value="INATIVO">Inativo</option>
                   </select>
                 </div>
               </div>
@@ -342,22 +345,14 @@
 
   <script th:src="@{/js/script.js}"></script>
   <script th:src="@{/js/colaborador-form.js}"></script>
-  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <!-- jQuery necessário -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
+<!-- Seu JS de notificações (que depende de jQuery) -->
+<script th:src="@{/js/notifications.js}" defer></script>
 
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
+<!-- Seu sidebar.js (se não depende de jQuery, pode ficar antes ou depois) -->
+<script src="/js/sidebar.js" defer></script>
 
 </body>
 

@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.repository;
 
+import com.jaasielsilva.portalceo.model.Beneficio;
 import com.jaasielsilva.portalceo.model.PlanoSaude;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -7,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PlanoSaudeRepository extends JpaRepository<PlanoSaude, Long> {
@@ -31,5 +33,9 @@ public interface PlanoSaudeRepository extends JpaRepository<PlanoSaude, Long> {
 
     // metodo Verificar existência pelo código – útil para validações de duplicidade
     boolean existsByCodigo(String codigo);
+
+
+    Optional<PlanoSaude> findByNome(String nome);
+    
 
 }

@@ -34,6 +34,7 @@ import com.jaasielsilva.portalceo.service.BeneficioService;
 import com.jaasielsilva.portalceo.service.CargoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
+import com.jaasielsilva.portalceo.service.PlanoSaudeService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
 /**
@@ -61,6 +62,8 @@ public class RhController {
     @Autowired
     private BeneficioService beneficioService;
 
+    @Autowired
+    private PlanoSaudeService planoSaudeService;
     /**
      * Redireciona para a página principal do módulo RH
      */
@@ -419,11 +422,11 @@ public class RhController {
      * BENEFÍCIOS
      * ===============================================
      */
-
     @GetMapping("/beneficios/plano-saude")
     public String planoSaude(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         model.addAttribute("beneficios", beneficioService.listarTodos());
+        model.addAttribute("planos", planoSaudeService.listarTodosAtivos());
         return "rh/beneficios/plano-saude";
     }
 

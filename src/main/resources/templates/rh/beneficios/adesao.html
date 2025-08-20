@@ -48,7 +48,7 @@
                   <div class="resumo-detalhes">Aguardando processamento</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item ativas">
                 <div class="resumo-icon">
                   <i class="fas fa-check-circle"></i>
@@ -59,7 +59,7 @@
                   <div class="resumo-detalhes">Benefícios ativos</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item canceladas">
                 <div class="resumo-icon">
                   <i class="fas fa-times-circle"></i>
@@ -70,7 +70,7 @@
                   <div class="resumo-detalhes">Este mês</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item economia">
                 <div class="resumo-icon">
                   <i class="fas fa-piggy-bank"></i>
@@ -107,7 +107,7 @@
                 </button>
               </div>
             </div>
-            
+
             <div class="beneficio-card">
               <div class="beneficio-icon">
                 <i class="fas fa-bus"></i>
@@ -126,7 +126,7 @@
                 </button>
               </div>
             </div>
-            
+
             <div class="beneficio-card">
               <div class="beneficio-icon">
                 <i class="fas fa-utensils"></i>
@@ -145,7 +145,7 @@
                 </button>
               </div>
             </div>
-            
+
             <div class="beneficio-card">
               <div class="beneficio-icon">
                 <i class="fas fa-tooth"></i>
@@ -228,26 +228,34 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr th:each="adesao : ${adesoes}">
                 <td>
                   <div class="colaborador-info">
-                    <strong>Pedro Lima</strong><br>
-                    <small>Marketing - Mat: 005</small>
+                    <strong th:text="${adesao.colaborador.nome}">Nome Colaborador</strong><br>
+                    <small th:text="${adesao.colaborador.departamento.nome}">Departamento - Mat: 000</small>
                   </div>
                 </td>
                 <td>
                   <div class="beneficio-info">
                     <i class="fas fa-heartbeat"></i>
-                    <strong>Plano de Saúde</strong><br>
-                    <small>Familiar (3 dependentes)</small>
+                    <strong th:text="${adesao.planoSaude.nome}">Plano de Saúde</strong><br>
+                    <small
+                      th:text="${adesao.quantidadeDependentes > 0 ? 'Familiar (' + adesao.quantidadeDependentes + ' dependentes)' : 'Individual'}">Individual</small>
                   </div>
                 </td>
                 <td><span class="tipo-badge adesao">Adesão</span></td>
+
                 <td>25/11/2023</td>
+
                 <td>01/12/2023</td>
-                <td>R$ 540,00</td>
+
+                <!-- Valor -->
+                <td th:text="'R$ ' + ${adesao.valorTotalMensal}"></td>
+
                 <td><span class="status-badge status-pendente">Pendente</span></td>
                 <td>
+
+                  
                   <button onclick="aprovarAdesao(1)" class="btn-icon btn-success" title="Aprovar">
                     <i class="fas fa-check"></i>
                   </button>
@@ -255,121 +263,6 @@
                     <i class="fas fa-times"></i>
                   </button>
                   <button onclick="verDetalhesAdesao(1)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Lucia Fernandes</strong><br>
-                    <small>RH - Mat: 006</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="beneficio-info">
-                    <i class="fas fa-utensils"></i>
-                    <strong>Vale Refeição</strong><br>
-                    <small>R$ 35,00/dia</small>
-                  </div>
-                </td>
-                <td><span class="tipo-badge adesao">Adesão</span></td>
-                <td>23/11/2023</td>
-                <td>01/12/2023</td>
-                <td>R$ 770,00</td>
-                <td><span class="status-badge status-pendente">Pendente</span></td>
-                <td>
-                  <button onclick="aprovarAdesao(2)" class="btn-icon btn-success" title="Aprovar">
-                    <i class="fas fa-check"></i>
-                  </button>
-                  <button onclick="rejeitarAdesao(2)" class="btn-icon btn-danger" title="Rejeitar">
-                    <i class="fas fa-times"></i>
-                  </button>
-                  <button onclick="verDetalhesAdesao(2)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Roberto Santos</strong><br>
-                    <small>Estagiário - Mat: 007</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="beneficio-info">
-                    <i class="fas fa-bus"></i>
-                    <strong>Vale Transporte</strong><br>
-                    <small>4 viagens/dia</small>
-                  </div>
-                </td>
-                <td><span class="tipo-badge adesao">Adesão</span></td>
-                <td>20/11/2023</td>
-                <td>01/12/2023</td>
-                <td>R$ 387,20</td>
-                <td><span class="status-badge status-pendente">Pendente</span></td>
-                <td>
-                  <button onclick="aprovarAdesao(3)" class="btn-icon btn-success" title="Aprovar">
-                    <i class="fas fa-check"></i>
-                  </button>
-                  <button onclick="rejeitarAdesao(3)" class="btn-icon btn-danger" title="Rejeitar">
-                    <i class="fas fa-times"></i>
-                  </button>
-                  <button onclick="verDetalhesAdesao(3)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>João Silva</strong><br>
-                    <small>TI - Mat: 001</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="beneficio-info">
-                    <i class="fas fa-heartbeat"></i>
-                    <strong>Plano de Saúde</strong><br>
-                    <small>Individual</small>
-                  </div>
-                </td>
-                <td><span class="tipo-badge ativa">Ativa</span></td>
-                <td>15/10/2023</td>
-                <td>01/11/2023</td>
-                <td>R$ 180,00</td>
-                <td><span class="status-badge status-ativa">Ativa</span></td>
-                <td>
-                  <button onclick="cancelarBeneficio(4)" class="btn-icon btn-warning" title="Cancelar">
-                    <i class="fas fa-ban"></i>
-                  </button>
-                  <button onclick="verDetalhesAdesao(4)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Maria Santos</strong><br>
-                    <small>Vendas - Mat: 002</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="beneficio-info">
-                    <i class="fas fa-tooth"></i>
-                    <strong>Plano Odontológico</strong><br>
-                    <small>Familiar</small>
-                  </div>
-                </td>
-                <td><span class="tipo-badge cancelamento">Cancelamento</span></td>
-                <td>18/11/2023</td>
-                <td>31/11/2023</td>
-                <td>R$ 90,00</td>
-                <td><span class="status-badge status-cancelada">Cancelada</span></td>
-                <td>
-                  <button onclick="verDetalhesAdesao(5)" class="btn-icon" title="Ver Detalhes">
                     <i class="fas fa-eye"></i>
                   </button>
                 </td>
@@ -435,7 +328,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form class="modal-body">
         <div class="form-row">
           <div class="form-group">
@@ -450,7 +343,8 @@
           </div>
           <div class="form-group">
             <label for="tipoBeneficioModal">Tipo de Benefício *</label>
-            <select id="tipoBeneficioModal" name="tipoBeneficio" required class="form-control" onchange="carregarOpcoesBeneficio()">
+            <select id="tipoBeneficioModal" name="tipoBeneficio" required class="form-control"
+              onchange="carregarOpcoesBeneficio()">
               <option value="">Selecione...</option>
               <option value="plano-saude">Plano de Saúde</option>
               <option value="vale-transporte">Vale Transporte</option>
@@ -459,7 +353,7 @@
             </select>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="dataVigencia">Data de Vigência *</label>
@@ -476,17 +370,18 @@
             </select>
           </div>
         </div>
-        
+
         <!-- Seção específica do benefício (será preenchida dinamicamente) -->
         <div id="opcoesBeneficio" style="display: none;">
           <!-- Conteúdo será inserido via JavaScript -->
         </div>
-        
+
         <div class="form-group">
           <label for="observacoes">Observações</label>
-          <textarea id="observacoes" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre a adesão..."></textarea>
+          <textarea id="observacoes" name="observacoes" class="form-control" rows="3"
+            placeholder="Informações adicionais sobre a adesão..."></textarea>
         </div>
-        
+
         <div class="form-group">
           <label>
             <input type="checkbox" id="processarImediatamente" name="processarImediatamente">
@@ -494,7 +389,7 @@
           </label>
         </div>
       </form>
-      
+
       <div class="modal-footer">
         <button type="button" onclick="fecharModalAdesao()" class="btn btn-secondary">
           <i class="fas fa-times"></i> Cancelar
@@ -511,25 +406,25 @@
     function abrirModalAdesao() {
       document.getElementById('modalAdesao').style.display = 'flex';
     }
-    
+
     function fecharModalAdesao() {
       document.getElementById('modalAdesao').style.display = 'none';
       document.querySelector('#modalAdesao form').reset();
       document.getElementById('opcoesBeneficio').style.display = 'none';
     }
-    
+
     function carregarOpcoesBeneficio() {
       const tipo = document.getElementById('tipoBeneficioModal').value;
       const container = document.getElementById('opcoesBeneficio');
-      
+
       if (!tipo) {
         container.style.display = 'none';
         return;
       }
-      
+
       let html = '';
-      
-      switch(tipo) {
+
+      switch (tipo) {
         case 'plano-saude':
           html = `
             <h4><i class="fas fa-heartbeat"></i> Opções do Plano de Saúde</h4>
@@ -549,7 +444,7 @@
             </div>
           `;
           break;
-          
+
         case 'vale-transporte':
           html = `
             <h4><i class="fas fa-bus"></i> Opções do Vale Transporte</h4>
@@ -570,7 +465,7 @@
             </div>
           `;
           break;
-          
+
         case 'vale-refeicao':
           html = `
             <h4><i class="fas fa-utensils"></i> Opções do Vale Refeição</h4>
@@ -592,7 +487,7 @@
             </div>
           `;
           break;
-          
+
         case 'plano-odonto':
           html = `
             <h4><i class="fas fa-tooth"></i> Opções do Plano Odontológico</h4>
@@ -613,11 +508,11 @@
           `;
           break;
       }
-      
+
       container.innerHTML = html;
       container.style.display = 'block';
     }
-    
+
     function salvarAdesao() {
       const form = document.querySelector('#modalAdesao form');
       if (form.checkValidity()) {
@@ -628,7 +523,7 @@
         alert('Por favor, preencha todos os campos obrigatórios.');
       }
     }
-    
+
     function processarAdesoes() {
       if (confirm('Deseja processar todas as adesões pendentes? Esta ação não pode ser desfeita.')) {
         alert('Processando adesões...');
@@ -639,14 +534,14 @@
         }, 3000);
       }
     }
-    
+
     function aprovarAdesao(id) {
       if (confirm('Tem certeza que deseja aprovar esta adesão?')) {
         alert(`Adesão ${id} aprovada com sucesso!`);
         location.reload();
       }
     }
-    
+
     function rejeitarAdesao(id) {
       const motivo = prompt('Motivo da rejeição:');
       if (motivo) {
@@ -654,7 +549,7 @@
         location.reload();
       }
     }
-    
+
     function cancelarBeneficio(id) {
       const motivo = prompt('Motivo do cancelamento:');
       if (motivo) {
@@ -665,80 +560,80 @@
         }
       }
     }
-    
+
     function verDetalhes(tipo) {
       alert(`Visualizando detalhes do benefício: ${tipo}`);
     }
-    
+
     function verDetalhesAdesao(id) {
       alert(`Visualizando detalhes da adesão ${id}`);
     }
-    
+
     function filtrarAdesoes() {
       alert('Aplicando filtros...');
     }
-    
+
     function exportarRelatorio() {
       alert('Exportando relatório de adesões...');
     }
   </script>
-  
+
   <style>
     .resumo-adesoes {
       margin: 20px 0;
     }
-    
+
     .resumo-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
     }
-    
+
     .resumo-item {
       display: flex;
       align-items: center;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    
+
     .resumo-item.pendentes {
       background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
       color: white;
     }
-    
+
     .resumo-item.ativas {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
-    
+
     .resumo-item.canceladas {
       background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       color: white;
     }
-    
+
     .resumo-item.economia {
       background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       color: white;
     }
-    
+
     .resumo-icon {
       font-size: 32px;
       margin-right: 20px;
       opacity: 0.9;
     }
-    
+
     .resumo-valor {
       font-size: 24px;
       font-weight: bold;
       margin: 5px 0;
     }
-    
+
     .resumo-detalhes {
       font-size: 14px;
       opacity: 0.9;
     }
-    
+
     /* Estilos para os cards de benefícios */
     .beneficios-container {
       display: grid;
@@ -746,7 +641,7 @@
       gap: 20px;
       margin: 20px 0;
     }
-    
+
     .beneficio-card {
       display: flex;
       flex-direction: column;
@@ -756,64 +651,64 @@
       transition: all 0.3s ease;
       background: #fff;
     }
-    
+
     .beneficio-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       transform: translateY(-2px);
     }
-    
+
     .beneficio-icon {
       font-size: 40px;
       color: #007bff;
       margin-bottom: 15px;
       text-align: center;
     }
-    
+
     .beneficio-info {
       flex-grow: 1;
       text-align: center;
     }
-    
+
     .beneficio-info h4 {
       margin: 0 0 10px 0;
       font-size: 18px;
     }
-    
+
     .beneficio-info p {
       margin: 0 0 15px 0;
       color: #6c757d;
       font-size: 14px;
     }
-    
+
     .beneficio-stats {
       display: flex;
       justify-content: space-around;
       margin-bottom: 15px;
     }
-    
+
     .stat {
       font-size: 12px;
       color: #6c757d;
     }
-    
+
     .stat i {
       margin-right: 4px;
     }
-    
+
     .beneficio-actions {
       text-align: center;
     }
-    
+
     .colaborador-info strong {
       display: block;
       margin-bottom: 2px;
     }
-    
+
     .beneficio-info strong {
       display: block;
       margin-bottom: 2px;
     }
-    
+
     .tipo-badge {
       padding: 4px 8px;
       border-radius: 4px;
@@ -821,22 +716,22 @@
       font-weight: bold;
       text-transform: uppercase;
     }
-    
+
     .tipo-badge.adesao {
       background: #28a745;
       color: white;
     }
-    
+
     .tipo-badge.ativa {
       background: #007bff;
       color: white;
     }
-    
+
     .tipo-badge.cancelamento {
       background: #dc3545;
       color: white;
     }
-    
+
     .status-badge {
       padding: 4px 8px;
       border-radius: 4px;
@@ -844,30 +739,30 @@
       font-weight: bold;
       text-transform: uppercase;
     }
-    
+
     .status-badge.status-pendente {
       background: #ffc107;
       color: #333;
     }
-    
+
     .status-badge.status-ativa {
       background: #28a745;
       color: white;
     }
-    
+
     .status-badge.status-cancelada {
       background: #dc3545;
       color: white;
     }
-    
+
     .modal-large {
       max-width: 800px;
     }
-    
+
     .input-group {
       display: flex;
     }
-    
+
     .input-group-text {
       background: #e9ecef;
       border: 1px solid #ced4da;
@@ -875,32 +770,32 @@
       padding: 8px 12px;
       border-radius: 4px 0 0 4px;
     }
-    
+
     .input-group .form-control {
       border-left: none;
       border-radius: 0 4px 4px 0;
     }
-    
+
     .form-text {
       font-size: 12px;
       color: #6c757d;
       margin-top: 4px;
     }
-    
+
     #opcoesBeneficio {
       background: #f8f9fa;
       padding: 15px;
       border-radius: 6px;
       margin: 15px 0;
     }
-    
+
     #opcoesBeneficio h4 {
       margin-top: 0;
       margin-bottom: 15px;
       color: #495057;
     }
   </style>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
@@ -908,8 +803,8 @@
   <script th:src="@{/js/notifications.js}"></script>
   <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+
+  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 

@@ -22,14 +22,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.jaasielsilva.portalceo.exception.BusinessValidationException;
 import com.jaasielsilva.portalceo.exception.CargoNotFoundException;
 import com.jaasielsilva.portalceo.exception.ColaboradorNotFoundException;
 import com.jaasielsilva.portalceo.exception.DepartamentoNotFoundException;
+import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.ColaboradorBeneficio;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.service.AdesaoPlanoSaudeService;
 import com.jaasielsilva.portalceo.service.BeneficioService;
 import com.jaasielsilva.portalceo.service.CargoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
@@ -64,6 +67,10 @@ public class RhController {
 
     @Autowired
     private PlanoSaudeService planoSaudeService;
+
+    @Autowired
+    private AdesaoPlanoSaudeService adesaoPlanoSaudeService;
+
     /**
      * Redireciona para a página principal do módulo RH
      */
@@ -445,9 +452,16 @@ public class RhController {
     }
 
     @GetMapping("/beneficios/adesao")
-    public String adesaoBeneficios(Model model) {
-        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
-        model.addAttribute("beneficios", beneficioService.listarTodos());
+    public String adesaoBeneficios(
+            Model model,
+            @RequestParam(defaultValue = "0") int page) {
+
+        Pageable pageable = PageRequest.of(page, 5); // 5 registros por página
+        Page<AdesaoPlanoSaude> adesoesPage = adesaoPlanoSaudeService.listarTodosPaginado(pageable);
+
+        model.addAttribute("adesoes", adesoesPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", adesoesPage.getTotalPages());
         return "rh/beneficios/adesao";
     }
 

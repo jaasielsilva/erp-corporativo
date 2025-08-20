@@ -28,9 +28,17 @@ public class VendaService {
     
     @Autowired
     private ProdutoService produtoService;
+    
+    @Autowired
+    private CaixaService caixaService;
 
     @Transactional
     public Venda salvar(Venda venda) {
+        // Calcular total se não foi definido
+        if (venda.getTotal() == null) {
+            venda.setTotal(venda.calcularTotal());
+        }
+        
         for (VendaItem item : venda.getItens()) {
             item.setVenda(venda);
             Produto produto = item.getProduto();
@@ -43,7 +51,18 @@ public class VendaService {
             produto.setEstoque(novaQuantidade);
             produtoService.salvar(produto); // atualiza o estoque no banco
         }
-        return vendaRepository.save(venda);
+        
+        Venda vendaSalva = vendaRepository.save(venda);
+        
+        // Registrar venda no caixa se estiver aberto
+        try {
+            caixaService.registrarVenda(vendaSalva);
+        } catch (Exception e) {
+            // Log do erro, mas não falha a venda
+            System.err.println("Erro ao registrar venda no caixa: " + e.getMessage());
+        }
+        
+        return vendaSalva;
     }
 
     // Lista todas as vendas
@@ -220,6 +239,131 @@ public class VendaService {
         } catch (NumberFormatException e) {
             return 75; // Valor padrão se houver erro
         }
+    }
+    
+    // ===== MÉTODOS ESPECÍFICOS PARA PDV =====
+    
+    @Transactional
+    public Venda processarVendaPdv(Venda venda) {
+        // Validações específicas do PDV
+        if (venda.getItens() == null || venda.getItens().isEmpty()) {
+            throw new IllegalArgumentException("Venda deve ter pelo menos um item");
+        }
+        
+        if (venda.getFormaPagamento() == null || venda.getFormaPagamento().trim().isEmpty()) {
+            throw new IllegalArgumentException("Forma de pagamento é obrigatória");
+        }
+        
+        // Verificar se existe caixa aberto
+        if (!caixaService.existeCaixaAberto()) {
+            throw new IllegalStateException("Não há caixa aberto. Abra o caixa antes de realizar vendas.");
+        }
+        
+        // Definir dados padrão do PDV
+        venda.setDataVenda(LocalDateTime.now());
+        venda.setStatus("FINALIZADA");
+        
+        // Calcular totais
+        BigDecimal subtotal = venda.getItens().stream()
+            .map(item -> item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        venda.setSubtotal(subtotal);
+        venda.setTotal(subtotal.subtract(venda.getDesconto() != null ? venda.getDesconto() : BigDecimal.ZERO));
+        
+        // Calcular troco se pagamento em dinheiro
+        if ("Dinheiro".equalsIgnoreCase(venda.getFormaPagamento()) && venda.getValorPago() != null) {
+            BigDecimal troco = venda.getValorPago().subtract(venda.getTotal());
+            venda.setTroco(troco.compareTo(BigDecimal.ZERO) > 0 ? troco : BigDecimal.ZERO);
+        }
+        
+        return salvar(venda);
+    }
+    
+    // Buscar vendas do dia atual
+    public List<Venda> buscarVendasDoDia() {
+        LocalDate hoje = LocalDate.now();
+        LocalDateTime inicioHoje = hoje.atStartOfDay();
+        LocalDateTime fimHoje = hoje.atTime(23, 59, 59);
+        return vendaRepository.findByDataVendaBetween(inicioHoje, fimHoje);
+    }
+    
+    // Calcular total de vendas do dia
+    public BigDecimal calcularTotalVendasDoDia() {
+        return buscarVendasDoDia().stream()
+            .map(Venda::getTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+    
+    // Contar vendas do dia
+    public long contarVendasDoDia() {
+        return buscarVendasDoDia().size();
+    }
+    
+    // Buscar vendas por forma de pagamento
+    public List<Venda> buscarPorFormaPagamento(String formaPagamento) {
+        return vendaRepository.findByFormaPagamentoIgnoreCase(formaPagamento);
+    }
+    
+    // Calcular total por forma de pagamento no dia
+    public BigDecimal calcularTotalPorFormaPagamentoDia(String formaPagamento) {
+        LocalDate hoje = LocalDate.now();
+        LocalDateTime inicioHoje = hoje.atStartOfDay();
+        LocalDateTime fimHoje = hoje.atTime(23, 59, 59);
+        
+        return vendaRepository.findByFormaPagamentoIgnoreCaseAndDataVendaBetween(
+            formaPagamento, inicioHoje, fimHoje)
+            .stream()
+            .map(Venda::getTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+    
+    // Relatório resumido de vendas do dia
+    public ResumoVendasDia obterResumoVendasDia() {
+        List<Venda> vendasDia = buscarVendasDoDia();
+        
+        BigDecimal totalDinheiro = calcularTotalPorFormaPagamentoDia("Dinheiro");
+        BigDecimal totalPix = calcularTotalPorFormaPagamentoDia("PIX");
+        BigDecimal totalCartaoDebito = calcularTotalPorFormaPagamentoDia("Cartão de Débito");
+        BigDecimal totalCartaoCredito = calcularTotalPorFormaPagamentoDia("Cartão de Crédito");
+        
+        return new ResumoVendasDia(
+            vendasDia.size(),
+            calcularTotalVendasDoDia(),
+            totalDinheiro,
+            totalPix,
+            totalCartaoDebito,
+            totalCartaoCredito
+        );
+    }
+    
+    // Classe para resumo de vendas do dia
+    public static class ResumoVendasDia {
+        private int quantidadeVendas;
+        private BigDecimal totalVendas;
+        private BigDecimal totalDinheiro;
+        private BigDecimal totalPix;
+        private BigDecimal totalCartaoDebito;
+        private BigDecimal totalCartaoCredito;
+        
+        public ResumoVendasDia(int quantidadeVendas, BigDecimal totalVendas, 
+                              BigDecimal totalDinheiro, BigDecimal totalPix,
+                              BigDecimal totalCartaoDebito, BigDecimal totalCartaoCredito) {
+            this.quantidadeVendas = quantidadeVendas;
+            this.totalVendas = totalVendas;
+            this.totalDinheiro = totalDinheiro;
+            this.totalPix = totalPix;
+            this.totalCartaoDebito = totalCartaoDebito;
+            this.totalCartaoCredito = totalCartaoCredito;
+        }
+        
+        // Getters
+        public int getQuantidadeVendas() { return quantidadeVendas; }
+        public BigDecimal getTotalVendas() { return totalVendas; }
+        public BigDecimal getTotalDinheiro() { return totalDinheiro; }
+        public BigDecimal getTotalPix() { return totalPix; }
+        public BigDecimal getTotalCartaoDebito() { return totalCartaoDebito; }
+        public BigDecimal getTotalCartaoCredito() { return totalCartaoCredito; }
     }
     
 }

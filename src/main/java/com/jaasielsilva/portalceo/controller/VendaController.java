@@ -341,4 +341,115 @@ public class VendaController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
     }
+    
+    // ===== ENDPOINTS PARA GESTÃO DE CAIXA =====
+    
+    @GetMapping("/caixa")
+    public String caixa(Model model) {
+        try {
+            Optional<Caixa> caixaAberto = caixaService.buscarCaixaAberto();
+            model.addAttribute("caixaAberto", caixaAberto.orElse(null));
+            model.addAttribute("resumoDia", vendaService.obterResumoVendasDia());
+            return "vendas/caixa";
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao carregar informações do caixa: " + e.getMessage());
+            return "error";
+        }
+    }
+    
+    @PostMapping("/api/caixa/abrir")
+    @ResponseBody
+    public ResponseEntity<?> abrirCaixa(@RequestParam BigDecimal valorInicial) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            
+            Caixa caixa = caixaService.abrirCaixa(usuario, valorInicial);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("mensagem", "Caixa aberto com sucesso!");
+            response.put("caixa", caixa);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @PostMapping("/api/caixa/fechar")
+    @ResponseBody
+    public ResponseEntity<?> fecharCaixa(@RequestParam(required = false) String observacoes) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            
+            Caixa caixa = caixaService.fecharCaixa(usuario, observacoes);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("mensagem", "Caixa fechado com sucesso!");
+            response.put("caixa", caixa);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("mensagem", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    // ===== ENDPOINTS PARA RELATÓRIOS =====
+    
+    @GetMapping("/relatorios")
+    public String relatorios(Model model) {
+        return "vendas/relatorios";
+    }
+    
+    @GetMapping("/api/resumo-dia")
+    @ResponseBody
+    public ResponseEntity<?> obterResumoDia() {
+        try {
+            VendaService.ResumoVendasDia resumo = vendaService.obterResumoVendasDia();
+            return ResponseEntity.ok(resumo);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao obter resumo: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @GetMapping("/api/vendas-recentes")
+    @ResponseBody
+    public ResponseEntity<?> obterVendasRecentes(@RequestParam(defaultValue = "10") int limite) {
+        try {
+            List<Venda> vendas = vendaService.buscarRecentes(limite);
+            return ResponseEntity.ok(vendas);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao buscar vendas: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    // ===== ENDPOINTS PARA FORMAS DE PAGAMENTO =====
+    
+    @GetMapping("/api/formas-pagamento")
+    @ResponseBody
+    public ResponseEntity<?> listarFormasPagamento() {
+        try {
+            List<FormaPagamento> formas = formaPagamentoService.buscarAtivas();
+            return ResponseEntity.ok(formas);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao buscar formas de pagamento: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 }

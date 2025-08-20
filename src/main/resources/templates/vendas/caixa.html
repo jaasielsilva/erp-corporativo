@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestão de Caixa - Painel do CEO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  
+  <style>
+    .caixa-container {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .caixa-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    
+    .caixa-header {
+      background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .status-card {
+      padding: 25px;
+      text-align: center;
+    }
+    
+    .status-aberto {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    
+    .status-fechado {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    
+    .resumo-card {
+      padding: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .resumo-item:last-child {
+      border-bottom: none;
+    }
+    
+    .resumo-label {
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .resumo-valor {
+      font-weight: 700;
+      font-size: 18px;
+      color: #059669;
+    }
+    
+    .btn-caixa {
+      border-radius: 15px;
+      padding: 15px 30px;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      transition: all 0.3s;
+    }
+    
+    .btn-caixa:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .btn-abrir {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    
+    .btn-fechar {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    
+    .valor-input {
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px 15px;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .valor-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="caixa-container">
+    <div class="container">
+      <!-- Header -->
+      <div class="caixa-card">
+        <div class="caixa-header">
+          <h1><i class="fas fa-cash-register me-3"></i>Gestão de Caixa</h1>
+          <p class="mb-0">Controle de Abertura e Fechamento</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Status do Caixa -->
+        <div class="col-lg-6">
+          <div class="caixa-card">
+            <div th:if="${caixaAberto != null}" class="status-card status-aberto">
+              <h3><i class="fas fa-check-circle me-2"></i>Caixa Aberto</h3>
+              <p class="mb-3">Caixa em funcionamento</p>
+              <div class="row text-center">
+                <div class="col-6">
+                  <h5>Valor Inicial</h5>
+                  <h4 th:text="'R$ ' + ${#numbers.formatDecimal(caixaAberto.valorInicial, 1, 2)}"></h4>
+                </div>
+                <div class="col-6">
+                  <h5>Aberto em</h5>
+                  <h6 th:text="${#temporals.format(caixaAberto.dataAbertura, 'dd/MM/yyyy HH:mm')}"></h6>
+                </div>
+              </div>
+              <hr class="my-4">
+              <button type="button" class="btn btn-caixa btn-fechar" onclick="mostrarModalFechar()">
+                <i class="fas fa-times me-2"></i>Fechar Caixa
+              </button>
+            </div>
+            
+            <div th:if="${caixaAberto == null}" class="status-card status-fechado">
+              <h3><i class="fas fa-times-circle me-2"></i>Caixa Fechado</h3>
+              <p class="mb-4">Abra o caixa para iniciar as vendas</p>
+              <button type="button" class="btn btn-caixa btn-abrir" onclick="mostrarModalAbrir()">
+                <i class="fas fa-play me-2"></i>Abrir Caixa
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumo do Dia -->
+        <div class="col-lg-6">
+          <div class="caixa-card">
+            <div class="card-header bg-light">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-line me-2"></i>Resumo do Dia
+              </h5>
+            </div>
+            <div class="resumo-card" th:if="${resumoDia != null}">
+              <div class="resumo-item">
+                <span class="resumo-label">Total de Vendas</span>
+                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalVendas, 1, 2)}"></span>
+              </div>
+              <div class="resumo-item">
+                <span class="resumo-label">Quantidade de Vendas</span>
+                <span class="resumo-valor" th:text="${resumoDia.quantidadeVendas}"></span>
+              </div>
+              <div class="resumo-item">
+                <span class="resumo-label">Ticket Médio</span>
+                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.ticketMedio, 1, 2)}"></span>
+              </div>
+              <div class="resumo-item">
+                <span class="resumo-label">Dinheiro</span>
+                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalDinheiro, 1, 2)}"></span>
+              </div>
+              <div class="resumo-item">
+                <span class="resumo-label">Cartão</span>
+                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalCartao, 1, 2)}"></span>
+              </div>
+              <div class="resumo-item">
+                <span class="resumo-label">PIX</span>
+                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalPix, 1, 2)}"></span>
+              </div>
+            </div>
+            <div class="resumo-card" th:if="${resumoDia == null}">
+              <div class="text-center text-muted py-4">
+                <i class="fas fa-chart-line fa-3x mb-3 opacity-50"></i>
+                <h5>Nenhuma venda hoje</h5>
+                <p>Os dados aparecerão após a primeira venda</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ações Rápidas -->
+      <div class="caixa-card">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-bolt me-2"></i>Ações Rápidas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <a href="/vendas/pdv" class="btn btn-outline-primary w-100 btn-caixa">
+                <i class="fas fa-cash-register d-block mb-2 fa-2x"></i>
+                PDV
+              </a>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a href="/vendas/relatorios" class="btn btn-outline-info w-100 btn-caixa">
+                <i class="fas fa-chart-bar d-block mb-2 fa-2x"></i>
+                Relatórios
+              </a>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a href="/vendas" class="btn btn-outline-success w-100 btn-caixa">
+                <i class="fas fa-list d-block mb-2 fa-2x"></i>
+                Vendas
+              </a>
+            </div>
+            <div class="col-md-3 mb-3">
+              <a href="/dashboard" class="btn btn-outline-secondary w-100 btn-caixa">
+                <i class="fas fa-home d-block mb-2 fa-2x"></i>
+                Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Abrir Caixa -->
+  <div class="modal fade" id="modalAbrirCaixa" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-cash-register me-2"></i>Abrir Caixa
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="valorInicial" class="form-label">Valor Inicial (R$)</label>
+            <input type="number" class="form-control valor-input" id="valorInicial" 
+                   placeholder="0,00" step="0.01" min="0" required>
+          </div>
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Digite o valor em dinheiro que está no caixa para iniciar as vendas.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success" onclick="abrirCaixa()">Abrir Caixa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Fechar Caixa -->
+  <div class="modal fade" id="modalFecharCaixa" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-times-circle me-2"></i>Fechar Caixa
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="observacoes" class="form-label">Observações (opcional)</label>
+            <textarea class="form-control" id="observacoes" rows="3" 
+                      placeholder="Digite observações sobre o fechamento do caixa..."></textarea>
+          </div>
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Atenção:</strong> Após fechar o caixa, não será possível realizar vendas até a próxima abertura.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" onclick="fecharCaixa()">Fechar Caixa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function mostrarModalAbrir() {
+      const modal = new bootstrap.Modal(document.getElementById('modalAbrirCaixa'));
+      modal.show();
+    }
+
+    function mostrarModalFechar() {
+      const modal = new bootstrap.Modal(document.getElementById('modalFecharCaixa'));
+      modal.show();
+    }
+
+    async function abrirCaixa() {
+      const valorInicial = document.getElementById('valorInicial').value;
+      
+      if (!valorInicial || parseFloat(valorInicial) < 0) {
+        alert('Digite um valor inicial válido!');
+        return;
+      }
+
+      try {
+        const response = await fetch('/vendas/api/caixa/abrir', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `valorInicial=${valorInicial}`
+        });
+
+        const result = await response.json();
+
+        if (result.sucesso) {
+          alert('Caixa aberto com sucesso!');
+          location.reload();
+        } else {
+          alert('Erro ao abrir caixa: ' + result.mensagem);
+        }
+      } catch (error) {
+        console.error('Erro ao abrir caixa:', error);
+        alert('Erro ao abrir caixa. Tente novamente.');
+      }
+    }
+
+    async function fecharCaixa() {
+      const observacoes = document.getElementById('observacoes').value;
+
+      if (!confirm('Tem certeza que deseja fechar o caixa?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/vendas/api/caixa/fechar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `observacoes=${encodeURIComponent(observacoes)}`
+        });
+
+        const result = await response.json();
+
+        if (result.sucesso) {
+          alert('Caixa fechado com sucesso!');
+          location.reload();
+        } else {
+          alert('Erro ao fechar caixa: ' + result.mensagem);
+        }
+      } catch (error) {
+        console.error('Erro ao fechar caixa:', error);
+        alert('Erro ao fechar caixa. Tente novamente.');
+      }
+    }
+  </script>
+</body>
+
+</html>

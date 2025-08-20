@@ -414,6 +414,27 @@
             </div>
           </div>
 
+          <!-- Status do Caixa -->
+          <div class="pdv-card" th:if="${caixaAberto == null}">
+            <div class="alert alert-warning text-center">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <strong>Caixa Fechado</strong><br>
+              <small>É necessário abrir o caixa para realizar vendas</small>
+              <br><br>
+              <button class="btn btn-warning btn-sm" onclick="abrirCaixa()">
+                <i class="fas fa-cash-register me-2"></i>Abrir Caixa
+              </button>
+            </div>
+          </div>
+          
+          <div class="pdv-card" th:if="${caixaAberto != null}">
+            <div class="alert alert-success text-center">
+              <i class="fas fa-check-circle me-2"></i>
+              <strong>Caixa Aberto</strong><br>
+              <small th:text="'Valor inicial: R$ ' + ${#numbers.formatDecimal(caixaAberto.valorInicial, 1, 2)}"></small>
+            </div>
+          </div>
+
           <!-- Formas de Pagamento -->
           <div class="pdv-card">
             <div class="payment-section">
@@ -421,44 +442,8 @@
                 <i class="fas fa-credit-card me-2"></i>Forma de Pagamento
               </h5>
               
-              <div class="payment-method" data-payment="dinheiro">
-                <div class="payment-icon text-success">
-                  <i class="fas fa-money-bill-wave"></i>
-                </div>
-                <div class="payment-details">
-                  <div class="payment-name">Dinheiro</div>
-                  <div class="payment-description">Pagamento à vista em espécie</div>
-                </div>
-              </div>
-
-              <div class="payment-method" data-payment="pix">
-                <div class="payment-icon text-primary">
-                  <i class="fas fa-qrcode"></i>
-                </div>
-                <div class="payment-details">
-                  <div class="payment-name">PIX</div>
-                  <div class="payment-description">Transferência instantânea</div>
-                </div>
-              </div>
-
-              <div class="payment-method" data-payment="debito">
-                <div class="payment-icon text-info">
-                  <i class="fas fa-credit-card"></i>
-                </div>
-                <div class="payment-details">
-                  <div class="payment-name">Cartão de Débito</div>
-                  <div class="payment-description">Débito em conta corrente</div>
-                </div>
-              </div>
-
-              <div class="payment-method" data-payment="credito">
-                <div class="payment-icon text-warning">
-                  <i class="fas fa-credit-card"></i>
-                </div>
-                <div class="payment-details">
-                  <div class="payment-name">Cartão de Crédito</div>
-                  <div class="payment-description">Parcelamento disponível</div>
-                </div>
+              <div id="paymentMethods">
+                <!-- Formas de pagamento serão carregadas dinamicamente -->
               </div>
 
               <!-- Seção de Parcelas (aparece apenas para cartão de crédito) -->
@@ -523,21 +508,17 @@
     // Variáveis globais
     let cart = [];
     let selectedPayment = null;
+    let selectedPaymentId = null;
     let selectedInstallments = 1;
     let totalAmount = 0;
-
-    // Produtos de exemplo (em produção, viria do backend)
-    const products = {
-      '7891234567890': { name: 'Produto A', price: 25.90, stock: 100 },
-      '7891234567891': { name: 'Produto B', price: 45.50, stock: 50 },
-      '7891234567892': { name: 'Produto C', price: 12.75, stock: 200 },
-      '7891234567893': { name: 'Produto D', price: 89.90, stock: 30 },
-      '7891234567894': { name: 'Produto E', price: 156.00, stock: 15 }
-    };
+    let paymentMethods = [];
+    let caixaAberto = false;
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
       setupEventListeners();
+      loadPaymentMethods();
+      checkCaixaStatus();
       updateDisplay();
     });
 
@@ -550,13 +531,107 @@
       });
 
       document.getElementById('btnAddProduct').addEventListener('click', addProductByEAN);
-
-      // Formas de pagamento
+    }
+    
+    async function loadPaymentMethods() {
+      try {
+        const response = await fetch('/vendas/api/formas-pagamento');
+        if (response.ok) {
+          paymentMethods = await response.json();
+          renderPaymentMethods();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar formas de pagamento:', error);
+      }
+    }
+    
+    function renderPaymentMethods() {
+      const container = document.getElementById('paymentMethods');
+      
+      container.innerHTML = paymentMethods.map(method => {
+        const icon = getPaymentIcon(method.nome);
+        return `
+          <div class="payment-method" data-payment="${method.id}" data-payment-name="${method.nome}" data-accepts-installments="${method.aceitaParcelas}" data-max-installments="${method.maxParcelas}">
+            <div class="payment-icon ${getPaymentIconColor(method.nome)}">
+              <i class="${icon}"></i>
+            </div>
+            <div class="payment-details">
+              <div class="payment-name">${method.nome}</div>
+              <div class="payment-description">${method.descricao || 'Forma de pagamento'}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Adicionar event listeners
       document.querySelectorAll('.payment-method').forEach(method => {
         method.addEventListener('click', function() {
-          selectPaymentMethod(this.dataset.payment);
+          selectPaymentMethod(this.dataset.payment, this.dataset.paymentName, this.dataset.acceptsInstallments === 'true', parseInt(this.dataset.maxInstallments));
         });
       });
+    }
+    
+    function getPaymentIcon(paymentName) {
+      const name = paymentName.toLowerCase();
+      if (name.includes('dinheiro')) return 'fas fa-money-bill-wave';
+      if (name.includes('pix')) return 'fas fa-qrcode';
+      if (name.includes('débito') || name.includes('debito')) return 'fas fa-credit-card';
+      if (name.includes('crédito') || name.includes('credito')) return 'fas fa-credit-card';
+      if (name.includes('cartão') || name.includes('cartao')) return 'fas fa-credit-card';
+      return 'fas fa-money-bill';
+    }
+    
+    function getPaymentIconColor(paymentName) {
+      const name = paymentName.toLowerCase();
+      if (name.includes('dinheiro')) return 'text-success';
+      if (name.includes('pix')) return 'text-primary';
+      if (name.includes('débito') || name.includes('debito')) return 'text-info';
+      if (name.includes('crédito') || name.includes('credito')) return 'text-warning';
+      return 'text-secondary';
+    }
+    
+    async function checkCaixaStatus() {
+      try {
+        const response = await fetch('/vendas/api/resumo-dia');
+        if (response.ok) {
+          caixaAberto = true;
+        } else {
+          caixaAberto = false;
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status do caixa:', error);
+        caixaAberto = false;
+      }
+    }
+    
+    async function abrirCaixa() {
+      const valorInicial = prompt('Digite o valor inicial do caixa (R$):');
+      if (!valorInicial || isNaN(valorInicial)) {
+        alert('Valor inválido!');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/vendas/api/caixa/abrir', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `valorInicial=${valorInicial}`
+        });
+        
+        const result = await response.json();
+        
+        if (result.sucesso) {
+          alert('Caixa aberto com sucesso!');
+          location.reload();
+        } else {
+          alert('Erro ao abrir caixa: ' + result.mensagem);
+        }
+      } catch (error) {
+        console.error('Erro ao abrir caixa:', error);
+        alert('Erro ao abrir caixa. Tente novamente.');
+      }
     }
 
     async function addProductByEAN() {
@@ -693,21 +768,22 @@
       document.getElementById('itemCount').textContent = totalItems;
     }
 
-    function selectPaymentMethod(payment) {
+    function selectPaymentMethod(paymentId, paymentName, acceptsInstallments, maxInstallments) {
       // Remover seleção anterior
       document.querySelectorAll('.payment-method').forEach(method => {
         method.classList.remove('selected');
       });
 
       // Selecionar novo método
-      document.querySelector(`[data-payment="${payment}"]`).classList.add('selected');
-      selectedPayment = payment;
+      document.querySelector(`[data-payment="${paymentId}"]`).classList.add('selected');
+      selectedPaymentId = paymentId;
+      selectedPayment = paymentName;
 
       // Mostrar/ocultar seção de parcelas
       const installmentsSection = document.getElementById('installmentsSection');
-      if (payment === 'credito') {
+      if (acceptsInstallments && maxInstallments > 1) {
         installmentsSection.style.display = 'block';
-        generateInstallmentOptions();
+        generateInstallmentOptions(maxInstallments);
       } else {
         installmentsSection.style.display = 'none';
         selectedInstallments = 1;
@@ -716,12 +792,12 @@
       updateFinishButton();
     }
 
-    function generateInstallmentOptions() {
+    function generateInstallmentOptions(maxInstallments) {
       const installmentOptions = document.getElementById('installmentOptions');
-      const maxInstallments = Math.min(12, Math.floor(totalAmount / 10)); // Mínimo R$ 10 por parcela
+      const maxAllowed = Math.min(maxInstallments, Math.floor(totalAmount / 10)); // Mínimo R$ 10 por parcela
       
       let optionsHTML = '';
-      for (let i = 1; i <= maxInstallments; i++) {
+      for (let i = 1; i <= maxAllowed; i++) {
         const installmentValue = totalAmount / i;
         const isSelected = i === selectedInstallments ? 'selected' : '';
         
@@ -775,14 +851,23 @@
         alert('Selecione uma forma de pagamento');
         return;
       }
+      
+      if (!caixaAberto) {
+        alert('É necessário abrir o caixa antes de realizar vendas');
+        return;
+      }
 
       // Preparar dados para envio
       const saleData = {
         clienteId: document.getElementById('customerSelect').value || null,
-        formaPagamento: getPaymentMethodName(selectedPayment),
+        formaPagamentoId: selectedPaymentId,
+        formaPagamento: selectedPayment,
+        parcelas: selectedInstallments,
+        valorTotal: totalAmount,
         itens: cart.map(item => ({
           ean: item.ean,
-          quantidade: item.quantity
+          quantidade: item.quantity,
+          precoUnitario: item.price
         }))
       };
 
@@ -952,16 +1037,16 @@
       }
     });
   </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
 
   <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 

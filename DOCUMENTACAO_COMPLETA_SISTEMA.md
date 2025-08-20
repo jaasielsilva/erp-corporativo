@@ -6,7 +6,8 @@
 1. **Dashboard** (95%)
    - Interface executiva completa
    - Gráficos e métricas implementados
-   - Integração com todos os módulos principais
+   - Integração com todos os módulos principais (Financeiro,RH,Estoque,Atedimento)
+
 
 2. **Usuários** (90%)
    - CRUD completo com permissões

@@ -14,13 +14,22 @@ import com.jaasielsilva.portalceo.model.VendaItem;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.VendaService;
+import com.jaasielsilva.portalceo.service.FormaPagamentoService;
+import com.jaasielsilva.portalceo.service.CaixaService;
+import com.jaasielsilva.portalceo.service.UsuarioService;
+import com.jaasielsilva.portalceo.model.FormaPagamento;
+import com.jaasielsilva.portalceo.model.Caixa;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +40,12 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/vendas")
@@ -45,6 +59,15 @@ public class VendaController {
 
     @Autowired
     private ProdutoService produtoService;
+    
+    @Autowired
+    private FormaPagamentoService formaPagamentoService;
+    
+    @Autowired
+    private CaixaService caixaService;
+    
+    @Autowired
+    private UsuarioService usuarioService;
 
     // 🧾 LISTAR VENDAS
     @GetMapping
@@ -69,8 +92,22 @@ public class VendaController {
     // 🏪 PDV - PONTO DE VENDA
     @GetMapping("/pdv")
     public String pdv(Model model) {
-        model.addAttribute("clientes", clienteService.buscarTodos());
-        return "vendas/pdv";
+        try {
+            // Verificar se há caixa aberto
+            if (!caixaService.existeCaixaAberto()) {
+                model.addAttribute("erro", "Não há caixa aberto. Abra o caixa antes de realizar vendas.");
+                return "vendas/caixa-fechado";
+            }
+            
+            model.addAttribute("clientes", clienteService.buscarTodos());
+            model.addAttribute("formasPagamento", formaPagamentoService.buscarAtivas());
+            model.addAttribute("resumoDia", vendaService.obterResumoVendasDia());
+            
+            return "vendas/pdv";
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao carregar PDV: " + e.getMessage());
+            return "error";
+        }
     }
     
 
@@ -94,50 +131,70 @@ public class VendaController {
     // 💳 PROCESSAR VENDA PDV (API REST)
     @PostMapping("/api/processar")
     @ResponseBody
-    public ResponseEntity<?> processarVendaPdv(@RequestBody VendaPdvRequest request) {
+    public ResponseEntity<VendaPdvResponse> processarVendaPdv(@RequestBody VendaPdvRequest request) {
         try {
+            // Obter usuário logado
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            
+            // Criar nova venda
             Venda venda = new Venda();
-
-            // Definir cliente (se selecionado)
-            if (request.getClienteId() != null) {
-                Cliente cliente = clienteService.buscarPorId(request.getClienteId())
-                        .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
-                venda.setCliente(cliente);
-            }
-
-            venda.setDataVenda(LocalDateTime.now());
             venda.setFormaPagamento(request.getFormaPagamento());
-            venda.setStatus("Finalizada");
-            venda.setObservacoes("Venda realizada via PDV");
+            venda.setObservacoes(request.getObservacoes());
+            venda.setUsuario(usuario);
+            venda.setDesconto(request.getDesconto() != null ? request.getDesconto() : BigDecimal.ZERO);
+            venda.setValorPago(request.getValorPago());
+            venda.setParcelas(request.getParcelas() != null ? request.getParcelas() : 1);
 
-            // Processar itens
-            BigDecimal total = BigDecimal.ZERO;
-            for (VendaPdvRequest.ItemRequest itemRequest : request.getItens()) {
-                VendaItem item = new VendaItem();
-
-                Produto produto = produtoService.buscarPorEan(itemRequest.getEan())
-                        .orElseThrow(
-                                () -> new IllegalArgumentException("Produto não encontrado: " + itemRequest.getEan()));
-
-                item.setProduto(produto);
-                item.setQuantidade(itemRequest.getQuantidade());
-                item.setPrecoUnitario(produto.getPreco());
-                item.setSubtotal(produto.getPreco().multiply(BigDecimal.valueOf(itemRequest.getQuantidade())));
-                item.setVenda(venda);
-
-                venda.getItens().add(item);
-                total = total.add(item.getSubtotal());
+            // Buscar cliente se informado
+            if (request.getClienteId() != null) {
+                Optional<Cliente> cliente = clienteService.buscarPorId(request.getClienteId());
+                cliente.ifPresent(venda::setCliente);
             }
 
-            venda.setTotal(total);
+            // Criar itens da venda
+            List<VendaItem> itens = new ArrayList<>();
 
-            // Salvar venda
-            Venda vendaSalva = vendaService.salvar(venda);
+            for (VendaPdvRequest.ItemRequest itemRequest : request.getItens()) {
+                Optional<Produto> produto = produtoService.buscarPorEan(itemRequest.getEan());
+                if (produto.isPresent()) {
+                    VendaItem item = new VendaItem();
+                    item.setProduto(produto.get());
+                    item.setQuantidade(itemRequest.getQuantidade());
+                    item.setPrecoUnitario(produto.get().getPreco());
+                    item.setVenda(venda);
+                    itens.add(item);
+                }
+            }
 
-            return ResponseEntity.ok(new VendaPdvResponse(vendaSalva.getId(), "Venda processada com sucesso!", true));
+            venda.setItens(itens);
 
+            // Processar venda usando o service específico do PDV
+            Venda vendaSalva = vendaService.processarVendaPdv(venda);
+
+            // Retornar resposta
+            VendaPdvResponse response = new VendaPdvResponse();
+            response.setId(vendaSalva.getId());
+            response.setNumeroVenda(vendaSalva.getNumeroVenda());
+            response.setTotal(vendaSalva.getTotal());
+            response.setTroco(vendaSalva.getTroco());
+            response.setDataVenda(vendaSalva.getDataVenda());
+            response.setSucesso(true);
+            response.setMensagem("Venda processada com sucesso!");
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            VendaPdvResponse response = new VendaPdvResponse();
+            response.setSucesso(false);
+            response.setMensagem(e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro ao processar venda: " + e.getMessage());
+            VendaPdvResponse response = new VendaPdvResponse();
+            response.setSucesso(false);
+            response.setMensagem("Erro interno: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

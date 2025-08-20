@@ -37,7 +37,7 @@
                   <div class="resumo-detalhes">15 titulares + 13 dependentes</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item custo">
                 <div class="resumo-icon">
                   <i class="fas fa-money-bill-wave"></i>
@@ -48,7 +48,7 @@
                   <div class="resumo-detalhes">Empresa + Colaboradores</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item empresa">
                 <div class="resumo-icon">
                   <i class="fas fa-building"></i>
@@ -59,7 +59,7 @@
                   <div class="resumo-detalhes">60% do total</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item colaborador">
                 <div class="resumo-icon">
                   <i class="fas fa-user"></i>
@@ -76,14 +76,17 @@
 
         </article>
         <!-- Planos Disponíveis -->
+        <!-- Planos Disponíveis -->
         <article class="card">
           <h3><i class="fas fa-clipboard-list"></i> Planos Disponíveis</h3>
           <div class="planos-disponiveis">
             <div class="planos-grid">
-              <div class="plano-card basico">
+
+              <!-- Plano Básico -->
+              <div class="plano-card basico" th:with="plano=${planos[0]}">
                 <div class="plano-header">
-                  <h4><i class="fas fa-shield-alt"></i> Plano Básico</h4>
-                  <div class="plano-preco">R$ 180,00/mês</div>
+                  <h4><i class="fas fa-shield-alt"></i> <span th:text="${plano.nome}">Plano Básico</span></h4>
+                  <div class="plano-preco" th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</div>
                 </div>
                 <div class="plano-beneficios">
                   <ul>
@@ -95,14 +98,15 @@
                   </ul>
                 </div>
                 <div class="plano-operadoras">
-                  <small>Disponível: Unimed, Amil</small>
+                  <small th:text="'Disponível: ' + ${plano.operadora}">Disponível: Operadora</small>
                 </div>
               </div>
-              
-              <div class="plano-card intermediario">
+
+              <!-- Plano Intermediário -->
+              <div class="plano-card intermediario" th:with="plano=${planos[1]}">
                 <div class="plano-header">
-                  <h4><i class="fas fa-shield-alt"></i> Plano Intermediário</h4>
-                  <div class="plano-preco">R$ 320,00/mês</div>
+                  <h4><i class="fas fa-shield-alt"></i> <span th:text="${plano.nome}">Plano Intermediário</span></h4>
+                  <div class="plano-preco" th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</div>
                 </div>
                 <div class="plano-beneficios">
                   <ul>
@@ -114,14 +118,15 @@
                   </ul>
                 </div>
                 <div class="plano-operadoras">
-                  <small>Disponível: Unimed, Bradesco, Amil</small>
+                  <small th:text="'Disponível: ' + ${plano.operadora}">Disponível: Operadora</small>
                 </div>
               </div>
-              
-              <div class="plano-card premium">
+
+              <!-- Plano Premium -->
+              <div class="plano-card premium" th:with="plano=${planos[2]}">
                 <div class="plano-header">
-                  <h4><i class="fas fa-crown"></i> Plano Premium</h4>
-                  <div class="plano-preco">R$ 580,00/mês</div>
+                  <h4><i class="fas fa-crown"></i> <span th:text="${plano.nome}">Plano Premium</span></h4>
+                  <div class="plano-preco" th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</div>
                 </div>
                 <div class="plano-beneficios">
                   <ul>
@@ -133,12 +138,14 @@
                   </ul>
                 </div>
                 <div class="plano-operadoras">
-                  <small>Disponível: Unimed, SulAmérica</small>
+                  <small th:text="'Disponível: ' + ${plano.operadora}">Disponível: Operadora</small>
                 </div>
               </div>
+
             </div>
           </div>
         </article>
+
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
@@ -154,7 +161,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form class="modal-body">
         <div class="form-row">
           <div class="form-group">
@@ -177,7 +184,7 @@
             </select>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="tipoPlanoAdesao">Tipo de Plano *</label>
@@ -193,14 +200,14 @@
             <input type="date" id="dataInicioAdesao" name="dataInicio" required class="form-control">
           </div>
         </div>
-        
+
         <div class="form-group">
           <label>
             <input type="checkbox" id="incluirDependentes" name="incluirDependentes" onchange="toggleDependentes()">
             Incluir dependentes
           </label>
         </div>
-        
+
         <div id="dependentesSection" style="display: none;">
           <h4><i class="fas fa-users"></i> Dependentes</h4>
           <div id="dependentesList">
@@ -236,13 +243,14 @@
             <i class="fas fa-plus"></i> Adicionar Dependente
           </button>
         </div>
-        
+
         <div class="form-group">
           <label for="observacoesAdesao">Observações</label>
-          <textarea id="observacoesAdesao" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre a adesão..."></textarea>
+          <textarea id="observacoesAdesao" name="observacoes" class="form-control" rows="3"
+            placeholder="Informações adicionais sobre a adesão..."></textarea>
         </div>
       </form>
-      
+
       <div class="modal-footer">
         <button type="button" onclick="fecharModalAdesao()" class="btn btn-secondary">
           <i class="fas fa-times"></i> Cancelar
@@ -253,8 +261,8 @@
       </div>
     </div>
   </div>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+
+  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 

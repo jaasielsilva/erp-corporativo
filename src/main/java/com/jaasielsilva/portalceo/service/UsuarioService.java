@@ -31,11 +31,16 @@ import java.util.stream.Collectors;
 @Service
 public class UsuarioService {
 
-    @Autowired private UsuarioRepository usuarioRepository;
-    @Autowired private BCryptPasswordEncoder passwordEncoder;
-    @Autowired private PerfilRepository perfilRepository;
-    @Autowired private JavaMailSender mailSender;
-    @Autowired private PasswordResetTokenRepository tokenRepository;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+    @Autowired
+    private PerfilRepository perfilRepository;
+    @Autowired
+    private JavaMailSender mailSender;
+    @Autowired
+    private PasswordResetTokenRepository tokenRepository;
 
     // ===============================
     // MÉTODOS DE CADASTRO E ATUALIZAÇÃO
@@ -52,16 +57,17 @@ public class UsuarioService {
             if (existente.isPresent()) {
                 Usuario usuarioExistente = existente.get();
                 // Protege usuário MASTER e admin principal
-                if (usuarioExistente.getNivelAcesso() == NivelAcesso.MASTER || 
-                    "admin@teste.com".equalsIgnoreCase(usuarioExistente.getEmail()) ||
-                    "master@sistema.com".equalsIgnoreCase(usuarioExistente.getEmail())) {
+                if (usuarioExistente.getNivelAcesso() == NivelAcesso.MASTER ||
+                        "admin@teste.com".equalsIgnoreCase(usuarioExistente.getEmail()) ||
+                        "master@sistema.com".equalsIgnoreCase(usuarioExistente.getEmail())) {
                     throw new IllegalStateException("Este usuário é protegido e não pode ser alterado.");
                 }
             }
         }
 
         Optional<Usuario> existenteEmail = usuarioRepository.findByEmail(usuario.getEmail());
-        if (existenteEmail.isPresent() && (usuario.getId() == null || !existenteEmail.get().getId().equals(usuario.getId()))) {
+        if (existenteEmail.isPresent()
+                && (usuario.getId() == null || !existenteEmail.get().getId().equals(usuario.getId()))) {
             throw new Exception("Email já cadastrado!");
         }
 
@@ -73,7 +79,7 @@ public class UsuarioService {
         // Define perfil padrão caso não haja perfis atribuídos
         if (usuario.getPerfis() == null || usuario.getPerfis().isEmpty()) {
             Perfil perfilPadrao = perfilRepository.findByNome("USER")
-                .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
+                    .orElseThrow(() -> new RuntimeException("Perfil padrão 'USER' não encontrado"));
             usuario.setPerfis(Set.of(perfilPadrao));
         }
 
@@ -95,9 +101,12 @@ public class UsuarioService {
             String msg = Optional.ofNullable(e.getCause()).map(Throwable::getMessage).orElse(e.getMessage());
             if (msg != null) {
                 String lower = msg.toLowerCase();
-                if (lower.contains("cpf")) throw new Exception("CPF já cadastrado no sistema.");
-                if (lower.contains("email")) throw new Exception("Email já cadastrado no sistema.");
-                if (lower.contains("matricula")) throw new Exception("Matrícula já cadastrada no sistema.");
+                if (lower.contains("cpf"))
+                    throw new Exception("CPF já cadastrado no sistema.");
+                if (lower.contains("email"))
+                    throw new Exception("Email já cadastrado no sistema.");
+                if (lower.contains("matricula"))
+                    throw new Exception("Matrícula já cadastrada no sistema.");
             }
             throw e;
         }
@@ -147,7 +156,7 @@ public class UsuarioService {
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
     }
-    
+
     public Optional<Usuario> buscarPorCpf(String cpf) {
         return usuarioRepository.findByCpf(cpf);
     }
@@ -175,18 +184,18 @@ public class UsuarioService {
 
     public boolean usuarioTemPermissaoParaExcluir(String matricula) {
         return usuarioRepository.findByMatricula(matricula)
-            .map(usuario -> usuario.getPerfis().stream()
-                .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN")))
-            .orElse(false);
+                .map(usuario -> usuario.getPerfis().stream()
+                        .anyMatch(perfil -> perfil.getNome().equalsIgnoreCase("ADMIN")))
+                .orElse(false);
     }
-    
+
     /**
      * Busca usuários que podem gerenciar outros usuários (ADMIN, MASTER, etc.)
      */
     public List<Usuario> buscarUsuariosComPermissaoGerenciarUsuarios() {
         return usuarioRepository.findAll().stream()
-            .filter(usuario -> usuario.getNivelAcesso() != null && usuario.getNivelAcesso().podeGerenciarUsuarios())
-            .collect(Collectors.toList());
+                .filter(usuario -> usuario.getNivelAcesso() != null && usuario.getNivelAcesso().podeGerenciarUsuarios())
+                .collect(Collectors.toList());
     }
 
     // ===============================
@@ -215,11 +224,10 @@ public class UsuarioService {
 
     public EstatisticasUsuariosDTO buscarEstatisticas() {
         return new EstatisticasUsuariosDTO(
-            totalUsuarios(),
-            totalAtivos(),
-            totalAdministradores(),
-            totalBloqueados()
-        );
+                totalUsuarios(),
+                totalAtivos(),
+                totalAdministradores(),
+                totalBloqueados());
     }
 
     // ===============================
@@ -233,44 +241,45 @@ public class UsuarioService {
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void excluirUsuario(Long id, String matriculaSolicitante) {
-    Usuario usuario = usuarioRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
 
-    // Protege usuário MASTER e admin principal
-    if (usuario.getNivelAcesso() == NivelAcesso.MASTER || 
-        "admin@teste.com".equalsIgnoreCase(usuario.getEmail()) ||
-        "master@sistema.com".equalsIgnoreCase(usuario.getEmail())) {
-        throw new IllegalStateException("Este usuário é protegido e não pode ser excluído.");
+        // Protege usuário MASTER e admin principal
+        if (usuario.getNivelAcesso() == NivelAcesso.MASTER ||
+                "admin@teste.com".equalsIgnoreCase(usuario.getEmail()) ||
+                "master@sistema.com".equalsIgnoreCase(usuario.getEmail())) {
+            throw new IllegalStateException("Este usuário é protegido e não pode ser excluído.");
+        }
+
+        if (usuario.getMatricula().equalsIgnoreCase(matriculaSolicitante)) {
+            throw new IllegalStateException("Usuário não pode se excluir sozinho.");
+        }
+
+        if (!usuarioTemPermissaoParaExcluir(matriculaSolicitante)) {
+            throw new IllegalStateException("Usuário não pode ser excluído: matrícula inválida.");
+        }
+
+        boolean ehAdmin = usuario.getPerfis().stream()
+                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+
+        if (ehAdmin && usuarioRepository.countUsuariosPorPerfil("ADMIN") <= 1) {
+            throw new IllegalStateException("Não é possível excluir o último administrador do sistema.");
+        }
+
+        // Em vez de deletar, atualiza o status para DEMITIDO e registra a data de
+        // desligamento
+        usuario.setStatus(Usuario.Status.DEMITIDO);
+        usuario.setDataDesligamento(java.time.LocalDate.now());
+
+        // Opcional: limpar informações sensíveis, telefone, ramal, etc (dependendo da
+        // política)
+        usuario.setTelefone(null);
+        usuario.setRamal(null);
+        usuarioRepository.save(usuario);
+
+        // Também pode deletar tokens, se necessário
+        tokenRepository.deleteByUsuarioId(usuario.getId());
     }
-
-    if (usuario.getMatricula().equalsIgnoreCase(matriculaSolicitante)) {
-        throw new IllegalStateException("Usuário não pode se excluir sozinho.");
-    }
-
-    if (!usuarioTemPermissaoParaExcluir(matriculaSolicitante)) {
-        throw new IllegalStateException("Usuário não pode ser excluído: matrícula inválida.");
-    }
-
-    boolean ehAdmin = usuario.getPerfis().stream()
-        .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
-
-    if (ehAdmin && usuarioRepository.countUsuariosPorPerfil("ADMIN") <= 1) {
-        throw new IllegalStateException("Não é possível excluir o último administrador do sistema.");
-    }
-
-    // Em vez de deletar, atualiza o status para DEMITIDO e registra a data de desligamento
-    usuario.setStatus(Usuario.Status.DEMITIDO);
-    usuario.setDataDesligamento(java.time.LocalDate.now());
-
-    // Opcional: limpar informações sensíveis, telefone, ramal, etc (dependendo da política)
-    usuario.setTelefone(null);
-    usuario.setRamal(null);
-    usuarioRepository.save(usuario);
-
-    // Também pode deletar tokens, se necessário
-    tokenRepository.deleteByUsuarioId(usuario.getId());
-}
-
 
     // ===============================
     // MÉTODOS DE RESET DE SENHA E TOKEN
@@ -282,7 +291,7 @@ public class UsuarioService {
      */
     public void resetarSenhaPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
+                .orElseThrow(() -> new IllegalArgumentException("Usuário com ID " + id + " não encontrado."));
 
         boolean enviado = enviarLinkRedefinicaoSenha(usuario.getEmail());
         if (!enviado) {
@@ -295,7 +304,8 @@ public class UsuarioService {
      */
     public boolean enviarLinkRedefinicaoSenha(String email) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        if (usuarioOpt.isEmpty()) return false;
+        if (usuarioOpt.isEmpty())
+            return false;
 
         Usuario usuario = usuarioOpt.get();
         String token = gerarTokenRedefinicao(usuario);
@@ -322,34 +332,79 @@ public class UsuarioService {
     /**
      * Carrega e processa o template de email substituindo os placeholders.
      */
-    private String carregarTemplateEmail(String templatePath, String nomeUsuario, String emailUsuario, String linkRedefinicao) {
+    private String carregarTemplateEmail(String templatePath, String nomeUsuario, String emailUsuario,
+            String linkRedefinicao) {
         try {
             // Lê o arquivo de template
             Path path = Paths.get(templatePath);
             String template = Files.readString(path, StandardCharsets.UTF_8);
-            
+
             // Substitui os placeholders
             template = template.replace("{{NOME_USUARIO}}", nomeUsuario);
             template = template.replace("{{EMAIL_USUARIO}}", emailUsuario);
             template = template.replace("{{LINK_REDEFINICAO}}", linkRedefinicao);
-            
+
             return template;
         } catch (Exception e) {
             e.printStackTrace();
             // Fallback para HTML simples em caso de erro
-            return "<html><body>"
-                    + "<h3>Olá " + nomeUsuario + ",</h3>"
-                    + "<p>Recebemos sua solicitação para redefinição de senha.</p>"
-                    + "<p><a href=\"" + linkRedefinicao + "\">Clique aqui para redefinir sua senha</a></p>"
-                    + "<p><small>O link expira em 1 hora.</small></p>"
-                    + "</body></html>";
+            return "<!DOCTYPE html>"
+                    + "<html lang=\"pt-BR\">"
+                    + "<head>"
+                    + "  <meta charset=\"UTF-8\">"
+                    + "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                    + "  <title>Redefinição de Senha</title>"
+                    + "  <style>"
+                    + "    body{margin:0;padding:0;background:#f5f6f8;font-family:Arial,Helvetica,sans-serif;color:#333;} "
+                    + "    .wrap{max-width:600px;margin:0 auto;background:#ffffff;} "
+                    + "    .header{background:#4b6cb7;background:linear-gradient(135deg,#4b6cb7 0%,#182848 100%);padding:24px;text-align:center;color:#fff;} "
+                    + "    .content{padding:24px 24px 8px 24px;} "
+                    + "    h3{margin:0 0 12px 0;font-size:20px;line-height:1.3;color:#2c3e50;} "
+                    + "    p{margin:0 0 16px 0;font-size:14px;line-height:1.6;} "
+                    + "    .cta{display:inline-block;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:bold;"
+                    + "         background:#667eea;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;} "
+                    + "    .box{background:#f7f8fa;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-top:16px;font-size:12px;word-break:break-all;} "
+                    + "    .footer{padding:20px;text-align:center;font-size:12px;color:#6b7280;background:#f3f4f6;} "
+                    + "    a{color:#3b82f6;} "
+                    + "  </style>"
+                    + "</head>"
+                    + "<body>"
+                    + "  <div class=\"wrap\">"
+                    + "    <div class=\"header\">"
+                    + "      <h2 style=\"margin:0;font-size:22px;\">ERP Corporativo</h2>"
+                    + "      <div style=\"opacity:.85;font-size:13px;\">Redefinição de Senha</div>"
+                    + "    </div>"
+                    + "    <div class=\"content\">"
+                    + "      <h3>Olá " + nomeUsuario + ",</h3>"
+                    + "      <p>Recebemos sua solicitação para redefinir a sua senha de acesso ao <strong>ERP Corporativo</strong>.</p>"
+                    + "      <p>Para continuar com segurança, clique no botão abaixo:</p>"
+                    + "      <p style=\"text-align:center;margin:20px 0 8px 0;\">"
+                    + "        <a class=\"cta\" href=\"" + linkRedefinicao
+                    + "\" target=\"_blank\" rel=\"noopener\">Redefinir minha senha</a>"
+                    + "      </p>"
+                    + "      <div class=\"box\">"
+                    + "        <div style=\"font-weight:bold;margin-bottom:8px;\">Se o botão não funcionar, copie e cole este link no navegador:</div>"
+                    + "        <div>" + linkRedefinicao + "</div>"
+                    + "      </div>"
+                    + "      <p style=\"margin-top:16px;font-size:12px;color:#6b7280;\">"
+                    + "        • O link expira em <strong>1 hora</strong> e pode ser usado apenas uma vez.<br>"
+                    + "        • Se você não solicitou esta redefinição, ignore este e-mail."
+                    + "      </p>"
+                    + "    </div>"
+                    + "    <div class=\"footer\">"
+                    + "      Este é um e-mail automático. Por favor, não responda."
+                    + "    </div>"
+                    + "  </div>"
+                    + "</body>"
+                    + "</html>";
         }
     }
 
     @Transactional
     public Optional<Usuario> validarToken(String token) {
         Optional<PasswordResetToken> tokenOpt = tokenRepository.findByToken(token);
-        if (tokenOpt.isEmpty()) return Optional.empty();
+        if (tokenOpt.isEmpty())
+            return Optional.empty();
 
         PasswordResetToken resetToken = tokenOpt.get();
 
@@ -364,7 +419,8 @@ public class UsuarioService {
     public boolean redefinirSenhaComToken(String token, String novaSenha) {
         try {
             Optional<PasswordResetToken> tokenOpt = tokenRepository.findByToken(token);
-            if (tokenOpt.isEmpty()) return false;
+            if (tokenOpt.isEmpty())
+                return false;
 
             PasswordResetToken resetToken = tokenOpt.get();
 
@@ -400,25 +456,25 @@ public class UsuarioService {
 
         return token;
     }
-    
+
     // Calcula performance financeira baseada na eficiência de gestão de usuários
     public int calcularPerformanceFinanceiro() {
         long totalUsuarios = totalUsuarios();
         long usuariosAtivos = totalAtivos();
         long usuariosBloqueados = totalBloqueados();
-        
+
         if (totalUsuarios == 0) {
             return 85; // Valor padrão
         }
-        
+
         // Calcula percentual de usuários ativos (menos bloqueados = melhor gestão)
         double percentualAtivos = ((double) usuariosAtivos / totalUsuarios) * 100;
         double percentualBloqueados = ((double) usuariosBloqueados / totalUsuarios) * 100;
-        
+
         // Performance baseada em usuários ativos e poucos bloqueados
         double performance = percentualAtivos - (percentualBloqueados * 0.5);
-        
+
         return (int) Math.min(100, Math.max(0, performance));
     }
-    
+
 }

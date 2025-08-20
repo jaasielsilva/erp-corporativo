@@ -354,11 +354,7 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
         return "redirect:/usuarios/relatorio";
     }
 
-    @GetMapping("/resetar-senha")
-    public String listarPermissoes(Model model) {
-        return "usuarios/resetar-senha";
-    }
-
+    
     // ===============================
     // BLOCO: RELATÓRIOS PDF
     // ===============================

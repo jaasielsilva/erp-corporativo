@@ -300,6 +300,13 @@ public class VendaService {
         return buscarVendasDoDia().size();
     }
     
+    // Buscar vendas recentes
+    public List<Venda> buscarVendasRecentes(int limite) {
+        return vendaRepository.findTop10ByOrderByDataVendaDesc().stream()
+            .limit(limite)
+            .collect(java.util.stream.Collectors.toList());
+    }
+    
     // Buscar vendas por forma de pagamento
     public List<Venda> buscarPorFormaPagamento(String formaPagamento) {
         return vendaRepository.findByFormaPagamentoIgnoreCase(formaPagamento);

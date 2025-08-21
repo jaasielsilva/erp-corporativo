@@ -26,6 +26,10 @@ public class FormaPagamentoService {
         return formaPagamentoRepository.findAll();
     }
 
+    public List<FormaPagamento> buscarAtivas() {
+        return formaPagamentoRepository.findAll();
+    }
+
     // Buscar por ID
     public Optional<FormaPagamento> buscarPorId(Long id) {
         return formaPagamentoRepository.findById(id);

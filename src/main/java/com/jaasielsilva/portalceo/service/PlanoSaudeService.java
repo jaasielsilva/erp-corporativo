@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PlanoSaudeService {
@@ -56,4 +57,8 @@ public class PlanoSaudeService {
         return planoSaudeRepository.existsByCodigo(codigo);
     }
 
+     // **Buscar por ID**
+    public Optional<PlanoSaude> findById(Long id) {
+        return planoSaudeRepository.findById(id);
+    }
 }

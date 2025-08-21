@@ -98,13 +98,24 @@ public class AdesaoPlanoSaude {
         calcularValores();
     }
 
-    private void calcularValores() {
+    public void calcularValores() {
         if (planoSaude != null) {
             valorMensalTitular = planoSaude.calcularValorColaboradorTitular();
             valorMensalDependentes = planoSaude.calcularValorColaboradorDependente()
-                .multiply(BigDecimal.valueOf(quantidadeDependentes));
+                    .multiply(BigDecimal.valueOf(quantidadeDependentes));
             valorTotalMensal = valorMensalTitular.add(valorMensalDependentes);
         }
+    }
+
+    // Adicione dentro da classe AdesaoPlanoSaude
+    public BigDecimal getValorTotalAtual() {
+        if (planoSaude != null) {
+            BigDecimal valorTitularAtual = planoSaude.calcularValorColaboradorTitular();
+            BigDecimal valorDependentesAtual = planoSaude.calcularValorColaboradorDependente()
+                    .multiply(BigDecimal.valueOf(quantidadeDependentes));
+            return valorTitularAtual.add(valorDependentesAtual);
+        }
+        return BigDecimal.ZERO;
     }
 
     public String getStatusDescricao() {

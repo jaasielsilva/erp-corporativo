@@ -365,7 +365,7 @@ public class VendaController {
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
             
-            Caixa caixa = caixaService.abrirCaixa(usuario, valorInicial);
+            Caixa caixa = caixaService.abrirCaixa(valorInicial, usuario, "Abertura via PDV");
             
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
@@ -389,7 +389,13 @@ public class VendaController {
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
             
-            Caixa caixa = caixaService.fecharCaixa(usuario, observacoes);
+            Optional<Caixa> caixaOpt = caixaService.buscarCaixaAberto();
+            if (caixaOpt.isEmpty()) {
+                throw new RuntimeException("Nenhum caixa aberto encontrado");
+            }
+            Caixa caixa = caixaOpt.get();
+            BigDecimal valorFinal = caixa.getValorInicial().add(vendaService.calcularTotalVendasDoDia());
+            Caixa caixaFechado = caixaService.fecharCaixa(caixa.getId(), valorFinal, usuario, observacoes);
             
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
@@ -429,7 +435,7 @@ public class VendaController {
     @ResponseBody
     public ResponseEntity<?> obterVendasRecentes(@RequestParam(defaultValue = "10") int limite) {
         try {
-            List<Venda> vendas = vendaService.buscarRecentes(limite);
+            List<Venda> vendas = vendaService.buscarVendasRecentes(limite);
             return ResponseEntity.ok(vendas);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();

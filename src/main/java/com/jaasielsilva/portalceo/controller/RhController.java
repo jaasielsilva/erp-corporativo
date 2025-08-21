@@ -1,8 +1,13 @@
 package com.jaasielsilva.portalceo.controller;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -12,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,18 +26,26 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jaasielsilva.portalceo.dto.AdesaoDTO;
 import com.jaasielsilva.portalceo.exception.BusinessValidationException;
 import com.jaasielsilva.portalceo.exception.CargoNotFoundException;
 import com.jaasielsilva.portalceo.exception.ColaboradorNotFoundException;
 import com.jaasielsilva.portalceo.exception.DepartamentoNotFoundException;
 import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude;
+import com.jaasielsilva.portalceo.model.Beneficio;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.ColaboradorBeneficio;
+import com.jaasielsilva.portalceo.model.PlanoSaude;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.AdesaoPlanoSaudeService;
 import com.jaasielsilva.portalceo.service.BeneficioService;
@@ -434,7 +449,105 @@ public class RhController {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         model.addAttribute("beneficios", beneficioService.listarTodos());
         model.addAttribute("planos", planoSaudeService.listarTodosAtivos());
+
+        // Resumo de beneficiários
+        Long titulares = adesaoPlanoSaudeService.contarTitulares();
+        Long dependentes = adesaoPlanoSaudeService.contarDependentes();
+        Long total = titulares + dependentes;
+
+        model.addAttribute("titulares", titulares);
+        model.addAttribute("dependentes", dependentes);
+        model.addAttribute("totalBeneficiarios", total);
+
+        // Resumo de custos
+        BigDecimal custoMensal = adesaoPlanoSaudeService.calcularCustoMensalTotal();
+        BigDecimal custoEmpresa = adesaoPlanoSaudeService.calcularCustoEmpresa();
+        BigDecimal descontoColaboradores = adesaoPlanoSaudeService.calcularDescontoColaboradoresPercentual();
+
+        model.addAttribute("descontoColaboradores", descontoColaboradores);
+        model.addAttribute("custoMensal", custoMensal);
+        model.addAttribute("custoEmpresa", custoEmpresa);
+
         return "rh/beneficios/plano-saude";
+    }
+
+    @GetMapping("/beneficios/adesao")
+    public String adesaoBeneficios(Model model,
+            @RequestParam(defaultValue = "0") int page) {
+
+        Pageable pageable = PageRequest.of(page, 5); // 5 registros por página
+        Page<AdesaoPlanoSaude> adesoesPage = adesaoPlanoSaudeService.listarTodosPaginado(pageable);
+
+        List<PlanoSaude> planosDeSaude = planoSaudeService.listarTodosAtivos();
+        List<Colaborador> colaboradores = colaboradorService.listarAtivos();
+        List<Beneficio> beneficios = beneficioService.listarTodos();
+
+        model.addAttribute("colaboradores", colaboradores);
+        model.addAttribute("beneficios", beneficios);
+        model.addAttribute("plano_de_saude", planosDeSaude);
+
+        // ----------------------------
+        // CÁLCULO DO CUSTO TOTAL CORRETO
+        // ----------------------------
+        BigDecimal custoTotal = adesoesPage.getContent().stream()
+                .filter(AdesaoPlanoSaude::isAtiva)
+                .map(AdesaoPlanoSaude::getValorTotalMensal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal custoEmpresa = custoTotal.multiply(BigDecimal.valueOf(0.6));
+        BigDecimal custoColaborador = custoTotal.multiply(BigDecimal.valueOf(0.4));
+        
+        model.addAttribute("custoMensal", custoTotal);
+        model.addAttribute("custoEmpresa", custoEmpresa);
+        model.addAttribute("custoColaborador", custoColaborador);
+
+        // Lista de adesões para exibição
+        List<Map<String, Object>> adesoesComValores = adesoesPage.getContent().stream().map(a -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("adesao", a);
+            map.put("valorTotalAtual", a.getValorTotalMensal());
+            return map;
+        }).collect(Collectors.toList());
+
+        model.addAttribute("adesoes", adesoesComValores);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", adesoesPage.getTotalPages());
+
+        return "rh/beneficios/adesao";
+    }
+
+    // metodo para salvar adesão a benefícios
+    @PostMapping("/beneficios/adesao")
+    public ResponseEntity<Void> criarAdesao(@RequestBody AdesaoDTO dto) {
+
+        // 1. Buscar colaborador
+        Colaborador colaborador = colaboradorService.findById(dto.getColaboradorId());
+
+        // 2. Buscar plano de saúde pelo ID
+        PlanoSaude plano = planoSaudeService.findById(dto.getPlanoId())
+                .orElseThrow(() -> new RuntimeException("Plano de saúde não encontrado: " + dto.getPlanoId()));
+
+        // 3. Criar nova adesão
+        AdesaoPlanoSaude adesao = new AdesaoPlanoSaude();
+        adesao.setColaborador(colaborador);
+        adesao.setPlanoSaude(plano);
+        adesao.setQuantidadeDependentes(dto.getQuantidadeDependentes());
+        adesao.setDataAdesao(LocalDate.now());
+        adesao.setDataVigenciaInicio(LocalDate.now());
+
+        // 4. Calcular valor total
+        BigDecimal valorTitular = plano.getValorTitular();
+        BigDecimal valorDependentes = plano.getValorDependente()
+                .multiply(BigDecimal.valueOf(dto.getQuantidadeDependentes()));
+        adesao.setValorTotalMensal(valorTitular.add(valorDependentes));
+
+        // 5. Definir status
+        adesao.setStatus(AdesaoPlanoSaude.StatusAdesao.ATIVA);
+
+        // 6. Salvar adesão
+        adesaoPlanoSaudeService.salvar(adesao);
+
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/beneficios/vale-transporte")
@@ -449,20 +562,6 @@ public class RhController {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         model.addAttribute("beneficios", beneficioService.listarTodos());
         return "rh/beneficios/vale-refeicao";
-    }
-
-    @GetMapping("/beneficios/adesao")
-    public String adesaoBeneficios(
-            Model model,
-            @RequestParam(defaultValue = "0") int page) {
-
-        Pageable pageable = PageRequest.of(page, 5); // 5 registros por página
-        Page<AdesaoPlanoSaude> adesoesPage = adesaoPlanoSaudeService.listarTodosPaginado(pageable);
-
-        model.addAttribute("adesoes", adesoesPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", adesoesPage.getTotalPages());
-        return "rh/beneficios/adesao";
     }
 
     /*

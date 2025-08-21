@@ -34,9 +34,14 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Total de Beneficiários</h4>
-                  <div class="resumo-valor">28</div>
-                  <div class="resumo-detalhes">15 titulares + 13 dependentes</div>
+                  <div class="resumo-valor" th:text="${totalBeneficiarios}">0</div>
+                  <div class="resumo-detalhes"
+                    th:text="${titulares} + ' titulares + ' + ${dependentes} + ' dependentes'">
+                    0 titulares + 0 dependentes
+                  </div>
                 </div>
+
+
               </div>
 
               <div class="resumo-item custo">
@@ -45,9 +50,14 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Custo Mensal</h4>
-                  <div class="resumo-valor">R$ 4.850,00</div>
+                  <div class="resumo-valor"
+                    th:text="'R$ ' + ${#numbers.formatDecimal(custoMensal, 0, 'POINT', 2, 'COMMA')}">
+                    R$ 0,00
+                  </div>
                   <div class="resumo-detalhes">Empresa + Colaboradores</div>
                 </div>
+
+
               </div>
 
               <div class="resumo-item empresa">
@@ -56,27 +66,35 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Custo Empresa</h4>
-                  <div class="resumo-valor">R$ 2.920,00</div>
+                  <div class="resumo-valor"
+                    th:text="'R$ ' + ${#numbers.formatDecimal(custoEmpresa, 0, 'POINT', 2, 'COMMA')}">
+                    R$ 0,00
+                  </div>
                   <div class="resumo-detalhes">60% do total</div>
                 </div>
+
               </div>
 
               <div class="resumo-item colaborador">
                 <div class="resumo-icon">
                   <i class="fas fa-user"></i>
                 </div>
+                <!-- Desconto Colaboradores -->
                 <div class="resumo-info">
                   <h4>Desconto Colaboradores</h4>
-                  <div class="resumo-valor">R$ 1.930,00</div>
+                  <div class="resumo-valor"
+                    th:text="'R$ ' + ${#numbers.formatDecimal(descontoColaboradores, 0, 'POINT', 2, 'COMMA')}">
+                    R$ 0,00
+                  </div>
                   <div class="resumo-detalhes">40% do total</div>
                 </div>
+
               </div>
             </div>
           </div>
         </article>
 
         </article>
-        <!-- Planos Disponíveis -->
         <!-- Planos Disponíveis -->
         <article class="card">
           <h3><i class="fas fa-clipboard-list"></i> Planos Disponíveis</h3>
@@ -87,8 +105,11 @@
               <div class="plano-card basico" th:with="plano=${planos[0]}">
                 <div class="plano-header">
                   <h4><i class="fas fa-shield-alt"></i> <span th:text="${plano.nome}">Plano Básico</span></h4>
-                  <div class="plano-preco" th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</div>
+                  <div class="plano-preco">
+                    <span th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</span><br />
+                  </div>
                 </div>
+
                 <div class="plano-beneficios">
                   <ul>
                     <li><i class="fas fa-check"></i> Consultas médicas</li>
@@ -263,7 +284,7 @@
     </div>
   </div>
 
-  
+
   <script th:src="@{/js/sidebar.js}"></script>
   <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

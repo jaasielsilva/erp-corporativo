@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>500 - Erro Interno | Portal CEO</title>
+  <title>Erro | Portal CEO</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
 
     body {
       font-family: 'Montserrat', sans-serif;
-      background: #0f172a;
+      background: #0f172a; /* Azul escuro elegante */
       color: #e0e7ff;
       height: 100vh;
       display: flex;
@@ -21,6 +23,15 @@
       text-align: center;
       padding: 2rem 1rem;
       user-select: none;
+    }
+
+    header {
+      margin-bottom: 1rem;
+    }
+
+    header img {
+      height: 48px;
+      filter: drop-shadow(0 0 2px rgba(0,0,0,0.7));
     }
 
     main {
@@ -48,67 +59,72 @@
     h1 {
       font-size: 3.5rem;
       font-weight: 700;
-      color: #f87171;
-      text-shadow: 0 2px 8px rgba(248, 113, 113, 0.4);
-      user-select: text;
+      color: #ef4444;
+      text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+      margin-bottom: 0.5rem;
     }
 
     h2 {
-      font-size: 1.7rem;
-      font-weight: 600;
+      font-size: 1.8rem;
+      font-weight: 400;
       color: #cbd5e1;
-      margin-bottom: 0.6rem;
-      user-select: text;
+      margin-bottom: 1rem;
     }
 
-    p.message {
-      font-size: 1.15rem;
-      line-height: 1.5;
+    .message {
+      font-size: 1.1rem;
+      line-height: 1.6;
       color: #94a3b8;
-      user-select: text;
+      margin-bottom: 2rem;
+    }
+
+    .error-code {
+      font-size: 1rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+      font-family: 'Courier New', monospace;
     }
 
     .buttons {
       display: flex;
+      gap: 1rem;
       justify-content: center;
-      gap: 1.4rem;
       flex-wrap: wrap;
-      margin-top: 1rem;
     }
 
     .btn {
-      padding: 0.85rem 2.2rem;
-      font-weight: 700;
-      font-size: 1rem;
-      border-radius: 9999px;
-      cursor: pointer;
-      user-select: none;
-      border: none;
-      transition: background-color 0.3s ease, color 0.3s ease;
-      text-decoration: none;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      cursor: pointer;
     }
 
     .btn-primary {
-      background-color: #ef4444;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
       color: white;
-      box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
     }
+
     .btn-primary:hover,
     .btn-primary:focus {
-      background-color: #dc2626;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
       outline: none;
-      box-shadow: 0 8px 16px rgba(220, 38, 38, 0.6);
     }
 
     .btn-secondary {
-      background-color: #1e293b;
-      color: #e0e7ff;
-      box-shadow: inset 0 0 0 2px #e0e7ff;
+      background: transparent;
+      color: #94a3b8;
+      border-color: #475569;
     }
+
     .btn-secondary:hover,
     .btn-secondary:focus {
       background-color: #334155;
@@ -136,11 +152,21 @@
       outline: none;
     }
 
+    /* Responsividade */
     @media (max-width: 480px) {
-      h1 { font-size: 3rem; }
-      h2 { font-size: 1.4rem; }
-      .buttons { flex-direction: column; gap: 1rem; }
-      .btn { width: 100%; }
+      h1 {
+        font-size: 3rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+      }
+      .buttons {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -149,29 +175,30 @@
 <main role="main" aria-labelledby="pageTitle">
   <svg class="illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="32" cy="32" r="30" stroke-opacity="0.2"/>
-    <line x1="20" y1="20" x2="44" y2="44"/>
-    <line x1="44" y1="20" x2="20" y2="44"/>
+    <path d="M32 16v16" />
+    <circle cx="32" cy="44" r="2" fill="#ef4444" />
   </svg>
 
-  <h1 id="pageTitle">500</h1>
-  <h2>Erro Interno do Servidor</h2>
+  <h1 id="pageTitle" th:text="${codigoErro != null ? codigoErro : 'Erro'}">Erro</h1>
+  <h2>Algo deu errado</h2>
   <p class="message">
-    Ocorreu um problema inesperado no servidor.<br/>
-    Nossa equipe já foi notificada e está trabalhando para resolver.<br/>
-    Por favor, tente novamente mais tarde.
+    Ocorreu um erro inesperado no sistema.<br/>
+    Nossa equipe foi notificada e está trabalhando para resolver o problema.
   </p>
+  
+  <div class="error-code" th:if="${codigoErro}">
+    Código do erro: <span th:text="${codigoErro}">500</span>
+  </div>
 
   <div class="buttons">
     <a href="/dashboard" class="btn btn-primary" role="button" aria-label="Voltar para o painel principal">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6H9v6a2 2 0 0 1-2 2H3z"/>
-      </svg>
+      <!-- Ícone "home" inline SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6H9v6a2 2 0 0 1-2 2H3z"/></svg>
       Painel Principal
     </a>
     <a href="/contato" class="btn btn-secondary" role="button" aria-label="Entrar em contato com suporte">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
+      <!-- Ícone "chat" inline SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Suporte
     </a>
   </div>
@@ -185,7 +212,10 @@
   </p>
 </footer>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <!-- Script de notificações -->
+  <!-- jQuery necessário para o sistema de notificações -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script th:src="@{/js/notifications.js}"></script>
 
 </body>
 </html>

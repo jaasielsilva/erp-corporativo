@@ -2,11 +2,14 @@ package com.jaasielsilva.portalceo.controller.rh.colaborador;
 
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.ColaboradorBeneficio;
+import com.jaasielsilva.portalceo.model.HistoricoColaborador;
+import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.AdesaoPlanoSaudeService;
 import com.jaasielsilva.portalceo.service.BeneficioService;
 import com.jaasielsilva.portalceo.service.CargoService;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
+import com.jaasielsilva.portalceo.service.HistoricoColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,10 +42,15 @@ public class ColaboradorController {
     private BeneficioService beneficioService;
     @Autowired
     private AdesaoPlanoSaudeService adesaoPlanoSaudeService;
+    @Autowired
+    private ColaboradorRepository colaboradorRepository;
+    @Autowired
+    private HistoricoColaboradorService historicoColaboradorService;
 
     @GetMapping("/listar")
     public String listar(Model model) {
-        model.addAttribute("colaboradores", colaboradorService.listarTodos());
+        List<Colaborador> colaboradores = colaboradorRepository.findAllWithCargo();
+        model.addAttribute("colaboradores", colaboradores);
         model.addAttribute("usuarios", usuarioService.findAll());
         return "rh/colaboradores/listar";
     }
@@ -126,24 +137,109 @@ public class ColaboradorController {
         return "redirect:/rh/colaboradores/listar";
     }
 
+    public String formatarUltimoAcesso(LocalDateTime dataHora) {
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+    LocalDateTime agora = LocalDateTime.now();
+
+    if (dataHora.toLocalDate().equals(agora.toLocalDate())) {
+        // Se foi hoje, exibe só hora
+        return "Hoje, " + dataHora.format(DateTimeFormatter.ofPattern("HH:mm"));
+    } else {
+        return dataHora.format(formatter);
+    }
+}
+
     // metodo para exibir a ficha do colaborador
     @GetMapping("/ficha/{id}")
     public String ficha(@PathVariable Long id, Model model) {
-        // Busca colaborador
         Colaborador colaborador = colaboradorService.findById(id);
         if (colaborador == null) {
             model.addAttribute("erro", "Colaborador não encontrado");
             return "rh/colaboradores/listar";
         }
+        List<HistoricoColaborador> historico = historicoColaboradorService.listarPorColaborador(id);
+        // Tempo na empresa
+        String tempoNaEmpresa = colaboradorService.calcularTempoNaEmpresa(colaborador.getDataAdmissao());
 
-        // Busca benefícios do colaborador
-        model.addAttribute("beneficios", colaborador.getBeneficios());
-
-        // Busca adesões ao plano de saúde do colaborador
-       
-
+        // Formatar último acesso
+        String ultimoAcesso = "-";
+        if (colaborador.getUltimoAcesso() != null) {
+            ultimoAcesso = formatarUltimoAcesso(colaborador.getUltimoAcesso());
+        }
+        model.addAttribute("historico", historico);
         model.addAttribute("colaborador", colaborador);
-        return "rh/colaboradores/ficha"; 
+        model.addAttribute("tempoNaEmpresa", tempoNaEmpresa);
+        model.addAttribute("ultimoAcesso", ultimoAcesso);
+        model.addAttribute("beneficios", colaborador.getBeneficios());
+        model.addAttribute("cargos", cargoService.listarTodos());
+
+        return "rh/colaboradores/ficha";
+    }
+
+    // método para exibir o histórico completo do colaborador
+    @GetMapping("/historico/{id}")
+    public String historico(@PathVariable Long id, Model model) {
+        Colaborador colaborador = colaboradorService.findById(id);
+        if (colaborador == null) {
+            model.addAttribute("erro", "Colaborador não encontrado");
+            return "rh/colaboradores/listar";
+        }
+        List<HistoricoColaborador> historico = historicoColaboradorService.listarPorColaborador(id);
+        
+        model.addAttribute("colaborador", colaborador);
+        model.addAttribute("historico", historico);
+        
+        return "rh/colaboradores/historico";
+    }
+
+    // método para processar a promoção do colaborador
+    @PostMapping("/promover/{id}")
+    public String promover(@PathVariable Long id, 
+                          @RequestParam Long novoCargoId,
+                          @RequestParam java.math.BigDecimal novoSalario,
+                          @RequestParam(required = false) String descricao,
+                          RedirectAttributes redirectAttributes) {
+        try {
+            Colaborador colaborador = colaboradorService.findById(id);
+            if (colaborador == null) {
+                redirectAttributes.addFlashAttribute("erro", "Colaborador não encontrado");
+                return "redirect:/rh/colaboradores/listar";
+            }
+
+            // Validações básicas
+            if (colaborador.getCargo().getId().equals(novoCargoId)) {
+                redirectAttributes.addFlashAttribute("erro", "O novo cargo deve ser diferente do cargo atual");
+                return "redirect:/rh/colaboradores/ficha/" + id;
+            }
+
+            if (novoSalario.compareTo(colaborador.getSalario()) <= 0) {
+                redirectAttributes.addFlashAttribute("erro", "O novo salário deve ser maior que o salário atual");
+                return "redirect:/rh/colaboradores/ficha/" + id;
+            }
+
+            // Buscar o novo cargo
+            var novoCargo = cargoService.findById(novoCargoId);
+            if (novoCargo == null) {
+                redirectAttributes.addFlashAttribute("erro", "Cargo não encontrado");
+                return "redirect:/rh/colaboradores/ficha/" + id;
+            }
+
+            // Registrar a promoção no histórico
+            colaboradorService.registrarPromocao(colaborador, novoCargo.getNome(), novoSalario, descricao);
+
+            // Atualizar os dados do colaborador
+            colaborador.setCargo(novoCargo);
+            colaborador.setSalario(novoSalario);
+            colaboradorService.salvar(colaborador);
+
+            redirectAttributes.addFlashAttribute("mensagem", 
+                "Colaborador promovido com sucesso para " + novoCargo.getNome() + "!");
+            return "redirect:/rh/colaboradores/ficha/" + id;
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao promover colaborador: " + e.getMessage());
+            return "redirect:/rh/colaboradores/ficha/" + id;
+        }
     }
 
 }

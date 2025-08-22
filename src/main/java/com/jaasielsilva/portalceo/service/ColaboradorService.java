@@ -6,10 +6,12 @@ import com.jaasielsilva.portalceo.exception.DepartamentoNotFoundException;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.Colaborador.StatusColaborador;
 import com.jaasielsilva.portalceo.model.ColaboradorBeneficio;
+import com.jaasielsilva.portalceo.model.HistoricoColaborador;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.CargoRepository;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.DepartamentoRepository;
+import com.jaasielsilva.portalceo.repository.HistoricoColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 
 import org.slf4j.Logger;
@@ -21,8 +23,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +50,9 @@ public class ColaboradorService {
 
     @Autowired
     private ColaboradorValidationService validationService;
+
+    @Autowired
+    private HistoricoColaboradorRepository historicoRepository;
 
     public List<Colaborador> listarAtivos() {
         return colaboradorRepository.findByAtivoTrue();
@@ -230,5 +238,32 @@ public class ColaboradorService {
 
         return colaborador;
     }
+
+    public void registrarPromocao(Colaborador colaborador, String cargoNovo, BigDecimal novoSalario) {
+        registrarPromocao(colaborador, cargoNovo, novoSalario, null);
+    }
+
+    public void registrarPromocao(Colaborador colaborador, String cargoNovo, BigDecimal novoSalario, String descricaoPersonalizada) {
+        HistoricoColaborador historico = new HistoricoColaborador();
+        historico.setColaborador(colaborador);
+        historico.setEvento("Promoção");
+        
+        String descricao = descricaoPersonalizada != null && !descricaoPersonalizada.trim().isEmpty() 
+            ? descricaoPersonalizada 
+            : "Promovido para " + cargoNovo;
+        historico.setDescricao(descricao);
+        
+        historico.setCargoAnterior(colaborador.getCargo().getNome());
+        historico.setCargoNovo(cargoNovo);
+        historico.setSalarioAnterior(colaborador.getSalario());
+        historico.setSalarioNovo(novoSalario);
+        historico.setDepartamentoAnterior(colaborador.getDepartamento().getNome());
+        historico.setDepartamentoNovo(colaborador.getDepartamento().getNome());
+        historico.setDataRegistro(LocalDateTime.now());
+
+
+        historicoRepository.save(historico);
+    }
+
 
 }

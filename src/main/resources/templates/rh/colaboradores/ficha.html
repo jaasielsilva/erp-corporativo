@@ -8,6 +8,8 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/ficha-colaborador.css}" />
+
 </head>
 
 <body>
@@ -25,10 +27,13 @@
           <a href="/rh/colaboradores/listar" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Voltar à Lista
           </a>
-          <a href="/rh/colaboradores/editar/1" class="btn btn-primary">
+          <a th:href="@{'/rh/colaboradores/editar/' + ${colaborador.id}}" class="btn btn-primary">
             <i class="fas fa-edit"></i> Editar
           </a>
-          <a href="/rh/colaboradores/documentos/1" class="btn btn-info">
+          <button onclick="abrirModalPromocao()" class="btn btn-warning" th:if="${colaborador.status.name() == 'ATIVO'}">
+            <i class="fas fa-arrow-up"></i> Promover
+          </button>
+          <a th:href="@{'/rh/colaboradores/documentos/' + ${colaborador.id}}" class="btn btn-info">
             <i class="fas fa-file-alt"></i> Documentos
           </a>
           <button onclick="imprimirFicha()" class="btn btn-success">
@@ -48,16 +53,6 @@
               <h2 th:text="${colaborador.nome}">Nome do Colaborador</h2>
 
               <div class="info-item" style="display:flex; gap:10px; align-items:center;">
-                <label>Cargo:</label>
-                <span class="cargo" th:text="${colaborador.cargo.nome}">Cargo do Colaborador</span>
-              </div>
-
-              <div class="info-item" style="display:flex; gap:10px; align-items:center;">
-                <label>Departamento:</label>
-                <span class="departamento" th:text="${colaborador.departamento.nome}">Departamento do Colaborador</span>
-              </div>
-
-              <div class="info-item" style="display:flex; gap:10px; align-items:center;">
                 <label>Status:</label>
                 <span class="status-badge status-ativo" th:text="${colaborador.status}">ATIVO</span>
               </div>
@@ -68,6 +63,7 @@
                 <span class="stat-label">Tempo na Empresa</span>
                 <span class="stat-value" th:text="${tempoNaEmpresa}">1 ano e 8 meses</span>
               </div>
+
               <div class="stat-item">
                 <span class="stat-label">Último Acesso</span>
                 <span class="stat-value" th:text="${ultimoAcesso}">Hoje, 14:30</span>
@@ -121,14 +117,16 @@
                 <label>Telefone:</label>
                 <span th:text="${colaborador.telefone}">Telefone</span>
               </div>
+
               <div class="info-item full-width">
                 <label>Endereço:</label>
                 <span
-                  th:text="|, ${colaborador.numero} - ${colaborador.bairro} - ${colaborador.cidade}/${colaborador.estado} - CEP: ${colaborador.cep}|">
+                  th:text="|${colaborador.logradouro}, ${colaborador.numero} ${colaborador.complemento} - ${colaborador.bairro} - ${colaborador.cidade}/${colaborador.estado} - CEP: ${colaborador.cep} - ${colaborador.pais}|">
                   Endereço completo
                 </span>
-
               </div>
+
+
             </div>
           </div>
 
@@ -198,33 +196,39 @@
             </div>
           </div>
 
-          
+
           <!-- Histórico Recente -->
           <div class="ficha-section">
-            
+
             <h3><i class="fas fa-history"></i> Histórico Recente</h3>
-            <H2>A PARTIR DAQUI DADOS FIXO POR ENQUANTO</H2>
             <div class="historico-timeline">
-              <div class="timeline-item">
-                <div class="timeline-date">15/11/2023</div>
+              <!-- Exibir apenas os 3 registros mais recentes -->
+              <div th:each="item, iterStat : ${historico}" th:if="${iterStat.index < 3}" class="timeline-item">
+                <div class="timeline-date" th:text="${#temporals.format(item.dataRegistro, 'dd/MM/yyyy')}">Data</div>
                 <div class="timeline-content">
-                  <h4>Promoção para Desenvolvedor Senior</h4>
-                  <p>Promovido de Desenvolvedor Pleno para Senior devido ao excelente desempenho.</p>
+                  <h4 th:text="${item.evento + (item.cargoNovo != null ? ' para ' + item.cargoNovo : '')}">Evento</h4>
+                  <p th:text="${item.descricao}">Descrição do evento</p>
+                  <!-- Detalhes adicionais se houver -->
+                  <div th:if="${item.salarioAnterior != null and item.salarioNovo != null}" class="timeline-details">
+                    <small th:text="'Salário: R$ ' + ${#numbers.formatDecimal(item.salarioAnterior, 1, 'COMMA', 2, 'POINT')} + ' → R$ ' + ${#numbers.formatDecimal(item.salarioNovo, 1, 'COMMA', 2, 'POINT')}">Detalhes salariais</small>
+                  </div>
                 </div>
               </div>
-              <div class="timeline-item">
-                <div class="timeline-date">01/07/2023</div>
+              
+              <!-- Mensagem quando não há histórico -->
+              <div th:if="${#lists.isEmpty(historico)}" class="timeline-item">
+                <div class="timeline-date">-</div>
                 <div class="timeline-content">
-                  <h4>Férias</h4>
-                  <p>Período de férias de 30 dias - 01/07/2023 a 30/07/2023</p>
+                  <h4>Nenhum histórico encontrado</h4>
+                  <p>Este colaborador ainda não possui registros no histórico.</p>
                 </div>
               </div>
-              <div class="timeline-item">
-                <div class="timeline-date">15/03/2023</div>
-                <div class="timeline-content">
-                  <h4>Avaliação de Desempenho</h4>
-                  <p>Avaliação anual - Nota: 9.2/10 - Excelente desempenho</p>
-                </div>
+              
+              <!-- Link para ver histórico completo se houver mais de 3 registros -->
+              <div th:if="${#lists.size(historico) > 3}" class="timeline-item" style="text-align: center; border: none;">
+                <a th:href="@{'/rh/colaboradores/historico/' + ${colaborador.id}}" class="btn btn-link">
+                  <i class="fas fa-eye"></i> Ver histórico completo (+ <span th:text="${#lists.size(historico) - 3}">0</span> registros)
+                </a>
               </div>
             </div>
           </div>
@@ -233,11 +237,10 @@
           <div class="ficha-section">
             <h3><i class="fas fa-sticky-note"></i> Observações</h3>
             <div class="observacoes-content">
-              <p>Colaborador experiente em desenvolvimento web. Especialista em Java e Spring Boot. Demonstra liderança
-                técnica e capacidade de mentoria para desenvolvedores juniores. Participou de projetos estratégicos da
-                empresa com excelentes resultados.</p>
+              <p th:text="${colaborador.observacoes}">Observações do colaborador</p>
             </div>
           </div>
+
         </div>
       </section>
 
@@ -245,27 +248,81 @@
     </main>
   </div>
 
+  <!-- Modal de Promoção -->
+  <div id="modalPromocao" class="modal-promocao hidden" onclick="fecharModalPromocao(event)">
+    <div class="modal-promocao-content" onclick="event.stopPropagation()">
+      <div class="modal-promocao-header">
+        <h3><i class="fas fa-arrow-up"></i> Promover Colaborador</h3>
+        <button type="button" class="modal-promocao-close" onclick="fecharModalPromocao()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-promocao-body">
+        <form id="formPromocao" th:action="@{/rh/colaboradores/promover/{id}(id=${colaborador.id})}" method="post">
+          <div class="form-group">
+            <label for="cargoAtual">Cargo Atual:</label>
+            <select id="cargoAtual" disabled>
+              <option th:value="${colaborador.cargo.id}" th:text="${colaborador.cargo.nome}" selected></option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+                    <label for="novoCargo">Novo Cargo:</label>
+                    <select id="novoCargo" name="novoCargoId" required>
+                        <option value="">Selecione o novo cargo</option>
+                        <option th:each="cargo : ${cargos}" 
+                                th:value="${cargo.id}" 
+                                th:text="${cargo.nome}"
+                                th:disabled="${cargo.id == colaborador.cargo.id}"></option>
+                    </select>
+                </div>
+          
+          <div class="form-group">
+            <label for="novoSalario">Novo Salário:</label>
+            <input type="number" id="novoSalario" name="novoSalario" 
+                   th:value="${colaborador.salario}" 
+                   step="0.01" min="0" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="descricao">Descrição da Promoção:</label>
+            <textarea id="descricao" name="descricao" 
+                      placeholder="Descreva os motivos da promoção..."></textarea>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-promocao-footer">
+        <button type="button" class="btn btn-secondary" onclick="fecharModalPromocao()">Cancelar</button>
+        <button type="submit" form="formPromocao" class="btn btn-primary">Confirmar Promoção</button>
+      </div>
+    </div>
+  </div>
+
   <script th:src="@{/js/script.js}"></script>
+
   <script>
     function imprimirFicha() {
       window.print();
+    }
+
+    function abrirModalPromocao() {
+      document.getElementById('modalPromocao').classList.remove('hidden');
+    }
+
+    function fecharModalPromocao(event) {
+      if (event && event.target !== event.currentTarget) {
+        return;
+      }
+      document.getElementById('modalPromocao').classList.add('hidden');
     }
   </script>
   <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-
-
   <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-  <!-- Script de notifica��es --> <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 
 </body>

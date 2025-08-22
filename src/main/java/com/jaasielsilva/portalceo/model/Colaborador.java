@@ -3,7 +3,9 @@ package com.jaasielsilva.portalceo.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.br.CPF;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,7 +19,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "colaboradores")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Colaborador {
@@ -106,17 +109,11 @@ public class Colaborador {
     private String cep;
 
     private String logradouro;
-
     private String numero;
-
     private String complemento;
-
     private String bairro;
-
     private String cidade;
-
     private String estado;
-
     private String pais;
 
     private String observacoes;
@@ -132,6 +129,9 @@ public class Colaborador {
     @JsonIgnoreProperties({ "supervisor", "cargo", "departamento" })
     private Colaborador supervisor;
 
+    @OneToMany(mappedBy = "colaborador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<HistoricoColaborador> historico;
+
     @PrePersist
     public void onPrePersist() {
         dataCriacao = LocalDateTime.now();
@@ -142,6 +142,22 @@ public class Colaborador {
     @PreUpdate
     public void onPreUpdate() {
         dataUltimaEdicao = LocalDateTime.now();
+    }
+
+    // Apenas ID no equals/hashCode para evitar loop
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Colaborador))
+            return false;
+        Colaborador that = (Colaborador) o;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
     // Enums internas ou separadas em arquivos próprios
@@ -156,5 +172,4 @@ public class Colaborador {
     public enum StatusColaborador {
         ATIVO, INATIVO, SUSPENSO
     }
-
 }

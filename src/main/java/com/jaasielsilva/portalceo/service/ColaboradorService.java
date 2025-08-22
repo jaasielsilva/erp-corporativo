@@ -59,6 +59,12 @@ public class ColaboradorService {
         return colaboradorRepository.countContratacoesPorPeriodo(dataInicio);
     }
 
+    /** Buscar colaborador por ID */
+    public Colaborador buscarPorId(Long id) {
+        return colaboradorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Colaborador não encontrado: " + id));
+    }
+
     // Método findAll que retorna todos os colaboradores
     public List<Colaborador> findAll() {
         return colaboradorRepository.findAll();

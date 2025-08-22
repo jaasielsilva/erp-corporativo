@@ -39,7 +39,7 @@
           <span th:text="${erro}"></span>
         </div>
 
-        <form class="form-container" method="post" action="/rh/colaboradores/salvar">
+        <form id="colaboradorForm" class="form-container" method="post" action="/rh/colaboradores/salvar" onsubmit="return validarFormularioAntesDaSubmissao()">
           <div class="form-grid">
             <!-- Dados Pessoais -->
             <div class="form-section">
@@ -346,17 +346,56 @@
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
-
-  <script th:src="@{/js/script.js}"></script>
-  <script th:src="@{/js/colaborador-form.js}"></script>
-  <!-- jQuery necessário -->
+  
+  <!-- Seu sidebar.js (se não depende de jQuery, pode ficar antes ou depois) -->
+  <script src="/js/sidebar.js" defer></script>
+  
+  <!-- jQuery necessário - deve ser carregado primeiro -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  
+  <script th:src="@{/js/colaborador-form.js}"></script>
 
   <!-- Seu JS de notificações (que depende de jQuery) -->
   <script th:src="@{/js/notifications.js}" defer></script>
 
-  <!-- Seu sidebar.js (se não depende de jQuery, pode ficar antes ou depois) -->
-  <script src="/js/sidebar.js" defer></script>
+
+  <script>
+    function validarFormularioAntesDaSubmissao() {
+      const camposObrigatorios = [
+        { id: 'nome', nome: 'Nome' },
+        { id: 'cpf', nome: 'CPF' },
+        { id: 'email', nome: 'Email' },
+        { id: 'cargo', nome: 'Cargo' },
+        { id: 'departamento', nome: 'Departamento' },
+        { id: 'dataAdmissao', nome: 'Data de Admissão' }
+      ];
+      
+      let erros = [];
+      
+      camposObrigatorios.forEach(campo => {
+        const elemento = document.getElementById(campo.id);
+        if (!elemento || !elemento.value.trim()) {
+          erros.push(campo.nome + ' é obrigatório');
+          if (elemento) {
+            elemento.style.borderColor = '#e74c3c';
+            elemento.style.boxShadow = '0 0 5px rgba(231, 76, 60, 0.3)';
+          }
+        } else {
+          if (elemento) {
+            elemento.style.borderColor = '';
+            elemento.style.boxShadow = '';
+          }
+        }
+      });
+      
+      if (erros.length > 0) {
+        alert('Por favor, preencha os seguintes campos obrigatórios:\n\n' + erros.join('\n'));
+        return false;
+      }
+      
+      return true;
+    }
+  </script>
 
 </body>
 

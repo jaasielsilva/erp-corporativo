@@ -1,8 +1,11 @@
 package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.Beneficio;
+import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.model.ColaboradorBeneficio;
 import com.jaasielsilva.portalceo.model.PlanoSaude;
 import com.jaasielsilva.portalceo.repository.BeneficioRepository;
+import com.jaasielsilva.portalceo.repository.ColaboradorBeneficioRepository;
 import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
 
 import org.springframework.stereotype.Service;
@@ -18,6 +21,9 @@ public class BeneficioService {
 
     @Autowired
     private PlanoSaudeRepository planoSaudeRepository;
+
+    @Autowired
+    private ColaboradorBeneficioRepository colaboradorBeneficioRepository;
     
     
     public BeneficioService(BeneficioRepository beneficioRepository) {
@@ -55,4 +61,12 @@ public class BeneficioService {
     public Optional<PlanoSaude> buscarPlanoPorNome(String nome) {
         return planoSaudeRepository.findByNome(nome);
     }
+
+    public void salvarBeneficiosDoColaborador(Colaborador colaborador) {
+    for (ColaboradorBeneficio cb : colaborador.getBeneficios()) {
+        cb.setColaborador(colaborador);
+        colaboradorBeneficioRepository.save(cb);
+    }
+}
+
 }

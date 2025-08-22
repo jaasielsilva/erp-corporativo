@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Evento - Agenda</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <h1 class="mb-4"><i class="fas fa-plus-circle"></i> Novo Evento</h1>
+
+                <form th:action="@{/agenda/salvar}" th:object="${evento}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" th:field="*{titulo}" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea th:field="*{descricao}" class="form-control"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data/Hora Início</label>
+                            <input type="datetime-local" th:field="*{dataHoraInicio}" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Data/Hora Fim</label>
+                            <input type="datetime-local" th:field="*{dataHoraFim}" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" th:field="*{lembrete}" class="form-check-input">
+                        <label class="form-check-label">Ativar lembrete</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Local</label>
+                        <input type="text" th:field="*{local}" class="form-control">
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <a href="/agenda/eventos" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+</body>
+</html>

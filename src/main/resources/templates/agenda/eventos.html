@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos - Agenda</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <h1 class="mb-4"><i class="fas fa-list"></i> Lista de Eventos</h1>
+
+                <a href="/agenda/novo-evento" class="btn btn-primary mb-3">
+                    <i class="fas fa-plus"></i> Novo Evento
+                </a>
+
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Data Início</th>
+                            <th>Data Fim</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="evento : ${eventos}">
+                            <td th:text="${evento.titulo}">Reunião</td>
+                            <td th:text="${#temporals.format(evento.dataHoraInicio, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${#temporals.format(evento.dataHoraFim, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td>
+                                <a th:href="@{'/agenda/editar/' + ${evento.id}}" class="btn btn-sm btn-warning">Editar</a>
+                                <a th:href="@{'/agenda/deletar/' + ${evento.id}}" class="btn btn-sm btn-danger">Excluir</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+</body>
+</html>

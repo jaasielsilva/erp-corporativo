@@ -41,6 +41,8 @@ public class AdesaoPlanoSaude {
     @Column
     private LocalDate dataCancelamento;
 
+    private String tipoAdesao;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusAdesao status = StatusAdesao.ATIVA;

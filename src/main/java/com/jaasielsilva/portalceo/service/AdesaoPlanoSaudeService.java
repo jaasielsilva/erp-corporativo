@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude;
+import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude.StatusAdesao;
 import com.jaasielsilva.portalceo.model.PlanoSaude;
 import com.jaasielsilva.portalceo.repository.AdesaoPlanoSaudeRepository;
 import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
@@ -48,7 +49,8 @@ public class AdesaoPlanoSaudeService {
 
     /** Lista todas as adesões ativas */
     public List<AdesaoPlanoSaude> listarAtivos() {
-        return repository.findByStatus("ATIVA");
+        return repository.findByStatus(StatusAdesao.ATIVA);
+
     }
 
     /** Atualiza os valores das adesões ativas de acordo com o plano */

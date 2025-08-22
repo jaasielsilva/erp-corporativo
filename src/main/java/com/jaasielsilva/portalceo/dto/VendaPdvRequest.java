@@ -1,45 +1,20 @@
 package com.jaasielsilva.portalceo.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
+import lombok.Data;
+
+@Data
 public class VendaPdvRequest {
     private Long clienteId;
     private String formaPagamento;
     private Integer parcelas;
     private List<ItemRequest> itens;
+    private String Observacoes;
+    private BigDecimal Desconto;
+    private BigDecimal ValorPago;
 
-    // Getters e Setters
-    public Long getClienteId() {
-        return clienteId;
-    }
-
-    public void setClienteId(Long clienteId) {
-        this.clienteId = clienteId;
-    }
-
-    public String getFormaPagamento() {
-        return formaPagamento;
-    }
-
-    public void setFormaPagamento(String formaPagamento) {
-        this.formaPagamento = formaPagamento;
-    }
-
-    public Integer getParcelas() {
-        return parcelas;
-    }
-
-    public void setParcelas(Integer parcelas) {
-        this.parcelas = parcelas;
-    }
-
-    public List<ItemRequest> getItens() {
-        return itens;
-    }
-
-    public void setItens(List<ItemRequest> itens) {
-        this.itens = itens;
-    }
 
     // Classe interna para itens
     public static class ItemRequest {

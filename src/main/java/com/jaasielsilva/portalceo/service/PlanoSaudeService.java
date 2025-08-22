@@ -57,8 +57,9 @@ public class PlanoSaudeService {
         return planoSaudeRepository.existsByCodigo(codigo);
     }
 
-     // **Buscar por ID**
-    public Optional<PlanoSaude> findById(Long id) {
-        return planoSaudeRepository.findById(id);
+    /** Buscar plano de saúde por ID */
+    public PlanoSaude buscarPorId(Long id) {
+        return planoSaudeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Plano de saúde não encontrado: " + id));
     }
 }

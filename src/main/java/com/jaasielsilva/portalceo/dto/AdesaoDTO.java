@@ -15,4 +15,5 @@ public class AdesaoDTO {
     private String tipoAdesao;
     private String observacoes;
     private boolean processarImediatamente;
+    
 }

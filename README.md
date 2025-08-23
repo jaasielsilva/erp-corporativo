@@ -1,8 +1,9 @@
 # Painel do CEO - ERP Corporativo
 
-Sistema ERP completo para gestão empresarial desenvolvido com Spring Boot, Thymeleaf, MySQL e HTML/CSS puro.  
-Ideal para controle administrativo de pequenas e médias empresas, com foco em modularidade, usabilidade e escalabilidade.
+Sistema ERP completo para gestão empresarial desenvolvido com **Spring Boot**, **Thymeleaf**, **MySQL** e **HTML/CSS puro**.  
+> Ideal para controle administrativo de pequenas e médias empresas, com foco em **modularidade, usabilidade e escalabilidade**.
 
+---
 ## Interface Administrativa
 
 O sistema possui uma interface web administrativa moderna, com estrutura modular e responsiva.  

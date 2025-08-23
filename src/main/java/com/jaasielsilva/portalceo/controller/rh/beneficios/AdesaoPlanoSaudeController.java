@@ -177,4 +177,163 @@ public class AdesaoPlanoSaudeController {
         }
     }
 
+    // Endpoint para salvar Vale Refeição
+    @PostMapping("/vale-refeicao/salvar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> salvarValeRefeicao(@RequestBody Map<String, Object> dadosVale) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Validações básicas
+            if (!dadosVale.containsKey("colaboradorId") || dadosVale.get("colaboradorId") == null) {
+                response.put("success", false);
+                response.put("message", "Colaborador é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (!dadosVale.containsKey("valorMensal") || dadosVale.get("valorMensal") == null) {
+                response.put("success", false);
+                response.put("message", "Valor mensal é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (!dadosVale.containsKey("dataInicio") || dadosVale.get("dataInicio") == null) {
+                response.put("success", false);
+                response.put("message", "Data de início é obrigatória");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Buscar colaborador
+            Long colaboradorId = Long.valueOf(dadosVale.get("colaboradorId").toString());
+            var colaborador = colaboradorService.buscarPorId(colaboradorId);
+            if (colaborador == null) {
+                response.put("success", false);
+                response.put("message", "Colaborador não encontrado");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Simular salvamento do vale refeição
+            // TODO: Implementar entidade e service específicos para ValeRefeicao
+            
+            response.put("success", true);
+            response.put("message", "Vale Refeição salvo com sucesso!");
+            response.put("tipo", "vale-refeicao");
+            response.put("colaborador", colaborador.getNome());
+            response.put("valor", dadosVale.get("valorMensal"));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Erro ao salvar Vale Refeição: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // Endpoint para salvar Vale Transporte
+    @PostMapping("/vale-transporte/salvar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> salvarValeTransporte(@RequestBody Map<String, Object> dadosVale) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Validações básicas
+            if (!dadosVale.containsKey("colaboradorId") || dadosVale.get("colaboradorId") == null) {
+                response.put("success", false);
+                response.put("message", "Colaborador é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (!dadosVale.containsKey("valorMensal") || dadosVale.get("valorMensal") == null) {
+                response.put("success", false);
+                response.put("message", "Valor mensal é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (!dadosVale.containsKey("dataInicio") || dadosVale.get("dataInicio") == null) {
+                response.put("success", false);
+                response.put("message", "Data de início é obrigatória");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Buscar colaborador
+            Long colaboradorId = Long.valueOf(dadosVale.get("colaboradorId").toString());
+            var colaborador = colaboradorService.buscarPorId(colaboradorId);
+            if (colaborador == null) {
+                response.put("success", false);
+                response.put("message", "Colaborador não encontrado");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Simular salvamento do vale transporte
+            // TODO: Implementar entidade e service específicos para ValeTransporte
+            
+            response.put("success", true);
+            response.put("message", "Vale Transporte salvo com sucesso!");
+            response.put("tipo", "vale-transporte");
+            response.put("colaborador", colaborador.getNome());
+            response.put("valor", dadosVale.get("valorMensal"));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Erro ao salvar Vale Transporte: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // Endpoint para salvar Vale Alimentação
+    @PostMapping("/vale-alimentacao/salvar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> salvarValeAlimentacao(@RequestBody Map<String, Object> dadosVale) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Validações básicas
+            if (!dadosVale.containsKey("colaboradorId") || dadosVale.get("colaboradorId") == null) {
+                response.put("success", false);
+                response.put("message", "Colaborador é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (!dadosVale.containsKey("valorMensal") || dadosVale.get("valorMensal") == null) {
+                response.put("success", false);
+                response.put("message", "Valor mensal é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (!dadosVale.containsKey("dataInicio") || dadosVale.get("dataInicio") == null) {
+                response.put("success", false);
+                response.put("message", "Data de início é obrigatória");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Buscar colaborador
+            Long colaboradorId = Long.valueOf(dadosVale.get("colaboradorId").toString());
+            var colaborador = colaboradorService.buscarPorId(colaboradorId);
+            if (colaborador == null) {
+                response.put("success", false);
+                response.put("message", "Colaborador não encontrado");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Simular salvamento do vale alimentação
+            // TODO: Implementar entidade e service específicos para ValeAlimentacao
+            
+            response.put("success", true);
+            response.put("message", "Vale Alimentação salvo com sucesso!");
+            response.put("tipo", "vale-alimentacao");
+            response.put("colaborador", colaborador.getNome());
+            response.put("valor", dadosVale.get("valorMensal"));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Erro ao salvar Vale Alimentação: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+     }
+
 }

@@ -9,6 +9,7 @@
   <link rel="stylesheet" th:href="@{/css/style.css}">
   <link rel="stylesheet" th:href="@{/css/sidebar.css}">
   <link rel="stylesheet" th:href="@{/css/adesao.css}">
+  <link rel="stylesheet" th:href="@{/css/benefits-modal.css}">
 
 </head>
 
@@ -102,171 +103,288 @@
           </table>
         </article>
 
-        <!-- Modal Nova Adesão -->
-        <div id="modalAdesao" class="modal">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3><i class="fas fa-plus"></i> Nova Adesão de Benefício</h3>
+        <!-- Modal para Nova Adesão de Benefícios -->
+        <div id="modalAdesao" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modalAdesaoLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content benefits-modal">
+            <div class="modal-header benefits-header">
+              <div class="header-content">
+                <div class="header-icon">
+                  <i class="fas fa-gift"></i>
+                </div>
+                <div class="header-text">
+                  <h3>Nova Adesão de Benefício</h3>
+                  <p class="modal-subtitle">Selecione o tipo de benefício e preencha as informações</p>
+                </div>
+              </div>
               <span class="close" onclick="fecharModalAdesao()">&times;</span>
             </div>
-            <form id="formAdesao" method="post" class="formulario-3col">
-
-              <div class="form-group">
-                <label for="colaboradorId">Colaborador: <span class="required">*</span></label>
-                <select id="colaboradorId" name="colaboradorId" required class="form-control">
-                  <option value="" disabled selected>Selecione um colaborador</option>
-                  <option th:each="col : ${colaboradores}" th:if="${col != null}" th:value="${col.id}"
-                    th:text="${col.nome != null ? col.nome : 'Nome não informado'} + ${col.departamento != null && col.departamento.nome != null ? ' - ' + col.departamento.nome : ' - Departamento não informado'}">
-                  </option>
-                </select>
-                <div class="invalid-feedback">Por favor, selecione um colaborador.</div>
-              </div>
-
-              <div class="form-group">
-                <label for="planoSaudeId">Plano de Saúde: <span class="required">*</span></label>
-                <select id="planoSaudeId" name="planoId" required class="form-control">
-                  <option value="" disabled selected>Selecione um plano de saúde</option>
-                  <option th:each="p : ${plano_de_saude}" th:if="${p != null}" th:value="${p.id}"
-                    th:text="${p.nome != null ? p.nome : 'Plano Indefinido'}"></option>
-                </select>
-                <div class="invalid-feedback">Por favor, selecione um plano de saúde.</div>
-              </div>
-
-              <div class="form-group">
-                <label for="quantidadeDependentes">Qtd. Dependentes:</label>
-                <input type="number" id="quantidadeDependentes" name="quantidadeDependentes" min="0" max="10" value="0"
-                  class="form-control">
-                <small class="form-text text-muted">Máx. 10 dependentes por adesão</small>
-              </div>
-
-              <div class="form-group">
-                <label for="valorTotal">Valor Total Mensal:</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">R$</span>
-                  </div>
-                  <input type="text" id="valorTotal" name="valorTotal" readonly class="form-control" placeholder="0,00">
+            <div class="modal-body benefits-body">
+              <!-- Etapa 1: Seleção do Tipo de Benefício -->
+              <div class="benefits-step" id="step-benefit-type">
+                <div class="step-header">
+                  <h6 class="step-title">
+                    <span class="step-number">1</span>
+                    Selecione o Tipo de Benefício
+                  </h6>
+                  <p class="step-description">Escolha qual benefício deseja adicionar para o colaborador</p>
                 </div>
-                <small class="form-text text-muted">Valor calculado automaticamente</small>
-              </div>
-
-              <div class="form-group">
-                <label for="dataVigencia">Data de Vigência: <span class="required">*</span></label>
-                <input type="date" id="dataVigencia" name="dataVigencia" required class="form-control">
-              </div>
-
-              <div class="form-group">
-                <label for="tipoAdesao">Tipo de Adesão: <span class="required">*</span></label>
-                <select id="tipoAdesao" name="tipoAdesao" required class="form-control">
-                  <option value="" disabled selected>Selecione...</option>
-                  <option value="ADESAO">Nova Adesão</option>
-                  <option value="ALTERACAO">Alteração</option>
-                  <option value="CANCELAMENTO">Cancelamento</option>
-                </select>
-              </div>
-
-              <div class="form-group full-width">
-                <label for="observacoes">Observações:</label>
-                <textarea id="observacoes" name="observacoes" class="form-control" rows="3"
-                  placeholder="Informações adicionais..."></textarea>
-              </div>
-
-              <div class="form-check full-width">
-                <input type="checkbox" id="processarImediatamente" name="processarImediatamente"
-                  class="form-check-input">
-                <label class="form-check-label" for="processarImediatamente">Processar imediatamente</label>
-              </div>
-
-              <div class="modal-footer full-width">
-                <button type="button" class="btn btn-secondary" onclick="fecharModalAdesao()">Cancelar</button>
-                <button type="submit" id="btnSalvarAdesao" class="btn btn-primary">
-                  <span class="btn-text">Salvar Adesão</span>
-                  <span class="btn-loading" style="display: none;">
-                    <i class="fas fa-spinner fa-spin"></i> Salvando...
-                  </span>
-                </button>
-              </div>
-
-            </form>
-            <div id="modalAdesao" class="modal">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h3><i class="fas fa-plus"></i> Nova Adesão de Benefício</h3>
-                  <span class="close" onclick="fecharModalAdesao()">&times;</span>
+                <div class="benefits-grid">
+                  <div class="benefit-card" data-benefit="plano-saude">
+                    <div class="benefit-icon">
+                      <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="benefit-info">
+                      <h6>Plano de Saúde</h6>
+                      <p>Assistência médica e hospitalar</p>
+                    </div>
+                    <div class="benefit-arrow">
+                      <i class="fas fa-chevron-right"></i>
+                    </div>
+                  </div>
+                  <div class="benefit-card" data-benefit="vale-refeicao">
+                    <div class="benefit-icon">
+                      <i class="fas fa-utensils"></i>
+                    </div>
+                    <div class="benefit-info">
+                      <h6>Vale Refeição</h6>
+                      <p>Auxílio alimentação para refeições</p>
+                    </div>
+                    <div class="benefit-arrow">
+                      <i class="fas fa-chevron-right"></i>
+                    </div>
+                  </div>
+                  <div class="benefit-card" data-benefit="vale-transporte">
+                    <div class="benefit-icon">
+                      <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="benefit-info">
+                      <h6>Vale Transporte</h6>
+                      <p>Auxílio para deslocamento</p>
+                    </div>
+                    <div class="benefit-arrow">
+                      <i class="fas fa-chevron-right"></i>
+                    </div>
+                  </div>
+                  <div class="benefit-card" data-benefit="vale-alimentacao">
+                    <div class="benefit-icon">
+                      <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="benefit-info">
+                      <h6>Vale Alimentação</h6>
+                      <p>Auxílio para compras em supermercados</p>
+                    </div>
+                    <div class="benefit-arrow">
+                      <i class="fas fa-chevron-right"></i>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <form id="formAdesao" method="post" class="formulario-3col">
-
-                  <div class="form-group">
-                    <label for="colaboradorId">Colaborador *</label>
-                    <select id="colaboradorId" name="colaboradorId" required class="form-control">
-                      <option value="" disabled selected>Selecione um colaborador</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="planoSaudeId">Plano de Saúde *</label>
-                    <select id="planoSaudeId" name="planoId" required class="form-control"></select>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="quantidadeDependentes">Qtd. Dependentes</label>
-                    <input type="number" id="quantidadeDependentes" name="quantidadeDependentes" min="0" max="10"
-                      value="0" class="form-control">
-                  </div>
-
-                  <div class="form-group">
-                    <label for="valorTotal">Valor Total</label>
-                    <div class="input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text">R$</span>
-                      </div>
-                      <input type="text" id="valorTotal" name="valorTotal" readonly class="form-control">
+              <!-- Etapa 2: Formulário Dinâmico -->
+              <div class="benefits-step" id="step-form" style="display: none;">
+                <div class="step-header">
+                  <button type="button" class="btn-back" onclick="voltarEtapa()">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar
+                  </button>
+                  <h6 class="step-title">
+                    <span class="step-number">2</span>
+                    <span id="selected-benefit-title">Informações do Benefício</span>
+                  </h6>
+                </div>
+                
+                <form id="formAdesao" method="post" class="benefits-form">
+                  <input type="hidden" id="tipoBeneficio" name="tipoBeneficio">
+                  
+                  <!-- Seção Colaborador (comum a todos) -->
+                  <div class="form-section">
+                    <h6 class="section-title">
+                      <i class="fas fa-user"></i>
+                      Colaborador
+                    </h6>
+                    <div class="form-group">
+                      <label for="colaboradorId">Selecione o Colaborador <span class="required">*</span></label>
+                      <select id="colaboradorId" name="colaboradorId" required class="form-control">
+                        <option value="" disabled selected>Selecione um colaborador</option>
+                        <option th:each="col : ${colaboradores}" th:if="${col != null}" th:value="${col.id}"
+                          th:text="${col.nome != null ? col.nome : 'Nome não informado'} + ${col.departamento != null && col.departamento.nome != null ? ' - ' + col.departamento.nome : ' - Departamento não informado'}">
+                        </option>
+                      </select>
                     </div>
                   </div>
 
-                  <div class="form-group">
-                    <label for="dataVigencia">Data de Vigência *</label>
-                    <input type="date" id="dataVigencia" name="dataVigencia" required class="form-control">
+                  <!-- Formulário Plano de Saúde -->
+                  <div class="form-section benefit-form" id="form-plano-saude" style="display: none;">
+                    <h6 class="section-title">
+                      <i class="fas fa-heartbeat"></i>
+                      Detalhes do Plano de Saúde
+                    </h6>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="planoSaudeId">Plano de Saúde <span class="required">*</span></label>
+                        <select id="planoSaudeId" name="planoId" required class="form-control">
+                          <option value="" disabled selected>Selecione um plano de saúde</option>
+                          <option th:each="p : ${plano_de_saude}" th:if="${p != null}" th:value="${p.id}"
+                            th:text="${p.nome != null ? p.nome : 'Plano Indefinido'}"></option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="tipoAdesao">Tipo de Adesão <span class="required">*</span></label>
+                        <select id="tipoAdesao" name="tipoAdesao" required class="form-control">
+                          <option value="" disabled selected>Selecione...</option>
+                          <option value="ADESAO">Nova Adesão</option>
+                          <option value="ALTERACAO">Alteração</option>
+                          <option value="CANCELAMENTO">Cancelamento</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="quantidadeDependentes">Qtd. Dependentes</label>
+                        <input type="number" id="quantidadeDependentes" name="quantidadeDependentes" min="0" max="10" value="0" class="form-control">
+                        <small class="form-text text-muted">Máx. 10 dependentes por adesão</small>
+                      </div>
+                      <div class="form-group">
+                        <label for="dataVigencia">Data de Vigência <span class="required">*</span></label>
+                        <input type="date" id="dataVigencia" name="dataVigencia" required class="form-control">
+                      </div>
+                      <div class="form-group">
+                        <label for="valorTotal">Valor Total Mensal</label>
+                        <div class="input-group">
+                          <div class="input-group-prepend">
+                            <span class="input-group-text">R$</span>
+                          </div>
+                          <input type="text" id="valorTotal" name="valorTotal" readonly class="form-control" placeholder="0,00">
+                        </div>
+                        <small class="form-text text-muted">Valor calculado automaticamente</small>
+                      </div>
+                    </div>
                   </div>
 
-                  <div class="form-group">
-                    <label for="tipoAdesao">Tipo de Adesão *</label>
-                    <select id="tipoAdesao" name="tipoAdesao" required class="form-control">
-                      <option value="" disabled selected>Selecione...</option>
-                      <option value="ADESAO">Nova Adesão</option>
-                      <option value="ALTERACAO">Alteração</option>
-                      <option value="CANCELAMENTO">Cancelamento</option>
-                    </select>
+                  <!-- Formulário Vale Refeição -->
+                  <div class="form-section benefit-form" id="form-vale-refeicao" style="display: none;">
+                    <h6 class="section-title">
+                      <i class="fas fa-utensils"></i>
+                      Detalhes do Vale Refeição
+                    </h6>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="valorValeRefeicao">Valor Mensal <span class="required">*</span></label>
+                        <div class="input-group">
+                          <span class="input-group-text">R$</span>
+                          <input type="number" class="form-control" id="valorValeRefeicao" name="valorMensal" step="0.01" min="0" required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="dataInicioVR">Data de Início <span class="required">*</span></label>
+                        <input type="date" class="form-control" id="dataInicioVR" name="dataInicio" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="fornecedorVR">Fornecedor</label>
+                        <select class="form-control" id="fornecedorVR" name="fornecedorId">
+                          <option value="">Selecione o fornecedor</option>
+                          <option value="1">Ticket Restaurante</option>
+                          <option value="2">Sodexo</option>
+                          <option value="3">Alelo</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
-                  <div class="form-group full-width">
-                    <label for="observacoes">Observações</label>
-                    <textarea id="observacoes" name="observacoes" class="form-control" rows="3"></textarea>
+                  <!-- Formulário Vale Transporte -->
+                  <div class="form-section benefit-form" id="form-vale-transporte" style="display: none;">
+                    <h6 class="section-title">
+                      <i class="fas fa-bus"></i>
+                      Detalhes do Vale Transporte
+                    </h6>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="valorValeTransporte">Valor Mensal <span class="required">*</span></label>
+                        <div class="input-group">
+                          <span class="input-group-text">R$</span>
+                          <input type="number" class="form-control" id="valorValeTransporte" name="valorMensal" step="0.01" min="0" required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="dataInicioVT">Data de Início <span class="required">*</span></label>
+                        <input type="date" class="form-control" id="dataInicioVT" name="dataInicio" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="tipoTransporte">Tipo de Transporte</label>
+                        <select class="form-control" id="tipoTransporte" name="tipoTransporte">
+                          <option value="">Selecione o tipo</option>
+                          <option value="ONIBUS">Ônibus</option>
+                          <option value="METRO">Metrô</option>
+                          <option value="TREM">Trem</option>
+                          <option value="INTEGRADO">Integrado</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Formulário Vale Alimentação -->
+                  <div class="form-section benefit-form" id="form-vale-alimentacao" style="display: none;">
+                    <h6 class="section-title">
+                      <i class="fas fa-shopping-cart"></i>
+                      Detalhes do Vale Alimentação
+                    </h6>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="valorValeAlimentacao">Valor Mensal <span class="required">*</span></label>
+                        <div class="input-group">
+                          <span class="input-group-text">R$</span>
+                          <input type="number" class="form-control" id="valorValeAlimentacao" name="valorMensal" step="0.01" min="0" required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="dataInicioVA">Data de Início <span class="required">*</span></label>
+                        <input type="date" class="form-control" id="dataInicioVA" name="dataInicio" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="fornecedorVA">Fornecedor</label>
+                        <select class="form-control" id="fornecedorVA" name="fornecedorId">
+                          <option value="">Selecione o fornecedor</option>
+                          <option value="1">Ticket Alimentação</option>
+                          <option value="2">Sodexo</option>
+                          <option value="3">Alelo</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Seção Observações (comum a todos) -->
+                  <div class="form-section">
+                    <h6 class="section-title">
+                      <i class="fas fa-comment-alt"></i>
+                      Observações
+                    </h6>
+                    <div class="form-group full-width">
+                      <label for="observacoes">Observações Adicionais</label>
+                      <textarea id="observacoes" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre a adesão..."></textarea>
+                    </div>
                   </div>
 
                   <div class="form-check full-width">
-                    <input type="checkbox" id="processarImediatamente" name="processarImediatamente"
-                      class="form-check-input">
+                    <input type="checkbox" id="processarImediatamente" name="processarImediatamente" class="form-check-input">
                     <label class="form-check-label" for="processarImediatamente">Processar imediatamente</label>
                   </div>
 
                   <div class="modal-footer full-width">
                     <button type="button" class="btn btn-secondary" onclick="fecharModalAdesao()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" id="btnSalvarAdesao" class="btn btn-primary" style="display: none;">
                       <span class="btn-text">Salvar Adesão</span>
                       <span class="btn-loading" style="display: none;">
                         <i class="fas fa-spinner fa-spin"></i> Salvando...
                       </span>
                     </button>
                   </div>
-
                 </form>
               </div>
             </div>
-
           </div>
         </div>
+      </div>
 
       </section>
 
@@ -434,6 +552,15 @@
       window.location.href = `/rh/beneficios/adesao/detalhes/${adesaoId}`;
     }
   </script>
+
+  <!-- jQuery necessário para o modal -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  
+  <!-- Bootstrap JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Script do novo modal de benefícios -->
+  <script th:src="@{/js/benefits.js}"></script>
 
 </body>
 

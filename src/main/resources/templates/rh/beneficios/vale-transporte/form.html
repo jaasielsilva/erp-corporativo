@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Cadastro de Vale Transporte</title>
+    <link href="/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<h2 th:text="${vale.id != null ? 'Editar Vale Transporte' : 'Novo Vale Transporte'}"></h2>
+
+<form th:action="@{/rh/beneficios/vale-transporte/salvar}" th:object="${vale}" method="post">
+    <input type="hidden" th:field="*{id}"/>
+
+    <label>Mês Referência:</label>
+    <input type="number" th:field="*{mesReferencia}"/><br>
+
+    <label>Ano Referência:</label>
+    <input type="number" th:field="*{anoReferencia}"/><br>
+
+    <label>Dias Úteis:</label>
+    <input type="number" th:field="*{diasUteis}"/><br>
+
+    <label>Valor Passagem:</label>
+    <input type="text" th:field="*{valorPassagem}"/><br>
+
+    <label>Linha Ônibus:</label>
+    <input type="text" th:field="*{linhaOnibus}"/><br>
+
+    <label>Origem:</label>
+    <input type="text" th:field="*{enderecoOrigem}"/><br>
+
+    <label>Destino:</label>
+    <input type="text" th:field="*{enderecoDestino}"/><br>
+
+    <label>Status:</label>
+    <select th:field="*{status}">
+        <option th:value="ATIVO">Ativo</option>
+        <option th:value="SUSPENSO">Suspenso</option>
+        <option th:value="CANCELADO">Cancelado</option>
+    </select><br>
+
+    <label>Observações:</label>
+    <textarea th:field="*{observacoes}"></textarea><br>
+
+    <button type="submit">Salvar</button>
+</form>
+</body>
+</html>

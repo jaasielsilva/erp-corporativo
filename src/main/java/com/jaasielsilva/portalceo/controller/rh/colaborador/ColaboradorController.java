@@ -245,7 +245,7 @@ public class ColaboradorController {
     @GetMapping("/relatorio")
     public String relatorioColaboradores(Model model) {
         // Adicione dados ao model se precisar
-        return "rh/colaboradores/relatorio"; 
+        return "rh/colaboradores/relatorios"; 
     }
 
 }

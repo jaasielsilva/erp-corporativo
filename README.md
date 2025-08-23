@@ -357,6 +357,276 @@ templates/
     └── recuperar-senha.html
 ```
 
+# 📚 DOCUMENTAÇÃO: NÍVEIS DE ACESSO E CONTROLE DE VISIBILIDADE
+
+> Baseado na estrutura da sua `sidebar.html` com Thymeleaf
+
+## 🎯 Objetivo
+
+Este documento define:
+- Os **perfis de usuário**
+- As **permissões de acesso**
+- Como o sistema **exibe ou oculta funcionalidades** com base no nível do usuário
+
+O controle é feito via **variáveis Thymeleaf** injetadas no `Model` pelo backend, com base no perfil do usuário logado.
+
+---
+
+## 🔐 Perfis de Usuário (Roles)
+
+| Perfil | Role Spring Security | Descrição |
+|-------|------------------------|---------|
+| **Master** | `ROLE_MASTER` | Máximo controle. Configurações globais, segurança, backup |
+| **Admin** | `ROLE_ADMIN` | Gestão de usuários, permissões, configurações |
+| **Gerencial** | `ROLE_GERENCIAL` | Acesso a relatórios, metas, RH, financeiro (visão geral) |
+| **Vendas** | `ROLE_VENDAS` | Acesso ao módulo Comercial (clientes, vendas, contratos) |
+| **Estoque** | `ROLE_ESTOQUE` | Controle de produtos, estoque, categorias |
+| **Financeiro** | `ROLE_FINANCEIRO` | Acesso ao módulo Financeiro |
+| **RH** | `ROLE_RH` | Acesso completo ao módulo Recursos Humanos |
+| **TI** | `ROLE_TI` | Gestão de sistemas, suporte, segurança da informação |
+| **Marketing** | `ROLE_MARKETING` | Campanhas, leads, eventos |
+| **Jurídico** | `ROLE_JURIDICO` | Contratos, processos, compliance |
+| **Usuário Comum** | `ROLE_USUARIO` | Acesso pessoal: chat, pedidos, serviços, favoritos |
+
+---
+
+## 🧩 Variáveis de Controle (Thymeleaf)
+
+Essas variáveis são **injetadas no `Model`** no backend (nos controllers) com base no perfil do usuário.
+
+| Variável Thymeleaf | Quando é `true` | Função |
+|--------------------|------------------|--------|
+| `isAdmin` | `ROLE_ADMIN` ou `ROLE_MASTER` | Libera configurações, gestão de acesso |
+| `isMaster` | `ROLE_MASTER` | Acesso total, incluindo segurança e backup |
+| `isGerencial` | `ROLE_GERENCIAL`, `ADMIN`, `MASTER` | Mostra relatórios, metas, benefícios |
+| `podeAcessarVendas` | `ROLE_VENDAS`, `GERENCIAL`, `ADMIN`, `MASTER` | Mostra Clientes, Vendas, Contratos |
+| `podeGerenciarVendas` | `ROLE_VENDAS`, `ADMIN`, `MASTER` | Permite criar/editar clientes e vendas |
+| `podeAcessarEstoque` | `ROLE_ESTOQUE`, `GERENCIAL`, `ADMIN`, `MASTER` | Mostra Produtos, Estoque, Categorias |
+| `podeAcessarFinanceiro` | `ROLE_FINANCEIRO`, `GERENCIAL`, `ADMIN`, `MASTER` | Mostra Contas, Fluxo de Caixa, Transferências |
+| `podeAcessarRH` | `ROLE_RH`, `GERENCIAL`, `ADMIN`, `MASTER` | Mostra RH (exceto folha e recrutamento) |
+| `podeGerenciarRH` | `ROLE_RH`, `ADMIN`, `MASTER` | Libera Folha, Recrutamento, Relatórios RH |
+| `podeAcessarTI` | `ROLE_TI`, `ADMIN`, `MASTER` | Mostra Sistemas, Suporte, Segurança |
+| `podeAcessarMarketing` | `ROLE_MARKETING`, `GERENCIAL`, `ADMIN`, `MASTER` | Mostra Campanhas, Leads |
+| `podeAcessarJuridico` | `ROLE_JURIDICO`, `ADMIN`, `MASTER` | Mostra Contratos, Processos |
+| `podeGerenciarUsuarios` | `ROLE_ADMIN`, `ROLE_MASTER` | Libera gestão de usuários e solicitações |
+| `nivelAcesso` | `String` | Exibe o nome do perfil (ex: "Gerencial") |
+
+---
+
+## 👤 Perfil por Perfil: O Que Cada Usuário Vê
+
+### 1. **Master** (`ROLE_MASTER`)
+✅ **Tudo liberado**
+
+- Todos os módulos: Vendas, Estoque, Financeiro, RH, TI, Jurídico, Marketing
+- Gestão de usuários e permissões
+- Configurações do sistema
+- Backup e segurança
+- Relatórios completos
+- Metas e indicadores
+- Pode aprovar férias, corrigir ponto, gerar folha
+
+> 🔐 *Acesso total. Ideal para fundadores ou CIOs.*
+
+---
+
+### 2. **Admin** (`ROLE_ADMIN`)
+✅ **Quase tudo liberado, exceto backup e segurança (opcional)**
+
+- Todos os módulos de gestão
+- Pode gerenciar usuários, perfis, permissões
+- Pode configurar o sistema
+- Pode gerar relatórios e metas
+- Pode gerenciar RH (folha, recrutamento)
+- Não pode fazer backup (se restringido)
+
+> 🛠️ *Ideal para gestores de TI ou RH que precisam administrar o sistema.*
+
+---
+
+### 3. **Gerencial** (`ROLE_GERENCIAL`)
+✅ **Visão geral do negócio**
+
+- Dashboard completo
+- Relatórios (vendas, financeiro, RH, estoque)
+- Metas e indicadores
+- Benefícios, férias (aprovar), ponto (corrigir)
+- Acesso a Clientes, Vendas, Estoque, Financeiro (leitura)
+- Pode ver documentos gerenciais
+
+❌ **Não pode:**
+- Gerenciar usuários
+- Alterar configurações do sistema
+- Fazer backup
+
+> 📊 *Ideal para gerentes de área que precisam de visão estratégica.*
+
+---
+
+### 4. **Vendas** (`ROLE_VENDAS`)
+✅ **Módulo Comercial completo**
+
+- Clientes (listar, novo, editar)
+- Vendas, contratos, pedidos
+- Histórico de interações
+- Busca avançada e relatórios de clientes
+
+❌ **Não pode:**
+- Acessar RH, Financeiro, Estoque
+- Ver configurações ou relatórios gerais
+
+> 💼 *Ideal para vendedores e supervisores comerciais.*
+
+---
+
+### 5. **Estoque** (`ROLE_ESTOQUE`)
+✅ **Controle total de produtos e estoque**
+
+- Produtos (CRUD)
+- Movimentações de entrada/saída
+- Inventário e ajustes
+- Categorias
+- Alertas de baixa
+
+❌ **Não pode:**
+- Acessar vendas, financeiro, RH
+- Criar clientes ou fornecedores
+
+> 📦 *Ideal para almoxarifados e logística.*
+
+---
+
+### 6. **Financeiro** (`ROLE_FINANCEIRO`)
+✅ **Módulo Financeiro completo**
+
+- Contas a pagar/receber
+- Fluxo de caixa
+- Transferências
+- Conciliação bancária
+- Orçamentos
+
+❌ **Não pode:**
+- Acessar RH, vendas, estoque (exceto leitura se necessário)
+- Gerenciar usuários
+
+> 💰 *Ideal para contadores e financeiros.*
+
+---
+
+### 7. **RH** (`ROLE_RH`)
+✅ **Acesso completo ao módulo RH**
+
+- Colaboradores (CRUD)
+- Folha de pagamento (gerar, holerite)
+- Ponto, férias, benefícios
+- Treinamentos, recrutamento
+- Relatórios (turnover, absenteísmo)
+
+❌ **Não pode:**
+- Acessar financeiro (exceto folha)
+- Alterar configurações do sistema
+
+> 👔 *Ideal para departamentos de pessoas.*
+
+---
+
+### 8. **TI** (`ROLE_TI`)
+✅ **Gestão de tecnologia**
+
+- Sistemas, suporte, backup
+- Segurança da informação
+- Gestão de usuários (suporte)
+
+❌ **Não pode:**
+- Acessar financeiro, RH, vendas
+- Ver dados sensíveis
+
+> 💻 *Ideal para equipe de TI.*
+
+---
+
+### 9. **Marketing** (`ROLE_MARKETING`)
+✅ **Campanhas e leads**
+
+- Campanhas publicitárias
+- Gestão de leads
+- Eventos e materiais
+
+❌ **Não pode:**
+- Acessar financeiro, RH, estoque
+
+> 📣 *Ideal para equipe de marketing.*
+
+---
+
+### 10. **Jurídico** (`ROLE_JURIDICO`)
+✅ **Contratos e processos**
+
+- Contratos com clientes/fornecedores
+- Processos judiciais
+- Compliance
+- Documentos legais
+
+❌ **Não pode:**
+- Acessar financeiro, RH, vendas
+
+> ⚖️ *Ideal para advogados e jurídicos.*
+
+---
+
+### 11. **Usuário Comum** (`ROLE_USUARIO`)
+✅ **Acesso pessoal**
+
+- Chat interno
+- Meus pedidos e serviços
+- Favoritos e recomendações
+- Documentos pessoais
+- Central de ajuda
+
+❌ **Não pode:**
+- Acessar módulos administrativos
+- Ver relatórios ou configurações
+
+> 🧑‍💻 *Ideal para colaboradores que usam o sistema para solicitações e comunicação.*
+
+---
+
+## 🧠 Como o Backend Injeta as Variáveis
+
+No seu controller, use `@ModelAttribute` para injetar as variáveis com base no usuário logado:
+
+```java
+@ModelAttribute
+public void addAttributes(Model model, Authentication authentication) {
+    if (authentication != null && authentication.isAuthenticated()) {
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+
+        model.addAttribute("usuarioLogado", usuario);
+        model.addAttribute("nivelAcesso", usuario.getRole().getDisplayName());
+
+        boolean isAdmin = usuario.hasRole("ADMIN");
+        boolean isMaster = usuario.hasRole("MASTER");
+        boolean isGerencial = usuario.hasRole("GERENCIAL") || isAdmin || isMaster;
+
+        model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("isMaster", isMaster);
+        model.addAttribute("isGerencial", isGerencial);
+        model.addAttribute("podeAcessarVendas", usuario.podeAcessarVendas());
+        model.addAttribute("podeGerenciarVendas", usuario.podeGerenciarVendas());
+        model.addAttribute("podeAcessarEstoque", usuario.podeAcessarEstoque());
+        model.addAttribute("podeAcessarFinanceiro", usuario.podeAcessarFinanceiro());
+        model.addAttribute("podeAcessarRH", usuario.podeAcessarRH());
+        model.addAttribute("podeGerenciarRH", usuario.podeGerenciarRH());
+        model.addAttribute("podeAcessarTI", usuario.hasRole("TI") || isAdmin || isMaster);
+        model.addAttribute("podeAcessarMarketing", usuario.podeAcessarMarketing() || isGerencial);
+        model.addAttribute("podeAcessarJuridico", usuario.hasRole("JURIDICO") || isAdmin || isMaster);
+        model.addAttribute("podeGerenciarUsuarios", isAdmin || isMaster);
+    }
+}
+
+
+
+
 ## Como Rodar o Projeto
 
 1. Clone o repositório  

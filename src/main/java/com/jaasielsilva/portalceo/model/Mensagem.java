@@ -35,14 +35,16 @@ public class Mensagem {
     private LocalDateTime dataEnvio;
 
     @Column(name = "lida", nullable = false)
+    @Builder.Default
     private boolean lida = false;
 
     @Column(name = "data_leitura")
     private LocalDateTime dataLeitura;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_mensagem")
-    private TipoMensagem tipoMensagem = TipoMensagem.TEXTO;
+    @Column(name = "tipo", nullable = false)
+    @Builder.Default
+    private TipoMensagem tipo = TipoMensagem.TEXTO;
 
     public enum TipoMensagem {
         TEXTO,
@@ -71,7 +73,6 @@ public class Mensagem {
 
     // Método para obter o outro participante da conversa
     public Usuario getOutroParticipante(Usuario usuarioAtual) {
-        return this.remetente.getId().equals(usuarioAtual.getId()) ? 
-               this.destinatario : this.remetente;
+        return this.remetente.getId().equals(usuarioAtual.getId()) ? this.destinatario : this.remetente;
     }
 }

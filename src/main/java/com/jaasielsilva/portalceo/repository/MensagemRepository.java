@@ -68,7 +68,7 @@ public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
     List<Mensagem> findMensagensRecentes(@Param("dataInicio") LocalDateTime dataInicio);
 
     // Buscar mensagens por tipo
-    @Query("SELECT m FROM Mensagem m WHERE m.tipoMensagem = :tipo " +
+    @Query("SELECT m FROM Mensagem m WHERE m.tipo = :tipo " +
            "ORDER BY m.dataEnvio DESC")
     List<Mensagem> findByTipoMensagem(@Param("tipo") Mensagem.TipoMensagem tipo);
 

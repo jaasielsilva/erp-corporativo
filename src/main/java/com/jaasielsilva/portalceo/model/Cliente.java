@@ -60,6 +60,12 @@ public class Cliente {
 
     private LocalDateTime dataUltimaEdicao;
 
+    // Campo para controle de último acesso
+    private LocalDateTime ultimoAcesso;
+
+    // Campo para identificar clientes VIP
+    private Boolean vip = false;
+
     @OneToMany(mappedBy = "cliente")
     private List<Venda> vendas;
 

@@ -60,7 +60,6 @@ public class ChatService {
         mensagem.setConteudo(conteudo);
         mensagem.setDataEnvio(LocalDateTime.now());
         mensagem.setLida(false);
-        mensagem.setTipoMensagem(tipo != null ? tipo : Mensagem.TipoMensagem.TEXTO);
         mensagem.setConversa(conversa);
 
         mensagem = mensagemRepository.save(mensagem);

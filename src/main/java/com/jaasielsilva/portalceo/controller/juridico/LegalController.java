@@ -3,7 +3,9 @@ package com.jaasielsilva.portalceo.controller.juridico;
 import com.jaasielsilva.portalceo.model.ContratoLegal;
 import com.jaasielsilva.portalceo.model.ContratoAditivo;
 import com.jaasielsilva.portalceo.model.ContratoAlerta;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ContratoLegalService;
+import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.repository.ContratoAditivoRepository;
 import com.jaasielsilva.portalceo.repository.ContratoAlertaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +35,9 @@ public class LegalController {
 
     @Autowired
     private ContratoLegalService contratoLegalService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @Autowired
     private ContratoAditivoRepository contratoAditivoRepository;
@@ -125,9 +132,13 @@ public class LegalController {
     }
 
     @PostMapping("/contratos/{id}/aprovar")
-    public String aprovarContrato(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String aprovarContrato(@PathVariable Long id, 
+                                 @RequestParam(required = false) String observacoes,
+                                 RedirectAttributes redirectAttributes,
+                                 Authentication authentication) {
         try {
-            contratoLegalService.aprovarContrato(id);
+            Usuario usuario = usuarioService.findByNome(authentication.getName());
+            contratoLegalService.aprovarContrato(id, observacoes != null ? observacoes : "Aprovado", usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Contrato aprovado com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao aprovar contrato: " + e.getMessage());
@@ -136,9 +147,14 @@ public class LegalController {
     }
 
     @PostMapping("/contratos/{id}/assinar")
-    public String assinarContrato(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String assinarContrato(@PathVariable Long id, 
+                                 @RequestParam(required = false) String dataAssinatura,
+                                 RedirectAttributes redirectAttributes,
+                                 Authentication authentication) {
         try {
-            contratoLegalService.assinarContrato(id);
+            Usuario usuario = usuarioService.findByNome(authentication.getName());
+            LocalDate data = dataAssinatura != null ? LocalDate.parse(dataAssinatura) : LocalDate.now();
+            contratoLegalService.assinarContrato(id, data, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Contrato assinado com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao assinar contrato: " + e.getMessage());
@@ -172,10 +188,13 @@ public class LegalController {
 
     @PostMapping("/contratos/{id}/renovar")
     public String renovarContrato(@PathVariable Long id, 
-                                 @RequestParam Integer novosPeriodos,
-                                 RedirectAttributes redirectAttributes) {
+                                 @RequestParam Integer novasDuracaoMeses,
+                                 @RequestParam BigDecimal novoValor,
+                                 RedirectAttributes redirectAttributes,
+                                 Authentication authentication) {
         try {
-            contratoLegalService.renovarContrato(id, novosPeriodos);
+            Usuario usuario = usuarioService.buscarPorEmail(authentication.getName());
+            contratoLegalService.renovarContrato(id, novasDuracaoMeses, novoValor, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Contrato renovado com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao renovar contrato: " + e.getMessage());

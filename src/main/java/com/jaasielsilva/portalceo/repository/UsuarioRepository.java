@@ -12,7 +12,8 @@ import java.util.Optional;
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByNome(String nome);  
     Optional<Usuario> findByEmail(String email);  
-    Optional<Usuario> findByUsuario(String usuario);
+    // Método removido - campo 'usuario' não existe na entidade Usuario
+    // Use findByEmail ou findByMatricula para autenticação
     long countByStatus(Usuario.Status status);
     Optional<Usuario> findByMatricula(String matricula);
     Optional<Usuario> findByCpf(String cpf);

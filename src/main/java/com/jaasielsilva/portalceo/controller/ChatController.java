@@ -93,11 +93,15 @@ public class ChatController {
             Authentication authentication) {
         try {
             Usuario remetente = usuarioService.findByNome(authentication.getName());
+            Mensagem.TipoMensagem tipoMensagem = mensagemDTO.getTipoMensagem() != null ? 
+                Mensagem.TipoMensagem.valueOf(mensagemDTO.getTipoMensagem().toUpperCase()) : 
+                Mensagem.TipoMensagem.TEXTO;
+            
             MensagemDTO novaMensagem = chatService.enviarMensagem(
                 remetente.getId(), 
                 mensagemDTO.getDestinatarioId(), 
                 mensagemDTO.getConteudo(),
-                mensagemDTO.getTipoMensagem()
+                tipoMensagem
             );
             return ResponseEntity.ok(novaMensagem);
         } catch (Exception e) {

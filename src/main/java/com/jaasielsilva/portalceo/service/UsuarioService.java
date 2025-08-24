@@ -479,6 +479,12 @@ public class UsuarioService {
 
 
     public Optional<Usuario> findByUsuario(String usuario) {
-        return usuarioRepository.findByUsuario(usuario);
+        // Método alterado para usar email em vez de campo 'usuario' inexistente
+        return usuarioRepository.findByEmail(usuario);
+    }
+
+    public Usuario findByNome(String nome) {
+        return usuarioRepository.findByNome(nome)
+                                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 }

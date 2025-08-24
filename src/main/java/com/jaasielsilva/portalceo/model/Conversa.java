@@ -32,6 +32,7 @@ public class Conversa {
     private LocalDateTime ultimaAtividade;
 
     @Column(name = "ativa", nullable = false)
+    @Builder.Default
     private boolean ativa = true;
 
     @OneToMany(mappedBy = "conversa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -50,14 +51,13 @@ public class Conversa {
 
     // Método para verificar se o usuário participa da conversa
     public boolean participaUsuario(Usuario usuario) {
-        return this.usuario1.getId().equals(usuario.getId()) || 
-               this.usuario2.getId().equals(usuario.getId());
+        return this.usuario1.getId().equals(usuario.getId()) ||
+                this.usuario2.getId().equals(usuario.getId());
     }
 
     // Método para obter o outro participante da conversa
     public Usuario getOutroParticipante(Usuario usuarioAtual) {
-        return this.usuario1.getId().equals(usuarioAtual.getId()) ? 
-               this.usuario2 : this.usuario1;
+        return this.usuario1.getId().equals(usuarioAtual.getId()) ? this.usuario2 : this.usuario1;
     }
 
     // Método para atualizar a última atividade
@@ -67,8 +67,9 @@ public class Conversa {
 
     // Método para contar mensagens não lidas de um usuário
     public long contarMensagensNaoLidas(Usuario usuario) {
-        if (mensagens == null) return 0;
-        
+        if (mensagens == null)
+            return 0;
+
         return mensagens.stream()
                 .filter(m -> !m.isLida())
                 .filter(m -> !m.getRemetente().getId().equals(usuario.getId()))

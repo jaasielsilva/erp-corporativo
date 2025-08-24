@@ -5,6 +5,8 @@ import com.jaasielsilva.portalceo.repository.ContratoLegalRepository;
 import com.jaasielsilva.portalceo.repository.ContratoAditivoRepository;
 import com.jaasielsilva.portalceo.repository.ContratoAlertaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -297,6 +299,127 @@ public class ContratoLegalService {
                 status -> status,
                 status -> contratoRepository.countByStatus(status)
             ));
+    }
+
+    // Métodos adicionais necessários para o controller
+    @Transactional(readOnly = true)
+    public Page<ContratoLegal> buscarContratosComFiltros(String numero, ContratoLegal.StatusContrato status, 
+                                                        ContratoLegal.TipoContrato tipo, Pageable pageable) {
+        if (numero != null && !numero.trim().isEmpty()) {
+            return contratoRepository.findByNumeroContratoContainingIgnoreCase(numero, pageable);
+        }
+        if (status != null && tipo != null) {
+            return contratoRepository.findByStatusAndTipo(status, tipo, pageable);
+        }
+        if (status != null) {
+            return contratoRepository.findByStatus(status, pageable);
+        }
+        if (tipo != null) {
+            return contratoRepository.findByTipo(tipo, pageable);
+        }
+        return contratoRepository.findAll(pageable);
+    }
+
+    @Transactional
+    public ContratoLegal salvarContrato(ContratoLegal contrato) {
+        return save(contrato);
+    }
+
+    @Transactional(readOnly = true)
+    public ContratoLegal buscarPorId(Long id) {
+        return findById(id).orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado com ID: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> gerarRelatorioVencimentos(int proximosDias) {
+        List<ContratoLegal> contratosVencendo = findContratosVencendoEm(proximosDias);
+        Map<String, Object> relatorio = new java.util.HashMap<>();
+        relatorio.put("contratos", contratosVencendo);
+        relatorio.put("total", contratosVencendo.size());
+        relatorio.put("proximosDias", proximosDias);
+        return relatorio;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> obterEstatisticasGerais(LocalDate dataInicio, LocalDate dataFim) {
+        Map<String, Object> estatisticas = new java.util.HashMap<>();
+        estatisticas.put("totalContratos", contratoRepository.count());
+        estatisticas.put("contratosAtivos", contratoRepository.countByStatus(ContratoLegal.StatusContrato.ATIVO));
+        estatisticas.put("contratosVencidos", contratoRepository.countByStatus(ContratoLegal.StatusContrato.VENCIDO));
+        estatisticas.put("valorTotalAtivos", calcularValorTotalAtivos());
+        estatisticas.put("receitaMensal", calcularReceitaMensalRecorrente());
+        return estatisticas;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> obterTimelineContrato(Long contratoId) {
+        ContratoLegal contrato = contratoRepository.findById(contratoId)
+            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+        
+        List<Map<String, Object>> timeline = new java.util.ArrayList<>();
+        
+        // Adicionar eventos do contrato
+        Map<String, Object> criacao = new java.util.HashMap<>();
+        criacao.put("data", contrato.getDataCriacao());
+        criacao.put("evento", "Contrato criado");
+        criacao.put("status", "RASCUNHO");
+        timeline.add(criacao);
+        
+        if (contrato.getDataAssinatura() != null) {
+            Map<String, Object> assinatura = new java.util.HashMap<>();
+            assinatura.put("data", contrato.getDataAssinatura());
+            assinatura.put("evento", "Contrato assinado");
+            assinatura.put("status", "ASSINADO");
+            timeline.add(assinatura);
+        }
+        
+        Map<String, Object> resultado = new java.util.HashMap<>();
+        resultado.put("eventos", timeline);
+        resultado.put("contratoId", contratoId);
+        resultado.put("total", timeline.size());
+        return resultado;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContratoLegal> buscarContratosVencendoEm(int proximosDias) {
+        LocalDate hoje = LocalDate.now();
+        LocalDate futuro = hoje.plusDays(proximosDias);
+        return contratoRepository.findContratosVencendoEm(hoje, futuro);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> gerarRelatorioContratos(LocalDate dataInicio, LocalDate dataFim, 
+                                                       ContratoLegal.TipoContrato tipo, 
+                                                       ContratoLegal.StatusContrato status) {
+        Map<String, Object> relatorio = new java.util.HashMap<>();
+        
+        List<ContratoLegal> contratos;
+        if (tipo != null && status != null) {
+            contratos = contratoRepository.findByTipoAndStatus(tipo, status);
+        } else if (tipo != null) {
+            contratos = contratoRepository.findByTipoOrderByDataCriacaoDesc(tipo);
+        } else if (status != null) {
+            contratos = contratoRepository.findByStatusOrderByDataCriacaoDesc(status);
+        } else {
+            contratos = contratoRepository.findAll();
+        }
+        
+        // Filtrar por data se especificado
+        if (dataInicio != null && dataFim != null) {
+            contratos = contratos.stream()
+                .filter(c -> c.getDataCriacao().toLocalDate().isAfter(dataInicio.minusDays(1)) && 
+                            c.getDataCriacao().toLocalDate().isBefore(dataFim.plusDays(1)))
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        relatorio.put("contratos", contratos);
+        relatorio.put("total", contratos.size());
+        relatorio.put("dataInicio", dataInicio);
+        relatorio.put("dataFim", dataFim);
+        relatorio.put("tipo", tipo);
+        relatorio.put("status", status);
+        
+        return relatorio;
     }
 
     @Transactional(readOnly = true)

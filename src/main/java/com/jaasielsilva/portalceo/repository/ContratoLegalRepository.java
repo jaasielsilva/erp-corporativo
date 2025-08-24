@@ -4,6 +4,8 @@ import com.jaasielsilva.portalceo.model.ContratoLegal;
 import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.model.Usuario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -142,4 +144,16 @@ public interface ContratoLegalRepository extends JpaRepository<ContratoLegal, Lo
 
     @Query("SELECT c FROM ContratoLegal c WHERE c.status = 'ATIVO' AND c.valorContrato > :valor ORDER BY c.valorContrato DESC")
     List<ContratoLegal> findContratosAltoValor(@Param("valor") BigDecimal valor);
+
+    // Métodos com paginação
+    Page<ContratoLegal> findByStatus(ContratoLegal.StatusContrato status, Pageable pageable);
+    
+    Page<ContratoLegal> findByTipo(ContratoLegal.TipoContrato tipo, Pageable pageable);
+    
+    Page<ContratoLegal> findByStatusAndTipo(ContratoLegal.StatusContrato status, ContratoLegal.TipoContrato tipo, Pageable pageable);
+    
+    Page<ContratoLegal> findByNumeroContratoContainingIgnoreCase(String numeroContrato, Pageable pageable);
+    
+    @Query("SELECT c FROM ContratoLegal c WHERE c.dataVencimento BETWEEN :dataInicio AND :dataFim")
+    List<ContratoLegal> findContratosVencendoEm(@Param("dataInicio") LocalDate dataInicio, @Param("dataFim") LocalDate dataFim);
 }

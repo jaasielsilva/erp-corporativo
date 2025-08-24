@@ -40,12 +40,17 @@ public class ChatWebSocketController {
         try {
             Usuario remetente = usuarioService.findByNome(principal.getName());
             
+            // Converte tipo de mensagem
+            Mensagem.TipoMensagem tipoMensagem = mensagem.getTipoMensagem() != null ? 
+                Mensagem.TipoMensagem.valueOf(mensagem.getTipoMensagem().toUpperCase()) : 
+                Mensagem.TipoMensagem.TEXTO;
+            
             // Envia a mensagem através do serviço
             MensagemDTO novaMensagem = chatService.enviarMensagem(
                 remetente.getId(),
                 mensagem.getDestinatarioId(),
                 mensagem.getConteudo(),
-                mensagem.getTipoMensagem()
+                tipoMensagem
             );
 
             // Envia para o destinatário via WebSocket

@@ -45,7 +45,6 @@ public class MensagemDTO {
                 .dataEnvioFormatada(mensagem.getDataEnvio().format(formatter))
                 .lida(mensagem.isLida())
                 .dataLeitura(mensagem.getDataLeitura())
-                .tipoMensagem(mensagem.getTipoMensagem().name())
                 .isMinhaMensagem(mensagem.getRemetente().getId().equals(usuarioLogadoId))
                 .build();
     }
@@ -53,15 +52,5 @@ public class MensagemDTO {
     // Sobrecarga do método fromEntity sem usuarioLogadoId
     public static MensagemDTO fromEntity(Mensagem mensagem) {
         return fromEntity(mensagem, null);
-    }
-    
-    // Método para converter para entidade (usado no envio)
-    public Mensagem toEntity() {
-        return Mensagem.builder()
-                .conteudo(this.conteudo)
-                .tipoMensagem(this.tipoMensagem != null ? 
-                             Mensagem.TipoMensagem.valueOf(this.tipoMensagem) : 
-                             Mensagem.TipoMensagem.TEXTO)
-                .build();
     }
 }

@@ -184,9 +184,9 @@ public class ChatController {
             List<NotificacaoChatDTO> notificacoes;
             
             if (apenasNaoLidas) {
-                notificacoes = notificacaoChatService.buscarNotificacoes(usuario.getId(), false);
+                notificacoes = notificacaoChatService.buscarNotificacoesNaoLidas(usuario.getId());
             } else {
-                notificacoes = notificacaoChatService.buscarTodasNotificacoes(usuario.getId());
+                notificacoes = notificacaoChatService.buscarNotificacoesDoUsuario(usuario.getId());
             }
             
             return ResponseEntity.ok(notificacoes);
@@ -205,7 +205,7 @@ public class ChatController {
             Authentication authentication) {
         try {
             Usuario usuario = usuarioService.findByNome(authentication.getName());
-            notificacaoChatService.marcarComoLida(notificacaoId, usuario.getId());
+            notificacaoChatService.marcarComoLida(notificacaoId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();

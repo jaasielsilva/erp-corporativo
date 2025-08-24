@@ -150,4 +150,20 @@ public class EmailService {
             "Credenciais de Acesso - Portal CEO", 
             template, nomeUsuario, email, senhaTemporaria);
     }
+
+    public void enviarEmailMarketing(String destinatario, String assunto, String corpo, Long campanhaId) {
+    String template = """
+        <html>
+        <body>
+            <h2>Email Marketing - Campanha %s</h2>
+            <p>%s</p>
+            <br>
+            <p><em>Este é um email automático da campanha %s.</em></p>
+        </body>
+        </html>
+        """;
+
+    enviarEmailComTemplate(destinatario, assunto, template, campanhaId, corpo, campanhaId);
+}
+
 }

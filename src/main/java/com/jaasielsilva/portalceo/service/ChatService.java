@@ -39,8 +39,7 @@ public class ChatService {
     @Autowired
     private NotificacaoChatService notificacaoChatService;
 
-    @Autowired
-    private ChatNotificationIntegrationService chatNotificationIntegrationService;
+
 
     /**
      * Enviar uma nova mensagem
@@ -70,8 +69,8 @@ public class ChatService {
         conversa.setUltimaAtividade(LocalDateTime.now());
         conversaRepository.save(conversa);
 
-        // Criar notificação integrada (chat + sistema principal)
-        chatNotificationIntegrationService.criarNotificacaoNovaMensagem(destinatario, remetente, mensagem);
+        // Criar notificação de chat
+        notificacaoChatService.criarNotificacaoNovaMensagem(destinatario, remetente, mensagem);
 
         // Enviar mensagem via WebSocket
         MensagemDTO mensagemDTO = MensagemDTO.fromEntity(mensagem);
@@ -150,8 +149,8 @@ public class ChatService {
     public void marcarMensagensComoLidas(Long usuarioId, Long remetenteId) {
         mensagemRepository.marcarMensagensComoLidas(usuarioId, remetenteId, LocalDateTime.now());
         
-        // Marcar notificações como lidas (integrado)
-        chatNotificationIntegrationService.marcarNotificacoesChatComoLidas(usuarioId, remetenteId);
+        // Marcar notificações como lidas
+        notificacaoChatService.marcarNotificacoesDeRemetenteComoLidas(usuarioId, remetenteId);
 
         // Notificar via WebSocket sobre atualização de mensagens lidas
         messagingTemplate.convertAndSendToUser(
@@ -160,6 +159,8 @@ public class ChatService {
                 usuarioId
         );
     }
+
+    
 
     /**
      * Contar mensagens não lidas de um usuário
@@ -251,23 +252,6 @@ public class ChatService {
         
         Conversa conversa = buscarOuCriarConversa(usuario1, usuario2);
         return ConversaDTO.fromEntity(conversa, usuario1);
-    }
-
-    /**
-     * Marcar mensagens como lidas por conversa
-     */
-    public void marcarMensagensComoLidas(Long conversaId, Long usuarioId) {
-        mensagemRepository.marcarMensagensComoLidas(conversaId, usuarioId, LocalDateTime.now());
-        
-        // Marcar notificações como lidas (integrado)
-        chatNotificationIntegrationService.marcarNotificacoesChatComoLidas(usuarioId, null);
-
-        // Notificar via WebSocket sobre atualização de mensagens lidas
-        messagingTemplate.convertAndSendToUser(
-                usuarioId.toString(),
-                "/queue/mensagens-lidas",
-                conversaId
-        );
     }
 
     /**

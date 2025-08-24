@@ -344,6 +344,11 @@ public class VendaService {
         );
     }
     
+    // Buscar venda por número da venda
+    public Optional<Venda> buscarPorNumeroVenda(String numeroVenda) {
+        return vendaRepository.findByNumeroVenda(numeroVenda);
+    }
+    
     // Classe para resumo de vendas do dia
     public static class ResumoVendasDia {
         private int quantidadeVendas;

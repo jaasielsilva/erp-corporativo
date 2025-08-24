@@ -28,9 +28,7 @@ public class NotificacaoChatService {
      * Criar notificação para nova mensagem
      */
     public NotificacaoChat criarNotificacaoNovaMensagem(Usuario destinatario, Usuario remetente, Mensagem mensagem) {
-        NotificacaoChat notificacao = NotificacaoChat.criarNotificacaoNovaMensagem(
-                destinatario, remetente, mensagem
-        );
+        NotificacaoChat notificacao = NotificacaoChat.criarNotificacaoNovaMensagem( remetente, mensagem);
         
         notificacao = notificacaoChatRepository.save(notificacao);
         

@@ -73,4 +73,16 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     List<Cliente> findByAtivoTrueAndTipoCliente(String tipoCliente);
 
+    // Clientes VIP (exemplo: com campo boolean vip = true)
+    @Query("SELECT c FROM Cliente c WHERE c.vip = true")
+    List<Cliente> findClientesVIP();
+
+    // Clientes cadastrados depois de uma data (novos)
+    @Query("SELECT c FROM Cliente c WHERE c.dataCadastro >= :data")
+    List<Cliente> findClientesNovos(@Param("data") LocalDate data);
+
+    // Clientes inativos (exemplo: último acesso antes de uma data)
+    @Query("SELECT c FROM Cliente c WHERE c.ultimoAcesso < :data")
+    List<Cliente> findClientesInativos(@Param("data") LocalDate data);
+
     }

@@ -477,4 +477,8 @@ public class UsuarioService {
         return (int) Math.min(100, Math.max(0, performance));
     }
 
+
+    public Optional<Usuario> findByUsuario(String usuario) {
+        return usuarioRepository.findByUsuario(usuario);
+    }
 }

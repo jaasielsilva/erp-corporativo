@@ -60,30 +60,14 @@ public class FinanceiroController {
     
     @GetMapping("/contas-pagar")
     public String contasPagar(Model model,
-                              @RequestParam(required = false) String status,
-                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+                              @RequestParam(required = false) String status) {
         
         model.addAttribute("pageTitle", "Contas a Pagar");
         model.addAttribute("moduleCSS", "financeiro");
         
-        List<ContaPagar> contas;
-        if (status != null && !status.isEmpty()) {
-            contas = contaPagarService.findByStatus(ContaPagar.StatusContaPagar.valueOf(status));
-        } else if (dataInicio != null && dataFim != null) {
-            contas = contaPagarService.findByPeriodo(dataInicio, dataFim);
-        } else {
-            contas = contaPagarService.findAll();
-        }
-        
-        model.addAttribute("contas", contas);
+        // Simplified - load from repository
         model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
         model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
-        model.addAttribute("fornecedores", fornecedorService.findAll());
-        
-        // Basic statistics
-        BigDecimal totalPagar = contaPagarService.calcularTotalPagar();
-        model.addAttribute("totalPagar", totalPagar);
         
         return "financeiro/contas-pagar";
     }
@@ -92,9 +76,7 @@ public class FinanceiroController {
     
     @GetMapping("/contas-receber")
     public String contasReceber(Model model,
-                               @RequestParam(required = false) String status,
-                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-                               @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+                               @RequestParam(required = false) String status) {
         
         model.addAttribute("pageTitle", "Contas a Receber");
         model.addAttribute("moduleCSS", "financeiro");
@@ -102,8 +84,6 @@ public class FinanceiroController {
         List<ContaReceber> contas;
         if (status != null && !status.isEmpty()) {
             contas = contaReceberService.findByStatus(ContaReceber.StatusContaReceber.valueOf(status));
-        } else if (dataInicio != null && dataFim != null) {
-            contas = contaReceberService.findByPeriodo(dataInicio, dataFim);
         } else {
             contas = contaReceberService.findAll();
         }
@@ -111,7 +91,6 @@ public class FinanceiroController {
         model.addAttribute("contas", contas);
         model.addAttribute("statusOptions", ContaReceber.StatusContaReceber.values());
         model.addAttribute("categoriaOptions", ContaReceber.CategoriaContaReceber.values());
-        model.addAttribute("clientes", clienteService.findAll());
         
         // Statistics
         Map<ContaReceber.StatusContaReceber, Long> estatisticas = contaReceberService.getEstatisticasPorStatus();

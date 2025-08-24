@@ -8,22 +8,26 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.jaasielsilva.portalceo.dto.VendaPdvRequest;
 import com.jaasielsilva.portalceo.dto.VendaPdvResponse;
 import com.jaasielsilva.portalceo.model.Cliente;
+import com.jaasielsilva.portalceo.model.Devolucao;
 import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.model.VendaItem;
 import com.jaasielsilva.portalceo.service.ClienteService;
+import com.jaasielsilva.portalceo.service.DevolucaoService;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.VendaService;
 import com.jaasielsilva.portalceo.service.FormaPagamentoService;
 import com.jaasielsilva.portalceo.service.CaixaService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
+import com.jaasielsilva.portalceo.service.VendaRelatorioService;
 import com.jaasielsilva.portalceo.model.FormaPagamento;
 import com.jaasielsilva.portalceo.model.Caixa;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
-
+import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -68,6 +72,12 @@ public class VendaController {
     
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private VendaRelatorioService vendaRelatorioService;
+    
+    @Autowired
+    private DevolucaoService devolucaoService;
 
     // 🧾 LISTAR VENDAS
     @GetMapping
@@ -407,6 +417,96 @@ public class VendaController {
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", false);
             response.put("mensagem", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    // ===== ENDPOINTS PARA RELATÓRIOS AVANÇADOS =====
+    
+    @GetMapping("/relatorios/avancados")
+    public String relatoriosAvancados(Model model) {
+        model.addAttribute("pageTitle", "Relatórios Avançados de Vendas");
+        return "vendas/relatorios-avancados";
+    }
+    
+    @GetMapping("/api/relatorio-performance")
+    @ResponseBody
+    public ResponseEntity<?> getRelatorioPerformance(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        try {
+            VendaRelatorioService.RelatorioPerformanceVendas relatorio = 
+                vendaRelatorioService.gerarRelatorioPerformance(inicio, fim);
+            return ResponseEntity.ok(relatorio);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao gerar relatório: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @GetMapping("/api/analise-comparativa")
+    @ResponseBody
+    public ResponseEntity<?> getAnaliseComparativa(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        try {
+            VendaRelatorioService.AnaliseComparativa analise = 
+                vendaRelatorioService.gerarAnaliseComparativa(inicio, fim);
+            return ResponseEntity.ok(analise);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao gerar análise: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @GetMapping("/api/analise-sazonalidade")
+    @ResponseBody
+    public ResponseEntity<?> getAnaliseSazonalidade(@RequestParam(defaultValue = "12") int meses) {
+        try {
+            VendaRelatorioService.AnaliseSazonalidade analise = 
+                vendaRelatorioService.gerarAnaliseSazonalidade(meses);
+            return ResponseEntity.ok(analise);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao gerar análise de sazonalidade: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @GetMapping("/api/analise-produtos")
+    @ResponseBody
+    public ResponseEntity<?> getAnaliseProdutos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        try {
+            VendaRelatorioService.AnaliseProdutos analise = 
+                vendaRelatorioService.gerarAnaliseProdutos(inicio, fim);
+            return ResponseEntity.ok(analise);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao gerar análise de produtos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    // ===== INTEGRAÇÃO COM DEVOLUÇÕES =====
+    
+    @GetMapping("/{id}/devolucoes")
+    @ResponseBody
+    public ResponseEntity<?> getDevolucoes(@PathVariable Long id) {
+        try {
+            Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
+            if (vendaOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            List<Devolucao> devolucoes = devolucaoService.findByVenda(vendaOpt.get());
+            return ResponseEntity.ok(devolucoes);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("erro", "Erro ao buscar devoluções: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

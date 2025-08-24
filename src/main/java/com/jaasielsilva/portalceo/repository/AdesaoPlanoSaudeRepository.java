@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude;
 import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude.StatusAdesao;
@@ -9,6 +10,7 @@ import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.PlanoSaude;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AdesaoPlanoSaudeRepository extends JpaRepository<AdesaoPlanoSaude, Long> {
@@ -37,4 +39,8 @@ public interface AdesaoPlanoSaudeRepository extends JpaRepository<AdesaoPlanoSau
 
      // Busca todas as adesões com status ATIVA
     List<AdesaoPlanoSaude> findByStatus(AdesaoPlanoSaude.StatusAdesao status);
+    
+    // Busca adesão ativa por colaborador
+    @Query("SELECT a FROM AdesaoPlanoSaude a WHERE a.colaborador.id = :colaboradorId AND a.status = 'ATIVA'")
+    Optional<AdesaoPlanoSaude> findAdesaoAtivaByColaborador(@Param("colaboradorId") Long colaboradorId);
 }

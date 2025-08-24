@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vale Refeição - Formulário - ERP Corporativo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+</head>
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <section class="content-area">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>
+                        <i class="fas fa-utensils"></i> 
+                        <span th:text="${vale.id} ? 'Editar Vale Refeição' : 'Novo Vale Refeição'"></span>
+                    </h1>
+                    <a th:href="@{/rh/beneficios/vale-refeicao/listar}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+
+                <!-- Mensagens de Erro -->
+                <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Corrija os erros abaixo:</h6>
+                    <ul class="mb-0">
+                        <li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-edit"></i> Dados do Vale Refeição</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="${vale.id} ? @{/rh/beneficios/vale-refeicao/atualizar} : @{/rh/beneficios/vale-refeicao/salvar}" 
+                              th:object="${vale}" method="post">
+                            
+                            <input type="hidden" th:field="*{id}" />
+                            
+                            <div class="row">
+                                <!-- Colaborador -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="colaborador" class="form-label">
+                                        <i class="fas fa-user"></i> Colaborador *
+                                    </label>
+                                    <select class="form-select" th:field="*{colaborador}" id="colaborador" required>
+                                        <option value="">Selecione um colaborador</option>
+                                        <option th:each="colaborador : ${colaboradores}" 
+                                                th:value="${colaborador.id}" 
+                                                th:text="${colaborador.nome + ' - ' + colaborador.cargo?.nome}">
+                                        </option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('colaborador')}" class="text-danger small">
+                                        <span th:errors="*{colaborador}"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Tipo de Vale -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="tipo" class="form-label">
+                                        <i class="fas fa-tag"></i> Tipo de Vale *
+                                    </label>
+                                    <select class="form-select" th:field="*{tipo}" id="tipo" required>
+                                        <option value="">Selecione o tipo</option>
+                                        <option th:each="tipoVale : ${tiposVale}" 
+                                                th:value="${tipoVale}" 
+                                                th:text="${tipoVale == T(com.jaasielsilva.portalceo.model.ValeRefeicao.TipoVale).REFEICAO} ? 'Vale Refeição' : 
+                                                         ${tipoVale == T(com.jaasielsilva.portalceo.model.ValeRefeicao.TipoVale).ALIMENTACAO} ? 'Vale Alimentação' : 'Vale Misto'">
+                                        </option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('tipo')}" class="text-danger small">
+                                        <span th:errors="*{tipo}"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Mês de Referência -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="mesReferencia" class="form-label">
+                                        <i class="fas fa-calendar"></i> Mês *
+                                    </label>
+                                    <select class="form-select" th:field="*{mesReferencia}" id="mesReferencia" required>
+                                        <option value="">Mês</option>
+                                        <option value="1">Janeiro</option>
+                                        <option value="2">Fevereiro</option>
+                                        <option value="3">Março</option>
+                                        <option value="4">Abril</option>
+                                        <option value="5">Maio</option>
+                                        <option value="6">Junho</option>
+                                        <option value="7">Julho</option>
+                                        <option value="8">Agosto</option>
+                                        <option value="9">Setembro</option>
+                                        <option value="10">Outubro</option>
+                                        <option value="11">Novembro</option>
+                                        <option value="12">Dezembro</option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('mesReferencia')}" class="text-danger small">
+                                        <span th:errors="*{mesReferencia}"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Ano de Referência -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="anoReferencia" class="form-label">
+                                        <i class="fas fa-calendar-alt"></i> Ano *
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{anoReferencia}" 
+                                           id="anoReferencia" min="2020" max="2030" required>
+                                    <div th:if="${#fields.hasErrors('anoReferencia')}" class="text-danger small">
+                                        <span th:errors="*{anoReferencia}"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Dias Úteis -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="diasUteis" class="form-label">
+                                        <i class="fas fa-business-time"></i> Dias Úteis *
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{diasUteis}" 
+                                           id="diasUteis" min="1" max="31" value="22" required>
+                                    <div th:if="${#fields.hasErrors('diasUteis')}" class="text-danger small">
+                                        <span th:errors="*{diasUteis}"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Valor Diário -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="valorDiario" class="form-label">
+                                        <i class="fas fa-dollar-sign"></i> Valor Diário *
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{valorDiario}" 
+                                           id="valorDiario" step="0.01" min="0" required>
+                                    <div th:if="${#fields.hasErrors('valorDiario')}" class="text-danger small">
+                                        <span th:errors="*{valorDiario}"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Percentual de Desconto -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="percentualDesconto" class="form-label">
+                                        <i class="fas fa-percentage"></i> Percentual Desconto *
+                                    </label>
+                                    <input type="number" class="form-control" th:field="*{percentualDesconto}" 
+                                           id="percentualDesconto" step="0.01" min="0" max="100" value="20" required>
+                                    <small class="form-text text-muted">Percentual que o colaborador paga</small>
+                                    <div th:if="${#fields.hasErrors('percentualDesconto')}" class="text-danger small">
+                                        <span th:errors="*{percentualDesconto}"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Operadora -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="operadora" class="form-label">
+                                        <i class="fas fa-building"></i> Operadora
+                                    </label>
+                                    <input type="text" class="form-control" th:field="*{operadora}" 
+                                           id="operadora" maxlength="100" placeholder="Ex: Sodexo, Alelo, VR">
+                                    <div th:if="${#fields.hasErrors('operadora')}" class="text-danger small">
+                                        <span th:errors="*{operadora}"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Número do Cartão -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="numeroCartao" class="form-label">
+                                        <i class="fas fa-credit-card"></i> Número do Cartão
+                                    </label>
+                                    <input type="text" class="form-control" th:field="*{numeroCartao}" 
+                                           id="numeroCartao" maxlength="100" placeholder="Número do cartão">
+                                    <div th:if="${#fields.hasErrors('numeroCartao')}" class="text-danger small">
+                                        <span th:errors="*{numeroCartao}"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Observações -->
+                            <div class="mb-3">
+                                <label for="observacoes" class="form-label">
+                                    <i class="fas fa-comment"></i> Observações
+                                </label>
+                                <textarea class="form-control" th:field="*{observacoes}" 
+                                          id="observacoes" rows="3" maxlength="500" 
+                                          placeholder="Observações adicionais sobre o vale refeição"></textarea>
+                                <div th:if="${#fields.hasErrors('observacoes')}" class="text-danger small">
+                                    <span th:errors="*{observacoes}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Valores Calculados (exibidos somente na edição) -->
+                            <div th:if="${vale.id}" class="row">
+                                <div class="col-md-12">
+                                    <div class="card bg-light">
+                                        <div class="card-header">
+                                            <h6><i class="fas fa-calculator"></i> Valores Calculados</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <strong>Valor Total do Mês:</strong><br>
+                                                    <span th:text="${#numbers.formatCurrency(vale.valorTotalMes)}">R$ 0,00</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Desconto do Colaborador:</strong><br>
+                                                    <span th:text="${#numbers.formatCurrency(vale.valorDesconto)}">R$ 0,00</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Subsídio da Empresa:</strong><br>
+                                                    <span th:text="${#numbers.formatCurrency(vale.valorSubsidioEmpresa)}">R$ 0,00</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <strong>Status:</strong><br>
+                                                    <span th:class="'badge ' + (${vale.status.name() == 'ATIVO'} ? 'bg-success' : 
+                                                                 ${vale.status.name() == 'SUSPENSO'} ? 'bg-warning' : 'bg-danger')"
+                                                          th:text="${vale.statusDescricao}"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botões -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <a th:href="@{/rh/beneficios/vale-refeicao/listar}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 
+                                    <span th:text="${vale.id} ? 'Atualizar' : 'Salvar'"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-calcular valores quando os campos relevantes mudarem
+        document.addEventListener('DOMContentLoaded', function() {
+            const diasUteis = document.getElementById('diasUteis');
+            const valorDiario = document.getElementById('valorDiario');
+            const percentualDesconto = document.getElementById('percentualDesconto');
+            
+            function calcularValores() {
+                const dias = parseFloat(diasUteis.value) || 0;
+                const valor = parseFloat(valorDiario.value) || 0;
+                const desconto = parseFloat(percentualDesconto.value) || 0;
+                
+                const total = dias * valor;
+                const valorDesconto = total * (desconto / 100);
+                const subsidio = total - valorDesconto;
+                
+                // Exibir valores calculados se houver um elemento para isso
+                const infoDiv = document.getElementById('valores-calculados');
+                if (infoDiv) {
+                    infoDiv.innerHTML = `
+                        <small class="text-muted">
+                            Total: R$ ${total.toFixed(2)} | 
+                            Desconto: R$ ${valorDesconto.toFixed(2)} | 
+                            Subsídio: R$ ${subsidio.toFixed(2)}
+                        </small>
+                    `;
+                }
+            }
+            
+            // Adicionar div para mostrar cálculos em tempo real
+            const form = document.querySelector('form');
+            const infoDiv = document.createElement('div');
+            infoDiv.id = 'valores-calculados';
+            infoDiv.className = 'mb-3';
+            form.insertBefore(infoDiv, form.lastElementChild);
+            
+            diasUteis.addEventListener('input', calcularValores);
+            valorDiario.addEventListener('input', calcularValores);
+            percentualDesconto.addEventListener('input', calcularValores);
+            
+            // Calcular ao carregar a página
+            calcularValores();
+        });
+    </script>
+</body>
+</html>

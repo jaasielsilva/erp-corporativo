@@ -146,4 +146,14 @@ public class AdesaoPlanoSaude {
     public boolean isCancelada() {
         return status == StatusAdesao.CANCELADA;
     }
+
+    // Método para calcular subsídio da empresa (assumindo que empresa paga 70%)
+    public BigDecimal getValorSubsidioEmpresa() {
+        return valorTotalMensal.multiply(BigDecimal.valueOf(0.70));
+    }
+
+    // Método para calcular desconto do colaborador (assumindo que colaborador paga 30%)
+    public BigDecimal getValorDesconto() {
+        return valorTotalMensal.multiply(BigDecimal.valueOf(0.30));
+    }
 }

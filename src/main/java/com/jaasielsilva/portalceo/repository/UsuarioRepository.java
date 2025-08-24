@@ -43,4 +43,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
    
    @Query("SELECT COUNT(u) FROM Usuario u JOIN u.perfis p WHERE p.id = :perfilId")
    long countByPerfilId(@Param("perfilId") Long perfilId);
+   
+   // Método para buscar usuários ativos excluindo um usuário específico (para chat)
+   List<Usuario> findByIdNotAndStatusOrderByNome(Long id, Usuario.Status status);
+   
+   // Método para buscar usuários ativos excluindo um usuário específico com filtro de nome (para chat)
+   List<Usuario> findByIdNotAndStatusAndNomeContainingIgnoreCaseOrderByNome(Long id, Usuario.Status status, String nome);
 }

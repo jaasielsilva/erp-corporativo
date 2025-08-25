@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisão - Adesão de Colaborador - Portal CEO</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    
+    <style>
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        function preencherResumoBeneficios(resumo) {
+            let html = '';
+            
+            if (resumo.calculo && resumo.calculo.itens && resumo.calculo.itens.length > 0) {
+                resumo.calculo.itens.forEach(function(item) {
+                    html += `
+                        <div class="benefit-item">
+                            <div class="benefit-header">
+                                <div>
+                                    <h6 class="mb-0">${item.nome}</h6>
+                                    <small class="text-muted">Titular: R$ ${item.custoTitular.toFixed(2).replace('.', ',')}</small>
+                                    ${item.quantidadeDependentes > 0 ? `
+                                        <br><small class="text-muted">
+                                            <i class="fas fa-users me-1"></i> ${item.quantidadeDependentes} dependente(s): 
+                                            R$ ${item.custoDependentes.toFixed(2).replace('.', ',')}
+                                        </small>
+                                    ` : ''}
+                                </div>
+                                <div class="benefit-price">R$ ${item.custoTotal.toFixed(2).replace('.', ',')}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#beneficiosSelecionados').html(html);
+                $('#totalMensalFinal').text(resumo.custoTotalFormatado || 'R$ 0,00');
+                
+            } else {
+                $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
+                $('#totalMensalFinal').text('R$ 0,00');
+            }
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 1rem;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .step.active .step-number {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background-color: #198754;
+            color: white;
+        }
+        
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background-color: #e9ecef;
+            margin: 0 1rem;
+        }
+        
+        .step.completed + .step-line {
+            background-color: #198754;
+        }
+        
+        .review-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-left: 5px solid #0d6efd;
+        }
+        
+        .review-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .review-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            margin-right: 1rem;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            flex: 0 0 40%;
+        }
+        
+        .info-value {
+            color: #212529;
+            flex: 1;
+            text-align: right;
+        }
+        
+        .document-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .document-item.uploaded {
+            background: #d1e7dd;
+            border-left: 4px solid #198754;
+        }
+        
+        .benefit-item {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #0d6efd;
+        }
+        
+        .benefit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .benefit-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        
+        .total-card {
+            background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .total-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        
+        .terms-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .btn-edit {
+            background: #6c757d;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-edit:hover {
+            background: #5a6268;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .btn-finalize {
+            background: linear-gradient(45deg, #198754, #20c997);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-finalize:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(25, 135, 84, 0.4);
+        }
+        
+        .btn-cancel {
+            background: #dc3545;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .section-title {
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .success-animation {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #198754;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Cabeçalho -->
+                <div class="text-center mb-4">
+                    <h1 class="display-6 text-primary">
+                        <i class="fas fa-clipboard-check me-2"></i>
+                        Revisão Final
+                    </h1>
+                    <p class="lead text-muted">Confira todos os dados antes de finalizar a adesão</p>
+                </div>
+                
+                <!-- Indicador de Etapas -->
+                <div class="step-indicator">
+                    <div class="step completed">
+                        <div class="step-number"><i class="fas fa-check"></i></div>
+                        <span>Dados Pessoais</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step completed">
+                        <div class="step-number"><i class="fas fa-check"></i></div>
+                        <span>Documentos</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step completed">
+                        <div class="step-number"><i class="fas fa-check"></i></div>
+                        <span>Benefícios</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step active">
+                        <div class="step-number">4</div>
+                        <span>Revisão</span>
+                    </div>
+                </div>
+                
+                <!-- Dados Pessoais -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="d-flex align-items-center">
+                            <div class="review-icon" style="background: linear-gradient(45deg, #0d6efd, #0056b3);">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">Dados Pessoais</h4>
+                                <small class="text-muted">Informações básicas do colaborador</small>
+                            </div>
+                        </div>
+                        <a href="#" class="btn-edit" onclick="editarDadosPessoais()">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </a>
+                    </div>
+                    
+                    <div id="dadosPessoais">
+                        <!-- Dados serão carregados via JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Documentos -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="d-flex align-items-center">
+                            <div class="review-icon" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">Documentos</h4>
+                                <small class="text-muted">Arquivos enviados</small>
+                            </div>
+                        </div>
+                        <a href="#" class="btn-edit" onclick="editarDocumentos()">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </a>
+                    </div>
+                    
+                    <div id="documentosEnviados">
+                        <!-- Documentos serão carregados via JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Benefícios -->
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="d-flex align-items-center">
+                            <div class="review-icon" style="background: linear-gradient(45deg, #fd7e14, #e55a4e);">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">Benefícios Selecionados</h4>
+                                <small class="text-muted">Planos e valores</small>
+                            </div>
+                        </div>
+                        <a href="#" class="btn-edit" onclick="editarBeneficios()">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </a>
+                    </div>
+                    
+                    <div id="beneficiosSelecionados">
+                        <!-- Benefícios serão carregados via JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Total Mensal -->
+                <div class="total-card">
+                    <h3><i class="fas fa-calculator me-2"></i>Resumo Financeiro</h3>
+                    <div class="total-amount" id="totalMensalFinal">R$ 0,00</div>
+                    <p class="mb-0">Valor total mensal dos benefícios</p>
+                    <small>*Valores podem sofrer alterações conforme política da empresa</small>
+                </div>
+                
+                <!-- Termos e Condições -->
+                <div class="terms-section">
+                    <h5 class="mb-3">
+                        <i class="fas fa-file-contract me-2"></i>
+                        Termos e Condições
+                    </h5>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="aceitarTermos" required>
+                        <label class="form-check-label" for="aceitarTermos">
+                            <strong>Li e aceito os termos e condições</strong> do processo de adesão
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="autorizarDesconto" required>
+                        <label class="form-check-label" for="autorizarDesconto">
+                            <strong>Autorizo o desconto</strong> dos valores dos benefícios em folha de pagamento
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmarDados" required>
+                        <label class="form-check-label" for="confirmarDados">
+                            <strong>Confirmo que todos os dados</strong> informados são verdadeiros
+                        </label>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Importante:</strong> Após a finalização, o processo será enviado para aprovação do RH. 
+                        Você receberá um e-mail com o status da sua solicitação.
+                    </div>
+                </div>
+                
+                <!-- Botões de Ação -->
+                <div class="text-center">
+                    <button type="button" class="btn btn-back me-3" onclick="voltarEtapa()">
+                        <i class="fas fa-arrow-left me-2"></i>Etapa Anterior
+                    </button>
+                    
+                    <button type="button" class="btn btn-cancel me-3" onclick="cancelarAdesao()">
+                        <i class="fas fa-times me-2"></i>Cancelar Adesão
+                    </button>
+                    
+                    <button type="button" class="btn btn-finalize" id="btnFinalizar" onclick="finalizarAdesao()" disabled>
+                        <i class="fas fa-check-circle me-2"></i>Finalizar Adesão
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <h5>Finalizando Adesão...</h5>
+            <p class="text-muted mb-0">Por favor, aguarde enquanto processamos sua solicitação.</p>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-5">
+                    <div class="success-animation">
+                        <i class="fas fa-check fa-2x text-white"></i>
+                    </div>
+                    <h3 class="text-success mb-3">Adesão Finalizada!</h3>
+                    <p class="mb-4">
+                        Sua solicitação de adesão foi enviada com sucesso para aprovação do RH.
+                        Você receberá um e-mail com o protocolo e próximos passos.
+                    </p>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Protocolo:</strong> <span id="protocoloAdesao"></span>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="irParaDashboard()">
+                        <i class="fas fa-home me-2"></i>Ir para Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <script>
+        let sessionId = '';
+        let dadosRevisao = {};
+        
+        $(document).ready(function() {
+            // Obter sessionId da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            sessionId = urlParams.get('sessionId');
+            
+            if (!sessionId) {
+                mostrarErro('Sessão inválida. Reinicie o processo de adesão.');
+                setTimeout(() => {
+                    window.location.href = '/rh/colaboradores/adesao';
+                }, 3000);
+                return;
+            }
+            
+            // Carregar dados para revisão
+            carregarDadosRevisao();
+            
+            // Configurar eventos
+            configurarEventos();
+        });
+        
+        function configurarEventos() {
+            // Verificar termos aceitos
+            $('#aceitarTermos, #autorizarDesconto, #confirmarDados').on('change', function() {
+                const todosAceitos = $('#aceitarTermos').is(':checked') && 
+                                   $('#autorizarDesconto').is(':checked') && 
+                                   $('#confirmarDados').is(':checked');
+                
+                $('#btnFinalizar').prop('disabled', !todosAceitos);
+            });
+        }
+        
+        function carregarDadosRevisao() {
+            $.ajax({
+                url: `/rh/colaboradores/adesao/revisao/${sessionId}`,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        dadosRevisao = response.data;
+                        preencherDadosRevisao();
+                        
+                        // Carregar resumo de benefícios se existir
+                        if (response.data.beneficios_calculo) {
+                            carregarResumoBeneficios();
+                        }
+                    } else {
+                        mostrarErro(response.message || 'Erro ao carregar dados para revisão');
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    mostrarErro(response?.message || 'Erro ao carregar dados');
+                }
+            });
+        }
+        
+        function carregarResumoBeneficios() {
+            $.ajax({
+                url: '/api/rh/colaboradores/adesao/beneficios/resumo',
+                method: 'GET',
+                success: function(response) {
+                    if (response.success && response.temBeneficios) {
+                        preencherResumoBeneficios(response.resumo);
+                    } else {
+                        $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
+                    }
+                },
+                error: function() {
+                    console.log('Erro ao carregar resumo de benefícios');
+                    $('#beneficiosSelecionados').html('<p class="text-muted">Erro ao carregar benefícios</p>');
+                }
+            });
+        }
+        
+        function preencherDadosRevisao() {
+            // Dados Pessoais
+            if (dadosRevisao.dadosPessoais) {
+                const dados = dadosRevisao.dadosPessoais;
+                let html = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <span class="info-label">Nome Completo:</span>
+                                <span class="info-value">${dados.nome || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">CPF:</span>
+                                <span class="info-value">${dados.cpf || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">E-mail:</span>
+                                <span class="info-value">${dados.email || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Telefone:</span>
+                                <span class="info-value">${dados.telefone || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Data de Nascimento:</span>
+                                <span class="info-value">${formatarData(dados.dataNascimento) || '-'}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <span class="info-label">Cargo:</span>
+                                <span class="info-value">${dados.cargo || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Departamento:</span>
+                                <span class="info-value">${dados.departamento || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Data de Admissão:</span>
+                                <span class="info-value">${formatarData(dados.dataAdmissao) || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Salário:</span>
+                                <span class="info-value">R$ ${formatarMoeda(dados.salario) || '-'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Endereço:</span>
+                                <span class="info-value">${dados.endereco || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#dadosPessoais').html(html);
+            }
+            
+            // Documentos
+            if (dadosRevisao.documentos) {
+                let html = '';
+                dadosRevisao.documentos.forEach(doc => {
+                    html += `
+                        <div class="document-item uploaded">
+                            <div>
+                                <i class="fas fa-file-alt me-2 text-success"></i>
+                                <strong>${doc.tipo}</strong>
+                                <br>
+                                <small class="text-muted">${doc.nomeArquivo} (${doc.tamanho})</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Enviado
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('#documentosEnviados').html(html);
+            }
+            
+            // Benefícios - será carregado separadamente via API
+            if (dadosRevisao.beneficios && Object.keys(dadosRevisao.beneficios).length > 0) {
+                $('#beneficiosSelecionados').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Carregando benefícios...</div>');
+            } else {
+                $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
+                $('#totalMensalFinal').text('R$ 0,00');
+            }
+        }
+        
+        function finalizarAdesao() {
+            // Verificar se todos os termos foram aceitos
+            if (!$('#aceitarTermos').is(':checked') || 
+                !$('#autorizarDesconto').is(':checked') || 
+                !$('#confirmarDados').is(':checked')) {
+                mostrarErro('Você deve aceitar todos os termos para finalizar a adesão.');
+                return;
+            }
+            
+            // Mostrar loading
+            $('#loadingOverlay').show();
+            
+            $.ajax({
+                url: '/rh/colaboradores/adesao/finalizar',
+                method: 'POST',
+                data: {
+                    sessionId: sessionId,
+                    aceitarTermos: true,
+                    autorizarDesconto: true,
+                    confirmarDados: true
+                },
+                success: function(response) {
+                    $('#loadingOverlay').hide();
+                    
+                    if (response.success) {
+                        $('#protocoloAdesao').text(response.protocolo);
+                        $('#successModal').modal('show');
+                    } else {
+                        mostrarErro(response.message || 'Erro ao finalizar adesão');
+                    }
+                },
+                error: function(xhr) {
+                    $('#loadingOverlay').hide();
+                    const response = xhr.responseJSON;
+                    mostrarErro(response?.message || 'Erro interno do servidor');
+                }
+            });
+        }
+        
+        function cancelarAdesao() {
+            if (confirm('Tem certeza que deseja cancelar a adesão? Todos os dados serão perdidos.')) {
+                $.ajax({
+                    url: '/rh/colaboradores/adesao/cancelar',
+                    method: 'POST',
+                    data: { sessionId: sessionId },
+                    success: function(response) {
+                        if (response.success) {
+                            mostrarSucesso('Adesão cancelada com sucesso.');
+                            setTimeout(() => {
+                                window.location.href = '/dashboard';
+                            }, 2000);
+                        } else {
+                            mostrarErro(response.message || 'Erro ao cancelar adesão');
+                        }
+                    },
+                    error: function(xhr) {
+                        const response = xhr.responseJSON;
+                        mostrarErro(response?.message || 'Erro interno do servidor');
+                    }
+                });
+            }
+        }
+        
+        function editarDadosPessoais() {
+            window.location.href = `/rh/colaboradores/adesao?sessionId=${sessionId}`;
+        }
+        
+        function editarDocumentos() {
+            window.location.href = `/rh/colaboradores/adesao/documentos?sessionId=${sessionId}`;
+        }
+        
+        function editarBeneficios() {
+            window.location.href = `/rh/colaboradores/adesao/beneficios?sessionId=${sessionId}`;
+        }
+        
+        function voltarEtapa() {
+            window.location.href = `/rh/colaboradores/adesao/beneficios?sessionId=${sessionId}`;
+        }
+        
+        function irParaDashboard() {
+            window.location.href = '/dashboard';
+        }
+        
+        function formatarData(data) {
+            if (!data) return '';
+            return new Date(data).toLocaleDateString('pt-BR');
+        }
+        
+        function formatarMoeda(valor) {
+            if (!valor) return '0,00';
+            return parseFloat(valor).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        function mostrarErro(mensagem) {
+            const alert = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            $('.container-fluid').prepend(alert);
+            $('html, body').animate({ scrollTop: 0 }, 500);
+        }
+        
+        function mostrarSucesso(mensagem) {
+            const alert = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            $('.container-fluid').prepend(alert);
+            $('html, body').animate({ scrollTop: 0 }, 500);
+        }
+    </script>
+</body>
+</html>

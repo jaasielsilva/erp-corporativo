@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprovação de Processos - Portal CEO</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+        
+        .card-processo {
+            transition: transform 0.2s;
+            border-left: 4px solid #007bff;
+        }
+        
+        .card-processo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -23px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #007bff;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #dee2e6;
+        }
+        
+        .custo-destaque {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .btn-action {
+            min-width: 100px;
+        }
+        
+        .modal-lg {
+            max-width: 900px;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .documento-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .beneficio-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    
+    <div class="container-fluid mt-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/rh">RH</a></li>
+                <li class="breadcrumb-item active">Aprovação de Processos</li>
+            </ol>
+        </nav>
+        
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2><i class="fas fa-clipboard-check me-2"></i>Aprovação de Processos de Adesão</h2>
+                <p class="text-muted">Gerencie e aprove processos de adesão de novos colaboradores</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-outline-primary" onclick="atualizarLista()">
+                    <i class="fas fa-sync-alt me-1"></i>Atualizar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" id="total-aguardando">0</h4>
+                                <p class="card-text">Aguardando Aprovação</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" id="total-aprovados">0</h4>
+                                <p class="card-text">Aprovados</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" id="total-rejeitados">0</h4>
+                                <p class="card-text">Rejeitados</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-times-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" id="total-hoje">0</h4>
+                                <p class="card-text">Processos Hoje</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-calendar-day fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="filtro-status" onchange="filtrarProcessos()">
+                            <option value="">Todos os Status</option>
+                            <option value="AGUARDANDO_APROVACAO" selected>Aguardando Aprovação</option>
+                            <option value="APROVADO">Aprovado</option>
+                            <option value="REJEITADO">Rejeitado</option>
+                            <option value="EM_ANDAMENTO">Em Andamento</option>
+                            <option value="CANCELADO">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Período</label>
+                        <select class="form-select" id="filtro-periodo" onchange="filtrarProcessos()">
+                            <option value="">Todos os Períodos</option>
+                            <option value="hoje">Hoje</option>
+                            <option value="semana">Esta Semana</option>
+                            <option value="mes">Este Mês</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="busca-texto" placeholder="Nome, email ou CPF..." onkeyup="filtrarProcessos()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-outline-secondary d-block w-100" onclick="limparFiltros()">
+                            <i class="fas fa-eraser me-1"></i>Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de Processos -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Processos de Adesão</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tabela-processos">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Cargo</th>
+                                <th>Status</th>
+                                <th>Data Criação</th>
+                                <th>Custo Mensal</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-processos">
+                            <!-- Processos serão carregados via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Loading -->
+                <div class="text-center loading" id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando processos...</p>
+                </div>
+                
+                <!-- Mensagem vazia -->
+                <div class="text-center d-none" id="lista-vazia">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum processo encontrado</h5>
+                    <p class="text-muted">Não há processos que correspondam aos filtros selecionados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Detalhes do Processo -->
+    <div class="modal fade" id="modalDetalhes" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Detalhes do Processo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="conteudo-detalhes">
+                    <!-- Conteúdo será carregado via JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-danger btn-action" id="btn-rejeitar" onclick="mostrarModalRejeicao()">
+                        <i class="fas fa-times me-1"></i>Rejeitar
+                    </button>
+                    <button type="button" class="btn btn-success btn-action" id="btn-aprovar" onclick="mostrarModalAprovacao()">
+                        <i class="fas fa-check me-1"></i>Aprovar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Aprovação -->
+    <div class="modal fade" id="modalAprovacao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Aprovar Processo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-aprovacao">
+                        <div class="mb-3">
+                            <label class="form-label">Aprovado por *</label>
+                            <input type="text" class="form-control" id="aprovado-por" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes-aprovacao" rows="3" placeholder="Observações sobre a aprovação (opcional)"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarAprovacao()">
+                        <i class="fas fa-check me-1"></i>Confirmar Aprovação
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Rejeição -->
+    <div class="modal fade" id="modalRejeicao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Rejeitar Processo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-rejeicao">
+                        <div class="mb-3">
+                            <label class="form-label">Rejeitado por *</label>
+                            <input type="text" class="form-control" id="rejeitado-por" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Motivo da rejeição *</label>
+                            <textarea class="form-control" id="motivo-rejeicao" rows="4" required placeholder="Descreva o motivo da rejeição..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarRejeicao()">
+                        <i class="fas fa-times me-1"></i>Confirmar Rejeição
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        let processoAtual = null;
+        let dataTable = null;
+        
+        $(document).ready(function() {
+            carregarEstatisticas();
+            carregarProcessos();
+            
+            // Inicializar DataTable
+            dataTable = $('#tabela-processos').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                },
+                pageLength: 25,
+                order: [[3, 'desc']], // Ordenar por data de criação
+                columnDefs: [
+                    { orderable: false, targets: [5] } // Desabilitar ordenação na coluna de ações
+                ]
+            });
+        });
+        
+        function carregarEstatisticas() {
+            fetch('/api/rh/processos-adesao/estatisticas')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-aguardando').textContent = data.processosAguardandoAprovacao || 0;
+                    document.getElementById('total-aprovados').textContent = data.processosPorStatus?.APROVADO || 0;
+                    document.getElementById('total-rejeitados').textContent = data.processosPorStatus?.REJEITADO || 0;
+                    document.getElementById('total-hoje').textContent = data.processosHoje || 0;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar estatísticas:', error);
+                });
+        }
+        
+        function carregarProcessos() {
+            mostrarLoading(true);
+            
+            const status = document.getElementById('filtro-status').value;
+            let url = '/api/rh/processos-adesao';
+            
+            if (status) {
+                url += '/status/' + status;
+            } else {
+                url += '/aguardando-aprovacao';
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    exibirProcessos(data);
+                    mostrarLoading(false);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar processos:', error);
+                    mostrarLoading(false);
+                    mostrarErro('Erro ao carregar processos');
+                });
+        }
+        
+        function exibirProcessos(processos) {
+            const tbody = document.getElementById('lista-processos');
+            const listaVazia = document.getElementById('lista-vazia');
+            
+            if (dataTable) {
+                dataTable.clear();
+            }
+            
+            if (processos.length === 0) {
+                listaVazia.classList.remove('d-none');
+                return;
+            }
+            
+            listaVazia.classList.add('d-none');
+            
+            processos.forEach(processo => {
+                const statusBadge = obterBadgeStatus(processo.status);
+                const custoFormatado = processo.custoTotalMensal ? 
+                    'R$ ' + processo.custoTotalMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : 
+                    'R$ 0,00';
+                
+                const dataFormatada = new Date(processo.dataCriacao).toLocaleString('pt-BR');
+                
+                const row = [
+                    `<div>
+                        <strong>${processo.nomeColaborador}</strong><br>
+                        <small class="text-muted">${processo.emailColaborador}</small><br>
+                        <small class="text-muted">CPF: ${processo.cpfColaborador}</small>
+                    </div>`,
+                    processo.cargo || 'Não informado',
+                    statusBadge,
+                    dataFormatada,
+                    `<span class="custo-destaque">${custoFormatado}</span>`,
+                    `<div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="verDetalhes(${processo.id})" title="Ver detalhes">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${processo.status === 'AGUARDANDO_APROVACAO' ? `
+                            <button class="btn btn-sm btn-outline-success" onclick="aprovarRapido(${processo.id})" title="Aprovar">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="rejeitarRapido(${processo.id})" title="Rejeitar">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                    </div>`
+                ];
+                
+                if (dataTable) {
+                    dataTable.row.add(row);
+                }
+            });
+            
+            if (dataTable) {
+                dataTable.draw();
+            }
+        }
+        
+        function obterBadgeStatus(status) {
+            const badges = {
+                'EM_ANDAMENTO': '<span class="badge bg-primary status-badge">Em Andamento</span>',
+                'AGUARDANDO_APROVACAO': '<span class="badge bg-warning status-badge">Aguardando Aprovação</span>',
+                'APROVADO': '<span class="badge bg-success status-badge">Aprovado</span>',
+                'REJEITADO': '<span class="badge bg-danger status-badge">Rejeitado</span>',
+                'CANCELADO': '<span class="badge bg-secondary status-badge">Cancelado</span>'
+            };
+            return badges[status] || '<span class="badge bg-secondary status-badge">Desconhecido</span>';
+        }
+        
+        function verDetalhes(processoId) {
+            fetch(`/api/rh/processos-adesao/${processoId}`)
+                .then(response => response.json())
+                .then(processo => {
+                    processoAtual = processo;
+                    exibirDetalhesProcesso(processo);
+                    
+                    // Controlar visibilidade dos botões
+                    const btnAprovar = document.getElementById('btn-aprovar');
+                    const btnRejeitar = document.getElementById('btn-rejeitar');
+                    
+                    if (processo.status === 'AGUARDANDO_APROVACAO') {
+                        btnAprovar.style.display = 'inline-block';
+                        btnRejeitar.style.display = 'inline-block';
+                    } else {
+                        btnAprovar.style.display = 'none';
+                        btnRejeitar.style.display = 'none';
+                    }
+                    
+                    new bootstrap.Modal(document.getElementById('modalDetalhes')).show();
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar detalhes:', error);
+                    mostrarErro('Erro ao carregar detalhes do processo');
+                });
+        }
+        
+        function exibirDetalhesProcesso(processo) {
+            const conteudo = document.getElementById('conteudo-detalhes');
+            
+            // Carregar histórico
+            fetch(`/api/rh/processos-adesao/${processo.id}/historico`)
+                .then(response => response.json())
+                .then(historico => {
+                    conteudo.innerHTML = gerarHtmlDetalhes(processo, historico);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar histórico:', error);
+                    conteudo.innerHTML = gerarHtmlDetalhes(processo, []);
+                });
+        }
+        
+        function gerarHtmlDetalhes(processo, historico) {
+            const dadosPessoais = processo.dadosPessoaisJson ? JSON.parse(processo.dadosPessoaisJson) : {};
+            const documentos = processo.documentosJson ? JSON.parse(processo.documentosJson) : {};
+            const beneficios = processo.beneficiosJson ? JSON.parse(processo.beneficiosJson) : {};
+            
+            let html = `
+                <!-- Informações Básicas -->
+                <div class="info-section">
+                    <h6><i class="fas fa-user me-2"></i>Informações do Colaborador</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nome:</strong> ${processo.nomeColaborador}</p>
+                            <p><strong>Email:</strong> ${processo.emailColaborador}</p>
+                            <p><strong>CPF:</strong> ${processo.cpfColaborador}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Cargo:</strong> ${processo.cargo || 'Não informado'}</p>
+                            <p><strong>Status:</strong> ${obterBadgeStatus(processo.status)}</p>
+                            <p><strong>Etapa:</strong> ${processo.etapaAtual || 'Não informado'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dados Pessoais -->
+                <div class="info-section">
+                    <h6><i class="fas fa-id-card me-2"></i>Dados Pessoais</h6>
+                    <div class="row">
+            `;
+            
+            Object.entries(dadosPessoais).forEach(([key, value]) => {
+                if (key !== 'nome' && key !== 'email' && key !== 'cpf') {
+                    html += `<div class="col-md-6"><p><strong>${formatarCampo(key)}:</strong> ${value}</p></div>`;
+                }
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            // Documentos
+            if (Object.keys(documentos).length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h6><i class="fas fa-file-alt me-2"></i>Documentos</h6>
+                `;
+                
+                Object.entries(documentos).forEach(([key, value]) => {
+                    html += `
+                        <div class="documento-item">
+                            <i class="fas fa-file-pdf text-danger me-2"></i>
+                            <span>${formatarCampo(key)}: ${value}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            // Benefícios
+            if (Object.keys(beneficios).length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h6><i class="fas fa-gift me-2"></i>Benefícios Selecionados</h6>
+                `;
+                
+                Object.entries(beneficios).forEach(([key, value]) => {
+                    html += `
+                        <div class="beneficio-item">
+                            <span>${formatarCampo(key)}</span>
+                            <span class="text-success">${value}</span>
+                        </div>
+                    `;
+                });
+                
+                if (processo.custoTotalMensal) {
+                    html += `
+                        <div class="mt-3 text-end">
+                            <strong class="custo-destaque">Custo Total Mensal: R$ ${processo.custoTotalMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+            }
+            
+            // Observações
+            if (processo.observacoes) {
+                html += `
+                    <div class="info-section">
+                        <h6><i class="fas fa-comment me-2"></i>Observações</h6>
+                        <p>${processo.observacoes}</p>
+                    </div>
+                `;
+            }
+            
+            // Histórico
+            if (historico.length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h6><i class="fas fa-history me-2"></i>Histórico do Processo</h6>
+                        <div class="timeline">
+                `;
+                
+                historico.forEach(evento => {
+                    const dataFormatada = new Date(evento.dataEvento).toLocaleString('pt-BR');
+                    html += `
+                        <div class="timeline-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>${evento.descricao}</strong>
+                                    ${evento.usuarioResponsavel ? `<br><small class="text-muted">Por: ${evento.usuarioResponsavel}</small>` : ''}
+                                    ${evento.observacoes ? `<br><small>${evento.observacoes}</small>` : ''}
+                                </div>
+                                <small class="text-muted">${dataFormatada}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return html;
+        }
+        
+        function formatarCampo(campo) {
+            return campo.replace(/([A-Z])/g, ' $1')
+                       .replace(/^./, str => str.toUpperCase())
+                       .replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        function mostrarModalAprovacao() {
+            new bootstrap.Modal(document.getElementById('modalAprovacao')).show();
+        }
+        
+        function mostrarModalRejeicao() {
+            new bootstrap.Modal(document.getElementById('modalRejeicao')).show();
+        }
+        
+        function confirmarAprovacao() {
+            const aprovadoPor = document.getElementById('aprovado-por').value.trim();
+            const observacoes = document.getElementById('observacoes-aprovacao').value.trim();
+            
+            if (!aprovadoPor) {
+                mostrarErro('Campo "Aprovado por" é obrigatório');
+                return;
+            }
+            
+            const dados = {
+                aprovadoPor: aprovadoPor,
+                observacoes: observacoes
+            };
+            
+            fetch(`/api/rh/processos-adesao/${processoAtual.id}/aprovar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarSucesso('Processo aprovado com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('modalAprovacao')).hide();
+                    bootstrap.Modal.getInstance(document.getElementById('modalDetalhes')).hide();
+                    carregarProcessos();
+                    carregarEstatisticas();
+                } else {
+                    mostrarErro(data.message || 'Erro ao aprovar processo');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao aprovar processo:', error);
+                mostrarErro('Erro ao aprovar processo');
+            });
+        }
+        
+        function confirmarRejeicao() {
+            const rejeitadoPor = document.getElementById('rejeitado-por').value.trim();
+            const motivoRejeicao = document.getElementById('motivo-rejeicao').value.trim();
+            
+            if (!rejeitadoPor) {
+                mostrarErro('Campo "Rejeitado por" é obrigatório');
+                return;
+            }
+            
+            if (!motivoRejeicao) {
+                mostrarErro('Campo "Motivo da rejeição" é obrigatório');
+                return;
+            }
+            
+            const dados = {
+                rejeitadoPor: rejeitadoPor,
+                motivoRejeicao: motivoRejeicao
+            };
+            
+            fetch(`/api/rh/processos-adesao/${processoAtual.id}/rejeitar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarSucesso('Processo rejeitado com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('modalRejeicao')).hide();
+                    bootstrap.Modal.getInstance(document.getElementById('modalDetalhes')).hide();
+                    carregarProcessos();
+                    carregarEstatisticas();
+                } else {
+                    mostrarErro(data.message || 'Erro ao rejeitar processo');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao rejeitar processo:', error);
+                mostrarErro('Erro ao rejeitar processo');
+            });
+        }
+        
+        function aprovarRapido(processoId) {
+            const aprovadoPor = prompt('Digite seu nome para aprovação:');
+            if (!aprovadoPor) return;
+            
+            const dados = {
+                aprovadoPor: aprovadoPor.trim()
+            };
+            
+            fetch(`/api/rh/processos-adesao/${processoId}/aprovar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarSucesso('Processo aprovado com sucesso!');
+                    carregarProcessos();
+                    carregarEstatisticas();
+                } else {
+                    mostrarErro(data.message || 'Erro ao aprovar processo');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao aprovar processo:', error);
+                mostrarErro('Erro ao aprovar processo');
+            });
+        }
+        
+        function rejeitarRapido(processoId) {
+            const rejeitadoPor = prompt('Digite seu nome:');
+            if (!rejeitadoPor) return;
+            
+            const motivoRejeicao = prompt('Digite o motivo da rejeição:');
+            if (!motivoRejeicao) return;
+            
+            const dados = {
+                rejeitadoPor: rejeitadoPor.trim(),
+                motivoRejeicao: motivoRejeicao.trim()
+            };
+            
+            fetch(`/api/rh/processos-adesao/${processoId}/rejeitar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarSucesso('Processo rejeitado com sucesso!');
+                    carregarProcessos();
+                    carregarEstatisticas();
+                } else {
+                    mostrarErro(data.message || 'Erro ao rejeitar processo');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao rejeitar processo:', error);
+                mostrarErro('Erro ao rejeitar processo');
+            });
+        }
+        
+        function filtrarProcessos() {
+            carregarProcessos();
+        }
+        
+        function limparFiltros() {
+            document.getElementById('filtro-status').value = 'AGUARDANDO_APROVACAO';
+            document.getElementById('filtro-periodo').value = '';
+            document.getElementById('busca-texto').value = '';
+            carregarProcessos();
+        }
+        
+        function atualizarLista() {
+            carregarProcessos();
+            carregarEstatisticas();
+        }
+        
+        function mostrarLoading(mostrar) {
+            const loading = document.getElementById('loading');
+            if (mostrar) {
+                loading.style.display = 'block';
+            } else {
+                loading.style.display = 'none';
+            }
+        }
+        
+        function mostrarSucesso(mensagem) {
+            // Implementar toast de sucesso
+            alert(mensagem); // Temporário
+        }
+        
+        function mostrarErro(mensagem) {
+            // Implementar toast de erro
+            alert(mensagem); // Temporário
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentos - Adesão de Colaborador - Portal CEO</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    
+    <style>
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 1rem;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .step.active .step-number {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background-color: #198754;
+            color: white;
+        }
+        
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background-color: #e9ecef;
+            margin: 0 1rem;
+        }
+        
+        .step.completed + .step-line {
+            background-color: #198754;
+        }
+        
+        .document-upload {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        
+        .upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: #e3f2fd;
+        }
+        
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .document-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-item.required {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .document-item.optional {
+            border-left: 4px solid #6c757d;
+        }
+        
+        .document-item.uploaded {
+            border-left: 4px solid #198754;
+            background-color: #d1e7dd;
+        }
+        
+        .file-preview {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .btn-remove {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 1rem;
+        }
+        
+        .section-title {
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-next {
+            background: linear-gradient(45deg, #0d6efd, #0056b3);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Cabeçalho -->
+                <div class="text-center mb-4">
+                    <h1 class="display-6 text-primary">
+                        <i class="fas fa-file-upload me-2"></i>
+                        Upload de Documentos
+                    </h1>
+                    <p class="lead text-muted">Envie os documentos necessários para completar o cadastro</p>
+                </div>
+                
+                <!-- Indicador de Etapas -->
+                <div class="step-indicator">
+                    <div class="step completed">
+                        <div class="step-number"><i class="fas fa-check"></i></div>
+                        <span>Dados Pessoais</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step active">
+                        <div class="step-number">2</div>
+                        <span>Documentos</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <span>Benefícios</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <span>Revisão</span>
+                    </div>
+                </div>
+                
+                <!-- Alerta Informativo -->
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Formatos aceitos:</strong> PDF, JPG, JPEG, PNG (máximo 5MB por arquivo)
+                    <br>
+                    <strong>Documentos obrigatórios:</strong> RG, CPF e Comprovante de Endereço
+                </div>
+                
+                <!-- Formulário de Upload -->
+                <form id="formDocumentos" enctype="multipart/form-data">
+                    <input type="hidden" id="sessionId" name="sessionId" th:value="${param.sessionId}">
+                    
+                    <!-- Documentos Obrigatórios -->
+                    <div class="document-upload">
+                        <h3 class="section-title">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Documentos Obrigatórios
+                        </h3>
+                        
+                        <!-- RG -->
+                        <div class="document-item required" id="doc-rg">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-id-card me-2"></i>
+                                        RG
+                                    </h5>
+                                    <small class="text-danger">Obrigatório</small>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="upload-area" onclick="document.getElementById('documentoRg').click()">
+                                        <input type="file" id="documentoRg" name="documentoRg" 
+                                               accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                        <p class="mb-0">Clique aqui ou arraste o arquivo do RG</p>
+                                        <small class="text-muted">PDF, JPG, JPEG ou PNG - Máx. 5MB</small>
+                                    </div>
+                                    <div class="file-preview" id="preview-rg"></div>
+                                    <div class="progress-container" id="progress-rg">
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CPF -->
+                        <div class="document-item required" id="doc-cpf">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-address-card me-2"></i>
+                                        CPF
+                                    </h5>
+                                    <small class="text-danger">Obrigatório</small>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="upload-area" onclick="document.getElementById('documentoCpf').click()">
+                                        <input type="file" id="documentoCpf" name="documentoCpf" 
+                                               accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                        <p class="mb-0">Clique aqui ou arraste o arquivo do CPF</p>
+                                        <small class="text-muted">PDF, JPG, JPEG ou PNG - Máx. 5MB</small>
+                                    </div>
+                                    <div class="file-preview" id="preview-cpf"></div>
+                                    <div class="progress-container" id="progress-cpf">
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Comprovante de Endereço -->
+                        <div class="document-item required" id="doc-endereco">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-home me-2"></i>
+                                        Comprovante de Endereço
+                                    </h5>
+                                    <small class="text-danger">Obrigatório</small>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="upload-area" onclick="document.getElementById('comprovanteEndereco').click()">
+                                        <input type="file" id="comprovanteEndereco" name="comprovanteEndereco" 
+                                               accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                        <p class="mb-0">Clique aqui ou arraste o comprovante de endereço</p>
+                                        <small class="text-muted">Conta de luz, água, telefone, etc. - Máx. 5MB</small>
+                                    </div>
+                                    <div class="file-preview" id="preview-endereco"></div>
+                                    <div class="progress-container" id="progress-endereco">
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Documentos Opcionais -->
+                    <div class="document-upload">
+                        <h3 class="section-title">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Documentos Opcionais
+                        </h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="document-item optional">
+                                    <h6><i class="fas fa-briefcase me-2"></i>Carteira de Trabalho</h6>
+                                    <input type="file" class="form-control" name="outrosDocumentos" 
+                                           accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="document-item optional">
+                                    <h6><i class="fas fa-vote-yea me-2"></i>Título de Eleitor</h6>
+                                    <input type="file" class="form-control" name="outrosDocumentos" 
+                                           accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="document-item optional">
+                                    <h6><i class="fas fa-shield-alt me-2"></i>Certificado de Reservista</h6>
+                                    <input type="file" class="form-control" name="outrosDocumentos" 
+                                           accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="document-item optional">
+                                    <h6><i class="fas fa-graduation-cap me-2"></i>Comprovante de Escolaridade</h6>
+                                    <input type="file" class="form-control" name="outrosDocumentos" 
+                                           accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="document-item optional">
+                                    <h6><i class="fas fa-heart me-2"></i>Certidão de Nascimento/Casamento</h6>
+                                    <input type="file" class="form-control" name="outrosDocumentos" 
+                                           accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="document-item optional">
+                                    <h6><i class="fas fa-file-alt me-2"></i>Outros Documentos</h6>
+                                    <input type="file" class="form-control" name="outrosDocumentos" 
+                                           accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumo dos Uploads -->
+                    <div class="document-upload" id="resumoUploads" style="display: none;">
+                        <h3 class="section-title">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Resumo dos Documentos
+                        </h3>
+                        
+                        <div id="listaDocumentosEnviados"></div>
+                    </div>
+                    
+                    <!-- Botões de Ação -->
+                    <div class="text-center">
+                        <button type="button" class="btn btn-back me-3" onclick="voltarEtapa()">
+                            <i class="fas fa-arrow-left me-2"></i>Etapa Anterior
+                        </button>
+                        <button type="submit" class="btn btn-next" id="btnProximaEtapa" disabled>
+                            Próxima Etapa
+                            <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <script>
+        let documentosObrigatoriosEnviados = {
+            rg: false,
+            cpf: false,
+            endereco: false
+        };
+        
+        $(document).ready(function() {
+            // Configurar eventos de upload
+            configurarUploadEventos();
+            
+            // Validação do formulário
+            $('#formDocumentos').on('submit', function(e) {
+                e.preventDefault();
+                enviarDocumentos();
+            });
+            
+            // Verificar se sessionId existe
+            if (!$('#sessionId').val()) {
+                mostrarErro('Sessão inválida. Reinicie o processo de adesão.');
+                setTimeout(() => {
+                    window.location.href = '/rh/colaboradores/adesao';
+                }, 3000);
+            }
+        });
+        
+        function configurarUploadEventos() {
+            // Eventos para documentos obrigatórios
+            $('#documentoRg').on('change', function() {
+                processarArquivo(this, 'rg', 'RG');
+            });
+            
+            $('#documentoCpf').on('change', function() {
+                processarArquivo(this, 'cpf', 'CPF');
+            });
+            
+            $('#comprovanteEndereco').on('change', function() {
+                processarArquivo(this, 'endereco', 'Comprovante de Endereço');
+            });
+            
+            // Drag and drop
+            $('.upload-area').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).addClass('dragover');
+            });
+            
+            $('.upload-area').on('dragleave', function(e) {
+                e.preventDefault();
+                $(this).removeClass('dragover');
+            });
+            
+            $('.upload-area').on('drop', function(e) {
+                e.preventDefault();
+                $(this).removeClass('dragover');
+                
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    const input = $(this).find('input[type="file"]')[0];
+                    input.files = files;
+                    $(input).trigger('change');
+                }
+            });
+        }
+        
+        function processarArquivo(input, tipo, nome) {
+            const arquivo = input.files[0];
+            
+            if (!arquivo) return;
+            
+            // Validar arquivo
+            if (!validarArquivo(arquivo)) {
+                input.value = '';
+                return;
+            }
+            
+            // Fazer upload via API
+            fazerUpload(arquivo, tipo, nome);
+        }
+        
+        function fazerUpload(arquivo, tipo, nome) {
+            const formData = new FormData();
+            formData.append('arquivo', arquivo);
+            formData.append('tipoDocumento', tipo);
+            formData.append('sessionId', $('#sessionId').val());
+            
+            // Mostrar progresso
+            const progressContainer = $(`#progress-${tipo}`);
+            progressContainer.show();
+            
+            $.ajax({
+                url: '/api/rh/colaboradores/adesao/documentos/upload',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                xhr: function() {
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', function(evt) {
+                        if (evt.lengthComputable) {
+                            const percentComplete = (evt.loaded / evt.total) * 100;
+                            progressContainer.find('.progress-bar').css('width', percentComplete + '%');
+                        }
+                    }, false);
+                    return xhr;
+                },
+                success: function(response) {
+                    progressContainer.hide();
+                    
+                    if (response.success) {
+                        // Mostrar preview
+                        mostrarPreview(arquivo, tipo, nome);
+                        
+                        // Marcar como enviado
+                        documentosObrigatoriosEnviados[tipo] = true;
+                        
+                        // Atualizar visual do item
+                        $(`#doc-${tipo}`).removeClass('required').addClass('uploaded');
+                        
+                        // Verificar se pode prosseguir
+                        verificarDocumentosObrigatorios();
+                    } else {
+                        mostrarErro(response.message || 'Erro ao fazer upload');
+                    }
+                },
+                error: function(xhr) {
+                    progressContainer.hide();
+                    const response = xhr.responseJSON;
+                    mostrarErro(response?.message || 'Erro de conexão durante upload');
+                }
+            });
+        }
+        
+        function validarArquivo(arquivo) {
+            // Verificar tamanho (5MB)
+            if (arquivo.size > 5 * 1024 * 1024) {
+                mostrarErro('Arquivo muito grande. Tamanho máximo: 5MB');
+                return false;
+            }
+            
+            // Verificar tipo
+            const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            if (!tiposPermitidos.includes(arquivo.type)) {
+                mostrarErro('Tipo de arquivo não permitido. Use PDF, JPG, JPEG ou PNG');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function mostrarPreview(arquivo, tipo, nome) {
+            const preview = $(`#preview-${tipo}`);
+            const tamanho = (arquivo.size / 1024 / 1024).toFixed(2);
+            
+            const html = `
+                <div class="file-info">
+                    <div>
+                        <i class="fas fa-file-alt me-2 text-success"></i>
+                        <strong>${nome}</strong>
+                        <br>
+                        <small class="text-muted">${arquivo.name} (${tamanho} MB)</small>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="visualizarArquivo('${tipo}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn-remove" onclick="removerArquivo('${tipo}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            preview.html(html).show();
+        }
+        
+        function removerArquivo(tipo) {
+            // Remover via API
+            $.ajax({
+                url: `/api/rh/colaboradores/adesao/documentos/remover/${tipo}`,
+                method: 'DELETE',
+                data: { sessionId: $('#sessionId').val() },
+                success: function(response) {
+                    if (response.success) {
+                        // Limpar input
+                        $(`#documento${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`).val('');
+                        
+                        // Esconder preview
+                        $(`#preview-${tipo}`).hide();
+                        
+                        // Marcar como não enviado
+                        documentosObrigatoriosEnviados[tipo] = false;
+                        
+                        // Atualizar visual
+                        $(`#doc-${tipo}`).removeClass('uploaded').addClass('required');
+                        
+                        // Verificar documentos
+                        verificarDocumentosObrigatorios();
+                    } else {
+                        mostrarErro(response.message || 'Erro ao remover arquivo');
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    mostrarErro(response?.message || 'Erro de conexão ao remover arquivo');
+                }
+            });
+        }
+        
+        function visualizarArquivo(tipo) {
+            window.open(`/api/rh/colaboradores/adesao/documentos/visualizar/${tipo}?sessionId=${$('#sessionId').val()}`, '_blank');
+        }
+        
+        function verificarDocumentosObrigatorios() {
+            const todosEnviados = Object.values(documentosObrigatoriosEnviados).every(enviado => enviado);
+            
+            $('#btnProximaEtapa').prop('disabled', !todosEnviados);
+            
+            if (todosEnviados) {
+                mostrarResumo();
+            }
+        }
+        
+        function mostrarResumo() {
+            const resumo = $('#resumoUploads');
+            const lista = $('#listaDocumentosEnviados');
+            
+            let html = '<div class="row">';
+            
+            // Documentos obrigatórios
+            Object.keys(documentosObrigatoriosEnviados).forEach(tipo => {
+                if (documentosObrigatoriosEnviados[tipo]) {
+                    const input = $(`#documento${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+                    const arquivo = input[0].files[0];
+                    
+                    html += `
+                        <div class="col-md-4 mb-2">
+                            <div class="alert alert-success mb-0">
+                                <i class="fas fa-check-circle me-2"></i>
+                                ${arquivo.name}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            lista.html(html);
+            resumo.show();
+        }
+        
+        function enviarDocumentos() {
+            if (!Object.values(documentosObrigatoriosEnviados).every(enviado => enviado)) {
+                mostrarErro('Todos os documentos obrigatórios devem ser enviados');
+                return;
+            }
+            
+            // Mostrar loading
+            $('#btnProximaEtapa').prop('disabled', true).html(
+                '<i class="fas fa-spinner fa-spin me-2"></i>Processando...');
+            
+            // Verificar status dos documentos
+            $.ajax({
+                url: '/api/rh/colaboradores/adesao/documentos/status',
+                method: 'GET',
+                data: { sessionId: $('#sessionId').val() },
+                success: function(response) {
+                    if (response.success && response.podeProximaEtapa) {
+                        // Marcar etapa como concluída
+                        $.ajax({
+                            url: '/rh/colaboradores/adesao/documentos',
+                            method: 'POST',
+                            data: { sessionId: $('#sessionId').val() },
+                            success: function(response) {
+                                if (response.success) {
+                                    mostrarSucesso('Documentos processados com sucesso!');
+                                    setTimeout(() => {
+                                        window.location.href = `/rh/colaboradores/adesao/beneficios?sessionId=${$('#sessionId').val()}`;
+                                    }, 1500);
+                                } else {
+                                    mostrarErro(response.message || 'Erro ao processar documentos');
+                                }
+                            },
+                            error: function(xhr) {
+                                const response = xhr.responseJSON;
+                                mostrarErro(response?.message || 'Erro interno do servidor');
+                            }
+                        });
+                    } else {
+                        mostrarErro('Todos os documentos obrigatórios devem ser enviados');
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    mostrarErro(response?.message || 'Erro de conexão. Tente novamente.');
+                },
+                complete: function() {
+                    $('#btnProximaEtapa').prop('disabled', false).html(
+                        'Próxima Etapa <i class="fas fa-arrow-right ms-2"></i>');
+                }
+            });
+        }
+        
+        function voltarEtapa() {
+            if (confirm('Tem certeza que deseja voltar? Os documentos enviados serão mantidos.')) {
+                window.location.href = `/rh/colaboradores/adesao?sessionId=${$('#sessionId').val()}`;
+            }
+        }
+        
+        function mostrarErro(mensagem) {
+            const alert = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            $('.container-fluid').prepend(alert);
+            $('html, body').animate({ scrollTop: 0 }, 500);
+        }
+        
+        function mostrarSucesso(mensagem) {
+            const alert = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            $('.container-fluid').prepend(alert);
+            $('html, body').animate({ scrollTop: 0 }, 500);
+        }
+    </script>
+</body>
+</html>

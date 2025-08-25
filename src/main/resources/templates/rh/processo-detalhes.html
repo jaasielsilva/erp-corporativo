@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Processo - Portal CEO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #6c757d;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #dee2e6;
+        }
+        .timeline-item.success::before {
+            background: #198754;
+        }
+        .timeline-item.warning::before {
+            background: #ffc107;
+        }
+        .timeline-item.danger::before {
+            background: #dc3545;
+        }
+        .timeline-item.info::before {
+            background: #0dcaf0;
+        }
+        .status-card {
+            border-left: 4px solid #007bff;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .status-card.aprovado {
+            border-left-color: #198754;
+        }
+        .status-card.rejeitado {
+            border-left-color: #dc3545;
+        }
+        .status-card.aguardando {
+            border-left-color: #ffc107;
+        }
+        .dados-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+        }
+        .btn-action {
+            margin: 0 5px;
+        }
+        .documento-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .documento-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .beneficio-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/rh/workflow">Workflow</a></li>
+                                <li class="breadcrumb-item active">Detalhes do Processo</li>
+                            </ol>
+                        </nav>
+                        <h2 class="mb-0"><i class="fas fa-user-plus me-2"></i>Processo de Adesão</h2>
+                        <p class="text-muted mb-0" th:if="${processo}">ID: <span th:text="${processo.id}"></span> | Session: <span th:text="${processo.sessionId}"></span></p>
+                    </div>
+                    <div>
+                        <a href="/rh/workflow" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Voltar
+                        </a>
+                        <button class="btn btn-outline-primary" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i>Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${processo}">
+            <!-- Status Card -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card status-card" th:classappend="${processo.status.name().toLowerCase()}">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <h5 class="mb-1">Status Atual</h5>
+                                    <span class="badge fs-6" th:classappend="${processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).APROVADO ? 'bg-success' : (processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).REJEITADO ? 'bg-danger' : (processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).AGUARDANDO_APROVACAO ? 'bg-warning text-dark' : 'bg-info'))}" th:text="${#strings.replace(processo.status.name(), '_', ' ')}"></span>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6 class="mb-1">Etapa Atual</h6>
+                                    <p class="mb-0" th:text="${processo.etapaAtual ?: 'Não definida'}"></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6 class="mb-1">Data de Criação</h6>
+                                    <p class="mb-0" th:text="${#temporals.format(processo.dataCriacao, 'dd/MM/yyyy HH:mm')}"></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6 class="mb-1">Custo Total Mensal</h6>
+                                    <p class="mb-0 fw-bold text-primary" th:text="${#numbers.formatCurrency(processo.custoTotalMensal ?: 0)}"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Ações -->
+                            <div class="row mt-3" th:if="${processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).AGUARDANDO_APROVACAO}">
+                                <div class="col-12">
+                                    <hr>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success btn-action" onclick="abrirModalAprovacao()">
+                                            <i class="fas fa-check me-1"></i>Aprovar
+                                        </button>
+                                        <button class="btn btn-danger btn-action" onclick="abrirModalRejeicao()">
+                                            <i class="fas fa-times me-1"></i>Rejeitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados do Colaborador -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card dados-card">
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="fas fa-user me-2"></i>Dados do Colaborador</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" style="width: 30%;">Nome:</td>
+                                    <td th:text="${processo.nomeColaborador}"></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td th:text="${processo.emailColaborador}"></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">CPF:</td>
+                                    <td th:text="${processo.cpfColaborador}"></td>
+                                </tr>
+                                <tr th:if="${processo.cargo}">
+                                    <td class="fw-bold">Cargo:</td>
+                                    <td th:text="${processo.cargo}"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card dados-card">
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações do Processo</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tr th:if="${processo.dataFinalizacao}">
+                                    <td class="fw-bold" style="width: 40%;">Finalizado em:</td>
+                                    <td th:text="${#temporals.format(processo.dataFinalizacao, 'dd/MM/yyyy HH:mm')}"></td>
+                                </tr>
+                                <tr th:if="${processo.dataAprovacao}">
+                                    <td class="fw-bold">Aprovado em:</td>
+                                    <td th:text="${#temporals.format(processo.dataAprovacao, 'dd/MM/yyyy HH:mm')}"></td>
+                                </tr>
+                                <tr th:if="${processo.motivoRejeicao}">
+                                    <td class="fw-bold">Motivo Rejeição:</td>
+                                    <td th:text="${processo.motivoRejeicao}"></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Última Atualização:</td>
+                                    <td th:text="${#temporals.format(processo.dataAtualizacao, 'dd/MM/yyyy HH:mm')}"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observações -->
+            <div class="row mb-4" th:if="${processo.observacoes}">
+                <div class="col-12">
+                    <div class="card dados-card">
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="fas fa-comment me-2"></i>Observações</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0" th:text="${processo.observacoes}"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados Detalhados (JSON) -->
+            <div class="row mb-4" th:if="${dadosDetalhados}">
+                <div class="col-md-6" th:if="${dadosDetalhados.documentos}">
+                    <div class="card dados-card">
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Documentos</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:each="documento : ${dadosDetalhados.documentos}" class="documento-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" th:text="${documento.nome}"></h6>
+                                        <small class="text-muted" th:text="${documento.tipo}"></small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-success" th:if="${documento.enviado}">Enviado</span>
+                                        <span class="badge bg-warning" th:unless="${documento.enviado}">Pendente</span>
+                                    </div>
+                                </div>
+                                <p class="mb-0 mt-2" th:if="${documento.observacoes}" th:text="${documento.observacoes}"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6" th:if="${dadosDetalhados.beneficios}">
+                    <div class="card dados-card">
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Benefícios</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:each="beneficio : ${dadosDetalhados.beneficios}" class="beneficio-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" th:text="${beneficio.nome}"></h6>
+                                        <small class="text-muted" th:text="${beneficio.tipo}"></small>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold text-primary" th:text="${#numbers.formatCurrency(beneficio.valor ?: 0)}"></span>
+                                    </div>
+                                </div>
+                                <p class="mb-0 mt-1" th:if="${beneficio.descricao}" th:text="${beneficio.descricao}"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Histórico -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card dados-card">
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histórico do Processo</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline" th:if="${historico and not #lists.isEmpty(historico)}">
+                                <div th:each="evento : ${historico}" class="timeline-item" 
+                                     th:classappend="${evento.tipoEvento == T(com.jaasielsilva.portalceo.model.HistoricoProcessoAdesao.TipoEvento).APROVACAO ? 'success' : (evento.tipoEvento == T(com.jaasielsilva.portalceo.model.HistoricoProcessoAdesao.TipoEvento).REJEICAO ? 'danger' : (evento.tipoEvento == T(com.jaasielsilva.portalceo.model.HistoricoProcessoAdesao.TipoEvento).INICIO_PROCESSO ? 'info' : 'warning'))}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1" th:text="${#strings.replace(evento.tipoEvento.name(), '_', ' ')}"></h6>
+                                            <p class="mb-1" th:text="${evento.descricao}"></p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user me-1"></i><span th:text="${evento.usuarioResponsavel ?: 'Sistema'}"></span>
+                                                <i class="fas fa-clock ms-3 me-1"></i><span th:text="${#temporals.format(evento.dataEvento, 'dd/MM/yyyy HH:mm')}"></span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div th:if="${evento.observacoes}" class="mt-2">
+                                        <div class="alert alert-light mb-0">
+                                            <small th:text="${evento.observacoes}"></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${#lists.isEmpty(historico)}" class="text-center py-4">
+                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">Nenhum evento registrado</h6>
+                                <p class="text-muted mb-0">O histórico será exibido conforme o processo avança.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagem de erro -->
+        <div th:unless="${processo}" class="row">
+            <div class="col-12">
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h4>Processo não encontrado</h4>
+                    <p class="mb-0">O processo solicitado não foi encontrado ou você não tem permissão para visualizá-lo.</p>
+                    <a href="/rh/workflow" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar ao Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Aprovação -->
+    <div class="modal fade" id="modalAprovacao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check me-2"></i>Aprovar Processo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAprovacao">
+                        <div class="mb-3">
+                            <label class="form-label">Aprovado por *</label>
+                            <input type="text" class="form-control" id="aprovadoPor" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoesAprovacao" rows="3" placeholder="Observações sobre a aprovação (opcional)"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarAprovacao()">
+                        <i class="fas fa-check me-1"></i>Aprovar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Rejeição -->
+    <div class="modal fade" id="modalRejeicao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-times me-2"></i>Rejeitar Processo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRejeicao">
+                        <div class="mb-3">
+                            <label class="form-label">Motivo da Rejeição *</label>
+                            <textarea class="form-control" id="motivoRejeicao" rows="3" required placeholder="Descreva o motivo da rejeição"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Responsável *</label>
+                            <input type="text" class="form-control" id="usuarioResponsavel" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarRejeicao()">
+                        <i class="fas fa-times me-1"></i>Rejeitar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:if="${processo}">
+        const processoId = /*[[${processo.id}]]*/ 0;
+        
+        function abrirModalAprovacao() {
+            document.getElementById('aprovadoPor').value = '';
+            document.getElementById('observacoesAprovacao').value = '';
+            new bootstrap.Modal(document.getElementById('modalAprovacao')).show();
+        }
+        
+        function confirmarAprovacao() {
+            const aprovadoPor = document.getElementById('aprovadoPor').value;
+            const observacoes = document.getElementById('observacoesAprovacao').value;
+            
+            if (!aprovadoPor.trim()) {
+                alert('Nome do aprovador é obrigatório');
+                return;
+            }
+            
+            const dados = {
+                aprovadoPor: aprovadoPor,
+                observacoes: observacoes
+            };
+            
+            fetch(`/rh/workflow/api/processo/${processoId}/aprovar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert('Erro ao aprovar processo: ' + data.erro);
+                    return;
+                }
+                
+                alert('Processo aprovado com sucesso!');
+                window.location.reload();
+            })
+            .catch(error => {
+                alert('Erro ao aprovar processo: ' + error.message);
+            });
+        }
+        
+        function abrirModalRejeicao() {
+            document.getElementById('motivoRejeicao').value = '';
+            document.getElementById('usuarioResponsavel').value = '';
+            new bootstrap.Modal(document.getElementById('modalRejeicao')).show();
+        }
+        
+        function confirmarRejeicao() {
+            const motivoRejeicao = document.getElementById('motivoRejeicao').value;
+            const usuarioResponsavel = document.getElementById('usuarioResponsavel').value;
+            
+            if (!motivoRejeicao.trim()) {
+                alert('Motivo da rejeição é obrigatório');
+                return;
+            }
+            
+            if (!usuarioResponsavel.trim()) {
+                alert('Usuário responsável é obrigatório');
+                return;
+            }
+            
+            const dados = {
+                motivoRejeicao: motivoRejeicao,
+                usuarioResponsavel: usuarioResponsavel
+            };
+            
+            fetch(`/rh/workflow/api/processo/${processoId}/rejeitar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert('Erro ao rejeitar processo: ' + data.erro);
+                    return;
+                }
+                
+                alert('Processo rejeitado com sucesso!');
+                window.location.reload();
+            })
+            .catch(error => {
+                alert('Erro ao rejeitar processo: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>

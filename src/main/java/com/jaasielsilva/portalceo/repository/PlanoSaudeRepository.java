@@ -27,4 +27,7 @@ public interface PlanoSaudeRepository extends JpaRepository<PlanoSaude, Long> {
     List<PlanoSaude> findByFaixaValor(@Param("valorMin") Double valorMin, @Param("valorMax") Double valorMax);
 
     boolean existsByCodigo(String codigo);
+
+    // Busca apenas os planos ativos
+    List<PlanoSaude> findByAtivoTrue();
 }

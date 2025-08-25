@@ -13,6 +13,10 @@ import java.util.Optional;
 @Repository
 public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> {
 
+    boolean existsByCpf(String cpf);
+
+    boolean existsByEmail(String email);
+
     List<Colaborador> findByAtivoTrue();
 
     Optional<Colaborador> findByCpf(String cpf);

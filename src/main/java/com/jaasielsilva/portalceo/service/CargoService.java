@@ -13,6 +13,10 @@ public class CargoService {
     @Autowired
     private CargoRepository cargoRepository;
 
+    public List<Cargo> listarAtivos() {
+    return cargoRepository.findByAtivoTrue();
+}
+
     public List<Cargo> listarTodos() {
         return cargoRepository.findAll();
     }

@@ -170,6 +170,17 @@
               </ul>
             </li>
 
+            <!-- Workflow de Aprovação - Apenas níveis gerenciais -->
+            <li class="has-submenu" th:if="${isGerencial}">
+              <a href="javascript:void(0);" class="submenu-toggle">
+                <i class="fas fa-tasks"></i> Workflow
+              </a>
+              <ul class="submenu">
+                <li><a href="/rh/workflow"><i class="fas fa-clipboard-check"></i> Aprovação de Processos</a></li>
+                <li><a href="/rh/workflow/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+              </ul>
+            </li>
+
             <!-- Ponto e Escalas -->
             <li class="has-submenu">
               <a href="javascript:void(0);" class="submenu-toggle">

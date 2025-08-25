@@ -23,4 +23,6 @@ public class Cargo {
     @Column(nullable = false, unique = true)
     private String nome;
 
+    private boolean ativo;
+
 }

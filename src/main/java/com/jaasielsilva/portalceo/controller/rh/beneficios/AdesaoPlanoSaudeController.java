@@ -37,7 +37,7 @@ public class AdesaoPlanoSaudeController {
     // Listar adesões
     @GetMapping
     public String listar(Model model) {
-        model.addAttribute("adesoes", adesaoService.listarAtivos());
+        model.addAttribute("adesoes", adesaoService.listarTodos());
         model.addAttribute("colaboradores", colaboradorService.listarTodos());
         model.addAttribute("plano_de_saude", planoService.listarTodosAtivos());
 

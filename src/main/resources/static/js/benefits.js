@@ -14,7 +14,7 @@ const benefitConfig = {
         title: 'Plano de Saúde',
         icon: 'fas fa-heartbeat',
         formId: 'form-plano-saude',
-        endpoint: '/rh/beneficios/plano-saude/salvar',
+        endpoint: '/rh/beneficios/adesao',
         requiredFields: ['colaboradorId', 'planoId', 'tipoAdesao', 'dataVigencia']
     },
     'vale-refeicao': {
@@ -100,9 +100,14 @@ function resetModal() {
         card.classList.remove('selected');
     });
     
-    // Esconder todos os formulários específicos
+    // Esconder todos os formulários específicos e reabilitar campos
     document.querySelectorAll('.benefit-form').forEach(form => {
         form.style.display = 'none';
+        // Reabilitar todos os campos para permitir reset correto
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            field.disabled = false;
+        });
     });
     
     // Limpar formulário
@@ -151,8 +156,23 @@ function nextStep() {
 function voltarEtapa() {
     if (currentStep === 2) {
         currentStep = 1;
-        document.getElementById('step-benefit-type').style.display = 'block';
+        
+        // Esconder etapa 2
         document.getElementById('step-form').style.display = 'none';
+        
+        // Esconder todos os formulários e desabilitar campos obrigatórios
+        document.querySelectorAll('.benefit-form').forEach(form => {
+            form.style.display = 'none';
+            const requiredFields = form.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                field.disabled = true;
+            });
+        });
+        
+        // Mostrar etapa 1
+        document.getElementById('step-benefit-type').style.display = 'block';
+        
+        // Esconder botão salvar
         document.getElementById('btnSalvarAdesao').style.display = 'none';
     }
 }
@@ -178,8 +198,26 @@ function showFormStep() {
     document.getElementById('step-benefit-type').style.display = 'none';
     document.getElementById('step-form').style.display = 'block';
     
-    // Mostrar formulário específico
-    document.getElementById(config.formId).style.display = 'block';
+    // Esconder todos os formulários e desabilitar campos obrigatórios
+    const allForms = document.querySelectorAll('.benefit-form');
+    allForms.forEach(form => {
+        form.style.display = 'none';
+        // Desabilitar campos obrigatórios em formulários ocultos
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            field.disabled = true;
+        });
+    });
+    
+    // Mostrar formulário específico e habilitar seus campos
+    const activeForm = document.getElementById(config.formId);
+    activeForm.style.display = 'block';
+    
+    // Habilitar campos obrigatórios no formulário ativo
+    const activeRequiredFields = activeForm.querySelectorAll('[required]');
+    activeRequiredFields.forEach(field => {
+        field.disabled = false;
+    });
     
     // Mostrar botão salvar
     document.getElementById('btnSalvarAdesao').style.display = 'flex';
@@ -333,8 +371,25 @@ function salvarAdesao() {
     const form = document.getElementById('formAdesao');
     const formData = new FormData(form);
     
+    // Converter FormData para objeto JSON
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    
     // Adicionar tipo de benefício
-    formData.append('tipoBeneficio', selectedBenefit);
+    data.tipoBeneficio = selectedBenefit;
+    
+    // Converter valores numéricos
+    if (data.colaboradorId) data.colaboradorId = parseInt(data.colaboradorId);
+    if (data.planoId) data.planoId = parseInt(data.planoId);
+    if (data.quantidadeDependentes) data.quantidadeDependentes = parseInt(data.quantidadeDependentes) || 0;
+    if (data.valorMensal) data.valorMensal = parseFloat(data.valorMensal) || 0;
+    
+    // Processar checkbox
+    data.processarImediatamente = form.querySelector('#processarImediatamente')?.checked || false;
+    
+    console.log('Enviando dados da adesão:', data);
     
     // Mostrar loading
     const btn = document.getElementById('btnSalvarAdesao');
@@ -344,10 +399,11 @@ function salvarAdesao() {
     // Enviar dados
     fetch(config.endpoint, {
         method: 'POST',
-        body: formData,
         headers: {
+            'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
-        }
+        },
+        body: JSON.stringify(data)
     })
     .then(response => {
         if (!response.ok) {

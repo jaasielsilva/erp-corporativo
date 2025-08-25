@@ -111,4 +111,11 @@ public class AdesaoPlanoSaudeService {
     public List<AdesaoPlanoSaude> listarTodosAtivos() {
         return repository.findByStatus(AdesaoPlanoSaude.StatusAdesao.ATIVA);
     }
+
+    /**
+     * Retorna todas as adesões de plano de saúde independente do status
+     */
+    public List<AdesaoPlanoSaude> listarTodos() {
+        return repository.findAll();
+    }
 }

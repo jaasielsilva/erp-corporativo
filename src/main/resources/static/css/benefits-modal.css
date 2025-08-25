@@ -7,17 +7,23 @@
 .benefits-modal {
     max-width: 800px;
     width: 90%;
+    max-height: 90vh;
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     border: none;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Corrigir animação do modal */
 /* Modal centralizado */
 .modal-dialog {
-    margin: auto; /* centraliza horizontalmente e verticalmente */
+    margin: 1.75rem auto; /* centraliza horizontalmente e verticalmente */
     max-width: 800px;
+    max-height: calc(100vh - 3.5rem);
+    display: flex;
+    align-items: center;
 }
 
 /* Remover qualquer deslocamento do transform */
@@ -100,12 +106,15 @@
 .benefits-body {
     padding: 0;
     background: #f8fafc;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(90vh - 120px);
 }
 
 /* Etapas do Modal */
 .benefits-step {
     padding: 30px;
-    min-height: 400px;
+    min-height: auto;
 }
 
 .step-header {
@@ -496,7 +505,17 @@
 @media (max-width: 768px) {
     .benefits-modal {
         width: 95vw;
-        margin: 20px auto;
+        max-height: 95vh;
+        margin: 10px auto;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem auto;
+        max-height: calc(100vh - 1rem);
+    }
+    
+    .benefits-body {
+        max-height: calc(95vh - 100px);
     }
     
     .benefits-grid {

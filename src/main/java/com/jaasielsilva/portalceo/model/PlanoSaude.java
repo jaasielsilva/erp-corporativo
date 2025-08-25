@@ -60,6 +60,19 @@ public class PlanoSaude {
     private LocalDateTime dataCriacao;
     private LocalDateTime dataUltimaEdicao;
 
+    @Column(length = 500)
+    private String cobertura;
+
+    @Column(length = 500)
+    private String redeCredenciada;
+
+    @Column(length = 100)
+    private String carencia;
+
+    public BigDecimal getValorMensal() {
+        return this.valorTitular;
+    }
+
     public enum TipoPlano {
         BASICO,
         INTERMEDIARIO,

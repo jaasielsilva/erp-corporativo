@@ -475,77 +475,7 @@
       `;
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-      const formAdesao = document.getElementById("formAdesao");
-      if (formAdesao) {
-        formAdesao.addEventListener("submit", function (e) {
-          e.preventDefault();
-          // Validações básicas
-          const colaboradorId = document.querySelector('[name="colaboradorId"]').value;
-          const planoId = document.querySelector('[name="planoId"]').value;
-          const dataVigencia = document.querySelector('[name="dataVigencia"]').value;
-          const tipoAdesao = document.querySelector('[name="tipoAdesao"]').value;
-
-          if (!colaboradorId || !planoId || !dataVigencia || !tipoAdesao) {
-            alert('Por favor, preencha todos os campos obrigatórios.');
-            return;
-          }
-
-          const formData = new FormData(this);
-          const valorTotalLimpo = formData.get("valorTotal").replace(/[R$\s.,]/g, '').replace(/([0-9]{2})$/, '.$1');
-
-          const data = {
-            colaboradorId: parseInt(colaboradorId),
-            planoId: parseInt(planoId),
-            quantidadeDependentes: parseInt(formData.get("quantidadeDependentes") || 0),
-            valorTotal: parseFloat(valorTotalLimpo) || 0,
-            dataVigencia: dataVigencia,
-            tipoAdesao: tipoAdesao,
-            observacoes: formData.get("observacoes") || '',
-            processarImediatamente: formData.get("processarImediatamente") != null
-          };
-
-          const submitBtn = this.querySelector('button[type="submit"]');
-          const btnText = submitBtn.querySelector('.btn-text');
-          const btnLoading = submitBtn.querySelector('.btn-loading');
-
-          submitBtn.disabled = true;
-          if (btnText) btnText.style.display = 'none';
-          if (btnLoading) btnLoading.style.display = 'inline';
-
-          fetch("/rh/beneficios/adesao", {
-            method: "POST",
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(data)
-          }).then(resp => resp.json())
-            .then(result => {
-              if (result.success) {
-                alert(`Adesão salva com sucesso!\nID: ${result.adesaoId}\nValor Total: R$ ${formatarMoeda(result.valorTotal)}`);
-                fecharModalAdesao();
-                location.reload();
-              } else {
-                alert('Erro ao salvar adesão: ' + (result.message || 'Erro desconhecido'));
-              }
-            }).catch(err => {
-              console.error('Erro:', err);
-              alert('Erro ao salvar adesão. Detalhes: ' + err.message);
-            }).finally(() => {
-              submitBtn.disabled = false;
-              if (btnText) btnText.style.display = 'inline';
-              if (btnLoading) btnLoading.style.display = 'none';
-            });
-        });
-      }
-
-      const planoSelect = document.getElementById("planoSaudeId");
-      if (planoSelect) planoSelect.addEventListener("change", atualizarValor);
-
-      const qtdDependentes = document.getElementById("quantidadeDependentes");
-      if (qtdDependentes) qtdDependentes.addEventListener("input", atualizarValor);
-    });
+    // O controle do formulário agora é feito pelo benefits.js
 
     function verDetalhesAdesao(adesaoId) {
       if (!adesaoId) { alert('ID da adesão não encontrado'); return; }

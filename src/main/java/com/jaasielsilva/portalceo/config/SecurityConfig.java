@@ -93,6 +93,7 @@ public class SecurityConfig {
                                                                 "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
                                                 .permitAll()
                                                 .requestMatchers("/api/produto/**", "/api/processar").permitAll()
+                                                .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
                                                 .requestMatchers("/api/notifications/**").authenticated()
                                                 .requestMatchers("/error", "/error/**").permitAll()
                                                 .anyRequest().authenticated())

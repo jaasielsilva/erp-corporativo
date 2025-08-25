@@ -1,4 +1,4 @@
-package com.jaasielsilva.portalceo.controller;
+package com.jaasielsilva.portalceo.controller.ajuda;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

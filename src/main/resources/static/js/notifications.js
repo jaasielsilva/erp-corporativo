@@ -207,19 +207,55 @@ $(document).ready(function () {
 
     // Inicializa badges de notificações não lidas
     function initializeBadges() {
-        const systemPromise = $.getJSON('/api/notifications/unread-count');
-        const chatPromise = $.getJSON('/api/notificacoes/count');
+        // Verificar se estamos na página de login
+        if (window.location.pathname === '/login' || window.location.pathname === '/') {
+            return; // Não carregar badges na página de login
+        }
+        
+        // Verificar se existem elementos da interface autenticada
+        if (!$('.notification-badge').length && !$('#notificationBadge').length) {
+            return; // Não há badges para atualizar
+        }
+        
+        const systemPromise = $.getJSON('/api/notifications/unread-count').fail(function(xhr) {
+            if (xhr.status === 401 || xhr.status === 403) {
+                return { unreadCount: 0 }; // Usuário não autenticado
+            }
+            throw xhr;
+        });
+        
+        const chatPromise = $.getJSON('/chat/api/notificacoes/count').fail(function(xhr) {
+            if (xhr.status === 401 || xhr.status === 403) {
+                return 0; // Usuário não autenticado
+            }
+            throw xhr;
+        });
         
         Promise.all([systemPromise, chatPromise]).then(([systemData, chatCount]) => {
             const systemCount = systemData.unreadCount || 0;
             updateBadges(systemCount, chatCount);
         }).catch(error => {
-            console.error('Erro ao inicializar badges:', error);
+            // Só logar erro se não for problema de autenticação
+            if (error.status !== 401 && error.status !== 403) {
+                console.error('Erro ao inicializar badges:', error);
+            }
+            // Em caso de erro, definir contadores como 0
+            updateBadges(0, 0);
         });
     }
     
-    initializeBadges();
+    // Verificar se estamos em uma página que deve ter badges
+    const shouldInitializeBadges = (
+        window.location.pathname !== '/login' && 
+        window.location.pathname !== '/' &&
+        window.location.pathname !== '/chat' && // Chat não precisa de badges de notificação
+        ($('.notification-badge').length > 0 || $('#notificationBadge').length > 0 || $('.notification-trigger').length > 0)
+    );
     
-    // Atualizar badges periodicamente
-    setInterval(initializeBadges, 30000); // A cada 30 segundos
+    if (shouldInitializeBadges) {
+        initializeBadges();
+        
+        // Atualizar badges periodicamente apenas se inicializamos
+        setInterval(initializeBadges, 30000); // A cada 30 segundos
+    }
 });

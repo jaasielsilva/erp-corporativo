@@ -1,0 +1,4 @@
+# Este arquivo representa um som de notificação básico em formato OGG
+# Para um sistema de produção, você deveria usar um arquivo de áudio real
+# Por ora, o JavaScript usará a Web Audio API para gerar um som
+# Este arquivo serve como placeholder para evitar o erro 404

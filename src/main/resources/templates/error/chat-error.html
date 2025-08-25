@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erro no Chat</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div th:replace="components/topbar :: topbar"></div>
+    <div class="container-fluid">
+        <div class="row">
+            <div th:replace="components/sidebar :: sidebar"></div>
+            
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Erro no Chat</h1>
+                </div>
+                
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Ops! Ocorreu um erro ao carregar o chat.</h4>
+                    <p th:text="${errorMessage}">Ocorreu um erro ao carregar o chat. Por favor, tente novamente.</p>
+                    <hr>
+                    <p class="mb-0">Se o problema persistir, entre em contato com o suporte técnico.</p>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="/dashboard" class="btn btn-primary">Voltar para o Dashboard</a>
+                    <a href="/chat" class="btn btn-secondary ms-2">Tentar Novamente</a>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/jquery-3.6.0.min.js"></script>
+</body>
+</html>

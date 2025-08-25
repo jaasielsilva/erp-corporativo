@@ -154,6 +154,4 @@ public interface ContratoLegalRepository extends JpaRepository<ContratoLegal, Lo
     
     Page<ContratoLegal> findByNumeroContratoContainingIgnoreCase(String numeroContrato, Pageable pageable);
     
-    @Query("SELECT c FROM ContratoLegal c WHERE c.dataVencimento BETWEEN :dataInicio AND :dataFim")
-    List<ContratoLegal> findContratosVencendoEm(@Param("dataInicio") LocalDate dataInicio, @Param("dataFim") LocalDate dataFim);
 }

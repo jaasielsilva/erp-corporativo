@@ -485,6 +485,6 @@ public class UsuarioService {
 
     public Usuario findByNome(String nome) {
         return usuarioRepository.findByNome(nome)
-                                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                                .orElse(null);
     }
 }

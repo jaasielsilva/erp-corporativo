@@ -60,6 +60,16 @@ public class Usuario {
     @Column(length = 10)
     private NivelAcesso nivelAcesso;
 
+    // Construtor otimizado para busca simples (sem JOINs)
+    public Usuario(Long id, String nome, String email, byte[] fotoPerfil, boolean online, Status status) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.fotoPerfil = fotoPerfil;
+        this.online = online;
+        this.status = status;
+    }
+
     @Lob
     @Column(name = "foto_perfil", columnDefinition = "LONGBLOB")
     private byte[] fotoPerfil;

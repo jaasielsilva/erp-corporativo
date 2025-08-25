@@ -4,12 +4,12 @@ import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.repository.ContratoLegalRepository;
 import com.jaasielsilva.portalceo.repository.ContratoAditivoRepository;
 import com.jaasielsilva.portalceo.repository.ContratoAlertaRepository;
-import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,34 +19,38 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class ContratoLegalService {
 
-    private final ContratoLegalRepository contratoRepository;
-    private final ContratoAditivoRepository aditivoRepository;
-    private final ContratoAlertaRepository alertaRepository;
-    private final NotificationService notificationService;
+    @Autowired
+    public ContratoLegalRepository contratoRepository;
+    @Autowired
+    public ContratoAditivoRepository aditivoRepository;
+    @Autowired
+    public ContratoAlertaRepository alertaRepository;
+    @Autowired
+    public NotificationService notificationService;
+    
 
     // CRUD Operations
     public ContratoLegal save(ContratoLegal contrato) {
         validarContrato(contrato);
-        
+
         if (contrato.getId() == null) {
             contrato.setDataCriacao(LocalDate.now());
             contrato.setStatus(ContratoLegal.StatusContrato.RASCUNHO);
-            
+
             // Generate contract number if not provided
             if (contrato.getNumeroContrato() == null || contrato.getNumeroContrato().trim().isEmpty()) {
                 contrato.setNumeroContrato(gerarNumeroContrato());
             }
         }
-        
+
         ContratoLegal contratoSalvo = contratoRepository.save(contrato);
-        
+
         // Create automatic alerts for important dates
         criarAlertasAutomaticos(contratoSalvo);
-        
+
         return contratoSalvo;
     }
 
@@ -78,7 +82,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal enviarParaAnalise(Long id, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.isRascunho()) {
             throw new IllegalStateException("Apenas contratos em rascunho podem ser enviados para análise");
@@ -93,7 +97,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal aprovarContrato(Long id, String observacoes, Usuario usuarioAprovacao) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.podeSerAprovado()) {
             throw new IllegalStateException("Contrato não pode ser aprovado no status atual: " + contrato.getStatus());
@@ -108,7 +112,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal assinarContrato(Long id, LocalDate dataAssinatura, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.podeSerAssinado()) {
             throw new IllegalStateException("Contrato não pode ser assinado no status atual: " + contrato.getStatus());
@@ -123,26 +127,26 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal ativarContrato(Long id, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.podeSerAtivado()) {
             throw new IllegalStateException("Contrato não pode ser ativado no status atual: " + contrato.getStatus());
         }
 
         contrato.setStatus(ContratoLegal.StatusContrato.ATIVO);
-        
+
         // Calculate end date and renewal date
         if (contrato.getDuracaoMeses() != null) {
             contrato.setDataFim(contrato.getDataInicio().plusMonths(contrato.getDuracaoMeses()));
             contrato.setDataVencimento(contrato.getDataFim());
-            
+
             if (contrato.getRenovacaoAutomatica()) {
                 contrato.setDataRenovacao(contrato.getDataVencimento().minusDays(contrato.getPrazoNotificacao()));
             }
         }
 
         ContratoLegal contratoAtivado = contratoRepository.save(contrato);
-        
+
         // Create renewal alerts if applicable
         if (contrato.getRenovacaoAutomatica()) {
             criarAlertaRenovacao(contratoAtivado);
@@ -154,7 +158,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal suspenderContrato(Long id, String motivo, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.podeSerSuspenso()) {
             throw new IllegalStateException("Contrato não pode ser suspenso no status atual: " + contrato.getStatus());
@@ -169,7 +173,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal reativarContrato(Long id, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.podeSerReativado()) {
             throw new IllegalStateException("Contrato não pode ser reativado no status atual: " + contrato.getStatus());
@@ -183,10 +187,11 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal rescindirContrato(Long id, String motivo, LocalDate dataRescisao, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.podeSerRescindido()) {
-            throw new IllegalStateException("Contrato não pode ser rescindido no status atual: " + contrato.getStatus());
+            throw new IllegalStateException(
+                    "Contrato não pode ser rescindido no status atual: " + contrato.getStatus());
         }
 
         contrato.setStatus(ContratoLegal.StatusContrato.RESCINDIDO);
@@ -199,7 +204,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoLegal renovarContrato(Long id, Integer novasDuracaoMeses, BigDecimal novoValor, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         if (!contrato.isAtivo()) {
             throw new IllegalStateException("Apenas contratos ativos podem ser renovados");
@@ -238,7 +243,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoAditivo criarAditivo(Long contratoId, ContratoAditivo aditivo, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(contratoId)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         aditivo.setContrato(contrato);
         aditivo.setUsuarioCriacao(usuario);
@@ -251,7 +256,7 @@ public class ContratoLegalService {
     @Transactional
     public ContratoAlerta criarAlerta(Long contratoId, ContratoAlerta alerta, Usuario usuario) {
         ContratoLegal contrato = contratoRepository.findById(contratoId)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
 
         alerta.setContrato(contrato);
         alerta.setUsuarioResponsavel(usuario);
@@ -294,17 +299,16 @@ public class ContratoLegalService {
     @Transactional(readOnly = true)
     public Map<ContratoLegal.StatusContrato, Long> getEstatisticasPorStatus() {
         return List.of(ContratoLegal.StatusContrato.values())
-            .stream()
-            .collect(Collectors.toMap(
-                status -> status,
-                status -> contratoRepository.countByStatus(status)
-            ));
+                .stream()
+                .collect(Collectors.toMap(
+                        status -> status,
+                        status -> contratoRepository.countByStatus(status)));
     }
 
     // Métodos adicionais necessários para o controller
     @Transactional(readOnly = true)
-    public Page<ContratoLegal> buscarContratosComFiltros(String numero, ContratoLegal.StatusContrato status, 
-                                                        ContratoLegal.TipoContrato tipo, Pageable pageable) {
+    public Page<ContratoLegal> buscarContratosComFiltros(String numero, ContratoLegal.StatusContrato status,
+            ContratoLegal.TipoContrato tipo, Pageable pageable) {
         if (numero != null && !numero.trim().isEmpty()) {
             return contratoRepository.findByNumeroContratoContainingIgnoreCase(numero, pageable);
         }
@@ -354,17 +358,17 @@ public class ContratoLegalService {
     @Transactional(readOnly = true)
     public Map<String, Object> obterTimelineContrato(Long contratoId) {
         ContratoLegal contrato = contratoRepository.findById(contratoId)
-            .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
-        
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+
         List<Map<String, Object>> timeline = new java.util.ArrayList<>();
-        
+
         // Adicionar eventos do contrato
         Map<String, Object> criacao = new java.util.HashMap<>();
         criacao.put("data", contrato.getDataCriacao());
         criacao.put("evento", "Contrato criado");
         criacao.put("status", "RASCUNHO");
         timeline.add(criacao);
-        
+
         if (contrato.getDataAssinatura() != null) {
             Map<String, Object> assinatura = new java.util.HashMap<>();
             assinatura.put("data", contrato.getDataAssinatura());
@@ -372,7 +376,7 @@ public class ContratoLegalService {
             assinatura.put("status", "ASSINADO");
             timeline.add(assinatura);
         }
-        
+
         Map<String, Object> resultado = new java.util.HashMap<>();
         resultado.put("eventos", timeline);
         resultado.put("contratoId", contratoId);
@@ -388,11 +392,11 @@ public class ContratoLegalService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, Object> gerarRelatorioContratos(LocalDate dataInicio, LocalDate dataFim, 
-                                                       ContratoLegal.TipoContrato tipo, 
-                                                       ContratoLegal.StatusContrato status) {
+    public Map<String, Object> gerarRelatorioContratos(LocalDate dataInicio, LocalDate dataFim,
+            ContratoLegal.TipoContrato tipo,
+            ContratoLegal.StatusContrato status) {
         Map<String, Object> relatorio = new java.util.HashMap<>();
-        
+
         List<ContratoLegal> contratos;
         if (tipo != null && status != null) {
             contratos = contratoRepository.findByTipoAndStatus(tipo, status);
@@ -403,22 +407,23 @@ public class ContratoLegalService {
         } else {
             contratos = contratoRepository.findAll();
         }
-        
+
         // Filtrar por data se especificado
         if (dataInicio != null && dataFim != null) {
             contratos = contratos.stream()
-                .filter(c -> c.getDataCriacao().toLocalDate().isAfter(dataInicio.minusDays(1)) && 
-                            c.getDataCriacao().toLocalDate().isBefore(dataFim.plusDays(1)))
-                .collect(java.util.stream.Collectors.toList());
+                    .filter(c -> c.getDataCriacao().isAfter(dataInicio.minusDays(1)) &&
+                            c.getDataCriacao().isBefore(dataFim.plusDays(1)))
+                    .collect(Collectors.toList());
+
         }
-        
+
         relatorio.put("contratos", contratos);
         relatorio.put("total", contratos.size());
         relatorio.put("dataInicio", dataInicio);
         relatorio.put("dataFim", dataFim);
         relatorio.put("tipo", tipo);
         relatorio.put("status", status);
-        
+
         return relatorio;
     }
 
@@ -426,10 +431,9 @@ public class ContratoLegalService {
     public Map<ContratoLegal.TipoContrato, Long> getEstatisticasPorTipo() {
         List<Object[]> results = contratoRepository.countByTipo();
         return results.stream()
-            .collect(Collectors.toMap(
-                row -> (ContratoLegal.TipoContrato) row[0],
-                row -> (Long) row[1]
-            ));
+                .collect(Collectors.toMap(
+                        row -> (ContratoLegal.TipoContrato) row[0],
+                        row -> (Long) row[1]));
     }
 
     @Transactional(readOnly = true)
@@ -453,12 +457,12 @@ public class ContratoLegalService {
     @Transactional
     public void processarContratosVencidos() {
         List<ContratoLegal> contratosVencidos = findContratosVencidos();
-        
+
         for (ContratoLegal contrato : contratosVencidos) {
             if (contrato.isAtivo()) {
                 contrato.setStatus(ContratoLegal.StatusContrato.VENCIDO);
                 contratoRepository.save(contrato);
-                
+
                 // Create alert for expired contract
                 criarAlertaVencimento(contrato);
             }
@@ -468,12 +472,12 @@ public class ContratoLegalService {
     @Transactional
     public void processarRenovacoes() {
         List<ContratoLegal> contratosParaRenovacao = findContratosParaRenovacao(30);
-        
+
         for (ContratoLegal contrato : contratosParaRenovacao) {
             if (contrato.getRenovacaoAutomatica() && contrato.precisaNotificacaoRenovacao()) {
                 // Create renewal notification
                 notificationService.enviarNotificacaoRenovacao(contrato);
-                
+
                 // Create renewal alert
                 criarAlertaRenovacao(contrato);
             }
@@ -485,17 +489,17 @@ public class ContratoLegalService {
         if (contrato.getTitulo() == null || contrato.getTitulo().trim().isEmpty()) {
             throw new IllegalArgumentException("Título do contrato é obrigatório");
         }
-        
+
         if (contrato.getDataInicio() == null) {
             throw new IllegalArgumentException("Data de início é obrigatória");
         }
-        
+
         if (contrato.getDataFim() != null && contrato.getDataFim().isBefore(contrato.getDataInicio())) {
             throw new IllegalArgumentException("Data de fim não pode ser anterior à data de início");
         }
-        
-        if (contrato.getNumeroContrato() != null && contrato.getId() == null && 
-            contratoRepository.existsByNumeroContrato(contrato.getNumeroContrato())) {
+
+        if (contrato.getNumeroContrato() != null && contrato.getId() == null &&
+                contratoRepository.existsByNumeroContrato(contrato.getNumeroContrato())) {
             throw new IllegalArgumentException("Já existe um contrato com este número");
         }
     }
@@ -519,7 +523,7 @@ public class ContratoLegalService {
             alerta.setDataVencimento(contrato.getDataVencimento());
             alerta.setAcaoRecomendada("Verificar necessidade de renovação ou rescisão");
             alerta.setUsuarioResponsavel(contrato.getUsuarioResponsavel());
-            
+
             alertaRepository.save(alerta);
         }
     }
@@ -535,7 +539,7 @@ public class ContratoLegalService {
         alerta.setDataVencimento(contrato.getDataVencimento());
         alerta.setAcaoRecomendada("Preparar documentação para renovação");
         alerta.setUsuarioResponsavel(contrato.getUsuarioResponsavel());
-        
+
         alertaRepository.save(alerta);
     }
 
@@ -549,7 +553,7 @@ public class ContratoLegalService {
         alerta.setDataAlerta(LocalDate.now());
         alerta.setAcaoRecomendada("Tomar ação imediata: renovar ou rescindir");
         alerta.setUsuarioResponsavel(contrato.getUsuarioResponsavel());
-        
+
         alertaRepository.save(alerta);
     }
 }

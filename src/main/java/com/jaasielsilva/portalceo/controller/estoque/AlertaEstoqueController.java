@@ -1,4 +1,4 @@
-package com.jaasielsilva.portalceo.controller;
+package com.jaasielsilva.portalceo.controller.estoque;
 
 import com.jaasielsilva.portalceo.service.AlertaEstoqueService;
 import org.springframework.beans.factory.annotation.Autowired;

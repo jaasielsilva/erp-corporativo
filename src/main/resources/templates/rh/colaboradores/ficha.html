@@ -30,12 +30,10 @@
           <a th:href="@{'/rh/colaboradores/editar/' + ${colaborador.id}}" class="btn btn-primary">
             <i class="fas fa-edit"></i> Editar
           </a>
-          <button onclick="abrirModalPromocao()" class="btn btn-warning" th:if="${colaborador.status.name() == 'ATIVO'}">
-            <i class="fas fa-arrow-up"></i> Promover
+          <button onclick="abrirModalPromocao()" class="btn btn-primary" th:if="${colaborador.status.name() == 'ATIVO'}">
+            <i class="fas fa-edit"></i> Promover
           </button>
-          <a th:href="@{'/rh/colaboradores/documentos/' + ${colaborador.id}}" class="btn btn-info">
-            <i class="fas fa-file-alt"></i> Documentos
-          </a>
+         
           <button onclick="imprimirFicha()" class="btn btn-success">
             <i class="fas fa-print"></i> Imprimir
           </button>

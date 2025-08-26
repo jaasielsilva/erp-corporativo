@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.jaasielsilva.portalceo.model.Colaborador;
@@ -23,6 +24,7 @@ public class EmailService {
     /**
      * Envia email simples
      */
+    @Async
     public void enviarEmail(String destinatario, String assunto, String corpo) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -46,6 +48,7 @@ public class EmailService {
     /**
      * Envia email com template HTML
      */
+    @Async
     public void enviarEmailComTemplate(String destinatario, String assunto, String template, Object... parametros) {
         try {
             String corpoFormatado = String.format(template, parametros);
@@ -58,6 +61,7 @@ public class EmailService {
     /**
      * Template para nova solicitação
      */
+    @Async
     public void enviarNotificacaoNovaSolicitacao(String destinatario, String protocolo, String solicitante,
             String colaborador) {
         String template = """
@@ -83,6 +87,7 @@ public class EmailService {
     /**
      * Template para aprovação
      */
+    @Async
     public void enviarNotificacaoAprovacao(String destinatario, String protocolo, String colaborador,
             String aprovador) {
         String template = """
@@ -108,6 +113,7 @@ public class EmailService {
     /**
      * Template para rejeição
      */
+    @Async
     public void enviarNotificacaoRejeicao(String destinatario, String protocolo, String colaborador, String motivo) {
         String template = """
                 <html>
@@ -132,6 +138,7 @@ public class EmailService {
     /**
      * Template para envio de credenciais
      */
+    @Async
     public void enviarCredenciais(String destinatario, String nomeUsuario, String email, String senhaTemporaria) {
         String template = """
                 <html>
@@ -156,6 +163,7 @@ public class EmailService {
                 template, nomeUsuario, email, senhaTemporaria);
     }
 
+    @Async
     public void enviarEmailMarketing(String destinatario, String assunto, String corpo, Long campanhaId) {
         String template = """
                 <html>
@@ -174,6 +182,7 @@ public class EmailService {
     /**
      * Envia email de boas-vindas para um novo colaborador
      */
+    @Async
     public void enviarEmailBoasVindas(Colaborador colaborador) {
         if (colaborador == null || colaborador.getEmail() == null) {
             logger.warn("Colaborador ou email inválido para envio de boas-vindas");

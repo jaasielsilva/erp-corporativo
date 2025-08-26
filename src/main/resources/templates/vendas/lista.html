@@ -12,141 +12,6 @@
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
   
-  <style>
-    .stats-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 15px;
-      padding: 25px;
-      color: white;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      border: none;
-    }
-    
-    .stats-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-    }
-    
-    .stats-card.revenue {
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    }
-    
-    .stats-card.count {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .stats-card.avg {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .stats-card.monthly {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .filter-card {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-      border: 1px solid #e9ecef;
-    }
-    
-    .action-btn {
-      border-radius: 10px;
-      padding: 12px 25px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-    
-    .btn-primary-custom {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    
-    .btn-success-custom {
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-      color: white;
-    }
-    
-    .btn-info-custom {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      color: white;
-    }
-    
-    .btn-warning-custom {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-    }
-    
-    .modern-table {
-      background: white;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-    }
-    
-    .modern-table thead {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    
-    .modern-table th {
-      border: none;
-      padding: 15px;
-      font-weight: 600;
-    }
-    
-    .modern-table td {
-      border: none;
-      padding: 15px;
-      border-bottom: 1px solid #f8f9fa;
-    }
-    
-    .modern-table tbody tr:hover {
-      background-color: #f8f9fa;
-    }
-    
-    .status-badge {
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.85em;
-      font-weight: 600;
-    }
-    
-    .status-finalizada {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .status-pendente {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-    
-    .status-cancelada {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    .chart-container {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-      border: 1px solid #e9ecef;
-    }
-  </style>
 </head>
 
 <body>
@@ -393,9 +258,9 @@
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
-  <script th:src="@{/js/script.js}"></script>
+
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -536,12 +401,105 @@
     }
     
     // Funções de ação
-    function exportarRelatorio() {
-      alert('Funcionalidade de exportação será implementada em breve!');
+    async function exportarRelatorio() {
+      try {
+        const response = await fetch('/vendas/api/relatorios/exportar-excel', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `relatorio-vendas-${new Date().toISOString().split('T')[0]}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          showNotification('Relatório exportado com sucesso!', 'success');
+        } else {
+          throw new Error('Erro ao exportar relatório');
+        }
+      } catch (error) {
+        console.error('Erro ao exportar relatório:', error);
+        showNotification('Erro ao exportar relatório. Tente novamente.', 'error');
+      }
     }
     
-    function gerarRelatorioMensal() {
-      alert('Relatório mensal será implementado em breve!');
+    async function gerarRelatorioMensal() {
+      try {
+        const response = await fetch('/vendas/api/relatorios/mensal', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Criar modal para exibir relatório
+          const modalHtml = `
+            <div class="modal fade" id="relatorioModal" tabindex="-1">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-chart-bar me-2"></i>Relatório Mensal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="card">
+                          <div class="card-body text-center">
+                            <h6>Total de Vendas</h6>
+                            <h3 class="text-primary">${data.totalVendas || 0}</h3>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card">
+                          <div class="card-body text-center">
+                            <h6>Faturamento</h6>
+                            <h3 class="text-success">R$ ${(data.faturamento || 0).toFixed(2)}</h3>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Remover modal anterior se existir
+          const existingModal = document.getElementById('relatorioModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          // Adicionar novo modal
+          document.body.insertAdjacentHTML('beforeend', modalHtml);
+          
+          // Mostrar modal
+          const modal = new bootstrap.Modal(document.getElementById('relatorioModal'));
+          modal.show();
+          
+        } else {
+          throw new Error('Erro ao gerar relatório mensal');
+        }
+      } catch (error) {
+        console.error('Erro ao gerar relatório mensal:', error);
+        showNotification('Erro ao gerar relatório mensal. Tente novamente.', 'error');
+      }
     }
     
     function atualizarDashboard() {
@@ -549,27 +507,21 @@
     }
     
     function verDetalhes(vendaId) {
-      alert('Ver detalhes da venda #' + vendaId + ' - Funcionalidade será implementada!');
+      window.location.href = '/vendas/' + vendaId + '/detalhes';
     }
     
     function editarVenda(vendaId) {
-      alert('Editar venda #' + vendaId + ' - Funcionalidade será implementada!');
+      window.location.href = '/vendas/' + vendaId + '/editar';
     }
   </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- Bootstrap JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- jQuery necessário -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-
-
+  <!-- Scripts de notificações e sidebar -->
   <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 

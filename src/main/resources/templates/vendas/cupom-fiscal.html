@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cupom Fiscal - Painel do CEO</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
+  
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { margin: 0; padding: 0; }
+      .cupom-container { 
+        width: 80mm; 
+        margin: 0 auto; 
+        font-size: 12px;
+        line-height: 1.2;
+      }
+      .app-container { display: block; }
+      .main-content { margin: 0; padding: 0; }
+      .content-area { padding: 0; }
+    }
+    
+    .cupom-container {
+      max-width: 300px;
+      margin: 0 auto;
+      font-family: 'Courier New', monospace;
+      background: white;
+      border: 1px solid #ddd;
+      padding: 15px;
+    }
+    
+    .cupom-header {
+      text-align: center;
+      border-bottom: 1px dashed #333;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .cupom-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+      font-size: 11px;
+    }
+    
+    .cupom-total {
+      border-top: 1px dashed #333;
+      padding-top: 5px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    
+    .cupom-footer {
+      text-align: center;
+      border-top: 1px dashed #333;
+      padding-top: 10px;
+      margin-top: 10px;
+      font-size: 10px;
+    }
+    
+    .print-only { display: none; }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}" class="no-print"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}" class="no-print"></header>
+
+      <section class="content-area">
+        <div class="container-fluid">
+          <!-- Header da Página -->
+          <div class="row mb-4 no-print">
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h1 class="display-6 fw-bold text-dark mb-0">
+                    <i class="fas fa-receipt me-2"></i>Cupom Fiscal
+                  </h1>
+                  <p class="text-muted mb-0" th:text="'Venda #' + ${venda.numeroVenda}">Venda #000001</p>
+                </div>
+                <div>
+                  <button onclick="window.print()" class="btn btn-primary me-2">
+                    <i class="fas fa-print"></i> Imprimir
+                  </button>
+                  <a th:href="@{'/vendas/' + ${venda.id}}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cupom Fiscal -->
+          <div class="row justify-content-center">
+            <div class="col-12">
+              <div class="cupom-container">
+                <!-- Cabeçalho da Empresa -->
+                <div class="cupom-header">
+                  <div style="font-weight: bold; font-size: 14px;">PAINEL DO CEO</div>
+                  <div style="font-size: 10px;">Sistema de Gestão Empresarial</div>
+                  <div style="font-size: 10px;">CNPJ: 00.000.000/0001-00</div>
+                  <div style="font-size: 10px;">Endereço da Empresa</div>
+                  <div style="font-size: 10px;">Cidade - Estado - CEP</div>
+                  <div style="font-size: 10px;">Tel: (11) 0000-0000</div>
+                </div>
+
+                <!-- Informações da Venda -->
+                <div style="margin-bottom: 10px; font-size: 10px;">
+                  <div>CUPOM FISCAL NÃO FISCAL</div>
+                  <div th:text="'Venda: ' + ${venda.numeroVenda}">Venda: 000001</div>
+                  <div th:text="'Data: ' + ${#temporals.format(venda.dataVenda, 'dd/MM/yyyy HH:mm:ss')}">Data: 01/01/2024 10:00:00</div>
+                  <div th:text="'Operador: ' + ${venda.usuario.nome}">Operador: Nome do Usuário</div>
+                  <div th:if="${venda.cliente != null}" th:text="'Cliente: ' + ${venda.cliente.nome}">Cliente: Nome do Cliente</div>
+                  <div th:if="${venda.cliente != null and venda.cliente.cpfCnpj != null}" th:text="'CPF/CNPJ: ' + ${venda.cliente.cpfCnpj}">CPF/CNPJ: 000.000.000-00</div>
+                </div>
+
+                <!-- Linha Separadora -->
+                <div style="border-bottom: 1px dashed #333; margin-bottom: 5px;"></div>
+
+                <!-- Cabeçalho dos Itens -->
+                <div style="font-size: 9px; margin-bottom: 3px;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>ITEM DESCRIÇÃO</span>
+                    <span>QTD x UNIT = TOTAL</span>
+                  </div>
+                </div>
+
+                <!-- Itens da Venda -->
+                <div th:each="item, iterStat : ${venda.itens}" style="margin-bottom: 3px;">
+                  <div style="font-size: 10px;">
+                    <div th:text="${iterStat.count + ' ' + item.produto.nome}">001 Nome do Produto</div>
+                    <div style="display: flex; justify-content: space-between; font-size: 9px;">
+                      <span th:text="${item.produto.codigoInterno ?: item.produto.ean}">COD123</span>
+                      <span th:text="${#numbers.formatDecimal(item.quantidade, 1, 3)} + ' x ' + 
+                                   ${#numbers.formatDecimal(item.precoUnitario, 1, 2)} + ' = ' + 
+                                   ${#numbers.formatDecimal(item.subtotal, 1, 2)}">1,000 x 10,00 = 10,00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Linha Separadora -->
+                <div style="border-bottom: 1px dashed #333; margin: 10px 0 5px 0;"></div>
+
+                <!-- Totais -->
+                <div style="font-size: 10px;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>SUBTOTAL:</span>
+                    <span th:text="'R$ ' + ${#numbers.formatDecimal(venda.subtotal, 1, 2)}">R$ 0,00</span>
+                  </div>
+                  <div th:if="${venda.desconto != null and venda.desconto > 0}" style="display: flex; justify-content: space-between;">
+                    <span>DESCONTO:</span>
+                    <span th:text="'R$ ' + ${#numbers.formatDecimal(venda.desconto, 1, 2)}">R$ 0,00</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-top: 3px;">
+                    <span>TOTAL:</span>
+                    <span th:text="'R$ ' + ${#numbers.formatDecimal(venda.total, 1, 2)}">R$ 0,00</span>
+                  </div>
+                </div>
+
+                <!-- Linha Separadora -->
+                <div style="border-bottom: 1px dashed #333; margin: 5px 0;"></div>
+
+                <!-- Forma de Pagamento -->
+                <div style="font-size: 10px;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span th:text="${venda.formaPagamento}">DINHEIRO</span>
+                    <span th:text="'R$ ' + ${#numbers.formatDecimal(venda.valorPago ?: venda.total, 1, 2)}">R$ 0,00</span>
+                  </div>
+                  <div th:if="${venda.parcelas != null and venda.parcelas > 1}" style="font-size: 9px;">
+                    <span th:text="'Parcelado em ' + ${venda.parcelas} + 'x'">Parcelado em 2x</span>
+                  </div>
+                  <div th:if="${venda.troco != null and venda.troco > 0}" style="display: flex; justify-content: space-between;">
+                    <span>TROCO:</span>
+                    <span th:text="'R$ ' + ${#numbers.formatDecimal(venda.troco, 1, 2)}">R$ 0,00</span>
+                  </div>
+                </div>
+
+                <!-- Observações -->
+                <div th:if="${venda.observacoes != null and !venda.observacoes.isEmpty()}" style="margin-top: 10px; font-size: 9px;">
+                  <div style="border-bottom: 1px dashed #333; margin-bottom: 5px;"></div>
+                  <div>OBSERVAÇÕES:</div>
+                  <div th:text="${venda.observacoes}">Observações da venda</div>
+                </div>
+
+                <!-- Rodapé -->
+                <div class="cupom-footer">
+                  <div style="margin-bottom: 5px;">*** CUPOM NÃO FISCAL ***</div>
+                  <div style="margin-bottom: 3px;">Obrigado pela preferência!</div>
+                  <div style="margin-bottom: 3px;">Volte sempre!</div>
+                  <div style="margin-bottom: 10px;">www.paineldoceo.com.br</div>
+                  
+                  <!-- QR Code (se disponível) -->
+                  <div th:if="${qrCodeUrl != null}" style="text-align: center; margin: 10px 0;">
+                    <div style="font-size: 8px; margin-bottom: 5px;">Consulte esta venda online:</div>
+                    <img th:src="${qrCodeUrl}" alt="QR Code" style="width: 80px; height: 80px;">
+                  </div>
+                  
+                  <div style="font-size: 8px; margin-top: 10px;">
+                    <div th:text="'Emitido em: ' + ${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm:ss')}">Emitido em: 01/01/2024 10:00:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ações Adicionais -->
+          <div class="row mt-4 no-print">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header bg-info text-white">
+                  <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Ações Adicionais</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-3 mb-2">
+                      <button onclick="window.print()" class="btn btn-primary w-100">
+                        <i class="fas fa-print"></i> Imprimir Cupom
+                      </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <button onclick="enviarPorEmail()" class="btn btn-success w-100">
+                        <i class="fas fa-envelope"></i> Enviar por Email
+                      </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <button onclick="compartilharWhatsApp()" class="btn btn-success w-100">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                      </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <a th:href="@{'/vendas/' + ${venda.id} + '/pdf'}" class="btn btn-danger w-100" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Gerar PDF
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}" class="no-print"></footer>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/notifications.js}" defer></script>
+  <script src="/js/sidebar.js" defer></script>
+
+  <script>
+    // Função para enviar cupom por email
+    function enviarPorEmail() {
+      const vendaId = [[${venda.id}]];
+      const clienteEmail = [[${venda.cliente?.email}]];
+      
+      if (!clienteEmail) {
+        const email = prompt('Digite o email para envio do cupom:');
+        if (!email) return;
+        
+        // Aqui você faria a requisição para enviar o email
+        fetch(`/vendas/${vendaId}/cupom/email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: email })
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('Cupom enviado por email com sucesso!');
+          } else {
+            alert('Erro ao enviar email. Tente novamente.');
+          }
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+          alert('Erro ao enviar email. Tente novamente.');
+        });
+      } else {
+        // Cliente tem email cadastrado
+        if (confirm(`Enviar cupom para ${clienteEmail}?`)) {
+          fetch(`/vendas/${vendaId}/cupom/email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: clienteEmail })
+          })
+          .then(response => {
+            if (response.ok) {
+              alert('Cupom enviado por email com sucesso!');
+            } else {
+              alert('Erro ao enviar email. Tente novamente.');
+            }
+          })
+          .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao enviar email. Tente novamente.');
+          });
+        }
+      }
+    }
+
+    // Função para compartilhar via WhatsApp
+    function compartilharWhatsApp() {
+      const vendaNumero = [[${venda.numeroVenda}]];
+      const vendaTotal = [[${venda.total}]];
+      const dataVenda = [[${#temporals.format(venda.dataVenda, 'dd/MM/yyyy')}]];
+      
+      const mensagem = `Cupom Fiscal - Venda #${vendaNumero}\n` +
+                      `Data: ${dataVenda}\n` +
+                      `Total: R$ ${vendaTotal.toFixed(2).replace('.', ',')}\n` +
+                      `\nObrigado pela preferência!\n` +
+                      `Painel do CEO - Sistema de Gestão`;
+      
+      const telefone = [[${venda.cliente?.celular ?: venda.cliente?.telefone}]];
+      
+      if (telefone) {
+        const whatsappUrl = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(mensagem)}`;
+        window.open(whatsappUrl, '_blank');
+      } else {
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+        window.open(whatsappUrl, '_blank');
+      }
+    }
+
+    // Auto-print quando a página carrega (opcional)
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('autoprint') === 'true') {
+        setTimeout(() => {
+          window.print();
+        }, 1000);
+      }
+    });
+
+    // Configurações de impressão
+    window.addEventListener('beforeprint', function() {
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+    });
+
+    window.addEventListener('afterprint', function() {
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+    });
+  </script>
+</body>
+
+</html>

@@ -102,7 +102,17 @@
           </ul>
         </li>
 
-        <li th:if="${podeAcessarVendas}"><a href="/vendas"><i class="fas fa-cash-register"></i> Vendas</a></li>
+        <li class="has-submenu" th:if="${podeAcessarVendas}">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-cash-register"></i> Vendas
+          </a>
+          <ul class="submenu">
+            <li><a href="/vendas"><i class="fas fa-list"></i> Lista de Vendas</a></li>
+            <li><a href="/vendas/pdv"><i class="fas fa-shopping-cart"></i> PDV</a></li>
+            <li><a href="/vendas/caixa"><i class="fas fa-cash-register"></i> Caixa</a></li>
+            <li><a href="/vendas/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+          </ul>
+        </li>
         <li th:if="${podeAcessarVendas}"><a href="/contratos"><i class="fas fa-file-contract"></i> Contratos</a></li>
         <li th:if="${podeAcessarCompras}"><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
 

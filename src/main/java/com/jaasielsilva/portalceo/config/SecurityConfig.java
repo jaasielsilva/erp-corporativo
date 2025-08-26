@@ -94,6 +94,7 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .requestMatchers("/api/produto/**", "/api/processar").permitAll()
                                                 .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
+                                                .requestMatchers("/api/chat/**").authenticated()
                                                 .requestMatchers("/api/notifications/**").authenticated()
                                                 .requestMatchers("/error", "/error/**").permitAll()
                                                 .anyRequest().authenticated())

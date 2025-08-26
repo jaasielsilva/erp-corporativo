@@ -1,4 +1,4 @@
-package com.jaasielsilva.portalceo.controller;
+package com.jaasielsilva.portalceo.controller.cliente;
 
 import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.service.ClienteService;

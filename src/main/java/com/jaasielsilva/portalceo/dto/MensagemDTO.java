@@ -1,14 +1,18 @@
 package com.jaasielsilva.portalceo.dto;
 
 import com.jaasielsilva.portalceo.model.Mensagem;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+
 public class MensagemDTO {
     
     private Long id;
@@ -30,23 +34,24 @@ public class MensagemDTO {
     public static MensagemDTO fromEntity(Mensagem mensagem, Long usuarioLogadoId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         
-        return MensagemDTO.builder()
-                .id(mensagem.getId())
-                .remetenteId(mensagem.getRemetente().getId())
-                .remetenteNome(mensagem.getRemetente().getNome())
-                .remetenteFoto(mensagem.getRemetente().getFotoPerfil() != null ? 
-                              "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(mensagem.getRemetente().getFotoPerfil()) : 
-                              null)
-                .destinatarioId(mensagem.getDestinatario().getId())
-                .destinatarioNome(mensagem.getDestinatario().getNome())
-                .conversaId(mensagem.getConversa().getId())
-                .conteudo(mensagem.getConteudo())
-                .dataEnvio(mensagem.getDataEnvio())
-                .dataEnvioFormatada(mensagem.getDataEnvio().format(formatter))
-                .lida(mensagem.isLida())
-                .dataLeitura(mensagem.getDataLeitura())
-                .isMinhaMensagem(mensagem.getRemetente().getId().equals(usuarioLogadoId))
-                .build();
+        MensagemDTO dto = new MensagemDTO();
+        dto.setId(mensagem.getId());
+        dto.setRemetenteId(mensagem.getRemetente().getId());
+        dto.setRemetenteNome(mensagem.getRemetente().getNome());
+        dto.setRemetenteFoto(mensagem.getRemetente().getFotoPerfil() != null ? "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(mensagem.getRemetente().getFotoPerfil()) : null);
+        // Mensagens no chat são enviadas para a conversa, não para destinatário específico
+        dto.setDestinatarioId(null);
+        dto.setDestinatarioNome(null);
+        dto.setConversaId(mensagem.getConversa().getId());
+        dto.setConteudo(mensagem.getConteudo());
+        dto.setDataEnvio(mensagem.getEnviadaEm());
+        dto.setDataEnvioFormatada(mensagem.getEnviadaEm().format(formatter));
+        dto.setLida(mensagem.isLida());
+        dto.setDataLeitura(mensagem.getLidaEm());
+        dto.setTipoMensagem(mensagem.getTipo().name());
+        dto.setMinhaMensagem(usuarioLogadoId != null && mensagem.getRemetente().getId().equals(usuarioLogadoId));
+        
+        return dto;
     }
     
     // Sobrecarga do método fromEntity sem usuarioLogadoId

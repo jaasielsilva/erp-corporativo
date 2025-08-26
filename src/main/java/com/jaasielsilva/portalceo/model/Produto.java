@@ -1,6 +1,8 @@
 package com.jaasielsilva.portalceo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ public class Produto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     private String nome;
 
     @Column(unique = true)
@@ -24,6 +27,8 @@ public class Produto {
 
     private String descricao;
 
+    @NotNull
+    @Column(precision = 10, scale = 2)
     private BigDecimal preco;
 
     private Integer estoque;
@@ -44,10 +49,12 @@ public class Produto {
 
     private String imagemUrl;
 
-    private boolean ativo;
+    private boolean ativo = true;
 
+    @Column(name = "data_cadastro")
     private LocalDateTime dataCadastro;
 
+    @Column(name = "data_ultima_compra")
     private LocalDateTime dataUltimaCompra;
 
     @ManyToOne
@@ -60,7 +67,15 @@ public class Produto {
 
     @PrePersist
     public void prePersist() {
-        this.dataCadastro = LocalDateTime.now();
-        this.ativo = true;
+        if (dataCadastro == null) {
+            dataCadastro = LocalDateTime.now();
+        }
+        if (ativo) {
+            ativo = true;
+        }
+    }
+
+    public boolean precisaRepor() {
+        return estoque != null && minimoEstoque != null && estoque <= minimoEstoque;
     }
 }

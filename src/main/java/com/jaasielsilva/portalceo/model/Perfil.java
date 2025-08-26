@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,5 +29,6 @@ public class Perfil {
     @ManyToMany(mappedBy = "perfis")
     @ToString.Exclude    // evita recursão no toString
     @EqualsAndHashCode.Exclude  // evita recursão em equals/hashCode
+    @JsonIgnore  // evita referência circular no JSON
     private Set<Usuario> usuarios;
 }

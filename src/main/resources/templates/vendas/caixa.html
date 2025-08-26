@@ -7,109 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-  
-  <style>
-    .caixa-container {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
-    }
-    
-    .caixa-card {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-    
-    .caixa-header {
-      background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-    
-    .status-card {
-      padding: 25px;
-      text-align: center;
-    }
-    
-    .status-aberto {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-    }
-    
-    .status-fechado {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: white;
-    }
-    
-    .resumo-card {
-      padding: 20px;
-    }
-    
-    .resumo-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .resumo-item:last-child {
-      border-bottom: none;
-    }
-    
-    .resumo-label {
-      font-weight: 600;
-      color: #374151;
-    }
-    
-    .resumo-valor {
-      font-weight: 700;
-      font-size: 18px;
-      color: #059669;
-    }
-    
-    .btn-caixa {
-      border-radius: 15px;
-      padding: 15px 30px;
-      font-weight: 600;
-      font-size: 16px;
-      border: none;
-      transition: all 0.3s;
-    }
-    
-    .btn-caixa:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-    
-    .btn-abrir {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-    }
-    
-    .btn-fechar {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: white;
-    }
-    
-    .valor-input {
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 12px 15px;
-      font-size: 18px;
-      font-weight: 600;
-      text-align: center;
-    }
-    
-    .valor-input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-  </style>
+  <link href="/css/caixa.css" rel="stylesheet" />
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
 </head>
 
 <body>
@@ -145,7 +46,7 @@
                 <i class="fas fa-times me-2"></i>Fechar Caixa
               </button>
             </div>
-            
+
             <div th:if="${caixaAberto == null}" class="status-card status-fechado">
               <h3><i class="fas fa-times-circle me-2"></i>Caixa Fechado</h3>
               <p class="mb-4">Abra o caixa para iniciar as vendas</p>
@@ -167,7 +68,8 @@
             <div class="resumo-card" th:if="${resumoDia != null}">
               <div class="resumo-item">
                 <span class="resumo-label">Total de Vendas</span>
-                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalVendas, 1, 2)}"></span>
+                <span class="resumo-valor"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalVendas, 1, 2)}"></span>
               </div>
               <div class="resumo-item">
                 <span class="resumo-label">Quantidade de Vendas</span>
@@ -175,15 +77,18 @@
               </div>
               <div class="resumo-item">
                 <span class="resumo-label">Ticket Médio</span>
-                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.ticketMedio, 1, 2)}"></span>
+                <span class="resumo-valor"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.ticketMedio, 1, 2)}"></span>
               </div>
               <div class="resumo-item">
                 <span class="resumo-label">Dinheiro</span>
-                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalDinheiro, 1, 2)}"></span>
+                <span class="resumo-valor"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalDinheiro, 1, 2)}"></span>
               </div>
               <div class="resumo-item">
                 <span class="resumo-label">Cartão</span>
-                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalCartao, 1, 2)}"></span>
+                <span class="resumo-valor"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalCartao, 1, 2)}"></span>
               </div>
               <div class="resumo-item">
                 <span class="resumo-label">PIX</span>
@@ -253,8 +158,8 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="valorInicial" class="form-label">Valor Inicial (R$)</label>
-            <input type="number" class="form-control valor-input" id="valorInicial" 
-                   placeholder="0,00" step="0.01" min="0" required>
+            <input type="number" class="form-control valor-input" id="valorInicial" placeholder="0,00" step="0.01"
+              min="0" required>
           </div>
           <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
@@ -282,8 +187,8 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="observacoes" class="form-label">Observações (opcional)</label>
-            <textarea class="form-control" id="observacoes" rows="3" 
-                      placeholder="Digite observações sobre o fechamento do caixa..."></textarea>
+            <textarea class="form-control" id="observacoes" rows="3"
+              placeholder="Digite observações sobre o fechamento do caixa..."></textarea>
           </div>
           <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -298,11 +203,20 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     function mostrarModalAbrir() {
-      const modal = new bootstrap.Modal(document.getElementById('modalAbrirCaixa'));
-      modal.show();
+      console.log('Função mostrarModalAbrir chamada');
+      try {
+        const modalElement = document.getElementById('modalAbrirCaixa');
+        console.log('Elemento modal encontrado:', modalElement);
+        const modal = new bootstrap.Modal(modalElement);
+        console.log('Modal Bootstrap criado:', modal);
+        modal.show();
+        console.log('Modal.show() chamado');
+      } catch (error) {
+        console.error('Erro ao abrir modal:', error);
+        alert('Erro ao abrir modal: ' + error.message);
+      }
     }
 
     function mostrarModalFechar() {
@@ -312,7 +226,7 @@
 
     async function abrirCaixa() {
       const valorInicial = document.getElementById('valorInicial').value;
-      
+
       if (!valorInicial || parseFloat(valorInicial) < 0) {
         alert('Digite um valor inicial válido!');
         return;
@@ -371,6 +285,11 @@
       }
     }
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script th:src="@{/js/notifications.js}" defer></script>
+  <script src="/js/sidebar.js" defer></script>
 </body>
 
 </html>

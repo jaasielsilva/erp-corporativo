@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios Avançados - Painel do CEO</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="container-fluid">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h1 class="display-6 fw-bold text-dark mb-0">📊 Relatórios Avançados de Vendas</h1>
+              <p class="text-muted">Análises detalhadas para decisões estratégicas</p>
+            </div>
+          </div>
+
+          <!-- Filtros -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="filter-card p-3 border rounded bg-light">
+                <h5><i class="fas fa-filter"></i> Filtros Avançados</h5>
+                <form method="get" action="#" class="row g-3 mt-2">
+                  <div class="col-md-3">
+                    <label class="form-label">Período</label>
+                    <input type="month" class="form-control" name="mesAno">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Cliente</label>
+                    <input type="text" class="form-control" name="cliente" placeholder="Nome ou CPF/CNPJ">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Forma de Pagamento</label>
+                    <select class="form-select" name="formaPagamento">
+                      <option value="">Todas</option>
+                      <option th:each="fp : ${formasPagamento}" th:value="${fp.id}" th:text="${fp.descricao}"></option>
+                    </select>
+                  </div>
+                  <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                      <i class="fas fa-search"></i> Aplicar Filtros
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráficos e Relatórios -->
+          <div class="row">
+            <div class="col-lg-8 mb-3">
+              <div class="card p-3 shadow-sm">
+                <h5><i class="fas fa-chart-line"></i> Faturamento Mensal</h5>
+                <canvas id="faturamentoMensalChart" height="120"></canvas>
+              </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+              <div class="card p-3 shadow-sm">
+                <h5><i class="fas fa-chart-pie"></i> Distribuição por Forma de Pagamento</h5>
+                <canvas id="formasPagamentoChart" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-12">
+              <div class="card p-3 shadow-sm">
+                <h5><i class="fas fa-table"></i> Top Clientes</h5>
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Cliente</th>
+                        <th>CPF/CNPJ</th>
+                        <th>Qtd. Compras</th>
+                        <th>Valor Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="c : ${topClientes}">
+                        <td th:text="${c.nome}">Cliente X</td>
+                        <td th:text="${c.cpfCnpj}">000.000.000-00</td>
+                        <td th:text="${c.qtdCompras}">0</td>
+                        <td th:text="${#numbers.formatCurrency(c.total)}">R$ 0,00</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Exemplo gráfico de faturamento mensal
+      new Chart(document.getElementById("faturamentoMensalChart"), {
+        type: 'bar',
+        data: {
+          labels: ['Jan','Fev','Mar','Abr','Mai','Jun'],
+          datasets: [{ label: 'Faturamento', data: [1200, 900, 1500, 2000, 1800, 2200], backgroundColor: '#4e73df' }]
+        }
+      });
+
+      // Exemplo gráfico de formas de pagamento
+      new Chart(document.getElementById("formasPagamentoChart"), {
+        type: 'doughnut',
+        data: {
+          labels: ['Pix','Cartão','Boleto'],
+          datasets: [{ data: [40, 35, 25], backgroundColor: ['#1cc88a','#36b9cc','#f6c23e'] }]
+        }
+      });
+    });
+  </script>
+</body>
+</html>

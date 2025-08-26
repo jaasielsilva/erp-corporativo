@@ -1,0 +1,101 @@
+
+    .caixa-container {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .caixa-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    
+    .caixa-header {
+      background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .status-card {
+      padding: 25px;
+      text-align: center;
+    }
+    
+    .status-aberto {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    
+    .status-fechado {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    
+    .resumo-card {
+      padding: 20px;
+    }
+    
+    .resumo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .resumo-item:last-child {
+      border-bottom: none;
+    }
+    
+    .resumo-label {
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .resumo-valor {
+      font-weight: 700;
+      font-size: 18px;
+      color: #059669;
+    }
+    
+    .btn-caixa {
+      border-radius: 15px;
+      padding: 15px 30px;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      transition: all 0.3s;
+    }
+    
+    .btn-caixa:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .btn-abrir {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    
+    .btn-fechar {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    
+    .valor-input {
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px 15px;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .valor-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }

@@ -2,14 +2,17 @@ package com.jaasielsilva.portalceo.dto;
 
 import com.jaasielsilva.portalceo.model.Conversa;
 import com.jaasielsilva.portalceo.model.Usuario;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class ConversaDTO {
     
     private Long id;
@@ -23,34 +26,42 @@ public class ConversaDTO {
     private long mensagensNaoLidas;
     private boolean ativa;
     
-    // Construtor a partir da entidade Conversa
     public static ConversaDTO fromEntity(Conversa conversa, Usuario usuarioLogado) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        Usuario outroUsuario = conversa.getOutroParticipante(usuarioLogado);
-        
-        String ultimaMensagemTexto = "";
-        if (conversa.getUltimaMensagem() != null) {
-            String conteudo = conversa.getUltimaMensagem().getConteudo();
-            ultimaMensagemTexto = conteudo.length() > 50 ? 
-                                 conteudo.substring(0, 50) + "..." : 
-                                 conteudo;
-        }
-        
-        return ConversaDTO.builder()
-                .id(conversa.getId())
-                .outroUsuarioId(outroUsuario.getId())
-                .outroUsuarioNome(outroUsuario.getNome())
-                .outroUsuarioFoto(outroUsuario.getFotoPerfil() != null ? 
-                                 "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(outroUsuario.getFotoPerfil()) : 
-                                 null)
-                .outroUsuarioOnline(outroUsuario.isOnline())
-                .ultimaMensagem(ultimaMensagemTexto)
-                .ultimaAtividade(conversa.getUltimaAtividade())
-                .ultimaAtividadeFormatada(conversa.getUltimaAtividade() != null ? 
-                                         conversa.getUltimaAtividade().format(formatter) : 
-                                         "")
-                .mensagensNaoLidas(conversa.contarMensagensNaoLidas(usuarioLogado))
-                .ativa(conversa.isAtiva())
-                .build();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    // Para conversas individuais, pegar o outro participante
+    Usuario outroUsuario = null;
+    if (conversa.isIndividual()) {
+        // pegar o outro participante ativo que não seja o usuário logado
+        outroUsuario = conversa.getParticipantes().stream()
+                .map(p -> p.getUsuario())
+                .filter(u -> !u.getId().equals(usuarioLogado.getId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    // Última mensagem
+    String ultimaMensagemTexto = "";
+    if (conversa.getUltimaMensagem() != null) {
+        String conteudo = conversa.getUltimaMensagem().getConteudo();
+        ultimaMensagemTexto = conteudo.length() > 50 ? conteudo.substring(0, 50) + "..." : conteudo;
+    }
+
+    // Contar mensagens não lidas
+    long mensagensNaoLidas = conversa.contarMensagensNaoLidas(usuarioLogado);
+
+    // Montar DTO
+    return new ConversaDTO(
+            conversa.getId(),
+            outroUsuario != null ? outroUsuario.getId() : null,
+            outroUsuario != null ? outroUsuario.getNome() : null,
+            outroUsuario != null && outroUsuario.getFotoPerfil() != null ? "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(outroUsuario.getFotoPerfil()) : null,
+            outroUsuario != null && outroUsuario.isOnline(), // se tiver campo online
+            ultimaMensagemTexto,
+            conversa.getUltimaAtividade(),
+            conversa.getUltimaAtividade() != null ? conversa.getUltimaAtividade().format(formatter) : null,
+            mensagensNaoLidas,
+            conversa.getAtiva()
+    );
     }
 }

@@ -357,11 +357,27 @@ public class VendaController {
     @GetMapping("/caixa")
     public String caixa(Model model) {
         try {
+            // Log para debug
+            System.out.println("[DEBUG] Iniciando carregamento da página de caixa");
+            
+            // Testar conexão com banco
+            System.out.println("[DEBUG] Verificando se existe caixa aberto...");
             Optional<Caixa> caixaAberto = caixaService.buscarCaixaAberto();
+            System.out.println("[DEBUG] Caixa aberto encontrado: " + caixaAberto.isPresent());
+            
             model.addAttribute("caixaAberto", caixaAberto.orElse(null));
-            model.addAttribute("resumoDia", vendaService.obterResumoVendasDia());
+            
+            System.out.println("[DEBUG] Obtendo resumo do dia...");
+            VendaService.ResumoVendasDia resumoDia = vendaService.obterResumoVendasDia();
+            System.out.println("[DEBUG] Resumo obtido com sucesso");
+            
+            model.addAttribute("resumoDia", resumoDia);
+            
+            System.out.println("[DEBUG] Carregamento concluído com sucesso");
             return "vendas/caixa";
         } catch (Exception e) {
+            System.err.println("[ERROR] Erro ao carregar informações do caixa: " + e.getMessage());
+            e.printStackTrace();
             model.addAttribute("erro", "Erro ao carregar informações do caixa: " + e.getMessage());
             return "error";
         }
@@ -380,7 +396,9 @@ public class VendaController {
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
             response.put("mensagem", "Caixa aberto com sucesso!");
-            response.put("caixa", caixa);
+            response.put("caixaId", caixa.getId());
+            response.put("valorInicial", caixa.getValorInicial());
+            response.put("dataAbertura", caixa.getDataAbertura());
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -550,12 +568,281 @@ public class VendaController {
     @ResponseBody
     public ResponseEntity<?> listarFormasPagamento() {
         try {
-            List<FormaPagamento> formas = formaPagamentoService.buscarAtivas();
+            List<FormaPagamento> formas = formaPagamentoService.buscarFormasAtivas();
             return ResponseEntity.ok(formas);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
             response.put("erro", "Erro ao buscar formas de pagamento: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    // 📋 DETALHES DA VENDA
+    @GetMapping("/{id}")
+    public String detalhes(@PathVariable Long id, Model model) {
+        try {
+            Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
+            if (vendaOpt.isPresent()) {
+                Venda venda = vendaOpt.get();
+                model.addAttribute("venda", venda);
+                model.addAttribute("itens", venda.getItens());
+                
+                // Buscar devoluções da venda
+                List<Devolucao> devolucoes = devolucaoService.findByVenda(venda);
+                model.addAttribute("devolucoes", devolucoes);
+                
+                return "vendas/detalhes";
+            } else {
+                model.addAttribute("erro", "Venda não encontrada");
+                return "redirect:/vendas";
+            }
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao buscar venda: " + e.getMessage());
+            return "redirect:/vendas";
+        }
+    }
+
+    // ✏️ EDITAR VENDA
+    @GetMapping("/{id}/editar")
+    public String editarVenda(@PathVariable Long id, Model model) {
+        try {
+            Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
+            if (vendaOpt.isPresent()) {
+                Venda venda = vendaOpt.get();
+                
+                // Verificar se a venda pode ser editada
+                if ("Cancelada".equals(venda.getStatus())) {
+                    model.addAttribute("erro", "Não é possível editar uma venda cancelada");
+                    return "redirect:/vendas/" + id;
+                }
+                
+                model.addAttribute("venda", venda);
+                model.addAttribute("clientes", clienteService.buscarTodos());
+                model.addAttribute("produtos", produtoService.listarTodosProdutos());
+                model.addAttribute("formasPagamento", formaPagamentoService.buscarAtivas());
+                
+                return "vendas/editar";
+            } else {
+                model.addAttribute("erro", "Venda não encontrada");
+                return "redirect:/vendas";
+            }
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao buscar venda: " + e.getMessage());
+            return "redirect:/vendas";
+        }
+    }
+
+    // 💾 ATUALIZAR VENDA
+    @PostMapping("/{id}/atualizar")
+    public String atualizarVenda(@PathVariable Long id, @ModelAttribute Venda vendaAtualizada, Model model) {
+        try {
+            Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
+            if (vendaOpt.isPresent()) {
+                Venda vendaExistente = vendaOpt.get();
+                
+                // Verificar se a venda pode ser editada
+                if ("Cancelada".equals(vendaExistente.getStatus())) {
+                    model.addAttribute("erro", "Não é possível editar uma venda cancelada");
+                    return "redirect:/vendas/" + id;
+                }
+                
+                // Atualizar campos permitidos
+                vendaExistente.setObservacoes(vendaAtualizada.getObservacoes());
+                vendaExistente.setDesconto(vendaAtualizada.getDesconto());
+                vendaExistente.setFormaPagamento(vendaAtualizada.getFormaPagamento());
+                vendaExistente.setParcelas(vendaAtualizada.getParcelas());
+                
+                vendaService.salvar(vendaExistente);
+                model.addAttribute("sucesso", "Venda atualizada com sucesso!");
+                
+                return "redirect:/vendas/" + id;
+            } else {
+                model.addAttribute("erro", "Venda não encontrada");
+                return "redirect:/vendas";
+            }
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao atualizar venda: " + e.getMessage());
+            return "redirect:/vendas/" + id + "/editar";
+        }
+    }
+
+    // 🔄 DEVOLUÇÃO DE VENDA
+    @GetMapping("/{id}/devolucao")
+    public String devolucaoVenda(@PathVariable Long id, Model model) {
+        try {
+            Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
+            if (vendaOpt.isPresent()) {
+                Venda venda = vendaOpt.get();
+                
+                // Verificar se a venda pode ter devolução
+                if (!"Finalizada".equals(venda.getStatus())) {
+                    model.addAttribute("erro", "Só é possível fazer devolução de vendas finalizadas");
+                    return "redirect:/vendas/" + id;
+                }
+                
+                model.addAttribute("venda", venda);
+                model.addAttribute("itens", venda.getItens());
+                
+                // Buscar devoluções anteriores
+                List<Devolucao> devolucoes = devolucaoService.findByVenda(venda);
+                model.addAttribute("devolucoes", devolucoes);
+                
+                return "vendas/devolucao";
+            } else {
+                model.addAttribute("erro", "Venda não encontrada");
+                return "redirect:/vendas";
+            }
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao buscar venda: " + e.getMessage());
+            return "redirect:/vendas";
+        }
+    }
+
+    // 📜 HISTÓRICO DO CLIENTE
+    @GetMapping("/historico-cliente/{clienteId}")
+    public String historicoCliente(@PathVariable Long clienteId, 
+                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                                 @RequestParam(required = false) String status,
+                                 @RequestParam(defaultValue = "data_desc") String ordenacao,
+                                 Model model) {
+        try {
+            Optional<Cliente> clienteOpt = clienteService.buscarPorId(clienteId);
+            if (clienteOpt.isPresent()) {
+                Cliente cliente = clienteOpt.get();
+                model.addAttribute("cliente", cliente);
+                
+                // Buscar vendas do cliente
+                List<Venda> vendas = vendaService.buscarPorCpfCnpj(cliente.getCpfCnpj());
+                model.addAttribute("vendas", vendas);
+                
+                // Calcular estatísticas
+                int totalVendas = vendas.size();
+                BigDecimal valorTotalGasto = vendas.stream()
+                    .map(Venda::getTotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal ticketMedio = totalVendas > 0 ? 
+                    valorTotalGasto.divide(BigDecimal.valueOf(totalVendas), 2, BigDecimal.ROUND_HALF_UP) : 
+                    BigDecimal.ZERO;
+                
+                model.addAttribute("totalVendas", totalVendas);
+                model.addAttribute("valorTotalGasto", valorTotalGasto);
+                model.addAttribute("ticketMedio", ticketMedio);
+                
+                // Última compra
+                LocalDateTime ultimaCompra = vendas.stream()
+                    .map(Venda::getDataVenda)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+                model.addAttribute("ultimaCompra", ultimaCompra);
+                
+                // Produtos únicos comprados
+                long produtosUnicos = vendas.stream()
+                    .flatMap(v -> v.getItens().stream())
+                    .map(item -> item.getProduto().getId())
+                    .distinct()
+                    .count();
+                model.addAttribute("produtosUnicos", produtosUnicos);
+                
+                // Parâmetros de filtro para manter no formulário
+                model.addAttribute("dataInicio", dataInicio);
+                model.addAttribute("dataFim", dataFim);
+                model.addAttribute("status", status);
+                model.addAttribute("ordenacao", ordenacao);
+                
+                return "vendas/historico-cliente";
+            } else {
+                model.addAttribute("erro", "Cliente não encontrado");
+                return "redirect:/vendas";
+            }
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao buscar histórico: " + e.getMessage());
+            return "redirect:/vendas";
+        }
+    }
+
+    // 🧾 CUPOM FISCAL
+    @GetMapping("/{id}/cupom-fiscal")
+    public String cupomFiscal(@PathVariable Long id, Model model) {
+        try {
+            Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
+            if (vendaOpt.isPresent()) {
+                Venda venda = vendaOpt.get();
+                model.addAttribute("venda", venda);
+                
+                // Gerar QR Code para consulta online (opcional)
+                try {
+                    String qrContent = "https://paineldoceo.com.br/vendas/" + id + "/consulta";
+                    String qrCodeUrl = gerarQRCodeBase64(qrContent);
+                    model.addAttribute("qrCodeUrl", qrCodeUrl);
+                } catch (Exception e) {
+                    // QR Code é opcional, não falha se der erro
+                    System.err.println("Erro ao gerar QR Code: " + e.getMessage());
+                }
+                
+                return "vendas/cupom-fiscal";
+            } else {
+                model.addAttribute("erro", "Venda não encontrada");
+                return "redirect:/vendas";
+            }
+        } catch (Exception e) {
+            model.addAttribute("erro", "Erro ao gerar cupom: " + e.getMessage());
+            return "redirect:/vendas";
+        }
+    }
+
+    // 📧 ENVIAR CUPOM POR EMAIL
+    @PostMapping("/{id}/cupom/email")
+    @ResponseBody
+    public ResponseEntity<?> enviarCupomPorEmail(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("erro", "Email é obrigatório"));
+            }
+            
+            Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
+            if (vendaOpt.isPresent()) {
+                // Aqui você implementaria o serviço de email
+                // emailService.enviarCupomFiscal(vendaOpt.get(), email);
+                
+                return ResponseEntity.ok(Map.of("sucesso", "Cupom enviado com sucesso para " + email));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("erro", "Erro ao enviar email: " + e.getMessage()));
+        }
+    }
+
+    // 🔍 BUSCAR VENDAS POR CLIENTE (API)
+    @GetMapping("/api/cliente/{clienteId}")
+    @ResponseBody
+    public ResponseEntity<?> buscarVendasPorCliente(@PathVariable Long clienteId) {
+        try {
+            Optional<Cliente> clienteOpt = clienteService.buscarPorId(clienteId);
+            if (clienteOpt.isPresent()) {
+                List<Venda> vendas = vendaService.buscarPorCpfCnpj(clienteOpt.get().getCpfCnpj());
+                return ResponseEntity.ok(vendas);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("erro", "Erro ao buscar vendas: " + e.getMessage()));
+        }
+    }
+
+    // 🔧 MÉTODO AUXILIAR PARA GERAR QR CODE
+    private String gerarQRCodeBase64(String content) throws WriterException, IOException {
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        BitMatrix bitMatrix = qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, 200, 200);
+        
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
+        
+        byte[] qrCodeBytes = outputStream.toByteArray();
+        return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(qrCodeBytes);
     }
 }

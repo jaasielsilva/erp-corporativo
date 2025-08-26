@@ -58,4 +58,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
    // Método otimizado para busca por nome (apenas campos básicos)
    @Query("SELECT new Usuario(u.id, u.nome, u.email, u.fotoPerfil, u.online, u.status) FROM Usuario u WHERE u.nome = :nome")
    Optional<Usuario> findByNomeSimple(@Param("nome") String nome);
+   
+   // Buscar usuários online
+   List<Usuario> findByOnlineTrueAndStatus(Usuario.Status status);
 }

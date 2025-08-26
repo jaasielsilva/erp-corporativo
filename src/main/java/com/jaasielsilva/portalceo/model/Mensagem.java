@@ -1,15 +1,19 @@
 package com.jaasielsilva.portalceo.model;
 
 import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Entidade que representa uma mensagem no sistema de chat interno
+ */
 @Entity
 @Table(name = "mensagens")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Mensagem {
 
     @Id
@@ -21,49 +25,102 @@ public class Mensagem {
     private Usuario remetente;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "destinatario_id", nullable = false)
-    private Usuario destinatario;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversa_id", nullable = false)
     private Conversa conversa;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String conteudo;
 
-    @Column(name = "data_envio", nullable = false)
-    private LocalDateTime dataEnvio;
+    @Column(name = "enviada_em", nullable = false)
+    private LocalDateTime enviadaEm;
 
     @Column(name = "lida", nullable = false)
-    @Builder.Default
-    private boolean lida = false;
 
-    @Column(name = "data_leitura")
-    private LocalDateTime dataLeitura;
+    private Boolean lida = false;
+
+    @Column(name = "lida_em")
+    private LocalDateTime lidaEm;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo", nullable = false)
-    @Builder.Default
+
     private TipoMensagem tipo = TipoMensagem.TEXTO;
 
+    @Column(name = "editada_em")
+    private LocalDateTime editadaEm;
+
+    @Column(name = "arquivo_url")
+    private String arquivoUrl;
+
+    @Column(name = "arquivo_nome")
+    private String arquivoNome;
+
+    @Column(name = "arquivo_tamanho")
+    private Long arquivoTamanho;
+
+    // Resposta a outra mensagem
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resposta_a_id")
+    private Mensagem respostaA;
+
+    // Enum para tipos de mensagem
     public enum TipoMensagem {
-        TEXTO,
-        ARQUIVO,
-        IMAGEM,
-        SISTEMA
+        TEXTO("Texto"),
+        ARQUIVO("Arquivo"),
+        IMAGEM("Imagem"),
+        SISTEMA("Sistema"),
+        NOTIFICACAO("Notificação");
+
+        private final String descricao;
+
+        TipoMensagem(String descricao) {
+            this.descricao = descricao;
+        }
+
+        public String getDescricao() {
+            return descricao;
+        }
+    }
+
+    // Métodos de conveniência
+    public boolean isLida() {
+        return Boolean.TRUE.equals(lida);
+    }
+
+    public void marcarComoLida() {
+        this.lida = true;
+        this.lidaEm = LocalDateTime.now();
+    }
+
+    public boolean temArquivo() {
+        return arquivoUrl != null && !arquivoUrl.trim().isEmpty();
+    }
+
+    public boolean isEditada() {
+        return editadaEm != null;
+    }
+
+    public boolean isResposta() {
+        return respostaA != null;
+    }
+
+    public boolean isSistema() {
+        return TipoMensagem.SISTEMA.equals(this.tipo);
+    }
+
+    public String getConteudoResumo(int maxLength) {
+        if (conteudo == null)
+            return "";
+        if (conteudo.length() <= maxLength)
+            return conteudo;
+        return conteudo.substring(0, maxLength) + "...";
     }
 
     @PrePersist
     protected void onCreate() {
-        if (dataEnvio == null) {
-            dataEnvio = LocalDateTime.now();
+        if (enviadaEm == null) {
+            enviadaEm = LocalDateTime.now();
         }
-    }
-
-    // Método para marcar como lida
-    public void marcarComoLida() {
-        this.lida = true;
-        this.dataLeitura = LocalDateTime.now();
     }
 
     // Método para verificar se a mensagem é do usuário
@@ -71,8 +128,13 @@ public class Mensagem {
         return this.remetente.getId().equals(usuario.getId());
     }
 
-    // Método para obter o outro participante da conversa
+    // Método para obter outro participante em conversas individuais
     public Usuario getOutroParticipante(Usuario usuarioAtual) {
-        return this.remetente.getId().equals(usuarioAtual.getId()) ? this.destinatario : this.remetente;
+        return this.conversa.getParticipantes().stream()
+                .map(ParticipanteConversa::getUsuario)
+                .filter(u -> !u.getId().equals(usuarioAtual.getId()))
+                .findFirst()
+                .orElse(null);
     }
+
 }

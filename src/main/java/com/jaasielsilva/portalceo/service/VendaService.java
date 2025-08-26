@@ -349,6 +349,41 @@ public class VendaService {
         return vendaRepository.findByNumeroVenda(numeroVenda);
     }
     
+    // Buscar vendas por cliente
+    public List<Venda> buscarPorCliente(Long clienteId) {
+        return vendaRepository.findAll().stream()
+            .filter(venda -> venda.getCliente() != null && venda.getCliente().getId().equals(clienteId))
+            .sorted((v1, v2) -> v2.getDataVenda().compareTo(v1.getDataVenda()))
+            .collect(java.util.stream.Collectors.toList());
+    }
+    
+    // Buscar vendas por cliente com filtros
+    public List<Venda> buscarPorClienteComFiltros(Long clienteId, LocalDate dataInicio, LocalDate dataFim, String status) {
+        List<Venda> vendas = buscarPorCliente(clienteId);
+        
+        if (dataInicio != null) {
+            LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
+            vendas = vendas.stream()
+                .filter(venda -> venda.getDataVenda().isAfter(inicioDateTime) || venda.getDataVenda().isEqual(inicioDateTime))
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        if (dataFim != null) {
+            LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59);
+            vendas = vendas.stream()
+                .filter(venda -> venda.getDataVenda().isBefore(fimDateTime) || venda.getDataVenda().isEqual(fimDateTime))
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        if (status != null && !status.isEmpty()) {
+            vendas = vendas.stream()
+                .filter(venda -> venda.getStatus().equalsIgnoreCase(status))
+                .collect(java.util.stream.Collectors.toList());
+        }
+        
+        return vendas;
+    }
+    
     // Classe para resumo de vendas do dia
     public static class ResumoVendasDia {
         private int quantidadeVendas;
@@ -376,6 +411,19 @@ public class VendaService {
         public BigDecimal getTotalPix() { return totalPix; }
         public BigDecimal getTotalCartaoDebito() { return totalCartaoDebito; }
         public BigDecimal getTotalCartaoCredito() { return totalCartaoCredito; }
+        
+        // Propriedades calculadas para compatibilidade com o template
+        public BigDecimal getTotalCartao() {
+            return (totalCartaoDebito != null ? totalCartaoDebito : BigDecimal.ZERO)
+                .add(totalCartaoCredito != null ? totalCartaoCredito : BigDecimal.ZERO);
+        }
+        
+        public BigDecimal getTicketMedio() {
+            if (quantidadeVendas > 0 && totalVendas != null) {
+                return totalVendas.divide(BigDecimal.valueOf(quantidadeVendas), 2, BigDecimal.ROUND_HALF_UP);
+            }
+            return BigDecimal.ZERO;
+        }
     }
     
 }

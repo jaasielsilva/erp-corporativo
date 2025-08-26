@@ -164,6 +164,10 @@ public class UsuarioService {
     public List<Usuario> buscarPorNomeOuEmail(String busca) {
         return usuarioRepository.buscarPorNomeOuEmail(busca);
     }
+    
+    public List<Usuario> buscarUsuariosOnline() {
+        return usuarioRepository.findByOnlineTrueAndStatus(Usuario.Status.ATIVO);
+    }
 
     public Optional<Usuario> buscarPorMatricula(String matricula) {
         return usuarioRepository.findByMatricula(matricula);

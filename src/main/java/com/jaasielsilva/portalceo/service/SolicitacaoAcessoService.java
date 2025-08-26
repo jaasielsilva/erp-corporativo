@@ -62,12 +62,23 @@ public class SolicitacaoAcessoService {
             // Definir dados do solicitante
             System.out.println("Definindo dados do solicitante...");
             solicitacao.setSolicitanteUsuario(solicitante);
-            solicitacao.setSolicitanteNome(solicitante.getNome());
-            solicitacao.setSolicitanteCargo(solicitante.getCargo() != null ? solicitante.getCargo().getNome() : "");
+            solicitacao.setSolicitanteNome(solicitante.getNome() != null ? solicitante.getNome() : "Administrador");
+            solicitacao.setSolicitanteCargo(solicitante.getCargo() != null ? solicitante.getCargo().getNome() : "Administrador do Sistema");
             solicitacao.setSolicitanteDepartamento(
-                    solicitante.getDepartamento() != null ? solicitante.getDepartamento().getNome() : "");
+                    solicitante.getDepartamento() != null ? solicitante.getDepartamento().getNome() : "TI - Administração");
             solicitacao.setSolicitanteEmail(solicitante.getEmail());
+            
+            // Definir nível de acesso padrão se não foi especificado
+            if (solicitacao.getNivelSolicitado() == null) {
+                solicitacao.setNivelSolicitado(SolicitacaoAcesso.NivelAcesso.CONSULTA);
+            }
+            
             System.out.println("Dados do solicitante definidos OK");
+            System.out.println("Nome: " + solicitacao.getSolicitanteNome());
+            System.out.println("Cargo: " + solicitacao.getSolicitanteCargo());
+            System.out.println("Departamento: " + solicitacao.getSolicitanteDepartamento());
+            System.out.println("Email: " + solicitacao.getSolicitanteEmail());
+            System.out.println("Nível solicitado: " + solicitacao.getNivelSolicitado());
 
             // Validar dados obrigatórios
             System.out.println("Validando solicitação...");

@@ -10,6 +10,9 @@ import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.service.NotificationService;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+import jakarta.validation.Validation;
+import jakarta.validation.ConstraintViolation;
 import java.security.Principal;
 import java.time.LocalDate;
 
@@ -190,39 +193,82 @@ public String listarSolicitacoes(
      * Processar nova solicitação
      */
     @PostMapping("/nova")
-    public String processarNovaSolicitacao(@Valid @ModelAttribute("solicitacaoAcesso") SolicitacaoAcesso solicitacao,
+    public String processarNovaSolicitacao(@ModelAttribute("solicitacaoAcesso") SolicitacaoAcesso solicitacao,
             BindingResult result,
             @RequestParam(value = "modulos", required = false) List<String> modulosSelecionados,
             Principal principal,
             RedirectAttributes redirectAttributes,
             Model model) {
 
+        System.out.println("===== INÍCIO DO PROCESSAMENTO DA NOVA SOLICITAÇÃO =====");
+        System.out.println("Principal: " + (principal != null ? principal.getName() : "null"));
+        System.out.println("Módulos selecionados: " + modulosSelecionados);
+        System.out.println("Colaborador ID: " + (solicitacao.getColaborador() != null ? solicitacao.getColaborador().getId() : "null"));
+        System.out.println("Tipo de usuário: " + solicitacao.getTipoUsuario());
+        System.out.println("Justificativa: " + solicitacao.getJustificativa());
+        System.out.println("Prazo de acesso: " + solicitacao.getPrazoAcesso());
+        System.out.println("Prioridade: " + solicitacao.getPrioridade());
+
         Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
         if (usuarioLogado == null) {
+            System.out.println("ERRO: Usuário não encontrado para o email: " + principal.getName());
             return "redirect:/login";
+        }
+        System.out.println("Usuário logado encontrado: " + usuarioLogado.getEmail());
+        
+        // Preencher dados do solicitante antes da validação
+        solicitacao.setSolicitanteNome(usuarioLogado.getNome() != null ? usuarioLogado.getNome() : "Administrador");
+        solicitacao.setSolicitanteCargo(usuarioLogado.getCargo() != null ? usuarioLogado.getCargo().getNome() : "Administrador do Sistema");
+        solicitacao.setSolicitanteDepartamento(usuarioLogado.getDepartamento() != null ? usuarioLogado.getDepartamento().getNome() : "TI - Administração");
+        solicitacao.setSolicitanteEmail(usuarioLogado.getEmail());
+        
+        // Definir nível de acesso padrão se não foi especificado
+        if (solicitacao.getNivelSolicitado() == null) {
+            solicitacao.setNivelSolicitado(SolicitacaoAcesso.NivelAcesso.CONSULTA);
+        }
+        
+        // Validação manual após preencher os dados
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        Set<ConstraintViolation<SolicitacaoAcesso>> violations = validator.validate(solicitacao);
+        
+        for (ConstraintViolation<SolicitacaoAcesso> violation : violations) {
+            result.rejectValue(violation.getPropertyPath().toString(), "error.validation", violation.getMessage());
         }
 
         try {
             if (modulosSelecionados == null || modulosSelecionados.isEmpty()) {
+                System.out.println("ERRO DE VALIDAÇÃO: Nenhum módulo selecionado");
                 result.rejectValue("modulos", "error.modulos", "Selecione pelo menos um módulo");
             }
 
             if (result.hasErrors()) {
+                System.out.println("ERRO DE VALIDAÇÃO: Formulário contém erros:");
+                result.getAllErrors().forEach(error -> {
+                    System.out.println("  - " + error.getDefaultMessage());
+                });
                 List<Colaborador> colaboradores = colaboradorService.listarTodos();
                 model.addAttribute("colaboradores", colaboradores);
                 model.addAttribute("usuarioLogado", usuarioLogado);
                 return "solicitacoes/nova";
             }
 
+            System.out.println("Validação passou com sucesso. Processando solicitação...");
+
+            System.out.println("Convertendo módulos selecionados...");
             Set<SolicitacaoAcesso.ModuloSistema> modulos = modulosSelecionados.stream()
                     .map(SolicitacaoAcesso.ModuloSistema::valueOf)
                     .collect(java.util.stream.Collectors.toSet());
             solicitacao.setModulos(modulos);
+            System.out.println("Módulos convertidos: " + modulos);
 
+            System.out.println("Buscando colaborador por ID: " + solicitacao.getColaborador().getId());
             Colaborador colaborador = colaboradorService.findById(solicitacao.getColaborador().getId());
             solicitacao.setColaborador(colaborador);
+            System.out.println("Colaborador encontrado: " + colaborador.getNome());
 
+            System.out.println("Criando solicitação no serviço...");
             SolicitacaoAcesso solicitacaoSalva = solicitacaoAcessoService.criarSolicitacao(solicitacao, usuarioLogado);
+            System.out.println("Solicitação criada com sucesso. Protocolo: " + solicitacaoSalva.getProtocolo());
 
             redirectAttributes.addFlashAttribute("mensagem",
                     "Solicitação criada com sucesso! Protocolo: " + solicitacaoSalva.getProtocolo());
@@ -230,6 +276,10 @@ public String listarSolicitacoes(
             return "redirect:/solicitacoes";
 
         } catch (Exception e) {
+            System.out.println("##### ERRO AO PROCESSAR SOLICITAÇÃO #####");
+            System.out.println("Tipo do erro: " + e.getClass().getSimpleName());
+            System.out.println("Mensagem: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("erro", "Erro ao criar solicitação: " + e.getMessage());
             return "redirect:/solicitacoes/nova";
         }

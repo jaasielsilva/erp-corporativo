@@ -101,6 +101,56 @@ public class ChatRestController {
     }
     
     /**
+     * Cria uma nova conversa (individual ou grupo)
+     */
+    @PostMapping("/conversas/nova")
+    public ResponseEntity<Conversa> criarNovaConversa(
+            @RequestBody Map<String, Object> request,
+            Authentication auth) {
+        try {
+            System.out.println("[DEBUG] Criando nova conversa - Request: " + request);
+            
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
+            if (usuario == null) {
+                System.out.println("[ERROR] Usuário não encontrado: " + auth.getName());
+                return ResponseEntity.badRequest().build();
+            }
+            
+            String type = (String) request.get("type");
+            System.out.println("[DEBUG] Tipo de conversa: " + type);
+            
+            if ("individual".equals(type)) {
+                Long participantId = Long.valueOf(request.get("participantId").toString());
+                System.out.println("[DEBUG] Criando conversa individual com participante: " + participantId);
+                
+                Conversa conversa = chatService.criarConversaIndividual(usuario.getId(), participantId);
+                System.out.println("[DEBUG] Conversa criada com sucesso: " + conversa.getId());
+                
+                return ResponseEntity.ok(conversa);
+            } else if ("grupo".equals(type)) {
+                String titulo = (String) request.get("titulo");
+                @SuppressWarnings("unchecked")
+                List<Long> participantesIds = (List<Long>) request.get("participantes");
+                
+                if (titulo == null || titulo.trim().isEmpty()) {
+                    System.out.println("[ERROR] Título do grupo não informado");
+                    return ResponseEntity.badRequest().build();
+                }
+                
+                Conversa conversa = chatService.criarConversaGrupo(titulo, usuario.getId(), participantesIds);
+                return ResponseEntity.ok(conversa);
+            } else {
+                System.out.println("[ERROR] Tipo de conversa inválido: " + type);
+                return ResponseEntity.badRequest().build();
+            }
+        } catch (Exception e) {
+            System.out.println("[ERROR] Erro ao criar conversa: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * Busca uma conversa específica
      */
     @GetMapping("/conversas/{conversaId}")

@@ -137,8 +137,8 @@ public class ChatService {
      * Busca conversas por tipo
      */
     @Transactional(readOnly = true)
-    public List<Conversa> buscarConversasPorTipo(Conversa.TipoConversa tipo) {
-        return conversaRepository.findConversasPorTipo(tipo);
+    public List<Conversa> buscarConversasPorTipo(Long usuarioId, Conversa.TipoConversa tipo) {
+        return conversaRepository.findConversasPorTipo(usuarioId, tipo.name());
     }
     
     /**
@@ -176,10 +176,32 @@ public class ChatService {
             throw new RuntimeException("Usuário não é participante desta conversa");
         }
         
+        // Determinar destinatário baseado no tipo de conversa
+        Usuario destinatario = null;
+        if (conversa.getTipo() == Conversa.TipoConversa.INDIVIDUAL) {
+            // Para conversa individual, o destinatário é o outro participante
+            List<ParticipanteConversa> participantesAtivos = participanteRepository.findParticipantesAtivosByConversaId(conversaId);
+            for (ParticipanteConversa p : participantesAtivos) {
+                if (!p.getUsuario().getId().equals(remetenteId)) {
+                    destinatario = p.getUsuario();
+                    break;
+                }
+            }
+        } else {
+            // Para conversas em grupo, usar o criador da conversa como destinatário padrão
+            if (conversa.getCriadoPor() != null) {
+                destinatario = usuarioRepository.findById(conversa.getCriadoPor())
+                        .orElse(remetente); // fallback para o próprio remetente
+            } else {
+                destinatario = remetente; // fallback para o próprio remetente
+            }
+        }
+        
         // Criar e salvar mensagem
         Mensagem mensagem = new Mensagem();
         mensagem.setConteudo(conteudo);
         mensagem.setRemetente(remetente);
+        mensagem.setDestinatario(destinatario);
         mensagem.setConversa(conversa);
         mensagem.setTipo(tipo);
         mensagem.setEnviadaEm(LocalDateTime.now());
@@ -216,9 +238,13 @@ public class ChatService {
             throw new RuntimeException("Não foi possível determinar remetente para mensagem de sistema");
         }
         
+        // Para mensagens de sistema, usar o remetente como destinatário padrão
+        Usuario destinatario = remetente;
+        
         Mensagem mensagem = new Mensagem();
         mensagem.setConteudo(conteudo);
         mensagem.setRemetente(remetente);
+        mensagem.setDestinatario(destinatario);
         mensagem.setConversa(conversa);
         mensagem.setTipo(Mensagem.TipoMensagem.SISTEMA);
         mensagem.setEnviadaEm(LocalDateTime.now());

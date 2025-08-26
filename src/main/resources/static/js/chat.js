@@ -575,6 +575,19 @@ function setupEventListeners() {
         showNewConversationModal();
     });
     
+    // Busca de usuários no modal
+    $('#userSearch').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        filterUsers(searchTerm);
+    });
+    
+    // Clique no botão conversar
+    $(document).on('click', '.start-conversation-btn', function(e) {
+        e.stopPropagation();
+        const userId = $(this).data('user-id');
+        startConversationWithUser(userId);
+    });
+    
     // Botões de anexo e emoji (placeholder)
     $('#attachmentBtn').on('click', function() {
         showNotification('Funcionalidade de anexos em desenvolvimento', 'info');
@@ -736,8 +749,162 @@ function showNotification(message, type = 'info') {
  * Mostra modal de nova conversa
  */
 function showNewConversationModal() {
-    // Implementação básica - pode ser expandida
-    showNotification('Modal de nova conversa em desenvolvimento', 'info');
+    // Carrega lista de usuários
+    loadUsers();
+    
+    // Exibe o modal
+    $('#newConversationModal').modal('show');
+}
+
+/**
+ * Carrega lista de usuários disponíveis
+ */
+function loadUsers() {
+    $.ajax({
+        url: '/api/chat/usuarios',
+        method: 'GET',
+        success: function(users) {
+            renderUsersList(users);
+        },
+        error: function(xhr) {
+            console.error('Erro ao carregar usuários:', xhr.responseText);
+            showNotification('Erro ao carregar lista de usuários', 'error');
+        }
+    });
+}
+
+/**
+ * Renderiza lista de usuários no modal
+ */
+function renderUsersList(users) {
+    const usersList = $('#usersList');
+    usersList.empty();
+    
+    if (!users || users.length === 0) {
+        usersList.append(`
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <p>Nenhum usuário encontrado</p>
+            </div>
+        `);
+        return;
+    }
+    
+    // Separa usuários online e offline
+    const onlineUsers = users.filter(user => user.online && user.id !== currentUser?.id);
+    const offlineUsers = users.filter(user => !user.online && user.id !== currentUser?.id);
+    
+    // Renderiza usuários online
+    if (onlineUsers.length > 0) {
+        usersList.append('<h6 class="text-success mb-3"><i class="fas fa-circle me-2"></i>Online (' + onlineUsers.length + ')</h6>');
+        onlineUsers.forEach(user => {
+            usersList.append(createUserItem(user, true));
+        });
+    }
+    
+    // Renderiza usuários offline
+    if (offlineUsers.length > 0) {
+        usersList.append('<h6 class="text-muted mb-3 mt-4"><i class="fas fa-circle me-2"></i>Offline (' + offlineUsers.length + ')</h6>');
+        offlineUsers.forEach(user => {
+            usersList.append(createUserItem(user, false));
+        });
+    }
+}
+
+/**
+ * Cria elemento HTML para um usuário
+ */
+function createUserItem(user, isOnline) {
+    const statusClass = isOnline ? 'status-online' : 'status-offline';
+    const statusText = isOnline ? 'Online' : 'Offline';
+    
+    return `
+        <div class="user-item" data-user-id="${user.id}" style="cursor: pointer; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" 
+             onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='white'">
+            <div class="d-flex align-items-center">
+                <div class="position-relative me-3">
+                    <img src="${user.avatar || '/img/default-avatar.svg'}" alt="${user.nome}" 
+                         class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                    <span class="position-absolute bottom-0 end-0 ${statusClass}" 
+                          style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></span>
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-1" style="font-size: 0.9rem; font-weight: 600;">${user.nome}</h6>
+                    <p class="mb-0 text-muted" style="font-size: 0.8rem;">${user.email || ''}</p>
+                    <small class="text-${isOnline ? 'success' : 'muted'}">${statusText}</small>
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-sm start-conversation-btn" data-user-id="${user.id}">
+                        <i class="fas fa-comment me-1"></i>Conversar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Inicia nova conversa com usuário
+ */
+function startConversationWithUser(userId) {
+    console.log('[DEBUG] Iniciando conversa com usuário ID:', userId);
+    console.log('[DEBUG] Current user:', currentUser);
+    
+    $.ajax({
+        url: '/api/chat/conversas/nova',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            participantId: userId,
+            type: 'individual'
+        }),
+        beforeSend: function(xhr) {
+            console.log('[DEBUG] Enviando requisição para criar conversa');
+        },
+        success: function(conversation) {
+            console.log('[DEBUG] Conversa criada com sucesso:', conversation);
+            
+            // Fecha o modal
+            $('#newConversationModal').modal('hide');
+            
+            // Recarrega lista de conversas
+            loadConversations();
+            
+            // Seleciona a nova conversa
+            setTimeout(() => {
+                selectConversation(conversation.id);
+            }, 500);
+            
+            showNotification('Nova conversa iniciada!', 'success');
+        },
+        error: function(xhr, status, error) {
+            console.error('[ERROR] Erro ao criar conversa:');
+            console.error('Status:', status);
+            console.error('Error:', error);
+            console.error('Response:', xhr.responseText);
+            console.error('Status Code:', xhr.status);
+            
+            showNotification('Erro ao iniciar conversa: ' + (xhr.responseText || error), 'error');
+        }
+    });
+}
+
+/**
+ * Filtra usuários por termo de busca
+ */
+function filterUsers(searchTerm) {
+    const userItems = $('.user-item');
+    
+    userItems.each(function() {
+        const userName = $(this).find('h6').text().toLowerCase();
+        const userEmail = $(this).find('p').text().toLowerCase();
+        
+        if (userName.includes(searchTerm) || userEmail.includes(searchTerm)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
 }
 
 // ==================== FUNÇÕES PÚBLICAS ====================

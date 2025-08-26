@@ -45,6 +45,9 @@ public class Conversa {
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao;
 
+    @Column(name = "criada_em", nullable = false)
+    private LocalDateTime criadaEm;
+
     @Column(nullable = false)
     private Boolean ativa = true;
 
@@ -164,34 +167,40 @@ public class Conversa {
     // Métodos estáticos para criação de conversas
     public static Conversa criarConversaIndividual(Long usuario1Id, Long usuario2Id, Long criadoPor) {
         Conversa conversa = new Conversa();
+        LocalDateTime agora = LocalDateTime.now();
         conversa.setTipo(TipoConversa.INDIVIDUAL);
         conversa.setUsuario1Id(usuario1Id);
         conversa.setUsuario2Id(usuario2Id);
         conversa.setCriadoPor(criadoPor);
-        conversa.setDataCriacao(LocalDateTime.now());
-        conversa.setUltimaAtividade(LocalDateTime.now());
+        conversa.setDataCriacao(agora);
+        conversa.setCriadaEm(agora);
+        conversa.setUltimaAtividade(agora);
         conversa.setAtiva(true);
         return conversa;
     }
 
     public static Conversa criarConversaGrupo(String titulo, Long criadoPor) {
         Conversa conversa = new Conversa();
+        LocalDateTime agora = LocalDateTime.now();
         conversa.setTipo(TipoConversa.GRUPO);
         conversa.setTitulo(titulo);
         conversa.setCriadoPor(criadoPor);
-        conversa.setDataCriacao(LocalDateTime.now());
-        conversa.setUltimaAtividade(LocalDateTime.now());
+        conversa.setDataCriacao(agora);
+        conversa.setCriadaEm(agora);
+        conversa.setUltimaAtividade(agora);
         conversa.setAtiva(true);
         return conversa;
     }
 
     public static Conversa criarConversaDepartamento(String titulo, Long criadoPor) {
         Conversa conversa = new Conversa();
+        LocalDateTime agora = LocalDateTime.now();
         conversa.setTipo(TipoConversa.DEPARTAMENTO);
         conversa.setTitulo(titulo);
         conversa.setCriadoPor(criadoPor);
-        conversa.setDataCriacao(LocalDateTime.now());
-        conversa.setUltimaAtividade(LocalDateTime.now());
+        conversa.setDataCriacao(agora);
+        conversa.setCriadaEm(agora);
+        conversa.setUltimaAtividade(agora);
         conversa.setAtiva(true);
         return conversa;
     }

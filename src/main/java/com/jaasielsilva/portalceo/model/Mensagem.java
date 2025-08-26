@@ -31,12 +31,16 @@ public class Mensagem {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String conteudo;
 
-    @Column(name = "enviada_em", nullable = false)
+    @Column(name = "data_envio", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime enviadaEm;
 
     @Column(name = "lida", nullable = false)
 
     private Boolean lida = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "destinatario_id", nullable = false)
+    private Usuario destinatario;
 
     @Column(name = "lida_em")
     private LocalDateTime lidaEm;
@@ -120,6 +124,12 @@ public class Mensagem {
     protected void onCreate() {
         if (enviadaEm == null) {
             enviadaEm = LocalDateTime.now();
+        }
+        if (lida == null) {
+            lida = false;
+        }
+        if (tipo == null) {
+            tipo = TipoMensagem.TEXTO;
         }
     }
 

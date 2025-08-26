@@ -147,6 +147,8 @@ public class EmailService {
                     <p>Acesse: <a href=\"http://localhost:8080\">Portal CEO</a></p>
                     <br>
                     <p><em>Este é um email automático. Não responda.</em></p>
+
+                    <p><em>as credenciais estao indo daqui.</em></p>
                 </body>
                 </html>
                 """;

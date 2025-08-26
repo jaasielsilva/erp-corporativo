@@ -17,6 +17,7 @@ import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -178,6 +179,22 @@ public class ColaboradorService {
             return colaboradores;
         } catch (Exception e) {
             logger.error("Erro ao buscar colaboradores: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Lista colaboradores otimizado para AJAX (apenas dados essenciais) com cache
+     */
+    @Cacheable(value = "colaboradoresAjax", unless = "#result.size() == 0")
+    public List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> listarParaAjax() {
+        logger.debug("Buscando colaboradores para AJAX (com cache)");
+        try {
+            List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> colaboradores = colaboradorRepository.findColaboradoresForAjax();
+            logger.debug("Encontrados {} colaboradores ativos para AJAX", colaboradores.size());
+            return colaboradores;
+        } catch (Exception e) {
+            logger.error("Erro ao buscar colaboradores para AJAX: {}", e.getMessage(), e);
             throw e;
         }
     }

@@ -118,9 +118,9 @@ public interface SolicitacaoAcessoRepository extends JpaRepository<SolicitacaoAc
     // Buscar solicitações por email do solicitante
     List<SolicitacaoAcesso> findBySolicitanteEmail(String email);
     
-    // Verificar se colaborador já tem solicitação pendente
-    @Query("SELECT COUNT(s) > 0 FROM SolicitacaoAcesso s WHERE s.colaborador = :colaborador AND s.status IN ('PENDENTE', 'EM_ANALISE')")
-    boolean existsSolicitacaoPendenteParaColaborador(@Param("colaborador") Colaborador colaborador);
+    // Verificar se colaborador já tem solicitação pendente (otimizado)
+    @Query("SELECT CASE WHEN COUNT(s.id) > 0 THEN true ELSE false END FROM SolicitacaoAcesso s WHERE s.colaborador.id = :colaboradorId AND s.status IN ('PENDENTE', 'EM_ANALISE')")
+    boolean existsSolicitacaoPendenteParaColaborador(@Param("colaboradorId") Long colaboradorId);
     
     // Buscar solicitações por texto (busca em múltiplos campos)
     @Query("SELECT s FROM SolicitacaoAcesso s WHERE " +

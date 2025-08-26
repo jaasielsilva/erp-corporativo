@@ -74,6 +74,8 @@
                 <div><strong>Nome:</strong> <span id="colaboradorNome"></span></div>
                 <div><strong>Email:</strong> <span id="colaboradorEmail"></span></div>
                 <div><strong>CPF:</strong> <span id="colaboradorCpf"></span></div>
+                <div><strong>Cargo:</strong> <span id="colaboradorCargo"></span></div>
+                <div><strong>Departamento:</strong> <span id="colaboradorDepartamento"></span></div>
               </div>
             </div>
           </div>
@@ -243,22 +245,46 @@
     });
 
     function carregarColaboradores() {
+      // Verificar se já existe cache válido
+      const cacheKey = 'colaboradores_cache';
+      const cacheTime = 'colaboradores_cache_time';
+      const cacheValidity = 5 * 60 * 1000; // 5 minutos
+      
+      const cachedData = localStorage.getItem(cacheKey);
+      const cachedTime = localStorage.getItem(cacheTime);
+      
+      if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheValidity) {
+        console.log('Usando colaboradores do cache');
+        preencherSelectColaboradores(JSON.parse(cachedData));
+        return;
+      }
+      
       fetch('/solicitacoes/colaboradores')
         .then(response => response.json())
         .then(colaboradores => {
-          const select = document.getElementById('colaborador');
-          colaboradores.forEach(colaborador => {
-            const option = document.createElement('option');
-            option.value = colaborador.id;
-            option.textContent = colaborador.nome;
-            option.dataset.email = colaborador.email;
-            option.dataset.cpf = colaborador.cpf;
-            select.appendChild(option);
-          });
+          // Salvar no cache
+          localStorage.setItem(cacheKey, JSON.stringify(colaboradores));
+          localStorage.setItem(cacheTime, Date.now().toString());
+          
+          preencherSelectColaboradores(colaboradores);
         })
         .catch(error => {
           console.error('Erro ao carregar colaboradores:', error);
         });
+    }
+    
+    function preencherSelectColaboradores(colaboradores) {
+      const select = document.getElementById('colaborador');
+      colaboradores.forEach(colaborador => {
+        const option = document.createElement('option');
+        option.value = colaborador.id;
+        option.textContent = `${colaborador.nome} - ${colaborador.cargo || 'N/A'} (${colaborador.departamento || 'N/A'})`;
+        option.dataset.email = colaborador.email;
+        option.dataset.cpf = colaborador.cpf;
+        option.dataset.cargo = colaborador.cargo || 'N/A';
+        option.dataset.departamento = colaborador.departamento || 'N/A';
+        select.appendChild(option);
+      });
     }
 
     function configurarEventListeners() {
@@ -268,9 +294,13 @@
         const infoDiv = document.getElementById('colaboradorInfo');
 
         if (selectedOption.value) {
-          document.getElementById('colaboradorNome').textContent = selectedOption.textContent;
+          // Extrair apenas o nome do texto completo
+          const nomeCompleto = selectedOption.textContent.split(' - ')[0];
+          document.getElementById('colaboradorNome').textContent = nomeCompleto;
           document.getElementById('colaboradorEmail').textContent = selectedOption.dataset.email || 'N/A';
           document.getElementById('colaboradorCpf').textContent = selectedOption.dataset.cpf || 'N/A';
+          document.getElementById('colaboradorCargo').textContent = selectedOption.dataset.cargo || 'N/A';
+          document.getElementById('colaboradorDepartamento').textContent = selectedOption.dataset.departamento || 'N/A';
           infoDiv.classList.remove('hidden');
         } else {
           infoDiv.classList.add('hidden');

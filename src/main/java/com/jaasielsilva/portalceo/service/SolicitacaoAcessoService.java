@@ -11,6 +11,7 @@ import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,14 +53,14 @@ public class SolicitacaoAcessoService {
         System.out.println("Solicitante: " + solicitante.getEmail());
         
         try {
-            // Validar se colaborador já tem solicitação pendente
+            // Validar se colaborador já tem solicitação pendente (otimizado)
             System.out.println("Verificando solicitação pendente...");
-            if (solicitacaoAcessoRepository.existsSolicitacaoPendenteParaColaborador(solicitacao.getColaborador())) {
+            if (solicitacaoAcessoRepository.existsSolicitacaoPendenteParaColaborador(solicitacao.getColaborador().getId())) {
                 throw new IllegalStateException("Já existe uma solicitação pendente para este colaborador");
             }
             System.out.println("Verificação de solicitação pendente OK");
 
-            // Definir dados do solicitante
+            // Definir dados do solicitante (otimizado)
             System.out.println("Definindo dados do solicitante...");
             solicitacao.setSolicitanteUsuario(solicitante);
             solicitacao.setSolicitanteNome(solicitante.getNome() != null ? solicitante.getNome() : "Administrador");
@@ -74,11 +75,6 @@ public class SolicitacaoAcessoService {
             }
             
             System.out.println("Dados do solicitante definidos OK");
-            System.out.println("Nome: " + solicitacao.getSolicitanteNome());
-            System.out.println("Cargo: " + solicitacao.getSolicitanteCargo());
-            System.out.println("Departamento: " + solicitacao.getSolicitanteDepartamento());
-            System.out.println("Email: " + solicitacao.getSolicitanteEmail());
-            System.out.println("Nível solicitado: " + solicitacao.getNivelSolicitado());
 
             // Validar dados obrigatórios
             System.out.println("Validando solicitação...");
@@ -90,10 +86,10 @@ public class SolicitacaoAcessoService {
             SolicitacaoAcesso solicitacaoSalva = solicitacaoAcessoRepository.save(solicitacao);
             System.out.println("Solicitação salva com protocolo: " + solicitacaoSalva.getProtocolo());
 
-            // Enviar notificação por email
-            System.out.println("Enviando notificação...");
-            enviarNotificacaoNovaSolicitacao(solicitacaoSalva);
-            System.out.println("Notificação enviada OK");
+            // Enviar notificação de forma assíncrona para não bloquear o processo
+            System.out.println("Agendando notificação assíncrona...");
+            enviarNotificacaoNovaSolicitacaoAsync(solicitacaoSalva);
+            System.out.println("Notificação agendada OK");
 
             System.out.println("===== FIM CRIAÇÃO SOLICITAÇÃO =====");
             return solicitacaoSalva;
@@ -516,6 +512,39 @@ public class SolicitacaoAcessoService {
             
         } catch (Exception e) {
             System.err.println("Erro ao enviar notificação de nova solicitação: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Enviar notificação de nova solicitação de forma assíncrona
+     */
+    @Async
+    public void enviarNotificacaoNovaSolicitacaoAsync(SolicitacaoAcesso solicitacao) {
+        try {
+            System.out.println("Iniciando envio assíncrono de notificação para protocolo: " + solicitacao.getProtocolo());
+            
+            // Enviar email
+            emailService.enviarNotificacaoNovaSolicitacao(
+                    "admin@empresa.com",
+                    solicitacao.getProtocolo(),
+                    solicitacao.getSolicitanteNome(),
+                    solicitacao.getColaborador().getNome());
+            
+            // Criar notificação no sistema para administradores
+            List<Usuario> admins = usuarioService.buscarUsuariosComPermissaoGerenciarUsuarios();
+            for (Usuario admin : admins) {
+                notificationService.notifyNewAccessRequest(
+                    admin, 
+                    solicitacao.getProtocolo(), 
+                    solicitacao.getSolicitanteNome()
+                );
+            }
+            
+            System.out.println("Notificação assíncrona enviada com sucesso para protocolo: " + solicitacao.getProtocolo());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao enviar notificação assíncrona de nova solicitação: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

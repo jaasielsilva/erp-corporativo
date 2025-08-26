@@ -41,6 +41,14 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true ORDER BY c.nome")
     List<Colaborador> findBasicInfoForSelection();
 
+    @Query("SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome) " +
+           "FROM Colaborador c " +
+           "LEFT JOIN c.cargo cg " +
+           "LEFT JOIN c.departamento d " +
+           "WHERE c.ativo = true " +
+           "ORDER BY c.nome")
+    List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> findColaboradoresForAjax();
+
     @Query("SELECT COUNT(c) FROM Colaborador c WHERE c.dataAdmissao >= :dataInicio AND c.ativo = true")
     long countContratacoesPorPeriodo(@Param("dataInicio") LocalDate dataInicio);
 

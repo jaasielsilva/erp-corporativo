@@ -406,16 +406,22 @@ public String listarSolicitacoes(
     }
 
     /**
-     * Carregar colaboradores via AJAX
+     * Carregar colaboradores via AJAX (otimizado)
      */
     @GetMapping("/colaboradores")
     @ResponseBody
-    public List<Colaborador> carregarColaboradores() {
+    public ResponseEntity<List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO>> carregarColaboradores() {
         try {
-            return colaboradorService.listarTodos();
+            List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> colaboradores = colaboradorService.listarParaAjax();
+            
+            // Adicionar headers de cache para melhorar performance
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "public, max-age=300") // Cache por 5 minutos
+                    .header("ETag", String.valueOf(colaboradores.hashCode()))
+                    .body(colaboradores);
         } catch (Exception e) {
             System.out.println("Erro ao carregar colaboradores via AJAX: " + e.getMessage());
-            return java.util.Collections.emptyList();
+            return ResponseEntity.ok(java.util.Collections.emptyList());
         }
     }
 

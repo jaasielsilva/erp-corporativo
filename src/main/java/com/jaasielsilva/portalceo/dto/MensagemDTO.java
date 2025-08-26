@@ -44,8 +44,8 @@ public class MensagemDTO {
         dto.setDestinatarioNome(null);
         dto.setConversaId(mensagem.getConversa().getId());
         dto.setConteudo(mensagem.getConteudo());
-        dto.setDataEnvio(mensagem.getEnviadaEm());
-        dto.setDataEnvioFormatada(mensagem.getEnviadaEm().format(formatter));
+        dto.setDataEnvio(mensagem.getDataEnvio());
+        dto.setDataEnvioFormatada(mensagem.getDataEnvio().format(formatter));
         dto.setLida(mensagem.isLida());
         dto.setDataLeitura(mensagem.getLidaEm());
         dto.setTipoMensagem(mensagem.getTipo().name());

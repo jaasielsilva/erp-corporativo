@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ public class ChatRestController {
     private UsuarioService usuarioService;
 
     // ==================== CONVERSAS ====================
-    
+
     /**
      * Lista todas as conversas do usuário logado
      */
@@ -51,7 +52,7 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Cria uma nova conversa individual
      */
@@ -64,14 +65,14 @@ public class ChatRestController {
             if (usuario == null) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             Conversa conversa = chatService.criarConversaIndividual(usuario.getId(), destinatarioId);
             return ResponseEntity.ok(conversa);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Cria uma nova conversa em grupo
      */
@@ -84,22 +85,22 @@ public class ChatRestController {
             if (usuario == null) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             String titulo = (String) request.get("titulo");
             @SuppressWarnings("unchecked")
             List<Long> participantesIds = (List<Long>) request.get("participantes");
-            
+
             if (titulo == null || titulo.trim().isEmpty()) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             Conversa conversa = chatService.criarConversaGrupo(titulo, usuario.getId(), participantesIds);
             return ResponseEntity.ok(conversa);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Cria uma nova conversa (individual ou grupo)
      */
@@ -108,48 +109,41 @@ public class ChatRestController {
             @RequestBody Map<String, Object> request,
             Authentication auth) {
         try {
-            System.out.println("[DEBUG] Criando nova conversa - Request: " + request);
-            
+
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
             if (usuario == null) {
                 System.out.println("[ERROR] Usuário não encontrado: " + auth.getName());
                 return ResponseEntity.badRequest().build();
             }
-            
+
             String type = (String) request.get("type");
-            System.out.println("[DEBUG] Tipo de conversa: " + type);
-            
+
             if ("individual".equals(type)) {
                 Long participantId = Long.valueOf(request.get("participantId").toString());
-                System.out.println("[DEBUG] Criando conversa individual com participante: " + participantId);
-                
+
                 Conversa conversa = chatService.criarConversaIndividual(usuario.getId(), participantId);
-                System.out.println("[DEBUG] Conversa criada com sucesso: " + conversa.getId());
-                
+
                 return ResponseEntity.ok(conversa);
             } else if ("grupo".equals(type)) {
                 String titulo = (String) request.get("titulo");
                 @SuppressWarnings("unchecked")
                 List<Long> participantesIds = (List<Long>) request.get("participantes");
-                
+
                 if (titulo == null || titulo.trim().isEmpty()) {
                     System.out.println("[ERROR] Título do grupo não informado");
                     return ResponseEntity.badRequest().build();
                 }
-                
+
                 Conversa conversa = chatService.criarConversaGrupo(titulo, usuario.getId(), participantesIds);
                 return ResponseEntity.ok(conversa);
             } else {
-                System.out.println("[ERROR] Tipo de conversa inválido: " + type);
                 return ResponseEntity.badRequest().build();
             }
         } catch (Exception e) {
-            System.out.println("[ERROR] Erro ao criar conversa: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     /**
      * Busca uma conversa específica
      */
@@ -159,12 +153,12 @@ public class ChatRestController {
             Authentication auth) {
         try {
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
-            
+
             // Verificar se usuário é participante
             if (!chatService.isParticipante(conversaId, usuario.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
+
             return chatService.buscarConversaPorId(conversaId)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
@@ -172,9 +166,9 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     // ==================== MENSAGENS ====================
-    
+
     /**
      * Lista mensagens de uma conversa
      */
@@ -184,23 +178,23 @@ public class ChatRestController {
             Authentication auth) {
         try {
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
-            
+
             // Verificar se usuário é participante
             if (!chatService.isParticipante(conversaId, usuario.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
+
             List<Mensagem> mensagens = chatService.buscarMensagensConversa(conversaId);
-            
+
             // Atualizar última visualização
             chatService.atualizarUltimaVisualizacao(conversaId, usuario.getId());
-            
+
             return ResponseEntity.ok(mensagens);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Envia uma nova mensagem
      */
@@ -217,25 +211,30 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Marca mensagem como lida
      */
-    @PutMapping("/mensagens/{mensagemId}/lida")
-    public ResponseEntity<Void> marcarComoLida(
-            @PathVariable Long mensagemId,
+    
+
+    // metodo teste de ler mensagem
+    @PutMapping("/conversas/{conversaId}/marcar-lidas")
+    public ResponseEntity<Void> marcarMensagensDaConversaComoLidas(
+            @PathVariable Long conversaId,
             Authentication auth) {
         try {
-            Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
-            chatService.marcarMensagemComoLida(mensagemId, usuario.getId());
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+            chatService.marcarMensagensDaConversaComoLidas(conversaId, usuario.getId());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     // ==================== USUÁRIOS ====================
-    
+
     /**
      * Retorna dados do usuário atual logado
      */
@@ -251,7 +250,7 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Lista usuários disponíveis para chat
      */
@@ -267,7 +266,7 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Busca usuários por nome
      */
@@ -282,7 +281,7 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Lista usuários online
      */
@@ -295,9 +294,9 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     // ==================== PARTICIPANTES ====================
-    
+
     /**
      * Adiciona participante a uma conversa em grupo
      */
@@ -311,22 +310,22 @@ public class ChatRestController {
             if (usuario == null) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             Long novoParticipanteId = request.get("usuarioId");
-            
+
             // Verificar se usuário pode adicionar participantes (deve ser admin/criador)
             if (!chatService.podeGerenciarParticipantes(conversaId, usuario.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
-            chatService.adicionarParticipante(conversaId, novoParticipanteId, 
+
+            chatService.adicionarParticipante(conversaId, novoParticipanteId,
                     com.jaasielsilva.portalceo.model.ParticipanteConversa.TipoParticipante.MEMBRO);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Remove participante de uma conversa em grupo
      */
@@ -340,19 +339,19 @@ public class ChatRestController {
             if (usuario == null) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             // Verificar se usuário pode remover participantes (deve ser admin/criador)
             if (!chatService.podeGerenciarParticipantes(conversaId, usuario.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
+
             chatService.removerParticipante(conversaId, usuarioId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Lista participantes de uma conversa
      */
@@ -362,20 +361,20 @@ public class ChatRestController {
             Authentication auth) {
         try {
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
-            
+
             // Verificar se usuário é participante
             if (!chatService.isParticipante(conversaId, usuario.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
+
             return ResponseEntity.ok(chatService.buscarParticipantesAtivos(conversaId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     // ==================== CONVERSAS POR TIPO ====================
-    
+
     /**
      * Busca conversas individuais do usuário
      */
@@ -386,14 +385,14 @@ public class ChatRestController {
             if (usuario == null) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             List<Conversa> conversas = chatService.buscarConversasIndividuaisDoUsuario(usuario.getId());
             return ResponseEntity.ok(conversas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     /**
      * Busca conversas em grupo do usuário
      */
@@ -404,16 +403,16 @@ public class ChatRestController {
             if (usuario == null) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             List<Conversa> conversas = chatService.buscarConversasGrupoDoUsuario(usuario.getId());
             return ResponseEntity.ok(conversas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     // ==================== ESTATÍSTICAS ====================
-    
+
     /**
      * Conta mensagens não lidas do usuário
      */
@@ -427,18 +426,17 @@ public class ChatRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     // ==================== UTILITÁRIOS ====================
-    
+
     /**
      * Verifica status de saúde do chat
      */
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> healthCheck() {
         return ResponseEntity.ok(Map.of(
-            "status", "UP",
-            "service", "Chat Service",
-            "timestamp", System.currentTimeMillis()
-        ));
+                "status", "UP",
+                "service", "Chat Service",
+                "timestamp", System.currentTimeMillis()));
     }
 }

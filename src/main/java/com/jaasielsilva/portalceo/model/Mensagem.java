@@ -31,8 +31,8 @@ public class Mensagem {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String conteudo;
 
-    @Column(name = "data_envio", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime enviadaEm;
+    @Column(name = "data_envio", nullable = false)
+    private LocalDateTime dataEnvio = LocalDateTime.now();
 
     @Column(name = "lida", nullable = false)
 
@@ -122,8 +122,8 @@ public class Mensagem {
 
     @PrePersist
     protected void onCreate() {
-        if (enviadaEm == null) {
-            enviadaEm = LocalDateTime.now();
+        if (dataEnvio == null) {
+            dataEnvio = LocalDateTime.now();
         }
         if (lida == null) {
             lida = false;

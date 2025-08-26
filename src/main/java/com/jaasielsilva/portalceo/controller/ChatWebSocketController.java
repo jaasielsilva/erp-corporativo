@@ -91,7 +91,7 @@ public class ChatWebSocketController {
             Long mensagemId = Long.valueOf(data.get("mensagemId").toString());
             Usuario usuario = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
             
-            chatService.marcarMensagemComoLida(mensagemId, usuario.getId());
+            chatService.marcarMensagensDaConversaComoLidas(mensagemId, usuario.getId());
             
             // Notificar remetente que mensagem foi lida
             messagingTemplate.convertAndSend(

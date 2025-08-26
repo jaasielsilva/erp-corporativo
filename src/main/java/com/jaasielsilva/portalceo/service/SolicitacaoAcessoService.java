@@ -47,29 +47,52 @@ public class SolicitacaoAcessoService {
      * Criar nova solicitação de acesso
      */
     public SolicitacaoAcesso criarSolicitacao(SolicitacaoAcesso solicitacao, Usuario solicitante) {
-        // Validar se colaborador já tem solicitação pendente
-        if (solicitacaoAcessoRepository.existsSolicitacaoPendenteParaColaborador(solicitacao.getColaborador())) {
-            throw new IllegalStateException("Já existe uma solicitação pendente para este colaborador");
+        System.out.println("===== INÍCIO CRIAÇÃO SOLICITAÇÃO =====");
+        System.out.println("Colaborador ID: " + (solicitacao.getColaborador() != null ? solicitacao.getColaborador().getId() : "NULL"));
+        System.out.println("Solicitante: " + solicitante.getEmail());
+        
+        try {
+            // Validar se colaborador já tem solicitação pendente
+            System.out.println("Verificando solicitação pendente...");
+            if (solicitacaoAcessoRepository.existsSolicitacaoPendenteParaColaborador(solicitacao.getColaborador())) {
+                throw new IllegalStateException("Já existe uma solicitação pendente para este colaborador");
+            }
+            System.out.println("Verificação de solicitação pendente OK");
+
+            // Definir dados do solicitante
+            System.out.println("Definindo dados do solicitante...");
+            solicitacao.setSolicitanteUsuario(solicitante);
+            solicitacao.setSolicitanteNome(solicitante.getNome());
+            solicitacao.setSolicitanteCargo(solicitante.getCargo() != null ? solicitante.getCargo().getNome() : "");
+            solicitacao.setSolicitanteDepartamento(
+                    solicitante.getDepartamento() != null ? solicitante.getDepartamento().getNome() : "");
+            solicitacao.setSolicitanteEmail(solicitante.getEmail());
+            System.out.println("Dados do solicitante definidos OK");
+
+            // Validar dados obrigatórios
+            System.out.println("Validando solicitação...");
+            validarSolicitacao(solicitacao);
+            System.out.println("Validação OK");
+
+            // Salvar solicitação
+            System.out.println("Salvando solicitação...");
+            SolicitacaoAcesso solicitacaoSalva = solicitacaoAcessoRepository.save(solicitacao);
+            System.out.println("Solicitação salva com protocolo: " + solicitacaoSalva.getProtocolo());
+
+            // Enviar notificação por email
+            System.out.println("Enviando notificação...");
+            enviarNotificacaoNovaSolicitacao(solicitacaoSalva);
+            System.out.println("Notificação enviada OK");
+
+            System.out.println("===== FIM CRIAÇÃO SOLICITAÇÃO =====");
+            return solicitacaoSalva;
+            
+        } catch (Exception e) {
+            System.err.println("##### ERRO NA CRIAÇÃO DA SOLICITAÇÃO #####");
+            System.err.println("Erro: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-
-        // Definir dados do solicitante
-        solicitacao.setSolicitanteUsuario(solicitante);
-        solicitacao.setSolicitanteNome(solicitante.getNome());
-        solicitacao.setSolicitanteCargo(solicitante.getCargo() != null ? solicitante.getCargo().getNome() : "");
-        solicitacao.setSolicitanteDepartamento(
-                solicitante.getDepartamento() != null ? solicitante.getDepartamento().getNome() : "");
-        solicitacao.setSolicitanteEmail(solicitante.getEmail());
-
-        // Validar dados obrigatórios
-        validarSolicitacao(solicitacao);
-
-        // Salvar solicitação
-        SolicitacaoAcesso solicitacaoSalva = solicitacaoAcessoRepository.save(solicitacao);
-
-        // Enviar notificação por email
-        enviarNotificacaoNovaSolicitacao(solicitacaoSalva);
-
-        return solicitacaoSalva;
     }
 
     /**

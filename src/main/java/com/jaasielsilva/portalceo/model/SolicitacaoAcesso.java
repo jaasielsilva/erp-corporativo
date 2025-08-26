@@ -137,7 +137,16 @@ public class SolicitacaoAcesso {
     // Construtores
     public SolicitacaoAcesso() {
         this.dataSolicitacao = LocalDateTime.now();
-        this.protocolo = gerarProtocolo();
+    }
+    
+    @PrePersist
+    private void prePersist() {
+        if (this.protocolo == null || this.protocolo.isEmpty()) {
+            this.protocolo = gerarProtocolo();
+        }
+        if (this.dataSolicitacao == null) {
+            this.dataSolicitacao = LocalDateTime.now();
+        }
     }
     
     // Método para gerar protocolo único

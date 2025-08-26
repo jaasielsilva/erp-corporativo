@@ -51,6 +51,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
    // Método para buscar usuários ativos excluindo um usuário específico com filtro de nome (para chat)
    List<Usuario> findByIdNotAndStatusAndNomeContainingIgnoreCaseOrderByNome(Long id, Usuario.Status status, String nome);
    
+   // Método otimizado para geração de matrícula única
+   Optional<Usuario> findTopByMatriculaStartingWithOrderByMatriculaDesc(String prefix);
+   
    // Método otimizado para busca simples de usuário (apenas campos básicos)
    @Query("SELECT new Usuario(u.id, u.nome, u.email, u.fotoPerfil, u.online, u.status) FROM Usuario u WHERE u.email = :email")
    Optional<Usuario> findByEmailSimple(@Param("email") String email);

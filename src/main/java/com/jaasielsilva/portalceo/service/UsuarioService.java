@@ -177,12 +177,45 @@ public class UsuarioService {
      * Gera uma matrícula única para um novo usuário
      */
     public String gerarMatriculaUnica() {
-        long totalUsuarios = usuarioRepository.count();
+        long startTime = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Iniciando geração de matrícula única");
+        
+        // Otimização: buscar a maior matrícula existente em vez de contar todos os usuários
+        long countStart = System.currentTimeMillis();
+        String ultimaMatricula = usuarioRepository.findTopByMatriculaStartingWithOrderByMatriculaDesc("USR")
+                .map(Usuario::getMatricula)
+                .orElse("USR0000");
+        long countEnd = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo para buscar última matrícula: " + (countEnd - countStart) + "ms");
+        
+        // Extrair número da última matrícula e incrementar
+        int proximoNumero = 1;
+        if (!"USR0000".equals(ultimaMatricula)) {
+            try {
+                proximoNumero = Integer.parseInt(ultimaMatricula.substring(3)) + 1;
+            } catch (NumberFormatException e) {
+                System.err.println("Erro ao extrair número da matrícula: " + ultimaMatricula);
+                // Fallback para método original
+                long totalUsuarios = usuarioRepository.count();
+                proximoNumero = (int) totalUsuarios + 1;
+            }
+        }
+        
         String matricula;
+        int tentativas = 0;
         do {
-            totalUsuarios++;
-            matricula = String.format("USR%04d", totalUsuarios);
+            matricula = String.format("USR%04d", proximoNumero);
+            proximoNumero++;
+            tentativas++;
+            
+            if (tentativas > 100) {
+                throw new RuntimeException("Não foi possível gerar matrícula única após 100 tentativas");
+            }
         } while (usuarioRepository.findByMatricula(matricula).isPresent());
+        
+        long endTime = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Matrícula gerada: " + matricula + " em " + tentativas + " tentativas, tempo total: " + (endTime - startTime) + "ms");
+        
         return matricula;
     }
 

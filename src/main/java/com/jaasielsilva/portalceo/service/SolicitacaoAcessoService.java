@@ -48,17 +48,20 @@ public class SolicitacaoAcessoService {
      * Criar nova solicitação de acesso
      */
     public SolicitacaoAcesso criarSolicitacao(SolicitacaoAcesso solicitacao, Usuario solicitante) {
+        long startTime = System.currentTimeMillis();
         System.out.println("===== INÍCIO CRIAÇÃO SOLICITAÇÃO =====");
         System.out.println("Colaborador ID: " + (solicitacao.getColaborador() != null ? solicitacao.getColaborador().getId() : "NULL"));
         System.out.println("Solicitante: " + solicitante.getEmail());
         
         try {
             // Validar se colaborador já tem solicitação pendente (otimizado)
+            long checkStart = System.currentTimeMillis();
             System.out.println("Verificando solicitação pendente...");
             if (solicitacaoAcessoRepository.existsSolicitacaoPendenteParaColaborador(solicitacao.getColaborador().getId())) {
                 throw new IllegalStateException("Já existe uma solicitação pendente para este colaborador");
             }
-            System.out.println("Verificação de solicitação pendente OK");
+            long checkEnd = System.currentTimeMillis();
+            System.out.println("Verificação de solicitação pendente OK - Tempo: " + (checkEnd - checkStart) + "ms");
 
             // Definir dados do solicitante (otimizado)
             System.out.println("Definindo dados do solicitante...");
@@ -82,16 +85,19 @@ public class SolicitacaoAcessoService {
             System.out.println("Validação OK");
 
             // Salvar solicitação
+            long saveStart = System.currentTimeMillis();
             System.out.println("Salvando solicitação...");
             SolicitacaoAcesso solicitacaoSalva = solicitacaoAcessoRepository.save(solicitacao);
-            System.out.println("Solicitação salva com protocolo: " + solicitacaoSalva.getProtocolo());
+            long saveEnd = System.currentTimeMillis();
+            System.out.println("Solicitação salva com protocolo: " + solicitacaoSalva.getProtocolo() + " - Tempo: " + (saveEnd - saveStart) + "ms");
 
             // Enviar notificação de forma assíncrona para não bloquear o processo
             System.out.println("Agendando notificação assíncrona...");
             enviarNotificacaoNovaSolicitacaoAsync(solicitacaoSalva);
             System.out.println("Notificação agendada OK");
 
-            System.out.println("===== FIM CRIAÇÃO SOLICITAÇÃO =====");
+            long endTime = System.currentTimeMillis();
+            System.out.println("===== FIM CRIAÇÃO SOLICITAÇÃO ===== Tempo total: " + (endTime - startTime) + "ms");
             return solicitacaoSalva;
             
         } catch (Exception e) {
@@ -108,6 +114,9 @@ public class SolicitacaoAcessoService {
     public SolicitacaoAcesso aprovarSolicitacao(Long solicitacaoId, Usuario aprovador,
             SolicitacaoAcesso.NivelAcesso nivelAprovado,
             String emailCorporativo, String observacoes) {
+        long startTime = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Iniciando aprovação da solicitação ID: " + solicitacaoId);
+        
         SolicitacaoAcesso solicitacao = buscarPorId(solicitacaoId)
                 .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada"));
 
@@ -124,10 +133,17 @@ public class SolicitacaoAcessoService {
         solicitacao.setEmailCorporativo(emailCorporativo);
         solicitacao.setObservacoesAprovador(observacoes);
 
+        // Salvar a solicitação aprovada
+        long saveStart = System.currentTimeMillis();
         SolicitacaoAcesso solicitacaoSalva = solicitacaoAcessoRepository.save(solicitacao);
+        long saveEnd = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo para salvar aprovação: " + (saveEnd - saveStart) + "ms");
 
-        // Enviar notificação de aprovação
+        // Enviar notificação de aprovação (assíncrono)
         enviarNotificacaoAprovacao(solicitacaoSalva);
+
+        long endTime = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo total de aprovação: " + (endTime - startTime) + "ms");
 
         return solicitacaoSalva;
     }
@@ -162,6 +178,9 @@ public class SolicitacaoAcessoService {
      * Criar usuário após aprovação
      */
     public Usuario criarUsuarioAposAprovacao(Long solicitacaoId) {
+        long startTime = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Iniciando criação de usuário para solicitação ID: " + solicitacaoId);
+        
         SolicitacaoAcesso solicitacao = buscarPorId(solicitacaoId)
                 .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada"));
 
@@ -174,6 +193,7 @@ public class SolicitacaoAcessoService {
         }
 
         // Criar usuário baseado na solicitação aprovada
+        long userCreationStart = System.currentTimeMillis();
         Usuario novoUsuario = new Usuario();
         novoUsuario.setNome(solicitacao.getColaborador().getNome());
         novoUsuario.setEmail(solicitacao.getEmailCorporativo());
@@ -182,34 +202,51 @@ public class SolicitacaoAcessoService {
         novoUsuario.setCargo(solicitacao.getColaborador().getCargo());
         novoUsuario.setDepartamento(solicitacao.getColaborador().getDepartamento());
         novoUsuario.setDataAdmissao(solicitacao.getColaborador().getDataAdmissao());
+        long userCreationEnd = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo para criar objeto usuário: " + (userCreationEnd - userCreationStart) + "ms");
 
         // Gerar matrícula única
+        long matriculaStart = System.currentTimeMillis();
         String matricula = usuarioService.gerarMatriculaUnica();
         novoUsuario.setMatricula(matricula);
+        long matriculaEnd = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo para gerar matrícula única: " + (matriculaEnd - matriculaStart) + "ms");
 
         // Definir nível de acesso baseado na aprovação
         NivelAcesso nivelAcesso = mapearNivelAcesso(solicitacao.getNivelAprovado());
         novoUsuario.setNivelAcesso(nivelAcesso);
 
         // Gerar senha temporária
+        long senhaStart = System.currentTimeMillis();
         String senhaTemporaria = gerarSenhaTemporaria();
         novoUsuario.setSenha(senhaTemporaria); // Será criptografada pelo UsuarioService
+        long senhaEnd = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo para gerar senha temporária: " + (senhaEnd - senhaStart) + "ms");
 
         // Salvar o novo usuário
+        long saveUserStart = System.currentTimeMillis();
         try {
             usuarioService.salvarUsuario(novoUsuario);
         } catch (Exception e) {
             throw new RuntimeException("Erro ao salvar novo usuário: " + e.getMessage(), e);
         }
+        long saveUserEnd = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo para salvar usuário no banco: " + (saveUserEnd - saveUserStart) + "ms");
 
         // Atualizar solicitação
+        long updateSolicitacaoStart = System.currentTimeMillis();
         solicitacao.setUsuarioCriado(novoUsuario);
         solicitacao.setStatus(StatusSolicitacao.USUARIO_CRIADO);
         solicitacaoAcessoRepository.save(solicitacao);
+        long updateSolicitacaoEnd = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo para atualizar solicitação: " + (updateSolicitacaoEnd - updateSolicitacaoStart) + "ms");
 
-        // Enviar credenciais por email
+        // Enviar credenciais por email (assíncrono)
         enviarCredenciaisUsuario(solicitacao, novoUsuario, senhaTemporaria);
 
+        long endTime = System.currentTimeMillis();
+        System.out.println("[PERFORMANCE] Tempo total para criar usuário: " + (endTime - startTime) + "ms");
+        
         return novoUsuario;
     }
 
@@ -549,10 +586,13 @@ public class SolicitacaoAcessoService {
     }
 
     /**
-     * Enviar notificação de aprovação
+     * Enviar notificação de aprovação de forma assíncrona
      */
-    private void enviarNotificacaoAprovacao(SolicitacaoAcesso solicitacao) {
+    @Async
+    public void enviarNotificacaoAprovacao(SolicitacaoAcesso solicitacao) {
         try {
+            System.out.println("Iniciando envio assíncrono de notificação de aprovação para protocolo: " + solicitacao.getProtocolo());
+            
             // Enviar email
             emailService.enviarNotificacaoAprovacao(
                     solicitacao.getSolicitanteEmail(),
@@ -565,17 +605,23 @@ public class SolicitacaoAcessoService {
                 .ifPresent(usuario -> {
                     notificationService.notifyAccessRequestApproved(usuario, solicitacao.getProtocolo());
                 });
+            
+            System.out.println("Notificação de aprovação enviada com sucesso para protocolo: " + solicitacao.getProtocolo());
                 
         } catch (Exception e) {
-            System.err.println("Erro ao enviar notificação de aprovação: " + e.getMessage());
+            System.err.println("Erro ao enviar notificação assíncrona de aprovação: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     /**
-     * Enviar notificação de rejeição
+     * Enviar notificação de rejeição de forma assíncrona
      */
-    private void enviarNotificacaoRejeicao(SolicitacaoAcesso solicitacao) {
+    @Async
+    public void enviarNotificacaoRejeicao(SolicitacaoAcesso solicitacao) {
         try {
+            System.out.println("Iniciando envio assíncrono de notificação de rejeição para protocolo: " + solicitacao.getProtocolo());
+            
             // Enviar email
             emailService.enviarNotificacaoRejeicao(
                     solicitacao.getSolicitanteEmail(),
@@ -592,24 +638,33 @@ public class SolicitacaoAcessoService {
                         solicitacao.getObservacoesAprovador()
                     );
                 });
+            
+            System.out.println("Notificação de rejeição enviada com sucesso para protocolo: " + solicitacao.getProtocolo());
                 
         } catch (Exception e) {
-            System.err.println("Erro ao enviar notificação de rejeição: " + e.getMessage());
+            System.err.println("Erro ao enviar notificação assíncrona de rejeição: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     /**
-     * Enviar credenciais do usuário
+     * Enviar credenciais do usuário de forma assíncrona
      */
-    private void enviarCredenciaisUsuario(SolicitacaoAcesso solicitacao, Usuario usuario, String senhaTemporaria) {
+    @Async
+    public void enviarCredenciaisUsuario(SolicitacaoAcesso solicitacao, Usuario usuario, String senhaTemporaria) {
         try {
+            System.out.println("Iniciando envio assíncrono de credenciais para usuário: " + usuario.getEmail());
+            
             emailService.enviarCredenciais(
                     usuario.getEmail(),
                     usuario.getNome(),
-                    usuario.getMatricula(),
+                    usuario.getEmail(),
                     senhaTemporaria);
+            
+            System.out.println("Credenciais enviadas com sucesso para usuário: " + usuario.getEmail());
         } catch (Exception e) {
-            System.err.println("Erro ao enviar credenciais: " + e.getMessage());
+            System.err.println("Erro ao enviar credenciais assíncronas: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

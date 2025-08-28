@@ -5,13 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Adesão aos Benefícios - ERP Corporativo</title>
-
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/css/style.css" rel="stylesheet">
   <link href="/css/sidebar.css" rel="stylesheet">
   <link href="/css/notifications.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/benefits-modal.css}">
-
 </head>
 
 <body>
@@ -21,18 +21,17 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
-        <h1>Adesão aos Benefícios</h1>
         <h2>Gerenciamento de adesões e cancelamentos de benefícios</h2>
 
-        <div class="action-buttons">
+        <div class="action-buttons mb-3">
           <button type="button" onclick="abrirModalAdesao()" class="btn btn-primary">
             <i class="fas fa-plus"></i> Nova Adesão
           </button>
         </div>
 
-        <article class="card">
+        <article class="card p-3">
           <h3><i class="fas fa-list"></i> Adesões e Cancelamentos</h3>
-          <table class="table-list">
+          <table class="table table-striped table-list">
             <thead>
               <tr>
                 <th>Colaborador</th>
@@ -50,8 +49,7 @@
                 <td>
                   <strong
                     th:text="${adesao.colaborador != null ? adesao.colaborador.nome : 'Colaborador não informado'}">Nome
-                    do
-                    Colaborador</strong><br>
+                    do Colaborador</strong><br>
                   <small
                     th:text="${adesao.colaborador != null && adesao.colaborador.departamento != null ? adesao.colaborador.departamento.nome : 'Departamento não informado'}"
                     class="text-muted">Departamento</small>
@@ -66,100 +64,104 @@
                 </td>
                 <td>
                   <span class="tipo-badge"
-                    th:classappend="${adesao.status != null ? adesao.status.name().toLowerCase() : 'indefinido'}"
-                    th:text="${adesao.status != null ? adesao.status.name() : 'INDEFINIDO'}">Status</span>
+                    th:text="${adesao.quantidadeDependentes != null && adesao.quantidadeDependentes > 0 ? 'Familiar (' + adesao.quantidadeDependentes + ' dependente' + (adesao.quantidadeDependentes > 1 ? 's' : '') + ')' : 'Individual'}"></span>
                 </td>
                 <td
                   th:text="${adesao.dataAdesao != null ? #temporals.format(adesao.dataAdesao, 'dd/MM/yyyy') : 'Não informado'}">
-                  Data
-                  Adesão</td>
+                  Data Adesão</td>
                 <td
                   th:text="${adesao.dataVigenciaInicio != null ? #temporals.format(adesao.dataVigenciaInicio, 'dd/MM/yyyy') : 'Não informado'}">
-                  Data
-                  Vigência</td>
+                  Data Vigência</td>
                 <td>
                   <span th:if="${adesao.valorTotalMensal != null}"
-                    th:text="|R$ ${#numbers.formatDecimal(adesao.valorTotalMensal, 1, 'COMMA', 2, 'POINT')}|">
-                    Valor
-                  </span>
-                  <span th:unless="${adesao.valorTotalMensal != null}" class="text-muted">
-                    Não calculado
-                  </span>
+                    th:text="|R$ ${#numbers.formatDecimal(adesao.valorTotalMensal, 1, 'COMMA', 2, 'POINT')}|">Valor</span>
+                  <span th:unless="${adesao.valorTotalMensal != null}" class="text-muted">Não calculado</span>
                 </td>
-
                 <td>
                   <span class="status-badge"
-                    th:classappend="'status-' + ${adesao.status != null ? adesao.status.name().toLowerCase() : 'indefinido'}"
+                    th:classappend="' status-' + ${adesao.status != null ? adesao.status.name().toLowerCase() : 'indefinido'}"
                     th:text="${adesao.status != null ? adesao.status.name() : 'INDEFINIDO'}">Status</span>
                 </td>
                 <td>
-                  <button type="button"
-                    th:attr="onclick='verDetalhesAdesao(' + ${adesao.id != null ? adesao.id : 0} + ')'" class="btn-icon"
-                    title="Ver Detalhes" th:disabled="${adesao.id == null}">
-                    <i class="fas fa-eye"></i>
-                  </button>
+                  <button type="button" class="btn btn-info btn-sm me-1" title="Ver Detalhes"
+                    th:attr="onclick='verDetalhesAdesao(' + ${adesao.id != null ? adesao.id : 0} + ')'"
+                    th:disabled="${adesao.id == null}"><i class="fas fa-search"></i></button>
+
+                  <button type="button" class="btn btn-warning btn-sm me-1 btn-editar" title="Editar Adesão"
+                    th:attr="data-id=${adesao.id}"
+                    th:if="${adesao.status != null && adesao.status.name() == 'ATIVA'}"><i
+                      class="fas fa-edit"></i></button>
+
+                  <button type="button" class="btn btn-danger btn-sm" title="Cancelar Adesão"
+                    th:attr="onclick='cancelarAdesao(' + ${adesao.id} + ')'"
+                    th:if="${adesao.status != null && adesao.status.name() == 'ATIVA'}"><i
+                      class="fas fa-times"></i></button>
                 </td>
               </tr>
+
               <tr th:if="${adesoes == null || adesoes.isEmpty()}">
                 <td colspan="8" class="text-center text-muted py-4">
                   <i class="fas fa-info-circle"></i> Nenhuma adesão encontrada
                 </td>
               </tr>
+            </tbody>
+          </table>
 
-              <!-- ✅ Modal fora da tabela -->
-              <div id="modalAdesao" class="modal" style="display: none;">
-                <div class="modal-content">
-                  <span class="close" onclick="fecharModalAdesao()">&times;</span>
-                  <h2>Nova Adesão - Plano de Saúde</h2>
+          <!-- Controles de Paginação -->
+          <div class="d-flex justify-content-end mt-3">
+            <nav>
+              <ul id="pagination" class="pagination pagination-sm mb-0"></ul>
+            </nav>
+          </div>
+        </article>
 
-                  <form id="formAdesao" method="post" th:action="@{/rh/beneficios/plano-saude/adesao/salvar}">
+        <!-- Modal -->
+        <div id="modalAdesao" class="modal" style="display:none;">
+          <div class="modal-content">
+            <span class="close" onclick="fecharModalAdesao()">&times;</span>
+            <h2>Nova Adesão - Plano de Saúde</h2>
+            <form id="formAdesao" method="post" th:action="@{/rh/beneficios/adesao/salvar}">
+              <div class="form-group">
+                <label for="colaborador">Colaborador</label>
+                <select id="colaborador" name="colaboradorId" required>
+                  <option value="">Selecione</option>
+                  <option th:each="colaborador : ${colaboradores}" th:value="${colaborador.id}"
+                    th:text="${colaborador.nome}"></option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="planoSaude">Plano de Saúde *</label>
+                <select id="planoSaude" name="planoId" required>
+                  <option value="">Selecione um plano</option>
+                  <option th:each="plano : ${plano_de_saude}" th:value="${plano.id}"
+                    th:text="${plano.nome + ' - ' + plano.operadora + ' (R$ ' + #numbers.formatDecimal(plano.valorTitular, 1, 2) + ')'}"
+                    th:attr="data-valor-titular=${plano.valorTitular}, data-valor-dependente=${plano.valorDependente}">
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="tipoAdesao">Tipo de Adesão *</label>
+                <select id="tipoAdesao" name="tipoAdesao" required>
+                  <option value="">Selecione</option>
+                  <option value="NOVA">Nova Adesão</option>
+                 
+                </select>
+              </div>
 
 
-                    <!-- Colaborador -->
-                    <div class="form-group">
-                      <label for="colaborador">Colaborador</label>
-                      <select id="colaborador" name="colaboradorId" required>
-                        <option value="">Selecione</option>
-                        <option th:each="colaborador : ${colaboradores}" th:value="${colaborador.id}"
-                          th:text="${colaborador.nome}"></option>
-                      </select>
-                    </div>
+              <div class="form-group">
+                <label for="dependentes">Quantidade de Dependentes</label>
+                <input type="number" id="dependentes" name="quantidadeDependentes" min="0" value="0">
+              </div>
 
-                    <!-- Plano de Saúde -->
-                    <div class="form-group">
-                      <label for="planoSaude">Plano de Saúde *</label>
-                      <select id="planoSaude" name="planoId" required>
-                        <option value="">Selecione um plano</option>
-                        <option th:each="plano : ${plano_de_saude}" th:value="${plano.id}"
-                          th:text="${plano.nome + ' - ' + plano.operadora + ' (R$ ' + #numbers.formatDecimal(plano.valorTitular, 1, 2) + ')'}"
-                          th:attr="data-valor-titular=${plano.valorTitular}, data-valor-dependente=${plano.valorDependente}"></option>
-                      </select>
-                    </div>
+              <div class="form-group">
+                <label for="dataVigencia">Data de Vigência *</label>
+                <input type="date" id="dataVigencia" name="dataVigencia" required>
+              </div>
 
-                    <!-- Tipo de Adesão -->
-                    <div class="form-group">
-                      <label for="tipoAdesao">Tipo de Adesão *</label>
-                      <select id="tipoAdesao" name="tipoAdesao" required>
-                        <option value="">Selecione</option>
-                        <option value="NOVA">Nova Adesão</option>
-                        <option value="INCLUSAO_DEPENDENTE">Inclusão de Dependente</option>
-                        <option value="ALTERACAO_PLANO">Alteração de Plano</option>
-                      </select>
-                    </div>
-
-                    <!-- Dependentes -->
-                    <div class="form-group">
-                      <label for="dependentes">Quantidade de Dependentes</label>
-                      <input type="number" id="dependentes" name="quantidadeDependentes" min="0" value="0">
-                    </div>
-
-                    <!-- Data de Vigência -->
-                    <div class="form-group">
-                      <label for="dataVigencia">Data de Vigência *</label>
-                      <input type="date" id="dataVigencia" name="dataVigencia" required>
-                    </div>
-
-                    <!-- Resumo de Valores -->
+               <!-- Resumo de Valores -->
                     <div class="form-group" id="resumoValores" style="display: none;">
                       <div class="card" style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6;">
                         <h5>Resumo de Valores</h5>
@@ -175,50 +177,223 @@
                       </div>
                     </div>
 
-                    <!-- Observações -->
-                    <div class="form-group">
-                      <label for="observacoes">Observações</label>
-                      <textarea id="observacoes" name="observacoes" rows="3" placeholder="Informações adicionais sobre a adesão..."></textarea>
-                    </div>
-
-                    <!-- Botões -->
-                    <div class="form-actions">
-                      <button type="submit" class="btn btn-primary">Salvar</button>
-                      <button type="button" class="btn btn-secondary" onclick="fecharModalAdesao()">Cancelar</button>
-                    </div>
-
-                  </form>
-                </div>
+              <div class="form-group">
+                <label for="observacoes">Observações (opcional)</label>
+                <textarea id="observacoes" name="observacoes" rows="2"
+                  placeholder="Observações adicionais..."></textarea>
               </div>
 
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="button" class="btn btn-secondary" onclick="fecharModalAdesao()">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
 
-            </tbody>
-          </table>
-        </article>
+      </section>
 
+      <!-- Modal de Edição de Adesão -->
+      <div id="modalEdicaoAdesao" class="modal" style="display: none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Editar Adesão - Plano de Saúde</h2>
+            <span class="close" onclick="fecharModalEdicaoAdesao()">&times;</span>
+          </div>
+          <div class="modal-body">
+            <form id="formEdicaoAdesao">
+              <input type="hidden" id="editAdesaoId" name="adesaoId">
+              
+              <div class="form-group">
+                <label for="editColaborador">Colaborador:</label>
+                <input type="text" id="editColaborador" name="colaborador" readonly class="form-control-readonly">
+                <input type="hidden" id="editColaboradorId" name="colaboradorId">
+              </div>
 
-  </div>
-  </div>
-  </div>
+              <div class="form-group">
+                <label for="editPlanoSaude">Plano de Saúde:</label>
+                <select id="editPlanoSaude" name="planoId" required>
+                  <option value="">Selecione um plano</option>
+                  <option th:each="plano : ${plano_de_saude}" th:value="${plano.id}" th:text="${plano.nome}"></option>
+                </select>
+              </div>
 
-  </section>
+              <div class="form-group">
+                <label for="editTipoAdesao">Tipo de Adesão:</label>
+                <select id="editTipoAdesao" name="tipoAdesao" required>
+                  <option value="NOVA">Nova Adesão</option>
+                  <option value="MUDANCA">Mudança de Plano</option>
+                </select>
+              </div>
 
-  <footer th:replace="~{components/footer :: footer}"></footer>
-  </main>
+              <div class="form-group" id="editDivJustificativa" style="display: none;">
+                <label for="editJustificativa">Justificativa para Mudança:</label>
+                <textarea id="editJustificativa" name="justificativa" rows="2" placeholder="Informe o motivo da mudança de plano"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="editDependentes">Quantidade de Dependentes:</label>
+                <input type="number" id="editDependentes" name="quantidadeDependentes" min="0" max="10" value="0">
+              </div>
+
+              <div class="form-group">
+                <label for="editDataVigencia">Data de Vigência:</label>
+                <input type="date" id="editDataVigencia" name="dataVigencia" required>
+              </div>
+
+              <div class="form-group">
+                <label for="editObservacoes">Observações (opcional):</label>
+                <textarea id="editObservacoes" name="observacoes" rows="2" placeholder="Observações adicionais"></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Atualizar</button>
+                <button type="button" class="btn btn-secondary" onclick="fecharModalEdicaoAdesao()">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
   </div>
 
   <script src="/js/sidebar.js" defer></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script th:src="@{/js/notifications.js}"></script>
-  
-  <!-- Dados dos planos para JavaScript -->
-  <script th:inline="javascript">
-    window.valoresPlanosJson = /*[[${valoresPlanosJson}]]*/ {};
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Paginação
+      const rowsPerPage = 5;
+      const table = document.querySelector('.table-list tbody');
+      const rows = Array.from(table.querySelectorAll('tr')).filter(r => !r.querySelector('#modalAdesao'));
+      const pagination = document.getElementById('pagination');
+
+      let currentPage = 1;
+      const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+      function showPage(page) {
+        rows.forEach((row, index) => {
+          row.style.display = (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) ? '' : 'none';
+        });
+        renderPagination();
+      }
+
+      // Event listener para o formulário de edição
+      document.getElementById("formEdicaoAdesao").addEventListener("submit", function (e) {
+        e.preventDefault();
+        
+        const adesaoId = document.getElementById("editAdesaoId").value;
+        const formData = new FormData(this);
+        const dados = Object.fromEntries(formData.entries());
+        
+        fetch(`/rh/beneficios/adesao/salvar/${adesaoId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dados)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showNotification(data.message, 'success');
+            fecharModalEdicaoAdesao();
+            location.reload();
+          } else {
+            showNotification(data.message, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+          showNotification('Erro ao atualizar adesão', 'error');
+        });
+      });
+
+      function renderPagination() {
+        pagination.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+          const li = document.createElement('li');
+          li.className = 'page-item ' + (i === currentPage ? 'active' : '');
+          const a = document.createElement('a');
+          a.className = 'page-link';
+          a.href = '#';
+          a.textContent = i;
+          a.addEventListener('click', function (e) {
+            e.preventDefault();
+            currentPage = i;
+            showPage(currentPage);
+          });
+          li.appendChild(a);
+          pagination.appendChild(li);
+        }
+      }
+
+      showPage(currentPage);
+
+      // Controle de permissão nos botões de editar
+      const botoesEditar = document.querySelectorAll(".btn-editar");
+      botoesEditar.forEach(botao => {
+        const id = botao.getAttribute("data-id");
+        if (!usuarioPodeEditarAdesao) {
+          botao.disabled = true;
+          botao.title = "Você não tem permissão para editar esta adesão.";
+        }
+        botao.addEventListener("click", function () {
+          if (usuarioPodeEditarAdesao) {
+            abrirFormEdicao(id);
+          }
+        });
+      });
+    });
+
+    function abrirFormEdicao(idAdesao) {
+      fetch(`/rh/beneficios/adesao/json/${idAdesao}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Não foi possível obter os dados da adesão");
+          return res.json();
+        })
+        .then(data => {
+          // Preencher o formulário de edição com os dados da adesão
+          document.getElementById("editAdesaoId").value = data.id;
+          document.getElementById("editColaboradorId").value = data.colaboradorId;
+          document.getElementById("editColaborador").value = data.colaboradorNome || 'Colaborador';
+          document.getElementById("editPlanoSaude").value = data.planoId;
+          document.getElementById("editTipoAdesao").value = data.tipoAdesao;
+          document.getElementById("editDependentes").value = data.quantidadeDependentes;
+          document.getElementById("editDataVigencia").value = data.dataVigencia || new Date().toISOString().slice(0, 10);
+          document.getElementById("editObservacoes").value = data.observacoes || "";
+
+          // Abrir o modal de edição
+          abrirModalEdicaoAdesao();
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function abrirModalEdicaoAdesao() {
+      document.getElementById("modalEdicaoAdesao").style.display = "block";
+    }
+
+    function fecharModalEdicaoAdesao() {
+      document.getElementById("modalEdicaoAdesao").style.display = "none";
+      document.getElementById("formEdicaoAdesao").reset();
+    }
+
+
+
+    function abrirModalAdesao() {
+      document.getElementById("modalAdesao").style.display = "block";
+    }
+
+    function fecharModalAdesao() {
+      document.getElementById("modalAdesao").style.display = "none";
+      document.getElementById("formAdesao").reset();
+      document.querySelector("#formAdesao button[type='submit']").textContent = "Salvar";
+    }
   </script>
-  
-  <script src="/js/adesao.js" defer></script>
-
-
 </body>
 
 </html>

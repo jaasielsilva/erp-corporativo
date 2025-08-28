@@ -11,6 +11,7 @@ import com.jaasielsilva.portalceo.repository.AdesaoPlanoSaudeRepository;
 import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -117,5 +118,31 @@ public class AdesaoPlanoSaudeService {
      */
     public List<AdesaoPlanoSaude> listarTodos() {
         return repository.findAll();
+    }
+
+    /** Cancela uma adesão */
+    @Transactional
+    public void cancelarAdesao(Long id, String motivo) {
+        AdesaoPlanoSaude adesao = buscarPorId(id);
+
+        if (adesao.getStatus() == StatusAdesao.CANCELADA) {
+            throw new IllegalArgumentException("Esta adesão já está cancelada");
+        }
+
+        if (adesao.getStatus() != StatusAdesao.ATIVA && adesao.getStatus() != StatusAdesao.PENDENTE) {
+            throw new IllegalArgumentException("Apenas adesões ativas ou pendentes podem ser canceladas");
+        }
+
+        adesao.setStatus(StatusAdesao.CANCELADA);
+        adesao.setDataCancelamento(LocalDate.now());
+
+        if (motivo != null && !motivo.trim().isEmpty()) {
+            String observacaoAtual = adesao.getObservacoes() != null ? adesao.getObservacoes() : "";
+            String novaObservacao = observacaoAtual.isEmpty() ? "Cancelamento: " + motivo
+                    : observacaoAtual + " | Cancelamento: " + motivo;
+            adesao.setObservacoes(novaObservacao);
+        }
+
+        repository.save(adesao);
     }
 }

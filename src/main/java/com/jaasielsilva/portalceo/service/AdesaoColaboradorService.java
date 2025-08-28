@@ -258,6 +258,26 @@ public class AdesaoColaboradorService {
     }
 
     /**
+     * Obtém benefícios selecionados da sessão
+     */
+    public Map<String, Object> obterBeneficiosSessao(String sessionId) {
+        AdesaoColaboradorDTO dadosAdesao = adesaoTemporaria.get(sessionId);
+        if (dadosAdesao == null) {
+            return new HashMap<>();
+        }
+        
+        Map<String, Object> beneficios = dadosAdesao.getBeneficiosSelecionados();
+        return beneficios != null ? beneficios : new HashMap<>();
+    }
+
+    /**
+     * Verifica se a sessão existe
+     */
+    public boolean existeSessao(String sessionId) {
+        return adesaoTemporaria.containsKey(sessionId);
+    }
+
+    /**
      * Obtém dados completos da adesão para revisão
      */
     public AdesaoColaboradorDTO obterDadosCompletos(String sessionId) {

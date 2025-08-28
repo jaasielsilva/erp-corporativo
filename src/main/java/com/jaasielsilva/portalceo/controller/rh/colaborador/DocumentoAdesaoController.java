@@ -1,5 +1,7 @@
 package com.jaasielsilva.portalceo.controller.rh.colaborador;
 
+import com.jaasielsilva.portalceo.service.AdesaoSecurityService;
+import com.jaasielsilva.portalceo.service.AuditService;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService.DocumentoInfo;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService.DocumentoException;
@@ -15,7 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +40,12 @@ public class DocumentoAdesaoController {
     @Autowired
     private DocumentoAdesaoService documentoService;
     
+    @Autowired
+    private AdesaoSecurityService securityService;
+    
+    @Autowired
+    private AuditService auditService;
+    
     /**
      * Upload de documento
      */
@@ -44,38 +53,71 @@ public class DocumentoAdesaoController {
     public ResponseEntity<Map<String, Object>> uploadDocumento(
             @RequestParam("arquivo") MultipartFile arquivo,
             @RequestParam("tipoDocumento") String tipoDocumento,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
         
         Map<String, Object> response = new HashMap<>();
+        String clientIp = getClientIp(request);
         
         try {
+            // Verificar rate limiting
+             if (!securityService.checkRateLimit(clientIp)) {
+                 auditService.logRateLimitExcedido(clientIp, "/upload", request.getHeader("User-Agent"));
+                 response.put("sucesso", false);
+                 response.put("mensagem", "Muitas tentativas. Tente novamente em alguns minutos.");
+                 return ResponseEntity.status(429).body(response);
+             }
+            
             String sessionId = session.getId();
             
+            // Verificar se sessão está bloqueada
+             if (securityService.isSessionBlocked(sessionId)) {
+                 auditService.logAcessoBloqueado(sessionId, "Sessão bloqueada", clientIp, request.getHeader("User-Agent"));
+                 response.put("sucesso", false);
+                 response.put("mensagem", "Sessão temporariamente bloqueada por motivos de segurança");
+                 return ResponseEntity.status(423).body(response);
+             }
+            
+            // Validar arquivo com segurança
+             AdesaoSecurityService.ValidationResult validation = securityService.validateFileUpload(arquivo, sessionId);
+             if (!validation.isValid()) {
+                 auditService.logUploadRejeitado(sessionId, validation.getFirstError(), 
+                     arquivo.getOriginalFilename(), arquivo.getContentType(), arquivo.getSize(), clientIp);
+                 response.put("sucesso", false);
+                 response.put("mensagem", validation.getFirstError());
+                 response.put("erros", validation.getErrors());
+                 return ResponseEntity.badRequest().body(response);
+             }
+            
             // Processar upload
-            DocumentoInfo documentoInfo = documentoService.processarUpload(arquivo, tipoDocumento, sessionId);
-            
-            response.put("sucesso", true);
-            response.put("mensagem", "Documento enviado com sucesso");
-            response.put("documento", documentoInfo);
-            
-            logger.info("Upload realizado com sucesso - Tipo: {}, Sessão: {}", tipoDocumento, sessionId);
+             DocumentoInfo documentoInfo = documentoService.processarUpload(arquivo, tipoDocumento, sessionId);
+             
+             // Log de auditoria
+             auditService.logDocumentoEnviado(sessionId, tipoDocumento, arquivo.getOriginalFilename(), 
+                 arquivo.getSize(), clientIp);
+             
+             response.put("sucesso", true);
+             response.put("mensagem", "Documento enviado com sucesso");
+             response.put("documento", documentoInfo);
+             
+             logger.info("Upload realizado com sucesso - Tipo: {}, Sessão: {}, IP: {}", tipoDocumento, sessionId, clientIp);
             
             return ResponseEntity.ok(response);
             
         } catch (DocumentoException e) {
-            logger.warn("Erro de validação no upload: {}", e.getMessage());
+            logger.warn("Erro de validação no upload - IP: {}: {}", clientIp, e.getMessage());
             response.put("sucesso", false);
             response.put("mensagem", e.getMessage());
             return ResponseEntity.badRequest().body(response);
             
         } catch (IOException e) {
-            logger.error("Erro de I/O no upload: {}", e.getMessage());
+            logger.error("Erro de I/O no upload - IP: {}: {}", clientIp, e.getMessage());
             response.put("sucesso", false);
             response.put("mensagem", "Erro interno ao processar arquivo");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             
         } catch (Exception e) {
-            logger.error("Erro inesperado no upload: {}", e.getMessage(), e);
+            logger.error("Erro inesperado no upload - IP: {}: {}", clientIp, e.getMessage(), e);
             response.put("sucesso", false);
             response.put("mensagem", "Erro inesperado ao processar arquivo");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -307,5 +349,22 @@ public class DocumentoAdesaoController {
             response.put("mensagem", "Erro ao limpar documentos");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+    
+    /**
+     * Extrai o IP real do cliente considerando proxies
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
+            return xRealIp;
+        }
+        
+        return request.getRemoteAddr();
     }
 }

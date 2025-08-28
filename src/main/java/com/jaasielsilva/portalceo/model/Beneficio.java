@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
 
@@ -24,5 +25,6 @@ public class Beneficio {
     private String nome;
 
     @OneToMany(mappedBy = "beneficio", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ColaboradorBeneficio> colaboradoresBeneficios;
 }

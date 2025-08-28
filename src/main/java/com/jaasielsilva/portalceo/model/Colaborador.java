@@ -87,6 +87,7 @@ public class Colaborador {
     private Cargo cargo;
 
     @OneToMany(mappedBy = "colaborador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<ColaboradorBeneficio> beneficios;
 
     @ManyToOne
@@ -130,6 +131,7 @@ public class Colaborador {
     private Colaborador supervisor;
 
     @OneToMany(mappedBy = "colaborador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<HistoricoColaborador> historico;
 
     @PrePersist

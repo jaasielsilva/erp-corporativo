@@ -92,10 +92,8 @@
                     th:if="${adesao.status != null && adesao.status.name() == 'ATIVA'}"><i
                       class="fas fa-edit"></i></button>
 
-                  <button type="button" class="btn btn-danger btn-sm" title="Cancelar Adesão"
-                    th:attr="onclick='cancelarAdesao(' + ${adesao.id} + ')'"
-                    th:if="${adesao.status != null && adesao.status.name() == 'ATIVA'}"><i
-                      class="fas fa-times"></i></button>
+                  <button type="button" class="btn btn-danger btn-sm" title="Excluir Adesão"
+                    th:attr="onclick='excluirAdesao(' + ${adesao.id} + ')'"><i class="fas fa-trash"></i></button>
                 </td>
               </tr>
 
@@ -146,7 +144,7 @@
                 <select id="tipoAdesao" name="tipoAdesao" required>
                   <option value="">Selecione</option>
                   <option value="NOVA">Nova Adesão</option>
-                 
+
                 </select>
               </div>
 
@@ -161,21 +159,22 @@
                 <input type="date" id="dataVigencia" name="dataVigencia" required>
               </div>
 
-               <!-- Resumo de Valores -->
-                    <div class="form-group" id="resumoValores" style="display: none;">
-                      <div class="card" style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6;">
-                        <h5>Resumo de Valores</h5>
-                        <div class="row">
-                          <div class="col-md-6">
-                            <p><strong>Valor Titular:</strong> <span id="valorTitular">R$ 0,00</span></p>
-                            <p><strong>Valor Dependentes:</strong> <span id="valorDependentes">R$ 0,00</span></p>
-                          </div>
-                          <div class="col-md-6">
-                            <p><strong>Total Mensal:</strong> <span id="valorTotal" style="font-size: 1.2em; color: #007bff;">R$ 0,00</span></p>
-                          </div>
-                        </div>
-                      </div>
+              <!-- Resumo de Valores -->
+              <div class="form-group" id="resumoValores" style="display: none;">
+                <div class="card" style="background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6;">
+                  <h5>Resumo de Valores</h5>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p><strong>Valor Titular:</strong> <span id="valorTitular">R$ 0,00</span></p>
+                      <p><strong>Valor Dependentes:</strong> <span id="valorDependentes">R$ 0,00</span></p>
                     </div>
+                    <div class="col-md-6">
+                      <p><strong>Total Mensal:</strong> <span id="valorTotal"
+                          style="font-size: 1.2em; color: #007bff;">R$ 0,00</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div class="form-group">
                 <label for="observacoes">Observações (opcional)</label>
@@ -203,7 +202,7 @@
           <div class="modal-body">
             <form id="formEdicaoAdesao">
               <input type="hidden" id="editAdesaoId" name="adesaoId">
-              
+
               <div class="form-group">
                 <label for="editColaborador">Colaborador:</label>
                 <input type="text" id="editColaborador" name="colaborador" readonly class="form-control-readonly">
@@ -228,7 +227,8 @@
 
               <div class="form-group" id="editDivJustificativa" style="display: none;">
                 <label for="editJustificativa">Justificativa para Mudança:</label>
-                <textarea id="editJustificativa" name="justificativa" rows="2" placeholder="Informe o motivo da mudança de plano"></textarea>
+                <textarea id="editJustificativa" name="justificativa" rows="2"
+                  placeholder="Informe o motivo da mudança de plano"></textarea>
               </div>
 
               <div class="form-group">
@@ -243,7 +243,8 @@
 
               <div class="form-group">
                 <label for="editObservacoes">Observações (opcional):</label>
-                <textarea id="editObservacoes" name="observacoes" rows="2" placeholder="Observações adicionais"></textarea>
+                <textarea id="editObservacoes" name="observacoes" rows="2"
+                  placeholder="Observações adicionais"></textarea>
               </div>
 
               <div class="form-actions">
@@ -251,6 +252,93 @@
                 <button type="button" class="btn btn-secondary" onclick="fecharModalEdicaoAdesao()">Cancelar</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Detalhes da Adesão -->
+      <div id="modalDetalhesAdesao" class="modal" style="display: none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Detalhes da Adesão</h2>
+            <span class="close" onclick="fecharModalDetalhes()">&times;</span>
+          </div>
+          <div class="modal-body">
+            <div class="detalhes-container">
+              <div class="detalhe-item">
+                <label>Colaborador:</label>
+                <span id="detalheColaborador"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Departamento:</label>
+                <span id="detalheDepartamento"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Plano de Saúde:</label>
+                <span id="detalhePlanoSaude"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Operadora:</label>
+                <span id="detalheOperadora"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Tipo de Adesão:</label>
+                <span id="detalheTipoAdesao"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Quantidade de Dependentes:</label>
+                <span id="detalheQuantidadeDependentes"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Data de Adesão:</label>
+                <span id="detalheDataAdesao"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Data de Vigência:</label>
+                <span id="detalheDataVigencia"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Valor Mensal Titular:</label>
+                <span id="detalheValorTitular"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Valor Mensal Dependentes:</label>
+                <span id="detalheValorDependentes"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Valor Total Mensal:</label>
+                <span id="detalheValorTotal" class="valor-destaque"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Status:</label>
+                <span id="detalheStatus" class="status-badge"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Observações:</label>
+                <span id="detalheObservacoes"></span>
+              </div>
+
+              <div class="detalhe-item">
+                <label>Data de Criação:</label>
+                <span id="detalheDataCriacao"></span>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="fecharModalDetalhes()">Fechar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -265,7 +353,10 @@
 
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    // Variável de permissão passada do controller
+    const usuarioPodeEditarAdesao = /*[[${usuarioPodeEditarAdesao}]]*/ true;
+
+    document.addEventListener("DOMContentLoaded", function () {
       // Paginação
       const rowsPerPage = 5;
       const table = document.querySelector('.table-list tbody');
@@ -285,11 +376,11 @@
       // Event listener para o formulário de edição
       document.getElementById("formEdicaoAdesao").addEventListener("submit", function (e) {
         e.preventDefault();
-        
+
         const adesaoId = document.getElementById("editAdesaoId").value;
         const formData = new FormData(this);
         const dados = Object.fromEntries(formData.entries());
-        
+
         fetch(`/rh/beneficios/adesao/salvar/${adesaoId}`, {
           method: 'POST',
           headers: {
@@ -297,21 +388,100 @@
           },
           body: JSON.stringify(dados)
         })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showNotification(data.message, 'success');
-            fecharModalEdicaoAdesao();
-            location.reload();
-          } else {
-            showNotification(data.message, 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Erro:', error);
-          showNotification('Erro ao atualizar adesão', 'error');
-        });
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showNotification(data.message, 'success');
+              fecharModalEdicaoAdesao();
+              location.reload();
+            } else {
+              showNotification(data.message, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Erro:', error);
+            showNotification('Erro ao atualizar adesão', 'error');
+          });
       });
+
+      // Função para ver detalhes da adesão
+      window.verDetalhesAdesao = function (adesaoId) {
+        fetch(`/rh/beneficios/adesao/detalhes/${adesaoId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const adesao = data.adesao;
+
+              // Preencher os campos do modal
+              document.getElementById('detalheColaborador').textContent = adesao.colaborador?.nome || 'Não informado';
+              document.getElementById('detalheDepartamento').textContent = adesao.colaborador?.departamento?.nome || 'Não informado';
+              document.getElementById('detalhePlanoSaude').textContent = adesao.planoSaude?.nome || 'Não informado';
+              document.getElementById('detalheOperadora').textContent = adesao.planoSaude?.operadora || 'Não informado';
+              document.getElementById('detalheTipoAdesao').textContent = adesao.tipoAdesao || 'Não informado';
+              document.getElementById('detalheQuantidadeDependentes').textContent = adesao.quantidadeDependentes || '0';
+
+              // Formatar datas
+              document.getElementById('detalheDataAdesao').textContent = adesao.dataAdesao ? new Date(adesao.dataAdesao).toLocaleDateString('pt-BR') : 'Não informado';
+              document.getElementById('detalheDataVigencia').textContent = adesao.dataVigenciaInicio ? new Date(adesao.dataVigenciaInicio).toLocaleDateString('pt-BR') : 'Não informado';
+              document.getElementById('detalheDataCriacao').textContent = adesao.dataCriacao ? new Date(adesao.dataCriacao).toLocaleDateString('pt-BR') : 'Não informado';
+
+              // Formatar valores monetários
+              const formatarMoeda = (valor) => {
+                return valor ? `R$ ${parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'R$ 0,00';
+              };
+
+              document.getElementById('detalheValorTitular').textContent = formatarMoeda(adesao.valorMensalTitular);
+              document.getElementById('detalheValorDependentes').textContent = formatarMoeda(adesao.valorMensalDependentes);
+              document.getElementById('detalheValorTotal').textContent = formatarMoeda(adesao.valorTotalMensal);
+
+              // Status com classe CSS
+              const statusElement = document.getElementById('detalheStatus');
+              statusElement.textContent = adesao.status || 'INDEFINIDO';
+              statusElement.className = `status-badge status-${(adesao.status || 'indefinido').toLowerCase()}`;
+
+              document.getElementById('detalheObservacoes').textContent = adesao.observacoes || 'Nenhuma observação';
+
+              // Abrir modal
+              document.getElementById('modalDetalhesAdesao').style.display = 'block';
+            } else {
+              showNotification(data.message || 'Erro ao carregar detalhes da adesão', 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Erro:', error);
+            showNotification('Erro ao carregar detalhes da adesão', 'error');
+          });
+      };
+
+      // Função para fechar modal de detalhes
+      window.fecharModalDetalhes = function () {
+        document.getElementById('modalDetalhesAdesao').style.display = 'none';
+      };
+
+      // Função para excluir adesão
+      window.excluirAdesao = function (adesaoId) {
+        if (confirm('Tem certeza que deseja excluir esta adesão? Esta ação não pode ser desfeita.')) {
+          fetch(`/rh/beneficios/adesao/excluir/${adesaoId}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showNotification(data.message || 'Adesão excluída com sucesso', 'success');
+                location.reload();
+              } else {
+                showNotification(data.message || 'Erro ao excluir adesão', 'error');
+              }
+            })
+            .catch(error => {
+              console.error('Erro:', error);
+              showNotification('Erro ao excluir adesão', 'error');
+            });
+        }
+      };
 
       function renderPagination() {
         pagination.innerHTML = '';
@@ -372,6 +542,43 @@
         })
         .catch(err => alert(err.message));
     }
+
+    function showNotification(message, type = 'info') {
+      // type pode ser: 'success', 'error', 'info'
+      const containerId = 'notificationContainer';
+      let container = document.getElementById(containerId);
+
+      // Criar container se não existir
+      if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        container.style.position = 'fixed';
+        container.style.top = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = 9999;
+        document.body.appendChild(container);
+      }
+
+      const notif = document.createElement('div');
+      notif.textContent = message;
+      notif.style.marginBottom = '10px';
+      notif.style.padding = '10px 15px';
+      notif.style.borderRadius = '5px';
+      notif.style.color = '#fff';
+      notif.style.minWidth = '200px';
+      notif.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+
+      if (type === 'success') notif.style.backgroundColor = '#28a745';
+      else if (type === 'error') notif.style.backgroundColor = '#dc3545';
+      else notif.style.backgroundColor = '#17a2b8';
+
+      container.appendChild(notif);
+
+      setTimeout(() => {
+        notif.remove();
+      }, 4000);
+    }
+
 
     function abrirModalEdicaoAdesao() {
       document.getElementById("modalEdicaoAdesao").style.display = "block";

@@ -145,4 +145,12 @@ public class AdesaoPlanoSaudeService {
 
         repository.save(adesao);
     }
+
+    /** Exclui uma adesão logicamente (marca como INATIVO) */
+    @Transactional
+    public void excluir(Long id) {
+        AdesaoPlanoSaude adesao = buscarPorId(id);
+        adesao.setStatus(StatusAdesao.INATIVO);
+        repository.save(adesao);
+    }
 }

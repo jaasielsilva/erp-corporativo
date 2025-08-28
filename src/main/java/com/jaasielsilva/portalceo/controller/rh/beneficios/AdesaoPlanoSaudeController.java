@@ -51,6 +51,10 @@ public class AdesaoPlanoSaudeController {
                             public final double dependente = p.getValorDependente().doubleValue();
                         }));
         model.addAttribute("valoresPlanosJson", valoresPlanosJson);
+        
+        // Adicionar permissão de edição (por enquanto sempre true, pode ser implementada lógica específica)
+        model.addAttribute("usuarioPodeEditarAdesao", true);
+        
         return "rh/beneficios/adesao";
     }
 
@@ -94,6 +98,63 @@ public class AdesaoPlanoSaudeController {
             response.put("message", "Adesão cancelada com sucesso");
             return ResponseEntity.ok(response);
 
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Erro interno do servidor");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // Buscar adesão por ID em formato JSON
+    @GetMapping("/json/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> buscarAdesaoJson(@PathVariable Long id) {
+        try {
+            AdesaoPlanoSaude adesao = adesaoService.buscarPorId(id);
+            if (adesao == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", adesao.getId());
+            response.put("colaboradorId", adesao.getColaborador().getId());
+            response.put("colaboradorNome", adesao.getColaborador().getNome());
+            response.put("departamento", adesao.getColaborador().getDepartamento() != null ? adesao.getColaborador().getDepartamento().getNome() : "");
+            response.put("planoId", adesao.getPlanoSaude() != null ? adesao.getPlanoSaude().getId() : null);
+            response.put("planoNome", adesao.getPlanoSaude() != null ? adesao.getPlanoSaude().getNome() : "");
+            response.put("operadora", adesao.getPlanoSaude() != null ? adesao.getPlanoSaude().getOperadora() : "");
+            response.put("tipoAdesao", adesao.getTipoAdesao());
+            response.put("quantidadeDependentes", adesao.getQuantidadeDependentes());
+            response.put("dataAdesao", adesao.getDataAdesao() != null ? adesao.getDataAdesao().toString() : "");
+            response.put("dataVigencia", adesao.getDataAdesao() != null ? adesao.getDataAdesao().toString() : "");
+            response.put("valorTitular", adesao.getPlanoSaude() != null ? adesao.getPlanoSaude().getValorTitular() : 0);
+            response.put("valorDependentes", adesao.getPlanoSaude() != null ? adesao.getPlanoSaude().getValorDependente().multiply(new java.math.BigDecimal(adesao.getQuantidadeDependentes())) : 0);
+            response.put("valorTotal", adesao.getValorTotalMensal());
+            response.put("status", adesao.getStatus());
+            response.put("observacoes", adesao.getObservacoes());
+            response.put("dataCriacao", adesao.getDataCriacao() != null ? adesao.getDataCriacao().toString() : "");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Excluir adesão
+    @DeleteMapping("/excluir/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> excluirAdesao(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            adesaoService.excluir(id);
+            response.put("success", true);
+            response.put("message", "Adesão excluída com sucesso");
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             response.put("success", false);
             response.put("message", e.getMessage());

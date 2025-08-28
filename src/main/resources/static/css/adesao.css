@@ -195,6 +195,12 @@
       border-color: #dc3545;
     }
 
+    .status-badge.status-inativo {
+      background-color: #e2e3e5;
+      color: #495057;
+      border-color: #6c757d;
+    }
+
     .status-badge.status-indefinido {
       background-color: #f5f5f5;
       color: #666;

@@ -44,7 +44,7 @@ public class AdesaoPlanoSaude {
     private String tipoAdesao;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private StatusAdesao status = StatusAdesao.ATIVA;
 
     @Column(nullable = false)
@@ -76,7 +76,8 @@ public class AdesaoPlanoSaude {
         PENDENTE,
         ATIVA,
         SUSPENSA,
-        CANCELADA
+        CANCELADA,
+        INATIVO
     }
 
     @PrePersist
@@ -130,6 +131,8 @@ public class AdesaoPlanoSaude {
                 return "Suspensa";
             case CANCELADA:
                 return "Cancelada";
+            case INATIVO:
+                return "Inativo";
             default:
                 return status.toString();
         }

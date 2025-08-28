@@ -79,9 +79,66 @@
                   Vigência</td>
                 <td>
                   <span th:if="${adesao.valorTotalMensal != null}"
-                    th:text="'R$ ' + #numbers.formatDecimal(adesao.valorTotalMensal, 1, 'COMMA', 2, 'POINT')">Valor</span>
-                  <span th:unless="${adesao.valorTotalMensal != null}" class="text-muted">Não calculado</span>
+                    th:text="|R$ ${#numbers.formatDecimal(adesao.valorTotalMensal, 1, 'COMMA', 2, 'POINT')}|">
+                    Valor
+                  </span>
+                  <span th:unless="${adesao.valorTotalMensal != null}" class="text-muted">
+                    Não calculado
+                  </span>
                 </td>
+
+                <!-- Modal de Adesão -->
+                <div id="modalAdesao" class="modal" style="display: none;">
+                  <div class="modal-content">
+                    <span class="close" onclick="fecharModalAdesao()">&times;</span>
+                    <h2>Nova Adesão - Plano de Saúde</h2>
+
+                    <form id="formAdesao" method="post" th:action="@{/rh/beneficios/plano-saude/adesao/salvar}">
+
+                      <!-- Colaborador -->
+                      <div class="form-group">
+                        <label for="colaborador">Colaborador</label>
+                        <select id="colaborador" name="colaboradorId" required>
+                          <option value="">Selecione</option>
+                          <option th:each="colaborador : ${colaboradores}" th:value="${colaborador.id}"
+                            th:text="${colaborador.nome}"></option>
+                        </select>
+                      </div>
+
+                      <!-- Plano de Saúde (opcional) -->
+                      <div class="form-group">
+                        <label for="planoSaude">Plano de Saúde (opcional)</label>
+                        <select id="planoSaude" name="planoSaudeId">
+                          <option value="">Selecione</option>
+                          <option th:each="plano : ${planos}" th:value="${plano.id}"
+                            th:text="${plano.nome + ' (' + plano.operadora + ')'}"></option>
+                        </select>
+                      </div>
+
+                      <!-- Dependentes -->
+                      <div class="form-group">
+                        <label for="dependentes">Quantidade de Dependentes</label>
+                        <input type="number" id="dependentes" name="quantidadeDependentes" min="0" value="0">
+                      </div>
+
+                      <!-- Data de Vigência -->
+                      <div class="form-group">
+                        <label for="dataVigencia">Data de Vigência</label>
+                        <input type="date" id="dataVigencia" name="dataInicio" required>
+                      </div>
+
+                      <!-- Botões -->
+                      <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="button" class="btn btn-secondary" onclick="fecharModalAdesao()">Cancelar</button>
+                      </div>
+
+                    </form>
+                  </div>
+                </div>
+
+
+
                 <td>
                   <span class="status-badge"
                     th:classappend="'status-' + ${adesao.status != null ? adesao.status.name().toLowerCase() : 'indefinido'}"
@@ -118,6 +175,7 @@
   <script src="/js/sidebar.js" defer></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script th:src="@{/js/notifications.js}"></script>
+  <script src="/js/adesao.js" defer></script>
 
 
 </body>

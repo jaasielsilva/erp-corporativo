@@ -74,6 +74,12 @@ public class DependentePlanoSaude {
         OUTROS
     }
 
+    public enum Genero {
+        MASCULINO,
+        FEMININO,
+        OUTRO
+    }
+
     @PrePersist
     public void onPrePersist() {
         dataCriacao = LocalDateTime.now();

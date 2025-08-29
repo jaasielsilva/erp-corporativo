@@ -19,12 +19,14 @@ public class RhController {
 
     /**
      * Página principal do módulo RH
-     * Redireciona para a página de adesão de colaboradores
+     * Dashboard central com opções de navegação
      */
     @GetMapping
     public String moduloRh(Model model) {
-        logger.info("Acessando módulo RH - redirecionando para adesão de colaboradores");
-        return "redirect:/rh/colaboradores/adesao";
+        logger.info("Acessando dashboard principal do módulo RH");
+        model.addAttribute("modulo", "RH");
+        model.addAttribute("titulo", "Recursos Humanos - Central");
+        return "rh/dashboard";
     }
 
     /**

@@ -1,0 +1,351 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <!-- Definições de gradientes e estilos -->
+  <defs>
+    <!-- Gradientes para os cards -->
+    <linearGradient id="gradientGestao" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientAdesao" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00b894"/>
+      <stop offset="100%" style="stop-color:#00cec9"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientDecision" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffeaa7"/>
+      <stop offset="100%" style="stop-color:#fab1a0"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientResult" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fd79a8"/>
+      <stop offset="100%" style="stop-color:#e84393"/>
+    </linearGradient>
+    
+    <!-- Filtros para sombras -->
+    <filter id="dropshadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="3" stdDeviation="4" flood-color="rgba(0,0,0,0.3)"/>
+    </filter>
+    
+    <!-- Marcadores para setas -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+            refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="white" />
+    </marker>
+  </defs>
+
+  <!-- Título Principal -->
+  <text x="700" y="40" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="28" font-weight="bold">
+    🏢 MÓDULO RH - FLUXO COMPLETO
+  </text>
+  
+  <text x="700" y="65" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="Arial, sans-serif" font-size="16">
+    Sistema de Gestão de Recursos Humanos - ERP Corporativo
+  </text>
+
+  <!-- ===== SEÇÃO DE ENTRADA ===== -->
+  <!-- Login do Usuário -->
+  <rect x="580" y="90" width="240" height="60" rx="30" ry="30" 
+        fill="url(#gradientDecision)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="700" y="115" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+    👤 Usuário RH faz Login
+  </text>
+  <text x="700" y="135" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12">
+    (GERENTE+ para acesso RH)
+  </text>
+
+  <!-- Seta para decisão -->
+  <line x1="700" y1="150" x2="700" y2="180" stroke="white" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+  <!-- Decisão Principal -->
+  <polygon points="700,180 760,220 700,260 640,220" 
+           fill="url(#gradientDecision)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="700" y="215" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+    Qual
+  </text>
+  <text x="700" y="230" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+    necessidade?
+  </text>
+
+  <!-- ===== LADO ESQUERDO: GESTÃO DIÁRIA ===== -->
+  
+  <!-- Seta para Gestão Diária -->
+  <line x1="640" y1="220" x2="480" y2="220" stroke="white" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="560" y="215" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    Gestão Diária
+  </text>
+
+  <!-- ColaboradorController -->
+  <rect x="200" y="280" width="260" height="80" rx="20" ry="20" 
+        fill="url(#gradientGestao)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="330" y="305" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">
+    ⚡ ColaboradorController
+  </text>
+  <text x="330" y="325" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12">
+    Sistema CRUD Rápido
+  </text>
+  <text x="330" y="340" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    /rh/colaboradores/listar
+  </text>
+  <text x="330" y="355" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    ⏱️ Tempo: 2-5 minutos
+  </text>
+
+  <!-- Seta para operações -->
+  <line x1="330" y1="360" x2="330" y2="390" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Operações da Gestão Diária -->
+  <g transform="translate(50, 400)">
+    <!-- Atualizar Dados -->
+    <rect x="0" y="0" width="180" height="60" rx="15" ry="15" 
+          fill="url(#gradientGestao)" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+    <text x="90" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+      📝 Atualizar Dados
+    </text>
+    <text x="90" y="35" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Telefone, endereço,
+    </text>
+    <text x="90" y="50" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      dados pessoais
+    </text>
+
+    <!-- Promoção -->
+    <rect x="200" y="0" width="180" height="60" rx="15" ry="15" 
+          fill="url(#gradientGestao)" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+    <text x="290" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+      📈 Promoção
+    </text>
+    <text x="290" y="35" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Dev Jr → Dev Pleno
+    </text>
+    <text x="290" y="50" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      R$ 6.000 → R$ 8.500
+    </text>
+
+    <!-- Consulta Benefícios -->
+    <rect x="400" y="0" width="180" height="60" rx="15" ry="15" 
+          fill="url(#gradientGestao)" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+    <text x="490" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+      🎁 Consulta Benefícios
+    </text>
+    <text x="490" y="35" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Vale-refeição, plano
+    </text>
+    <text x="490" y="50" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      saúde, histórico
+    </text>
+  </g>
+
+  <!-- Resultado Gestão Diária -->
+  <rect x="200" y="500" width="260" height="50" rx="25" ry="25" 
+        fill="url(#gradientResult)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="330" y="520" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+    ✅ Operação concluída
+  </text>
+  <text x="330" y="535" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12">
+    ⏱️ Tempo: 2-5 minutos
+  </text>
+
+  <!-- ===== LADO DIREITO: PROCESSO DE ADESÃO ===== -->
+  
+  <!-- Seta para Adesão -->
+  <line x1="760" y1="220" x2="920" y2="220" stroke="white" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="840" y="215" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    Nova Contratação
+  </text>
+
+  <!-- AdesaoColaboradorController -->
+  <rect x="800" y="280" width="280" height="80" rx="20" ry="20" 
+        fill="url(#gradientAdesao)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="940" y="305" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">
+    🔄 AdesaoColaboradorController
+  </text>
+  <text x="940" y="325" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12">
+    Workflow Formal Completo
+  </text>
+  <text x="940" y="340" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    /rh/colaboradores/adesao
+  </text>
+  <text x="940" y="355" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    ⏱️ Tempo: 45-60 minutos
+  </text>
+
+  <!-- Seta para etapas -->
+  <line x1="940" y1="360" x2="940" y2="390" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Etapas do Processo de Adesão -->
+  <g transform="translate(700, 400)">
+    <!-- Etapa 1: Dados -->
+    <rect x="0" y="0" width="120" height="45" rx="10" ry="10" 
+          fill="url(#gradientAdesao)" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+    <text x="60" y="18" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">
+      1️⃣ DADOS
+    </text>
+    <text x="60" y="32" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      CPF, Nome, Email
+    </text>
+    <text x="60" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      Cargo, Salário
+    </text>
+
+    <!-- Etapa 2: Documentos -->
+    <rect x="140" y="0" width="120" height="45" rx="10" ry="10" 
+          fill="url(#gradientAdesao)" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+    <text x="200" y="18" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">
+      2️⃣ DOCUMENTOS
+    </text>
+    <text x="200" y="32" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      RG, CPF, Diploma
+    </text>
+    <text x="200" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      Comprovantes
+    </text>
+
+    <!-- Etapa 3: Benefícios -->
+    <rect x="280" y="0" width="120" height="45" rx="10" ry="10" 
+          fill="url(#gradientAdesao)" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+    <text x="340" y="18" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">
+      3️⃣ BENEFÍCIOS
+    </text>
+    <text x="340" y="32" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      Plano saúde
+    </text>
+    <text x="340" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      Vale-refeição
+    </text>
+
+    <!-- Etapa 4: Revisão -->
+    <rect x="420" y="0" width="120" height="45" rx="10" ry="10" 
+          fill="url(#gradientAdesao)" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+    <text x="480" y="18" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">
+      4️⃣ REVISÃO
+    </text>
+    <text x="480" y="32" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      Confirma todos
+    </text>
+    <text x="480" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      os dados
+    </text>
+
+    <!-- Setas entre etapas -->
+    <line x1="120" y1="22" x2="140" y2="22" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <line x1="260" y1="22" x2="280" y2="22" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <line x1="400" y1="22" x2="420" y2="22" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+  </g>
+
+  <!-- Seta para aprovação -->
+  <line x1="940" y1="445" x2="940" y2="480" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Processo de Aprovação -->
+  <polygon points="940,480 980,510 940,540 900,510" 
+           fill="url(#gradientDecision)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="940" y="505" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="11" font-weight="bold">
+    Aprovação
+  </text>
+  <text x="940" y="520" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="11" font-weight="bold">
+    Gerente?
+  </text>
+
+  <!-- Setas de decisão -->
+  <line x1="900" y1="510" x2="850" y2="510" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="875" y="505" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">❌ Rejeitado</text>
+
+  <line x1="980" y1="510" x2="1030" y2="510" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1005" y="505" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">✅ Aprovado</text>
+
+  <!-- Rejeição -->
+  <rect x="750" y="530" width="100" height="40" rx="10" ry="10" 
+        fill="#d63031" filter="url(#dropshadow)" stroke="white" stroke-width="1"/>
+  <text x="800" y="545" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">
+    📧 Email
+  </text>
+  <text x="800" y="558" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+    com motivo
+  </text>
+
+  <!-- Finalização -->
+  <rect x="1030" y="480" width="150" height="60" rx="15" ry="15" 
+        fill="url(#gradientAdesao)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="1105" y="500" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+    🎉 FINALIZAÇÃO
+  </text>
+  <text x="1105" y="515" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    Cria no banco +
+  </text>
+  <text x="1105" y="530" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    integrações
+  </text>
+
+  <!-- Integrações -->
+  <g transform="translate(1050, 560)">
+    <text x="55" y="15" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">
+      ⚙️ Integrações Automáticas:
+    </text>
+    <text x="55" y="30" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      💻 Slack | 📧 Google | 🔑 GitHub | 🖥️ Jira
+    </text>
+  </g>
+
+  <!-- Resultado Final Adesão -->
+  <rect x="980" y="620" width="200" height="50" rx="25" ry="25" 
+        fill="url(#gradientResult)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  <text x="1080" y="640" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+    ✅ Colaborador ativo
+  </text>
+  <text x="1080" y="655" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12">
+    ⏱️ Tempo: 45-60 minutos
+  </text>
+
+  <!-- ===== SEÇÃO DE MÉTRICAS ===== -->
+  <rect x="400" y="720" width="600" height="120" rx="20" ry="20" 
+        fill="rgba(255,255,255,0.1)" filter="url(#dropshadow)" stroke="white" stroke-width="2"/>
+  
+  <text x="700" y="745" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="18" font-weight="bold">
+    📊 MÉTRICAS STARTUP DE TECNOLOGIA (50 funcionários)
+  </text>
+
+  <g transform="translate(420, 760)">
+    <!-- Gestão Diária -->
+    <rect x="0" y="0" width="270" height="60" rx="10" ry="10" 
+          fill="url(#gradientGestao)" stroke="white" stroke-width="1"/>
+    <text x="135" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+      ⚡ Gestão Diária
+    </text>
+    <text x="135" y="35" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      15-20 operações/dia
+    </text>
+    <text x="135" y="50" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      📈 Promoções frequentes | 📝 Atualizações rápidas
+    </text>
+
+    <!-- Processo de Adesão -->
+    <rect x="290" y="0" width="270" height="60" rx="10" ry="10" 
+          fill="url(#gradientAdesao)" stroke="white" stroke-width="1"/>
+    <text x="425" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+      🔄 Processo de Adesão
+    </text>
+    <text x="425" y="35" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      8 processos/mês (5-10 contratações)
+    </text>
+    <text x="425" y="50" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      🎯 Foco em velocidade | 💻 Integração com ferramentas
+    </text>
+  </g>
+
+  <!-- Eficiência Geral -->
+  <text x="700" y="890" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">
+    🎯 EFICIÊNCIA: 90% Automatizada | ⚡ Velocidade + 🔒 Controle
+  </text>
+
+  <!-- Logo/Marca -->
+  <text x="700" y="950" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="Arial, sans-serif" font-size="12">
+    ERP Corporativo - Módulo RH © 2024
+  </text>
+
+  <!-- Seta de volta da rejeição -->
+  <path d="M 800 570 Q 750 600 750 650 Q 750 700 820 720" stroke="white" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="750" y="620" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">
+    🔄 Volta para correção
+  </text>
+
+</svg>

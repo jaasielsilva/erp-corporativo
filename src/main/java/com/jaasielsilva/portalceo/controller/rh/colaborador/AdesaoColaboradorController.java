@@ -81,6 +81,31 @@ public class AdesaoColaboradorController {
     }
 
     /**
+     * Endpoint REST para carregar todos os cargos ativos
+     */
+    @GetMapping("/api/cargos")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> carregarCargos() {
+        try {
+            List<Map<String, Object>> cargosResponse = cargoService.listarAtivos()
+                .stream()
+                .map(cargo -> {
+                    Map<String, Object> cargoMap = new HashMap<>();
+                    cargoMap.put("id", cargo.getId());
+                    cargoMap.put("nome", cargo.getNome());
+                    return cargoMap;
+                })
+                .toList();
+            
+            logger.info("Carregando {} cargos ativos via API", cargosResponse.size());
+            return ResponseEntity.ok(cargosResponse);
+        } catch (Exception e) {
+            logger.error("Erro ao carregar cargos via API: {}", e.getMessage());
+            return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
+    /**
      * Processar dados pessoais (Etapa 1)
      */
     @PostMapping("/dados-pessoais")

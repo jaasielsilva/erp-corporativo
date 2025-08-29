@@ -238,11 +238,8 @@
                             <div class="col-md-4 mb-3">
                                 <label for="cargoId" class="form-label required-field">Cargo</label>
                                 <select id="cargo" name="cargo.id" required class="form-control">
-                                    <option value="">Selecione...</option>
-                                    <option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nome}">
-                                    </option>
+                                    <option value="">Carregando cargos...</option>
                                 </select>
-
                                 <div class="invalid-feedback">Cargo é obrigatório</div>
                             </div>
 
@@ -435,6 +432,9 @@
         document.addEventListener('DOMContentLoaded', function () {
             console.log('Página carregada com JavaScript vanilla');
 
+            // Carregar cargos dinamicamente
+            carregarCargos();
+
             // Buscar CEP
             const cepInput = document.getElementById('cep');
             if (cepInput) {
@@ -446,8 +446,11 @@
                 });
             }
 
-            // Carregar supervisores
-            carregarSupervisores();
+            // Event listener para carregar supervisores
+            const departamentoSelect = document.getElementById('departamentoId');
+            if (departamentoSelect) {
+                departamentoSelect.addEventListener('change', carregarSupervisores);
+            }
 
             // Validação do formulário
             const form = document.getElementById('formDadosPessoais');
@@ -478,9 +481,54 @@
                 .catch(error => console.error('Erro ao buscar CEP:', error));
         }
 
+        function carregarCargos() {
+             fetch('/rh/colaboradores/adesao/api/cargos')
+                 .then(response => response.json())
+                 .then(cargos => {
+                     const cargoSelect = document.getElementById('cargo');
+                     if (cargoSelect) {
+                         cargoSelect.innerHTML = '<option value="">Selecione um cargo...</option>';
+                         cargos.forEach(cargo => {
+                             const option = document.createElement('option');
+                             option.value = cargo.id;
+                             option.textContent = cargo.nome;
+                             cargoSelect.appendChild(option);
+                         });
+                     }
+                 })
+                 .catch(error => {
+                     console.error('Erro ao carregar cargos:', error);
+                     const cargoSelect = document.getElementById('cargo');
+                     if (cargoSelect) {
+                         cargoSelect.innerHTML = '<option value="">Erro ao carregar cargos</option>';
+                     }
+                 });
+         }
+
         function carregarSupervisores() {
-            // Implementar carregamento de supervisores via AJAX
-            // Por enquanto, deixar vazio
+            const departamentoId = document.getElementById('departamentoId').value;
+            const supervisorSelect = document.getElementById('supervisorId');
+            
+            if (!departamentoId) {
+                supervisorSelect.innerHTML = '<option value="">Nenhum supervisor</option>';
+                return;
+            }
+
+            fetch(`/api/supervisores?departamentoId=${departamentoId}`)
+                .then(response => response.json())
+                .then(supervisores => {
+                    supervisorSelect.innerHTML = '<option value="">Nenhum supervisor</option>';
+                    supervisores.forEach(supervisor => {
+                        const option = document.createElement('option');
+                        option.value = supervisor.id;
+                        option.textContent = supervisor.nome;
+                        supervisorSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar supervisores:', error);
+                    supervisorSelect.innerHTML = '<option value="">Erro ao carregar supervisores</option>';
+                });
         }
 
         function enviarDadosPessoais() {

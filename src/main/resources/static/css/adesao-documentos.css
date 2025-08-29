@@ -1,0 +1,164 @@
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 1rem;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .step.active .step-number {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background-color: #198754;
+            color: white;
+        }
+        
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background-color: #e9ecef;
+            margin: 0 1rem;
+        }
+        
+        .step.completed + .step-line {
+            background-color: #198754;
+        }
+        
+        .document-upload {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        
+        .upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: #e3f2fd;
+        }
+        
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .document-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-item.required {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .document-item.optional {
+            border-left: 4px solid #6c757d;
+        }
+        
+        .document-item.uploaded {
+            border-left: 4px solid #198754;
+            background-color: #d1e7dd;
+        }
+        
+        .file-preview {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .btn-remove {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 1rem;
+        }
+        
+        .section-title {
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-next {
+            background: linear-gradient(45deg, #0d6efd, #0056b3);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+        }

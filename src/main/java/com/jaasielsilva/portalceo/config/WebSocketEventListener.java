@@ -1,7 +1,6 @@
 package com.jaasielsilva.portalceo.config;
 
 import com.jaasielsilva.portalceo.service.ChatService;
-import com.jaasielsilva.portalceo.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -23,9 +22,6 @@ public class WebSocketEventListener {
 
     @Autowired
     private ChatService chatService;
-
-    @Autowired
-    private UsuarioService usuarioService;
 
     /**
      * Evento disparado quando um usuário conecta via WebSocket

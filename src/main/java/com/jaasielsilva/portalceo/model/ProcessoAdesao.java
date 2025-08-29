@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,9 @@ public class ProcessoAdesao {
 
     @Column(name = "data_aprovacao")
     private LocalDateTime dataAprovacao;
+
+    @Column(name = "salario")
+    private BigDecimal salario;
 
     @Column(name = "motivo_rejeicao", columnDefinition = "TEXT")
     private String motivoRejeicao;

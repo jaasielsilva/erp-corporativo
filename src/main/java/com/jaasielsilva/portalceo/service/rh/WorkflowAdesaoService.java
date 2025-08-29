@@ -17,6 +17,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -42,6 +44,9 @@ public class WorkflowAdesaoService {
     /**
      * Salva processo de adesão no banco de dados
      */
+    /**
+     * Salva processo de adesão no banco de dados
+     */
     public ProcessoAdesao salvarProcesso(String sessionId, Map<String, Object> dadosPessoais) {
         try {
             // Verificar se já existe processo para esta sessão
@@ -53,9 +58,9 @@ public class WorkflowAdesaoService {
                 processo.setDataAtualizacao(LocalDateTime.now());
             } else {
                 // Criar novo processo
-                String nome = (String) dadosPessoais.get("nome");
-                String email = (String) dadosPessoais.get("email");
-                String cpf = (String) dadosPessoais.get("cpf");
+                String nome = dadosPessoais.get("nome") != null ? dadosPessoais.get("nome").toString() : null;
+                String email = dadosPessoais.get("email") != null ? dadosPessoais.get("email").toString() : null;
+                String cpf = dadosPessoais.get("cpf") != null ? dadosPessoais.get("cpf").toString() : null;
 
                 // Verificar se já existe processo ativo para este CPF
                 if (processoRepository.existeProcessoAtivoPorCpf(cpf)) {
@@ -63,12 +68,27 @@ public class WorkflowAdesaoService {
                 }
 
                 processo = new ProcessoAdesao(sessionId, nome, email, cpf);
-                processo.setCargo((String) dadosPessoais.get("cargo"));
+
+                // Cargo
+                if (dadosPessoais.get("cargo") != null) {
+                    processo.setCargo(dadosPessoais.get("cargo").toString());
+                }
 
                 // Converter data de admissão se presente
                 if (dadosPessoais.get("dataAdmissao") != null) {
-                    String dataAdmissaoStr = (String) dadosPessoais.get("dataAdmissao");
+                    String dataAdmissaoStr = dadosPessoais.get("dataAdmissao").toString();
                     processo.setDataAdmissao(LocalDateTime.parse(dataAdmissaoStr + "T00:00:00"));
+                }
+
+                // Salário (se existir e for número)
+                if (dadosPessoais.get("salario") != null) {
+                    Object salarioObj = dadosPessoais.get("salario");
+                    if (salarioObj instanceof Number) {
+                        processo.setSalario(BigDecimal.valueOf(((Number) salarioObj).doubleValue()));
+                    } else {
+                        // caso venha como string
+                        processo.setSalario(new BigDecimal(salarioObj.toString()));
+                    }
                 }
             }
 

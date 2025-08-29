@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 @Data
 @NoArgsConstructor
@@ -30,7 +31,7 @@ public class AdesaoColaboradorDTO {
     @NotBlank(message = "Email é obrigatório")
     private String email;
 
-    @Pattern(regexp = "^\\([1-9]{2}\\) (?:[2-8]|9[1-9])[0-9]{3}-[0-9]{4}$", message = "Telefone deve ter formato válido")
+    @Pattern(regexp = "^\\([1-9]{2}\\) [0-9]{4,5}-[0-9]{4}$", message = "Telefone deve ter formato válido (XX) XXXXX-XXXX ou (XX) XXXX-XXXX")
     private String telefone;
 
     @NotNull(message = "Sexo é obrigatório")
@@ -46,6 +47,11 @@ public class AdesaoColaboradorDTO {
 
     @NotBlank(message = "RG é obrigatório")
     private String rg;
+    
+    private String orgaoEmissorRg; // Órgão emissor do RG
+    
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dataEmissaoRg; // Data de emissão do RG
 
     // === DADOS PROFISSIONAIS ===
     @NotNull(message = "Data de admissão é obrigatória")
@@ -101,13 +107,18 @@ public class AdesaoColaboradorDTO {
     private Map<String, String> documentosUpload; // nome_documento -> caminho_arquivo
     
     private List<String> documentosObrigatorios = List.of(
-        "RG", "CPF", "Comprovante de Endereço"
+        "RG", "CPF", "Comprovante de Endereço", "Foto 3x4"
     );
     
     private List<String> documentosOpcionais = List.of(
         "Carteira de Trabalho", "Título de Eleitor", "Certificado de Reservista",
-        "Comprovante de Escolaridade", "Certidão de Nascimento/Casamento"
+        "Comprovante de Escolaridade", "Certidão de Nascimento/Casamento",
+        "Carteira de Motorista", "Comprovante de Conta Bancária"
     );
+    
+    // Controle de upload de documentos
+    private Map<String, Boolean> statusDocumentos; // documento -> enviado
+    private Map<String, String> observacoesDocumentos; // documento -> observação
 
     // === BENEFÍCIOS ===
     private Map<String, Object> beneficiosSelecionados; // beneficio_id -> configuracao
@@ -116,6 +127,7 @@ public class AdesaoColaboradorDTO {
     private Boolean planoSaudeOpcional = false;
     private String planoSaudeTipo; // INDIVIDUAL, FAMILIAR
     private Integer planoSaudeDependentes = 0;
+    private Long planoSaudeId; // ID do plano selecionado
     
     private Boolean valeRefeicaoOpcional = false;
     private BigDecimal valeRefeicaoValor;
@@ -125,19 +137,37 @@ public class AdesaoColaboradorDTO {
     
     private Boolean valeAlimentacaoOpcional = false;
     private BigDecimal valeAlimentacaoValor;
+    
+    // Benefícios adicionais
+    private Boolean seguroVidaOpcional = false;
+    private Boolean assistenciaOdontologicaOpcional = false;
+    private Boolean gymPassOpcional = false;
+    
+    // Lista de dependentes para benefícios
+    private List<DependenteBeneficioDTO> dependentes;
 
     // === CONTROLE DO PROCESSO ===
     private String sessionId;
-    private String etapaAtual; // DADOS_PESSOAIS, DOCUMENTOS, BENEFICIOS, REVISAO, FINALIZADO
-    private String statusProcesso; // EM_ANDAMENTO, FINALIZADO, CANCELADO
+    private String etapaAtual = "DADOS_PESSOAIS"; // DADOS_PESSOAIS, DOCUMENTOS, BENEFICIOS, REVISAO, FINALIZADO
+    private String statusProcesso = "EM_ANDAMENTO"; // EM_ANDAMENTO, FINALIZADO, CANCELADO
+    
+    // Percentual de conclusão do processo
+    private Integer percentualConclusao = 0;
     
     // === OBSERVAÇÕES ===
     private String observacoes;
     
     // === DADOS DE CONTROLE ===
     private String criadoPor; // usuário que iniciou o processo
-    private LocalDate dataInicioProcesso;
+    private LocalDate dataInicioProcesso = LocalDate.now();
     private LocalDate dataFinalizacaoProcesso;
+    
+    // Dados de auditoria
+    private String ultimaAtualizacaoPor;
+    private LocalDate dataUltimaAtualizacao;
+    
+    // Validação de integridade
+    private String hashValidacao; // Para validar integridade dos dados
     
     // === VALIDAÇÕES CUSTOMIZADAS ===
     
@@ -214,5 +244,94 @@ public class AdesaoColaboradorDTO {
             case "REVISAO" -> "FINALIZADO";
             default -> "DADOS_PESSOAIS";
         };
+    }
+    
+    /**
+     * Calcula o percentual de conclusão do processo
+     */
+    public Integer calcularPercentualConclusao() {
+        return switch (etapaAtual) {
+            case "DADOS_PESSOAIS" -> 25;
+            case "DOCUMENTOS" -> 50;
+            case "BENEFICIOS" -> 75;
+            case "REVISAO" -> 90;
+            case "FINALIZADO" -> 100;
+            default -> 0;
+        };
+    }
+    
+    /**
+     * Verifica se todos os campos obrigatórios dos dados pessoais estão preenchidos
+     */
+    public boolean isDadosPessoaisCompletos() {
+        return nome != null && !nome.trim().isEmpty() &&
+               cpf != null && !cpf.trim().isEmpty() &&
+               email != null && !email.trim().isEmpty() &&
+               dataNascimento != null &&
+               sexo != null && !sexo.trim().isEmpty() &&
+               estadoCivil != null && !estadoCivil.trim().isEmpty() &&
+               rg != null && !rg.trim().isEmpty();
+    }
+    
+    /**
+     * Verifica se todos os campos obrigatórios dos dados profissionais estão preenchidos
+     */
+    public boolean isDadosProfissionaisCompletos() {
+        return cargoId != null &&
+               departamentoId != null &&
+               dataAdmissao != null &&
+               salario != null && salario.compareTo(BigDecimal.ZERO) > 0 &&
+               tipoContrato != null && !tipoContrato.trim().isEmpty() &&
+               cargaHoraria != null && cargaHoraria > 0;
+    }
+    
+    /**
+     * Verifica se todos os campos obrigatórios do endereço estão preenchidos
+     */
+    public boolean isEnderecoCompleto() {
+        return cep != null && !cep.trim().isEmpty() &&
+               logradouro != null && !logradouro.trim().isEmpty() &&
+               numero != null && !numero.trim().isEmpty() &&
+               bairro != null && !bairro.trim().isEmpty() &&
+               cidade != null && !cidade.trim().isEmpty() &&
+               estado != null && !estado.trim().isEmpty();
+    }
+    
+    /**
+     * Verifica se pode avançar para a próxima etapa
+     */
+    public boolean podeAvancarEtapa() {
+        return switch (etapaAtual) {
+            case "DADOS_PESSOAIS" -> isDadosPessoaisCompletos() && isDadosProfissionaisCompletos() && isEnderecoCompleto();
+            case "DOCUMENTOS" -> isDocumentosObrigatoriosCompletos();
+            case "BENEFICIOS" -> true; // Benefícios são opcionais
+            case "REVISAO" -> isProntoParaFinalizacao();
+            default -> false;
+        };
+    }
+    
+    /**
+     * Inicializa o processo com valores padrão
+     */
+    public void inicializarProcesso(String usuarioResponsavel) {
+        this.sessionId = java.util.UUID.randomUUID().toString();
+        this.etapaAtual = "DADOS_PESSOAIS";
+        this.statusProcesso = "EM_ANDAMENTO";
+        this.criadoPor = usuarioResponsavel;
+        this.dataInicioProcesso = LocalDate.now();
+        this.percentualConclusao = 0;
+        this.pais = "Brasil";
+        
+        // Inicializar mapas
+        this.documentosUpload = new java.util.HashMap<>();
+        this.statusDocumentos = new java.util.HashMap<>();
+        this.observacoesDocumentos = new java.util.HashMap<>();
+        this.beneficiosSelecionados = new java.util.HashMap<>();
+        this.dependentes = new ArrayList<>();
+        
+        // Inicializar status dos documentos obrigatórios
+        for (String doc : documentosObrigatorios) {
+            statusDocumentos.put(doc, false);
+        }
     }
 }

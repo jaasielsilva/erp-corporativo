@@ -16,6 +16,7 @@ import com.jaasielsilva.portalceo.service.BeneficioAdesaoService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 
 import jakarta.validation.Valid;
+import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,10 @@ public class AdesaoColaboradorController {
         String sessionId = request.getSession().getId();
 
         try {
+            // Log dos dados recebidos para debug
+            logger.info("Dados recebidos - Nome: {}, CPF: {}, Email: {}", 
+                       dadosAdesao.getNome(), dadosAdesao.getCpf(), dadosAdesao.getEmail());
+            
             // Verificar rate limiting
             if (!securityService.checkRateLimit(clientIp)) {
                 auditService.logRateLimitExcedido(clientIp, "/dados-pessoais", request.getHeader("User-Agent"));
@@ -129,8 +134,27 @@ public class AdesaoColaboradorController {
             }
 
             if (result.hasErrors()) {
+                Map<String, List<String>> errors = new HashMap<>();
+                result.getFieldErrors().forEach(error -> {
+                    String fieldName = error.getField();
+                    String errorMessage = error.getDefaultMessage();
+                    
+                    // Melhorar mensagens específicas
+                    if ("telefone".equals(fieldName)) {
+                        errorMessage = "Telefone deve estar no formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX";
+                    } else if ("cpf".equals(fieldName)) {
+                        errorMessage = "CPF deve estar no formato XXX.XXX.XXX-XX e ser válido";
+                    } else if ("email".equals(fieldName)) {
+                        errorMessage = "Email deve ter um formato válido (exemplo@dominio.com)";
+                    }
+                    
+                    errors.computeIfAbsent(fieldName, k -> new ArrayList<>())
+                          .add(errorMessage);
+                });
+
                 response.put("success", false);
-                response.put("errors", result.getAllErrors());
+                response.put("message", "Dados inválidos. Verifique os campos destacados.");
+                response.put("errors", errors);
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -188,8 +212,15 @@ public class AdesaoColaboradorController {
 
             logger.info("Dados pessoais processados com sucesso para CPF: {} - IP: {}", dadosAdesao.getCpf(), clientIp);
 
+        } catch (org.springframework.http.converter.HttpMessageNotReadableException e) {
+            logger.error("Erro ao ler mensagem HTTP: {}", e.getMessage(), e);
+
+            response.put("success", false);
+            response.put("message", "Erro na codificação dos dados. Verifique caracteres especiais.");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             logger.error("Erro ao processar dados pessoais - IP: {}", clientIp, e);
+
             response.put("success", false);
             response.put("message", "Erro interno do servidor");
             return ResponseEntity.internalServerError().body(response);
@@ -262,8 +293,74 @@ public class AdesaoColaboradorController {
     }
 
     /**
-     * Upload de documentos (Etapa 2)
+     * Página de documentos (Etapa 2)
      */
+    @GetMapping("/documentos")
+    public String paginaDocumentos(@RequestParam("sessionId") String sessionId, Model model) {
+        try {
+            // Validar se a sessão existe
+            if (sessionId == null || sessionId.trim().isEmpty()) {
+                logger.warn("SessionId inválido para página de documentos");
+                return "redirect:/rh/colaboradores/adesao?erro=sessao-invalida";
+            }
+
+            // Verificar se existem dados da etapa anterior
+            AdesaoColaboradorDTO dadosAdesao = adesaoService.obterDadosCompletos(sessionId);
+            if (dadosAdesao == null) {
+                logger.warn("Dados de adesão não encontrados para sessionId: {}", sessionId);
+                return "redirect:/rh/colaboradores/adesao?erro=sessao-invalida";
+            }
+
+            model.addAttribute("sessionId", sessionId);
+            model.addAttribute("dadosAdesao", dadosAdesao);
+
+            logger.info("Carregando página de documentos para sessão: {}", sessionId);
+            return "rh/colaboradores/adesao/documentos";
+
+        } catch (Exception e) {
+            logger.error("Erro ao carregar página de documentos: ", e);
+            return "redirect:/rh/colaboradores/adesao?erro=erro-interno";
+        }
+    }
+
+    /**
+     * Processar documentos (Etapa 2)
+     */
+    @PostMapping("/documentos")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> processarDocumentos(
+            @RequestParam("sessionId") String sessionId) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // Validar se todos os documentos obrigatórios foram enviados
+            boolean documentosCompletos = documentoService.verificarDocumentosObrigatorios(sessionId);
+
+            if (!documentosCompletos) {
+                response.put("success", false);
+                response.put("message", "Todos os documentos obrigatórios devem ser enviados");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Atualizar workflow
+            workflowService.atualizarEtapa(sessionId, "documentos");
+
+            response.put("success", true);
+            response.put("proximaEtapa", "beneficios");
+            response.put("message", "Documentos processados com sucesso!");
+
+            logger.info("Documentos processados com sucesso para sessão: {}", sessionId);
+
+        } catch (Exception e) {
+            logger.error("Erro ao processar documentos: ", e);
+            response.put("success", false);
+            response.put("message", "Erro ao processar documentos: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * Seleção de benefícios (Etapa 3)

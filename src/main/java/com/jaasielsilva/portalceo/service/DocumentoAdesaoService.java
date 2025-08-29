@@ -53,7 +53,11 @@ public class DocumentoAdesaoService {
     private static final Map<String, String> DOCUMENTOS_OBRIGATORIOS = Map.of(
         "documentoRg", "RG",
         "documentoCpf", "CPF",
-        "comprovanteEndereco", "Comprovante de Endereço"
+        "comprovanteEndereco", "Comprovante de Endereço",
+        // Mapeamento alternativo para compatibilidade com frontend
+        "rg", "RG",
+        "cpf", "CPF",
+        "endereco", "Comprovante de Endereço"
     );
     
     private static final Map<String, String> DOCUMENTOS_OPCIONAIS = Map.of(
@@ -63,6 +67,13 @@ public class DocumentoAdesaoService {
         "comprovanteEscolaridade", "Comprovante de Escolaridade",
         "certidaoNascimentoCasamento", "Certidão de Nascimento/Casamento",
         "outrosDocumentos", "Outros Documentos"
+    );
+    
+    // Mapeamento para normalizar tipos de documento
+    private static final Map<String, String> MAPEAMENTO_TIPOS = Map.of(
+        "rg", "documentoRg",
+        "cpf", "documentoCpf",
+        "endereco", "comprovanteEndereco"
     );
     
     /**
@@ -75,11 +86,14 @@ public class DocumentoAdesaoService {
         validarArquivo(arquivo);
         validarTipoDocumento(tipoDocumento);
         
+        // Normalizar tipo de documento para compatibilidade
+        String tipoNormalizado = normalizarTipoDocumento(tipoDocumento);
+        
         // Criar diretório se não existir
         Path diretorioSessao = criarDiretorioSessao(sessionId);
         
         // Gerar nome único para o arquivo
-        String nomeArquivo = gerarNomeArquivo(arquivo.getOriginalFilename(), tipoDocumento);
+        String nomeArquivo = gerarNomeArquivo(arquivo.getOriginalFilename(), tipoNormalizado);
         Path caminhoArquivo = diretorioSessao.resolve(nomeArquivo);
         
         try {
@@ -89,7 +103,7 @@ public class DocumentoAdesaoService {
             // Criar info do documento
             DocumentoInfo documentoInfo = new DocumentoInfo();
             documentoInfo.setTipo(obterNomeTipoDocumento(tipoDocumento));
-            documentoInfo.setTipoInterno(tipoDocumento);
+            documentoInfo.setTipoInterno(tipoNormalizado);
             documentoInfo.setNomeArquivo(arquivo.getOriginalFilename());
             documentoInfo.setNomeArquivoSalvo(nomeArquivo);
             documentoInfo.setCaminhoArquivo(caminhoArquivo.toString());
@@ -143,7 +157,10 @@ public class DocumentoAdesaoService {
                 .map(DocumentoInfo::getTipoInterno)
                 .collect(Collectors.toSet());
         
-        return DOCUMENTOS_OBRIGATORIOS.keySet().stream()
+        // Verificar apenas os tipos normalizados obrigatórios
+        Set<String> tiposObrigatoriosNormalizados = Set.of("documentoRg", "documentoCpf", "comprovanteEndereco");
+        
+        return tiposObrigatoriosNormalizados.stream()
                 .allMatch(tiposEnviados::contains);
     }
     
@@ -297,6 +314,10 @@ public class DocumentoAdesaoService {
             !DOCUMENTOS_OPCIONAIS.containsKey(tipoDocumento)) {
             throw new DocumentoException("Tipo de documento inválido: " + tipoDocumento);
         }
+    }
+    
+    private String normalizarTipoDocumento(String tipoDocumento) {
+        return MAPEAMENTO_TIPOS.getOrDefault(tipoDocumento, tipoDocumento);
     }
     
     private Path criarDiretorioSessao(String sessionId) throws IOException {

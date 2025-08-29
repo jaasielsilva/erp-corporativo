@@ -1,0 +1,4 @@
+Este é um arquivo de teste para simular o documento RG.
+Conteúdo: RG - 12.345.678-9
+Nome: João Silva Santos
+Data: 15/05/1990

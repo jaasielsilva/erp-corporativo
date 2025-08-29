@@ -32,4 +32,19 @@ public class CargoService {
     public void excluir(Long id) {
         cargoRepository.deleteById(id);
     }
+
+    public int ativarTodosCargos() {
+        List<Cargo> todosCargos = cargoRepository.findAll();
+        int cargosAtualizados = 0;
+        
+        for (Cargo cargo : todosCargos) {
+            if (!cargo.isAtivo()) {
+                cargo.setAtivo(true);
+                cargoRepository.save(cargo);
+                cargosAtualizados++;
+            }
+        }
+        
+        return cargosAtualizados;
+    }
 }

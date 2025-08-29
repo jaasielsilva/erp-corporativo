@@ -108,7 +108,7 @@ public class AdesaoColaboradorService {
                     adesao.setEtapaAtual("BENEFICIOS");
                     break;
                 case "beneficios":
-                    adesao.setEtapaAtual("REVISAO");
+                    adesao.setEtapaAtual("revisao");
                     break;
             }
         }
@@ -286,7 +286,7 @@ public class AdesaoColaboradorService {
             throw new IllegalArgumentException("Sessão não encontrada: " + sessionId);
         }
 
-        dadosAdesao.setEtapaAtual("REVISAO");
+        dadosAdesao.setEtapaAtual("revisao");
         adesaoTemporaria.put(sessionId, dadosAdesao);
 
         return dadosAdesao;

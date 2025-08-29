@@ -19,39 +19,6 @@
             margin-bottom: 2rem;
         }
         
-        function preencherResumoBeneficios(resumo) {
-            let html = '';
-            
-            if (resumo.calculo && resumo.calculo.itens && resumo.calculo.itens.length > 0) {
-                resumo.calculo.itens.forEach(function(item) {
-                    html += `
-                        <div class="benefit-item">
-                            <div class="benefit-header">
-                                <div>
-                                    <h6 class="mb-0">${item.nome}</h6>
-                                    <small class="text-muted">Titular: R$ ${item.custoTitular.toFixed(2).replace('.', ',')}</small>
-                                    ${item.quantidadeDependentes > 0 ? `
-                                        <br><small class="text-muted">
-                                            <i class="fas fa-users me-1"></i> ${item.quantidadeDependentes} dependente(s): 
-                                            R$ ${item.custoDependentes.toFixed(2).replace('.', ',')}
-                                        </small>
-                                    ` : ''}
-                                </div>
-                                <div class="benefit-price">R$ ${item.custoTotal.toFixed(2).replace('.', ',')}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                $('#beneficiosSelecionados').html(html);
-                $('#totalMensalFinal').text(resumo.custoTotalFormatado || 'R$ 0,00');
-                
-            } else {
-                $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
-                $('#totalMensalFinal').text('R$ 0,00');
-            }
-        }
-        
         .step {
             display: flex;
             align-items: center;

@@ -12,6 +12,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <link th:href="@{/css/notifications.css}" rel="stylesheet">
 
     <style>
         .step-indicator {
@@ -103,9 +105,14 @@
 </head>
 
 <body>
-    <div class="container-fluid py-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid py-4">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10">
                 <!-- Cabeçalho -->
                 <div class="text-center mb-4">
                     <h1 class="display-6 text-primary">
@@ -655,6 +662,19 @@
             }
         }
     </script>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
+    <script src="/js/sidebar.js" defer></script>
+    
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
 
 </html>

@@ -148,7 +148,7 @@ public class AdesaoColaboradorDTO {
 
     // === CONTROLE DO PROCESSO ===
     private String sessionId;
-    private String etapaAtual = "DADOS_PESSOAIS"; // DADOS_PESSOAIS, DOCUMENTOS, BENEFICIOS, REVISAO, FINALIZADO
+    private String etapaAtual = "DADOS_PESSOAIS"; // DADOS_PESSOAIS, DOCUMENTOS, BENEFICIOS, revisao, FINALIZADO
     private String statusProcesso = "EM_ANDAMENTO"; // EM_ANDAMENTO, FINALIZADO, CANCELADO
     
     // Percentual de conclusão do processo
@@ -227,7 +227,7 @@ public class AdesaoColaboradorDTO {
      * Verifica se o processo está em uma etapa válida para finalização
      */
     public boolean isProntoParaFinalizacao() {
-        return "REVISAO".equals(etapaAtual) && 
+        return "revisao".equals(etapaAtual) && 
                isDocumentosObrigatoriosCompletos() &&
                isIdadeValida() &&
                isDataAdmissaoValida();
@@ -240,8 +240,8 @@ public class AdesaoColaboradorDTO {
         return switch (etapaAtual) {
             case "DADOS_PESSOAIS" -> "DOCUMENTOS";
             case "DOCUMENTOS" -> "BENEFICIOS";
-            case "BENEFICIOS" -> "REVISAO";
-            case "REVISAO" -> "FINALIZADO";
+            case "BENEFICIOS" -> "revisao";
+            case "revisao" -> "FINALIZADO";
             default -> "DADOS_PESSOAIS";
         };
     }
@@ -254,7 +254,7 @@ public class AdesaoColaboradorDTO {
             case "DADOS_PESSOAIS" -> 25;
             case "DOCUMENTOS" -> 50;
             case "BENEFICIOS" -> 75;
-            case "REVISAO" -> 90;
+            case "revisao" -> 90;
             case "FINALIZADO" -> 100;
             default -> 0;
         };
@@ -305,7 +305,7 @@ public class AdesaoColaboradorDTO {
             case "DADOS_PESSOAIS" -> isDadosPessoaisCompletos() && isDadosProfissionaisCompletos() && isEnderecoCompleto();
             case "DOCUMENTOS" -> isDocumentosObrigatoriosCompletos();
             case "BENEFICIOS" -> true; // Benefícios são opcionais
-            case "REVISAO" -> isProntoParaFinalizacao();
+            case "revisao" -> isProntoParaFinalizacao();
             default -> false;
         };
     }

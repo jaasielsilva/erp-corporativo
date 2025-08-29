@@ -97,7 +97,6 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/chat/**").authenticated()
                                                 .requestMatchers("/api/notifications/**").authenticated()
                                                 .requestMatchers("/error", "/error/**").permitAll()
-                                                .requestMatchers("/rh/colaboradores/adesao/**", "/api/rh/colaboradores/adesao/**").permitAll()
                                                 .anyRequest().authenticated())
 
                                 .formLogin(form -> form

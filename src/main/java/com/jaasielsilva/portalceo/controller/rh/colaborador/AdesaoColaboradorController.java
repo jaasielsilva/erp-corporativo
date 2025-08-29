@@ -89,15 +89,15 @@ public class AdesaoColaboradorController {
     public ResponseEntity<List<Map<String, Object>>> carregarCargos() {
         try {
             List<Map<String, Object>> cargosResponse = cargoService.listarAtivos()
-                .stream()
-                .map(cargo -> {
-                    Map<String, Object> cargoMap = new HashMap<>();
-                    cargoMap.put("id", cargo.getId());
-                    cargoMap.put("nome", cargo.getNome());
-                    return cargoMap;
-                })
-                .toList();
-            
+                    .stream()
+                    .map(cargo -> {
+                        Map<String, Object> cargoMap = new HashMap<>();
+                        cargoMap.put("id", cargo.getId());
+                        cargoMap.put("nome", cargo.getNome());
+                        return cargoMap;
+                    })
+                    .toList();
+
             logger.info("Carregando {} cargos ativos via API", cargosResponse.size());
             return ResponseEntity.ok(cargosResponse);
         } catch (Exception e) {
@@ -122,9 +122,9 @@ public class AdesaoColaboradorController {
 
         try {
             // Log dos dados recebidos para debug
-            logger.info("Dados recebidos - Nome: {}, CPF: {}, Email: {}", 
-                       dadosAdesao.getNome(), dadosAdesao.getCpf(), dadosAdesao.getEmail());
-            
+            logger.info("Dados recebidos - Nome: {}, CPF: {}, Email: {}",
+                    dadosAdesao.getNome(), dadosAdesao.getCpf(), dadosAdesao.getEmail());
+
             // Verificar rate limiting
             if (!securityService.checkRateLimit(clientIp)) {
                 auditService.logRateLimitExcedido(clientIp, "/dados-pessoais", request.getHeader("User-Agent"));
@@ -138,7 +138,7 @@ public class AdesaoColaboradorController {
                 result.getFieldErrors().forEach(error -> {
                     String fieldName = error.getField();
                     String errorMessage = error.getDefaultMessage();
-                    
+
                     // Melhorar mensagens específicas
                     if ("telefone".equals(fieldName)) {
                         errorMessage = "Telefone deve estar no formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX";
@@ -147,9 +147,9 @@ public class AdesaoColaboradorController {
                     } else if ("email".equals(fieldName)) {
                         errorMessage = "Email deve ter um formato válido (exemplo@dominio.com)";
                     }
-                    
+
                     errors.computeIfAbsent(fieldName, k -> new ArrayList<>())
-                          .add(errorMessage);
+                            .add(errorMessage);
                 });
 
                 response.put("success", false);
@@ -293,6 +293,44 @@ public class AdesaoColaboradorController {
     }
 
     /**
+     * Página de seleção de benefícios (Etapa 3)
+     */
+    @GetMapping("/beneficios")
+    public String paginaBeneficios(
+            @RequestParam("sessionId") String sessionId,
+            Model model,
+            RedirectAttributes redirectAttrs) {
+
+        try {
+            // Buscar dados do processo
+            AdesaoColaboradorDTO dadosAdesao = adesaoService.obterDadosCompletos(sessionId);
+
+            if (dadosAdesao == null) {
+                logger.warn("Processo não encontrado para sessionId: {}", sessionId);
+                redirectAttrs.addFlashAttribute("erro", "Processo não encontrado. Reinicie a adesão.");
+                return "redirect:/rh/colaboradores/adesao";
+            }
+
+            // Verificar se a etapa anterior foi concluída
+            if (!"documentos".equalsIgnoreCase(dadosAdesao.getEtapaAtual())) {
+                logger.warn("Acesso inválido à etapa benefícios. Etapa atual: {}", dadosAdesao.getEtapaAtual());
+                return "redirect:/rh/colaboradores/adesao/" + dadosAdesao.getEtapaAtual() + "?sessionId=" + sessionId;
+            }
+
+            model.addAttribute("dadosAdesao", dadosAdesao);
+            model.addAttribute("beneficios", beneficioService.listarTodos());
+            model.addAttribute("sessionId", sessionId);
+
+            return "rh/colaboradores/adesao/beneficios"; // nome do template Thymeleaf
+
+        } catch (Exception e) {
+            logger.error("Erro ao carregar página de benefícios", e);
+            redirectAttrs.addFlashAttribute("erro", "Erro ao carregar página de benefícios.");
+            return "redirect:/rh/colaboradores/adesao";
+        }
+    }
+
+    /**
      * Página de documentos (Etapa 2)
      */
     @GetMapping("/documentos")
@@ -415,15 +453,15 @@ public class AdesaoColaboradorController {
     /**
      * Revisão e finalização (Etapa 4)
      */
-    @GetMapping("/revisao/{sessionId}")
-    public String paginaRevisao(@PathVariable String sessionId, Model model) {
+    @GetMapping("/revisao")
+    public String paginaRevisao(
+            @RequestParam("sessionId") String sessionId,
+            Model model) {
         try {
             AdesaoColaboradorDTO dadosCompletos = adesaoService.obterDadosCompletos(sessionId);
             model.addAttribute("dadosAdesao", dadosCompletos);
             model.addAttribute("sessionId", sessionId);
-
             return "rh/colaboradores/adesao/revisao";
-
         } catch (Exception e) {
             logger.error("Erro ao carregar página de revisão: ", e);
             return "redirect:/rh/colaboradores/adesao?erro=sessao-invalida";

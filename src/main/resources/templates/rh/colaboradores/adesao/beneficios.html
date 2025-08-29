@@ -1,30 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Benefícios - Adesão de Colaborador - Portal CEO</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link th:href="@{/css/style.css}" rel="stylesheet">
-    
+
     <style>
         .step-indicator {
             display: flex;
             justify-content: center;
             margin-bottom: 2rem;
         }
-        
+
         .step {
             display: flex;
             align-items: center;
             margin: 0 1rem;
         }
-        
+
         .step-number {
             width: 40px;
             height: 40px;
@@ -37,55 +38,55 @@
             font-weight: bold;
             margin-right: 0.5rem;
         }
-        
+
         .step.active .step-number {
             background-color: #0d6efd;
             color: white;
         }
-        
+
         .step.completed .step-number {
             background-color: #198754;
             color: white;
         }
-        
+
         .step-line {
             width: 60px;
             height: 2px;
             background-color: #e9ecef;
             margin: 0 1rem;
         }
-        
-        .step.completed + .step-line {
+
+        .step.completed+.step-line {
             background-color: #198754;
         }
-        
+
         .benefit-card {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
             padding: 2rem;
             margin-bottom: 2rem;
             transition: all 0.3s ease;
             border: 2px solid transparent;
         }
-        
+
         .benefit-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
-        
+
         .benefit-card.selected {
             border-color: #0d6efd;
             background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
         }
-        
+
         .benefit-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 1.5rem;
         }
-        
+
         .benefit-icon {
             width: 60px;
             height: 60px;
@@ -97,19 +98,19 @@
             color: white;
             margin-right: 1rem;
         }
-        
+
         .benefit-toggle {
             position: relative;
             width: 60px;
             height: 30px;
         }
-        
+
         .benefit-toggle input {
             opacity: 0;
             width: 0;
             height: 0;
         }
-        
+
         .slider {
             position: absolute;
             cursor: pointer;
@@ -121,7 +122,7 @@
             transition: .4s;
             border-radius: 30px;
         }
-        
+
         .slider:before {
             position: absolute;
             content: "";
@@ -133,40 +134,41 @@
             transition: .4s;
             border-radius: 50%;
         }
-        
-        input:checked + .slider {
+
+        input:checked+.slider {
             background-color: #0d6efd;
         }
-        
-        input:checked + .slider:before {
+
+        input:checked+.slider:before {
             transform: translateX(30px);
         }
-        
+
         .benefit-details {
             display: none;
             margin-top: 1.5rem;
             padding: 1.5rem;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255, 255, 255, 0.8);
             border-radius: 10px;
             border-left: 4px solid #0d6efd;
         }
-        
+
         .benefit-details.show {
             display: block;
             animation: slideDown 0.3s ease;
         }
-        
+
         @keyframes slideDown {
             from {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .plan-option {
             background: white;
             border: 2px solid #e9ecef;
@@ -176,29 +178,29 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .plan-option:hover {
             border-color: #0d6efd;
         }
-        
+
         .plan-option.selected {
             border-color: #0d6efd;
             background: #f8f9ff;
         }
-        
+
         .plan-price {
             font-size: 1.5rem;
             font-weight: bold;
             color: #0d6efd;
         }
-        
+
         .dependents-section {
             background: #f8f9fa;
             border-radius: 10px;
             padding: 1.5rem;
             margin-top: 1rem;
         }
-        
+
         .dependent-item {
             background: white;
             border-radius: 8px;
@@ -206,7 +208,7 @@
             margin-bottom: 1rem;
             border: 1px solid #dee2e6;
         }
-        
+
         .summary-card {
             background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
             color: white;
@@ -214,21 +216,21 @@
             padding: 2rem;
             margin-top: 2rem;
         }
-        
+
         .summary-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
+
         .summary-item:last-child {
             border-bottom: none;
             font-weight: bold;
             font-size: 1.2rem;
         }
-        
+
         .btn-next {
             background: linear-gradient(45deg, #0d6efd, #0056b3);
             border: none;
@@ -238,12 +240,12 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-        
+
         .btn-next:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
         }
-        
+
         .btn-back {
             background: #6c757d;
             border: none;
@@ -252,7 +254,7 @@
             color: white;
             font-weight: 500;
         }
-        
+
         .section-title {
             color: #0d6efd;
             border-bottom: 2px solid #0d6efd;
@@ -261,10 +263,11 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Sidebar -->
-        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-    
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
     <div class="container-fluid py-4">
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -276,7 +279,7 @@
                     </h1>
                     <p class="lead text-muted">Escolha os benefícios que deseja aderir</p>
                 </div>
-                
+
                 <!-- Indicador de Etapas -->
                 <div class="step-indicator">
                     <div class="step completed">
@@ -299,11 +302,11 @@
                         <span>Revisão</span>
                     </div>
                 </div>
-                
+
                 <!-- Formulário de Benefícios -->
                 <form id="formBeneficios">
                     <input type="hidden" id="sessionId" name="sessionId" th:value="${param.sessionId}">
-                    
+
                     <!-- Plano de Saúde -->
                     <div class="benefit-card" id="card-plano-saude">
                         <div class="benefit-header">
@@ -321,15 +324,15 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        
+
                         <p class="text-muted mb-3">
-                            Tenha acesso a uma ampla rede credenciada de médicos, hospitais e laboratórios. 
+                            Tenha acesso a uma ampla rede credenciada de médicos, hospitais e laboratórios.
                             Cobertura nacional com atendimento de qualidade.
                         </p>
-                        
+
                         <div class="benefit-details" id="details-plano-saude">
                             <h5 class="mb-3">Escolha seu plano:</h5>
-                            
+
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="plan-option" data-plan="basico" data-price="89.90">
@@ -346,7 +349,7 @@
                                         <input type="radio" name="planoSaudeTipo" value="basico" class="d-none">
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-4">
                                     <div class="plan-option" data-plan="intermediario" data-price="149.90">
                                         <div class="text-center">
@@ -363,7 +366,7 @@
                                         <input type="radio" name="planoSaudeTipo" value="intermediario" class="d-none">
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-4">
                                     <div class="plan-option" data-plan="premium" data-price="249.90">
                                         <div class="text-center">
@@ -381,7 +384,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Dependentes -->
                             <div class="dependents-section" id="dependentes-plano-saude" style="display: none;">
                                 <h6 class="mb-3">Dependentes</h6>
@@ -391,9 +394,10 @@
                                         Incluir dependentes no plano
                                     </label>
                                 </div>
-                                
+
                                 <div id="listaDependentes" style="display: none;">
-                                    <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="adicionarDependente()">
+                                    <button type="button" class="btn btn-outline-primary btn-sm mb-3"
+                                        onclick="adicionarDependente()">
                                         <i class="fas fa-plus me-2"></i>Adicionar Dependente
                                     </button>
                                     <div id="dependentesContainer"></div>
@@ -401,7 +405,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Vale Refeição -->
                     <div class="benefit-card" id="card-vale-refeicao">
                         <div class="benefit-header">
@@ -419,12 +423,12 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        
+
                         <p class="text-muted mb-3">
-                            Cartão alimentação aceito em milhares de estabelecimentos. 
+                            Cartão alimentação aceito em milhares de estabelecimentos.
                             Valor mensal para suas refeições durante o trabalho.
                         </p>
-                        
+
                         <div class="benefit-details" id="details-vale-refeicao">
                             <div class="row">
                                 <div class="col-md-6">
@@ -437,7 +441,7 @@
                                         <input type="radio" name="valeRefeicaoValor" value="300" class="d-none">
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <div class="plan-option" data-plan="vale-500" data-price="500.00">
                                         <div class="text-center">
@@ -451,7 +455,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Vale Transporte -->
                     <div class="benefit-card" id="card-vale-transporte">
                         <div class="benefit-header">
@@ -469,12 +473,12 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        
+
                         <p class="text-muted mb-3">
-                            Auxílio para transporte público ou combustível. 
+                            Auxílio para transporte público ou combustível.
                             Valor calculado baseado na distância casa-trabalho.
                         </p>
-                        
+
                         <div class="benefit-details" id="details-vale-transporte">
                             <div class="row">
                                 <div class="col-md-4">
@@ -487,7 +491,7 @@
                                         <input type="radio" name="valeTransporteValor" value="150" class="d-none">
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-4">
                                     <div class="plan-option" data-plan="transporte-250" data-price="250.00">
                                         <div class="text-center">
@@ -498,7 +502,7 @@
                                         <input type="radio" name="valeTransporteValor" value="250" class="d-none">
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-4">
                                     <div class="plan-option" data-plan="transporte-350" data-price="350.00">
                                         <div class="text-center">
@@ -512,22 +516,22 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Resumo dos Benefícios -->
                     <div class="summary-card" id="resumoBeneficios" style="display: none;">
                         <h4 class="mb-3">
                             <i class="fas fa-calculator me-2"></i>
                             Resumo dos Benefícios Selecionados
                         </h4>
-                        
+
                         <div id="listaBeneficiosSelecionados"></div>
-                        
+
                         <div class="summary-item">
                             <span>Total Mensal:</span>
                             <span id="totalMensal">R$ 0,00</span>
                         </div>
                     </div>
-                    
+
                     <!-- Botões de Ação -->
                     <div class="text-center mt-4">
                         <button type="button" class="btn btn-back me-3" onclick="voltarEtapa()">
@@ -542,32 +546,32 @@
             </div>
         </div>
     </div>
-    
-       <!-- Footer -->
-            <footer th:replace="~{components/footer :: footer}"></footer>
-    
+
+    <!-- Footer -->
+    <footer th:replace="~{components/footer :: footer}"></footer>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    
+
     <script>
         let beneficiosSelecionados = {};
         let totalMensal = 0;
         let contadorDependentes = 0;
-        
-        $(document).ready(function() {
+
+        $(document).ready(function () {
             // Carregar benefícios disponíveis
             carregarBeneficios();
-            
+
             // Configurar eventos
             configurarEventos();
-            
+
             // Validação do formulário
-            $('#formBeneficios').on('submit', function(e) {
+            $('#formBeneficios').on('submit', function (e) {
                 e.preventDefault();
                 enviarBeneficios();
             });
-            
+
             // Verificar se sessionId existe
             if (!$('#sessionId').val()) {
                 mostrarErro('Sessão inválida. Reinicie o processo de adesão.');
@@ -576,12 +580,12 @@
                 }, 3000);
             }
         });
-        
+
         function carregarBeneficios() {
             $.ajax({
                 url: '/api/rh/colaboradores/adesao/beneficios/disponiveis',
                 method: 'GET',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         preencherBeneficios(response.beneficios);
                         // Carregar benefícios já selecionados da sessão
@@ -590,14 +594,14 @@
                         mostrarErro('Erro ao carregar benefícios: ' + response.message);
                     }
                 },
-                error: function() {
+                error: function () {
                     mostrarErro('Erro de conexão ao carregar benefícios');
                 }
             });
         }
-        
+
         function preencherBeneficios(beneficios) {
-            beneficios.forEach(function(beneficio) {
+            beneficios.forEach(function (beneficio) {
                 if (beneficio.tipo === 'PLANO_SAUDE') {
                     preencherPlanosSaude(beneficio.opcoes);
                 } else if (beneficio.tipo === 'VALE_REFEICAO') {
@@ -607,13 +611,13 @@
                 }
             });
         }
-        
+
         function carregarBeneficiosSessao() {
             $.ajax({
                 url: '/api/rh/colaboradores/adesao/beneficios/sessao',
                 method: 'GET',
                 data: { sessionId: $('#sessionId').val() },
-                success: function(response) {
+                success: function (response) {
                     if (response.success && response.temDados) {
                         preencherFormularioComDados(response.beneficios);
                         if (response.calculo) {
@@ -621,23 +625,23 @@
                         }
                     }
                 },
-                error: function() {
+                error: function () {
                     console.log('Nenhum benefício salvo na sessão');
                 }
             });
         }
-        
+
         function configurarEventos() {
             // Toggles de benefícios
-            $('.benefit-toggle input').on('change', function() {
+            $('.benefit-toggle input').on('change', function () {
                 const beneficio = $(this).val();
                 const card = $(this).closest('.benefit-card');
                 const details = card.find('.benefit-details');
-                
+
                 if ($(this).is(':checked')) {
                     card.addClass('selected');
                     details.addClass('show');
-                    
+
                     // Mostrar seção de dependentes para plano de saúde
                     if (beneficio === 'PLANO_SAUDE') {
                         $('#dependentes-plano-saude').show();
@@ -645,14 +649,14 @@
                 } else {
                     card.removeClass('selected');
                     details.removeClass('show');
-                    
+
                     // Limpar seleções
                     card.find('.plan-option').removeClass('selected');
                     card.find('input[type="radio"]').prop('checked', false);
-                    
+
                     // Remover do resumo
                     delete beneficiosSelecionados[beneficio];
-                    
+
                     // Esconder dependentes
                     if (beneficio === 'PLANO_SAUDE') {
                         $('#dependentes-plano-saude').hide();
@@ -660,24 +664,24 @@
                         $('#listaDependentes').hide();
                     }
                 }
-                
+
                 atualizarResumo();
             });
-            
+
             // Seleção de planos
-            $('.plan-option').on('click', function() {
+            $('.plan-option').on('click', function () {
                 const container = $(this).parent();
                 container.find('.plan-option').removeClass('selected');
                 $(this).addClass('selected');
-                
+
                 const radio = $(this).find('input[type="radio"]');
                 radio.prop('checked', true);
-                
+
                 atualizarResumo();
             });
-            
+
             // Dependentes
-            $('#incluirDependentes').on('change', function() {
+            $('#incluirDependentes').on('change', function () {
                 if ($(this).is(':checked')) {
                     $('#listaDependentes').show();
                 } else {
@@ -688,10 +692,10 @@
                 atualizarResumo();
             });
         }
-        
+
         function adicionarDependente() {
             contadorDependentes++;
-            
+
             const html = `
                 <div class="dependent-item" id="dependente-${contadorDependentes}">
                     <div class="row align-items-center">
@@ -723,24 +727,24 @@
                     </div>
                 </div>
             `;
-            
+
             $('#dependentesContainer').append(html);
             atualizarResumo();
         }
-        
+
         function removerDependente(id) {
             $(`#dependente-${id}`).remove();
             atualizarResumo();
         }
-        
+
         function atualizarResumo() {
             const beneficiosParaCalculo = coletarBeneficiosSelecionados();
-            
+
             if (Object.keys(beneficiosParaCalculo).length === 0) {
                 $('#resumoBeneficios').hide();
                 return;
             }
-            
+
             $.ajax({
                 url: '/api/rh/colaboradores/adesao/beneficios/calcular',
                 method: 'POST',
@@ -749,7 +753,7 @@
                     sessionId: $('#sessionId').val(),
                     beneficios: beneficiosParaCalculo
                 }),
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         beneficiosSelecionados = beneficiosParaCalculo;
                         totalMensal = response.calculo.custoTotal;
@@ -757,42 +761,42 @@
                     } else {
                         mostrarErro('Erro no cálculo: ' + response.message);
                         if (response.errors) {
-                            response.errors.forEach(function(erro) {
+                            response.errors.forEach(function (erro) {
                                 mostrarErro(erro);
                             });
                         }
                     }
                 },
-                error: function() {
+                error: function () {
                     mostrarErro('Erro de conexão ao calcular benefícios');
                 }
             });
         }
-        
+
         function coletarBeneficiosSelecionados() {
             const beneficios = {};
-            
+
             // Verificar benefícios selecionados
-            $('.benefit-toggle input:checked').each(function() {
+            $('.benefit-toggle input:checked').each(function () {
                 const beneficio = $(this).val();
                 const card = $(this).closest('.benefit-card');
                 const planoSelecionado = card.find('.plan-option.selected');
-                
+
                 if (planoSelecionado.length > 0) {
                     const planoId = planoSelecionado.data('plan');
-                    
+
                     beneficios[beneficio] = {
                         planoId: planoId
                     };
-                    
+
                     // Adicionar dependentes para plano de saúde
                     if (beneficio === 'PLANO_SAUDE' && $('#incluirDependentes').is(':checked')) {
                         const dependentes = [];
-                        $('#dependentesContainer .dependent-item').each(function() {
+                        $('#dependentesContainer .dependent-item').each(function () {
                             const nome = $(this).find('input[name*="nome"]').val();
                             const parentesco = $(this).find('select[name*="parentesco"]').val();
                             const dataNascimento = $(this).find('input[name*="dataNascimento"]').val();
-                            
+
                             if (nome && parentesco && dataNascimento) {
                                 dependentes.push({
                                     nome: nome,
@@ -801,18 +805,18 @@
                                 });
                             }
                         });
-                        
+
                         beneficios[beneficio].dependentes = dependentes;
                     }
                 }
             });
-            
+
             return beneficios;
         }
-        
+
         function mostrarResumoCalculado(calculo) {
             let html = '';
-            
+
             calculo.itens.forEach(item => {
                 html += `
                     <div class="summary-item">
@@ -820,7 +824,7 @@
                         <span>R$ ${item.custoTitular.toFixed(2)}</span>
                     </div>
                 `;
-                
+
                 if (item.quantidadeDependentes > 0) {
                     html += `
                         <div class="summary-item">
@@ -830,36 +834,36 @@
                     `;
                 }
             });
-            
+
             $('#listaBeneficiosSelecionados').html(html);
             $('#totalMensal').text(`R$ ${calculo.custoTotal.toFixed(2)}`);
             $('#resumoBeneficios').show();
         }
-        
+
         function enviarBeneficios() {
             const beneficiosParaEnvio = coletarBeneficiosSelecionados();
-            
+
             // Validar se todos os benefícios selecionados têm plano escolhido
             let beneficiosIncompletos = [];
-            $('.benefit-toggle input:checked').each(function() {
+            $('.benefit-toggle input:checked').each(function () {
                 const card = $(this).closest('.benefit-card');
                 const planoSelecionado = card.find('.plan-option.selected');
-                
+
                 if (planoSelecionado.length === 0) {
                     const nome = card.find('h4').text();
                     beneficiosIncompletos.push(nome);
                 }
             });
-            
+
             if (beneficiosIncompletos.length > 0) {
                 mostrarErro(`Selecione um plano para: ${beneficiosIncompletos.join(', ')}`);
                 return;
             }
-            
+
             // Mostrar loading
             $('#btnProximaEtapa').prop('disabled', true).html(
                 '<i class="fas fa-spinner fa-spin me-2"></i>Processando...');
-            
+
             $.ajax({
                 url: '/rh/colaboradores/adesao/beneficios',
                 method: 'POST',
@@ -868,38 +872,40 @@
                     sessionId: $('#sessionId').val(),
                     beneficios: beneficiosParaEnvio
                 }),
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         mostrarSucesso('Benefícios selecionados com sucesso!');
                         setTimeout(() => {
-                            window.location.href = `/rh/colaboradores/adesao/revisao?sessionId=${$('#sessionId').val()}`;
+                            // ✅ CORREÇÃO AQUI: use /revisao/{sessionId} (path variable)
+                            const sessionId = $('#sessionId').val();
+                            window.location.href = `/rh/colaboradores/adesao/revisao/${sessionId}`;
                         }, 1500);
                     } else {
                         mostrarErro(response.message || 'Erro ao processar benefícios');
                         if (response.errors) {
-                            response.errors.forEach(function(erro) {
+                            response.errors.forEach(function (erro) {
                                 mostrarErro(erro);
                             });
                         }
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     const response = xhr.responseJSON;
                     mostrarErro(response?.message || 'Erro interno do servidor');
                 },
-                complete: function() {
+                complete: function () {
                     $('#btnProximaEtapa').prop('disabled', false).html(
                         'Próxima Etapa <i class="fas fa-arrow-right ms-2"></i>');
                 }
             });
         }
-        
+
         function voltarEtapa() {
             if (confirm('Tem certeza que deseja voltar? As seleções de benefícios serão mantidas.')) {
                 window.location.href = `/rh/colaboradores/adesao/documentos?sessionId=${$('#sessionId').val()}`;
             }
         }
-        
+
         function mostrarErro(mensagem) {
             const alert = `
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -908,11 +914,11 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
-            
+
             $('.container-fluid').prepend(alert);
             $('html, body').animate({ scrollTop: 0 }, 500);
         }
-        
+
         function mostrarSucesso(mensagem) {
             const alert = `
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -921,10 +927,11 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
-            
+
             $('.container-fluid').prepend(alert);
             $('html, body').animate({ scrollTop: 0 }, 500);
         }
     </script>
 </body>
+
 </html>

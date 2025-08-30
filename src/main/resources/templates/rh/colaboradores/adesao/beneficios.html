@@ -882,9 +882,9 @@
                     if (response.success) {
                         mostrarSucesso('Benefícios selecionados com sucesso!');
                         setTimeout(() => {
-                            // ✅ CORREÇÃO AQUI: use /revisao/{sessionId} (path variable)
+                            // ✅ CORREÇÃO AQUI: use /revisao?sessionId= (query parameter)
                             const sessionId = $('#sessionId').val();
-                            window.location.href = `/rh/colaboradores/adesao/revisao/${sessionId}`;
+                            window.location.href = `/rh/colaboradores/adesao/revisao?sessionId=${sessionId}`;
                         }, 1500);
                     } else {
                         mostrarErro(response.message || 'Erro ao processar benefícios');

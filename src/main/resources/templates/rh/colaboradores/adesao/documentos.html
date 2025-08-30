@@ -659,19 +659,19 @@
 
                         $('#btnProximaEtapa').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Processando...');
 
+                        // Primeiro, processar os documentos no backend
                         $.ajax({
-                            url: '/api/rh/colaboradores/adesao/documentos/status',
-                            method: 'GET',
+                            url: '/rh/colaboradores/adesao/documentos',
+                            method: 'POST',
                             data: { sessionId: $('#sessionId').val() },
                             success: function (response) {
-                                if (response.success && response.podeProximaEtapa) {
-                                    // ✅ Aqui você pode avançar direto, pois o status já confirma
-                                    mostrarSucesso('Documentos validados com sucesso!');
+                                if (response.success) {
+                                    mostrarSucesso('Documentos processados com sucesso!');
                                     setTimeout(() => {
                                         window.location.href = `/rh/colaboradores/adesao/beneficios?sessionId=${$('#sessionId').val()}`;
                                     }, 1500);
                                 } else {
-                                    mostrarErro('Documentos obrigatórios não estão completos.');
+                                    mostrarErro(response.message || 'Erro ao processar documentos.');
                                 }
                             },
                             error: function (xhr) {

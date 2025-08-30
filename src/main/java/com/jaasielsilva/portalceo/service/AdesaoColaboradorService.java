@@ -2,7 +2,9 @@ package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.dto.AdesaoColaboradorDTO;
 import com.jaasielsilva.portalceo.model.*;
+import com.jaasielsilva.portalceo.model.ProcessoAdesao;
 import com.jaasielsilva.portalceo.repository.*;
+import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +59,9 @@ public class AdesaoColaboradorService {
 
     @Autowired
     private DocumentoAdesaoService documentoService;
+
+    @Autowired
+    private WorkflowAdesaoService workflowService;
 
     /**
      * Verifica se CPF já existe no sistema
@@ -278,7 +283,7 @@ public class AdesaoColaboradorService {
     }
 
     /**
-     * Obtém dados completos da adesão para revisão
+     * Obtém dados completos da adesão
      */
     public AdesaoColaboradorDTO obterDadosCompletos(String sessionId) {
         AdesaoColaboradorDTO dadosAdesao = adesaoTemporaria.get(sessionId);
@@ -286,7 +291,17 @@ public class AdesaoColaboradorService {
             throw new IllegalArgumentException("Sessão não encontrada: " + sessionId);
         }
 
-        dadosAdesao.setEtapaAtual("revisao");
+        // Consultar a etapa atual do workflow ao invés de sempre definir como 'revisao'
+        try {
+            ProcessoAdesao processo = workflowService.buscarProcessoPorSessionId(sessionId);
+            if (processo != null) {
+                dadosAdesao.setEtapaAtual(processo.getEtapaAtual());
+            }
+        } catch (Exception e) {
+            logger.warn("Erro ao consultar etapa atual do workflow para sessão {}: {}", sessionId, e.getMessage());
+            // Manter a etapa atual que já estava no DTO se houver erro
+        }
+
         adesaoTemporaria.put(sessionId, dadosAdesao);
 
         return dadosAdesao;

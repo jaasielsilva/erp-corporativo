@@ -343,7 +343,7 @@ public class WorkflowAdesaoService {
 
     // Métodos auxiliares
 
-    private ProcessoAdesao buscarProcessoPorSessionId(String sessionId) {
+    public ProcessoAdesao buscarProcessoPorSessionId(String sessionId) {
         return processoRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new WorkflowException("Processo não encontrado para esta sessão"));
     }

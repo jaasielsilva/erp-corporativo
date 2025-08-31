@@ -618,6 +618,21 @@
             });
         }
 
+        function preencherPlanosSaude(opcoes) {
+            // Implementação para preencher opções de plano de saúde
+            console.log('Preenchendo planos de saúde:', opcoes);
+        }
+
+        function preencherValeRefeicao(opcoes) {
+            // Implementação para preencher opções de vale refeição
+            console.log('Preenchendo vale refeição:', opcoes);
+        }
+
+        function preencherValeTransporte(opcoes) {
+            // Implementação para preencher opções de vale transporte
+            console.log('Preenchendo vale transporte:', opcoes);
+        }
+
         function carregarBeneficiosSessao() {
             $.ajax({
                 url: '/api/rh/colaboradores/adesao/beneficios/sessao',
@@ -762,8 +777,8 @@
                 success: function (response) {
                     if (response.success) {
                         beneficiosSelecionados = beneficiosParaCalculo;
-                        totalMensal = response.calculo.custoTotal;
-                        mostrarResumoCalculado(response.calculo);
+                        totalMensal = response.data.resumo.totalMensal;
+                        mostrarResumoCalculado(response.data.resumo);
                     } else {
                         mostrarErro('Erro no cálculo: ' + response.message);
                         if (response.errors) {
@@ -791,9 +806,17 @@
                 if (planoSelecionado.length > 0) {
                     const planoId = planoSelecionado.data('plan');
 
-                    beneficios[beneficio] = {
-                        planoId: planoId
-                    };
+                    // Para plano de saúde, usar planoId
+                    if (beneficio === 'PLANO_SAUDE') {
+                        beneficios[beneficio] = {
+                            planoId: planoId
+                        };
+                    } else {
+                        // Para vales, usar valor
+                        beneficios[beneficio] = {
+                            valor: planoId
+                        };
+                    }
 
                     // Adicionar dependentes para plano de saúde
                     if (beneficio === 'PLANO_SAUDE' && $('#incluirDependentes').is(':checked')) {
@@ -842,7 +865,7 @@
             });
 
             $('#listaBeneficiosSelecionados').html(html);
-            $('#totalMensal').text(`R$ ${calculo.custoTotal.toFixed(2)}`);
+            $('#totalMensal').text(`R$ ${calculo.totalMensal.toFixed(2)}`);
             $('#resumoBeneficios').show();
         }
 

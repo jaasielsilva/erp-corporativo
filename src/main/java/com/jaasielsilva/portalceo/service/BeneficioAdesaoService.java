@@ -1,8 +1,6 @@
 package com.jaasielsilva.portalceo.service;
 
-import com.jaasielsilva.portalceo.model.Beneficio;
 import com.jaasielsilva.portalceo.model.PlanoSaude;
-import com.jaasielsilva.portalceo.repository.BeneficioRepository;
 import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,9 +19,6 @@ import java.util.stream.Collectors;
 public class BeneficioAdesaoService {
     
     private static final Logger logger = LoggerFactory.getLogger(BeneficioAdesaoService.class);
-    
-    @Autowired
-    private BeneficioRepository beneficioRepository;
     
     @Autowired
     private PlanoSaudeRepository planoSaudeRepository;
@@ -228,7 +223,17 @@ public class BeneficioAdesaoService {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> dependentes = (List<Map<String, Object>>) dadosPlano.get("dependentes");
             
-            Optional<PlanoSaude> planoOpt = planoSaudeRepository.findById(Long.parseLong(planoId));
+            // Buscar plano por código primeiro, depois por ID
+            Optional<PlanoSaude> planoOpt = planoSaudeRepository.findByCodigo(planoId);
+            if (!planoOpt.isPresent()) {
+                try {
+                    Long id = Long.parseLong(planoId);
+                    planoOpt = planoSaudeRepository.findById(id);
+                } catch (NumberFormatException e) {
+                    // Se não conseguir converter para Long, plano não existe
+                }
+            }
+            
             if (!planoOpt.isPresent()) {
                 return null;
             }
@@ -339,20 +344,52 @@ public class BeneficioAdesaoService {
             @SuppressWarnings("unchecked")
             Map<String, Object> dadosPlano = (Map<String, Object>) selecao;
             
-            String planoId = (String) dadosPlano.get("planoId");
+            logger.info("Validando plano de saúde - dados recebidos: {}", dadosPlano);
+            
+            Object planoIdObj = dadosPlano.get("planoId");
+            logger.info("PlanoId objeto: {}, tipo: {}", planoIdObj, planoIdObj != null ? planoIdObj.getClass().getName() : "null");
+            
+            String planoId = null;
+            if (planoIdObj != null) {
+                planoId = planoIdObj.toString();
+            }
+            
             if (planoId == null || planoId.trim().isEmpty()) {
                 erros.add("Plano de saúde deve ser selecionado");
                 return erros;
             }
             
-            // Verificar se plano existe
+            logger.info("PlanoId como string: '{}'", planoId);
+            
+            // Verificar se plano existe - primeiro tenta por código, depois por ID
+            boolean planoExiste = false;
             try {
-                Long id = Long.parseLong(planoId);
-                if (!planoSaudeRepository.existsById(id)) {
-                    erros.add("Plano de saúde selecionado não existe");
+                // Tenta primeiro buscar por código (basico, intermediario, premium)
+                Optional<PlanoSaude> planoPorCodigo = planoSaudeRepository.findByCodigo(planoId);
+                if (planoPorCodigo.isPresent()) {
+                    planoExiste = true;
+                    logger.info("Plano encontrado por código '{}': ID {}", planoId, planoPorCodigo.get().getId());
+                } else {
+                    // Se não encontrou por código, tenta por ID numérico
+                    try {
+                        Long id = Long.parseLong(planoId);
+                        logger.info("Tentando buscar por ID numérico: {}", id);
+                        if (planoSaudeRepository.existsById(id)) {
+                            planoExiste = true;
+                            logger.info("Plano encontrado por ID numérico: {}", id);
+                        }
+                    } catch (NumberFormatException e) {
+                        logger.info("PlanoId '{}' não é um número, tentativa de busca por código falhou", planoId);
+                    }
                 }
-            } catch (NumberFormatException e) {
-                erros.add("ID do plano de saúde inválido");
+                
+                if (!planoExiste) {
+                    erros.add("ID do plano de saúde inválido");
+                    logger.warn("Plano com código/ID '{}' não existe no banco", planoId);
+                }
+            } catch (Exception e) {
+                erros.add("Erro ao validar plano de saúde");
+                logger.error("Erro ao validar plano '{}': {}", planoId, e.getMessage());
             }
             
             // Validar dependentes se existirem

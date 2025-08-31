@@ -70,8 +70,31 @@ public class AdesaoColaboradorController {
      * Página inicial do processo de adesão
      */
     @GetMapping
-    public String iniciarAdesao(Model model) {
-        logger.info("Iniciando processo de adesão de colaborador");
+    public String iniciarAdesao(
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            Model model) {
+        
+        // Se sessionId foi fornecido, tentar continuar processo existente
+        if (sessionId != null && !sessionId.trim().isEmpty()) {
+            try {
+                AdesaoColaboradorDTO dadosExistentes = adesaoService.obterDadosCompletos(sessionId);
+                if (dadosExistentes != null) {
+                    logger.info("Continuando processo existente para sessão: {}", sessionId);
+                    model.addAttribute("colaborador", dadosExistentes);
+                    model.addAttribute("sessionId", sessionId);
+                    model.addAttribute("cargos", cargoService.listarAtivos());
+                    model.addAttribute("departamentos", departamentoService.listarTodos());
+                    model.addAttribute("beneficios", beneficioService.listarTodos());
+                    return "rh/colaboradores/adesao/inicio";
+                }
+            } catch (Exception e) {
+                logger.warn("Erro ao recuperar sessão {}: {}", sessionId, e.getMessage());
+                // Continua para iniciar novo processo
+            }
+        }
+        
+        // Iniciar novo processo
+        logger.info("Iniciando novo processo de adesão de colaborador");
         logger.info("Cargos encontrados: {}", cargoService.listarAtivos().size());
         model.addAttribute("colaborador", new Colaborador());
         model.addAttribute("cargos", cargoService.listarAtivos());
@@ -406,12 +429,28 @@ public class AdesaoColaboradorController {
     @PostMapping("/beneficios")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> processarBeneficios(
-            @RequestParam("sessionId") String sessionId,
-            @RequestBody Map<String, Object> beneficiosSelecionados) {
+            @RequestBody Map<String, Object> request) {
 
         Map<String, Object> response = new HashMap<>();
 
         try {
+            // Extrair sessionId e benefícios do request
+            String sessionId = (String) request.get("sessionId");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> beneficiosSelecionados = (Map<String, Object>) request.get("beneficios");
+            
+            if (sessionId == null || sessionId.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "SessionId é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (beneficiosSelecionados == null) {
+                response.put("success", false);
+                response.put("message", "Benefícios são obrigatórios");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
             // Validar benefícios selecionados usando o serviço especializado
             List<String> erros = beneficioAdesaoService.validarSelecaoBeneficios(beneficiosSelecionados);
 
@@ -432,6 +471,9 @@ public class AdesaoColaboradorController {
 
             // Processar seleção de benefícios
             adesaoService.processarBeneficios(sessionId, beneficiosSelecionados);
+            
+            // Marcar etapa como concluída para avançar para revisão
+            adesaoService.marcarEtapaConcluida(sessionId, "beneficios");
 
             response.put("success", true);
             response.put("proximaEtapa", "revisao");

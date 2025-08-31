@@ -105,16 +105,31 @@ public class BeneficioAdesaoController {
     }
     
     /**
+     * Endpoint de teste para verificar se o controller está funcionando
+     */
+    @GetMapping("/test")
+    public ResponseEntity<Map<String, Object>> testEndpoint() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "BeneficioAdesaoController está funcionando!");
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
      * Calcula o valor total dos benefícios selecionados
      */
     @PostMapping("/calcular")
     public ResponseEntity<Map<String, Object>> calcularCustoBeneficios(
             @RequestBody Map<String, Object> request) {
         try {
+            logger.info("Request recebido: {}", request);
+            
             String sessionId = (String) request.get("sessionId");
             Object beneficiosObj = request.get("beneficios");
             
             logger.info("Calculando custo de benefícios para sessionId: {}", sessionId);
+            logger.info("Benefícios recebidos: {}", beneficiosObj);
+            logger.info("Tipo do objeto benefícios: {}", beneficiosObj != null ? beneficiosObj.getClass().getName() : "null");
             
             if (sessionId == null || sessionId.trim().isEmpty()) {
                 Map<String, Object> errorResponse = new HashMap<>();
@@ -130,17 +145,29 @@ public class BeneficioAdesaoController {
                 return ResponseEntity.badRequest().body(errorResponse);
             }
             
-            // Converter benefícios para Map
-            Map<String, Object> beneficios;
+            // Converter benefícios para o formato esperado
+            Map<String, Object> beneficios = new HashMap<>();
             if (beneficiosObj instanceof String) {
                 // Se vier como string JSON, fazer parse
                 beneficios = objectMapper.readValue((String) beneficiosObj, 
                     new TypeReference<Map<String, Object>>() {});
-            } else {
+            } else if (beneficiosObj instanceof List) {
+                // Se vier como lista (formato do frontend), converter para Map
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> beneficiosList = (List<Map<String, Object>>) beneficiosObj;
+                beneficios.put("beneficios", beneficiosList);
+                logger.info("Convertendo lista de benefícios para Map: {}", beneficios);
+            } else if (beneficiosObj instanceof Map) {
                 // Se já for um Map
                 @SuppressWarnings("unchecked")
                 Map<String, Object> temp = (Map<String, Object>) beneficiosObj;
                 beneficios = temp;
+            } else {
+                logger.error("Tipo de benefícios não suportado: {}", beneficiosObj.getClass().getName());
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Formato de benefícios inválido");
+                return ResponseEntity.badRequest().body(errorResponse);
             }
             
             // Verificar se a sessão existe
@@ -152,12 +179,16 @@ public class BeneficioAdesaoController {
             }
             
             // Validar benefícios selecionados
+            logger.info("Iniciando validação dos benefícios: {}", beneficios);
             List<String> errosValidacao = beneficioAdesaoService.validarSelecaoBeneficios(beneficios);
+            logger.info("Erros de validação encontrados: {}", errosValidacao);
+            
             if (!errosValidacao.isEmpty()) {
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
                 errorResponse.put("message", "Seleção de benefícios inválida");
                 errorResponse.put("erros", errosValidacao);
+                logger.warn("Retornando erro de validação: {}", errorResponse);
                 return ResponseEntity.badRequest().body(errorResponse);
             }
             
@@ -178,12 +209,11 @@ public class BeneficioAdesaoController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("Erro ao calcular custo de benefícios: {}", e.getMessage(), e);
-            
+            logger.error("Erro ao calcular custos de benefícios para request: {}", request, e);
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Erro ao calcular custo dos benefícios");
-            
+            errorResponse.put("message", "Erro interno do servidor: " + e.getMessage());
+            errorResponse.put("stackTrace", e.getStackTrace());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }

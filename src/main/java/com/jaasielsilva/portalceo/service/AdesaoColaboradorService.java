@@ -218,7 +218,8 @@ public class AdesaoColaboradorService {
         // Processar benefícios específicos
         processarBeneficiosEspecificos(dadosAdesao, beneficiosSelecionados);
 
-        dadosAdesao.setEtapaAtual("BENEFICIOS");
+        // Atualizar etapa atual para revisao após processar benefícios
+        dadosAdesao.setEtapaAtual("revisao");
         adesaoTemporaria.put(sessionId, dadosAdesao);
 
         logger.info("Benefícios processados para sessão: {} - Total selecionados: {}",

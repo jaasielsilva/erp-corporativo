@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude;
 import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude.StatusAdesao;
-import com.jaasielsilva.portalceo.model.PlanoSaude;
 import com.jaasielsilva.portalceo.repository.AdesaoPlanoSaudeRepository;
-import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -21,9 +18,6 @@ public class AdesaoPlanoSaudeService {
 
     @Autowired
     private AdesaoPlanoSaudeRepository repository;
-
-    @Autowired
-    private PlanoSaudeRepository planoRepository;
 
 
     /** Salva ou atualiza uma adesão */

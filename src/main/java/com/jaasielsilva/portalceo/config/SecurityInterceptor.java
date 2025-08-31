@@ -96,7 +96,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
         // Content Security Policy básica
         response.setHeader(HEADER_CONTENT_SECURITY_POLICY, 
             "default-src 'self'; " +
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://ajax.googleapis.com; " +
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://ajax.googleapis.com https://code.jquery.com; " +
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
             "img-src 'self' data: https:; " +
             "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
@@ -122,7 +122,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
         return requestURI != null && (
             requestURI.contains("/dados-pessoais") ||
             requestURI.contains("/documentos") ||
-            requestURI.contains("/beneficios") ||
+            (requestURI.contains("/beneficios") && !requestURI.contains("/beneficios/calcular") && !requestURI.contains("/beneficios/disponiveis")) ||
             requestURI.contains("/upload") ||
             requestURI.contains("/finalizar")
         );

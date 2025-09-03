@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adesões e Cancelamentos - ERP Corporativo</title>
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/plano-de-saude.css}" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1><i class="fas fa-clipboard-list"></i> Adesões e Cancelamentos</h1>
+        <h2>Gerenciamento de adesões ao plano de saúde</h2>
+
+        <!-- Botões de Ação -->
+        <div class="action-buttons" style="margin-bottom: 20px;">
+          <button onclick="abrirModalNovaAdesao()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Adesão
+          </button>
+          <button onclick="atualizarLista()" class="btn btn-secondary">
+            <i class="fas fa-refresh"></i> Atualizar
+          </button>
+        </div>
+
+        <!-- Lista de Adesões -->
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Adesões Ativas e Histórico</h3>
+          <div class="table-responsive">
+            <table class="table-list" id="tabelaAdesoes">
+              <thead>
+                <tr>
+                  <th>Colaborador</th>
+                  <th>Benefício</th>
+                  <th>Tipo</th>
+                  <th>Data Solicitação</th>
+                  <th>Data Vigência</th>
+                  <th>Valor Total Colaborador</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Dados serão carregados dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Modal Nova Adesão -->
+  <div id="modalNovaAdesao" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus"></i> Nova Adesão ao Plano de Saúde</h3>
+        <button onclick="fecharModalNovaAdesao()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="formNovaAdesao" class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="colaboradorAdesao">Colaborador *</label>
+            <select id="colaboradorAdesao" name="colaboradorId" required class="form-control">
+              <option value="">Selecione um colaborador...</option>
+              <!-- Colaboradores serão carregados via JavaScript -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="planoAdesao">Plano de Saúde *</label>
+            <select id="planoAdesao" name="planoSaudeId" required class="form-control">
+              <option value="">Selecione o plano...</option>
+              <!-- Planos serão carregados via JavaScript -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantidadeDependentesAdesao">Quantidade de Dependentes</label>
+            <input type="number" id="quantidadeDependentesAdesao" name="quantidadeDependentes" 
+                   class="form-control" min="0" max="10" value="0">
+          </div>
+          <div class="form-group">
+            <label for="dataInicioAdesao">Data de Início *</label>
+            <input type="date" id="dataInicioAdesao" name="dataInicio" required class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="observacoesAdesao">Observações</label>
+          <textarea id="observacoesAdesao" name="observacoes" class="form-control" rows="3"
+            placeholder="Informações adicionais sobre a adesão..."></textarea>
+        </div>
+      </form>
+
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalNovaAdesao()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarNovaAdesao()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Salvar Adesão
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Adesão -->
+  <div id="modalEditarAdesao" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-edit"></i> Editar Adesão</h3>
+        <button onclick="fecharModalEditarAdesao()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="formEditarAdesao" class="modal-body">
+        <input type="hidden" id="adesaoIdEdicao" name="adesaoId">
+        
+        <div class="info-adesao" id="infoAdesaoEdicao">
+          <!-- Informações da adesão serão exibidas aqui -->
+        </div>
+
+        <div class="form-group">
+          <label for="novaQuantidadeDependentes">Nova Quantidade de Dependentes *</label>
+          <input type="number" id="novaQuantidadeDependentes" name="quantidadeDependentes" 
+                 class="form-control" min="0" max="10" required>
+        </div>
+
+        <div class="form-group">
+          <label for="motivoEdicao">Motivo da Alteração</label>
+          <textarea id="motivoEdicao" name="observacoes" class="form-control" rows="3"
+            placeholder="Descreva o motivo da alteração..."></textarea>
+        </div>
+      </form>
+
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalEditarAdesao()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="salvarEdicaoAdesao()" class="btn btn-primary">
+          <i class="fas fa-save"></i> Salvar Alterações
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cancelar Adesão -->
+  <div id="modalCancelarAdesao" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-times-circle"></i> Cancelar Adesão</h3>
+        <button onclick="fecharModalCancelarAdesao()" class="btn-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="formCancelarAdesao" class="modal-body">
+        <input type="hidden" id="adesaoIdCancelamento" name="adesaoId">
+        
+        <div class="info-adesao" id="infoAdesaoCancelamento">
+          <!-- Informações da adesão serão exibidas aqui -->
+        </div>
+
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>Atenção:</strong> Esta ação cancelará definitivamente a adesão do colaborador ao plano de saúde.
+        </div>
+
+        <div class="form-group">
+          <label for="motivoCancelamento">Motivo do Cancelamento *</label>
+          <textarea id="motivoCancelamento" name="motivo" class="form-control" rows="3"
+            placeholder="Descreva o motivo do cancelamento..." required></textarea>
+        </div>
+      </form>
+
+      <div class="modal-footer">
+        <button type="button" onclick="fecharModalCancelarAdesao()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" onclick="confirmarCancelamentoAdesao()" class="btn btn-danger">
+          <i class="fas fa-ban"></i> Confirmar Cancelamento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/js/sidebar.js}"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+
+  <script>
+    // Variáveis globais
+    let colaboradores = [];
+    let planos = [];
+
+    // Inicialização
+    $(document).ready(function() {
+      carregarDados();
+      carregarAdesoes();
+      configurarDataMinima();
+    });
+
+    function configurarDataMinima() {
+      const hoje = new Date().toISOString().split('T')[0];
+      $('#dataInicioAdesao').attr('min', hoje).val(hoje);
+    }
+
+    async function carregarDados() {
+      try {
+        // Carregar colaboradores
+        const responseColaboradores = await fetch('/api/rh/colaboradores/listar');
+        colaboradores = await responseColaboradores.json();
+        
+        // Carregar planos
+        const responsePlanos = await fetch('/api/rh/beneficios/plano-saude/listar');
+        planos = await responsePlanos.json();
+        
+        preencherSelectColaboradores();
+        preencherSelectPlanos();
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        mostrarNotificacao('Erro ao carregar dados iniciais', 'error');
+      }
+    }
+
+    function preencherSelectColaboradores() {
+      const select = $('#colaboradorAdesao');
+      select.empty().append('<option value="">Selecione um colaborador...</option>');
+      
+      colaboradores.forEach(colaborador => {
+        select.append(`<option value="${colaborador.id}">${colaborador.nome} - ${colaborador.departamento?.nome || 'N/A'}</option>`);
+      });
+    }
+
+    function preencherSelectPlanos() {
+      const select = $('#planoAdesao');
+      select.empty().append('<option value="">Selecione o plano...</option>');
+      
+      planos.forEach(plano => {
+        select.append(`<option value="${plano.id}" 
+          data-valor-titular="${plano.valorTitular}" 
+          data-valor-dependente="${plano.valorDependente}">
+          ${plano.nome} - ${plano.operadora} (R$ ${plano.valorTitular.toFixed(2)})
+        </option>`);
+      });
+    }
+
+    async function carregarAdesoes() {
+      try {
+        const response = await fetch('/api/rh/beneficios/plano-saude/adesoes/listar');
+        const adesoes = await response.json();
+        
+        preencherTabelaAdesoes(adesoes);
+      } catch (error) {
+        console.error('Erro ao carregar adesões:', error);
+        mostrarNotificacao('Erro ao carregar adesões', 'error');
+      }
+    }
+
+    function preencherTabelaAdesoes(adesoes) {
+      const tbody = $('#tabelaAdesoes tbody');
+      tbody.empty();
+
+      if (!adesoes || adesoes.length === 0) {
+        tbody.append('<tr><td colspan="8" class="text-center">Nenhuma adesão encontrada</td></tr>');
+        return;
+      }
+
+      adesoes.forEach(adesao => {
+        const tipoAdesao = adesao.quantidadeDependentes === 0 ? 'Individual' : `Familiar (${adesao.quantidadeDependentes} dependente${adesao.quantidadeDependentes > 1 ? 's' : ''})`;
+        const statusClass = getStatusClass(adesao.status);
+        const acoes = gerarBotoesAcoes(adesao);
+
+        const row = `
+          <tr data-adesao-id="${adesao.id}">
+            <td>
+              <strong>${adesao.colaborador.nome}</strong><br>
+              <small class="text-muted">${adesao.colaborador.departamento?.nome || 'N/A'}</small>
+            </td>
+            <td>
+              <strong>${adesao.planoSaude.nome}</strong><br>
+              <small class="text-muted">${adesao.planoSaude.operadora}</small>
+            </td>
+            <td>${tipoAdesao}</td>
+            <td>${formatarData(adesao.dataAdesao)}</td>
+            <td>${adesao.dataVigenciaInicio ? formatarData(adesao.dataVigenciaInicio) : 'Não informado'}</td>
+            <td><strong>R$ ${adesao.valorTotalMensal.toFixed(2)}</strong></td>
+            <td><span class="status-badge ${statusClass}">${adesao.statusDescricao}</span></td>
+            <td>${acoes}</td>
+          </tr>
+        `;
+        
+        tbody.append(row);
+      });
+    }
+
+    function getStatusClass(status) {
+      const classes = {
+        'ATIVA': 'status-ativo',
+        'PENDENTE': 'status-pendente',
+        'SUSPENSA': 'status-suspenso',
+        'CANCELADA': 'status-cancelado',
+        'INATIVO': 'status-inativo'
+      };
+      return classes[status] || 'status-default';
+    }
+
+    function gerarBotoesAcoes(adesao) {
+      let acoes = '';
+      
+      if (adesao.status === 'ATIVA') {
+        acoes += `
+          <button onclick="abrirModalEditarAdesao(${adesao.id})" class="btn-icon" title="Editar">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button onclick="abrirModalCancelarAdesao(${adesao.id})" class="btn-icon btn-danger" title="Cancelar">
+            <i class="fas fa-ban"></i>
+          </button>
+        `;
+      } else {
+        acoes += `
+          <button class="btn-icon" title="Visualizar" onclick="visualizarAdesao(${adesao.id})">
+            <i class="fas fa-eye"></i>
+          </button>
+        `;
+      }
+      
+      return acoes;
+    }
+
+    // Funções dos modais
+    function abrirModalNovaAdesao() {
+      $('#modalNovaAdesao').show();
+    }
+
+    function fecharModalNovaAdesao() {
+      $('#modalNovaAdesao').hide();
+      $('#formNovaAdesao')[0].reset();
+      configurarDataMinima();
+    }
+
+    async function salvarNovaAdesao() {
+      const formData = new FormData($('#formNovaAdesao')[0]);
+      
+      try {
+        const response = await fetch('/rh/beneficios/plano-saude/adesao/salvar', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('sucesso')) {
+          mostrarNotificacao(result, 'success');
+          fecharModalNovaAdesao();
+          carregarAdesoes();
+        } else {
+          mostrarNotificacao(result, 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar adesão:', error);
+        mostrarNotificacao('Erro ao salvar adesão', 'error');
+      }
+    }
+
+    async function abrirModalEditarAdesao(adesaoId) {
+      // Buscar dados da adesão
+      try {
+        const response = await fetch(`/api/rh/beneficios/plano-saude/adesao/${adesaoId}`);
+        const adesao = await response.json();
+        
+        $('#adesaoIdEdicao').val(adesaoId);
+        $('#novaQuantidadeDependentes').val(adesao.quantidadeDependentes);
+        
+        const infoHtml = `
+          <div class="adesao-info-card">
+            <h4>${adesao.colaborador.nome}</h4>
+            <p><strong>Plano:</strong> ${adesao.planoSaude.nome} - ${adesao.planoSaude.operadora}</p>
+            <p><strong>Dependentes Atuais:</strong> ${adesao.quantidadeDependentes}</p>
+            <p><strong>Valor Atual:</strong> R$ ${adesao.valorTotalMensal.toFixed(2)}</p>
+          </div>
+        `;
+        
+        $('#infoAdesaoEdicao').html(infoHtml);
+        $('#modalEditarAdesao').show();
+      } catch (error) {
+        console.error('Erro ao carregar dados da adesão:', error);
+        mostrarNotificacao('Erro ao carregar dados da adesão', 'error');
+      }
+    }
+
+    function fecharModalEditarAdesao() {
+      $('#modalEditarAdesao').hide();
+      $('#formEditarAdesao')[0].reset();
+    }
+
+    async function salvarEdicaoAdesao() {
+      const adesaoId = $('#adesaoIdEdicao').val();
+      const quantidadeDependentes = $('#novaQuantidadeDependentes').val();
+      const observacoes = $('#motivoEdicao').val();
+      
+      try {
+        const response = await fetch(`/rh/beneficios/plano-saude/adesao/editar/${adesaoId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `quantidadeDependentes=${quantidadeDependentes}&observacoes=${encodeURIComponent(observacoes)}`
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('sucesso')) {
+          mostrarNotificacao(result, 'success');
+          fecharModalEditarAdesao();
+          carregarAdesoes();
+        } else {
+          mostrarNotificacao(result, 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao editar adesão:', error);
+        mostrarNotificacao('Erro ao editar adesão', 'error');
+      }
+    }
+
+    async function abrirModalCancelarAdesao(adesaoId) {
+      try {
+        const response = await fetch(`/api/rh/beneficios/plano-saude/adesao/${adesaoId}`);
+        const adesao = await response.json();
+        
+        $('#adesaoIdCancelamento').val(adesaoId);
+        
+        const infoHtml = `
+          <div class="adesao-info-card">
+            <h4>${adesao.colaborador.nome}</h4>
+            <p><strong>Plano:</strong> ${adesao.planoSaude.nome} - ${adesao.planoSaude.operadora}</p>
+            <p><strong>Dependentes:</strong> ${adesao.quantidadeDependentes}</p>
+            <p><strong>Valor Mensal:</strong> R$ ${adesao.valorTotalMensal.toFixed(2)}</p>
+            <p><strong>Data da Adesão:</strong> ${formatarData(adesao.dataAdesao)}</p>
+          </div>
+        `;
+        
+        $('#infoAdesaoCancelamento').html(infoHtml);
+        $('#modalCancelarAdesao').show();
+      } catch (error) {
+        console.error('Erro ao carregar dados da adesão:', error);
+        mostrarNotificacao('Erro ao carregar dados da adesão', 'error');
+      }
+    }
+
+    function fecharModalCancelarAdesao() {
+      $('#modalCancelarAdesao').hide();
+      $('#formCancelarAdesao')[0].reset();
+    }
+
+    async function confirmarCancelamentoAdesao() {
+      const adesaoId = $('#adesaoIdCancelamento').val();
+      const motivo = $('#motivoCancelamento').val();
+      
+      if (!motivo.trim()) {
+        mostrarNotificacao('Por favor, informe o motivo do cancelamento', 'warning');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/rh/beneficios/plano-saude/adesao/cancelar/${adesaoId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `motivo=${encodeURIComponent(motivo)}`
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('sucesso')) {
+          mostrarNotificacao(result, 'success');
+          fecharModalCancelarAdesao();
+          carregarAdesoes();
+        } else {
+          mostrarNotificacao(result, 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao cancelar adesão:', error);
+        mostrarNotificacao('Erro ao cancelar adesão', 'error');
+      }
+    }
+
+    // Funções utilitárias
+    function formatarData(dataString) {
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR');
+    }
+
+    function mostrarNotificacao(mensagem, tipo) {
+      // Implementação da notificação
+      console.log(`[${tipo.toUpperCase()}] ${mensagem}`);
+      alert(mensagem); // Substituir por sistema de notificação mais elegante
+    }
+
+    function atualizarLista() {
+      carregarAdesoes();
+    }
+
+    function visualizarAdesao(adesaoId) {
+      // Implementar visualização detalhada
+      console.log('Visualizar adesão:', adesaoId);
+    }
+  </script>
+</body>
+
+</html>

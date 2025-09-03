@@ -88,6 +88,11 @@
       color: white;
     }
     
+    .plano-badge.executivo {
+      background: #dc3545;
+      color: white;
+    }
+    
     .dependentes-info {
       text-align: center;
     }
@@ -138,6 +143,10 @@
     
     .plano-card.premium {
       border-color: #6f42c1;
+    }
+    
+    .plano-card.executivo {
+      border-color: #dc3545;
     }
     
     .plano-header {

@@ -119,7 +119,8 @@ public class PlanoSaude {
     }
 
     public BigDecimal calcularValorColaboradorDependente() {
-        return valorDependente.multiply(percentualColaborador).divide(BigDecimal.valueOf(100));
+        // Dependente: funcionário paga 100% do valor
+        return valorDependente;
     }
 
     public BigDecimal calcularValorEmpresaTitular() {
@@ -127,6 +128,7 @@ public class PlanoSaude {
     }
 
     public BigDecimal calcularValorEmpresaDependente() {
-        return valorDependente.multiply(percentualEmpresa).divide(BigDecimal.valueOf(100));
+        // Dependente: empresa não paga nada (0%)
+        return BigDecimal.ZERO;
     }
 }

@@ -80,19 +80,25 @@ public class AdesaoPlanoSaudeService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** Calcula o custo da empresa (80% do total) */
+    /** Calcula o custo da empresa - somatória dos subsídios de todas as adesões ativas */
     public BigDecimal calcularCustoEmpresa() {
-        return calcularCustoMensalTotal().multiply(BigDecimal.valueOf(0.8));
+        return repository.findAll().stream()
+                .filter(AdesaoPlanoSaude::isAtiva)
+                .map(AdesaoPlanoSaude::getValorSubsidioEmpresa)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** Calcula o custo dos colaboradores (20% do total) */
+    /** Calcula o custo dos colaboradores - somatória dos descontos de todas as adesões ativas */
     public BigDecimal calcularCustoColaboradores() {
-        return calcularCustoMensalTotal().multiply(BigDecimal.valueOf(0.2));
+        return repository.findAll().stream()
+                .filter(AdesaoPlanoSaude::isAtiva)
+                .map(AdesaoPlanoSaude::getValorDesconto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** Calcula o desconto dos colaboradores como percentual (20%) */
+    /** Calcula o desconto dos colaboradores - mesmo que calcularCustoColaboradores() */
     public BigDecimal calcularDescontoColaboradoresPercentual() {
-        return calcularCustoMensalTotal().multiply(BigDecimal.valueOf(0.2));
+        return calcularCustoColaboradores();
     }
 
     /** Retorna todas as adesões de plano de saúde paginadas */

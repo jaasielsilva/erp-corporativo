@@ -228,8 +228,8 @@ public class FolhaPagamentoService {
         Optional<AdesaoPlanoSaude> planoSaude = adesaoPlanoSaudeRepository
                 .findAdesaoAtivaByColaborador(colaborador.getId());
         if (planoSaude.isPresent()) {
-            // Assumindo que empresa paga 70% do valor total
-            BigDecimal subsidio = planoSaude.get().getValorTotalMensal().multiply(BigDecimal.valueOf(0.70));
+            // Usar o método correto para calcular subsídio da empresa
+            BigDecimal subsidio = planoSaude.get().getValorSubsidioEmpresa();
             holerite.setAuxilioSaude(subsidio);
         } else {
             holerite.setAuxilioSaude(BigDecimal.ZERO);
@@ -284,8 +284,8 @@ public class FolhaPagamentoService {
         Optional<AdesaoPlanoSaude> planoSaude = adesaoPlanoSaudeRepository
                 .findAdesaoAtivaByColaborador(colaborador.getId());
         if (planoSaude.isPresent()) {
-            // Assumindo que colaborador paga 30% do valor total
-            BigDecimal desconto = planoSaude.get().getValorTotalMensal().multiply(BigDecimal.valueOf(0.30));
+            // Usar o método correto para calcular desconto do colaborador
+            BigDecimal desconto = planoSaude.get().getValorDesconto();
             holerite.setDescontoPlanoSaude(desconto);
         } else {
             holerite.setDescontoPlanoSaude(BigDecimal.ZERO);

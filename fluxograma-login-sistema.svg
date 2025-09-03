@@ -1,0 +1,328 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 2200" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <defs>
+    <!-- Gradientes para os elementos -->
+    <linearGradient id="gradientStart" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2e7d32"/>
+      <stop offset="100%" style="stop-color:#1b5e20"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientProcess" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1976d2"/>
+      <stop offset="100%" style="stop-color:#0d47a1"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientDecision" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f57c00"/>
+      <stop offset="100%" style="stop-color:#e65100"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientDatabase" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7b1fa2"/>
+      <stop offset="100%" style="stop-color:#4a148c"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientSecurity" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d32f2f"/>
+      <stop offset="100%" style="stop-color:#b71c1c"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientSuccess" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#388e3c"/>
+      <stop offset="100%" style="stop-color:#2e7d32"/>
+    </linearGradient>
+    
+    <linearGradient id="gradientError" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d32f2f"/>
+      <stop offset="100%" style="stop-color:#b71c1c"/>
+    </linearGradient>
+    
+    <!-- Filtros para sombras -->
+    <filter id="dropshadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="3" stdDeviation="4" flood-color="rgba(0,0,0,0.3)"/>
+    </filter>
+    
+    <style>
+      .start-end { fill: url(#gradientStart); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      .process { fill: url(#gradientProcess); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      .decision { fill: url(#gradientDecision); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      .database { fill: url(#gradientDatabase); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      .security { fill: url(#gradientSecurity); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      .validation { fill: url(#gradientDecision); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      .success { fill: url(#gradientSuccess); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      .error { fill: url(#gradientError); stroke: white; stroke-width: 2; filter: url(#dropshadow); }
+      
+      .text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; fill: white; font-weight: bold; }
+      .text-small { font-family: Arial, sans-serif; font-size: 10px; text-anchor: middle; fill: white; font-weight: 500; }
+      .text-dark { font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; fill: #333; font-weight: 600; }
+      
+      .arrow { stroke: white; stroke-width: 3; fill: none; marker-end: url(#arrowhead); }
+      .arrow-success { stroke: #4caf50; stroke-width: 3; fill: none; marker-end: url(#arrowhead-success); }
+      .arrow-error { stroke: #f44336; stroke-width: 3; fill: none; marker-end: url(#arrowhead-error); }
+      
+      .container { fill: rgba(255,255,255,0.1); stroke: rgba(255,255,255,0.3); stroke-width: 2; stroke-dasharray: 5,5; }
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; fill: white; }
+      .section-title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; text-anchor: start; fill: white; }
+    </style>
+    
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="white" />
+    </marker>
+    <marker id="arrowhead-success" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4caf50" />
+    </marker>
+    <marker id="arrowhead-error" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f44336" />
+    </marker>
+  </defs>
+
+  <!-- Titulo Principal -->
+  <text x="700" y="40" class="title">FLUXOGRAMA DO SISTEMA DE LOGIN</text>
+  <text x="700" y="65" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="Arial, sans-serif" font-size="16">
+    Sistema de Autenticacao - ERP Corporativo
+  </text>
+  
+  <!-- Container Principal -->
+  <rect x="50" y="80" width="1300" height="2070" class="container" />
+
+  <!-- INICIO DO FLUXO -->
+  <ellipse cx="700" cy="120" rx="80" ry="30" class="start-end" />
+  <text x="700" y="125" class="text">INICIO</text>
+
+  <!-- ACESSO A APLICACAO -->
+  <rect x="600" y="170" width="200" height="60" rx="10" class="process" />
+  <text x="700" y="195" class="text">Usuario acessa URL</text>
+  <text x="700" y="210" class="text-small">/ ou /login</text>
+
+  <!-- INTERCEPTOR DE SEGURANCA -->
+  <rect x="100" y="260" width="250" height="80" rx="10" class="security" />
+  <text x="225" y="285" class="text">SecurityInterceptor</text>
+  <text x="225" y="300" class="text-small">Headers de Seguranca</text>
+  <text x="225" y="315" class="text-small">Rate Limiting</text>
+  <text x="225" y="330" class="text-small">Bloqueio de Sessao</text>
+
+  <!-- LOGIN CONTROLLER -->
+  <rect x="600" y="260" width="200" height="80" rx="10" class="process" />
+  <text x="700" y="290" class="text">LoginController</text>
+  <text x="700" y="305" class="text-small">@GetMapping("/login")</text>
+  <text x="700" y="320" class="text-small">return "login"</text>
+
+  <!-- RENDERIZACAO DO TEMPLATE -->
+  <rect x="950" y="260" width="200" height="80" rx="10" class="process" />
+  <text x="1050" y="290" class="text">Template Engine</text>
+  <text x="1050" y="305" class="text-small">Thymeleaf</text>
+  <text x="1050" y="320" class="text-small">login.html</text>
+
+  <!-- FORMULARIO DE LOGIN -->
+  <rect x="600" y="380" width="200" height="80" rx="10" class="process" />
+  <text x="700" y="410" class="text">Formulario de Login</text>
+  <text x="700" y="425" class="text-small">Campo Username</text>
+  <text x="700" y="440" class="text-small">Campo Password</text>
+
+  <!-- SUBMISSAO DO FORMULARIO -->
+  <rect x="600" y="500" width="200" height="60" rx="10" class="process" />
+  <text x="700" y="525" class="text">POST /login</text>
+  <text x="700" y="540" class="text-small">username + password</text>
+
+  <!-- SECURITY FILTER CHAIN -->
+  <rect x="100" y="600" width="1200" height="100" rx="10" class="security" />
+  <text x="700" y="630" class="text">Spring Security Filter Chain</text>
+  <text x="300" y="655" class="text-small">CSRF Protection (Disabled)</text>
+  <text x="700" y="655" class="text-small">Form Login Processing</text>
+  <text x="1100" y="655" class="text-small">Authentication Provider</text>
+  <text x="700" y="675" class="text-small">BCryptPasswordEncoder</text>
+
+  <!-- USUARIO DETAILS SERVICE -->
+  <rect x="150" y="740" width="200" height="100" rx="10" class="database" />
+  <text x="250" y="770" class="text">UsuarioDetailsService</text>
+  <text x="250" y="790" class="text-small">loadUserByUsername()</text>
+  <text x="250" y="805" class="text-small">Busca por email</text>
+  <text x="250" y="820" class="text-small">no banco de dados</text>
+
+  <!-- CONSULTA NO BANCO -->
+  <rect x="450" y="740" width="200" height="100" rx="10" class="database" />
+  <text x="550" y="770" class="text">Banco de Dados</text>
+  <text x="550" y="790" class="text-small">UsuarioRepository</text>
+  <text x="550" y="805" class="text-small">findByEmail()</text>
+  <text x="550" y="820" class="text-small">Tabela: usuarios</text>
+
+  <!-- DECISAO: USUARIO ENCONTRADO? -->
+  <polygon points="700,880 780,820 700,760 620,820" class="decision" />
+  <text x="700" y="815" class="text-small">Usuario</text>
+  <text x="700" y="830" class="text-small">Encontrado?</text>
+
+  <!-- VALIDACAO DE STATUS -->
+  <rect x="900" y="740" width="200" height="120" rx="10" class="validation" />
+  <text x="1000" y="770" class="text">Validacao Status</text>
+  <text x="1000" y="790" class="text-small">ATIVO - OK</text>
+  <text x="1000" y="805" class="text-small">INATIVO - Erro</text>
+  <text x="1000" y="820" class="text-small">BLOQUEADO - Erro</text>
+  <text x="1000" y="835" class="text-small">DEMITIDO - Erro</text>
+  <text x="1000" y="850" class="text-small">Throws Exception</text>
+
+  <!-- VERIFICACAO DE SENHA -->
+  <rect x="600" y="940" width="200" height="80" rx="10" class="security" />
+  <text x="700" y="970" class="text">Verificacao Senha</text>
+  <text x="700" y="985" class="text-small">BCryptPasswordEncoder</text>
+  <text x="700" y="1000" class="text-small">matches(password, hash)</text>
+
+  <!-- DECISAO: SENHA VALIDA? -->
+  <polygon points="700,1100 780,1040 700,980 620,1040" class="decision" />
+  <text x="700" y="1035" class="text-small">Senha</text>
+  <text x="700" y="1050" class="text-small">Valida?</text>
+
+  <!-- CRIACAO DE SESSAO -->
+  <rect x="600" y="1140" width="200" height="80" rx="10" class="success" />
+  <text x="700" y="1170" class="text">Criar Sessao</text>
+  <text x="700" y="1185" class="text-small">SecurityContext</text>
+  <text x="700" y="1200" class="text-small">Authentication</text>
+
+  <!-- CARREGAMENTO DE PERFIS -->
+  <rect x="600" y="1260" width="200" height="80" rx="10" class="process" />
+  <text x="700" y="1290" class="text">Carregar Perfis</text>
+  <text x="700" y="1305" class="text-small">Roles e Authorities</text>
+  <text x="700" y="1320" class="text-small">ROLE_ADMIN, etc.</text>
+
+  <!-- REDIRECIONAMENTO PARA DASHBOARD -->
+  <rect x="600" y="1380" width="200" height="80" rx="10" class="success" />
+  <text x="700" y="1410" class="text">Redirecionamento</text>
+  <text x="700" y="1425" class="text-small">defaultSuccessUrl</text>
+  <text x="700" y="1440" class="text-small">/dashboard</text>
+
+  <!-- DASHBOARD CONTROLLER -->
+  <rect x="600" y="1500" width="200" height="100" rx="10" class="process" />
+  <text x="700" y="1530" class="text">DashboardController</text>
+  <text x="700" y="1550" class="text-small">@GetMapping("/dashboard")</text>
+  <text x="700" y="1565" class="text-small">Carrega dados:</text>
+  <text x="700" y="1580" class="text-small">Estatisticas</text>
+  <text x="700" y="1595" class="text-small">Graficos</text>
+
+  <!-- GLOBAL CONTROLLER ADVICE -->
+  <rect x="900" y="1500" width="200" height="100" rx="10" class="process" />
+  <text x="1000" y="1530" class="text">GlobalControllerAdvice</text>
+  <text x="1000" y="1550" class="text-small">@ModelAttribute</text>
+  <text x="1000" y="1565" class="text-small">usuarioLogado</text>
+  <text x="1000" y="1580" class="text-small">isAdmin</text>
+  <text x="1000" y="1595" class="text-small">Permissoes</text>
+
+  <!-- RENDERIZACAO DO DASHBOARD -->
+  <rect x="600" y="1640" width="200" height="80" rx="10" class="success" />
+  <text x="700" y="1670" class="text">Dashboard Template</text>
+  <text x="700" y="1685" class="text-small">dashboard.html</text>
+  <text x="700" y="1700" class="text-small">Thymeleaf</text>
+
+  <!-- SUCCESS END -->
+  <ellipse cx="700" cy="1770" rx="100" ry="30" class="success" />
+  <text x="700" y="1775" class="text">ACESSO AUTORIZADO</text>
+
+  <!-- TRATAMENTO DE ERROS -->
+  <rect x="100" y="1020" width="250" height="100" rx="10" class="error" />
+  <text x="225" y="1050" class="text">Tratamento de Erros</text>
+  <text x="225" y="1070" class="text-small">CustomAuthentication</text>
+  <text x="225" y="1085" class="text-small">FailureHandler</text>
+  <text x="225" y="1100" class="text-small">Mensagens especificas</text>
+
+  <!-- REDIRECIONAMENTO COM ERRO -->
+  <rect x="100" y="1160" width="250" height="80" rx="10" class="error" />
+  <text x="225" y="1190" class="text">Redirecionamento</text>
+  <text x="225" y="1205" class="text-small">/login?error=true</text>
+  <text x="225" y="1220" class="text-small">message=encoded</text>
+
+  <!-- EXIBICAO DE ERRO -->
+  <rect x="100" y="1280" width="250" height="80" rx="10" class="error" />
+  <text x="225" y="1310" class="text">Exibicao de Erro</text>
+  <text x="225" y="1325" class="text-small">JavaScript handle</text>
+  <text x="225" y="1340" class="text-small">Error message display</text>
+
+  <!-- ERROR END -->
+  <ellipse cx="225" cy="1410" rx="100" ry="30" class="error" />
+  <text x="225" y="1415" class="text">ACESSO NEGADO</text>
+
+  <!-- SETAS DO FLUXO PRINCIPAL -->
+  <line x1="700" y1="150" x2="700" y2="170" class="arrow" />
+  <line x1="700" y1="230" x2="700" y2="260" class="arrow" />
+  <line x1="700" y1="340" x2="700" y2="380" class="arrow" />
+  <line x1="700" y1="460" x2="700" y2="500" class="arrow" />
+  <line x1="700" y1="560" x2="700" y2="600" class="arrow" />
+  <line x1="700" y1="700" x2="700" y2="760" class="arrow" />
+  
+  <!-- Setas para componentes laterais -->
+  <line x1="600" y1="300" x2="350" y2="300" class="arrow" />
+  <line x1="800" y1="300" x2="950" y2="300" class="arrow" />
+  <line x1="350" y1="790" x2="450" y2="790" class="arrow" />
+  <line x1="780" y1="820" x2="900" y2="800" class="arrow-success" />
+  
+  <!-- Fluxo de sucesso -->
+  <line x1="700" y1="880" x2="700" y2="940" class="arrow-success" />
+  <line x1="700" y1="1020" x2="700" y2="1040" class="arrow" />
+  <line x1="700" y1="1100" x2="700" y2="1140" class="arrow-success" />
+  <line x1="700" y1="1220" x2="700" y2="1260" class="arrow" />
+  <line x1="700" y1="1340" x2="700" y2="1380" class="arrow" />
+  <line x1="700" y1="1460" x2="700" y2="1500" class="arrow" />
+  <line x1="700" y1="1600" x2="700" y2="1640" class="arrow" />
+  <line x1="700" y1="1720" x2="700" y2="1740" class="arrow" />
+  
+  <!-- Setas para componentes auxiliares do dashboard -->
+  <line x1="800" y1="1550" x2="900" y2="1550" class="arrow" />
+  
+  <!-- Fluxo de erro -->
+  <line x1="620" y1="820" x2="350" y2="1020" class="arrow-error" />
+  <line x1="620" y1="1040" x2="350" y2="1060" class="arrow-error" />
+  <line x1="225" y1="1120" x2="225" y2="1160" class="arrow" />
+  <line x1="225" y1="1240" x2="225" y2="1280" class="arrow" />
+  <line x1="225" y1="1360" x2="225" y2="1380" class="arrow" />
+
+  <!-- Labels das decisoes -->
+  <text x="750" y="805" class="text-dark">SIM</text>
+  <text x="580" y="805" class="text-dark">NAO</text>
+  <text x="750" y="1025" class="text-dark">SIM</text>
+  <text x="580" y="1025" class="text-dark">NAO</text>
+
+  <!-- Legenda -->
+  <rect x="50" y="1820" width="1300" height="330" rx="10" class="container" />
+  <text x="70" y="1850" class="section-title">LEGENDA E COMPONENTES:</text>
+  
+  <!-- Legenda dos componentes -->
+  <rect x="80" y="1870" width="150" height="30" rx="5" class="start-end" />
+  <text x="155" y="1890" class="text-small">Inicio/Fim</text>
+  
+  <rect x="250" y="1870" width="150" height="30" rx="5" class="process" />
+  <text x="325" y="1890" class="text-small">Processo</text>
+  
+  <polygon points="420,1885 470,1870 420,1855 370,1870" class="decision" />
+  <text x="420" y="1890" class="text-small">Decisao</text>
+  
+  <rect x="490" y="1870" width="150" height="30" rx="5" class="database" />
+  <text x="565" y="1890" class="text-small">Banco de Dados</text>
+  
+  <rect x="660" y="1870" width="150" height="30" rx="5" class="security" />
+  <text x="735" y="1890" class="text-small">Seguranca</text>
+  
+  <rect x="830" y="1870" width="150" height="30" rx="5" class="validation" />
+  <text x="905" y="1890" class="text-small">Validacao</text>
+  
+  <rect x="1000" y="1870" width="150" height="30" rx="5" class="success" />
+  <text x="1075" y="1890" class="text-small">Sucesso</text>
+  
+  <rect x="1170" y="1870" width="150" height="30" rx="5" class="error" />
+  <text x="1245" y="1890" class="text-small">Erro</text>
+
+  <!-- Descricao dos componentes principais -->
+  <text x="70" y="1940" class="section-title">COMPONENTES PRINCIPAIS:</text>
+  
+  <text x="80" y="1970" class="text-dark">LoginController: Controlador responsavel por exibir a pagina de login</text>
+  <text x="80" y="1990" class="text-dark">SecurityConfig: Configuracao do Spring Security com autenticacao e autorizacao</text>
+  <text x="80" y="2010" class="text-dark">UsuarioDetailsService: Servico para carregar dados do usuario do banco de dados</text>
+  <text x="80" y="2030" class="text-dark">CustomAuthenticationFailureHandler: Tratamento personalizado de falhas de autenticacao</text>
+  <text x="80" y="2050" class="text-dark">BCryptPasswordEncoder: Codificacao e verificacao segura de senhas</text>
+  <text x="80" y="2070" class="text-dark">DashboardController: Controlador principal apos login bem-sucedido</text>
+  <text x="80" y="2090" class="text-dark">GlobalControllerAdvice: Fornece dados globais para todas as paginas</text>
+  <text x="80" y="2110" class="text-dark">SecurityInterceptor: Interceptador para validacoes de seguranca e headers</text>
+
+  <!-- Status de usuario -->
+  <text x="70" y="2130" class="section-title">STATUS DE USUARIO VALIDOS:</text>
+  <text x="80" y="2150" class="text-dark">ATIVO: Usuario pode fazer login normalmente</text>
+  <text x="350" y="2150" class="text-dark">BLOQUEADO: Usuario bloqueado por seguranca - login negado</text>
+  <text x="80" y="2170" class="text-dark">INATIVO: Usuario temporariamente inativo - login negado</text>
+  <text x="350" y="2170" class="text-dark">DEMITIDO: Usuario demitido - login permanentemente negado</text>
+
+</svg>

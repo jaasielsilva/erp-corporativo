@@ -150,13 +150,21 @@ public class AdesaoPlanoSaude {
         return status == StatusAdesao.CANCELADA;
     }
 
-    // Método para calcular subsídio da empresa (assumindo que empresa paga 70%)
+    // Método para calcular subsídio da empresa 
+    // Titular: empresa paga 80%, Dependente: empresa paga 0%
     public BigDecimal getValorSubsidioEmpresa() {
-        return valorTotalMensal.multiply(BigDecimal.valueOf(0.70));
+        if (planoSaude != null) {
+            BigDecimal subsidioTitular = planoSaude.calcularValorEmpresaTitular();
+            BigDecimal subsidioDependentes = planoSaude.calcularValorEmpresaDependente()
+                    .multiply(BigDecimal.valueOf(quantidadeDependentes));
+            return subsidioTitular.add(subsidioDependentes);
+        }
+        return BigDecimal.ZERO;
     }
 
-    // Método para calcular desconto do colaborador (assumindo que colaborador paga 30%)
+    // Método para calcular desconto do colaborador
+    // Titular: colaborador paga 20%, Dependente: colaborador paga 100%
     public BigDecimal getValorDesconto() {
-        return valorTotalMensal.multiply(BigDecimal.valueOf(0.30));
+        return valorTotalMensal;
     }
 }

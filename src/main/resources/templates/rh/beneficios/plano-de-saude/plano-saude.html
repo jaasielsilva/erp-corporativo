@@ -70,7 +70,7 @@
                     th:text="'R$ ' + ${#numbers.formatDecimal(custoEmpresa, 0, 'POINT', 2, 'COMMA')}">
                     R$ 0,00
                   </div>
-                  <div class="resumo-detalhes">60% do total</div>
+                  <div class="resumo-detalhes">Empresa (titular 80%)</div>
                 </div>
 
               </div>
@@ -86,7 +86,7 @@
                     th:text="'R$ ' + ${#numbers.formatDecimal(descontoColaboradores, 0, 'POINT', 2, 'COMMA')}">
                     R$ 0,00
                   </div>
-                  <div class="resumo-detalhes">40% do total</div>
+                  <div class="resumo-detalhes">Colaboradores (titular 20% + dependentes 100%)</div>
                 </div>
 
               </div>
@@ -101,62 +101,38 @@
           <div class="planos-disponiveis">
             <div class="planos-grid">
 
-              <!-- Plano Básico -->
-              <div class="plano-card basico" th:with="plano=${planos[0]}">
+              <!-- Iterar dinamicamente pelos planos -->
+              <div th:each="plano, iterStat : ${planos}" 
+                   th:class="'plano-card ' + ${plano.tipo.name().toLowerCase()}">
                 <div class="plano-header">
-                  <h4><i class="fas fa-shield-alt"></i> <span th:text="${plano.nome}">Plano Básico</span></h4>
+                  <h4>
+                    <i class="fas fa-shield-alt" th:if="${plano.tipo.name() == 'BASICO'}"></i>
+                    <i class="fas fa-shield-alt" th:if="${plano.tipo.name() == 'INTERMEDIARIO'}"></i>
+                    <i class="fas fa-crown" th:if="${plano.tipo.name() == 'PREMIUM'}"></i>
+                    <i class="fas fa-crown" th:if="${plano.tipo.name() == 'EXECUTIVO'}"></i>
+                    <span th:text="${plano.nome}">Nome do Plano</span>
+                  </h4>
                   <div class="plano-preco">
-                    <span th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</span><br />
+                    <span th:text="'R$ ' + ${#numbers.formatDecimal(plano.valorTitular, 0, 'POINT', 2, 'COMMA')} + '/mês'">R$ 0,00/mês</span>
                   </div>
                 </div>
 
                 <div class="plano-beneficios">
                   <ul>
                     <li><i class="fas fa-check"></i> Consultas médicas</li>
-                    <li><i class="fas fa-check"></i> Exames básicos</li>
+                    <li><i class="fas fa-check"></i> 
+                      <span th:if="${plano.tipo.name() == 'BASICO'}">Exames básicos</span>
+                      <span th:if="${plano.tipo.name() != 'BASICO'}">Exames completos</span>
+                    </li>
                     <li><i class="fas fa-check"></i> Emergência 24h</li>
-                    <li><i class="fas fa-times"></i> Cirurgias eletivas</li>
-                    <li><i class="fas fa-times"></i> Quarto privativo</li>
-                  </ul>
-                </div>
-                <div class="plano-operadoras">
-                  <small th:text="'Disponível: ' + ${plano.operadora}">Disponível: Operadora</small>
-                </div>
-              </div>
-
-              <!-- Plano Intermediário -->
-              <div class="plano-card intermediario" th:with="plano=${planos[1]}">
-                <div class="plano-header">
-                  <h4><i class="fas fa-shield-alt"></i> <span th:text="${plano.nome}">Plano Intermediário</span></h4>
-                  <div class="plano-preco" th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</div>
-                </div>
-                <div class="plano-beneficios">
-                  <ul>
-                    <li><i class="fas fa-check"></i> Consultas médicas</li>
-                    <li><i class="fas fa-check"></i> Exames completos</li>
-                    <li><i class="fas fa-check"></i> Emergência 24h</li>
-                    <li><i class="fas fa-check"></i> Cirurgias eletivas</li>
-                    <li><i class="fas fa-times"></i> Quarto privativo</li>
-                  </ul>
-                </div>
-                <div class="plano-operadoras">
-                  <small th:text="'Disponível: ' + ${plano.operadora}">Disponível: Operadora</small>
-                </div>
-              </div>
-
-              <!-- Plano Premium -->
-              <div class="plano-card premium" th:with="plano=${planos[2]}">
-                <div class="plano-header">
-                  <h4><i class="fas fa-crown"></i> <span th:text="${plano.nome}">Plano Premium</span></h4>
-                  <div class="plano-preco" th:text="'R$ ' + ${plano.valorTitular} + '/mês'">R$ 0,00/mês</div>
-                </div>
-                <div class="plano-beneficios">
-                  <ul>
-                    <li><i class="fas fa-check"></i> Consultas médicas</li>
-                    <li><i class="fas fa-check"></i> Exames completos</li>
-                    <li><i class="fas fa-check"></i> Emergência 24h</li>
-                    <li><i class="fas fa-check"></i> Cirurgias eletivas</li>
-                    <li><i class="fas fa-check"></i> Quarto privativo</li>
+                    <li>
+                      <i th:class="${plano.tipo.name() == 'BASICO'} ? 'fas fa-times' : 'fas fa-check'"></i>
+                      Cirurgias eletivas
+                    </li>
+                    <li>
+                      <i th:class="${plano.tipo.name() == 'PREMIUM' || plano.tipo.name() == 'EXECUTIVO'} ? 'fas fa-check' : 'fas fa-times'"></i>
+                      Quarto privativo
+                    </li>
                   </ul>
                 </div>
                 <div class="plano-operadoras">

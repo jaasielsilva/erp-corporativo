@@ -148,6 +148,9 @@
                 <h4>Folha de Pagamento Analítica</h4>
                 <p>Relatório detalhado com todos os colaboradores, proventos e descontos</p>
                 <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('analitica', 'visualizar')" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i> Visualizar
+                  </button>
                   <button onclick="gerarRelatorio('analitica')" class="btn btn-primary btn-sm">
                     <i class="fas fa-file-pdf"></i> PDF
                   </button>
@@ -166,6 +169,9 @@
                 <h4>Resumo Gerencial</h4>
                 <p>Visão executiva com totais e indicadores principais</p>
                 <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('gerencial', 'visualizar')" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i> Visualizar
+                  </button>
                   <button onclick="gerarRelatorio('gerencial')" class="btn btn-primary btn-sm">
                     <i class="fas fa-file-pdf"></i> PDF
                   </button>
@@ -184,6 +190,9 @@
                 <h4>Obrigações Trabalhistas</h4>
                 <p>INSS, IRRF, FGTS e demais obrigações por colaborador</p>
                 <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('obrigacoes', 'visualizar')" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i> Visualizar
+                  </button>
                   <button onclick="gerarRelatorio('obrigacoes')" class="btn btn-primary btn-sm">
                     <i class="fas fa-file-pdf"></i> PDF
                   </button>
@@ -202,6 +211,9 @@
                 <h4>Por Departamento</h4>
                 <p>Análise de custos e colaboradores por departamento</p>
                 <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('departamento', 'visualizar')" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i> Visualizar
+                  </button>
                   <button onclick="gerarRelatorio('departamento')" class="btn btn-primary btn-sm">
                     <i class="fas fa-file-pdf"></i> PDF
                   </button>
@@ -220,6 +232,9 @@
                 <h4>Comparativo Mensal</h4>
                 <p>Evolução da folha nos últimos 12 meses</p>
                 <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('comparativo', 'visualizar')" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i> Visualizar
+                  </button>
                   <button onclick="gerarRelatorio('comparativo')" class="btn btn-primary btn-sm">
                     <i class="fas fa-file-pdf"></i> PDF
                   </button>
@@ -238,6 +253,9 @@
                 <h4>Benefícios</h4>
                 <p>Relatório de benefícios concedidos e seus custos</p>
                 <div class="relatorio-actions">
+                  <button onclick="gerarRelatorio('beneficios', 'visualizar')" class="btn btn-info btn-sm">
+                    <i class="fas fa-eye"></i> Visualizar
+                  </button>
                   <button onclick="gerarRelatorio('beneficios')" class="btn btn-primary btn-sm">
                     <i class="fas fa-file-pdf"></i> PDF
                   </button>
@@ -415,8 +433,237 @@
     }
 
     function gerarRelatorio(tipo, formato = 'pdf') {
-      alert(`Gerando relatório ${tipo} em formato ${formato.toUpperCase()}...`);
-      // Implementar geração de relatório
+      const inicio = document.getElementById('periodoInicio').value;
+      const fim = document.getElementById('periodoFim').value;
+      const departamento = document.getElementById('departamentoRel').value;
+      
+      if (!inicio || !fim) {
+        alert('Por favor, selecione o período do relatório.');
+        return;
+      }
+      
+      // Mostrar loading
+      const loadingDiv = document.createElement('div');
+      loadingDiv.innerHTML = '<div class="alert alert-info">Gerando relatório... <i class="fas fa-spinner fa-spin"></i></div>';
+      loadingDiv.style.position = 'fixed';
+      loadingDiv.style.top = '20px';
+      loadingDiv.style.right = '20px';
+      loadingDiv.style.zIndex = '9999';
+      document.body.appendChild(loadingDiv);
+      
+      let url;
+      const params = new URLSearchParams({
+        inicio: inicio,
+        fim: fim
+      });
+      
+      if (departamento) {
+        params.append('departamentoId', departamento);
+      }
+      
+      // Determinar URL baseada no tipo e formato
+      if (formato === 'visualizar') {
+        switch(tipo) {
+          case 'analitica':
+            url = `/rh/api/relatorios/folha-analitica?${params}`;
+            break;
+          case 'gerencial':
+            url = `/rh/api/relatorios/gerencial?${params}`;
+            break;
+          case 'obrigacoes':
+            url = `/rh/api/relatorios/obrigacoes?${params}`;
+            break;
+          case 'departamento':
+            if (!departamento) {
+              alert('Selecione um departamento para este relatório.');
+              document.body.removeChild(loadingDiv);
+              return;
+            }
+            url = `/rh/api/relatorios/departamento?${params}`;
+            break;
+          case 'comparativo':
+            url = `/rh/api/relatorios/comparativo?${params}`;
+            break;
+          case 'beneficios':
+            url = `/rh/api/relatorios/beneficios?${params}`;
+            break;
+          default:
+            alert('Tipo de relatório não suportado.');
+            document.body.removeChild(loadingDiv);
+            return;
+        }
+        
+        // Fazer requisição AJAX para visualizar
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            document.body.removeChild(loadingDiv);
+            exibirRelatorio(tipo, data);
+          })
+          .catch(error => {
+            document.body.removeChild(loadingDiv);
+            console.error('Erro ao gerar relatório:', error);
+            alert('Erro ao gerar relatório. Verifique o console para mais detalhes.');
+          });
+      } else {
+        // Para exportação (PDF, Excel)
+        params.append('tipo', tipo);
+        url = `/rh/api/relatorios/exportar/${formato}?${params}`;
+        
+        // Fazer download direto
+        window.open(url, '_blank');
+        setTimeout(() => {
+          document.body.removeChild(loadingDiv);
+        }, 2000);
+      }
+    }
+    
+    function exibirRelatorio(tipo, data) {
+      // Criar modal para exibir o relatório
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Relatório - ${tipo.replace('-', ' ').toUpperCase()}</h5>
+              <button type="button" class="btn-close" onclick="fecharModal(this)">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div id="relatorio-content"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="fecharModal(this)">Fechar</button>
+              <button type="button" class="btn btn-primary" onclick="gerarRelatorio('${tipo}', 'pdf')">Exportar PDF</button>
+              <button type="button" class="btn btn-success" onclick="gerarRelatorio('${tipo}', 'excel')">Exportar Excel</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Formatar dados baseado no tipo
+      const content = document.getElementById('relatorio-content');
+      formatarDadosRelatorio(tipo, data, content);
+    }
+    
+    function fecharModal(btn) {
+      const modal = btn.closest('.modal-overlay');
+      document.body.removeChild(modal);
+    }
+    
+    function formatarDadosRelatorio(tipo, data, container) {
+      let html = '';
+      
+      switch(tipo) {
+        case 'analitica':
+          html = `
+            <div class="resumo-cards">
+              <div class="resumo-item">
+                <h5>Total Salários</h5>
+                <h3 class="text-primary">R$ ${data.totalSalarios ? data.totalSalarios.toFixed(2) : '0,00'}</h3>
+              </div>
+              <div class="resumo-item">
+                <h5>Total Descontos</h5>
+                <h3 class="text-danger">R$ ${data.totalDescontos ? data.totalDescontos.toFixed(2) : '0,00'}</h3>
+              </div>
+              <div class="resumo-item">
+                <h5>Total Líquido</h5>
+                <h3 class="text-success">R$ ${data.totalLiquido ? data.totalLiquido.toFixed(2) : '0,00'}</h3>
+              </div>
+              <div class="resumo-item">
+                <h5>Colaboradores</h5>
+                <h3 class="text-info">${data.itens ? data.itens.length : 0}</h3>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Departamento</th>
+                    <th>Cargo</th>
+                    <th>Salário Base</th>
+                    <th>INSS</th>
+                    <th>IRRF</th>
+                    <th>Total Descontos</th>
+                    <th>Salário Líquido</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          if (data.itens) {
+            data.itens.forEach(item => {
+              html += `
+                <tr>
+                  <td>${item.nomeColaborador || ''}</td>
+                  <td>${item.departamento || ''}</td>
+                  <td>${item.cargo || ''}</td>
+                  <td>R$ ${item.salarioBase ? item.salarioBase.toFixed(2) : '0,00'}</td>
+                  <td>R$ ${item.inss ? item.inss.toFixed(2) : '0,00'}</td>
+                  <td>R$ ${item.irrf ? item.irrf.toFixed(2) : '0,00'}</td>
+                  <td>R$ ${item.totalDescontos ? item.totalDescontos.toFixed(2) : '0,00'}</td>
+                  <td>R$ ${item.salarioLiquido ? item.salarioLiquido.toFixed(2) : '0,00'}</td>
+                </tr>
+              `;
+            });
+          }
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+          break;
+          
+        case 'gerencial':
+          html = `
+            <div class="resumo-cards">
+              <div class="resumo-item">
+                <h5>Total Colaboradores</h5>
+                <h3 class="text-primary">${data.totalColaboradores || 0}</h3>
+              </div>
+              <div class="resumo-item">
+                <h5>Total Folha</h5>
+                <h3 class="text-success">R$ ${data.totalFolha ? data.totalFolha.toFixed(2) : '0,00'}</h3>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Departamento</th>
+                    <th>Colaboradores</th>
+                    <th>Custo Total</th>
+                    <th>Média Salarial</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          if (data.resumoPorDepartamento) {
+            Object.values(data.resumoPorDepartamento).forEach(resumo => {
+              html += `
+                <tr>
+                  <td>${resumo.departamento || ''}</td>
+                  <td>${resumo.colaboradores || 0}</td>
+                  <td>R$ ${resumo.custoTotal ? resumo.custoTotal.toFixed(2) : '0,00'}</td>
+                  <td>R$ ${resumo.mediaSalarial ? resumo.mediaSalarial.toFixed(2) : '0,00'}</td>
+                </tr>
+              `;
+            });
+          }
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+          break;
+          
+        default:
+          html = '<div class="alert alert-warning">Formato de relatório não suportado.</div>';
+      }
+      
+      container.innerHTML = html;
     }
 
     function exportarTodosRelatorios() {
@@ -576,6 +823,107 @@
       font-weight: bold;
     }
     
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    
+    .modal-dialog {
+      background: white;
+      border-radius: 8px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8f9fa;
+    }
+    
+    .modal-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .btn-close:hover {
+      color: #000;
+    }
+    
+    .modal-body {
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #f8f9fa;
+    }
+    
+    .resumo-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .resumo-item {
+      text-align: center;
+      padding: 15px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+    
+    .resumo-item h5 {
+      margin-bottom: 10px;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .resumo-item h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+    
+    .text-primary { color: #007bff !important; }
+    .text-success { color: #28a745 !important; }
+    .text-danger { color: #dc3545 !important; }
+    .text-info { color: #17a2b8 !important; }
+    
     @media (max-width: 768px) {
       .charts-container {
         grid-template-columns: 1fr;
@@ -586,6 +934,15 @@
       }
       
       .relatorios-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .modal-dialog {
+        max-width: 95vw;
+        margin: 10px;
+      }
+      
+      .resumo-cards {
         grid-template-columns: 1fr;
       }
     }

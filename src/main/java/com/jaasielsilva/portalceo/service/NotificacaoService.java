@@ -11,15 +11,20 @@ import org.springframework.stereotype.Service;
 
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.ProcessoAdesao;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 
 @Service
 public class NotificacaoService {
 
     private final WorkflowAdesaoService workflowAdesaoService;
+    private final EmailService emailService;
+    private final UsuarioService usuarioService;
 
-    public NotificacaoService(@Lazy WorkflowAdesaoService workflowAdesaoService) {
+    public NotificacaoService(@Lazy WorkflowAdesaoService workflowAdesaoService, EmailService emailService, UsuarioService usuarioService) {
         this.workflowAdesaoService = workflowAdesaoService;
+        this.emailService = emailService;
+        this.usuarioService = usuarioService;
     }
 
     // Armazenamento em memória das notificações (em produção, usar banco de dados)
@@ -118,12 +123,15 @@ public class NotificacaoService {
                 processo.getNomeColaborador());
         String url = "/rh/workflow/processo/" + processo.getId();
 
-        List<String> usuariosGerenciais = List.of(
-                "admin@empresa.com",
-                "rh@empresa.com",
-                "gerente@empresa.com");
+        // Buscar usuários aprovadores dinamicamente
+        List<Usuario> usuariosAprovadores = usuarioService.buscarUsuariosAprovadores();
 
-        usuariosGerenciais.forEach(email -> adicionarNotificacao(email, titulo, mensagem, "warning", url));
+        usuariosAprovadores.forEach(usuario -> {
+            // Notificação interna
+            adicionarNotificacao(usuario.getEmail(), titulo, mensagem, "warning", url);
+            // Email
+            emailService.enviarNotificacaoNovoProcessoAdesao(usuario.getEmail(), processo.getNomeColaborador(), processo.getId().toString());
+        });
     }
 
     public void notificarProcessoAprovado(ProcessoAdesao processo) {
@@ -133,7 +141,14 @@ public class NotificacaoService {
         String url = "/rh/colaboradores/adesao/status/" + processo.getSessionId();
 
         if (processo.getEmailColaborador() != null) {
+            // Notificação interna
             adicionarNotificacao(processo.getEmailColaborador(), titulo, mensagem, "success", url);
+            // Email
+            emailService.enviarNotificacaoProcessoAprovado(
+                processo.getEmailColaborador(), 
+                processo.getNomeColaborador(), 
+                processo.getAprovadoPor() != null ? processo.getAprovadoPor() : "Sistema"
+            );
         }
     }
 
@@ -144,7 +159,14 @@ public class NotificacaoService {
         String url = "/rh/colaboradores/adesao/status/" + processo.getSessionId();
 
         if (processo.getEmailColaborador() != null) {
+            // Notificação interna
             adicionarNotificacao(processo.getEmailColaborador(), titulo, mensagem, "error", url);
+            // Email
+            emailService.enviarNotificacaoProcessoRejeitado(
+                processo.getEmailColaborador(), 
+                processo.getNomeColaborador(), 
+                processo.getMotivoRejeicao() != null ? processo.getMotivoRejeicao() : "Não especificado"
+            );
         }
     }
 

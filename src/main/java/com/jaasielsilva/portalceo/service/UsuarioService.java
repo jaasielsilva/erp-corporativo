@@ -235,6 +235,20 @@ public class UsuarioService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca usuários aprovadores (ADMIN, MASTER, RH) para notificações de novos processos
+     */
+    public List<Usuario> buscarUsuariosAprovadores() {
+        return usuarioRepository.findAll().stream()
+                .filter(usuario -> usuario.getStatus() == Usuario.Status.ATIVO)
+                .filter(usuario -> usuario.getPerfis() != null && !usuario.getPerfis().isEmpty())
+                .filter(usuario -> usuario.getPerfis().stream()
+                    .anyMatch(perfil -> perfil.getNome().equals("ADMIN") || 
+                                      perfil.getNome().equals("MASTER") || 
+                                      perfil.getNome().equals("RH")))
+                .collect(Collectors.toList());
+    }
+
     // ===============================
     // MÉTODOS DE ESTATÍSTICAS
     // ===============================

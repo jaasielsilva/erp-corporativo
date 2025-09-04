@@ -221,15 +221,38 @@
                                 <div class="border-end">
                                     <h3 class="text-warning mb-1">
                                         <i class="fas fa-clock"></i>
-                                        <span id="processosAprovacao">-</span>
+                                        <span id="processosAprovacao" th:text="${processosAguardandoAprovacao ?: 0}">0</span>
                                     </h3>
                                     <p class="text-muted mb-0">Aguardando Aprovação</p>
                                 </div>
                             </div>
                             <div class="col-md-3">
+                                <h3 class="text-success mb-1">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span id="processosAprovados" th:text="${processosAprovados ?: 0}">0</span>
+                                </h3>
+                                <p class="text-muted mb-0">Processos Aprovados</p>
+                            </div>
+                        </div>
+                        <div class="row text-center mt-3">
+                            <div class="col-md-4">
+                                <h3 class="text-danger mb-1">
+                                    <i class="fas fa-times-circle"></i>
+                                    <span id="processosRejeitados" th:text="${processosRejeitados ?: 0}">0</span>
+                                </h3>
+                                <p class="text-muted mb-0">Processos Rejeitados</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h3 class="text-info mb-1">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <span id="processosHoje" th:text="${processosHoje ?: 0}">0</span>
+                                </h3>
+                                <p class="text-muted mb-0">Processos Hoje</p>
+                            </div>
+                            <div class="col-md-4">
                                 <h3 class="text-info mb-1">
                                     <i class="fas fa-utensils"></i>
-                                    <span id="valesAtivos">-</span>
+                                    <span id="valesAtivos" th:text="${valesAtivos ?: 0}">0</span>
                                 </h3>
                                 <p class="text-muted mb-0">Vales Refeição Ativos</p>
                             </div>
@@ -243,9 +266,41 @@
     <!-- Scripts adicionais -->
     <script layout:fragment="scripts">
         document.addEventListener('DOMContentLoaded', function() {
-            // Carregar estatísticas básicas via AJAX (opcional)
-            // Implementar quando tiver APIs de estatísticas
-            console.log('Dashboard RH carregado');
+            // Dashboard RH carregado com estatísticas dos processos de adesão
+            console.log('Dashboard RH carregado com métricas atualizadas dos processos de adesão');
+            
+            // Função para atualizar estatísticas em tempo real
+            function atualizarEstatisticas() {
+                fetch('/rh/api/processos-adesao/estatisticas')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                             // Atualizar os valores na tela usando os IDs corretos
+                             const aguardandoElement = document.querySelector('.card:nth-child(1) .card-body h3');
+                             const aprovadosElement = document.querySelector('.card:nth-child(2) .card-body h3');
+                             const rejeitadosElement = document.querySelector('.card:nth-child(3) .card-body h3');
+                             const hojeElement = document.querySelector('.card:nth-child(4) .card-body h3');
+                             
+                             if (aguardandoElement) aguardandoElement.textContent = data.processosAguardandoAprovacao || 0;
+                             if (aprovadosElement) aprovadosElement.textContent = data.processosAprovados || 0;
+                             if (rejeitadosElement) rejeitadosElement.textContent = data.processosRejeitados || 0;
+                             if (hojeElement) hojeElement.textContent = data.processosHoje || 0;
+                            
+                            console.log('Estatísticas atualizadas:', data);
+                        } else {
+                            console.error('Erro ao carregar estatísticas:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição de estatísticas:', error);
+                    });
+            }
+            
+            // Atualizar estatísticas a cada 30 segundos
+            setInterval(atualizarEstatisticas, 30000);
+            
+            // Atualizar uma vez ao carregar a página
+            setTimeout(atualizarEstatisticas, 1000);
         });
     </script>
 </body>

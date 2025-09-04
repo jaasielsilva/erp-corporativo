@@ -216,4 +216,87 @@ public class EmailService {
         logger.info("Email de boas-vindas enviado para {}", email);
     }
 
+    /**
+     * Envia email de notificação para novo processo de adesão
+     */
+    @Async
+    public void enviarNotificacaoNovoProcessoAdesao(String destinatario, String nomeColaborador, String processoId) {
+        String template = """
+                <html>
+                <body>
+                    <h2>Novo Processo de Adesão - Portal CEO</h2>
+                    <p><strong>Colaborador:</strong> %s</p>
+                    <p><strong>Processo ID:</strong> %s</p>
+                    <p>Um novo processo de adesão foi criado e aguarda aprovação.</p>
+                    <p>Acesse o sistema para revisar e processar o processo.</p>
+                    <p><a href="http://localhost:8080/rh/workflow/processo/%s">Visualizar Processo</a></p>
+                    <br>
+                    <p><em>Este é um email automático. Não responda.</em></p>
+                </body>
+                </html>
+                """;
+
+        enviarEmailComTemplate(destinatario,
+                "Novo Processo de Adesão - " + nomeColaborador,
+                template, nomeColaborador, processoId, processoId);
+
+        logger.info("Email de novo processo de adesão enviado para {} - Colaborador: {}", destinatario, nomeColaborador);
+    }
+
+    /**
+     * Envia email de notificação de processo aprovado
+     */
+    @Async
+    public void enviarNotificacaoProcessoAprovado(String destinatario, String nomeColaborador, String aprovadoPor) {
+        String template = """
+                <html>
+                <body>
+                    <h2>Processo de Adesão Aprovado - Portal CEO</h2>
+                    <p>Olá <strong>%s</strong>,</p>
+                    <p>Seu processo de adesão foi <strong>aprovado</strong> com sucesso!</p>
+                    <p><strong>Aprovado por:</strong> %s</p>
+                    <p>Seus benefícios serão ativados em breve e você receberá mais informações sobre os próximos passos.</p>
+                    <p><a href="http://localhost:8080/rh/colaboradores/adesao/status">Acompanhar Status</a></p>
+                    <br>
+                    <p>Parabéns e bem-vindo(a) aos nossos benefícios!</p>
+                    <p><em>Este é um email automático. Não responda.</em></p>
+                </body>
+                </html>
+                """;
+
+        enviarEmailComTemplate(destinatario,
+                "Processo de Adesão Aprovado",
+                template, nomeColaborador, aprovadoPor);
+
+        logger.info("Email de processo aprovado enviado para {} - Colaborador: {}", destinatario, nomeColaborador);
+    }
+
+    /**
+     * Envia email de notificação de processo rejeitado
+     */
+    @Async
+    public void enviarNotificacaoProcessoRejeitado(String destinatario, String nomeColaborador, String motivoRejeicao) {
+        String template = """
+                <html>
+                <body>
+                    <h2>Processo de Adesão Rejeitado - Portal CEO</h2>
+                    <p>Olá <strong>%s</strong>,</p>
+                    <p>Infelizmente, seu processo de adesão foi <strong>rejeitado</strong>.</p>
+                    <p><strong>Motivo:</strong> %s</p>
+                    <p>Entre em contato com o departamento de RH para mais informações ou para iniciar um novo processo.</p>
+                    <p><a href="http://localhost:8080/rh/colaboradores/adesao/inicio">Iniciar Novo Processo</a></p>
+                    <br>
+                    <p>Atenciosamente,<br>Equipe de RH</p>
+                    <p><em>Este é um email automático. Não responda.</em></p>
+                </body>
+                </html>
+                """;
+
+        enviarEmailComTemplate(destinatario,
+                "Processo de Adesão Rejeitado",
+                template, nomeColaborador, motivoRejeicao);
+
+        logger.info("Email de processo rejeitado enviado para {} - Colaborador: {}", destinatario, nomeColaborador);
+    }
+
 }

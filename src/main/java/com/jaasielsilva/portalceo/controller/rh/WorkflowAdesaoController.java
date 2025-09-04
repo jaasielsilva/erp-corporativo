@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class WorkflowAdesaoController {
      * Página principal do workflow de aprovação
      */
     @GetMapping("/aprovacao")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public String paginaAprovacao(Model model) {
         try {
             // Carregar estatísticas para o dashboard
@@ -48,6 +50,7 @@ public class WorkflowAdesaoController {
      */
     @GetMapping("/api/processos")
     @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public ResponseEntity<Map<String, Object>> listarProcessos(
             @RequestParam(defaultValue = "AGUARDANDO_APROVACAO") String status,
             @RequestParam(defaultValue = "0") int page,
@@ -80,8 +83,16 @@ public class WorkflowAdesaoController {
      */
     @GetMapping("/api/processo/{id}")
     @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public ResponseEntity<Map<String, Object>> buscarProcesso(@PathVariable Long id) {
         try {
+            // Validação de ID
+            if (id == null || id <= 0) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "ID do processo inválido");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
             WorkflowAdesaoService.ProcessoAdesaoInfo processo = workflowService.buscarProcessoPorId(id);
             
             Map<String, Object> response = new HashMap<>();
@@ -101,8 +112,16 @@ public class WorkflowAdesaoController {
      */
     @GetMapping("/api/processo/{id}/historico")
     @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public ResponseEntity<Map<String, Object>> buscarHistoricoProcesso(@PathVariable Long id) {
         try {
+            // Validação de ID
+            if (id == null || id <= 0) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "ID do processo inválido");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
             List<WorkflowAdesaoService.HistoricoEventoInfo> historico = 
                 workflowService.buscarHistoricoProcesso(id);
             
@@ -123,17 +142,39 @@ public class WorkflowAdesaoController {
      */
     @PostMapping("/api/processo/{id}/aprovar")
     @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH')")
     public ResponseEntity<Map<String, Object>> aprovarProcesso(
             @PathVariable Long id,
             @RequestBody Map<String, String> dados) {
         
         try {
+            // Validação de ID
+            if (id == null || id <= 0) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "ID do processo inválido");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
             String aprovadoPor = dados.get("aprovadoPor");
             String observacoes = dados.get("observacoes");
             
+            // Validação do aprovador
             if (aprovadoPor == null || aprovadoPor.trim().isEmpty()) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("erro", "Nome do aprovador é obrigatório");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            // Validação de tamanho e caracteres
+            if (aprovadoPor.trim().length() > 100) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "Nome do aprovador muito longo (máximo 100 caracteres)");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            if (observacoes != null && observacoes.length() > 500) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "Observações muito longas (máximo 500 caracteres)");
                 return ResponseEntity.badRequest().body(error);
             }
             
@@ -157,23 +198,51 @@ public class WorkflowAdesaoController {
      */
     @PostMapping("/api/processo/{id}/rejeitar")
     @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH')")
     public ResponseEntity<Map<String, Object>> rejeitarProcesso(
             @PathVariable Long id,
             @RequestBody Map<String, String> dados) {
         
         try {
+            // Validação de ID
+            if (id == null || id <= 0) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "ID do processo inválido");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
             String motivoRejeicao = dados.get("motivoRejeicao");
             String usuarioResponsavel = dados.get("usuarioResponsavel");
             
+            // Validação do motivo
             if (motivoRejeicao == null || motivoRejeicao.trim().isEmpty()) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("erro", "Motivo da rejeição é obrigatório");
                 return ResponseEntity.badRequest().body(error);
             }
             
+            if (motivoRejeicao.trim().length() < 10) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "Motivo da rejeição deve ter pelo menos 10 caracteres");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            if (motivoRejeicao.length() > 500) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "Motivo da rejeição muito longo (máximo 500 caracteres)");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            // Validação do usuário responsável
             if (usuarioResponsavel == null || usuarioResponsavel.trim().isEmpty()) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("erro", "Usuário responsável é obrigatório");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            if (usuarioResponsavel.trim().length() > 100) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("erro", "Nome do usuário responsável muito longo (máximo 100 caracteres)");
                 return ResponseEntity.badRequest().body(error);
             }
             
@@ -193,10 +262,11 @@ public class WorkflowAdesaoController {
     }
     
     /**
-     * API: Obtém estatísticas do dashboard
+     * API: Obter estatísticas do dashboard
      */
     @GetMapping("/api/estatisticas")
     @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public ResponseEntity<Map<String, Object>> obterEstatisticas() {
         try {
             WorkflowAdesaoService.DashboardEstatisticas stats = workflowService.obterEstatisticas();
@@ -217,8 +287,15 @@ public class WorkflowAdesaoController {
      * Página de detalhes de um processo
      */
     @GetMapping("/processo/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public String detalheProcesso(@PathVariable Long id, Model model) {
         try {
+            // Validação de ID
+            if (id == null || id <= 0) {
+                model.addAttribute("erro", "ID do processo inválido");
+                return "rh/workflow-aprovacao";
+            }
+            
             WorkflowAdesaoService.ProcessoAdesaoInfo processo = workflowService.buscarProcessoPorId(id);
             List<WorkflowAdesaoService.HistoricoEventoInfo> historico = 
                 workflowService.buscarHistoricoProcesso(id);
@@ -238,6 +315,7 @@ public class WorkflowAdesaoController {
      * Página de relatórios
      */
     @GetMapping("/relatorios")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public String paginaRelatorios(Model model) {
         try {
             // Carregar estatísticas
@@ -253,10 +331,11 @@ public class WorkflowAdesaoController {
     }
     
     /**
-     * API: Busca processos para relatórios
+     * API: Buscar processos para relatórios
      */
     @GetMapping("/api/relatorios/processos")
     @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
     public ResponseEntity<Map<String, Object>> buscarProcessosRelatorio(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String dataInicio,

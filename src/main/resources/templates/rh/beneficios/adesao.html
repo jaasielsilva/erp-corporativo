@@ -12,6 +12,11 @@
   <link href="/css/notifications.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/benefits-modal.css}">
+  <style>
+    .usuario-criacao {
+      font-size: 0.9em;
+    }
+  </style>
 </head>
 
 <body>
@@ -41,6 +46,7 @@
                 <th>Data Vigência</th>
                 <th>Valor Total Colaborador</th>
                 <th>Status</th>
+                <th>Criado por</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -83,6 +89,13 @@
                     th:text="${adesao.status != null ? adesao.status.name() : 'INDEFINIDO'}">Status</span>
                 </td>
                 <td>
+                  <div class="usuario-criacao">
+                    <strong th:text="${adesao.usuarioCriacao != null ? adesao.usuarioCriacao.nome : 'Não informado'}">Usuário</strong><br>
+                    <small th:text="${adesao.usuarioCriacao != null ? adesao.usuarioCriacao.email : ''}"
+                      class="text-muted">Email</small>
+                  </div>
+                </td>
+                <td>
                   <button type="button" class="btn btn-info btn-sm me-1" title="Ver Detalhes"
                     th:attr="onclick='verDetalhesAdesao(' + ${adesao.id != null ? adesao.id : 0} + ')'"
                     th:disabled="${adesao.id == null}"><i class="fas fa-search"></i></button>
@@ -98,7 +111,7 @@
               </tr>
 
               <tr th:if="${adesoes == null || adesoes.isEmpty()}">
-                <td colspan="8" class="text-center text-muted py-4">
+                <td colspan="9" class="text-center text-muted py-4">
                   <i class="fas fa-info-circle"></i> Nenhuma adesão encontrada
                 </td>
               </tr>
@@ -118,10 +131,10 @@
           <div class="modal-content">
             <span class="close" onclick="fecharModalAdesao()">&times;</span>
             <h2>Nova Adesão - Plano de Saúde</h2>
-            <form id="formAdesao" method="post" th:action="@{/rh/beneficios/adesao/salvar}">
+            <form id="formAdesao" onsubmit="return enviarFormulario(event)">
               <div class="form-group">
                 <label for="colaborador">Colaborador</label>
-                <select id="colaborador" name="colaboradorId" required>
+                <select id="colaborador" name="colaboradorId" required onchange="verificarColaborador()">
                   <option value="">Selecione</option>
                   <option th:each="colaborador : ${colaboradores}" th:value="${colaborador.id}"
                     th:text="${colaborador.nome}"></option>
@@ -334,6 +347,11 @@
                 <label>Data de Criação:</label>
                 <span id="detalheDataCriacao"></span>
               </div>
+              
+              <div class="detalhe-item">
+                <label>Criado por:</label>
+                <span id="detalheCriadoPor"></span>
+              </div>
             </div>
 
             <div class="form-actions">
@@ -355,6 +373,82 @@
   <script>
     // Variável de permissão passada do controller
     const usuarioPodeEditarAdesao = /*[[${usuarioPodeEditarAdesao}]]*/ true;
+
+    // Função para verificar se colaborador já possui adesão ativa
+    function verificarColaborador() {
+      const colaboradorId = document.getElementById('colaborador').value;
+      const submitButton = document.querySelector('#formAdesao button[type="submit"]');
+      
+      if (!colaboradorId) {
+        submitButton.disabled = false;
+        return;
+      }
+      
+      fetch(`/rh/beneficios/adesao/verificar-colaborador/${colaboradorId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.possuiAdesaoAtiva) {
+            // Colaborador já possui adesão ativa
+            showNotification(
+              `Colaborador já possui plano de saúde ativo:\n` +
+              `Plano: ${data.planoAtual}\n` +
+              `Operadora: ${data.operadoraAtual}\n` +
+              `Data de Adesão: ${new Date(data.dataAdesao).toLocaleDateString('pt-BR')}\n` +
+              `Dependentes: ${data.dependentes}`,
+              'error'
+            );
+            submitButton.disabled = true;
+            submitButton.textContent = 'Colaborador já possui plano';
+            submitButton.style.backgroundColor = '#dc3545';
+          } else {
+            // Colaborador pode aderir
+            submitButton.disabled = false;
+            submitButton.textContent = 'Salvar';
+            submitButton.style.backgroundColor = '';
+          }
+        })
+        .catch(error => {
+          console.error('Erro ao verificar colaborador:', error);
+          showNotification('Erro ao verificar colaborador', 'error');
+        });
+    }
+
+    // Função para enviar o formulário via AJAX
+    function enviarFormulario(event) {
+      event.preventDefault();
+      
+      const submitButton = document.querySelector('#formAdesao button[type="submit"]');
+      
+      if (submitButton.disabled) {
+        showNotification('Colaborador já possui plano de saúde ativo', 'error');
+        return false;
+      }
+      
+      const formData = new FormData(document.getElementById('formAdesao'));
+      
+      fetch('/rh/beneficios/adesao/salvar', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showNotification(data.message, 'success');
+          fecharModalAdesao();
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        } else {
+          showNotification(data.message, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Erro:', error);
+        showNotification('Erro ao processar solicitação', 'error');
+      });
+      
+      return false;
+    }
 
     document.addEventListener("DOMContentLoaded", function () {
       // Paginação
@@ -393,7 +487,10 @@
             if (data.success) {
               showNotification(data.message, 'success');
               fecharModalEdicaoAdesao();
-              location.reload();
+              // Aguardar 2 segundos antes de recarregar para que o usuário veja a notificação
+              setTimeout(() => {
+                location.reload();
+              }, 4000);
             } else {
               showNotification(data.message, 'error');
             }
@@ -441,6 +538,16 @@
 
               document.getElementById('detalheObservacoes').textContent = adesao.observacoes || 'Nenhuma observação';
 
+              // Formatar data de criação e informações do criador
+              document.getElementById('detalheDataCriacao').textContent = adesao.dataCriacao ? new Date(adesao.dataCriacao).toLocaleDateString('pt-BR') : 'Não informado';
+              
+              const criadoPorElement = document.getElementById('detalheCriadoPor');
+              if (adesao.usuarioCriacaoNome && adesao.usuarioCriacaoNome !== 'Não informado') {
+                criadoPorElement.innerHTML = `<strong>${adesao.usuarioCriacaoNome}</strong><br><small class="text-muted">${adesao.usuarioCriacaoEmail || ''}</small>`;
+              } else {
+                criadoPorElement.textContent = 'Não informado';
+              }
+
               // Abrir modal
               document.getElementById('modalDetalhesAdesao').style.display = 'block';
             } else {
@@ -471,7 +578,10 @@
             .then(data => {
               if (data.success) {
                 showNotification(data.message || 'Adesão excluída com sucesso', 'success');
-                location.reload();
+                // Aguardar 2 segundos antes de recarregar para que o usuário veja a notificação
+                setTimeout(() => {
+                  location.reload();
+                }, 2000);
               } else {
                 showNotification(data.message || 'Erro ao excluir adesão', 'error');
               }
@@ -553,7 +663,7 @@
         container = document.createElement('div');
         container.id = containerId;
         container.style.position = 'fixed';
-        container.style.top = '20px';
+        container.style.top = '70px';
         container.style.right = '20px';
         container.style.zIndex = 9999;
         document.body.appendChild(container);
@@ -576,7 +686,7 @@
 
       setTimeout(() => {
         notif.remove();
-      }, 4000);
+      }, 5000);
     }
 
 

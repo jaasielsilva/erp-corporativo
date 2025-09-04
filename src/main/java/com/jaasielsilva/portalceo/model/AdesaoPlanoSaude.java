@@ -110,13 +110,25 @@ public class AdesaoPlanoSaude {
         }
     }
 
-    // Adicione dentro da classe AdesaoPlanoSaude
+    // Método que calcula o custo total do plano (empresa + colaborador)
     public BigDecimal getValorTotalAtual() {
         if (planoSaude != null) {
-            BigDecimal valorTitularAtual = planoSaude.calcularValorColaboradorTitular();
-            BigDecimal valorDependentesAtual = planoSaude.calcularValorColaboradorDependente()
+            // Custo total = valor total do titular + valor total dos dependentes
+            BigDecimal custoTotalTitular = planoSaude.getValorTitular();
+            BigDecimal custoTotalDependentes = planoSaude.getValorDependente()
                     .multiply(BigDecimal.valueOf(quantidadeDependentes));
-            return valorTitularAtual.add(valorDependentesAtual);
+            return custoTotalTitular.add(custoTotalDependentes);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    // Método que calcula apenas o valor que o colaborador paga
+    public BigDecimal getValorColaboradorAtual() {
+        if (planoSaude != null) {
+            BigDecimal valorTitularColaborador = planoSaude.calcularValorColaboradorTitular();
+            BigDecimal valorDependentesColaborador = planoSaude.calcularValorColaboradorDependente()
+                    .multiply(BigDecimal.valueOf(quantidadeDependentes));
+            return valorTitularColaborador.add(valorDependentesColaborador);
         }
         return BigDecimal.ZERO;
     }
@@ -165,6 +177,6 @@ public class AdesaoPlanoSaude {
     // Método para calcular desconto do colaborador
     // Titular: colaborador paga 20%, Dependente: colaborador paga 100%
     public BigDecimal getValorDesconto() {
-        return valorTotalMensal;
+        return getValorColaboradorAtual();
     }
 }

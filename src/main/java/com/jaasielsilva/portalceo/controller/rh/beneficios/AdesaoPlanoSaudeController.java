@@ -16,8 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.http.HttpStatus;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/rh/beneficios/adesao")
@@ -31,6 +34,9 @@ public class AdesaoPlanoSaudeController {
 
     @Autowired
     private PlanoSaudeService planoService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     // Listar adesões
     @GetMapping
@@ -58,29 +64,154 @@ public class AdesaoPlanoSaudeController {
         return "rh/beneficios/adesao";
     }
 
+    // Verificar se colaborador já possui adesão ativa
+    @GetMapping("/verificar-colaborador/{colaboradorId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> verificarColaborador(@PathVariable Long colaboradorId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            boolean possuiAdesaoAtiva = adesaoService.colaboradorPossuiAdesaoAtiva(colaboradorId);
+            
+            response.put("possuiAdesaoAtiva", possuiAdesaoAtiva);
+            
+            if (possuiAdesaoAtiva) {
+                Optional<AdesaoPlanoSaude> adesaoAtiva = adesaoService.buscarAdesaoAtivaDoColaborador(colaboradorId);
+                if (adesaoAtiva.isPresent()) {
+                    AdesaoPlanoSaude adesao = adesaoAtiva.get();
+                    response.put("planoAtual", adesao.getPlanoSaude() != null ? adesao.getPlanoSaude().getNome() : "Plano não identificado");
+                    response.put("operadoraAtual", adesao.getPlanoSaude() != null ? adesao.getPlanoSaude().getOperadora() : "Operadora não identificada");
+                    response.put("dataAdesao", adesao.getDataAdesao() != null ? adesao.getDataAdesao().toString() : "Data não informada");
+                    response.put("dependentes", adesao.getQuantidadeDependentes());
+                }
+                response.put("message", "Colaborador já possui plano de saúde ativo");
+            } else {
+                response.put("message", "Colaborador pode aderir a um plano");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("error", true);
+            response.put("message", "Erro ao verificar colaborador: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     // Salvar nova adesão
     @PostMapping("/salvar")
-    public String salvar(@RequestParam Long colaboradorId,
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> salvar(@RequestParam Long colaboradorId,
                         @RequestParam(required = false) Long planoId,
                         @RequestParam String tipoAdesao,
                         @RequestParam(required = false) Integer quantidadeDependentes,
                         @RequestParam String dataVigencia,
-                        @RequestParam(required = false) String observacoes) {
+                        @RequestParam(required = false) String observacoes,
+                        Principal principal) {
         
-        AdesaoPlanoSaude adesao = new AdesaoPlanoSaude();
-        adesao.setColaborador(colaboradorService.buscarPorId(colaboradorId));
+        Map<String, Object> response = new HashMap<>();
         
-        if (planoId != null) {
-            adesao.setPlanoSaude(planoService.buscarPorId(planoId));
+        try {
+            // Verificar se o colaborador já possui adesão ativa
+            if (adesaoService.colaboradorPossuiAdesaoAtiva(colaboradorId)) {
+                response.put("success", false);
+                response.put("message", "Colaborador já possui plano de saúde ativo");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            AdesaoPlanoSaude adesao = new AdesaoPlanoSaude();
+            adesao.setColaborador(colaboradorService.buscarPorId(colaboradorId));
+            
+            if (planoId != null) {
+                adesao.setPlanoSaude(planoService.buscarPorId(planoId));
+            }
+            
+            adesao.setTipoAdesao(tipoAdesao);
+            adesao.setDataAdesao(LocalDate.parse(dataVigencia));
+            adesao.setQuantidadeDependentes(quantidadeDependentes != null ? quantidadeDependentes : 0);
+            adesao.setObservacoes(observacoes);
+            
+            // Capturar o usuário que está fazendo a adesão
+            if (principal != null) {
+                Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+                adesao.setUsuarioCriacao(usuarioLogado);
+            }
+            
+            adesaoService.salvar(adesao);
+            
+            response.put("success", true);
+            response.put("message", "Adesão criada com sucesso!");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Erro ao criar adesão: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    // Editar adesão existente
+    @PostMapping("/salvar/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> editarAdesao(@PathVariable Long id,
+                                                           @RequestBody Map<String, Object> dados,
+                                                           Principal principal) {
+        Map<String, Object> response = new HashMap<>();
         
-        adesao.setTipoAdesao(tipoAdesao);
-        adesao.setDataAdesao(LocalDate.parse(dataVigencia));
-        adesao.setQuantidadeDependentes(quantidadeDependentes != null ? quantidadeDependentes : 0);
-        adesao.setObservacoes(observacoes);
-        
-        adesaoService.salvar(adesao);
-        return "redirect:/rh/beneficios/adesao";
+        try {
+            AdesaoPlanoSaude adesao = adesaoService.buscarPorId(id);
+            
+            // Atualizar dados da adesão
+            if (dados.containsKey("planoId") && dados.get("planoId") != null) {
+                Long planoId = Long.valueOf(dados.get("planoId").toString());
+                adesao.setPlanoSaude(planoService.buscarPorId(planoId));
+            }
+            
+            if (dados.containsKey("tipoAdesao")) {
+                adesao.setTipoAdesao(dados.get("tipoAdesao").toString());
+            }
+            
+            if (dados.containsKey("quantidadeDependentes")) {
+                Integer novaQuantidade = Integer.valueOf(dados.get("quantidadeDependentes").toString());
+                adesao.setQuantidadeDependentes(novaQuantidade);
+            }
+            
+            if (dados.containsKey("dataVigencia")) {
+                adesao.setDataAdesao(LocalDate.parse(dados.get("dataVigencia").toString()));
+            }
+            
+            if (dados.containsKey("observacoes")) {
+                String observacoesAtuais = adesao.getObservacoes() != null ? adesao.getObservacoes() : "";
+                String novasObservacoes = dados.get("observacoes").toString();
+                
+                // Capturar o usuário que está editando
+                String nomeUsuarioEditor = "Sistema";
+                if (principal != null) {
+                    Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+                    if (usuarioLogado != null) {
+                        nomeUsuarioEditor = usuarioLogado.getNome();
+                    }
+                }
+                
+                if (!observacoesAtuais.isEmpty()) {
+                    adesao.setObservacoes(observacoesAtuais + " | Edição por " + nomeUsuarioEditor + ": " + novasObservacoes);
+                } else {
+                    adesao.setObservacoes("Edição por " + nomeUsuarioEditor + ": " + novasObservacoes);
+                }
+            }
+            
+            // Salvar as alterações
+            adesaoService.salvar(adesao);
+            
+            response.put("success", true);
+            response.put("message", "Adesão editada com sucesso!");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Erro ao editar adesão: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     // Cancelar adesão
@@ -137,10 +268,90 @@ public class AdesaoPlanoSaudeController {
             response.put("status", adesao.getStatus());
             response.put("observacoes", adesao.getObservacoes());
             response.put("dataCriacao", adesao.getDataCriacao() != null ? adesao.getDataCriacao().toString() : "");
+            
+            // Informações do usuário que criou a adesão
+            if (adesao.getUsuarioCriacao() != null) {
+                response.put("usuarioCriacaoId", adesao.getUsuarioCriacao().getId());
+                response.put("usuarioCriacaoNome", adesao.getUsuarioCriacao().getNome());
+                response.put("usuarioCriacaoEmail", adesao.getUsuarioCriacao().getEmail());
+            } else {
+                response.put("usuarioCriacaoId", null);
+                response.put("usuarioCriacaoNome", "Não informado");
+                response.put("usuarioCriacaoEmail", "Não informado");
+            }
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Endpoint de detalhes (usado pelo JavaScript para modal de detalhes)
+    @GetMapping("/detalhes/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> buscarDetalhesAdesao(@PathVariable Long id) {
+        try {
+            AdesaoPlanoSaude adesao = adesaoService.buscarPorId(id);
+            if (adesao == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Adesão não encontrada");
+                return ((BodyBuilder) ResponseEntity.notFound()).body(errorResponse);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            
+            Map<String, Object> adesaoData = new HashMap<>();
+            adesaoData.put("id", adesao.getId());
+            
+            // Informações do colaborador
+            Map<String, Object> colaborador = new HashMap<>();
+            colaborador.put("nome", adesao.getColaborador().getNome());
+            colaborador.put("id", adesao.getColaborador().getId());
+            if (adesao.getColaborador().getDepartamento() != null) {
+                Map<String, Object> departamento = new HashMap<>();
+                departamento.put("nome", adesao.getColaborador().getDepartamento().getNome());
+                colaborador.put("departamento", departamento);
+            }
+            adesaoData.put("colaborador", colaborador);
+            
+            // Informações do plano de saúde
+            if (adesao.getPlanoSaude() != null) {
+                Map<String, Object> planoSaude = new HashMap<>();
+                planoSaude.put("nome", adesao.getPlanoSaude().getNome());
+                planoSaude.put("operadora", adesao.getPlanoSaude().getOperadora());
+                adesaoData.put("planoSaude", planoSaude);
+            }
+            
+            adesaoData.put("tipoAdesao", adesao.getTipoAdesao());
+            adesaoData.put("quantidadeDependentes", adesao.getQuantidadeDependentes());
+            adesaoData.put("dataAdesao", adesao.getDataAdesao() != null ? adesao.getDataAdesao().toString() : null);
+            adesaoData.put("dataVigenciaInicio", adesao.getDataVigenciaInicio() != null ? adesao.getDataVigenciaInicio().toString() : null);
+            adesaoData.put("valorMensalTitular", adesao.getValorMensalTitular());
+            adesaoData.put("valorMensalDependentes", adesao.getValorMensalDependentes());
+            adesaoData.put("valorTotalMensal", adesao.getValorTotalMensal());
+            adesaoData.put("status", adesao.getStatus() != null ? adesao.getStatus().name() : null);
+            adesaoData.put("observacoes", adesao.getObservacoes());
+            adesaoData.put("dataCriacao", adesao.getDataCriacao() != null ? adesao.getDataCriacao().toString() : null);
+            
+            // Informações do usuário que criou a adesão
+            if (adesao.getUsuarioCriacao() != null) {
+                adesaoData.put("usuarioCriacaoNome", adesao.getUsuarioCriacao().getNome());
+                adesaoData.put("usuarioCriacaoEmail", adesao.getUsuarioCriacao().getEmail());
+            } else {
+                adesaoData.put("usuarioCriacaoNome", "Não informado");
+                adesaoData.put("usuarioCriacaoEmail", "Não informado");
+            }
+            
+            response.put("adesao", adesaoData);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Erro interno do servidor: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 

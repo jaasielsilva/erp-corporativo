@@ -10,6 +10,7 @@ import com.jaasielsilva.portalceo.repository.AdesaoPlanoSaudeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -111,6 +112,20 @@ public class AdesaoPlanoSaudeService {
      */
     public List<AdesaoPlanoSaude> listarTodosAtivos() {
         return repository.findByStatus(AdesaoPlanoSaude.StatusAdesao.ATIVA);
+    }
+
+    /**
+     * Verifica se o colaborador já possui uma adesão ativa
+     */
+    public boolean colaboradorPossuiAdesaoAtiva(Long colaboradorId) {
+        return repository.findAdesaoAtivaByColaborador(colaboradorId).isPresent();
+    }
+
+    /**
+     * Busca adesão ativa do colaborador
+     */
+    public Optional<AdesaoPlanoSaude> buscarAdesaoAtivaDoColaborador(Long colaboradorId) {
+        return repository.findAdesaoAtivaByColaborador(colaboradorId);
     }
 
     /**

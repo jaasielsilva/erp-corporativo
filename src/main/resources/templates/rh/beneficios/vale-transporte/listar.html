@@ -6,8 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Vale Transporte - ERP Corporativo</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
 </head>
 
 <body>
@@ -44,8 +48,8 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Colaboradores Ativos</h4>
-                  <div class="resumo-valor">12</div>
-                  <div class="resumo-detalhes">de 15 colaboradores</div>
+                  <div class="resumo-valor" th:text="${resumo.totalValesAtivos != null ? resumo.totalValesAtivos : 0}">0</div>
+                  <div class="resumo-detalhes" th:text="'de ' + ${resumo.totalColaboradoresAtivos != null ? resumo.totalColaboradoresAtivos : 0} + ' colaboradores'">de 0 colaboradores</div>
                 </div>
               </div>
               
@@ -55,8 +59,8 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Custo Total</h4>
-                  <div class="resumo-valor">R$ 2.640,00</div>
-                  <div class="resumo-detalhes">Novembro/2023</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(resumo.custoTotalMes != null ? resumo.custoTotalMes : 0)}">R$ 0,00</div>
+                  <div class="resumo-detalhes" th:text="${resumo.mesAnoFormatado}">Referência</div>
                 </div>
               </div>
               
@@ -66,8 +70,8 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Desconto Colaboradores</h4>
-                  <div class="resumo-valor">R$ 1.584,00</div>
-                  <div class="resumo-detalhes">60% do total</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(resumo.totalDescontoColaboradores != null ? resumo.totalDescontoColaboradores : 0)}">R$ 0,00</div>
+                  <div class="resumo-detalhes" th:text="${#numbers.formatDecimal(resumo.percentualDesconto != null ? resumo.percentualDesconto : 0, 1, 1)} + '% do total'">0% do total</div>
                 </div>
               </div>
               
@@ -77,8 +81,8 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Custo Empresa</h4>
-                  <div class="resumo-valor">R$ 1.056,00</div>
-                  <div class="resumo-detalhes">40% do total</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(resumo.totalSubsidioEmpresa != null ? resumo.totalSubsidioEmpresa : 0)}">R$ 0,00</div>
+                  <div class="resumo-detalhes" th:text="${#numbers.formatDecimal(resumo.percentualSubsidio != null ? resumo.percentualSubsidio : 0, 1, 1)} + '% do total'">0% do total</div>
                 </div>
               </div>
             </div>
@@ -88,12 +92,12 @@
         <!-- Configurações -->
         <article class="card">
           <h3><i class="fas fa-cogs"></i> Configurações do Vale Transporte</h3>
-          <form class="form-container">
+          <form class="form-container" th:object="${configuracao}">
             <div class="form-row">
               <div class="form-group">
                 <label for="percentualDesconto">Percentual de Desconto do Colaborador</label>
                 <div class="input-group">
-                  <input type="number" id="percentualDesconto" name="percentualDesconto" class="form-control" value="6" min="0" max="100" step="0.1">
+                  <input type="number" id="percentualDesconto" th:field="*{percentualDesconto}" class="form-control" min="0" max="100" step="0.1">
                   <span class="input-group-text">%</span>
                 </div>
                 <small class="form-text">Máximo legal: 6% do salário base</small>
@@ -102,12 +106,12 @@
                 <label for="valorPassagem">Valor da Passagem</label>
                 <div class="input-group">
                   <span class="input-group-text">R$</span>
-                  <input type="number" id="valorPassagem" name="valorPassagem" class="form-control" value="4.40" step="0.01">
+                  <input type="number" id="valorPassagem" th:field="*{valorPassagem}" class="form-control" step="0.01">
                 </div>
               </div>
               <div class="form-group">
                 <label for="diasUteis">Dias Úteis do Mês</label>
-                <input type="number" id="diasUteis" name="diasUteis" class="form-control" value="22" min="1" max="31">
+                <input type="number" id="diasUteis" th:field="*{diasUteisPadrao}" class="form-control" min="1" max="31">
               </div>
             </div>
             <div class="form-actions">
@@ -121,33 +125,35 @@
         <!-- Filtros -->
         <article class="card">
           <h3><i class="fas fa-filter"></i> Filtros</h3>
-          <form class="form-container">
+          <form class="form-container" method="get" th:action="@{/rh/beneficios/vale-transporte/listar}">
             <div class="form-row">
               <div class="form-group">
                 <label for="mesReferencia">Mês de Referência</label>
-                <input type="month" id="mesReferencia" name="mesReferencia" class="form-control" value="2023-11">
+                <input type="month" id="mesReferencia" name="mesReferencia" class="form-control" 
+                       th:value="${anoAtual + '-' + (#strings.length(mesAtual) == 1 ? '0' + mesAtual : mesAtual)}">
               </div>
               <div class="form-group">
                 <label for="statusVT">Status</label>
                 <select id="statusVT" name="status" class="form-control">
-                  <option value="">Todos</option>
-                  <option value="ativo">Ativo</option>
-                  <option value="suspenso">Suspenso</option>
-                  <option value="cancelado">Cancelado</option>
+                  <option value="" th:selected="${statusFiltro == null or statusFiltro == ''}">Todos</option>
+                  <option value="ATIVO" th:selected="${statusFiltro == 'ATIVO'}">Ativo</option>
+                  <option value="SUSPENSO" th:selected="${statusFiltro == 'SUSPENSO'}">Suspenso</option>
+                  <option value="CANCELADO" th:selected="${statusFiltro == 'CANCELADO'}">Cancelado</option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="departamentoVT">Departamento</label>
                 <select id="departamentoVT" name="departamento" class="form-control">
-                  <option value="">Todos os departamentos</option>
-                  <option value="ti">TI</option>
-                  <option value="vendas">Vendas</option>
-                  <option value="financeiro">Financeiro</option>
-                  <option value="rh">RH</option>
+                  <option value="" th:selected="${departamentoFiltro == null or departamentoFiltro == ''}">Todos os departamentos</option>
+                  <!-- Aqui poderiam ser carregados os departamentos dinamicamente -->
+                  <option value="ti" th:selected="${departamentoFiltro == 'ti'}">TI</option>
+                  <option value="vendas" th:selected="${departamentoFiltro == 'vendas'}">Vendas</option>
+                  <option value="financeiro" th:selected="${departamentoFiltro == 'financeiro'}">Financeiro</option>
+                  <option value="rh" th:selected="${departamentoFiltro == 'rh'}">RH</option>
                 </select>
               </div>
               <div class="form-group">
-                <button type="button" onclick="filtrarVales()" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary">
                   <i class="fas fa-search"></i> Filtrar
                 </button>
               </div>
@@ -158,155 +164,87 @@
         <!-- Lista de Colaboradores -->
         <article class="card">
           <h3><i class="fas fa-list"></i> Vale Transporte por Colaborador</h3>
-          <table class="table-list">
-            <thead>
-              <tr>
-                <th>Colaborador</th>
-                <th>Departamento</th>
-                <th>Trajeto</th>
-                <th>Viagens/Dia</th>
-                <th>Dias Úteis</th>
-                <th>Valor Total</th>
-                <th>Desconto (6%)</th>
-                <th>Valor Líquido</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>João Silva</strong><br>
-                    <small>Matrícula: 001</small>
-                  </div>
-                </td>
-                <td>TI</td>
-                <td>
-                  <div class="trajeto-info">
-                    <strong>Casa → Trabalho</strong><br>
-                    <small>2 linhas de ônibus</small>
-                  </div>
-                </td>
-                <td class="text-center">4</td>
-                <td class="text-center">22</td>
-                <td><strong>R$ 387,20</strong></td>
-                <td>R$ 232,32</td>
-                <td>R$ 154,88</td>
-                <td><span class="status-badge status-ativo">Ativo</span></td>
-                <td>
-                  <button onclick="editarVT(1)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(1)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button onclick="suspenderVT(1)" class="btn-icon btn-warning" title="Suspender">
-                    <i class="fas fa-pause"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Maria Santos</strong><br>
-                    <small>Matrícula: 002</small>
-                  </div>
-                </td>
-                <td>Vendas</td>
-                <td>
-                  <div class="trajeto-info">
-                    <strong>Casa → Trabalho</strong><br>
-                    <small>1 linha de metrô</small>
-                  </div>
-                </td>
-                <td class="text-center">2</td>
-                <td class="text-center">22</td>
-                <td><strong>R$ 193,60</strong></td>
-                <td>R$ 116,16</td>
-                <td>R$ 77,44</td>
-                <td><span class="status-badge status-ativo">Ativo</span></td>
-                <td>
-                  <button onclick="editarVT(2)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(2)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button onclick="suspenderVT(2)" class="btn-icon btn-warning" title="Suspender">
-                    <i class="fas fa-pause"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Carlos Oliveira</strong><br>
-                    <small>Matrícula: 003</small>
-                  </div>
-                </td>
-                <td>Financeiro</td>
-                <td>
-                  <div class="trajeto-info">
-                    <strong>Não utiliza</strong><br>
-                    <small>Veículo próprio</small>
-                  </div>
-                </td>
-                <td class="text-center">-</td>
-                <td class="text-center">-</td>
-                <td><strong>R$ 0,00</strong></td>
-                <td>R$ 0,00</td>
-                <td>R$ 0,00</td>
-                <td><span class="status-badge status-cancelado">Não Utiliza</span></td>
-                <td>
-                  <button onclick="ativarVT(3)" class="btn-icon btn-success" title="Ativar">
-                    <i class="fas fa-play"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Ana Costa</strong><br>
-                    <small>Matrícula: 004</small>
-                  </div>
-                </td>
-                <td>Design</td>
-                <td>
-                  <div class="trajeto-info">
-                    <strong>Casa → Trabalho</strong><br>
-                    <small>1 linha de ônibus</small>
-                  </div>
-                </td>
-                <td class="text-center">2</td>
-                <td class="text-center">15</td>
-                <td><strong>R$ 132,00</strong></td>
-                <td>R$ 79,20</td>
-                <td>R$ 52,80</td>
-                <td><span class="status-badge status-suspenso">Suspenso</span></td>
-                <td>
-                  <button onclick="editarVT(4)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(4)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button onclick="reativarVT(4)" class="btn-icon btn-success" title="Reativar">
-                    <i class="fas fa-play"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="total-row">
-                <td colspan="5"><strong>TOTAIS</strong></td>
-                <td><strong>R$ 712,80</strong></td>
-                <td><strong>R$ 427,68</strong></td>
-                <td><strong>R$ 285,12</strong></td>
-                <td colspan="2"></td>
-              </tr>
-            </tfoot>
-          </table>
+          <div th:if="${vales != null and !vales.isEmpty()}">
+            <table class="table-list">
+              <thead>
+                <tr>
+                  <th>Colaborador</th>
+                  <th>Departamento</th>
+                  <th>Trajeto</th>
+                  <th>Viagens/Dia</th>
+                  <th>Dias Úteis</th>
+                  <th>Valor Total</th>
+                  <th>Desconto (6%)</th>
+                  <th>Valor Líquido</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="vale : ${vales}">
+                  <td>
+                    <div class="colaborador-info">
+                      <strong th:text="${vale.nomeColaborador}">Nome do Colaborador</strong><br>
+                      <small th:text="'Matrícula: ' + ${vale.matriculaColaborador}">Matrícula: 000</small>
+                    </div>
+                  </td>
+                  <td th:text="${vale.departamento}">Departamento</td>
+                  <td>
+                    <div class="trajeto-info">
+                      <strong th:text="${vale.trajetoFormatado}">Casa → Trabalho</strong><br>
+                      <small th:text="${vale.linhaOnibus != null ? vale.linhaOnibus : 'Linha não informada'}">Linha de ônibus</small>
+                    </div>
+                  </td>
+                  <td class="text-center" th:text="${vale.viagensDia}">0</td>
+                  <td class="text-center" th:text="${vale.diasUteis}">0</td>
+                  <td><strong th:text="${#numbers.formatCurrency(vale.valorTotalMes != null ? vale.valorTotalMes : 0)}">R$ 0,00</strong></td>
+                  <td th:text="${#numbers.formatCurrency(vale.valorDesconto != null ? vale.valorDesconto : 0)}">R$ 0,00</td>
+                  <td th:text="${#numbers.formatCurrency(vale.valorSubsidioEmpresa != null ? vale.valorSubsidioEmpresa : 0)}">R$ 0,00</td>
+                  <td>
+                    <span class="status-badge" th:classappend="${vale.statusCssClass}" th:text="${vale.statusDescricao}">Status</span>
+                  </td>
+                  <td>
+                    <button th:onclick="'editarVT(' + ${vale.id} + ')'" class="btn-icon" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button th:onclick="'verDetalhes(' + ${vale.id} + ')'" class="btn-icon" title="Ver Detalhes">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button th:if="${vale.status.name() == 'ATIVO'}" th:onclick="'suspenderVT(' + ${vale.id} + ')'" class="btn-icon btn-warning" title="Suspender">
+                      <i class="fas fa-pause"></i>
+                    </button>
+                    <button th:if="${vale.status.name() == 'SUSPENSO'}" th:onclick="'reativarVT(' + ${vale.id} + ')'" class="btn-icon btn-success" title="Reativar">
+                      <i class="fas fa-play"></i>
+                    </button>
+                    <button th:if="${vale.status.name() == 'CANCELADO'}" th:onclick="'ativarVT(' + ${vale.id} + ')'" class="btn-icon btn-success" title="Ativar">
+                      <i class="fas fa-play"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot th:if="${vales != null and !vales.isEmpty()}">
+                <tr class="total-row">
+                  <td colspan="5"><strong>TOTAIS</strong></td>
+                  <td><strong th:text="${#numbers.formatCurrency(vales.stream().mapToDouble(v -> v.valorTotalMes != null ? v.valorTotalMes.doubleValue() : 0).sum())}">R$ 0,00</strong></td>
+                  <td><strong th:text="${#numbers.formatCurrency(vales.stream().mapToDouble(v -> v.valorDesconto != null ? v.valorDesconto.doubleValue() : 0).sum())}">R$ 0,00</strong></td>
+                  <td><strong th:text="${#numbers.formatCurrency(vales.stream().mapToDouble(v -> v.valorSubsidioEmpresa != null ? v.valorSubsidioEmpresa.doubleValue() : 0).sum())}">R$ 0,00</strong></td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          
+          <!-- Mensagem quando não há dados -->
+          <div th:if="${vales == null or vales.isEmpty()}" class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-bus"></i>
+            </div>
+            <h4>Nenhum vale transporte encontrado</h4>
+            <p>Não há vales transporte cadastrados para os filtros selecionados.</p>
+            <button onclick="abrirModalSolicitacao()" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Cadastrar Primeiro Vale
+            </button>
+          </div>
         </article>
 
         <!-- Histórico de Alterações -->
@@ -495,7 +433,7 @@
     
     function calcularValorDiario() {
       const viagens = document.getElementById('viagensDia').value;
-      const valorPassagem = 4.40; // Valor configurado
+      const valorPassagem = parseFloat(document.getElementById('valorPassagem').value) || 4.40;
       
       if (viagens) {
         const valorDiario = viagens * valorPassagem;
@@ -506,68 +444,148 @@
     function salvarSolicitacao() {
       const form = document.querySelector('#modalSolicitacao form');
       if (form.checkValidity()) {
-        alert('Solicitação salva com sucesso!');
-        fecharModalSolicitacao();
-        location.reload();
+        // Redirecionar para o formulário de cadastro real
+        window.location.href = '/rh/beneficios/vale-transporte/novo';
       } else {
         alert('Por favor, preencha todos os campos obrigatórios.');
       }
     }
     
     function salvarConfiguracoes() {
-      alert('Configurações salvas com sucesso!');
+      const percentual = document.getElementById('percentualDesconto').value;
+      const valorPassagem = document.getElementById('valorPassagem').value;
+      const diasUteis = document.getElementById('diasUteis').value;
+      
+      if (percentual && valorPassagem && diasUteis) {
+        alert('Configurações salvas com sucesso!');
+      } else {
+        alert('Por favor, preencha todos os campos de configuração.');
+      }
     }
     
     function calcularVales() {
-      if (confirm('Deseja calcular os vales transporte para o mês atual? Esta ação irá recalcular todos os valores.')) {
-        alert('Calculando vales transporte...');
-        // Simular processamento
-        setTimeout(() => {
-          alert('Cálculo concluído com sucesso!');
-          location.reload();
-        }, 2000);
+      if (confirm('Deseja calcular os vales transporte para o mês atual? Esta ação irá processar todos os colaboradores ativos.')) {
+        const mes = new Date().getMonth() + 1;
+        const ano = new Date().getFullYear();
+        const diasUteis = document.getElementById('diasUteis').value || 22;
+        const valorPassagem = parseFloat(document.getElementById('valorPassagem').value) || 4.40;
+        const percentualDesconto = parseFloat(document.getElementById('percentualDesconto').value) || 6.0;
+        
+        const config = {
+          diasUteisPadrao: parseInt(diasUteis),
+          valorPassagem: valorPassagem,
+          percentualDesconto: percentualDesconto
+        };
+        
+        fetch(`/rh/beneficios/vale-transporte/api/calcular-mes?mes=${mes}&ano=${ano}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(config)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.sucesso) {
+            alert(data.mensagem);
+            location.reload();
+          } else {
+            alert('Erro: ' + data.erro);
+          }
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+          alert('Erro ao processar cálculo mensal.');
+        });
       }
     }
     
     function editarVT(id) {
-      alert(`Editando vale transporte do colaborador ${id}`);
+      window.location.href = `/rh/beneficios/vale-transporte/editar/${id}`;
     }
     
     function verDetalhes(id) {
+      // Implementar modal de detalhes ou página de detalhes
       alert(`Visualizando detalhes do vale transporte ${id}`);
     }
     
     function suspenderVT(id) {
       const motivo = prompt('Motivo da suspensão:');
       if (motivo) {
-        alert(`Vale transporte ${id} suspenso. Motivo: ${motivo}`);
+        fetch(`/rh/beneficios/vale-transporte/api/suspender/${id}?motivo=${encodeURIComponent(motivo)}`, {
+          method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.sucesso) {
+            alert(data.mensagem);
+            location.reload();
+          } else {
+            alert('Erro: ' + data.erro);
+          }
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+          alert('Erro ao suspender vale transporte.');
+        });
       }
     }
     
     function reativarVT(id) {
       if (confirm('Tem certeza que deseja reativar este vale transporte?')) {
-        alert(`Vale transporte ${id} reativado com sucesso!`);
+        fetch(`/rh/beneficios/vale-transporte/api/reativar/${id}`, {
+          method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.sucesso) {
+            alert(data.mensagem);
+            location.reload();
+          } else {
+            alert('Erro: ' + data.erro);
+          }
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+          alert('Erro ao reativar vale transporte.');
+        });
       }
     }
     
     function ativarVT(id) {
       if (confirm('Deseja ativar o vale transporte para este colaborador?')) {
-        abrirModalSolicitacao();
-        // Pré-selecionar o colaborador
-        document.getElementById('colaboradorVT').value = id;
+        // Redirecionar para novo vale com colaborador pré-selecionado
+        window.location.href = `/rh/beneficios/vale-transporte/novo?colaboradorId=${id}`;
       }
     }
     
-    function filtrarVales() {
-      alert('Aplicando filtros...');
-    }
-    
     function exportarRelatorio() {
+      const mes = document.getElementById('mesReferencia').value;
+      const status = document.getElementById('statusVT').value;
+      const departamento = document.getElementById('departamentoVT').value;
+      
+      let params = new URLSearchParams();
+      if (mes) params.append('mes', mes);
+      if (status) params.append('status', status);
+      if (departamento) params.append('departamento', departamento);
+      
+      // Implementar exportação
       alert('Exportando relatório de vale transporte...');
+      // window.location.href = `/rh/beneficios/vale-transporte/api/relatorio?${params.toString()}`;
     }
     
     // Event listeners
-    document.getElementById('viagensDia').addEventListener('change', calcularValorDiario);
+    document.addEventListener('DOMContentLoaded', function() {
+      const viagensSelect = document.getElementById('viagensDia');
+      if (viagensSelect) {
+        viagensSelect.addEventListener('change', calcularValorDiario);
+      }
+      
+      const valorPassagemInput = document.getElementById('valorPassagem');
+      if (valorPassagemInput) {
+        valorPassagemInput.addEventListener('change', calcularValorDiario);
+      }
+    });
   </script>
   
   <style>
@@ -701,6 +719,28 @@
       font-size: 12px;
       color: #6c757d;
       margin-top: 4px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+    
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .empty-state h4 {
+      margin-bottom: 10px;
+      color: #495057;
+    }
+    
+    .empty-state p {
+      margin-bottom: 30px;
+      font-size: 16px;
     }
   </style>
   <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->

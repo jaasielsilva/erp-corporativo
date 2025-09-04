@@ -1,47 +1,322 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Cadastro de Vale Transporte</title>
-    <link href="/css/style.css" rel="stylesheet"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${vale.id != null ? 'Editar Vale Transporte' : 'Novo Vale Transporte'}">Cadastro de Vale Transporte</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
 </head>
 <body>
-<h2 th:text="${vale.id != null ? 'Editar Vale Transporte' : 'Novo Vale Transporte'}"></h2>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-<form th:action="@{/rh/beneficios/vale-transporte/salvar}" th:object="${vale}" method="post">
-    <input type="hidden" th:field="*{id}"/>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-    <label>Mês Referência:</label>
-    <input type="number" th:field="*{mesReferencia}"/><br>
+            <section class="content-area">
+                <div class="page-header">
+                    <h1><i class="fas fa-bus"></i> <span th:text="${vale.id != null ? 'Editar Vale Transporte' : 'Novo Vale Transporte'}">Cadastro de Vale Transporte</span></h1>
+                    <div class="breadcrumb">
+                        <a th:href="@{/rh/beneficios/vale-transporte/listar}">Vale Transporte</a>
+                        <span>></span>
+                        <span th:text="${vale.id != null ? 'Editar' : 'Novo'}">Novo</span>
+                    </div>
+                </div>
 
-    <label>Ano Referência:</label>
-    <input type="number" th:field="*{anoReferencia}"/><br>
+                <!-- Formulário Principal -->
+                <article class="card">
+                    <h3><i class="fas fa-edit"></i> Dados do Vale Transporte</h3>
+                    
+                    <!-- Exibir erros se houver -->
+                    <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger">
+                        <h4>Erros de validação:</h4>
+                        <ul>
+                            <li th:each="error : ${#fields.allErrors()}" th:text="${error}">Erro</li>
+                        </ul>
+                    </div>
 
-    <label>Dias Úteis:</label>
-    <input type="number" th:field="*{diasUteis}"/><br>
+                    <form th:action="@{${vale.id != null ? '/rh/beneficios/vale-transporte/atualizar/' + vale.id : '/rh/beneficios/vale-transporte/salvar'}}" 
+                          th:object="${vale}" method="post" class="form-container">
+                        
+                        <input type="hidden" th:field="*{id}"/>
 
-    <label>Valor Passagem:</label>
-    <input type="text" th:field="*{valorPassagem}"/><br>
+                        <!-- Informações Básicas -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-info-circle"></i> Informações Básicas</h4>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="colaborador">Colaborador *</label>
+                                    <select th:field="*{colaborador.id}" id="colaborador" class="form-control" required>
+                                        <option value="">Selecione um colaborador...</option>
+                                        <option th:each="colaborador : ${colaboradores}" 
+                                                th:value="${colaborador.id}" 
+                                                th:text="${colaborador.nome + ' - ' + (colaborador.departamento != null ? colaborador.departamento.nome : 'N/A')}"
+                                                th:selected="${vale.colaborador != null and vale.colaborador.id == colaborador.id}">
+                                            Colaborador
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="status">Status</label>
+                                    <select th:field="*{status}" id="status" class="form-control">
+                                        <option th:value="ATIVO" th:selected="${vale.status == T(com.jaasielsilva.portalceo.model.ValeTransporte.StatusValeTransporte).ATIVO}">Ativo</option>
+                                        <option th:value="SUSPENSO" th:selected="${vale.status == T(com.jaasielsilva.portalceo.model.ValeTransporte.StatusValeTransporte).SUSPENSO}">Suspenso</option>
+                                        <option th:value="CANCELADO" th:selected="${vale.status == T(com.jaasielsilva.portalceo.model.ValeTransporte.StatusValeTransporte).CANCELADO}">Cancelado</option>
+                                    </select>
+                                </div>
+                            </div>
 
-    <label>Linha Ônibus:</label>
-    <input type="text" th:field="*{linhaOnibus}"/><br>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="mesReferencia">Mês Referência *</label>
+                                    <select th:field="*{mesReferencia}" id="mesReferencia" class="form-control" required>
+                                        <option value="">Selecione o mês...</option>
+                                        <option th:value="1" th:selected="${vale.mesReferencia == 1}">Janeiro</option>
+                                        <option th:value="2" th:selected="${vale.mesReferencia == 2}">Fevereiro</option>
+                                        <option th:value="3" th:selected="${vale.mesReferencia == 3}">Março</option>
+                                        <option th:value="4" th:selected="${vale.mesReferencia == 4}">Abril</option>
+                                        <option th:value="5" th:selected="${vale.mesReferencia == 5}">Maio</option>
+                                        <option th:value="6" th:selected="${vale.mesReferencia == 6}">Junho</option>
+                                        <option th:value="7" th:selected="${vale.mesReferencia == 7}">Julho</option>
+                                        <option th:value="8" th:selected="${vale.mesReferencia == 8}">Agosto</option>
+                                        <option th:value="9" th:selected="${vale.mesReferencia == 9}">Setembro</option>
+                                        <option th:value="10" th:selected="${vale.mesReferencia == 10}">Outubro</option>
+                                        <option th:value="11" th:selected="${vale.mesReferencia == 11}">Novembro</option>
+                                        <option th:value="12" th:selected="${vale.mesReferencia == 12}">Dezembro</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="anoReferencia">Ano Referência *</label>
+                                    <input type="number" th:field="*{anoReferencia}" id="anoReferencia" class="form-control" 
+                                           th:value="${vale.anoReferencia != null ? vale.anoReferencia : anoAtual}" 
+                                           min="2020" max="2030" required/>
+                                </div>
+                            </div>
+                        </div>
 
-    <label>Origem:</label>
-    <input type="text" th:field="*{enderecoOrigem}"/><br>
+                        <!-- Informações de Transporte -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-route"></i> Informações de Transporte</h4>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="diasUteis">Dias Úteis do Mês *</label>
+                                    <input type="number" th:field="*{diasUteis}" id="diasUteis" class="form-control" 
+                                           min="1" max="31" value="22" required onchange="calcularValores()"/>
+                                    <small class="form-text">Quantidade de dias úteis trabalhados no mês</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="viagensDia">Viagens por Dia *</label>
+                                    <select th:field="*{viagensDia}" id="viagensDia" class="form-control" required onchange="calcularValores()">
+                                        <option value="">Selecione...</option>
+                                        <option th:value="2" th:selected="${vale.viagensDia == 2}">2 viagens (ida e volta)</option>
+                                        <option th:value="4" th:selected="${vale.viagensDia == 4}">4 viagens (ida, volta + integração)</option>
+                                        <option th:value="6" th:selected="${vale.viagensDia == 6}">6 viagens (ida, volta + 2 integrações)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="valorPassagem">Valor da Passagem *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" th:field="*{valorPassagem}" id="valorPassagem" class="form-control" 
+                                               step="0.01" min="0" value="4.40" required onchange="calcularValores()"/>
+                                    </div>
+                                </div>
+                            </div>
 
-    <label>Destino:</label>
-    <input type="text" th:field="*{enderecoDestino}"/><br>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="linhaOnibus">Linha/Transporte</label>
+                                    <input type="text" th:field="*{linhaOnibus}" id="linhaOnibus" class="form-control" 
+                                           placeholder="Ex: Linha 123, Metrô Azul, Van Escolar"/>
+                                </div>
+                            </div>
 
-    <label>Status:</label>
-    <select th:field="*{status}">
-        <option th:value="ATIVO">Ativo</option>
-        <option th:value="SUSPENSO">Suspenso</option>
-        <option th:value="CANCELADO">Cancelado</option>
-    </select><br>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="enderecoOrigem">Endereço de Origem</label>
+                                    <input type="text" th:field="*{enderecoOrigem}" id="enderecoOrigem" class="form-control" 
+                                           placeholder="Endereço de residência ou ponto de partida"/>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="enderecoDestino">Endereço de Destino</label>
+                                    <input type="text" th:field="*{enderecoDestino}" id="enderecoDestino" class="form-control" 
+                                           placeholder="Endereço do trabalho ou ponto de chegada"/>
+                                </div>
+                            </div>
+                        </div>
 
-    <label>Observações:</label>
-    <textarea th:field="*{observacoes}"></textarea><br>
+                        <!-- Cálculos Automáticos -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-calculator"></i> Cálculos Automáticos</h4>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="valorTotalMes">Valor Total do Mês</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" th:field="*{valorTotalMes}" id="valorTotalMes" class="form-control" readonly/>
+                                    </div>
+                                    <small class="form-text">Calculado automaticamente: Dias Úteis × Viagens/Dia × Valor Passagem</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="valorDesconto">Desconto do Colaborador (6%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" th:field="*{valorDesconto}" id="valorDesconto" class="form-control" readonly/>
+                                    </div>
+                                    <small class="form-text">Máximo de 6% do salário base</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="valorSubsidioEmpresa">Subsídio da Empresa</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" th:field="*{valorSubsidioEmpresa}" id="valorSubsidioEmpresa" class="form-control" readonly/>
+                                    </div>
+                                    <small class="form-text">Valor Total - Desconto do Colaborador</small>
+                                </div>
+                            </div>
+                        </div>
 
-    <button type="submit">Salvar</button>
-</form>
+                        <!-- Observações -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-comment"></i> Observações</h4>
+                            
+                            <div class="form-group">
+                                <label for="observacoes">Observações</label>
+                                <textarea th:field="*{observacoes}" id="observacoes" class="form-control" rows="4" 
+                                          placeholder="Informações adicionais sobre o vale transporte..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="form-actions">
+                            <button type="button" onclick="history.back()" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> <span th:text="${vale.id != null ? 'Atualizar' : 'Salvar'}">Salvar</span>
+                            </button>
+                        </div>
+                    </form>
+                </article>
+            </section>
+
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        function calcularValores() {
+            const diasUteis = parseInt(document.getElementById('diasUteis').value) || 0;
+            const viagensDia = parseInt(document.getElementById('viagensDia').value) || 0;
+            const valorPassagem = parseFloat(document.getElementById('valorPassagem').value) || 0;
+            
+            if (diasUteis > 0 && viagensDia > 0 && valorPassagem > 0) {
+                const valorTotal = diasUteis * viagensDia * valorPassagem;
+                
+                // Simular cálculo do desconto (6% máximo do salário)
+                // Em um caso real, seria necessário buscar o salário do colaborador
+                const salarioBase = 1500; // Valor exemplo
+                const descontoMaximo = salarioBase * 0.06;
+                const valorDesconto = Math.min(valorTotal, descontoMaximo);
+                const valorSubsidio = valorTotal - valorDesconto;
+                
+                document.getElementById('valorTotalMes').value = valorTotal.toFixed(2);
+                document.getElementById('valorDesconto').value = valorDesconto.toFixed(2);
+                document.getElementById('valorSubsidioEmpresa').value = valorSubsidio.toFixed(2);
+            }
+        }
+        
+        // Calcular valores ao carregar a página se já houver dados
+        document.addEventListener('DOMContentLoaded', function() {
+            calcularValores();
+        });
+    </script>
+
+    <style>
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .form-section h4 {
+            margin-bottom: 20px;
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+        }
+        
+        .breadcrumb {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .breadcrumb a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .input-group {
+            display: flex;
+        }
+        
+        .input-group-text {
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-right: none;
+            padding: 8px 12px;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .form-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+    </style>
+
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:src="@{/js/sidebar.js}"></script>
 </body>
 </html>

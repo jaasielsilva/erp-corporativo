@@ -107,7 +107,7 @@ public class AdesaoColaboradorDTO {
     private Map<String, String> documentosUpload; // nome_documento -> caminho_arquivo
     
     private List<String> documentosObrigatorios = List.of(
-        "RG", "CPF", "Comprovante de Endereço", "Foto 3x4"
+        "RG", "CPF", "Comprovante de Endereço"
     );
     
     private List<String> documentosOpcionais = List.of(

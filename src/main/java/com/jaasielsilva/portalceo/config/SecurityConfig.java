@@ -195,10 +195,25 @@ public class SecurityConfig {
                 plano.setPercentualEmpresa(BigDecimal.valueOf(80));
                 plano.setObservacoes(observacoes);
 
-                // gera código automaticamente (primeiras 4 letras da operadora + 3 números
-                // aleatórios)
-                String codigo = operadora.substring(0, Math.min(4, operadora.length())).toUpperCase()
+                // Usar códigos predefinidos baseados no tipo ao invés de aleatórios
+                String codigo;
+                switch (tipo) {
+                    case BASICO:
+                        codigo = "basico";
+                        break;
+                    case INTERMEDIARIO:
+                        codigo = "intermediario";
+                        break;
+                    case PREMIUM:
+                        codigo = "premium";
+                        break;
+                    case EXECUTIVO:
+                        codigo = "executivo";
+                        break;
+                    default:
+                        codigo = operadora.substring(0, Math.min(4, operadora.length())).toUpperCase()
                                 + String.format("%03d", new Random().nextInt(1000));
+                }
                 plano.setCodigo(codigo);
 
                 return plano;

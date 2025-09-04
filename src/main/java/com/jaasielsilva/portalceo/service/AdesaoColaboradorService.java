@@ -307,6 +307,26 @@ public class AdesaoColaboradorService {
 
         return dadosAdesao;
     }
+    
+    /**
+     * Atualiza dados temporários da adesão
+     */
+    public void atualizarDadosTemporarios(String sessionId, AdesaoColaboradorDTO dadosAtualizados) {
+        if (sessionId == null || dadosAtualizados == null) {
+            throw new IllegalArgumentException("SessionId e dados não podem ser nulos");
+        }
+        
+        // Verificar se a sessão existe
+        if (!adesaoTemporaria.containsKey(sessionId)) {
+            throw new IllegalArgumentException("Sessão não encontrada: " + sessionId);
+        }
+        
+        // Atualizar cache temporário
+        adesaoTemporaria.put(sessionId, dadosAtualizados);
+        
+        logger.info("Dados temporários atualizados para sessionId: {} - Etapa: {}", 
+                   sessionId, dadosAtualizados.getEtapaAtual());
+    }
 
     /**
      * Finaliza o processo de adesão criando o colaborador definitivamente

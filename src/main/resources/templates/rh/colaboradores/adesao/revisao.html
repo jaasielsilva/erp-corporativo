@@ -209,25 +209,30 @@
             background: #dc3545;
             border: none;
             padding: 12px 30px;
-            border-radius: 25px;
+            border-radius: 20px;
             color: white;
-            font-weight: 500;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-cancel:hover {
+            background: #c82333;
+            transform: translateY(-1px);
         }
         
         .btn-back {
             background: #6c757d;
             border: none;
             padding: 12px 30px;
-            border-radius: 25px;
+            border-radius: 20px;
             color: white;
-            font-weight: 500;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
         
-        .section-title {
-            color: #0d6efd;
-            border-bottom: 2px solid #0d6efd;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
+        .btn-back:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
         }
         
         .loading-overlay {
@@ -236,10 +241,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             display: none;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             z-index: 9999;
         }
         
@@ -248,22 +253,56 @@
             padding: 3rem;
             border-radius: 15px;
             text-align: center;
-            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
         
         .success-animation {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: #198754;
-            margin: 0 auto 1rem;
+            background: linear-gradient(45deg, #198754, #20c997);
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 2rem;
             animation: pulse 2s infinite;
         }
         
         @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .benefit-summary-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 4px solid #0d6efd;
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-summary-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .benefit-summary-item h6 {
+            color: #0d6efd;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .benefit-summary-item .text-muted {
+            font-size: 0.875rem;
+        }
+        
+        .benefit-summary-item strong {
+            color: #198754;
+            font-size: 1.1rem;
+        }
+    </style>
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
@@ -540,6 +579,7 @@
             $.ajax({
                 url: '/api/rh/colaboradores/adesao/beneficios/resumo',
                 method: 'GET',
+                data: { sessionId: sessionId },
                 success: function(response) {
                     if (response.success && response.temBeneficios) {
                         preencherResumoBeneficios(response.resumo);
@@ -547,9 +587,22 @@
                         $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
                     }
                 },
-                error: function() {
-                    console.log('Erro ao carregar resumo de benefícios');
-                    $('#beneficiosSelecionados').html('<p class="text-muted">Erro ao carregar benefícios</p>');
+                error: function(xhr, status, error) {
+                    console.error('Erro ao carregar resumo de benefícios:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                    
+                    let mensagemErro = 'Erro ao carregar benefícios';
+                    if (xhr.status === 500) {
+                        mensagemErro = 'Erro interno do servidor ao carregar benefícios';
+                    } else if (xhr.status === 404) {
+                        mensagemErro = 'Sessão não encontrada';
+                    }
+                    
+                    $('#beneficiosSelecionados').html(`<p class="text-muted">${mensagemErro}</p>`);
                 }
             });
         }
@@ -763,6 +816,55 @@
             
             $('.container-fluid').prepend(alert);
             $('html, body').animate({ scrollTop: 0 }, 500);
+        }
+        
+        function preencherResumoBeneficios(resumo) {
+            console.log('Preenchendo resumo de benefícios:', resumo);
+            
+            if (!resumo || !resumo.itens || resumo.itens.length === 0) {
+                $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
+                $('#totalMensalFinal').text('R$ 0,00');
+                return;
+            }
+            
+            let html = '';
+            
+            resumo.itens.forEach(item => {
+                html += `
+                    <div class="benefit-summary-item">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="mb-1">${item.nome}</h6>
+                                <small class="text-muted">${item.plano}</small>
+                            </div>
+                            <div class="text-end">
+                                <strong>R$ ${item.custoTitular.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                `;
+                
+                if (item.quantidadeDependentes > 0) {
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center mb-2 ms-3">
+                            <small class="text-muted">
+                                <i class="fas fa-user-plus me-1"></i>
+                                ${item.quantidadeDependentes} dependente(s)
+                            </small>
+                            <small><strong>R$ ${item.custoDependentes.toFixed(2)}</strong></small>
+                        </div>
+                    `;
+                }
+                
+                html += `</div><hr class="my-3">`;
+            });
+            
+            // Remover a última linha hr
+            html = html.replace(/<hr class="my-3">$/, '');
+            
+            $('#beneficiosSelecionados').html(html);
+            $('#totalMensalFinal').text(`R$ ${resumo.totalMensal.toFixed(2)}`);
+            
+            console.log('Resumo de benefícios preenchido com sucesso');
         }
     </script>
 </body>

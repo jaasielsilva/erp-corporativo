@@ -230,9 +230,17 @@ public class UsuarioService {
      * Busca usuários que podem gerenciar outros usuários (ADMIN, MASTER, etc.)
      */
     public List<Usuario> buscarUsuariosComPermissaoGerenciarUsuarios() {
-        return usuarioRepository.findAll().stream()
-                .filter(usuario -> usuario.getNivelAcesso() != null && usuario.getNivelAcesso().podeGerenciarUsuarios())
-                .collect(Collectors.toList());
+        return usuarioRepository.findByPerfisContaining(
+            perfilRepository.findById(1L).orElse(null) // Assumindo que o perfil ADMIN tem ID 1
+        ).stream().filter(Objects::nonNull).collect(Collectors.toList());
+    }
+    
+    /**
+     * Busca usuários com permissão para gerenciar RH
+     */
+    public List<Usuario> buscarUsuariosComPermissaoGerenciarRH() {
+        // Buscar usuários com perfil ADMIN ou com nível de acesso que permite gerenciar RH
+        return usuarioRepository.findUsuariosComPermissaoGerenciarRH();
     }
 
     /**

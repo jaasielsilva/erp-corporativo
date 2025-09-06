@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.Cargo;
 import com.jaasielsilva.portalceo.model.Departamento;
 import com.jaasielsilva.portalceo.model.ProcessoAdesao;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.service.AdesaoColaboradorService;
 import com.jaasielsilva.portalceo.service.AdesaoSecurityService;
@@ -17,6 +18,8 @@ import com.jaasielsilva.portalceo.service.DocumentoAdesaoService;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService.DocumentoInfo;
 import com.jaasielsilva.portalceo.service.BeneficioAdesaoService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
+import com.jaasielsilva.portalceo.service.NotificationService;
+import com.jaasielsilva.portalceo.service.UsuarioService;
 
 import jakarta.validation.Valid;
 import java.util.ArrayList;
@@ -72,6 +75,12 @@ public class AdesaoColaboradorController {
     
     @Autowired
     private ColaboradorService colaboradorService;
+    
+    @Autowired
+    private NotificationService notificationService;
+    
+    @Autowired
+    private UsuarioService usuarioService;
 
     /**
      * Página inicial do processo de adesão
@@ -438,6 +447,20 @@ public class AdesaoColaboradorController {
 
             if (!documentosCompletos) {
                 logger.warn("Documentos obrigatórios não foram enviados para sessionId: {}", sessionId);
+                
+                // Criar notificação para usuários com permissão de gerenciar RH
+                AdesaoColaboradorDTO dadosAdesao = adesaoService.obterDadosCompletos(sessionId);
+                if (dadosAdesao != null) {
+                    List<Usuario> usuariosRH = usuarioService.buscarUsuariosComPermissaoGerenciarRH();
+                    for (Usuario usuario : usuariosRH) {
+                        notificationService.notifyEmployeeDocumentPending(
+                            dadosAdesao.getNome(), 
+                            dadosAdesao.getEmail(), 
+                            usuario
+                        );
+                    }
+                }
+                
                 response.put("success", false);
                 response.put("message", "Todos os documentos obrigatórios devem ser enviados");
                 return ResponseEntity.badRequest().body(response);
@@ -770,6 +793,16 @@ public class AdesaoColaboradorController {
 
             // Criar colaborador definitivamente
             Colaborador colaboradorCriado = adesaoService.finalizarAdesao(sessionId);
+            
+            // Criar notificação para usuários com permissão de gerenciar RH
+            List<Usuario> usuariosRH = usuarioService.buscarUsuariosComPermissaoGerenciarRH();
+            for (Usuario usuario : usuariosRH) {
+                notificationService.notifyNewEmployeeAdmission(
+                    colaboradorCriado.getNome(), 
+                    colaboradorCriado.getEmail(), 
+                    usuario
+                );
+            }
 
             response.put("success", true);
             response.put("colaboradorId", colaboradorCriado.getId());

@@ -5,10 +5,12 @@
   <meta charset="UTF-8">
   <title>Estoque - Visão Geral</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" th:href="@{/css/style.css}">
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+
   <link rel="stylesheet" th:href="@{/css/estoque-lista.css}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -237,25 +239,14 @@
     });
   </script>
 
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- jQuery necessário -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
+  <!-- Seu JS de notificações (que depende de jQuery) -->
+  <script th:src="@{/js/notifications.js}" defer></script>
 
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
+  <!-- Seu sidebar.js (se não depende de jQuery, pode ficar antes ou depois) -->
+  <script src="/js/sidebar.js" defer></script>
 
 
 </body>

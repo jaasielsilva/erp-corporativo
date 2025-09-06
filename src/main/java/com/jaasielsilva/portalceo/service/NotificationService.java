@@ -176,6 +176,16 @@ public class NotificationService {
     }
 
     /**
+     * Verifica processos de adesão com documentação pendente e cria notificações
+     */
+    @Scheduled(fixedRate = 1800000) // 30 minutos
+    @Async
+    public void checkPendingDocumentations() {
+        // Esta implementação seria feita em uma próxima fase quando tivermos acesso ao serviço de workflow
+        // Por enquanto, deixamos o método vazio
+    }
+
+    /**
      * Limpeza automática de notificações antigas (executada diariamente)
      */
     @Scheduled(cron = "0 0 2 * * ?") // Todo dia às 2h da manhã
@@ -251,6 +261,30 @@ public class NotificationService {
                 profiles);
         notification.setExpiresAt(deadline);
         return notificationRepository.save(notification);
+    }
+
+    /**
+     * Notificação de novo colaborador em processo de admissão
+     */
+    public Notification notifyNewEmployeeAdmission(String employeeName, String employeeEmail, Usuario recipient) {
+        return createNotification(
+                "hr_admission",
+                "Novo Colaborador em Admissão",
+                String.format("Novo colaborador %s (%s) está em processo de admissão e aguarda integração.", employeeName, employeeEmail),
+                Notification.Priority.HIGH,
+                recipient);
+    }
+
+    /**
+     * Notificação de pendência documental de colaborador
+     */
+    public Notification notifyEmployeeDocumentPending(String employeeName, String employeeEmail, Usuario recipient) {
+        return createNotification(
+                "hr_document_pending",
+                "Pendência Documental - Colaborador",
+                String.format("Colaborador %s (%s) possui documentação pendente no processo de admissão.", employeeName, employeeEmail),
+                Notification.Priority.HIGH,
+                recipient);
     }
 
     public void enviarNotificacaoRenovacao(ContratoLegal contrato) {

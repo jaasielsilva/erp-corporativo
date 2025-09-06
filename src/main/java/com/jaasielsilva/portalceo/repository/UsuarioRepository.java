@@ -64,4 +64,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
    
    // Buscar usuários online
    List<Usuario> findByOnlineTrueAndStatus(Usuario.Status status);
+   
+   // Buscar usuários com permissão para gerenciar RH
+   @Query("SELECT u FROM Usuario u WHERE u.nivelAcesso IN ('MASTER', 'ADMIN') OR u.nivelAcesso IN ('GERENTE', 'COORDENADOR', 'SUPERVISOR')")
+   List<Usuario> findUsuariosComPermissaoGerenciarRH();
 }

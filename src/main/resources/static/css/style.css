@@ -21,7 +21,7 @@ html, body {
 --------------------------------------------- */
 .app-container {
   display: flex;       /* Layout flexível horizontal */
-  height: 100vh;       /* Altura total da janela */
+  min-height: 100vh;   /* Altura mínima da janela, permite crescer */
   width: 100vw;        /* Largura total da janela */
 }
 
@@ -402,6 +402,7 @@ html, body {
   display: flex;
   flex-direction: column;
   transition: margin-left 0.3s ease; /* Animação suave */
+  overflow-y: auto;     /* Permite scroll vertical */
 }
 
 
@@ -516,8 +517,6 @@ html, body {
 .content-area {
   padding: 30px;
   flex-grow: 1;
-  overflow-y: auto;
-  max-height: calc(100vh - 60px); /* Altura descontando topbar */
   color: #334155;
 }
 

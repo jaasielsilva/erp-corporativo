@@ -10,7 +10,9 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <link th:href="@{/css/notifications.css}" rel="stylesheet">
     
     <style>
         .step-indicator {
@@ -303,17 +305,14 @@
             font-size: 1.1rem;
         }
     </style>
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-    </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-    
-    <div class="container-fluid py-4">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid py-4">
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <!-- Cabeçalho -->
@@ -508,6 +507,11 @@
                 </div>
             </div>
         </div>
+    </div>
+    
+                </div>
+            </section>
+        </main>
     </div>
     
     <div th:replace="~{components/footer :: footer}"></div>

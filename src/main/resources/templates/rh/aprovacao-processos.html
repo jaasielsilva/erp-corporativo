@@ -11,6 +11,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
+    <link th:href="@{/css/notifications.css}" rel="stylesheet">
     
     <style>
         .status-badge {
@@ -110,9 +114,12 @@
     </style>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
-    
-    <div class="container-fluid mt-4">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid py-4">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -867,5 +874,14 @@
             alert(mensagem); // Temporário
         }
     </script>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <div th:replace="~{components/footer :: footer}"></div>
+    
+    <script th:src="@{/js/sidebar.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
 </html>

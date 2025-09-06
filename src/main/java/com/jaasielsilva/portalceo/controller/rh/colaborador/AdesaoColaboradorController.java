@@ -10,6 +10,7 @@ import com.jaasielsilva.portalceo.service.AdesaoColaboradorService;
 import com.jaasielsilva.portalceo.service.AdesaoSecurityService;
 import com.jaasielsilva.portalceo.service.AuditService;
 import com.jaasielsilva.portalceo.service.CargoService;
+import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
 import com.jaasielsilva.portalceo.service.BeneficioService;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService;
@@ -68,6 +69,9 @@ public class AdesaoColaboradorController {
 
     @Autowired
     private WorkflowAdesaoService workflowService;
+    
+    @Autowired
+    private ColaboradorService colaboradorService;
 
     /**
      * Página inicial do processo de adesão
@@ -88,6 +92,7 @@ public class AdesaoColaboradorController {
                     model.addAttribute("cargos", cargoService.listarAtivos());
                     model.addAttribute("departamentos", departamentoService.listarTodos());
                     model.addAttribute("beneficios", beneficioService.listarTodos());
+                    model.addAttribute("supervisores", colaboradorService.buscarSupervisoresPotenciais());
                     return "rh/colaboradores/adesao/inicio";
                 }
             } catch (Exception e) {
@@ -103,6 +108,7 @@ public class AdesaoColaboradorController {
         model.addAttribute("cargos", cargoService.listarAtivos());
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("beneficios", beneficioService.listarTodos());
+        model.addAttribute("supervisores", colaboradorService.buscarSupervisoresPotenciais());
 
         return "rh/colaboradores/adesao/inicio";
     }
@@ -133,6 +139,32 @@ public class AdesaoColaboradorController {
     }
 
     /**
+     * Endpoint REST para carregar todos os supervisores ativos
+     */
+    @GetMapping("/api/supervisores")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> carregarSupervisores() {
+        try {
+            List<Map<String, Object>> supervisoresResponse = colaboradorService.buscarSupervisoresPotenciais()
+                    .stream()
+                    .map(supervisor -> {
+                        Map<String, Object> supervisorMap = new HashMap<>();
+                        supervisorMap.put("id", supervisor.getId());
+                        supervisorMap.put("nome", supervisor.getNome());
+                        supervisorMap.put("cargo", supervisor.getCargo() != null ? supervisor.getCargo().getNome() : "");
+                        return supervisorMap;
+                    })
+                    .toList();
+
+            logger.info("Carregando {} supervisores ativos via API", supervisoresResponse.size());
+            return ResponseEntity.ok(supervisoresResponse);
+        } catch (Exception e) {
+            logger.error("Erro ao carregar supervisores via API: {}", e.getMessage());
+            return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
+    /**
      * Processar dados pessoais (Etapa 1)
      */
     @PostMapping("/dados-pessoais")
@@ -148,8 +180,8 @@ public class AdesaoColaboradorController {
 
         try {
             // Log dos dados recebidos para debug
-            logger.info("Dados recebidos - Nome: {}, CPF: {}, Email: {}",
-                    dadosAdesao.getNome(), dadosAdesao.getCpf(), dadosAdesao.getEmail());
+            logger.info("Dados recebidos - Nome: {}, CPF: {}, Email: {}, SupervisorId: {}",
+                    dadosAdesao.getNome(), dadosAdesao.getCpf(), dadosAdesao.getEmail(), dadosAdesao.getSupervisorId());
 
             // Verificar rate limiting
             if (!securityService.checkRateLimit(clientIp)) {
@@ -225,6 +257,7 @@ public class AdesaoColaboradorController {
             dadosPessoaisMap.put("telefone", dadosAdesao.getTelefone());
             dadosPessoaisMap.put("sexo", dadosAdesao.getSexo());
             dadosPessoaisMap.put("estadoCivil", dadosAdesao.getEstadoCivil());
+            dadosPessoaisMap.put("supervisorId", dadosAdesao.getSupervisorId());
 
             workflowService.salvarProcesso(tempSessionId, dadosPessoaisMap);
             workflowService.atualizarEtapa(tempSessionId, "dados-pessoais");

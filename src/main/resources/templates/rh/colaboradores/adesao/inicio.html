@@ -304,6 +304,10 @@
                                 <label for="supervisorId" class="form-label">Supervisor</label>
                                 <select class="form-select" id="supervisorId" name="supervisorId">
                                     <option value="">Nenhum supervisor</option>
+                                    <option th:each="supervisor : ${supervisores}" 
+                                            th:value="${supervisor.id}" 
+                                            th:text="${supervisor.nome + ' - ' + (supervisor.cargo != null ? supervisor.cargo.nome : 'Sem cargo')}">
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -469,9 +473,39 @@
                 });
             }
 
-            // === Carregar supervisores (exemplo futuro) ===
+            // === Carregar supervisores ===
             function carregarSupervisores() {
-                // Implementar depois via API
+                fetch('/rh/colaboradores/adesao/api/supervisores')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erro na resposta: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const select = document.getElementById('supervisorId');
+                        if (select) {
+                            // Limpar opções exceto a primeira
+                            select.innerHTML = '<option value="">Nenhum supervisor</option>';
+                            
+                            // Adicionar supervisores
+                            data.forEach(supervisor => {
+                                const option = document.createElement('option');
+                                option.value = supervisor.id;
+                                option.textContent = supervisor.nome + (supervisor.cargo ? ' - ' + supervisor.cargo : ' - Sem cargo');
+                                select.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar supervisores:', error);
+                        // Tentar carregar supervisores do modelo Thymeleaf como fallback
+                        const select = document.getElementById('supervisorId');
+                        if (select && select.children.length <= 1) {
+                            // Se não há opções carregadas, mostrar mensagem de erro
+                            console.log('Usando dados do modelo Thymeleaf como fallback');
+                        }
+                    });
             }
             carregarSupervisores();
 

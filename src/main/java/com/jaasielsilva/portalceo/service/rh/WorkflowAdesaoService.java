@@ -291,6 +291,15 @@ public class WorkflowAdesaoService {
     }
 
     /**
+     * Busca processos com filtro por status e texto (nome ou CPF)
+     */
+    public Page<ProcessoAdesaoInfo> buscarProcessosComFiltro(ProcessoAdesao.StatusProcesso status, String search, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dataCriacao").descending());
+        return processoRepository.buscarPorStatusETexto(status, search, pageable)
+                .map(this::converterParaInfo);
+    }
+
+    /**
      * Busca processo por ID
      */
     public ProcessoAdesaoInfo buscarProcessoPorId(Long id) {

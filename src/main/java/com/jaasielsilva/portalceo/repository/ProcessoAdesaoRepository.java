@@ -89,4 +89,13 @@ public interface ProcessoAdesaoRepository extends JpaRepository<ProcessoAdesao, 
     @Query("SELECT p FROM ProcessoAdesao p WHERE p.dataCriacao >= :inicio AND p.dataCriacao <= :fim")
     List<ProcessoAdesao> findProcessosHoje(@Param("inicio") LocalDateTime inicio,
                                            @Param("fim") LocalDateTime fim);
+
+    // Busca por status e texto (nome ou CPF)
+    @Query("SELECT p FROM ProcessoAdesao p WHERE p.status = :status AND " +
+           "(LOWER(p.nomeColaborador) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "REPLACE(p.cpfColaborador, '.', '') LIKE CONCAT('%', REPLACE(:search, '.', ''), '%') OR " +
+           "REPLACE(REPLACE(p.cpfColaborador, '.', ''), '-', '') LIKE CONCAT('%', REPLACE(REPLACE(:search, '.', ''), '-', ''), '%'))")
+    Page<ProcessoAdesao> buscarPorStatusETexto(@Param("status") ProcessoAdesao.StatusProcesso status,
+                                               @Param("search") String search,
+                                               Pageable pageable);
 }

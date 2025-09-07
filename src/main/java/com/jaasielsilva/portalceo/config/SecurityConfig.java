@@ -90,9 +90,10 @@ public class SecurityConfig {
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
-                                                                "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
+                                                "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
                                                 .permitAll()
                                                 .requestMatchers("/api/produto/**", "/api/processar", "/api/beneficios/**", "/api/rh/**").permitAll()
+                                                .requestMatchers("/rh/colaboradores/adesao/**").permitAll()
                                                 .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
                                                 .requestMatchers("/api/chat/**").authenticated()
                                                 .requestMatchers("/api/notifications/**").authenticated()

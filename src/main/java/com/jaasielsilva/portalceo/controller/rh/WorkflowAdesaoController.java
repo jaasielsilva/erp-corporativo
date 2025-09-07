@@ -46,7 +46,7 @@ public class WorkflowAdesaoController {
     }
     
     /**
-     * API: Lista processos por status com paginação
+     * API: Lista processos por status com paginação e busca
      */
     @GetMapping("/api/processos")
     @ResponseBody
@@ -54,12 +54,20 @@ public class WorkflowAdesaoController {
     public ResponseEntity<Map<String, Object>> listarProcessos(
             @RequestParam(defaultValue = "AGUARDANDO_APROVACAO") String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
         
         try {
             ProcessoAdesao.StatusProcesso statusEnum = ProcessoAdesao.StatusProcesso.valueOf(status);
-            Page<WorkflowAdesaoService.ProcessoAdesaoInfo> processos = 
-                workflowService.listarProcessosPorStatus(statusEnum, page, size);
+            Page<WorkflowAdesaoService.ProcessoAdesaoInfo> processos;
+            
+            if (search != null && !search.trim().isEmpty()) {
+                // Busca com filtro
+                processos = workflowService.buscarProcessosComFiltro(statusEnum, search.trim(), page, size);
+            } else {
+                // Busca normal por status
+                processos = workflowService.listarProcessosPorStatus(statusEnum, page, size);
+            }
             
             Map<String, Object> response = new HashMap<>();
             response.put("processos", processos.getContent());
@@ -367,6 +375,97 @@ public class WorkflowAdesaoController {
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("erro", "Erro ao buscar processos para relatório: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    /**
+     * API: Métricas para relatórios
+     */
+    @GetMapping("/api/relatorios/metricas")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
+    public ResponseEntity<Map<String, Object>> obterMetricasRelatorio(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String periodo) {
+        
+        try {
+            WorkflowAdesaoService.DashboardEstatisticas stats = workflowService.obterEstatisticas();
+            
+            // Calcular total de processos somando todos os status
+            long totalProcessos = stats.getProcessosPorStatus().values().stream()
+                .mapToLong(Long::longValue).sum();
+            
+            // Obter valores específicos do mapa de status
+            long totalAprovados = stats.getProcessosPorStatus().getOrDefault("APROVADO", 0L);
+            
+            Map<String, Object> metricas = new HashMap<>();
+            metricas.put("totalProcessos", totalProcessos);
+            metricas.put("totalAprovados", totalAprovados);
+            metricas.put("processosHoje", stats.getProcessosHoje());
+            metricas.put("aguardandoAprovacao", stats.getProcessosAguardandoAprovacao());
+            metricas.put("tempoMedioAprovacao", 3.5); // Valor fixo por enquanto
+            metricas.put("custoMedioMensal", 2500.00); // Valor fixo por enquanto
+            
+            return ResponseEntity.ok(metricas);
+            
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("erro", "Erro ao obter métricas: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    /**
+     * API: Gráficos para relatórios
+     */
+    @GetMapping("/api/relatorios/graficos")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_RH', 'ROLE_GERENCIAL')")
+    public ResponseEntity<Map<String, Object>> obterGraficosRelatorio(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String periodo) {
+        
+        try {
+            WorkflowAdesaoService.DashboardEstatisticas stats = workflowService.obterEstatisticas();
+            
+            Map<String, Object> graficos = new HashMap<>();
+            
+            // Gráfico de status dos processos usando dados reais
+            Map<String, Long> statusMap = stats.getProcessosPorStatus();
+            Map<String, Object> statusProcessos = new HashMap<>();
+            statusProcessos.put("labels", List.of("Aguardando", "Aprovados", "Rejeitados", "Em Andamento"));
+            statusProcessos.put("data", List.of(
+                statusMap.getOrDefault("AGUARDANDO_APROVACAO", 0L),
+                statusMap.getOrDefault("APROVADO", 0L),
+                statusMap.getOrDefault("REJEITADO", 0L),
+                statusMap.getOrDefault("EM_ANDAMENTO", 0L)
+            ));
+            graficos.put("statusProcessos", statusProcessos);
+            
+            // Gráfico de evolução mensal (dados fictícios)
+            Map<String, Object> evolucaoMensal = new HashMap<>();
+            evolucaoMensal.put("labels", List.of("Jan", "Fev", "Mar", "Abr", "Mai", "Jun"));
+            evolucaoMensal.put("data", List.of(12, 19, 15, 25, 22, 30));
+            graficos.put("evolucaoMensal", evolucaoMensal);
+            
+            // Gráfico de tempo de aprovação (dados fictícios)
+            Map<String, Object> tempoAprovacao = new HashMap<>();
+            tempoAprovacao.put("labels", List.of("0-1 dia", "1-3 dias", "3-7 dias", "+7 dias"));
+            tempoAprovacao.put("data", List.of(45, 30, 20, 5));
+            graficos.put("tempoAprovacao", tempoAprovacao);
+            
+            // Gráfico de custos por departamento (dados fictícios)
+            Map<String, Object> custosDepartamento = new HashMap<>();
+            custosDepartamento.put("labels", List.of("TI", "Vendas", "Marketing", "RH", "Financeiro"));
+            custosDepartamento.put("data", List.of(15000, 25000, 18000, 12000, 20000));
+            graficos.put("custosDepartamento", custosDepartamento);
+            
+            return ResponseEntity.ok(graficos);
+            
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("erro", "Erro ao obter gráficos: " + e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
     }

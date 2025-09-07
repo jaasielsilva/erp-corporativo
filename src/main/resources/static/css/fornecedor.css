@@ -61,7 +61,7 @@
 
 .modal {
   position: fixed;
-  z-index: 9999;
+  z-index: 1040; /* CORRIGIDO: z-index apropriado */
   left: 0; top: 0;
   width: 100%; height: 100%;
   background-color: rgba(0,0,0,0.5);

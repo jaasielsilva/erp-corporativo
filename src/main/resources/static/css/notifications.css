@@ -85,17 +85,19 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    z-index: -1;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.3s ease, visibility 0.3s ease, z-index 0s 0.3s;
     pointer-events: none;
 }
 
 .notification-overlay.show {
     opacity: 1;
     visibility: visible;
-    pointer-events: auto;
+    pointer-events: none; /* CORRIGIDO: não deve interceptar eventos */
+    z-index: 998; /* CORRIGIDO: z-index menor que o sidebar */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .notification-overlay.hidden {

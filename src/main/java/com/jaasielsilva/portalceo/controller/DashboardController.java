@@ -23,6 +23,7 @@ import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.SolicitacaoAcessoService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.service.VendaService;
+import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 
 @Controller
 public class DashboardController {
@@ -47,6 +48,9 @@ public class DashboardController {
 
     @Autowired
     private EstoqueService estoqueService;
+
+    @Autowired
+    private WorkflowAdesaoService workflowAdesaoService;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
@@ -95,6 +99,12 @@ public class DashboardController {
 
         // Solicitações atrasadas (dados reais)
         long solicitacoesAtrasadas = solicitacaoAcessoService.contarSolicitacoesAtrasadas();
+
+        // Dados dos processos de adesão (RH)
+        WorkflowAdesaoService.DashboardEstatisticas estatisticasAdesao = workflowAdesaoService.obterEstatisticas();
+        long processosAdesaoTotal = estatisticasAdesao.getProcessosPorStatus().values().stream()
+                .mapToLong(Long::longValue).sum();
+        long processosAguardandoAprovacao = estatisticasAdesao.getProcessosAguardandoAprovacao();
 
         // Percentual da meta (simulado)
         String percentualMeta = "87%";
@@ -175,6 +185,8 @@ public class DashboardController {
         model.addAttribute("solicitacoesPendentes", String.format("%,d", solicitacoesPendentes));
         model.addAttribute("produtosCriticos", String.format("%,d", produtosCriticos));
         model.addAttribute("solicitacoesAtrasadas", String.format("%,d", solicitacoesAtrasadas));
+        model.addAttribute("processosAdesaoTotal", processosAdesaoTotal);
+        model.addAttribute("processosAguardandoAprovacao", processosAguardandoAprovacao);
         model.addAttribute("percentualMeta", percentualMeta);
 
         // Dados para gráficos

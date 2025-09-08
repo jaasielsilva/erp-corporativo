@@ -546,4 +546,14 @@ public class UsuarioService {
         return usuarioRepository.findByNome(nome)
                                 .orElse(null);
     }
+                    
+    // Registra o último acesso do usuário e marca como online
+    @Transactional
+    public void registrarUltimoAcesso(String login) {
+        usuarioRepository.findByEmail(login).ifPresent(usuario -> {
+            usuario.setUltimoAcesso(LocalDateTime.now());
+            usuario.setOnline(true); 
+            usuarioRepository.save(usuario);
+        });
+    }
 }

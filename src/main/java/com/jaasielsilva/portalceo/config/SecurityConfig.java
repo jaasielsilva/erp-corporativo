@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.config;
 
 import com.jaasielsilva.portalceo.security.CustomAuthenticationFailureHandler;
+import com.jaasielsilva.portalceo.security.CustomAuthenticationSuccessHandler;
 import com.jaasielsilva.portalceo.security.UsuarioDetailsService;
 import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.repository.*;
@@ -29,44 +30,48 @@ import java.util.Set;
 @Configuration
 public class SecurityConfig {
 
-        private final UsuarioRepository usuarioRepository;
-        private final PerfilRepository perfilRepository;
-        private final PermissaoRepository permissaoRepository;
-        private final CargoRepository cargoRepository;
-        private final DepartamentoRepository departamentoRepository;
-        private final ColaboradorRepository colaboradorRepository;
-        private final CargoHierarquiaRepository cargoHierarquiaRepository;
-        private final CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository;
-        private final ProdutoService produtoService;
-        private final CategoriaService categoriaService;
-        private final FornecedorService fornecedorService;
-        private final PlanoSaudeRepository planoSaudeRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PerfilRepository perfilRepository;
+    private final PermissaoRepository permissaoRepository;
+    private final CargoRepository cargoRepository;
+    private final DepartamentoRepository departamentoRepository;
+    private final ColaboradorRepository colaboradorRepository;
+    private final CargoHierarquiaRepository cargoHierarquiaRepository;
+    private final CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository;
+    private final ProdutoService produtoService;
+    private final CategoriaService categoriaService;
+    private final FornecedorService fornecedorService;
+    private final PlanoSaudeRepository planoSaudeRepository;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
-        public SecurityConfig(UsuarioRepository usuarioRepository,
-                        PerfilRepository perfilRepository,
-                        PermissaoRepository permissaoRepository,
-                        CargoRepository cargoRepository,
-                        DepartamentoRepository departamentoRepository,
-                        ColaboradorRepository colaboradorRepository,
-                        CargoHierarquiaRepository cargoHierarquiaRepository,
-                        CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository,
-                        ProdutoService produtoService,
-                        CategoriaService categoriaService,
-                        FornecedorService fornecedorService,
-                        PlanoSaudeRepository planoSaudeRepository) {
-                this.usuarioRepository = usuarioRepository;
-                this.perfilRepository = perfilRepository;
-                this.permissaoRepository = permissaoRepository;
-                this.cargoRepository = cargoRepository;
-                this.departamentoRepository = departamentoRepository;
-                this.colaboradorRepository = colaboradorRepository;
-                this.cargoHierarquiaRepository = cargoHierarquiaRepository;
-                this.cargoDepartamentoAssociacaoRepository = cargoDepartamentoAssociacaoRepository;
-                this.produtoService = produtoService;
-                this.categoriaService = categoriaService;
-                this.fornecedorService = fornecedorService;
-                this.planoSaudeRepository = planoSaudeRepository;
-        }
+    public SecurityConfig(UsuarioRepository usuarioRepository,
+                          PerfilRepository perfilRepository,
+                          PermissaoRepository permissaoRepository,
+                          CargoRepository cargoRepository,
+                          DepartamentoRepository departamentoRepository,
+                          ColaboradorRepository colaboradorRepository,
+                          CargoHierarquiaRepository cargoHierarquiaRepository,
+                          CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository,
+                          ProdutoService produtoService,
+                          CategoriaService categoriaService,
+                          FornecedorService fornecedorService,
+                          PlanoSaudeRepository planoSaudeRepository,
+                          CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) { // ← adicionado
+        this.usuarioRepository = usuarioRepository;
+        this.perfilRepository = perfilRepository;
+        this.permissaoRepository = permissaoRepository;
+        this.cargoRepository = cargoRepository;
+        this.departamentoRepository = departamentoRepository;
+        this.colaboradorRepository = colaboradorRepository;
+        this.cargoHierarquiaRepository = cargoHierarquiaRepository;
+        this.cargoDepartamentoAssociacaoRepository = cargoDepartamentoAssociacaoRepository;
+        this.produtoService = produtoService;
+        this.categoriaService = categoriaService;
+        this.fornecedorService = fornecedorService;
+        this.planoSaudeRepository = planoSaudeRepository;
+        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler; // ← adicionado
+    }
+
 
         @Bean
         public BCryptPasswordEncoder passwordEncoder() {
@@ -105,7 +110,7 @@ public class SecurityConfig {
                                                 .loginProcessingUrl("/login")
                                                 .usernameParameter("username")
                                                 .passwordParameter("password")
-                                                .defaultSuccessUrl("/dashboard", true)
+                                                .successHandler(customAuthenticationSuccessHandler)
                                                 .failureHandler(failureHandler)
                                                 .permitAll())
                                 .logout(logout -> logout.permitAll())

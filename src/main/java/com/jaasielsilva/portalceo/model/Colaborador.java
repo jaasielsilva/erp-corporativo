@@ -130,6 +130,10 @@ public class Colaborador {
     @JsonIgnoreProperties({ "supervisor", "cargo", "departamento" })
     private Colaborador supervisor;
 
+    @OneToOne(mappedBy = "colaborador")
+    @JsonIgnore
+    private Usuario usuario;
+
     @OneToMany(mappedBy = "colaborador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<HistoricoColaborador> historico;

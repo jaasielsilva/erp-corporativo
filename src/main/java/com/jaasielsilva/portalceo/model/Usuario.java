@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -48,6 +49,8 @@ public class Usuario {
     private String estado;
 
     private boolean online;
+
+    private LocalDateTime ultimoAcesso;
     
     @Column(length = 10)
     private String ramal;

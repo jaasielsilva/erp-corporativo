@@ -11,11 +11,90 @@
   <link href="/css/style.css" rel="stylesheet">
   <link href="/css/sidebar.css" rel="stylesheet">
   <link href="/css/notifications.css" rel="stylesheet">
+  
+  <style>
+    /* Estilos do Dashboard - Stats Cards */
+    .stats-row-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 20px;
+    }
+    
+    .stat-card-small {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 20px;
+      color: white;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    
+    .stat-card-small:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card-small:nth-child(1) {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card-small:nth-child(2) {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .stat-card-small:nth-child(3) {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card-small:nth-child(4) {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .stat-card-small:nth-child(5) {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .stat-card-small:nth-child(6) {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      color: #1f2937;
+    }
+    
+    .stat-card-small .stat-icon {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      opacity: 0.8;
+    }
+    
+    .stat-card-small .stat-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      line-height: 1;
+    }
+    
+    .stat-card-small .stat-label {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+  
 </head>
 
 <body>
-  <div class="caixa-container">
-    <div class="container">
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="container-fluid">
       <!-- Header -->
       <div class="caixa-card">
         <div class="caixa-header">
@@ -65,34 +144,36 @@
                 <i class="fas fa-chart-line me-2"></i>Resumo do Dia
               </h5>
             </div>
-            <div class="resumo-card" th:if="${resumoDia != null}">
-              <div class="resumo-item">
-                <span class="resumo-label">Total de Vendas</span>
-                <span class="resumo-valor"
-                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalVendas, 1, 2)}"></span>
+            <div class="stats-row-vertical" th:if="${resumoDia != null}">
+              <div class="stat-card-small">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-number" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalVendas, 1, 2)}">R$ 0,00</div>
+                <div class="stat-label">Total de Vendas</div>
               </div>
-              <div class="resumo-item">
-                <span class="resumo-label">Quantidade de Vendas</span>
-                <span class="resumo-valor" th:text="${resumoDia.quantidadeVendas}"></span>
+              <div class="stat-card-small">
+                <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+                <div class="stat-number" th:text="${resumoDia.quantidadeVendas}">0</div>
+                <div class="stat-label">Quantidade de Vendas</div>
               </div>
-              <div class="resumo-item">
-                <span class="resumo-label">Ticket Médio</span>
-                <span class="resumo-valor"
-                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.ticketMedio, 1, 2)}"></span>
+              <div class="stat-card-small">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-number" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.ticketMedio, 1, 2)}">R$ 0,00</div>
+                <div class="stat-label">Ticket Médio</div>
               </div>
-              <div class="resumo-item">
-                <span class="resumo-label">Dinheiro</span>
-                <span class="resumo-valor"
-                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalDinheiro, 1, 2)}"></span>
+              <div class="stat-card-small">
+                <div class="stat-icon"><i class="fas fa-money-bill"></i></div>
+                <div class="stat-number" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalDinheiro, 1, 2)}">R$ 0,00</div>
+                <div class="stat-label">Dinheiro</div>
               </div>
-              <div class="resumo-item">
-                <span class="resumo-label">Cartão</span>
-                <span class="resumo-valor"
-                  th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalCartao, 1, 2)}"></span>
+              <div class="stat-card-small">
+                <div class="stat-icon"><i class="fas fa-credit-card"></i></div>
+                <div class="stat-number" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalCartao, 1, 2)}">R$ 0,00</div>
+                <div class="stat-label">Cartão</div>
               </div>
-              <div class="resumo-item">
-                <span class="resumo-label">PIX</span>
-                <span class="resumo-valor" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalPix, 1, 2)}"></span>
+              <div class="stat-card-small">
+                <div class="stat-icon"><i class="fab fa-pix"></i></div>
+                <div class="stat-number" th:text="'R$ ' + ${#numbers.formatDecimal(resumoDia.totalPix, 1, 2)}">R$ 0,00</div>
+                <div class="stat-label">PIX</div>
               </div>
             </div>
             <div class="resumo-card" th:if="${resumoDia == null}">
@@ -203,16 +284,56 @@
     </div>
   </div>
 
+  <style>
+    /* Correção específica para modal de caixa */
+    #modalAbrirCaixa {
+      z-index: 1055 !important;
+    }
+    #modalAbrirCaixa .modal-dialog {
+      z-index: 1056 !important;
+    }
+    #modalAbrirCaixa .modal-content {
+      z-index: 1057 !important;
+    }
+    #modalAbrirCaixa input {
+      pointer-events: auto !important;
+      z-index: 1058 !important;
+    }
+  </style>
+
   <script>
     function mostrarModalAbrir() {
       console.log('Função mostrarModalAbrir chamada');
       try {
         const modalElement = document.getElementById('modalAbrirCaixa');
         console.log('Elemento modal encontrado:', modalElement);
-        const modal = new bootstrap.Modal(modalElement);
+        
+        // Limpar qualquer instância anterior
+        const existingModal = bootstrap.Modal.getInstance(modalElement);
+        if (existingModal) {
+          existingModal.dispose();
+        }
+        
+        // Criar nova instância
+        const modal = new bootstrap.Modal(modalElement, {
+          backdrop: 'static',
+          keyboard: false
+        });
         console.log('Modal Bootstrap criado:', modal);
+        
+        // Mostrar modal
         modal.show();
         console.log('Modal.show() chamado');
+        
+        // Focar no campo após o modal aparecer
+        modalElement.addEventListener('shown.bs.modal', function () {
+          const valorInput = document.getElementById('valorInicial');
+          if (valorInput) {
+            valorInput.focus();
+            valorInput.select();
+          }
+        });
+        
       } catch (error) {
         console.error('Erro ao abrir modal:', error);
         alert('Erro ao abrir modal: ' + error.message);
@@ -285,6 +406,13 @@
       }
     }
   </script>
+
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

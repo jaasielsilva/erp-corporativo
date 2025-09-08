@@ -204,6 +204,37 @@
       background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
       color: white;
     }
+    
+    /* Estilos do Dashboard - Stats Cards */
+    .stat-card-scanner {
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      color: white;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .stat-card-scanner .stat-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+    
+    .stat-card-scanner .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      line-height: 1;
+    }
+    
+    .stat-card-scanner .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
   </style>
 </head>
 
@@ -263,10 +294,11 @@
                         </button>
                     </div>
                   </div>
-                  <div class="col-md-4 text-center">
-                    <div class="scanner-stats">
-                      <div class="h5 mb-1">Produtos Adicionados</div>
-                      <div class="h2 mb-0" id="produtoCount">0</div>
+                  <div class="col-md-4">
+                    <div class="stat-card-scanner">
+                      <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+                      <div class="stat-number" id="produtoCount">0</div>
+                      <div class="stat-label">Produtos Adicionados</div>
                     </div>
                   </div>
                 </div>

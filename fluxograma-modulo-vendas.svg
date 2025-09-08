@@ -1,0 +1,147 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; fill: #2563eb; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 16px; fill: #64748b; }
+      .box { fill: #f8fafc; stroke: #3b82f6; stroke-width: 2; rx: 8; }
+      .process { fill: #dbeafe; stroke: #3b82f6; stroke-width: 2; rx: 8; }
+      .decision { fill: #fef3c7; stroke: #f59e0b; stroke-width: 2; }
+      .endpoint { fill: #dcfce7; stroke: #16a34a; stroke-width: 2; rx: 8; }
+      .text { font-family: Arial, sans-serif; font-size: 12px; fill: #1f2937; text-anchor: middle; }
+      .arrow { stroke: #6b7280; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .label { font-family: Arial, sans-serif; font-size: 10px; fill: #6b7280; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
+    </marker>
+  </defs>
+  
+  <!-- Título -->
+  <text x="600" y="30" class="title">Fluxograma do Módulo de Vendas</text>
+  <text x="600" y="55" class="subtitle">Sistema Completo de Gestão Comercial</text>
+  
+  <!-- Início -->
+  <rect x="550" y="80" width="100" height="40" class="endpoint" />
+  <text x="600" y="105" class="text">INÍCIO</text>
+  
+  <!-- Verificação de Caixa -->
+  <polygon points="550,150 600,130 650,150 600,170" class="decision" />
+  <text x="600" y="155" class="text">Caixa Aberto?</text>
+  
+  <!-- Abrir Caixa -->
+  <rect x="350" y="180" width="120" height="40" class="process" />
+  <text x="410" y="205" class="text">Abrir Caixa</text>
+  
+  <!-- Definir Valor Inicial -->
+  <rect x="350" y="240" width="120" height="40" class="process" />
+  <text x="410" y="265" class="text">Definir Valor Inicial</text>
+  
+  <!-- Acessar PDV -->
+  <rect x="540" y="240" width="120" height="40" class="process" />
+  <text x="600" y="265" class="text">Acessar PDV</text>
+  
+  <!-- Escanear Produto -->
+  <rect x="540" y="300" width="120" height="40" class="process" />
+  <text x="600" y="325" class="text">Escanear/Buscar Produto</text>
+  
+  <!-- Adicionar à Venda -->
+  <rect x="540" y="360" width="120" height="40" class="process" />
+  <text x="600" y="385" class="text">Adicionar à Venda</text>
+  
+  <!-- Mais Produtos? -->
+  <polygon points="540,440 600,420 660,440 600,460" class="decision" />
+  <text x="600" y="445" class="text">Mais Produtos?</text>
+  
+  <!-- Selecionar Cliente -->
+  <rect x="740" y="420" width="120" height="40" class="process" />
+  <text x="800" y="445" class="text">Selecionar Cliente</text>
+  
+  <!-- Forma de Pagamento -->
+  <rect x="740" y="480" width="120" height="40" class="process" />
+  <text x="800" y="505" class="text">Forma de Pagamento</text>
+  
+  <!-- Aplicar Desconto -->
+  <rect x="740" y="540" width="120" height="40" class="process" />
+  <text x="800" y="565" class="text">Aplicar Desconto</text>
+  
+  <!-- Calcular Total -->
+  <rect x="740" y="600" width="120" height="40" class="process" />
+  <text x="800" y="625" class="text">Calcular Total</text>
+  
+  <!-- Processar Pagamento -->
+  <rect x="540" y="660" width="120" height="40" class="process" />
+  <text x="600" y="685" class="text">Processar Pagamento</text>
+  
+  <!-- Gerar Cupom -->
+  <rect x="360" y="660" width="120" height="40" class="process" />
+  <text x="420" y="685" class="text">Gerar Cupom Fiscal</text>
+  
+  <!-- Atualizar Estoque -->
+  <rect x="180" y="660" width="120" height="40" class="process" />
+  <text x="240" y="685" class="text">Atualizar Estoque</text>
+  
+  <!-- Fim -->
+  <rect x="190" y="720" width="100" height="40" class="endpoint" />
+  <text x="240" y="745" class="text">FIM</text>
+  
+  <!-- Relatórios (lado direito) -->
+  <rect x="950" y="150" width="120" height="40" class="box" />
+  <text x="1010" y="175" class="text">Relatórios Básicos</text>
+  
+  <rect x="950" y="210" width="120" height="40" class="box" />
+  <text x="1010" y="235" class="text">Relatórios Avançados</text>
+  
+  <rect x="950" y="270" width="120" height="40" class="box" />
+  <text x="1010" y="295" class="text">Análise Performance</text>
+  
+  <rect x="950" y="330" width="120" height="40" class="box" />
+  <text x="1010" y="355" class="text">Análise Comparativa</text>
+  
+  <rect x="950" y="390" width="120" height="40" class="box" />
+  <text x="1010" y="415" class="text">Sazonalidade</text>
+  
+  <!-- Devoluções (lado esquerdo) -->
+  <rect x="50" y="150" width="120" height="40" class="box" />
+  <text x="110" y="175" class="text">Gestão Devoluções</text>
+  
+  <rect x="50" y="210" width="120" height="40" class="box" />
+  <text x="110" y="235" class="text">Histórico Cliente</text>
+  
+  <rect x="50" y="270" width="120" height="40" class="box" />
+  <text x="110" y="295" class="text">Cupons Fiscais</text>
+  
+  <rect x="50" y="330" width="120" height="40" class="box" />
+  <text x="110" y="355" class="text">Editar Vendas</text>
+  
+  <!-- Setas principais -->
+  <line x1="600" y1="120" x2="600" y2="130" class="arrow" />
+  <line x1="575" y1="150" x2="450" y2="180" class="arrow" />
+  <line x1="410" y1="220" x2="410" y2="240" class="arrow" />
+  <line x1="470" y1="260" x2="540" y2="260" class="arrow" />
+  <line x1="625" y1="150" x2="600" y2="240" class="arrow" />
+  <line x1="600" y1="280" x2="600" y2="300" class="arrow" />
+  <line x1="600" y1="340" x2="600" y2="360" class="arrow" />
+  <line x1="600" y1="400" x2="600" y2="420" class="arrow" />
+  <line x1="660" y1="440" x2="740" y2="440" class="arrow" />
+  <line x1="800" y1="460" x2="800" y2="480" class="arrow" />
+  <line x1="800" y1="520" x2="800" y2="540" class="arrow" />
+  <line x1="800" y1="580" x2="800" y2="600" class="arrow" />
+  <line x1="740" y1="625" x2="660" y2="680" class="arrow" />
+  <line x1="540" y1="685" x2="480" y2="685" class="arrow" />
+  <line x1="360" y1="685" x2="300" y2="685" class="arrow" />
+  <line x1="240" y1="700" x2="240" y2="720" class="arrow" />
+  
+  <!-- Seta de loop -->
+  <path d="M 540 440 Q 480 380 540 320" class="arrow" />
+  
+  <!-- Labels -->
+  <text x="520" y="175" class="label">Não</text>
+  <text x="630" y="175" class="label">Sim</text>
+  <text x="680" y="435" class="label">Não</text>
+  <text x="520" y="360" class="label">Sim</text>
+  
+  <!-- Título das seções -->
+  <text x="110" y="130" class="subtitle">Funcionalidades</text>
+  <text x="1010" y="130" class="subtitle">Relatórios</text>
+  
+</svg>

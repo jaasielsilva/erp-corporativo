@@ -337,8 +337,14 @@
 </head>
 
 <body>
-  <div class="pdv-container">
-    <div class="container-fluid">
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="container-fluid">
       <div class="row">
         <!-- Coluna Esquerda - Scanner e Produtos -->
         <div class="col-lg-8">
@@ -475,6 +481,11 @@
         </div>
       </div>
     </div>
+        </div>
+      </section>
+      
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
   </div>
 
   <!-- Modal de Comprovante -->
@@ -535,10 +546,15 @@
     
     async function loadPaymentMethods() {
       try {
+        console.log('Carregando formas de pagamento...');
         const response = await fetch('/vendas/api/formas-pagamento');
+        console.log('Response status:', response.status);
         if (response.ok) {
           paymentMethods = await response.json();
+          console.log('Formas de pagamento carregadas:', paymentMethods);
           renderPaymentMethods();
+        } else {
+          console.error('Erro na resposta:', response.status, response.statusText);
         }
       } catch (error) {
         console.error('Erro ao carregar formas de pagamento:', error);
@@ -547,6 +563,13 @@
     
     function renderPaymentMethods() {
       const container = document.getElementById('paymentMethods');
+      console.log('Renderizando formas de pagamento. Container:', container);
+      console.log('Métodos de pagamento:', paymentMethods);
+      
+      if (!paymentMethods || paymentMethods.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">Nenhuma forma de pagamento encontrada</div>';
+        return;
+      }
       
       container.innerHTML = paymentMethods.map(method => {
         const icon = getPaymentIcon(method.nome);
@@ -562,6 +585,8 @@
           </div>
         `;
       }).join('');
+      
+      console.log('HTML gerado:', container.innerHTML);
       
       // Adicionar event listeners
       document.querySelectorAll('.payment-method').forEach(method => {
@@ -1037,22 +1062,7 @@
       }
     });
   </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-
+  <!-- Scripts para notificações -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
-
 </html>

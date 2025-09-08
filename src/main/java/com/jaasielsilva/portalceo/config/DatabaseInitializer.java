@@ -7,6 +7,7 @@ import com.jaasielsilva.portalceo.model.Beneficio;
 import com.jaasielsilva.portalceo.model.PlanoSaude;
 import com.jaasielsilva.portalceo.repository.BeneficioRepository;
 import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
+import com.jaasielsilva.portalceo.service.FormaPagamentoService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,6 +20,9 @@ public class DatabaseInitializer implements CommandLineRunner {
     
     @Autowired
     private PlanoSaudeRepository planoSaudeRepository;
+    
+    @Autowired
+    private FormaPagamentoService formaPagamentoService;
 
     // Aqui você já deve ter injeções de UserRepository, RoleRepository etc.
     // @Autowired
@@ -46,6 +50,8 @@ public class DatabaseInitializer implements CommandLineRunner {
         
         System.out.println("DatabaseInitializer: Benefícios genéricos criados. Planos de Saúde são gerenciados pelo SecurityConfig.");
         
-       
+        // ===== Inicializando Formas de Pagamento =====
+        formaPagamentoService.inicializarFormasPadrao();
+        System.out.println("DatabaseInitializer: Formas de pagamento inicializadas.");
     }
 }

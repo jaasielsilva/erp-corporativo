@@ -374,6 +374,18 @@
                             Imprimir Comprovante
                         </button>
                         
+                        <!-- Botões de Aprovação/Rejeição -->
+                        <button class="btn btn-outline-success" onclick="abrirModalAprovacao()">
+                            <i class="fas fa-check me-1"></i>
+                            Aprovar Processo
+                        </button>
+                        
+                        <button class="btn btn-outline-danger" onclick="abrirModalRejeicao()">
+                            <i class="fas fa-times me-1"></i>
+                            Rejeitar Processo
+                        </button>
+                        <!-- Fim Botões de Aprovação/Rejeição -->
+                        
                         <button class="btn btn-outline-secondary" onclick="voltarInicio()">
                             <i class="fas fa-home me-1"></i>
                             Voltar ao Início
@@ -423,6 +435,220 @@
         <i class="fas fa-sync-alt"></i>
     </button>
     
+    <!-- Modal de Aprovação -->
+    <div class="modal fade" id="modalAprovacao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Aprovar Processo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAprovacao">
+                        <input type="hidden" id="processoIdAprovacao">
+                        <div class="mb-3">
+                            <label class="form-label">Aprovado por *</label>
+                            <input type="text" class="form-control" id="aprovadoPor" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoesAprovacao" rows="3" placeholder="Observações sobre a aprovação (opcional)"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarAprovacao()">
+                        <i class="fas fa-check me-1"></i>Confirmar Aprovação
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Rejeição -->
+    <div class="modal fade" id="modalRejeicao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Rejeitar Processo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRejeicao">
+                        <input type="hidden" id="processoIdRejeicao">
+                        <div class="mb-3">
+                            <label class="form-label">Motivo da Rejeição *</label>
+                            <textarea class="form-control" id="motivoRejeicao" rows="3" required placeholder="Descreva o motivo da rejeição"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Responsável *</label>
+                            <input type="text" class="form-control" id="usuarioResponsavel" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarRejeicao()">
+                        <i class="fas fa-times me-1"></i>Rejeitar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funções para abrir os modais
+        function abrirModalAprovacao() {
+            // Obter o ID do processo do status atual
+            const processoId = document.getElementById('processoIdAprovacao').value;
+            document.getElementById('aprovadoPor').value = '';
+            document.getElementById('observacoesAprovacao').value = '';
+            new bootstrap.Modal(document.getElementById('modalAprovacao')).show();
+        }
+        
+        function abrirModalRejeicao() {
+            // Obter o ID do processo do status atual
+            const processoId = document.getElementById('processoIdRejeicao').value;
+            document.getElementById('motivoRejeicao').value = '';
+            document.getElementById('usuarioResponsavel').value = '';
+            new bootstrap.Modal(document.getElementById('modalRejeicao')).show();
+        }
+        
+        // Funções para confirmar ações
+        function confirmarAprovacao() {
+            const processoId = document.getElementById('processoIdAprovacao').value;
+            const aprovadoPor = document.getElementById('aprovadoPor').value;
+            const observacoes = document.getElementById('observacoesAprovacao').value;
+            
+            if (!aprovadoPor.trim()) {
+                mostrarErro('Nome do aprovador é obrigatório');
+                return;
+            }
+            
+            const dados = {
+                processoId: processoId,
+                aprovadoPor: aprovadoPor,
+                observacoes: observacoes
+            };
+            
+            fetch('/rh/colaboradores/adesao/api/aprovar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    mostrarErro('Erro ao aprovar processo: ' + data.message);
+                    return;
+                }
+                
+                mostrarSucesso('Processo aprovado com sucesso!');
+                bootstrap.Modal.getInstance(document.getElementById('modalAprovacao')).hide();
+                // Atualizar status
+                atualizarStatus();
+            })
+            .catch(error => {
+                mostrarErro('Erro ao aprovar processo: ' + error.message);
+            });
+        }
+        
+        function confirmarRejeicao() {
+            const processoId = document.getElementById('processoIdRejeicao').value;
+            const motivoRejeicao = document.getElementById('motivoRejeicao').value;
+            const usuarioResponsavel = document.getElementById('usuarioResponsavel').value;
+            
+            if (!motivoRejeicao.trim()) {
+                mostrarErro('Motivo da rejeição é obrigatório');
+                return;
+            }
+            
+            if (!usuarioResponsavel.trim()) {
+                mostrarErro('Usuário responsável é obrigatório');
+                return;
+            }
+            
+            const dados = {
+                processoId: processoId,
+                motivoRejeicao: motivoRejeicao,
+                usuarioResponsavel: usuarioResponsavel
+            };
+            
+            fetch('/rh/colaboradores/adesao/api/rejeitar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    mostrarErro('Erro ao rejeitar processo: ' + data.message);
+                    return;
+                }
+                
+                mostrarSucesso('Processo rejeitado com sucesso!');
+                bootstrap.Modal.getInstance(document.getElementById('modalRejeicao')).hide();
+                // Atualizar status
+                atualizarStatus();
+            })
+            .catch(error => {
+                mostrarErro('Erro ao rejeitar processo: ' + error.message);
+            });
+        }
+        
+        // Funções auxiliares para notificações
+        function mostrarSucesso(mensagem) {
+            // Criar elemento de alerta se não existir
+            if (!document.getElementById('alert-sucesso')) {
+                const alertHtml = `
+                    <div class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3" 
+                         id="alert-sucesso" role="alert" style="z-index: 9999;">
+                        <i class="fas fa-check-circle me-2"></i>
+                        ${mensagem}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', alertHtml);
+                
+                // Remover automaticamente após 5 segundos
+                setTimeout(() => {
+                    const alert = document.getElementById('alert-sucesso');
+                    if (alert) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+        }
+        
+        function mostrarErro(mensagem) {
+            // Criar elemento de alerta se não existir
+            if (!document.getElementById('alert-erro')) {
+                const alertHtml = `
+                    <div class="alert alert-danger alert-dismissible fade show position-fixed top-0 end-0 m-3" 
+                         id="alert-erro" role="alert" style="z-index: 9999;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${mensagem}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', alertHtml);
+                
+                // Remover automaticamente após 5 segundos
+                setTimeout(() => {
+                    const alert = document.getElementById('alert-erro');
+                    if (alert) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+        }
+    </script>
+    
     <footer th:replace="~{components/footer :: footer}"></footer>
     
     <!-- Scripts -->
@@ -462,6 +688,12 @@
         }
         
         function atualizarInterface(dados) {
+            // Armazenar o ID do processo
+            if (dados.processoId) {
+                document.getElementById('processoIdAprovacao').value = dados.processoId;
+                document.getElementById('processoIdRejeicao').value = dados.processoId;
+            }
+            
             // Atualizar ícone e título principal
             const statusIcon = document.getElementById('status-icon');
             const statusTitulo = document.getElementById('status-titulo');

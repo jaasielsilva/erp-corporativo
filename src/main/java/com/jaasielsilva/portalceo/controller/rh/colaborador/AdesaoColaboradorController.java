@@ -344,11 +344,13 @@ public class AdesaoColaboradorController {
 
         try {
             // Buscar dados do processo no workflow
-            // Por enquanto, retornar status básico
+            ProcessoAdesao processo = workflowService.buscarProcessoPorSessionId(sessionId);
+            
             response.put("success", true);
-            response.put("status", "AGUARDANDO_APROVACAO");
-            response.put("etapaAtual", "revisao");
+            response.put("status", processo.getStatus().name());
+            response.put("etapaAtual", processo.getEtapaAtual());
             response.put("mensagem", "Processo enviado para aprovação");
+            response.put("processoId", processo.getId()); // Adicionando o ID do processo
 
             return ResponseEntity.ok(response);
 
@@ -1010,4 +1012,114 @@ public class AdesaoColaboradorController {
             response.put("message", "Debug failed: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
-    }}
+    }
+    
+    /**
+     * API: Aprova processo de adesão
+     */
+    @PostMapping("/api/aprovar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> aprovarProcesso(
+            @RequestBody Map<String, String> dados) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Long processoId = Long.valueOf(dados.get("processoId"));
+            String aprovadoPor = dados.get("aprovadoPor");
+            String observacoes = dados.get("observacoes");
+            
+            if (processoId == null) {
+                response.put("success", false);
+                response.put("message", "ID do processo é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (aprovadoPor == null || aprovadoPor.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Campo 'aprovadoPor' é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Chamar o método de aprovação no workflow service
+            workflowService.aprovarProcesso(processoId, aprovadoPor, observacoes);
+            
+            // Buscar o processo atualizado
+            WorkflowAdesaoService.ProcessoAdesaoInfo processoInfo = workflowService.buscarProcessoPorId(processoId);
+            
+            response.put("success", true);
+            response.put("message", "Processo aprovado com sucesso");
+            response.put("processo", processoInfo);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "ID do processo inválido");
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            logger.error("Erro ao aprovar processo: ", e);
+            response.put("success", false);
+            response.put("message", "Erro interno do servidor: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * API: Rejeita processo de adesão
+     */
+    @PostMapping("/api/rejeitar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> rejeitarProcesso(
+            @RequestBody Map<String, String> dados) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Long processoId = Long.valueOf(dados.get("processoId"));
+            String motivoRejeicao = dados.get("motivoRejeicao");
+            String usuarioResponsavel = dados.get("usuarioResponsavel");
+            
+            if (processoId == null) {
+                response.put("success", false);
+                response.put("message", "ID do processo é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (motivoRejeicao == null || motivoRejeicao.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Motivo da rejeição é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            if (usuarioResponsavel == null || usuarioResponsavel.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Usuário responsável é obrigatório");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Chamar o método de rejeição no workflow service
+            workflowService.rejeitarProcesso(processoId, motivoRejeicao, usuarioResponsavel);
+            
+            // Buscar o processo atualizado
+            WorkflowAdesaoService.ProcessoAdesaoInfo processoInfo = workflowService.buscarProcessoPorId(processoId);
+            
+            response.put("success", true);
+            response.put("message", "Processo rejeitado com sucesso");
+            response.put("processo", processoInfo);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (NumberFormatException e) {
+            response.put("success", false);
+            response.put("message", "ID do processo inválido");
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            logger.error("Erro ao rejeitar processo: ", e);
+            response.put("success", false);
+            response.put("message", "Erro interno do servidor: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+}

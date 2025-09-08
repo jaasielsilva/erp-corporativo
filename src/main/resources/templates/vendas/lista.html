@@ -12,6 +12,82 @@
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
   
+  <style>
+    /* Estilos do Dashboard - Stats Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      padding: 25px;
+      color: white;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    .stat-card:nth-child(1) {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card:nth-child(2) {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .stat-card:nth-child(3) {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card:nth-child(4) {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .stat-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      opacity: 0.8;
+    }
+    
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      line-height: 1;
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-change {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    
+    .stat-change.positive {
+      color: #a7f3d0;
+    }
+    
+    .stat-change.negative {
+      color: #fca5a5;
+    }
+  </style>
+  
 </head>
 
 <body>
@@ -30,51 +106,31 @@
             </div>
           </div>
 
-          <!-- Estatísticas Principais -->
-          <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
-              <div class="stats-card count">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-1 opacity-75">Total de Vendas</h6>
-                    <h3 class="mb-0 fw-bold" th:text="${totalVendas}">0</h3>
-                  </div>
-                  <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
-                </div>
-              </div>
+          <!-- Estatísticas Principais - Padrão Dashboard -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+              <div class="stat-number" th:text="${totalVendas}">0</div>
+              <div class="stat-label">Total de Vendas</div>
+              <div class="stat-change positive">+8.3% vs mês anterior</div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-              <div class="stats-card revenue">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-1 opacity-75">Faturamento Total</h6>
-                    <h3 class="mb-0 fw-bold" th:text="${valorTotalFormatado}">R$ 0,00</h3>
-                  </div>
-                  <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
-                </div>
-              </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+              <div class="stat-number" th:text="${valorTotalFormatado}">R$ 0,00</div>
+              <div class="stat-label">Faturamento Total</div>
+              <div class="stat-change positive">+12.5% vs mês anterior</div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-              <div class="stats-card avg">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-1 opacity-75">Ticket Médio</h6>
-                    <h3 class="mb-0 fw-bold" id="ticketMedio">R$ 0,00</h3>
-                  </div>
-                  <i class="fas fa-chart-line fa-2x opacity-75"></i>
-                </div>
-              </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+              <div class="stat-number" id="ticketMedio">R$ 0,00</div>
+              <div class="stat-label">Ticket Médio</div>
+              <div class="stat-change positive">+5.2% vs mês anterior</div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-              <div class="stats-card monthly">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h6 class="mb-1 opacity-75">Vendas do Mês</h6>
-                    <h3 class="mb-0 fw-bold" id="vendasMes">0</h3>
-                  </div>
-                  <i class="fas fa-calendar-alt fa-2x opacity-75"></i>
-                </div>
-              </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+              <div class="stat-number" id="vendasMes">0</div>
+              <div class="stat-label">Vendas do Mês</div>
+              <div class="stat-change positive">Meta: 85% atingida</div>
             </div>
           </div>
 

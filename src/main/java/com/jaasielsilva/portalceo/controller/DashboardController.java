@@ -132,8 +132,11 @@ public class DashboardController {
         // ===== DADOS PARA GRÁFICOS ADICIONAIS =====
         // Vendas por categoria (dados reais)
         Map<String, BigDecimal> vendasPorCategoriaMap = vendaService.getVendasPorCategoria();
+        System.out.println("DEBUG - Vendas por categoria: " + vendasPorCategoriaMap);
         List<String> categoriasLabels = new ArrayList<>(vendasPorCategoriaMap.keySet());
         List<BigDecimal> categoriasValores = new ArrayList<>(vendasPorCategoriaMap.values());
+        System.out.println("DEBUG - Labels: " + categoriasLabels);
+        System.out.println("DEBUG - Valores: " + categoriasValores);
 
         // Status das solicitações (dados reais)
         List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();

@@ -63,19 +63,19 @@ public class VendaController {
 
     @Autowired
     private ProdutoService produtoService;
-    
+
     @Autowired
     private FormaPagamentoService formaPagamentoService;
-    
+
     @Autowired
     private CaixaService caixaService;
-    
+
     @Autowired
     private UsuarioService usuarioService;
-    
+
     @Autowired
     private VendaRelatorioService vendaRelatorioService;
-    
+
     @Autowired
     private DevolucaoService devolucaoService;
 
@@ -108,19 +108,17 @@ public class VendaController {
                 model.addAttribute("erro", "Não há caixa aberto. Abra o caixa antes de realizar vendas.");
                 return "vendas/caixa-fechado";
             }
-            
+
             model.addAttribute("clientes", clienteService.buscarTodos());
             model.addAttribute("formasPagamento", formaPagamentoService.buscarAtivas());
             model.addAttribute("resumoDia", vendaService.obterResumoVendasDia());
-            
+
             return "vendas/pdv";
         } catch (Exception e) {
             model.addAttribute("erro", "Erro ao carregar PDV: " + e.getMessage());
             return "error";
         }
     }
-    
-
 
     // 🔍 BUSCAR PRODUTO POR EAN (API REST para PDV)
     @GetMapping("/api/produto/{ean}")
@@ -146,8 +144,8 @@ public class VendaController {
             // Obter usuário logado
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-            
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
             // Criar nova venda
             Venda venda = new Venda();
             venda.setFormaPagamento(request.getFormaPagamento());
@@ -351,28 +349,28 @@ public class VendaController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
     }
-    
+
     // ===== ENDPOINTS PARA GESTÃO DE CAIXA =====
-    
+
     @GetMapping("/caixa")
     public String caixa(Model model) {
         try {
             // Log para debug
             System.out.println("[DEBUG] Iniciando carregamento da página de caixa");
-            
+
             // Testar conexão com banco
             System.out.println("[DEBUG] Verificando se existe caixa aberto...");
             Optional<Caixa> caixaAberto = caixaService.buscarCaixaAberto();
             System.out.println("[DEBUG] Caixa aberto encontrado: " + caixaAberto.isPresent());
-            
+
             model.addAttribute("caixaAberto", caixaAberto.orElse(null));
-            
+
             System.out.println("[DEBUG] Obtendo resumo do dia...");
             VendaService.ResumoVendasDia resumoDia = vendaService.obterResumoVendasDia();
             System.out.println("[DEBUG] Resumo obtido com sucesso");
-            
+
             model.addAttribute("resumoDia", resumoDia);
-            
+
             System.out.println("[DEBUG] Carregamento concluído com sucesso");
             return "vendas/caixa";
         } catch (Exception e) {
@@ -382,24 +380,24 @@ public class VendaController {
             return "error";
         }
     }
-    
+
     @PostMapping("/api/caixa/abrir")
     @ResponseBody
     public ResponseEntity<?> abrirCaixa(@RequestParam BigDecimal valorInicial) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-            
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
             Caixa caixa = caixaService.abrirCaixa(valorInicial, usuario, "Abertura via PDV");
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
             response.put("mensagem", "Caixa aberto com sucesso!");
             response.put("caixaId", caixa.getId());
             response.put("valorInicial", caixa.getValorInicial());
             response.put("dataAbertura", caixa.getDataAbertura());
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -408,15 +406,15 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @PostMapping("/api/caixa/fechar")
     @ResponseBody
     public ResponseEntity<?> fecharCaixa(@RequestParam(required = false) String observacoes) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-            
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
             Optional<Caixa> caixaOpt = caixaService.buscarCaixaAberto();
             if (caixaOpt.isEmpty()) {
                 throw new RuntimeException("Nenhum caixa aberto encontrado");
@@ -424,12 +422,12 @@ public class VendaController {
             Caixa caixa = caixaOpt.get();
             BigDecimal valorFinal = caixa.getValorInicial().add(vendaService.calcularTotalVendasDoDia());
             Caixa caixaFechado = caixaService.fecharCaixa(caixa.getId(), valorFinal, usuario, observacoes);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
             response.put("mensagem", "Caixa fechado com sucesso!");
             response.put("caixa", caixa);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -438,23 +436,23 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     // ===== ENDPOINTS PARA RELATÓRIOS AVANÇADOS =====
-    
+
     @GetMapping("/relatorios/avancados")
     public String relatoriosAvancados(Model model) {
         model.addAttribute("pageTitle", "Relatórios Avançados de Vendas");
         return "vendas/relatorios-avancados";
     }
-    
+
     @GetMapping("/api/relatorio-performance")
     @ResponseBody
     public ResponseEntity<?> getRelatorioPerformance(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
         try {
-            VendaRelatorioService.RelatorioPerformanceVendas relatorio = 
-                vendaRelatorioService.gerarRelatorioPerformance(inicio, fim);
+            VendaRelatorioService.RelatorioPerformanceVendas relatorio = vendaRelatorioService
+                    .gerarRelatorioPerformance(inicio, fim);
             return ResponseEntity.ok(relatorio);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
@@ -462,15 +460,15 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/api/analise-comparativa")
     @ResponseBody
     public ResponseEntity<?> getAnaliseComparativa(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
         try {
-            VendaRelatorioService.AnaliseComparativa analise = 
-                vendaRelatorioService.gerarAnaliseComparativa(inicio, fim);
+            VendaRelatorioService.AnaliseComparativa analise = vendaRelatorioService.gerarAnaliseComparativa(inicio,
+                    fim);
             return ResponseEntity.ok(analise);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
@@ -478,13 +476,12 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/api/analise-sazonalidade")
     @ResponseBody
     public ResponseEntity<?> getAnaliseSazonalidade(@RequestParam(defaultValue = "12") int meses) {
         try {
-            VendaRelatorioService.AnaliseSazonalidade analise = 
-                vendaRelatorioService.gerarAnaliseSazonalidade(meses);
+            VendaRelatorioService.AnaliseSazonalidade analise = vendaRelatorioService.gerarAnaliseSazonalidade(meses);
             return ResponseEntity.ok(analise);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
@@ -492,15 +489,14 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/api/analise-produtos")
     @ResponseBody
     public ResponseEntity<?> getAnaliseProdutos(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
         try {
-            VendaRelatorioService.AnaliseProdutos analise = 
-                vendaRelatorioService.gerarAnaliseProdutos(inicio, fim);
+            VendaRelatorioService.AnaliseProdutos analise = vendaRelatorioService.gerarAnaliseProdutos(inicio, fim);
             return ResponseEntity.ok(analise);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
@@ -508,9 +504,9 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     // ===== INTEGRAÇÃO COM DEVOLUÇÕES =====
-    
+
     @GetMapping("/{id}/devolucoes")
     @ResponseBody
     public ResponseEntity<?> getDevolucoes(@PathVariable Long id) {
@@ -519,7 +515,7 @@ public class VendaController {
             if (vendaOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
+
             List<Devolucao> devolucoes = devolucaoService.findByVenda(vendaOpt.get());
             return ResponseEntity.ok(devolucoes);
         } catch (Exception e) {
@@ -528,14 +524,14 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     // ===== ENDPOINTS PARA RELATÓRIOS =====
-    
+
     @GetMapping("/relatorios")
     public String relatorios(Model model) {
         return "vendas/relatorios";
     }
-    
+
     @GetMapping("/api/resumo-dia")
     @ResponseBody
     public ResponseEntity<?> obterResumoDia() {
@@ -548,7 +544,7 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/api/vendas-recentes")
     @ResponseBody
     public ResponseEntity<?> obterVendasRecentes(@RequestParam(defaultValue = "10") int limite) {
@@ -561,9 +557,9 @@ public class VendaController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     // ===== ENDPOINTS PARA FORMAS DE PAGAMENTO =====
-    
+
     @GetMapping("/api/formas-pagamento")
     @ResponseBody
     public ResponseEntity<?> listarFormasPagamento() {
@@ -586,11 +582,11 @@ public class VendaController {
                 Venda venda = vendaOpt.get();
                 model.addAttribute("venda", venda);
                 model.addAttribute("itens", venda.getItens());
-                
+
                 // Buscar devoluções da venda
                 List<Devolucao> devolucoes = devolucaoService.findByVenda(venda);
                 model.addAttribute("devolucoes", devolucoes);
-                
+
                 return "vendas/detalhes";
             } else {
                 model.addAttribute("erro", "Venda não encontrada");
@@ -609,18 +605,18 @@ public class VendaController {
             Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
             if (vendaOpt.isPresent()) {
                 Venda venda = vendaOpt.get();
-                
+
                 // Verificar se a venda pode ser editada
                 if ("Cancelada".equals(venda.getStatus())) {
                     model.addAttribute("erro", "Não é possível editar uma venda cancelada");
                     return "redirect:/vendas/" + id;
                 }
-                
+
                 model.addAttribute("venda", venda);
                 model.addAttribute("clientes", clienteService.buscarTodos());
                 model.addAttribute("produtos", produtoService.listarTodosProdutos());
                 model.addAttribute("formasPagamento", formaPagamentoService.buscarAtivas());
-                
+
                 return "vendas/editar";
             } else {
                 model.addAttribute("erro", "Venda não encontrada");
@@ -639,22 +635,22 @@ public class VendaController {
             Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
             if (vendaOpt.isPresent()) {
                 Venda vendaExistente = vendaOpt.get();
-                
+
                 // Verificar se a venda pode ser editada
                 if ("Cancelada".equals(vendaExistente.getStatus())) {
                     model.addAttribute("erro", "Não é possível editar uma venda cancelada");
                     return "redirect:/vendas/" + id;
                 }
-                
+
                 // Atualizar campos permitidos
                 vendaExistente.setObservacoes(vendaAtualizada.getObservacoes());
                 vendaExistente.setDesconto(vendaAtualizada.getDesconto());
                 vendaExistente.setFormaPagamento(vendaAtualizada.getFormaPagamento());
                 vendaExistente.setParcelas(vendaAtualizada.getParcelas());
-                
+
                 vendaService.salvar(vendaExistente);
                 model.addAttribute("sucesso", "Venda atualizada com sucesso!");
-                
+
                 return "redirect:/vendas/" + id;
             } else {
                 model.addAttribute("erro", "Venda não encontrada");
@@ -673,20 +669,20 @@ public class VendaController {
             Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
             if (vendaOpt.isPresent()) {
                 Venda venda = vendaOpt.get();
-                
+
                 // Verificar se a venda pode ter devolução
                 if (!"Finalizada".equals(venda.getStatus())) {
                     model.addAttribute("erro", "Só é possível fazer devolução de vendas finalizadas");
                     return "redirect:/vendas/" + id;
                 }
-                
+
                 model.addAttribute("venda", venda);
                 model.addAttribute("itens", venda.getItens());
-                
+
                 // Buscar devoluções anteriores
                 List<Devolucao> devolucoes = devolucaoService.findByVenda(venda);
                 model.addAttribute("devolucoes", devolucoes);
-                
+
                 return "vendas/devolucao";
             } else {
                 model.addAttribute("erro", "Venda não encontrada");
@@ -700,56 +696,56 @@ public class VendaController {
 
     // 📜 HISTÓRICO DO CLIENTE
     @GetMapping("/historico-cliente/{clienteId}")
-    public String historicoCliente(@PathVariable Long clienteId, 
-                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
-                                 @RequestParam(required = false) String status,
-                                 @RequestParam(defaultValue = "data_desc") String ordenacao,
-                                 Model model) {
+    public String historicoCliente(@PathVariable Long clienteId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "data_desc") String ordenacao,
+            Model model) {
         try {
             Optional<Cliente> clienteOpt = clienteService.buscarPorId(clienteId);
             if (clienteOpt.isPresent()) {
                 Cliente cliente = clienteOpt.get();
                 model.addAttribute("cliente", cliente);
-                
+
                 // Buscar vendas do cliente
                 List<Venda> vendas = vendaService.buscarPorCpfCnpj(cliente.getCpfCnpj());
                 model.addAttribute("vendas", vendas);
-                
+
                 // Calcular estatísticas
                 int totalVendas = vendas.size();
                 BigDecimal valorTotalGasto = vendas.stream()
-                    .map(Venda::getTotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal ticketMedio = totalVendas > 0 ? 
-                    valorTotalGasto.divide(BigDecimal.valueOf(totalVendas), 2, BigDecimal.ROUND_HALF_UP) : 
-                    BigDecimal.ZERO;
-                
+                        .map(Venda::getTotal)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal ticketMedio = totalVendas > 0
+                        ? valorTotalGasto.divide(BigDecimal.valueOf(totalVendas), 2, BigDecimal.ROUND_HALF_UP)
+                        : BigDecimal.ZERO;
+
                 model.addAttribute("totalVendas", totalVendas);
                 model.addAttribute("valorTotalGasto", valorTotalGasto);
                 model.addAttribute("ticketMedio", ticketMedio);
-                
+
                 // Última compra
                 LocalDateTime ultimaCompra = vendas.stream()
-                    .map(Venda::getDataVenda)
-                    .max(LocalDateTime::compareTo)
-                    .orElse(null);
+                        .map(Venda::getDataVenda)
+                        .max(LocalDateTime::compareTo)
+                        .orElse(null);
                 model.addAttribute("ultimaCompra", ultimaCompra);
-                
+
                 // Produtos únicos comprados
                 long produtosUnicos = vendas.stream()
-                    .flatMap(v -> v.getItens().stream())
-                    .map(item -> item.getProduto().getId())
-                    .distinct()
-                    .count();
+                        .flatMap(v -> v.getItens().stream())
+                        .map(item -> item.getProduto().getId())
+                        .distinct()
+                        .count();
                 model.addAttribute("produtosUnicos", produtosUnicos);
-                
+
                 // Parâmetros de filtro para manter no formulário
                 model.addAttribute("dataInicio", dataInicio);
                 model.addAttribute("dataFim", dataFim);
                 model.addAttribute("status", status);
                 model.addAttribute("ordenacao", ordenacao);
-                
+
                 return "vendas/historico-cliente";
             } else {
                 model.addAttribute("erro", "Cliente não encontrado");
@@ -769,7 +765,7 @@ public class VendaController {
             if (vendaOpt.isPresent()) {
                 Venda venda = vendaOpt.get();
                 model.addAttribute("venda", venda);
-                
+
                 // Gerar QR Code para consulta online (opcional)
                 try {
                     String qrContent = "https://paineldoceo.com.br/vendas/" + id + "/consulta";
@@ -779,7 +775,7 @@ public class VendaController {
                     // QR Code é opcional, não falha se der erro
                     System.err.println("Erro ao gerar QR Code: " + e.getMessage());
                 }
-                
+
                 return "vendas/cupom-fiscal";
             } else {
                 model.addAttribute("erro", "Venda não encontrada");
@@ -800,12 +796,12 @@ public class VendaController {
             if (email == null || email.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("erro", "Email é obrigatório"));
             }
-            
+
             Optional<Venda> vendaOpt = vendaService.buscarPorId(id);
             if (vendaOpt.isPresent()) {
                 // Aqui você implementaria o serviço de email
                 // emailService.enviarCupomFiscal(vendaOpt.get(), email);
-                
+
                 return ResponseEntity.ok(Map.of("sucesso", "Cupom enviado com sucesso para " + email));
             } else {
                 return ResponseEntity.notFound().build();
@@ -838,11 +834,26 @@ public class VendaController {
     private String gerarQRCodeBase64(String content) throws WriterException, IOException {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, 200, 200);
-        
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
-        
+
         byte[] qrCodeBytes = outputStream.toByteArray();
         return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(qrCodeBytes);
     }
+
+    // metodo pra atender o grafico de vendas
+    @GetMapping("/api/categoria")
+    @ResponseBody
+    public ResponseEntity<?> vendasPorCategoria() {
+        try {
+            // Supondo que você tenha um service que retorna vendas agrupadas por categoria
+            Map<String, BigDecimal> resultado = vendaService.calcularVendasPorCategoria();
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("erro", e.getMessage()));
+        }
+    }
+
 }

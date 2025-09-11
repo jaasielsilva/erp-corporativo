@@ -342,56 +342,8 @@
                         <div class="benefit-details" id="details-plano-saude">
                             <h5 class="mb-3">Escolha seu plano:</h5>
 
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="plan-option" data-plan="basico" data-price="89.90">
-                                        <div class="text-center">
-                                            <h6 class="fw-bold">Básico</h6>
-                                            <div class="plan-price">R$ 89,90</div>
-                                            <small class="text-muted">por mês</small>
-                                        </div>
-                                        <ul class="list-unstyled mt-3">
-                                            <li><i class="fas fa-check text-success me-2"></i>Consultas médicas</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Exames básicos</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Emergência 24h</li>
-                                        </ul>
-                                        <input type="radio" name="planoSaudeTipo" value="basico" class="d-none">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="plan-option" data-plan="intermediario" data-price="149.90">
-                                        <div class="text-center">
-                                            <h6 class="fw-bold">Intermediário</h6>
-                                            <div class="plan-price">R$ 149,90</div>
-                                            <small class="text-muted">por mês</small>
-                                        </div>
-                                        <ul class="list-unstyled mt-3">
-                                            <li><i class="fas fa-check text-success me-2"></i>Tudo do Básico</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Internações</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Cirurgias</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Exames complexos</li>
-                                        </ul>
-                                        <input type="radio" name="planoSaudeTipo" value="intermediario" class="d-none">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="plan-option" data-plan="premium" data-price="249.90">
-                                        <div class="text-center">
-                                            <h6 class="fw-bold">Premium</h6>
-                                            <div class="plan-price">R$ 249,90</div>
-                                            <small class="text-muted">por mês</small>
-                                        </div>
-                                        <ul class="list-unstyled mt-3">
-                                            <li><i class="fas fa-check text-success me-2"></i>Tudo do Intermediário</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Quarto privativo</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Medicina preventiva</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Rede premium</li>
-                                        </ul>
-                                        <input type="radio" name="planoSaudeTipo" value="premium" class="d-none">
-                                    </div>
-                                </div>
+                            <div class="row" id="planos-saude-container">
+                                <!-- Os planos serão carregados dinamicamente via JavaScript -->
                             </div>
 
                             <!-- Dependentes -->
@@ -619,8 +571,61 @@
         }
 
         function preencherPlanosSaude(opcoes) {
-            // Implementação para preencher opções de plano de saúde
-            console.log('Preenchendo planos de saúde:', opcoes);
+            const container = $('#planos-saude-container');
+            container.empty();
+            
+            opcoes.forEach(function(plano, index) {
+                const tipoPlano = plano.nome.toLowerCase().includes('básico') ? 'basico' : 
+                                 plano.nome.toLowerCase().includes('intermediário') ? 'intermediario' : 'premium';
+                
+                const valorFormatado = parseFloat(plano.valor).toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+                
+                const planoHtml = `
+                    <div class="col-md-4">
+                        <div class="plan-option" data-plan="${tipoPlano}" data-price="${plano.valor}" data-plano-id="${plano.id}">
+                            <div class="text-center">
+                                <h6 class="fw-bold">${plano.nome}</h6>
+                                <div class="plan-price">${valorFormatado}</div>
+                                <small class="text-muted">por mês</small>
+                                <small class="text-muted d-block">${plano.detalhes?.operadora || 'Operadora'}</small>
+                            </div>
+                            <ul class="list-unstyled mt-3">
+                                <li><i class="fas fa-check text-success me-2"></i>Consultas médicas</li>
+                                <li><i class="fas fa-check text-success me-2"></i>${tipoPlano === 'basico' ? 'Exames básicos' : 'Exames completos'}</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Emergência 24h</li>
+                                ${tipoPlano !== 'basico' ? '<li><i class="fas fa-check text-success me-2"></i>Internações e cirurgias</li>' : ''}
+                                ${tipoPlano === 'premium' ? '<li><i class="fas fa-check text-success me-2"></i>Quarto privativo</li>' : ''}
+                                ${tipoPlano === 'premium' ? '<li><i class="fas fa-check text-success me-2"></i>Medicina preventiva</li>' : ''}
+                            </ul>
+                            <input type="radio" name="planoSaudeTipo" value="${plano.id}" class="d-none">
+                        </div>
+                    </div>
+                `;
+                
+                container.append(planoHtml);
+            });
+            
+            // Reconfigurar eventos para os novos elementos
+            configurarEventosPlanos();
+            
+            console.log('Planos de saúde carregados:', opcoes);
+        }
+        
+        function configurarEventosPlanos() {
+            // Seleção de planos dinâmicos
+            $('#planos-saude-container .plan-option').off('click').on('click', function () {
+                const container = $(this).closest('#planos-saude-container');
+                container.find('.plan-option').removeClass('selected');
+                $(this).addClass('selected');
+
+                const radio = $(this).find('input[type="radio"]');
+                radio.prop('checked', true);
+
+                atualizarResumo();
+            });
         }
 
         function preencherValeRefeicao(opcoes) {
@@ -804,15 +809,15 @@
                 const planoSelecionado = card.find('.plan-option.selected');
 
                 if (planoSelecionado.length > 0) {
-                    const planoId = planoSelecionado.data('plan');
-
-                    // Para plano de saúde, usar planoId
+                    // Para plano de saúde, usar o ID real do plano do banco de dados
                     if (beneficio === 'PLANO_SAUDE') {
+                        const planoIdReal = planoSelecionado.data('plano-id') || planoSelecionado.find('input[type="radio"]').val();
                         beneficios[beneficio] = {
-                            planoId: planoId
+                            planoId: planoIdReal
                         };
                     } else {
                         // Para vales, usar valor
+                        const planoId = planoSelecionado.data('plan');
                         beneficios[beneficio] = {
                             valor: planoId
                         };

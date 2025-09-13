@@ -50,11 +50,14 @@
     font-size: 0.8rem;
     border: none;
     transition: all 0.2s;
+    position: relative;
+    z-index: 10;
 }
 
 .btn-action:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 11;
 }
 
 /* Tabelas responsivas melhoradas */

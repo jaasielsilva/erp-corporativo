@@ -251,7 +251,25 @@
                     if (!overlay.classList.contains('show')) {
                         overlay.style.zIndex = '-1';
                         overlay.style.pointerEvents = 'none';
+                        overlay.style.visibility = 'hidden';
                     }
+                });
+                
+                // Remove qualquer elemento com z-index muito alto que possa estar bloqueando
+                const allElements = document.querySelectorAll('*');
+                allElements.forEach(el => {
+                    const zIndex = window.getComputedStyle(el).zIndex;
+                    if (zIndex && parseInt(zIndex) > 2000 && !el.classList.contains('modal')) {
+                        el.style.pointerEvents = 'none';
+                    }
+                });
+                
+                // Força que todos os botões de ação sejam clicáveis
+                const actionButtons = document.querySelectorAll('.btn-action, .btn-outline-success, .btn-outline-danger, .btn-outline-info');
+                actionButtons.forEach(btn => {
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.position = 'relative';
+                    btn.style.zIndex = '25';
                 });
             }, 500);
             
@@ -387,6 +405,16 @@
             
             html += '</tbody></table></div>';
             container.innerHTML = html;
+            
+            // Garante que os novos botões sejam clicáveis
+            setTimeout(() => {
+                const newActionButtons = container.querySelectorAll('.btn-action, .btn-outline-success, .btn-outline-danger, .btn-outline-info');
+                newActionButtons.forEach(btn => {
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.position = 'relative';
+                    btn.style.zIndex = '25';
+                });
+            }, 100);
         }
         
         function renderizarPaginacao(data) {

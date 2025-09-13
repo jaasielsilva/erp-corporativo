@@ -489,22 +489,30 @@
         // Tentar obter dados dinâmicos
         try {
             const dynamicSolicitacoes = [[${solicitacoesStatus}]];
-            console.log('Solicitações - Valores:', dynamicSolicitacoes);
+            console.log('=== DEBUG FRONTEND SOLICITAÇÕES ===');
+            console.log('Dados recebidos do backend:', dynamicSolicitacoes);
+            console.log('Tipo dos dados:', typeof dynamicSolicitacoes);
+            console.log('É array?', Array.isArray(dynamicSolicitacoes));
+            console.log('Tamanho do array:', dynamicSolicitacoes ? dynamicSolicitacoes.length : 'null/undefined');
             
             if (dynamicSolicitacoes && dynamicSolicitacoes.length > 0) {
                 // Se todos os valores são zero, usar dados estáticos
                 const hasNonZeroValues = dynamicSolicitacoes.some(val => val > 0);
+                console.log('Tem valores não-zero?', hasNonZeroValues);
+                
                 if (hasNonZeroValues) {
                     solicitacoesValores = dynamicSolicitacoes;
-                    console.log('Usando dados dinâmicos para solicitações');
+                    console.log('✅ Usando dados dinâmicos para solicitações:', solicitacoesValores);
                 } else {
-                    console.log('Dados de solicitações são zeros, usando estáticos de fallback');
+                    console.log('⚠️ Dados de solicitações são zeros, usando estáticos de fallback');
                 }
             } else {
-                console.log('Usando dados estáticos para solicitações');
+                console.log('⚠️ Array vazio ou null, usando dados estáticos para solicitações');
             }
+            console.log('Valores finais que serão usados:', solicitacoesValores);
+            console.log('=====================================');
         } catch (e) {
-            console.log('Erro ao carregar dados de solicitações, usando estáticos:', e);
+            console.log('❌ Erro ao carregar dados de solicitações, usando estáticos:', e);
         }
         
         const chartSolicitacoes = new Chart(ctxSolicitacoes, {

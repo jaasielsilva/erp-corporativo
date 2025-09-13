@@ -29,6 +29,9 @@ public class ProcessoAdesao {
     @Column(name = "cpf_colaborador", nullable = false)
     private String cpfColaborador;
 
+    @Column(name = "colaborador_id")
+    private Long colaboradorId;
+
     @Column(name = "cargo")
     private String cargo;
 

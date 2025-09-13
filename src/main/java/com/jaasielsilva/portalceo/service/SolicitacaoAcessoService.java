@@ -393,13 +393,21 @@ public class SolicitacaoAcessoService {
 
         try {
             // Buscar contagens para cada status na ordem específica para o gráfico
-            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.PENDENTE));
-            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.APROVADO));
-            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.REJEITADO));
-            valores.add(solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.USUARIO_CRIADO));
+            Long pendentes = solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.PENDENTE);
+            Long aprovadas = solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.APROVADO);
+            Long rejeitadas = solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.REJEITADO);
+            Long usuarioCriado = solicitacaoAcessoRepository.countByStatusForChart(StatusSolicitacao.USUARIO_CRIADO);
+            
+            valores.add(pendentes != null ? pendentes : 0L);
+            valores.add(aprovadas != null ? aprovadas : 0L);
+            valores.add(rejeitadas != null ? rejeitadas : 0L);
+            valores.add(usuarioCriado != null ? usuarioCriado : 0L);
+            
+         
 
         } catch (Exception e) {
             System.err.println("Erro ao obter valores do gráfico: " + e.getMessage());
+            e.printStackTrace();
             // Retornar valores padrão em caso de erro
             valores.add(0L);
             valores.add(0L);

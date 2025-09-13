@@ -2,12 +2,16 @@ package com.jaasielsilva.portalceo.service.rh;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.HistoricoProcessoAdesao;
 import com.jaasielsilva.portalceo.model.ProcessoAdesao;
+import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.HistoricoProcessoAdesaoRepository;
 import com.jaasielsilva.portalceo.repository.ProcessoAdesaoRepository;
 
 import com.jaasielsilva.portalceo.service.NotificacaoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -28,6 +32,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class WorkflowAdesaoService {
 
+    private static final Logger logger = LoggerFactory.getLogger(WorkflowAdesaoService.class);
+
     @Autowired
     private ProcessoAdesaoRepository processoRepository;
 
@@ -37,6 +43,9 @@ public class WorkflowAdesaoService {
 
     @Autowired
     private HistoricoProcessoAdesaoRepository historicoRepository;
+
+    @Autowired
+    private ColaboradorRepository colaboradorRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -217,6 +226,9 @@ public class WorkflowAdesaoService {
         processo.aprovar(aprovadoPor, observacoes != null ? observacoes : "");
 
         processoRepository.save(processo);
+
+        // ATIVAR COLABORADOR APÓS APROVAÇÃO
+        ativarColaboradorAprovado(processo);
 
         // Registrar aprovação no histórico
         HistoricoProcessoAdesao historico = HistoricoProcessoAdesao.criarEventoAprovacao(processo, aprovadoPor);
@@ -738,6 +750,38 @@ public class WorkflowAdesaoService {
 
         public void setProcessosHoje(Integer processosHoje) {
             this.processosHoje = processosHoje;
+        }
+    }
+
+    /**
+     * Ativa colaborador após aprovação do processo
+     */
+    private void ativarColaboradorAprovado(ProcessoAdesao processo) {
+        try {
+            // Buscar colaborador pelo CPF do processo
+            Optional<Colaborador> colaboradorOpt = colaboradorRepository.findByCpf(processo.getCpfColaborador());
+            
+            if (colaboradorOpt.isPresent()) {
+                Colaborador colaborador = colaboradorOpt.get();
+                
+                // Ativar colaborador
+                colaborador.setStatus(Colaborador.StatusColaborador.ATIVO);
+                colaborador.setAtivo(true);
+                
+                // Salvar alterações
+                colaboradorRepository.save(colaborador);
+                
+                logger.info("Colaborador ativado após aprovação do processo - CPF: {}, Nome: {}", 
+                           processo.getCpfColaborador(), processo.getNomeColaborador());
+            } else {
+                logger.warn("Colaborador não encontrado para ativação - CPF: {}, Processo ID: {}", 
+                           processo.getCpfColaborador(), processo.getId());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Erro ao ativar colaborador após aprovação - Processo ID: {}, CPF: {}", 
+                        processo.getId(), processo.getCpfColaborador(), e);
+            // Não propagar erro para não interromper o fluxo de aprovação
         }
     }
 

@@ -191,11 +191,29 @@ public class ColaboradorService {
         try {
             List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> colaboradores = colaboradorRepository.findColaboradoresForAjax();
             logger.debug("Encontrados {} colaboradores ativos para AJAX", colaboradores.size());
+            
+            // Verificação adicional para depuração
+            if (colaboradores.size() < 2) {
+                logger.warn("Número inesperado de colaboradores encontrados: {}", colaboradores.size());
+                // Buscar todos os colaboradores ativos para comparação
+                List<Colaborador> todosColaboradores = colaboradorRepository.findByAtivoTrue();
+                logger.debug("Total de colaboradores ativos no banco: {}", todosColaboradores.size());
+                
+                // Buscar todos os colaboradores para depuração
+                List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> todosParaDebug = colaboradorRepository.findAllColaboradoresForDebug();
+                logger.debug("Total de colaboradores no banco (para debug): {}", todosParaDebug.size());
+            }
+            
             return colaboradores;
         } catch (Exception e) {
             logger.error("Erro ao buscar colaboradores para AJAX: {}", e.getMessage(), e);
             throw e;
         }
+    }
+    
+    // Método para depuração - busca todos os colaboradores independentemente do status
+    public List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> listarTodosParaDebug() {
+        return colaboradorRepository.findAllColaboradoresForDebug();
     }
 
     public Page<Colaborador> listarTodosPaginado(Pageable pageable) {

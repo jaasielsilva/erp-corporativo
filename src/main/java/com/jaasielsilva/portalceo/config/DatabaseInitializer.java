@@ -78,81 +78,81 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
     
     private void criarDadosTesteVendas() {
-        // Verificar se já existem dados
-        if (vendaRepository.count() > 0) {
-            return;
-        }
-        
-        // Criar categorias
-        Categoria categoria1 = criarCategoria("Eletrônicos");
-        Categoria categoria2 = criarCategoria("Roupas");
-        Categoria categoria3 = criarCategoria("Casa e Jardim");
-        Categoria categoria4 = criarCategoria("Livros");
-        
-        // Criar produtos
-        Produto produto1 = criarProduto("Smartphone", new BigDecimal("1200.00"), categoria1);
-        Produto produto2 = criarProduto("Notebook", new BigDecimal("2500.00"), categoria1);
-        Produto produto3 = criarProduto("Camiseta", new BigDecimal("50.00"), categoria2);
-        Produto produto4 = criarProduto("Calça Jeans", new BigDecimal("120.00"), categoria2);
-        Produto produto5 = criarProduto("Mesa de Jantar", new BigDecimal("800.00"), categoria3);
-        Produto produto6 = criarProduto("Livro de Programação", new BigDecimal("80.00"), categoria4);
-        
-        // Criar vendas de teste
-        criarVendaTeste(produto1, 2, new BigDecimal("1200.00"));
-        criarVendaTeste(produto2, 1, new BigDecimal("2500.00"));
-        criarVendaTeste(produto3, 5, new BigDecimal("50.00"));
-        criarVendaTeste(produto4, 3, new BigDecimal("120.00"));
-        criarVendaTeste(produto5, 1, new BigDecimal("800.00"));
-        criarVendaTeste(produto6, 4, new BigDecimal("80.00"));
-        
-        // Criar mais algumas vendas para ter dados variados
-        criarVendaTeste(produto1, 1, new BigDecimal("1200.00"));
-        criarVendaTeste(produto3, 10, new BigDecimal("50.00"));
-        criarVendaTeste(produto5, 2, new BigDecimal("800.00"));
+    // Verificar se já existem dados
+    if (vendaRepository.count() > 0) {
+        return;
     }
-    
-    private Categoria criarCategoria(String nome) {
-        if (categoriaRepository.findByNome(nome).isPresent()) {
-            return categoriaRepository.findByNome(nome).get();
-        }
-        
+
+    // Criar categorias
+    Categoria categoria1 = criarCategoria("Eletrônicos");
+    Categoria categoria2 = criarCategoria("Roupas");
+    Categoria categoria3 = criarCategoria("Casa e Jardim");
+    Categoria categoria4 = criarCategoria("Livros");
+
+    // Criar produtos
+    Produto produto1 = criarProduto("Smartphone", new BigDecimal("1200.00"), categoria1);
+    Produto produto2 = criarProduto("Notebook", new BigDecimal("2500.00"), categoria1);
+    Produto produto3 = criarProduto("Camiseta", new BigDecimal("50.00"), categoria2);
+    Produto produto4 = criarProduto("Calça Jeans", new BigDecimal("120.00"), categoria2);
+    Produto produto5 = criarProduto("Mesa de Jantar", new BigDecimal("800.00"), categoria3);
+    Produto produto6 = criarProduto("Livro de Programação", new BigDecimal("80.00"), categoria4);
+
+    // Criar vendas de teste
+    criarVendaTeste(produto1, 2);
+    criarVendaTeste(produto2, 1);
+    criarVendaTeste(produto3, 5);
+    criarVendaTeste(produto4, 3);
+    criarVendaTeste(produto5, 1);
+    criarVendaTeste(produto6, 4);
+
+    // Criar mais algumas vendas para ter dados variados
+    criarVendaTeste(produto1, 1);
+    criarVendaTeste(produto3, 10);
+    criarVendaTeste(produto5, 2);
+}
+
+private Categoria criarCategoria(String nome) {
+    return categoriaRepository.findByNome(nome).orElseGet(() -> {
         Categoria categoria = new Categoria();
         categoria.setNome(nome);
         return categoriaRepository.save(categoria);
-    }
-    
-    private Produto criarProduto(String nome, BigDecimal preco, Categoria categoria) {
-        Produto produto = new Produto();
-        produto.setNome(nome);
-        produto.setPreco(preco);
-        produto.setCategoria(categoria);
-        produto.setEstoque(100);
-        produto.setMinimoEstoque(10);
-        produto.setUnidadeMedida("UN");
-        produto.setAtivo(true);
-        return produtoRepository.save(produto);
-    }
-    
-    private void criarVendaTeste(Produto produto, int quantidade, BigDecimal precoUnitario) {
-        Venda venda = new Venda();
-        venda.setDataVenda(LocalDateTime.now().minusDays((long)(Math.random() * 30)));
-        venda.setStatus("FINALIZADA");
-        venda.setFormaPagamento("DINHEIRO");
-        
-        VendaItem item = new VendaItem();
-        item.setProduto(produto);
-        item.setQuantidade(quantidade);
-        item.setPrecoUnitario(precoUnitario);
-        item.setVenda(venda);
-        
-        List<VendaItem> itens = new ArrayList<>();
-        itens.add(item);
-        venda.setItens(itens);
-        
-        BigDecimal subtotal = precoUnitario.multiply(BigDecimal.valueOf(quantidade));
-        venda.setSubtotal(subtotal);
-        venda.setTotal(subtotal);
-        
-        vendaRepository.save(venda);
-    }
+    });
+}
+
+private Produto criarProduto(String nome, BigDecimal preco, Categoria categoria) {
+    Produto produto = new Produto();
+    produto.setNome(nome);
+    produto.setPreco(preco);
+    produto.setCategoria(categoria);
+    produto.setEstoque(100);
+    produto.setMinimoEstoque(10);
+    produto.setUnidadeMedida("UN");
+    produto.setAtivo(true);
+    return produtoRepository.save(produto);
+}
+
+private void criarVendaTeste(Produto produto, int quantidade) {
+    // Criar a venda
+    Venda venda = new Venda();
+    venda.setDataVenda(LocalDateTime.now().minusDays((long)(Math.random() * 30)));
+    venda.setStatus("FINALIZADA");
+    venda.setFormaPagamento("DINHEIRO");
+
+    // Criar item da venda e associar bidirecionalmente
+    VendaItem item = new VendaItem();
+    item.setProduto(produto);
+    item.setQuantidade(quantidade);
+    item.setPrecoUnitario(produto.getPreco());
+    item.setVenda(venda); // associa o item à venda
+
+    venda.getItens().add(item); // adiciona o item à lista da venda
+
+    // Calcular subtotal e total
+    venda.setSubtotal(item.getSubtotal());
+    venda.setTotal(venda.calcularTotal());
+
+    // Salvar a venda (cascade salva o item automaticamente)
+    vendaRepository.save(venda);
+}
+
 }

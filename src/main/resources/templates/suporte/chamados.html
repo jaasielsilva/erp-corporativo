@@ -113,6 +113,25 @@
             padding: 1rem;
             margin-bottom: 1.5rem;
         }
+
+        /* Estilos para avaliação por estrelas */
+        .rating-stars {
+            display: inline-block;
+        }
+
+        .rating-stars .star {
+            font-size: 14px;
+            color: #ddd;
+            margin-right: 2px;
+        }
+
+        .rating-stars .star.filled {
+            color: #ffc107;
+        }
+
+        .rating-stars .star.empty {
+            color: #e9ecef;
+        }
     </style>
 </head>
 
@@ -218,17 +237,20 @@
                                             <th>Assunto</th>
                                             <th>Status</th>
                                             <th>Prioridade</th>
+                                            <th>Categoria</th>
                                             <th>Solicitante</th>
                                             <th>Técnico</th>
                                             <th>SLA</th>
                                             <th>Data Abertura</th>
+                                            <th>Tempo Resolução</th>
+                                            <th>Avaliação</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <!-- Mensagem quando não há chamados -->
                                         <tr th:if="${#lists.isEmpty(chamados)}">
-                                            <td colspan="9" class="text-center text-muted py-5">
+                                            <td colspan="12" class="text-center text-muted py-5">
                                                 <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                                 <h5>Nenhum chamado encontrado</h5>
                                                 <p class="mb-0">Não há chamados cadastrados no sistema.</p>
@@ -271,6 +293,10 @@
                                                       th:text="${chamado.prioridade.descricao}">Média</span>
                                             </td>
                                             <td>
+                                                <span th:text="${chamado.categoria ?: 'Geral'}">Geral</span>
+                                                <small th:if="${chamado.subcategoria}" class="text-muted d-block" th:text="${chamado.subcategoria}">Subcategoria</small>
+                                            </td>
+                                            <td>
                                                 <div>
                                                     <strong th:text="${chamado.solicitanteNome ?: 'N/A'}">João Silva</strong>
                                                     <br>
@@ -297,6 +323,20 @@
                                                 <small th:text="${#temporals.format(chamado.dataAbertura, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
                                             </td>
                                             <td>
+                                                <span th:if="${chamado.tempoResolucaoMinutos != null}" 
+                                                      th:text="${chamado.tempoResolucaoMinutos < 60 ? chamado.tempoResolucaoMinutos + 'min' : 
+                                                               (chamado.tempoResolucaoMinutos / 60) + 'h ' + (chamado.tempoResolucaoMinutos % 60) + 'min'}">2h 30min</span>
+                                                <span th:unless="${chamado.tempoResolucaoMinutos != null}" class="text-muted">-</span>
+                                            </td>
+                                            <td>
+                                                <div th:if="${chamado.avaliacao != null}" class="rating-stars">
+                                                    <span th:each="i : ${#numbers.sequence(1, 5)}" 
+                                                          th:class="'star ' + ${i <= chamado.avaliacao ? 'filled' : 'empty'}">★</span>
+                                                    <small class="text-muted d-block" th:text="${chamado.avaliacao + '/5'}">5/5</small>
+                                                </div>
+                                                <span th:unless="${chamado.avaliacao != null}" class="text-muted">-</span>
+                                            </td>
+                                            <td>
                                                 <div class="btn-group" role="group">
                                                     <a th:href="@{/suporte/chamados/{id}(id=${chamado.id})}" 
                                                        class="btn btn-outline-primary btn-action" 
@@ -321,6 +361,14 @@
                                                             onclick="fecharChamado([[${chamado.id}]])">
                                                         <i class="fas fa-times"></i>
                                                     </button>
+                                                    
+                                                    <!-- Botão de Avaliação -->
+                                                    <a th:href="@{/suporte/chamados/{id}/avaliar(id=${chamado.id})}" 
+                                                       class="btn btn-outline-warning btn-action"
+                                                       th:if="${(chamado.status.name() == 'RESOLVIDO' or chamado.status.name() == 'FECHADO') and chamado.avaliacao == null}"
+                                                       title="Avaliar atendimento">
+                                                        <i class="fas fa-star"></i>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>

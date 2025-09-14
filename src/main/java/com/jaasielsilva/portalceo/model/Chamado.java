@@ -41,8 +41,17 @@ public class Chamado {
     @Column(name = "data_abertura", nullable = false)
     private LocalDateTime dataAbertura;
 
+    @Column(name = "data_inicio_atendimento")
+    private LocalDateTime dataInicioAtendimento;
+
     @Column(name = "data_resolucao")
     private LocalDateTime dataResolucao;
+
+    @Column(name = "data_fechamento")
+    private LocalDateTime dataFechamento;
+
+    @Column(name = "sla_vencimento")
+    private LocalDateTime slaVencimento;
 
     @Column(name = "tecnico_responsavel")
     private String tecnicoResponsavel;
@@ -55,6 +64,18 @@ public class Chamado {
 
     @Column(name = "categoria")
     private String categoria;
+
+    @Column(name = "subcategoria")
+    private String subcategoria;
+
+    @Column(name = "tempo_resolucao_minutos")
+    private Integer tempoResolucaoMinutos;
+
+    @Column(name = "avaliacao")
+    private Integer avaliacao; // 1-5 estrelas
+
+    @Column(name = "comentario_avaliacao", columnDefinition = "TEXT")
+    private String comentarioAvaliacao;
 
     @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
@@ -113,6 +134,9 @@ public class Chamado {
     public void resolver() {
         this.status = StatusChamado.RESOLVIDO;
         this.dataResolucao = LocalDateTime.now();
+        if (this.dataInicioAtendimento != null) {
+            this.tempoResolucaoMinutos = (int) java.time.Duration.between(this.dataInicioAtendimento, this.dataResolucao).toMinutes();
+        }
     }
 
     public void fechar() {
@@ -120,11 +144,13 @@ public class Chamado {
         if (this.dataResolucao == null) {
             this.dataResolucao = LocalDateTime.now();
         }
+        this.dataFechamento = LocalDateTime.now();
     }
 
     public void iniciarAtendimento(String tecnico) {
         this.status = StatusChamado.EM_ANDAMENTO;
         this.tecnicoResponsavel = tecnico;
+        this.dataInicioAtendimento = LocalDateTime.now();
     }
 
     // Getters e Setters
@@ -238,6 +264,62 @@ public class Chamado {
 
     public void setSlaRestante(Long slaRestante) {
         this.slaRestante = slaRestante;
+    }
+
+    public LocalDateTime getDataInicioAtendimento() {
+        return dataInicioAtendimento;
+    }
+
+    public void setDataInicioAtendimento(LocalDateTime dataInicioAtendimento) {
+        this.dataInicioAtendimento = dataInicioAtendimento;
+    }
+
+    public LocalDateTime getDataFechamento() {
+        return dataFechamento;
+    }
+
+    public void setDataFechamento(LocalDateTime dataFechamento) {
+        this.dataFechamento = dataFechamento;
+    }
+
+    public LocalDateTime getSlaVencimento() {
+        return slaVencimento;
+    }
+
+    public void setSlaVencimento(LocalDateTime slaVencimento) {
+        this.slaVencimento = slaVencimento;
+    }
+
+    public String getSubcategoria() {
+        return subcategoria;
+    }
+
+    public void setSubcategoria(String subcategoria) {
+        this.subcategoria = subcategoria;
+    }
+
+    public Integer getTempoResolucaoMinutos() {
+        return tempoResolucaoMinutos;
+    }
+
+    public void setTempoResolucaoMinutos(Integer tempoResolucaoMinutos) {
+        this.tempoResolucaoMinutos = tempoResolucaoMinutos;
+    }
+
+    public Integer getAvaliacao() {
+        return avaliacao;
+    }
+
+    public void setAvaliacao(Integer avaliacao) {
+        this.avaliacao = avaliacao;
+    }
+
+    public String getComentarioAvaliacao() {
+        return comentarioAvaliacao;
+    }
+
+    public void setComentarioAvaliacao(String comentarioAvaliacao) {
+        this.comentarioAvaliacao = comentarioAvaliacao;
     }
 
     // Enums

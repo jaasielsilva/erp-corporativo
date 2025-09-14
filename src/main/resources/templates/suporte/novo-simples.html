@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Chamado - Teste Simples</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4>Novo Chamado - Teste Simples</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Próximo Número:</strong> <span th:text="${proximoNumero}">N/A</span></p>
+                        <p><strong>Status:</strong> Template carregado com sucesso!</p>
+                        
+                        <form>
+                            <div class="mb-3">
+                                <label for="numero" class="form-label">Número do Chamado</label>
+                                <input type="text" class="form-control" id="numero" name="numero" 
+                                       th:value="${proximoNumero}" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="assunto" class="form-label">Assunto</label>
+                                <input type="text" class="form-control" id="assunto" name="assunto" 
+                                       placeholder="Digite o assunto" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Criar Chamado</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -52,6 +52,9 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
            "AND c.dataResolucao IS NOT NULL")
     Double calcularTempoMedioResolucaoEmHoras();
 
+    @Query("SELECT AVG(c.avaliacao) FROM Chamado c WHERE c.avaliacao IS NOT NULL")
+    Double calcularAvaliacaoMedia();
+
     // Query para buscar chamados resolvidos com tempo de resolução
     @Query("SELECT c, TIMESTAMPDIFF(HOUR, c.dataAbertura, c.dataResolucao) as tempoResolucao " +
            "FROM Chamado c " +

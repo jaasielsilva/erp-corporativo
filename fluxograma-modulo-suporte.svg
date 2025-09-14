@@ -1,0 +1,176 @@
+<svg width="1200" height="1400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .box { fill: #f8f9fa; stroke: #495057; stroke-width: 2; }
+      .start-end { fill: #28a745; stroke: #1e7e34; stroke-width: 2; }
+      .process { fill: #007bff; stroke: #0056b3; stroke-width: 2; }
+      .decision { fill: #ffc107; stroke: #e0a800; stroke-width: 2; }
+      .status { fill: #6f42c1; stroke: #5a2d91; stroke-width: 2; }
+      .text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+      .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-anchor: middle; }
+      .arrow { stroke: #495057; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .priority-text { font-size: 10px; fill: #6c757d; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#495057" />
+    </marker>
+  </defs>
+  
+  <!-- Título -->
+  <text x="600" y="30" class="title" fill="#212529">Fluxograma do Módulo de Suporte - Sistema ERP</text>
+  
+  <!-- Início -->
+  <ellipse cx="600" cy="80" rx="80" ry="25" class="start-end" />
+  <text x="600" y="85" class="text" fill="white">INÍCIO</text>
+  
+  <!-- Usuário acessa sistema -->
+  <rect x="520" y="130" width="160" height="40" rx="5" class="process" />
+  <text x="600" y="155" class="text" fill="white">Usuário acessa /suporte</text>
+  
+  <!-- Dashboard -->
+  <rect x="520" y="200" width="160" height="40" rx="5" class="box" />
+  <text x="600" y="225" class="text">Dashboard Principal</text>
+  
+  <!-- Decisão: Novo chamado ou visualizar -->
+  <polygon points="600,270 650,300 600,330 550,300" class="decision" />
+  <text x="600" y="305" class="text">Ação?</text>
+  
+  <!-- Caminho 1: Novo Chamado -->
+  <rect x="320" y="380" width="160" height="40" rx="5" class="process" />
+  <text x="400" y="405" class="text" fill="white">Novo Chamado</text>
+  
+  <!-- Formulário -->
+  <rect x="320" y="450" width="160" height="60" rx="5" class="box" />
+  <text x="400" y="470" class="text">Preencher Formulário:</text>
+  <text x="400" y="485" class="text">• Assunto</text>
+  <text x="400" y="500" class="text">• Descrição</text>
+  <text x="400" y="515" class="text">• Prioridade</text>
+  
+  <!-- Validação -->
+  <polygon points="400,540 450,570 400,600 350,570" class="decision" />
+  <text x="400" y="575" class="text">Válido?</text>
+  
+  <!-- Criar chamado -->
+  <rect x="320" y="630" width="160" height="60" rx="5" class="process" />
+  <text x="400" y="650" class="text" fill="white">Criar Chamado:</text>
+  <text x="400" y="665" class="text" fill="white">• Gerar número único</text>
+  <text x="400" y="680" class="text" fill="white">• Calcular SLA</text>
+  <text x="400" y="695" class="text" fill="white">• Status: ABERTO</text>
+  
+  <!-- Caminho 2: Visualizar chamados -->
+  <rect x="720" y="380" width="160" height="40" rx="5" class="box" />
+  <text x="800" y="405" class="text">Listar Chamados</text>
+  
+  <!-- Selecionar chamado -->
+  <rect x="720" y="450" width="160" height="40" rx="5" class="box" />
+  <text x="800" y="475" class="text">Selecionar Chamado</text>
+  
+  <!-- Estados do Chamado -->
+  <rect x="100" y="750" width="1000" height="120" rx="5" fill="#e9ecef" stroke="#adb5bd" stroke-width="1" />
+  <text x="600" y="770" class="title" fill="#495057">Estados e Transições do Chamado</text>
+  
+  <!-- Status ABERTO -->
+  <rect x="150" y="790" width="120" height="40" rx="5" class="status" />
+  <text x="210" y="815" class="text" fill="white">ABERTO</text>
+  <text x="210" y="840" class="priority-text">Aguardando atendimento</text>
+  
+  <!-- Status EM_ANDAMENTO -->
+  <rect x="320" y="790" width="120" height="40" rx="5" class="status" />
+  <text x="380" y="815" class="text" fill="white">EM_ANDAMENTO</text>
+  <text x="380" y="840" class="priority-text">Técnico atendendo</text>
+  
+  <!-- Status RESOLVIDO -->
+  <rect x="490" y="790" width="120" height="40" rx="5" class="status" />
+  <text x="550" y="815" class="text" fill="white">RESOLVIDO</text>
+  <text x="550" y="840" class="priority-text">Aguardando confirmação</text>
+  
+  <!-- Status FECHADO -->
+  <rect x="660" y="790" width="120" height="40" rx="5" class="status" />
+  <text x="720" y="815" class="text" fill="white">FECHADO</text>
+  <text x="720" y="840" class="priority-text">Finalizado</text>
+  
+  <!-- Ações do Técnico -->
+  <rect x="150" y="900" width="200" height="40" rx="5" class="process" />
+  <text x="250" y="925" class="text" fill="white">Técnico: Iniciar Atendimento</text>
+  
+  <rect x="400" y="900" width="200" height="40" rx="5" class="process" />
+  <text x="500" y="925" class="text" fill="white">Técnico: Resolver Chamado</text>
+  
+  <rect x="650" y="900" width="200" height="40" rx="5" class="process" />
+  <text x="750" y="925" class="text" fill="white">Cliente: Confirmar Resolução</text>
+  
+  <!-- Prioridades e SLA -->
+  <rect x="900" y="900" width="250" height="120" rx="5" fill="#fff3cd" stroke="#ffeaa7" stroke-width="1" />
+  <text x="1025" y="920" class="title" fill="#856404">Prioridades e SLA</text>
+  <text x="1025" y="940" class="text" fill="#856404">URGENTE: 8 horas</text>
+  <text x="1025" y="955" class="text" fill="#856404">ALTA: 24 horas</text>
+  <text x="1025" y="970" class="text" fill="#856404">MÉDIA: 48 horas</text>
+  <text x="1025" y="985" class="text" fill="#856404">BAIXA: 72 horas</text>
+  <text x="1025" y="1005" class="priority-text" fill="#856404">Apenas horas úteis (8h-18h)</text>
+  
+  <!-- Exemplo dos chamados do usuário -->
+  <rect x="50" y="1050" width="500" height="100" rx="5" fill="#d1ecf1" stroke="#bee5eb" stroke-width="1" />
+  <text x="300" y="1070" class="title" fill="#0c5460">Exemplo: Chamados do Usuário</text>
+  <text x="300" y="1090" class="text" fill="#0c5460">CH20250914153610 - teste breve - URGENTE - 8h restantes</text>
+  <text x="300" y="1105" class="text" fill="#0c5460">CH20250914153146 - teste breve - BAIXA - 72h restantes</text>
+  <text x="300" y="1125" class="text" fill="#0c5460">Status: ABERTO - Não atribuído</text>
+  
+  <!-- APIs disponíveis -->
+  <rect x="600" y="1050" width="550" height="100" rx="5" fill="#d4edda" stroke="#c3e6cb" stroke-width="1" />
+  <text x="875" y="1070" class="title" fill="#155724">APIs REST Disponíveis</text>
+  <text x="875" y="1090" class="text" fill="#155724">GET /suporte - Dashboard | POST /suporte/novo - Criar</text>
+  <text x="875" y="1105" class="text" fill="#155724">GET /suporte/chamados - Listar | GET /suporte/chamados/{id} - Visualizar</text>
+  <text x="875" y="1120" class="text" fill="#155724">POST /suporte/chamados/{id}/status - Atualizar status</text>
+  
+  <!-- Setas principais -->
+  <line x1="600" y1="105" x2="600" y2="130" class="arrow" />
+  <line x1="600" y1="170" x2="600" y2="200" class="arrow" />
+  <line x1="600" y1="240" x2="600" y2="270" class="arrow" />
+  
+  <!-- Seta para novo chamado -->
+  <line x1="570" y1="300" x2="450" y2="350" class="arrow" />
+  <text x="500" y="320" class="priority-text">Novo</text>
+  <line x1="400" y1="350" x2="400" y2="380" class="arrow" />
+  <line x1="400" y1="420" x2="400" y2="450" class="arrow" />
+  <line x1="400" y1="510" x2="400" y2="540" class="arrow" />
+  <line x1="400" y1="600" x2="400" y2="630" class="arrow" />
+  
+  <!-- Seta para visualizar -->
+  <line x1="630" y1="300" x2="750" y2="350" class="arrow" />
+  <text x="700" y="320" class="priority-text">Visualizar</text>
+  <line x1="800" y1="350" x2="800" y2="380" class="arrow" />
+  <line x1="800" y1="420" x2="800" y2="450" class="arrow" />
+  
+  <!-- Seta de erro na validação -->
+  <line x1="350" y1="570" x2="300" y2="570" class="arrow" stroke="#dc3545" />
+  <line x1="300" y1="570" x2="300" y2="480" class="arrow" stroke="#dc3545" />
+  <line x1="300" y1="480" x2="320" y2="480" class="arrow" stroke="#dc3545" />
+  <text x="280" y="525" class="priority-text" fill="#dc3545">Erro</text>
+  
+  <!-- Setas entre estados -->
+  <line x1="270" y1="810" x2="320" y2="810" class="arrow" />
+  <line x1="440" y1="810" x2="490" y2="810" class="arrow" />
+  <line x1="610" y1="810" x2="660" y2="810" class="arrow" />
+  
+  <!-- Setas das ações -->
+  <line x1="210" y1="830" x2="210" y2="900" class="arrow" />
+  <line x1="380" y1="830" x2="380" y2="900" class="arrow" />
+  <line x1="550" y1="830" x2="550" y2="900" class="arrow" />
+  
+  <!-- Seta de reabertura -->
+  <line x1="550" y1="790" x2="550" y2="770" class="arrow" stroke="#fd7e14" />
+  <line x1="550" y1="770" x2="380" y2="770" class="arrow" stroke="#fd7e14" />
+  <line x1="380" y1="770" x2="380" y2="790" class="arrow" stroke="#fd7e14" />
+  <text x="465" y="765" class="priority-text" fill="#fd7e14">Reabertura</text>
+  
+  <!-- Conectar criação com estados -->
+  <line x1="400" y1="690" x2="400" y2="720" class="arrow" />
+  <line x1="400" y1="720" x2="210" y2="720" class="arrow" />
+  <line x1="210" y1="720" x2="210" y2="790" class="arrow" />
+  
+  <!-- Conectar visualização com estados -->
+  <line x1="800" y1="490" x2="800" y2="720" class="arrow" />
+  <line x1="800" y1="720" x2="550" y2="720" class="arrow" />
+  <line x1="550" y1="720" x2="550" y2="790" class="arrow" />
+  
+</svg>

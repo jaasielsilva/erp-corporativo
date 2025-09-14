@@ -179,6 +179,49 @@
                         </div>
                     </div>
 
+                    <!-- Linha adicional: Card de Avaliação Média -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Avaliação Média
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${avaliacaoMedia != null ? #numbers.formatDecimal(avaliacaoMedia, 1, 1) : '0.0'}">4.2</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Ações Rápidas
+                                            </div>
+                                            <div class="mt-2">
+                                                <a href="/suporte/chamados" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-list me-1"></i>Ver Todos os Chamados
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-external-link-alt fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Linha 2: Gráficos -->
                     <div class="row mb-4">
                         <!-- Gráfico de Barras - Chamados por Categoria -->
@@ -313,7 +356,7 @@
         <!-- Botão Flutuante "Abrir Chamado" -->
         <div class="floating-btn">
             <button type="button" class="btn btn-primary btn-lg rounded-circle shadow" 
-                    onclick="window.location.href='/suporte/novo'" 
+                    onclick="window.location.href='/suporte/chamados/novo'" 
                     title="Abrir Novo Chamado"
                     style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1000;">
                 <i class="fas fa-plus fa-lg"></i>

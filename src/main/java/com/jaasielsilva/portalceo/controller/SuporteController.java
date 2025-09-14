@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.controller;
 import com.jaasielsilva.portalceo.model.Chamado;
 import com.jaasielsilva.portalceo.model.Chamado.StatusChamado;
 import com.jaasielsilva.portalceo.model.Chamado.Prioridade;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ChamadoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/suporte")
@@ -39,6 +41,9 @@ public class SuporteController {
             // SLA médio
             Double slaMedio = chamadoService.calcularSlaMedio();
             
+            // Avaliação média
+            Double avaliacaoMedia = chamadoService.calcularAvaliacaoMedia();
+            
             // Últimos chamados para tabela
             List<Chamado> ultimosChamados = chamadoService.listarUltimosChamados(10);
             
@@ -57,6 +62,7 @@ public class SuporteController {
             model.addAttribute("chamadosEmAndamento", chamadosEmAndamento);
             model.addAttribute("chamadosResolvidos", chamadosResolvidos);
             model.addAttribute("slaMedio", slaMedio != null ? Math.round(slaMedio * 100.0) / 100.0 : 0.0);
+            model.addAttribute("avaliacaoMedia", avaliacaoMedia != null ? Math.round(avaliacaoMedia * 100.0) / 100.0 : 0.0);
             model.addAttribute("ultimosChamados", ultimosChamados);
             model.addAttribute("estatisticasPrioridade", estatisticasPrioridade);
             model.addAttribute("estatisticasStatus", estatisticasStatus);
@@ -134,6 +140,34 @@ public class SuporteController {
         return "suporte/chamados";
     }
     
+    // Formulário para novo chamado - DEVE VIR ANTES da rota com {id}
+    @GetMapping("/chamados/novo")
+    public String novoFormulario(Model model) {
+        logger.info("Acessando formulário de novo chamado");
+        
+        try {
+            // Gera o próximo número do chamado
+            String proximoNumero = chamadoService.gerarProximoNumero();
+            model.addAttribute("proximoNumero", proximoNumero);
+            model.addAttribute("prioridades", Prioridade.values());
+            model.addAttribute("chamado", new Chamado());
+            
+            // Adicionar usuário logado (mock para teste)
+            Usuario usuarioMock = new Usuario();
+            usuarioMock.setId(1L);
+            usuarioMock.setNome("Usuário Teste");
+            model.addAttribute("usuarioLogado", usuarioMock);
+            
+            logger.info("Próximo número de chamado gerado: {}", proximoNumero);
+            
+            return "suporte/novo";
+        } catch (Exception e) {
+            logger.error("Erro ao carregar formulário de novo chamado: {}", e.getMessage(), e);
+            model.addAttribute("erro", "Erro ao carregar formulário: " + e.getMessage());
+            return "error";
+        }
+    }
+    
     // Visualizar chamado específico
     @GetMapping("/chamados/{id}")
     public String visualizarChamado(@PathVariable Long id, Model model) {
@@ -148,29 +182,6 @@ public class SuporteController {
         }
         
         return "suporte/visualizar";
-    }
-    
-    // Formulário para novo chamado
-    @GetMapping("/novo")
-    public String novoChamado(Model model) {
-        try {
-            logger.info("Iniciando carregamento da página novo chamado");
-            
-            // Gerar próximo número do chamado
-            String proximoNumero = chamadoService.gerarProximoNumero();
-            model.addAttribute("proximoNumero", proximoNumero);
-            logger.info("Próximo número gerado: {}", proximoNumero);
-            
-            model.addAttribute("prioridades", Prioridade.values());
-            logger.info("Prioridades adicionadas ao model: {}", Prioridade.values().length);
-            
-            logger.info("Retornando template suporte/novo");
-            return "suporte/novo";
-            
-        } catch (Exception e) {
-            logger.error("Erro ao carregar página novo chamado: ", e);
-            throw e;
-        }
     }
     
     // Página de teste para novo chamado
@@ -190,8 +201,22 @@ public class SuporteController {
         return "suporte/teste-simples";
     }
     
+    @GetMapping("/novo-simples")
+    public String novoSimples(Model model) {
+        try {
+            logger.info("Testando template simplificado");
+            String proximoNumero = chamadoService.gerarProximoNumero();
+            model.addAttribute("proximoNumero", proximoNumero);
+            logger.info("Template simplificado - Próximo número: {}", proximoNumero);
+            return "suporte/novo-simples";
+        } catch (Exception e) {
+            logger.error("Erro no template simplificado: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
     // Criar novo chamado
-    @PostMapping("/novo")
+    @PostMapping("/chamados/novo")
     public String criarChamado(@ModelAttribute Chamado chamado) {
         try {
             Chamado chamadoCriado = chamadoService.criarChamado(chamado);
@@ -249,9 +274,62 @@ public class SuporteController {
     // Página de debug para novo chamado
     @GetMapping("/debug-novo")
     public String debugNovo(Model model) {
-        model.addAttribute("proximoNumero", chamadoService.gerarProximoNumero());
-        return "suporte/debug-novo";
+        try {
+            logger.info("=== DEBUG NOVO CHAMADO ===");
+            
+            // Teste 1: Gerar número
+            String proximoNumero = chamadoService.gerarProximoNumero();
+            logger.info("Próximo número gerado: {}", proximoNumero);
+            model.addAttribute("proximoNumero", proximoNumero);
+            
+            // Teste 2: Verificar se o service está funcionando
+            logger.info("ChamadoService injetado: {}", chamadoService != null);
+            
+            // Teste 3: Adicionar dados básicos
+            model.addAttribute("teste", "Debug funcionando");
+            
+            logger.info("=== FIM DEBUG ===");
+            return "suporte/debug-novo";
+            
+        } catch (Exception e) {
+            logger.error("Erro no debug: {}", e.getMessage(), e);
+            model.addAttribute("erro", e.getMessage());
+            return "suporte/debug-novo";
+        }
     }
     
+    // Página para avaliar chamado
+    @GetMapping("/chamados/{id}/avaliar")
+    public String avaliarChamado(@PathVariable Long id, Model model) {
+        try {
+            // Buscar chamado por ID
+            Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(id);
+            if (!chamadoOpt.isPresent()) {
+                logger.warn("Chamado não encontrado com ID: {}", id);
+                return "redirect:/suporte/chamados?erro=nao_encontrado";
+            }
+            Chamado chamado = chamadoOpt.get();
+            
+            // Verificar se o chamado pode ser avaliado (deve estar resolvido ou fechado)
+            if (chamado.getStatus() != StatusChamado.RESOLVIDO && chamado.getStatus() != StatusChamado.FECHADO) {
+                logger.warn("Tentativa de avaliar chamado {} com status inválido: {}", id, chamado.getStatus());
+                return "redirect:/suporte/chamados?erro=status_invalido";
+            }
+            
+            // Verificar se já foi avaliado
+            if (chamado.getAvaliacao() != null) {
+                logger.warn("Tentativa de avaliar chamado {} que já foi avaliado", id);
+                return "redirect:/suporte/chamados?erro=ja_avaliado";
+            }
+            
+            model.addAttribute("chamado", chamado);
+            logger.info("Carregando página de avaliação para chamado {}", id);
+            return "suporte/avaliar";
+            
+        } catch (Exception e) {
+            logger.error("Erro ao carregar página de avaliação para chamado {}: {}", id, e.getMessage());
+            return "redirect:/suporte/chamados?erro=sistema";
+        }
+    }
 
 }

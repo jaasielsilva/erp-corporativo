@@ -30,24 +30,26 @@ public class ChamadoService {
 
     // Criar novo chamado
     public Chamado criarChamado(Chamado chamado) {
-        logger.info("Criando novo chamado: {}", chamado.getAssunto());
-        
-        // Definir valores padrão se não informados
-        if (chamado.getStatus() == null) {
-            chamado.setStatus(StatusChamado.ABERTO);
+        // Gerar número único se não foi definido
+        if (chamado.getNumero() == null || chamado.getNumero().isEmpty()) {
+            chamado.setNumero(gerarProximoNumero());
         }
         
+        // Definir data de abertura se não foi definida
         if (chamado.getDataAbertura() == null) {
             chamado.setDataAbertura(LocalDateTime.now());
         }
         
-        Chamado chamadoSalvo = chamadoRepository.save(chamado);
+        // Definir status inicial
+        if (chamado.getStatus() == null) {
+            chamado.setStatus(StatusChamado.ABERTO);
+        }
         
-        // Calcular SLA restante após salvar
-        chamadoSalvo.setSlaRestante(calcularSlaRestante(chamadoSalvo));
+        // Calcular e definir SLA de vencimento
+        chamado.setSlaVencimento(calcularSlaVencimento(chamado));
         
-        logger.info("Chamado criado com sucesso. Número: {}", chamadoSalvo.getNumero());
-        return chamadoSalvo;
+        logger.info("Criando novo chamado: {} - SLA: {}", chamado.getAssunto(), chamado.getSlaVencimento());
+        return chamadoRepository.save(chamado);
     }
 
     // Buscar chamado por ID
@@ -173,10 +175,20 @@ public class ChamadoService {
         throw new RuntimeException("Chamado não encontrado com ID: " + id);
     }
 
+    // Calcular SLA de vencimento baseado na prioridade
+    public LocalDateTime calcularSlaVencimento(Chamado chamado) {
+        if (chamado.getDataAbertura() == null || chamado.getPrioridade() == null) {
+            return null;
+        }
+        
+        int horasUteis = chamado.getPrioridade().getHorasUteis();
+        return chamado.getDataAbertura().plusHours(horasUteis);
+    }
+    
     // MÉTODO PRINCIPAL: Calcular SLA restante em horas
     @Transactional(readOnly = true)
     public Long calcularSlaRestante(Chamado chamado) {
-        if (chamado == null || chamado.getDataAbertura() == null || chamado.getPrioridade() == null) {
+        if (chamado == null || chamado.getSlaVencimento() == null) {
             return 0L;
         }
         
@@ -186,19 +198,15 @@ public class ChamadoService {
         }
         
         try {
-            // Obter horas úteis do SLA baseado na prioridade
-            int horasUteisSla = chamado.getPrioridade().getHorasUteis();
+            LocalDateTime agora = LocalDateTime.now();
             
-            // Calcular horas úteis decorridas desde a abertura
-            long horasUteisDecorridas = calcularHorasUteisDecorridas(chamado.getDataAbertura(), LocalDateTime.now());
+            // Calcular horas restantes até o vencimento
+            long horasRestantes = ChronoUnit.HOURS.between(agora, chamado.getSlaVencimento());
             
-            // Calcular SLA restante
-            long slaRestante = horasUteisSla - horasUteisDecorridas;
+            logger.debug("Chamado {}: {} horas restantes até vencimento", 
+                        chamado.getNumero(), horasRestantes);
             
-            logger.debug("Chamado {}: SLA {} horas, Decorridas {} horas, Restante {} horas", 
-                        chamado.getNumero(), horasUteisSla, horasUteisDecorridas, slaRestante);
-            
-            return slaRestante;
+            return horasRestantes;
             
         } catch (Exception e) {
             logger.error("Erro ao calcular SLA restante para chamado {}: {}", chamado.getNumero(), e.getMessage());
@@ -224,6 +232,10 @@ public class ChamadoService {
             logger.error("Erro ao calcular SLA médio: {}", e.getMessage());
             return 0.0;
         }
+    }
+    
+    public Double calcularAvaliacaoMedia() {
+        return chamadoRepository.calcularAvaliacaoMedia();
     }
 
     // Método auxiliar para calcular horas úteis entre duas datas

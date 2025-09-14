@@ -1,0 +1,172 @@
+<svg width="800" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .box { fill: #f8f9fa; stroke: #495057; stroke-width: 2; }
+      .start-end { fill: #28a745; stroke: #1e7e34; stroke-width: 2; }
+      .decision { fill: #ffc107; stroke: #e0a800; stroke-width: 2; }
+      .process { fill: #007bff; stroke: #0056b3; stroke-width: 2; }
+      .text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+      .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-anchor: middle; }
+      .arrow { stroke: #495057; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .status-text { font-size: 10px; fill: #6c757d; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#495057" />
+    </marker>
+  </defs>
+  
+  <!-- Título -->
+  <text x="400" y="30" class="title" fill="#212529">Fluxograma do Sistema de Chamados de Suporte</text>
+  
+  <!-- Início -->
+  <ellipse cx="400" cy="80" rx="80" ry="25" class="start-end"/>
+  <text x="400" y="85" class="text" fill="white">INÍCIO</text>
+  
+  <!-- Seta 1 -->
+  <line x1="400" y1="105" x2="400" y2="135" class="arrow"/>
+  
+  <!-- Abertura do Chamado -->
+  <rect x="320" y="140" width="160" height="50" rx="5" class="process"/>
+  <text x="400" y="160" class="text" fill="white">Usuário Abre</text>
+  <text x="400" y="175" class="text" fill="white">Novo Chamado</text>
+  
+  <!-- Seta 2 -->
+  <line x1="400" y1="190" x2="400" y2="220" class="arrow"/>
+  
+  <!-- Geração Automática -->
+  <rect x="300" y="225" width="200" height="60" rx="5" class="box"/>
+  <text x="400" y="245" class="text">Sistema Gera:</text>
+  <text x="400" y="260" class="text">• Número único (CH + timestamp)</text>
+  <text x="400" y="275" class="text">• Define SLA por prioridade</text>
+  
+  <!-- Seta 3 -->
+  <line x1="400" y1="285" x2="400" y2="315" class="arrow"/>
+  
+  <!-- Status ABERTO -->
+  <rect x="320" y="320" width="160" height="50" rx="5" class="start-end"/>
+  <text x="400" y="340" class="text" fill="white">STATUS: ABERTO</text>
+  <text x="400" y="355" class="text" fill="white">Aguardando Atendimento</text>
+  
+  <!-- Seta 4 -->
+  <line x1="400" y1="370" x2="400" y2="400" class="arrow"/>
+  
+  <!-- Decisão: Técnico Disponível -->
+  <polygon points="400,410 480,440 400,470 320,440" class="decision"/>
+  <text x="400" y="435" class="text">Técnico</text>
+  <text x="400" y="450" class="text">Disponível?</text>
+  
+  <!-- Seta SIM -->
+  <line x1="480" y1="440" x2="550" y2="440" class="arrow"/>
+  <text x="515" y="435" class="status-text">SIM</text>
+  
+  <!-- Atribuição -->
+  <rect x="560" y="415" width="160" height="50" rx="5" class="process"/>
+  <text x="640" y="435" class="text" fill="white">Técnico Inicia</text>
+  <text x="640" y="450" class="text" fill="white">Atendimento</text>
+  
+  <!-- Seta para EM_ANDAMENTO -->
+  <line x1="640" y1="465" x2="640" y2="495" class="arrow"/>
+  
+  <!-- Status EM_ANDAMENTO -->
+  <rect x="560" y="500" width="160" height="50" rx="5" class="process"/>
+  <text x="640" y="520" class="text" fill="white">STATUS: EM_ANDAMENTO</text>
+  <text x="640" y="535" class="text" fill="white">Técnico Trabalhando</text>
+  
+  <!-- Seta NÃO (fila de espera) -->
+  <line x1="320" y1="440" x2="200" y2="440" class="arrow"/>
+  <text x="260" y="435" class="status-text">NÃO</text>
+  
+  <!-- Fila de Espera -->
+  <rect x="120" y="415" width="160" height="50" rx="5" class="box"/>
+  <text x="200" y="435" class="text">Permanece na Fila</text>
+  <text x="200" y="450" class="text">por Prioridade</text>
+  
+  <!-- Seta volta para decisão -->
+  <line x1="200" y1="415" x2="200" y2="380" class="arrow"/>
+  <line x1="200" y1="380" x2="350" y2="380" class="arrow"/>
+  <line x1="350" y1="380" x2="350" y2="410" class="arrow"/>
+  
+  <!-- Trabalho na Solução -->
+  <rect x="560" y="580" width="160" height="60" rx="5" class="box"/>
+  <text x="640" y="600" class="text">Técnico Trabalha</text>
+  <text x="640" y="615" class="text">na Solução:</text>
+  <text x="640" y="630" class="text">• Diagnóstico • Correção</text>
+  
+  <!-- Seta 5 -->
+  <line x1="640" y1="550" x2="640" y2="580" class="arrow"/>
+  
+  <!-- Seta 6 -->
+  <line x1="640" y1="640" x2="640" y2="670" class="arrow"/>
+  
+  <!-- Decisão: Problema Resolvido -->
+  <polygon points="640,680 720,710 640,740 560,710" class="decision"/>
+  <text x="640" y="705" class="text">Problema</text>
+  <text x="640" y="720" class="text">Resolvido?</text>
+  
+  <!-- Seta NÃO (volta para trabalho) -->
+  <line x1="560" y1="710" x2="500" y2="710" class="arrow"/>
+  <line x1="500" y1="710" x2="500" y2="610" class="arrow"/>
+  <line x1="500" y1="610" x2="560" y2="610" class="arrow"/>
+  <text x="530" y="705" class="status-text">NÃO</text>
+  
+  <!-- Seta SIM -->
+  <line x1="720" y1="710" x2="780" y2="710" class="arrow"/>
+  <text x="750" y="705" class="status-text">SIM</text>
+  
+  <!-- Marcar como Resolvido -->
+  <rect x="790" y="685" width="160" height="50" rx="5" class="start-end"/>
+  <text x="870" y="705" class="text" fill="white">STATUS: RESOLVIDO</text>
+  <text x="870" y="720" class="text" fill="white">Aguarda Confirmação</text>
+  
+  <!-- Seta para baixo -->
+  <line x1="870" y1="735" x2="870" y2="765" class="arrow"/>
+  
+  <!-- Decisão: Cliente Confirma -->
+  <polygon points="870,775 950,805 870,835 790,805" class="decision"/>
+  <text x="870" y="800" class="text">Cliente</text>
+  <text x="870" y="815" class="text">Confirma?</text>
+  
+  <!-- Seta SIM -->
+  <line x1="870" y1="835" x2="870" y2="865" class="arrow"/>
+  <text x="885" y="850" class="status-text">SIM</text>
+  
+  <!-- Status FECHADO -->
+  <rect x="790" y="870" width="160" height="50" rx="5" class="start-end"/>
+  <text x="870" y="890" class="text" fill="white">STATUS: FECHADO</text>
+  <text x="870" y="905" class="text" fill="white">Chamado Finalizado</text>
+  
+  <!-- Seta NÃO (reabertura) -->
+  <line x1="790" y1="805" x2="730" y2="805" class="arrow"/>
+  <line x1="730" y1="805" x2="730" y2="850" class="arrow"/>
+  <line x1="730" y1="850" x2="400" y2="850" class="arrow"/>
+  <line x1="400" y1="850" x2="400" y2="580" class="arrow"/>
+  <line x1="400" y1="580" x2="560" y2="580" class="arrow"/>
+  <text x="760" y="800" class="status-text">NÃO</text>
+  <text x="565" y="575" class="status-text">Reabre</text>
+  
+  <!-- Seta final -->
+  <line x1="870" y1="920" x2="870" y2="950" class="arrow"/>
+  
+  <!-- Fim -->
+  <ellipse cx="870" cy="975" rx="60" ry="25" class="start-end"/>
+  <text x="870" y="980" class="text" fill="white">FIM</text>
+  
+  <!-- Legenda de SLA -->
+  <rect x="50" y="1050" width="700" height="120" rx="5" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+  <text x="400" y="1075" class="title" fill="#212529">Legenda de SLA por Prioridade</text>
+  
+  <rect x="80" y="1090" width="150" height="30" rx="3" fill="#dc3545" stroke="#c82333"/>
+  <text x="155" y="1110" class="text" fill="white">URGENTE: 8h</text>
+  
+  <rect x="250" y="1090" width="150" height="30" rx="3" fill="#fd7e14" stroke="#e55a00"/>
+  <text x="325" y="1110" class="text" fill="white">ALTA: 24h</text>
+  
+  <rect x="420" y="1090" width="150" height="30" rx="3" fill="#ffc107" stroke="#e0a800"/>
+  <text x="495" y="1110" class="text">MÉDIA: 48h</text>
+  
+  <rect x="590" y="1090" width="150" height="30" rx="3" fill="#28a745" stroke="#1e7e34"/>
+  <text x="665" y="1110" class="text" fill="white">BAIXA: 72h</text>
+  
+  <text x="80" y="1145" class="status-text">• SLA é calculado automaticamente baseado na prioridade</text>
+  <text x="80" y="1160" class="status-text">• Alertas são enviados quando SLA está próximo do vencimento</text>
+</svg>

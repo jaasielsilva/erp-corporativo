@@ -122,58 +122,71 @@ public class ChamadoRestController {
     }
 
     /**
-     * Atualiza status do chamado
+     * Atualizar status do chamado
      */
     @PutMapping("/{id}/status")
-    public ResponseEntity<Map<String, Object>> atualizarStatus(
+    public ResponseEntity<Chamado> atualizarStatus(
             @PathVariable Long id,
-            @RequestParam String status,
+            @RequestParam Chamado.StatusChamado status,
             @RequestParam(required = false) String tecnicoResponsavel) {
         
-        Map<String, Object> response = new HashMap<>();
         try {
-            Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(id);
-            if (chamadoOpt.isEmpty()) {
-                response.put("sucesso", false);
-                response.put("erro", "Chamado não encontrado");
-                return ResponseEntity.notFound().build();
-            }
-
-            Chamado chamado = chamadoOpt.get();
+            Chamado chamado = chamadoService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
             
-            // Atualizar status baseado no parâmetro
-            switch (status.toUpperCase()) {
-                case "ABERTO":
-                    chamado.setStatus(Chamado.StatusChamado.ABERTO);
-                    break;
-                case "EM_ANDAMENTO":
-                    chamado.setStatus(Chamado.StatusChamado.EM_ANDAMENTO);
+            // Atualizar status baseado no valor recebido
+            switch (status) {
+                case EM_ANDAMENTO:
                     if (tecnicoResponsavel != null) {
-                        chamado.setTecnicoResponsavel(tecnicoResponsavel);
+                        chamado = chamadoService.iniciarAtendimento(id, tecnicoResponsavel);
                     }
                     break;
-                case "RESOLVIDO":
-                    chamado.setStatus(Chamado.StatusChamado.RESOLVIDO);
+                case RESOLVIDO:
+                    chamado = chamadoService.resolverChamado(id);
                     break;
-                case "FECHADO":
-                    chamado.setStatus(Chamado.StatusChamado.FECHADO);
+                case FECHADO:
+                    chamado = chamadoService.fecharChamado(id);
                     break;
                 default:
-                    response.put("sucesso", false);
-                    response.put("erro", "Status inválido");
-                    return ResponseEntity.badRequest().body(response);
+                    throw new IllegalArgumentException("Status inválido: " + status);
             }
-
-            Chamado chamadoAtualizado = chamadoService.atualizarChamado(chamado);
-            response.put("sucesso", true);
-            response.put("chamado", chamadoAtualizado);
-            response.put("mensagem", "Status atualizado com sucesso!");
-            return ResponseEntity.ok(response);
+            
+            return ResponseEntity.ok(chamado);
             
         } catch (Exception e) {
-            response.put("sucesso", false);
-            response.put("erro", e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    /**
+     * Avaliar chamado resolvido
+     */
+    @PostMapping("/{id}/avaliacao")
+    public ResponseEntity<Chamado> avaliarChamado(
+            @PathVariable Long id,
+            @RequestParam Integer avaliacao,
+            @RequestParam(required = false) String comentario) {
+        
+        try {
+            Chamado chamado = chamadoService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
+            
+            if (chamado.getStatus() != Chamado.StatusChamado.RESOLVIDO && chamado.getStatus() != Chamado.StatusChamado.FECHADO) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            if (avaliacao < 1 || avaliacao > 5) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            chamado.setAvaliacao(avaliacao);
+            chamado.setComentarioAvaliacao(comentario);
+            
+            Chamado chamadoAtualizado = chamadoService.atualizarChamado(chamado);
+            return ResponseEntity.ok(chamadoAtualizado);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

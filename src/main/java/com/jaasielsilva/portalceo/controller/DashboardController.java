@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
+import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.service.ClienteService;

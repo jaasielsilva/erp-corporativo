@@ -97,8 +97,9 @@ public class SecurityConfig {
                                                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
                                                 "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
                                                 .permitAll()
-                                                .requestMatchers("/api/produto/**", "/api/processar", "/api/beneficios/**", "/api/rh/**").permitAll()
+                                                .requestMatchers("/api/produto/**", "/api/processar", "/api/beneficios/**", "/api/rh/**", "/api/chamados/**").permitAll()
                                                 .requestMatchers("/rh/colaboradores/adesao/**").permitAll()
+                                                .requestMatchers("/suporte/**").permitAll()
                                                 .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
                                                 .requestMatchers("/api/chat/**").authenticated()
                                                 .requestMatchers("/api/notifications/**").authenticated()

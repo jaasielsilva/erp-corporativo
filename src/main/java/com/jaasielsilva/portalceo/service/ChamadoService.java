@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -305,5 +306,10 @@ public class ChamadoService {
         } else {
             throw new RuntimeException("Chamado não encontrado com ID: " + id);
         }
+    }
+    
+    // Gerar próximo número de chamado
+    public String gerarProximoNumero() {
+        return "CH" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     }
 }

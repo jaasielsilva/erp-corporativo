@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abrir Chamado - ERP Empresarial</title>
+
+    <!-- Bootstrap 5 via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Estilos da empresa -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+
+<body>
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Conteúdo da página -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-9">
+                            <div class="card shadow-sm rounded-3 mt-4 mb-5">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-ticket-alt me-2"></i>
+                                        Abrir Novo Chamado
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+
+                                    <!-- ALERTA -->
+                                    <div id="alertArea"></div>
+
+                                    <!-- FORM INICIO -->
+                                    <form id="chamadoForm" novalidate>
+
+                                        <!-- Número do Chamado -->
+                                        <div class="mb-3">
+                                            <label for="numero" class="form-label">
+                                                <i class="fas fa-hashtag"></i> Número do Chamado
+                                            </label>
+                                            <input type="text" class="form-control" id="numero" name="numero"
+                                                   th:value="${proximoNumero}" readonly>
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Gerado automaticamente pelo sistema
+                                            </div>
+                                        </div>
+
+                                        <!-- Categoria -->
+                                        <div class="mb-3">
+                                            <label for="categoria" class="form-label">
+                                                <i class="fas fa-folder"></i> Categoria <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="categoria" name="categoria" required>
+                                                <option value="">Selecione uma categoria</option>
+                                                <option value="TECNICO">Técnico</option>
+                                                <option value="FINANCEIRO">Financeiro</option>
+                                                <option value="RH">Recursos Humanos</option>
+                                                <option value="VENDAS">Vendas</option>
+                                                <option value="ESTOQUE">Estoque</option>
+                                                <option value="GERAL">Geral</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Assunto -->
+                                        <div class="mb-3">
+                                            <label for="assunto" class="form-label">
+                                                <i class="fas fa-tag"></i> Assunto <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="assunto" name="assunto" maxlength="100"
+                                                   placeholder="Descreva brevemente o problema ou solicitação" required>
+                                        </div>
+
+                                        <!-- Prioridade -->
+                                        <div class="mb-3">
+                                            <label for="prioridade" class="form-label">
+                                                <i class="fas fa-flag"></i> Prioridade <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="prioridade" name="prioridade" required>
+                                                <option value="">Selecione a prioridade</option>
+                                                <option value="BAIXA">Baixa (72h úteis)</option>
+                                                <option value="MEDIA">Média (48h úteis)</option>
+                                                <option value="ALTA">Alta (24h úteis)</option>
+                                                <option value="URGENTE">Urgente (8h úteis)</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Nome do Solicitante -->
+                                        <div class="mb-3">
+                                            <label for="solicitanteNome" class="form-label">
+                                                <i class="fas fa-user-circle"></i> Nome Completo <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="solicitanteNome" name="solicitanteNome"
+                                                   maxlength="100" placeholder="Digite seu nome completo" required>
+                                        </div>
+
+                                        <!-- Email do Solicitante -->
+                                        <div class="mb-3">
+                                            <label for="solicitanteEmail" class="form-label">
+                                                <i class="fas fa-envelope"></i> Email <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="email" class="form-control" id="solicitanteEmail" name="solicitanteEmail"
+                                                   placeholder="seu.email@empresa.com" required>
+                                        </div>
+
+                                        <!-- Descrição -->
+                                        <div class="mb-3">
+                                            <label for="descricao" class="form-label">
+                                                <i class="fas fa-file-alt"></i> Descrição do Problema <span class="text-danger">*</span>
+                                            </label>
+                                            <textarea class="form-control" id="descricao" name="descricao" rows="6" maxlength="2000"
+                                                      placeholder="Explique detalhadamente o problema..." required></textarea>
+                                        </div>
+
+                                        <!-- Anexos -->
+                                        <div class="mb-3">
+                                            <label for="anexos" class="form-label">
+                                                <i class="fas fa-paperclip"></i> Anexos (opcional)
+                                            </label>
+                                            <input type="file" class="form-control" id="anexos" name="anexos" multiple>
+                                        </div>
+
+                                        <!-- Botões -->
+                                        <div class="d-flex justify-content-between">
+                                            <a th:href="@{/suporte}" class="btn btn-outline-secondary">
+                                                <i class="fas fa-arrow-left me-1"></i> Voltar
+                                            </a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-paper-plane me-1"></i> Abrir Chamado
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <!-- FORM FIM -->
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+
+        </main>
+    </div>
+
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+
+    <!-- Script para enviar via API REST -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("chamadoForm");
+            const alertArea = document.getElementById("alertArea");
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                // Coleta os dados do formulário
+                const chamado = {
+                    numero: document.getElementById("numero").value,
+                    categoria: document.getElementById("categoria").value,
+                    assunto: document.getElementById("assunto").value,
+                    prioridade: document.getElementById("prioridade").value,
+                    solicitanteNome: document.getElementById("solicitanteNome").value,
+                    solicitanteEmail: document.getElementById("solicitanteEmail").value,
+                    descricao: document.getElementById("descricao").value
+                };
+
+                try {
+                    const response = await fetch("/api/chamados", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(chamado)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.sucesso) {
+                        alertArea.innerHTML = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                ${result.mensagem}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`;
+                        form.reset();
+                    } else {
+                        alertArea.innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Erro: ${result.erro || "Falha ao criar chamado."}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>`;
+                    }
+                } catch (error) {
+                    alertArea.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Erro inesperado: ${error.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

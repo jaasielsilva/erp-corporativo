@@ -153,9 +153,41 @@ public class SuporteController {
     // Formulário para novo chamado
     @GetMapping("/novo")
     public String novoChamado(Model model) {
-        model.addAttribute("chamado", new Chamado());
+        try {
+            logger.info("Iniciando carregamento da página novo chamado");
+            
+            // Gerar próximo número do chamado
+            String proximoNumero = chamadoService.gerarProximoNumero();
+            model.addAttribute("proximoNumero", proximoNumero);
+            logger.info("Próximo número gerado: {}", proximoNumero);
+            
+            model.addAttribute("prioridades", Prioridade.values());
+            logger.info("Prioridades adicionadas ao model: {}", Prioridade.values().length);
+            
+            logger.info("Retornando template suporte/novo");
+            return "suporte/novo";
+            
+        } catch (Exception e) {
+            logger.error("Erro ao carregar página novo chamado: ", e);
+            throw e;
+        }
+    }
+    
+    // Página de teste para novo chamado
+    @GetMapping("/teste-chamado")
+    public String testeChamado(Model model) {
+        model.addAttribute("proximoNumero", chamadoService.gerarProximoNumero());
         model.addAttribute("prioridades", Prioridade.values());
-        return "suporte/novo";
+        model.addAttribute("chamado", new Chamado());
+        return "suporte/teste-chamado";
+    }
+    
+    @GetMapping("/teste-simples")
+    public String testeSimples(Model model) {
+        model.addAttribute("proximoNumero", chamadoService.gerarProximoNumero());
+        model.addAttribute("prioridades", Prioridade.values());
+        model.addAttribute("chamado", new Chamado());
+        return "suporte/teste-simples";
     }
     
     // Criar novo chamado
@@ -213,4 +245,13 @@ public class SuporteController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+    
+    // Página de debug para novo chamado
+    @GetMapping("/debug-novo")
+    public String debugNovo(Model model) {
+        model.addAttribute("proximoNumero", chamadoService.gerarProximoNumero());
+        return "suporte/debug-novo";
+    }
+    
+
 }

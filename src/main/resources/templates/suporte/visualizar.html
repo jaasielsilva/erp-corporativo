@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Chamado #' + ${chamado.numero} + ' - Suporte - ERP Corporativo'">Chamado - Suporte - ERP Corporativo</title>
+    
+    <!-- CSS Files -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-aberto {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status-em-andamento {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .status-resolvido {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .status-fechado {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .prioridade-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .prioridade-baixa {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .prioridade-media {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .prioridade-alta {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .prioridade-urgente {
+            background-color: #ffcdd2;
+            color: #c62828;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .sla-verde {
+            color: #388e3c;
+            font-weight: 600;
+        }
+        
+        .sla-amarelo {
+            color: #f57c00;
+            font-weight: 600;
+        }
+        
+        .sla-vermelho {
+            color: #d32f2f;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        .info-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0.5rem;
+            width: 0.75rem;
+            height: 0.75rem;
+            background: #007bff;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #dee2e6;
+        }
+        
+        .timeline-item.status-change::before {
+            background: #28a745;
+        }
+        
+        .timeline-item.comment::before {
+            background: #ffc107;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-action {
+            margin: 0 0.25rem;
+        }
+        
+        .observacoes-box {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="/suporte" class="text-decoration-none">
+                                    <i class="fas fa-headset me-1"></i>Suporte
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="/suporte/chamados" class="text-decoration-none">
+                                    <i class="fas fa-list me-1"></i>Chamados
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <i class="fas fa-eye me-1"></i>Chamado <span th:text="${chamado.numero}">#001</span>
+                            </li>
+                        </ol>
+                    </nav>
+
+                    <!-- Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h1 class="h3 mb-0 text-gray-800">
+                                        <i class="fas fa-ticket-alt text-primary me-2"></i>
+                                        Chamado <span th:text="${chamado.numero}">#001</span>
+                                    </h1>
+                                    <p class="text-muted mb-0" th:text="${chamado.assunto}">Assunto do chamado</p>
+                                </div>
+                                <div>
+                                    <a href="/suporte/chamados" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i> Voltar
+                                    </a>
+                                    <div class="btn-group ms-2" role="group">
+                                        <button th:if="${chamado.status.name() == 'ABERTO'}" 
+                                                class="btn btn-success btn-action" 
+                                                onclick="iniciarAtendimento([[${chamado.id}]])">
+                                            <i class="fas fa-play me-1"></i> Iniciar Atendimento
+                                        </button>
+                                        <button th:if="${chamado.status.name() == 'EM_ANDAMENTO'}" 
+                                                class="btn btn-warning btn-action" 
+                                                onclick="resolverChamado([[${chamado.id}]])">
+                                            <i class="fas fa-check me-1"></i> Resolver
+                                        </button>
+                                        <button th:if="${chamado.status.name() == 'RESOLVIDO'}" 
+                                                class="btn btn-secondary btn-action" 
+                                                onclick="fecharChamado([[${chamado.id}]])">
+                                            <i class="fas fa-times me-1"></i> Fechar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Informações do Chamado -->
+                        <div class="col-lg-8">
+                            <div class="card shadow mb-4">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Detalhes do Chamado
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Status e Prioridade -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Status:</label>
+                                            <div>
+                                                <span class="status-badge" 
+                                                      th:classappend="${
+                                                          chamado.status.name() == 'ABERTO' ? 'status-aberto' :
+                                                          chamado.status.name() == 'EM_ANDAMENTO' ? 'status-em-andamento' :
+                                                          chamado.status.name() == 'RESOLVIDO' ? 'status-resolvido' :
+                                                          'status-fechado'
+                                                      }"
+                                                      th:text="${chamado.status.descricao}">Aberto</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Prioridade:</label>
+                                            <div>
+                                                <span class="prioridade-badge"
+                                                      th:classappend="${
+                                                          chamado.prioridade.name() == 'BAIXA' ? 'prioridade-baixa' :
+                                                          chamado.prioridade.name() == 'MEDIA' ? 'prioridade-media' :
+                                                          chamado.prioridade.name() == 'ALTA' ? 'prioridade-alta' :
+                                                          'prioridade-urgente'
+                                                      }"
+                                                      th:text="${chamado.prioridade.descricao}">Média</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Assunto -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Assunto:</label>
+                                        <p class="mb-0" th:text="${chamado.assunto}">Assunto do chamado</p>
+                                    </div>
+
+                                    <!-- Descrição -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Descrição:</label>
+                                        <div class="info-card">
+                                            <p class="mb-0" th:text="${chamado.descricao}" style="white-space: pre-wrap;">Descrição detalhada do problema...</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Categoria -->
+                                    <div class="mb-4" th:if="${chamado.categoria}">
+                                        <label class="form-label fw-bold">Categoria:</label>
+                                        <p class="mb-0" th:text="${chamado.categoria}">Categoria do chamado</p>
+                                    </div>
+
+                                    <!-- Observações -->
+                                    <div th:if="${chamado.observacoes}">
+                                        <label class="form-label fw-bold">Observações:</label>
+                                        <div class="observacoes-box">
+                                            <p class="mb-0" th:text="${chamado.observacoes}" style="white-space: pre-wrap;">Observações adicionais...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informações Laterais -->
+                        <div class="col-lg-4">
+                            <!-- Informações Gerais -->
+                            <div class="card shadow mb-4">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold">
+                                        <i class="fas fa-user-cog me-2"></i>
+                                        Informações Gerais
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Solicitante -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Solicitante:</label>
+                                        <div>
+                                            <strong th:text="${chamado.solicitanteNome ?: 'N/A'}">João Silva</strong>
+                                            <br>
+                                            <small class="text-muted" th:text="${chamado.solicitanteEmail ?: ''}">joao@empresa.com</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Técnico Responsável -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Técnico Responsável:</label>
+                                        <p class="mb-0" th:text="${chamado.tecnicoResponsavel ?: 'Não atribuído'}" 
+                                           th:class="${chamado.tecnicoResponsavel == null ? 'text-muted' : ''}">Técnico</p>
+                                    </div>
+
+                                    <!-- Data de Abertura -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Data de Abertura:</label>
+                                        <p class="mb-0" th:text="${#temporals.format(chamado.dataAbertura, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</p>
+                                    </div>
+
+                                    <!-- Data de Início -->
+                                    <div class="mb-3" th:if="${chamado.dataInicio}">
+                                        <label class="form-label fw-bold">Data de Início:</label>
+                                        <p class="mb-0" th:text="${#temporals.format(chamado.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 11:00</p>
+                                    </div>
+
+                                    <!-- Data de Resolução -->
+                                    <div class="mb-3" th:if="${chamado.dataResolucao}">
+                                        <label class="form-label fw-bold">Data de Resolução:</label>
+                                        <p class="mb-0" th:text="${#temporals.format(chamado.dataResolucao, 'dd/MM/yyyy HH:mm')}">01/01/2024 15:00</p>
+                                    </div>
+
+                                    <!-- Data de Fechamento -->
+                                    <div class="mb-3" th:if="${chamado.dataFechamento}">
+                                        <label class="form-label fw-bold">Data de Fechamento:</label>
+                                        <p class="mb-0" th:text="${#temporals.format(chamado.dataFechamento, 'dd/MM/yyyy HH:mm')}">01/01/2024 16:00</p>
+                                    </div>
+
+                                    <!-- SLA -->
+                                    <div th:if="${chamado.slaRestante != null}">
+                                        <label class="form-label fw-bold">SLA Restante:</label>
+                                        <p class="mb-0">
+                                            <span th:class="${
+                                                      chamado.slaRestante <= 0 ? 'sla-vermelho' :
+                                                      chamado.slaRestante <= 4 ? 'sla-amarelo' :
+                                                      'sla-verde'
+                                                  }">
+                                                <i class="fas fa-clock me-1"></i>
+                                                <span th:text="${chamado.slaRestante > 0 ? chamado.slaRestante + ' horas' : 'SLA Vencido'}">24 horas</span>
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Histórico de Status -->
+                            <div class="card shadow">
+                                <div class="card-header">
+                                    <h6 class="m-0 font-weight-bold">
+                                        <i class="fas fa-history me-2"></i>
+                                        Histórico
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="timeline">
+                                        <!-- Abertura do chamado -->
+                                        <div class="timeline-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">Chamado Aberto</h6>
+                                                    <p class="mb-0 text-muted small">Por <span th:text="${chamado.solicitanteNome ?: 'Sistema'}">João Silva</span></p>
+                                                </div>
+                                                <small class="text-muted" th:text="${#temporals.format(chamado.dataAbertura, 'dd/MM HH:mm')}">01/01 10:00</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Início do atendimento -->
+                                        <div class="timeline-item status-change" th:if="${chamado.dataInicio}">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">Atendimento Iniciado</h6>
+                                                    <p class="mb-0 text-muted small">Por <span th:text="${chamado.tecnicoResponsavel ?: 'Técnico'}">Técnico</span></p>
+                                                </div>
+                                                <small class="text-muted" th:text="${#temporals.format(chamado.dataInicio, 'dd/MM HH:mm')}">01/01 11:00</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Resolução -->
+                                        <div class="timeline-item status-change" th:if="${chamado.dataResolucao}">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">Chamado Resolvido</h6>
+                                                    <p class="mb-0 text-muted small">Por <span th:text="${chamado.tecnicoResponsavel ?: 'Técnico'}">Técnico</span></p>
+                                                </div>
+                                                <small class="text-muted" th:text="${#temporals.format(chamado.dataResolucao, 'dd/MM HH:mm')}">01/01 15:00</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Fechamento -->
+                                        <div class="timeline-item status-change" th:if="${chamado.dataFechamento}">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">Chamado Fechado</h6>
+                                                    <p class="mb-0 text-muted small">Por <span th:text="${chamado.tecnicoResponsavel ?: 'Sistema'}">Sistema</span></p>
+                                                </div>
+                                                <small class="text-muted" th:text="${#temporals.format(chamado.dataFechamento, 'dd/MM HH:mm')}">01/01 16:00</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    
+    <script>
+        // Funções para ações dos chamados
+        function iniciarAtendimento(id) {
+            const tecnico = prompt('Nome do técnico responsável:');
+            if (tecnico) {
+                atualizarStatusChamado(id, 'iniciar', tecnico);
+            }
+        }
+        
+        function resolverChamado(id) {
+            if (confirm('Deseja marcar este chamado como resolvido?')) {
+                atualizarStatusChamado(id, 'resolver');
+            }
+        }
+        
+        function fecharChamado(id) {
+            if (confirm('Deseja fechar este chamado definitivamente?')) {
+                atualizarStatusChamado(id, 'fechar');
+            }
+        }
+        
+        function atualizarStatusChamado(id, acao, tecnico = null) {
+            const data = {
+                acao: acao
+            };
+            
+            if (tecnico) {
+                data.tecnico = tecnico;
+            }
+            
+            $.ajax({
+                url: `/suporte/chamados/${id}/status`,
+                method: 'POST',
+                data: data,
+                success: function(response) {
+                    if (response.sucesso) {
+                        location.reload();
+                    } else {
+                        alert('Erro: ' + response.erro);
+                    }
+                },
+                error: function() {
+                    alert('Erro ao atualizar status do chamado.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

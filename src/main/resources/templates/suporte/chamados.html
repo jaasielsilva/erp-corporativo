@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lista de Chamados - Suporte - ERP Corporativo</title>
+    
+    <!-- CSS Files -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-aberto {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status-em-andamento {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .status-resolvido {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .status-fechado {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .prioridade-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .prioridade-baixa {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .prioridade-media {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .prioridade-alta {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .prioridade-urgente {
+            background-color: #ffcdd2;
+            color: #c62828;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .sla-verde {
+            color: #388e3c;
+            font-weight: 600;
+        }
+        
+        .sla-amarelo {
+            color: #f57c00;
+            font-weight: 600;
+        }
+        
+        .sla-vermelho {
+            color: #d32f2f;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin: 0 0.125rem;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .filters-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="/suporte" class="text-decoration-none">
+                                    <i class="fas fa-headset me-1"></i>Suporte
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <i class="fas fa-list me-1"></i>Lista de Chamados
+                            </li>
+                        </ol>
+                    </nav>
+
+                    <!-- Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h1 class="h3 mb-0 text-gray-800">
+                                        <i class="fas fa-list text-primary me-2"></i>
+                                        Lista de Chamados
+                                    </h1>
+                                    <p class="text-muted mb-0">Gerencie todos os chamados de suporte</p>
+                                </div>
+                                <div>
+                                    <a href="/suporte/novo" class="btn btn-primary">
+                                        <i class="fas fa-plus me-1"></i> Novo Chamado
+                                    </a>
+                                    <button class="btn btn-outline-primary ms-2" onclick="window.location.reload()">
+                                        <i class="fas fa-sync-alt me-1"></i> Atualizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="filters-card">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="filtroStatus">
+                                    <option value="">Todos os Status</option>
+                                    <option value="ABERTO">Aberto</option>
+                                    <option value="EM_ANDAMENTO">Em Andamento</option>
+                                    <option value="RESOLVIDO">Resolvido</option>
+                                    <option value="FECHADO">Fechado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Prioridade</label>
+                                <select class="form-select" id="filtroPrioridade">
+                                    <option value="">Todas as Prioridades</option>
+                                    <option value="URGENTE">Urgente</option>
+                                    <option value="ALTA">Alta</option>
+                                    <option value="MEDIA">Média</option>
+                                    <option value="BAIXA">Baixa</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Técnico</label>
+                                <input type="text" class="form-control" id="filtroTecnico" placeholder="Nome do técnico">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Buscar</label>
+                                <input type="text" class="form-control" id="filtroBusca" placeholder="Número ou assunto">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Chamados -->
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-table me-2"></i>
+                                Chamados de Suporte
+                                <span class="badge bg-light text-dark ms-2" th:text="${#lists.size(chamados)}">0</span>
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Número</th>
+                                            <th>Assunto</th>
+                                            <th>Status</th>
+                                            <th>Prioridade</th>
+                                            <th>Solicitante</th>
+                                            <th>Técnico</th>
+                                            <th>SLA</th>
+                                            <th>Data Abertura</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Mensagem quando não há chamados -->
+                                        <tr th:if="${#lists.isEmpty(chamados)}">
+                                            <td colspan="9" class="text-center text-muted py-5">
+                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                <h5>Nenhum chamado encontrado</h5>
+                                                <p class="mb-0">Não há chamados cadastrados no sistema.</p>
+                                                <a href="/suporte/novo" class="btn btn-primary mt-3">
+                                                    <i class="fas fa-plus me-1"></i> Criar Primeiro Chamado
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Lista de chamados -->
+                                        <tr th:each="chamado : ${chamados}" th:unless="${#lists.isEmpty(chamados)}">
+                                            <td>
+                                                <strong th:text="${chamado.numero}">#001</strong>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong th:text="${chamado.assunto}">Problema no sistema</strong>
+                                                    <br>
+                                                    <small class="text-muted" th:text="${#strings.abbreviate(chamado.descricao, 50)}">Descrição resumida...</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge" 
+                                                      th:classappend="${
+                                                          chamado.status.name() == 'ABERTO' ? 'status-aberto' :
+                                                          chamado.status.name() == 'EM_ANDAMENTO' ? 'status-em-andamento' :
+                                                          chamado.status.name() == 'RESOLVIDO' ? 'status-resolvido' :
+                                                          'status-fechado'
+                                                      }"
+                                                      th:text="${chamado.status.descricao}">Aberto</span>
+                                            </td>
+                                            <td>
+                                                <span class="prioridade-badge"
+                                                      th:classappend="${
+                                                          chamado.prioridade.name() == 'BAIXA' ? 'prioridade-baixa' :
+                                                          chamado.prioridade.name() == 'MEDIA' ? 'prioridade-media' :
+                                                          chamado.prioridade.name() == 'ALTA' ? 'prioridade-alta' :
+                                                          'prioridade-urgente'
+                                                      }"
+                                                      th:text="${chamado.prioridade.descricao}">Média</span>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong th:text="${chamado.solicitanteNome ?: 'N/A'}">João Silva</strong>
+                                                    <br>
+                                                    <small class="text-muted" th:text="${chamado.solicitanteEmail ?: ''}">joao@empresa.com</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span th:text="${chamado.tecnicoResponsavel ?: 'Não atribuído'}" 
+                                                      th:class="${chamado.tecnicoResponsavel == null ? 'text-muted' : ''}">Técnico</span>
+                                            </td>
+                                            <td>
+                                                <span th:if="${chamado.slaRestante != null}"
+                                                      th:class="${
+                                                          chamado.slaRestante <= 0 ? 'sla-vermelho' :
+                                                          chamado.slaRestante <= 4 ? 'sla-amarelo' :
+                                                          'sla-verde'
+                                                      }">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    <span th:text="${chamado.slaRestante > 0 ? chamado.slaRestante + 'h' : 'Vencido'}">24h</span>
+                                                </span>
+                                                <span th:unless="${chamado.slaRestante != null}" class="text-muted">-</span>
+                                            </td>
+                                            <td>
+                                                <small th:text="${#temporals.format(chamado.dataAbertura, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a th:href="@{/suporte/chamados/{id}(id=${chamado.id})}" 
+                                                       class="btn btn-outline-primary btn-action" 
+                                                       title="Visualizar">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <button th:if="${chamado.status.name() == 'ABERTO'}" 
+                                                            class="btn btn-outline-success btn-action" 
+                                                            title="Iniciar Atendimento"
+                                                            onclick="iniciarAtendimento([[${chamado.id}]])">
+                                                        <i class="fas fa-play"></i>
+                                                    </button>
+                                                    <button th:if="${chamado.status.name() == 'EM_ANDAMENTO'}" 
+                                                            class="btn btn-outline-warning btn-action" 
+                                                            title="Resolver"
+                                                            onclick="resolverChamado([[${chamado.id}]])">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button th:if="${chamado.status.name() == 'RESOLVIDO'}" 
+                                                            class="btn btn-outline-secondary btn-action" 
+                                                            title="Fechar"
+                                                            onclick="fecharChamado([[${chamado.id}]])">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    
+    <script>
+        // Filtros da tabela
+        $(document).ready(function() {
+            // Filtro por status
+            $('#filtroStatus').on('change', function() {
+                filtrarTabela();
+            });
+            
+            // Filtro por prioridade
+            $('#filtroPrioridade').on('change', function() {
+                filtrarTabela();
+            });
+            
+            // Filtro por técnico
+            $('#filtroTecnico').on('keyup', function() {
+                filtrarTabela();
+            });
+            
+            // Filtro de busca geral
+            $('#filtroBusca').on('keyup', function() {
+                filtrarTabela();
+            });
+        });
+        
+        function filtrarTabela() {
+            const status = $('#filtroStatus').val().toLowerCase();
+            const prioridade = $('#filtroPrioridade').val().toLowerCase();
+            const tecnico = $('#filtroTecnico').val().toLowerCase();
+            const busca = $('#filtroBusca').val().toLowerCase();
+            
+            $('tbody tr').each(function() {
+                const row = $(this);
+                const statusRow = row.find('td:eq(2)').text().toLowerCase();
+                const prioridadeRow = row.find('td:eq(3)').text().toLowerCase();
+                const tecnicoRow = row.find('td:eq(5)').text().toLowerCase();
+                const numeroRow = row.find('td:eq(0)').text().toLowerCase();
+                const assuntoRow = row.find('td:eq(1)').text().toLowerCase();
+                
+                let mostrar = true;
+                
+                if (status && !statusRow.includes(status)) mostrar = false;
+                if (prioridade && !prioridadeRow.includes(prioridade)) mostrar = false;
+                if (tecnico && !tecnicoRow.includes(tecnico)) mostrar = false;
+                if (busca && !numeroRow.includes(busca) && !assuntoRow.includes(busca)) mostrar = false;
+                
+                row.toggle(mostrar);
+            });
+        }
+        
+        // Funções para ações dos chamados
+        function iniciarAtendimento(id) {
+            const tecnico = prompt('Nome do técnico responsável:');
+            if (tecnico) {
+                atualizarStatusChamado(id, 'iniciar', tecnico);
+            }
+        }
+        
+        function resolverChamado(id) {
+            if (confirm('Deseja marcar este chamado como resolvido?')) {
+                atualizarStatusChamado(id, 'resolver');
+            }
+        }
+        
+        function fecharChamado(id) {
+            if (confirm('Deseja fechar este chamado definitivamente?')) {
+                atualizarStatusChamado(id, 'fechar');
+            }
+        }
+        
+        function atualizarStatusChamado(id, acao, tecnico = null) {
+            const data = {
+                acao: acao
+            };
+            
+            if (tecnico) {
+                data.tecnico = tecnico;
+            }
+            
+            $.ajax({
+                url: `/suporte/chamados/${id}/status`,
+                method: 'POST',
+                data: data,
+                success: function(response) {
+                    if (response.sucesso) {
+                        location.reload();
+                    } else {
+                        alert('Erro: ' + response.erro);
+                    }
+                },
+                error: function() {
+                    alert('Erro ao atualizar status do chamado.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -161,5 +161,40 @@ public String salvarAdesao(@RequestParam Long colaboradorId,
     public List<AdesaoPlanoSaude> listarAdesoesApiCompatible() {
         return listarAdesoesApi();
     }
+
+    // DEBUG: Endpoint para verificar planos no banco
+    @GetMapping("/debug/planos")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> debugPlanos() {
+        try {
+            List<PlanoSaude> planos = planoSaudeService.listarTodosAtivos();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("totalPlanos", planos.size());
+            response.put("planos", planos);
+            
+            // Log detalhado
+            System.out.println("=== DEBUG PLANOS DE SAÚDE ===");
+            System.out.println("Total de planos encontrados: " + planos.size());
+            
+            for (PlanoSaude plano : planos) {
+                System.out.println("Plano: " + plano.getNome() + " | ID: " + plano.getId() + 
+                                 " | Código: " + plano.getCodigo() + " | Valor: R$ " + plano.getValorTitular());
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.err.println("Erro no debug de planos: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
 }
 

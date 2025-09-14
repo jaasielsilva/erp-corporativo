@@ -9,17 +9,20 @@ import com.jaasielsilva.portalceo.model.Categoria;
 import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.model.VendaItem;
+import com.jaasielsilva.portalceo.model.Chamado;
 import com.jaasielsilva.portalceo.repository.BeneficioRepository;
 import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
 import com.jaasielsilva.portalceo.repository.CategoriaRepository;
 import com.jaasielsilva.portalceo.repository.ProdutoRepository;
 import com.jaasielsilva.portalceo.repository.VendaRepository;
+import com.jaasielsilva.portalceo.repository.ChamadoRepository;
 import com.jaasielsilva.portalceo.service.FormaPagamentoService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @Component
 public class DatabaseInitializer implements CommandLineRunner {
@@ -41,6 +44,9 @@ public class DatabaseInitializer implements CommandLineRunner {
     
     @Autowired
     private VendaRepository vendaRepository;
+    
+    @Autowired
+    private ChamadoRepository chamadoRepository;
 
     // Aqui você já deve ter injeções de UserRepository, RoleRepository etc.
     // @Autowired
@@ -75,6 +81,10 @@ public class DatabaseInitializer implements CommandLineRunner {
         // ===== Criando dados de teste para vendas =====
         criarDadosTesteVendas();
         System.out.println("DatabaseInitializer: Dados de teste para vendas criados.");
+        
+        // ===== Criando dados de teste para chamados =====
+        criarDadosTesteChamados();
+        System.out.println("DatabaseInitializer: Dados de teste para chamados criados.");
     }
     
     private void criarDadosTesteVendas() {
@@ -153,6 +163,91 @@ private void criarVendaTeste(Produto produto, int quantidade) {
 
     // Salvar a venda (cascade salva o item automaticamente)
     vendaRepository.save(venda);
+}
+
+private void criarDadosTesteChamados() {
+    // Verificar se já existem dados
+    if (chamadoRepository.count() > 0) {
+        return;
+    }
+
+    // Criar chamados de exemplo com diferentes status e prioridades
+    List<Chamado> chamados = Arrays.asList(
+        criarChamado("Sistema lento", "O sistema está muito lento para carregar as páginas", 
+                    Chamado.Prioridade.ALTA, Chamado.StatusChamado.ABERTO, "TI", "joao.silva@empresa.com"),
+        
+        criarChamado("Erro no login", "Não consigo fazer login no sistema", 
+                    Chamado.Prioridade.URGENTE, Chamado.StatusChamado.EM_ANDAMENTO, "TI", "maria.santos@empresa.com"),
+        
+        criarChamado("Impressora não funciona", "A impressora do 2º andar não está funcionando", 
+                    Chamado.Prioridade.MEDIA, Chamado.StatusChamado.ABERTO, "Infraestrutura", "carlos.oliveira@empresa.com"),
+        
+        criarChamado("Solicitação de acesso", "Preciso de acesso ao módulo financeiro", 
+                    Chamado.Prioridade.MEDIA, Chamado.StatusChamado.RESOLVIDO, "Segurança", "ana.costa@empresa.com"),
+        
+        criarChamado("Backup falhou", "O backup automático falhou na madrugada", 
+                    Chamado.Prioridade.ALTA, Chamado.StatusChamado.EM_ANDAMENTO, "TI", "pedro.alves@empresa.com"),
+        
+        criarChamado("Email não funciona", "Não estou recebendo emails desde ontem", 
+                    Chamado.Prioridade.ALTA, Chamado.StatusChamado.ABERTO, "TI", "lucia.ferreira@empresa.com"),
+        
+        criarChamado("Instalação de software", "Preciso instalar o Adobe Photoshop", 
+                    Chamado.Prioridade.BAIXA, Chamado.StatusChamado.FECHADO, "TI", "rafael.lima@empresa.com"),
+        
+        criarChamado("Problema na rede", "Internet instável no setor comercial", 
+                    Chamado.Prioridade.MEDIA, Chamado.StatusChamado.RESOLVIDO, "Infraestrutura", "fernanda.rocha@empresa.com")
+    );
+
+    chamadoRepository.saveAll(chamados);
+}
+
+private Chamado criarChamado(String assunto, String descricao, Chamado.Prioridade prioridade, 
+                            Chamado.StatusChamado status, String categoria, String solicitanteEmail) {
+    Chamado chamado = new Chamado();
+    chamado.setAssunto(assunto);
+    chamado.setDescricao(descricao);
+    chamado.setPrioridade(prioridade);
+    chamado.setStatus(status);
+    chamado.setCategoria(categoria);
+    chamado.setSolicitanteEmail(solicitanteEmail);
+    chamado.setSolicitanteNome(extrairNomeDaEmail(solicitanteEmail));
+    chamado.setDataAbertura(LocalDateTime.now().minusDays((long)(Math.random() * 7))); // Últimos 7 dias
+    
+    // Definir técnico responsável e datas para chamados em andamento/resolvidos
+    if (status == Chamado.StatusChamado.EM_ANDAMENTO || status == Chamado.StatusChamado.RESOLVIDO || status == Chamado.StatusChamado.FECHADO) {
+        chamado.setTecnicoResponsavel("Técnico TI");
+        chamado.setDataInicioAtendimento(chamado.getDataAbertura().plusHours(1));
+    }
+    
+    if (status == Chamado.StatusChamado.RESOLVIDO || status == Chamado.StatusChamado.FECHADO) {
+        chamado.setDataResolucao(chamado.getDataAbertura().plusHours(2 + (long)(Math.random() * 24)));
+        if (Math.random() > 0.5) {
+            chamado.setAvaliacao((int)(Math.random() * 5) + 1); // Avaliação de 1 a 5
+        }
+    }
+    
+    // Calcular SLA baseado na prioridade
+    switch (prioridade) {
+        case URGENTE:
+            chamado.setSlaVencimento(chamado.getDataAbertura().plusHours(8));
+            break;
+        case ALTA:
+            chamado.setSlaVencimento(chamado.getDataAbertura().plusHours(24));
+            break;
+        case MEDIA:
+            chamado.setSlaVencimento(chamado.getDataAbertura().plusHours(48));
+            break;
+        case BAIXA:
+            chamado.setSlaVencimento(chamado.getDataAbertura().plusHours(72));
+            break;
+    }
+    
+    return chamado;
+}
+
+private String extrairNomeDaEmail(String email) {
+    String nome = email.split("@")[0];
+    return nome.replace(".", " ").toUpperCase();
 }
 
 }

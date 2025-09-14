@@ -13,24 +13,55 @@
     
     <!-- Estilos customizados para o dashboard de suporte -->
     <style>
-        .border-left-primary {
-            border-left: 0.25rem solid #4e73df !important;
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
-        .border-left-warning {
-            border-left: 0.25rem solid #f6c23e !important;
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .border-left-success {
-            border-left: 0.25rem solid #1cc88a !important;
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
         }
-        .border-left-info {
-            border-left: 0.25rem solid #36b9cc !important;
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
         }
-        .text-gray-800 {
-            color: #5a5c69 !important;
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .text-gray-300 {
-            color: #dddfeb !important;
+        .stat-number { font-size: 36px; font-weight: 800; color: #1e293b; margin: 10px 0; }
+        .stat-label { font-size: 16px; color: #64748b; font-weight: 500; }
+        .stat-change {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: 600;
         }
+        .stat-change.positive { background: #dcfce7; color: #16a34a; }
+        .stat-change.negative { background: #fef2f2; color: #dc2626; }
+        .stat-change.neutral { background: #f1f5f9; color: #64748b; }
         .chart-area {
             position: relative;
             height: 300px;
@@ -64,6 +95,90 @@
         }
         .content-area {
             padding: 1.5rem;
+        }
+        
+        /* Estilos para o card de ações rápidas */
+        .actions-card {
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 8px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            min-height: 60px;
+        }
+        
+        .action-btn i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+        
+        .action-btn span {
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #5a6c7d 0%, #3a4b5c 100%);
+            color: white;
+        }
+        
+        .action-btn.warning {
+            background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+            color: white;
+        }
+        
+        .action-btn.info {
+            background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .action-btn.primary:hover { color: white; }
+        .action-btn.secondary:hover { color: white; }
+        .action-btn.warning:hover { color: white; }
+        .action-btn.info:hover { color: white; }
+        
+        @media (max-width: 768px) {
+            .quick-actions {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            
+            .action-btn {
+                min-height: 50px;
+                padding: 10px 6px;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -104,120 +219,59 @@
                         </div>
                     </div>
 
-                    <!-- Linha 1: Cards de Resumo -->
-                    <div class="row mb-4">
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Chamados Abertos
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${chamadosAbertos ?: '0'}">0</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Cards de Estatísticas -->
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-ticket-alt"></i></div>
+                            <div class="stat-number" th:text="${chamadosAbertos ?: '0'}">0</div>
+                            <div class="stat-label">Chamados Abertos</div>
+                            <div class="stat-change neutral">Aguardando atendimento</div>
                         </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Em Andamento
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${chamadosEmAndamento ?: '0'}">0</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-cogs fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-cogs"></i></div>
+                            <div class="stat-number" th:text="${chamadosEmAndamento ?: '0'}">0</div>
+                            <div class="stat-label">Em Andamento</div>
+                            <div class="stat-change neutral">Sendo processados</div>
                         </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Resolvidos (Mês)
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${chamadosResolvidos ?: '0'}">0</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-number" th:text="${chamadosResolvidos ?: '0'}">0</div>
+                            <div class="stat-label">Resolvidos (Mês)</div>
+                            <div class="stat-change positive">Concluídos com sucesso</div>
                         </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                SLA Médio
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${slaMedio + 'h' ?: '0h'}">0h</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-number" th:text="${slaMedio != null ? #numbers.formatDecimal(slaMedio, 1, 1) + 'h' : '0.0h'}">0.0h</div>
+                            <div class="stat-label">SLA Médio</div>
+                            <div class="stat-change neutral">Tempo de resolução</div>
                         </div>
-                    </div>
-
-                    <!-- Linha adicional: Card de Avaliação Média -->
-                    <div class="row mb-4">
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Avaliação Média
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${avaliacaoMedia != null ? #numbers.formatDecimal(avaliacaoMedia, 1, 1) : '0.0'}">4.2</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-star fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-star"></i></div>
+                            <div class="stat-number" th:text="${avaliacaoMedia != null ? #numbers.formatDecimal(avaliacaoMedia, 1, 1) : '0,0'}">0,0</div>
+                            <div class="stat-label">Avaliação Média</div>
+                            <div class="stat-change neutral">Satisfação dos usuários</div>
                         </div>
                         
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Ações Rápidas
-                                            </div>
-                                            <div class="mt-2">
-                                                <a href="/suporte/chamados" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-list me-1"></i>Ver Todos os Chamados
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-external-link-alt fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="stat-card actions-card">
+                            <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                            <div class="stat-label">Ações Rápidas</div>
+                            <div class="quick-actions">
+                                <a href="/suporte/chamados/novo" class="action-btn primary">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Novo Chamado</span>
+                                </a>
+                                <a href="/suporte/chamados" class="action-btn secondary">
+                                    <i class="fas fa-list"></i>
+                                    <span>Ver Todos</span>
+                                </a>
+                                <a href="/suporte/chamados?status=ABERTO" class="action-btn warning">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>Pendentes</span>
+                                </a>
+                                <a href="/suporte/relatorios" class="action-btn info">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>Relatórios</span>
+                                </a>
                             </div>
                         </div>
                     </div>

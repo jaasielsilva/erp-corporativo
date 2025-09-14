@@ -33,6 +33,12 @@ public class SuporteController {
         try {
             logger.info("Carregando dashboard de suporte");
             
+            // Mock de usuário logado para o topbar
+            Usuario usuarioLogado = new Usuario();
+            usuarioLogado.setId(1L);
+            usuarioLogado.setNome("Administrador");
+            model.addAttribute("usuarioLogado", usuarioLogado);
+            
             // Estatísticas gerais
             long chamadosAbertos = chamadoService.contarPorStatus(StatusChamado.ABERTO);
             long chamadosEmAndamento = chamadoService.contarPorStatus(StatusChamado.EM_ANDAMENTO);
@@ -130,6 +136,12 @@ public class SuporteController {
     @GetMapping("/chamados")
     public String listarChamados(Model model) {
         try {
+            // Mock de usuário logado para o topbar
+            Usuario usuarioLogado = new Usuario();
+            usuarioLogado.setId(1L);
+            usuarioLogado.setNome("Administrador");
+            model.addAttribute("usuarioLogado", usuarioLogado);
+            
             List<Chamado> chamados = chamadoService.listarTodos();
             model.addAttribute("chamados", chamados);
         } catch (Exception e) {
@@ -172,16 +184,23 @@ public class SuporteController {
     @GetMapping("/chamados/{id}")
     public String visualizarChamado(@PathVariable Long id, Model model) {
         try {
+            // Mock de usuário logado para o topbar
+            Usuario usuarioLogado = new Usuario();
+            usuarioLogado.setId(1L);
+            usuarioLogado.setNome("Administrador");
+            model.addAttribute("usuarioLogado", usuarioLogado);
+            
             Chamado chamado = chamadoService.buscarPorId(id)
                 .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
             
             model.addAttribute("chamado", chamado);
+            logger.info("Visualizando chamado {}: {}", id, chamado.getNumero());
         } catch (Exception e) {
             logger.error("Erro ao visualizar chamado {}: {}", id, e.getMessage());
             return "redirect:/suporte";
         }
         
-        return "suporte/visualizar";
+        return "suporte/teste-debug";
     }
     
     // Página de teste para novo chamado
@@ -271,6 +290,26 @@ public class SuporteController {
         }
     }
     
+    // Endpoint de teste para debug do template
+    @GetMapping("/chamados/{id}/debug")
+    public String debugChamado(@PathVariable Long id, Model model) {
+        try {
+            logger.info("=== DEBUG CHAMADO {} ===", id);
+            
+            Chamado chamado = chamadoService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
+            
+            model.addAttribute("chamado", chamado);
+            logger.info("Chamado carregado para debug: {}", chamado.getNumero());
+            
+            return "suporte/teste-debug";
+        } catch (Exception e) {
+            logger.error("Erro no debug do chamado {}: {}", id, e.getMessage(), e);
+            model.addAttribute("chamado", null);
+            return "suporte/teste-debug";
+        }
+    }
+    
     // Página de debug para novo chamado
     @GetMapping("/debug-novo")
     public String debugNovo(Model model) {
@@ -330,6 +369,62 @@ public class SuporteController {
             logger.error("Erro ao carregar página de avaliação para chamado {}: {}", id, e.getMessage());
             return "redirect:/suporte/chamados?erro=sistema";
         }
+    }
+    
+    // Endpoint de teste simples para debug
+    @GetMapping("/test")
+    @ResponseBody
+    public String testEndpoint() {
+        return "Servidor funcionando corretamente - " + new java.util.Date();
+    }
+    
+    // Teste de busca de chamado sem template
+    @GetMapping("/chamados/{id}/json")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> buscarChamadoJson(@PathVariable Long id) {
+        try {
+            Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(id);
+            Map<String, Object> response = new HashMap<>();
+            
+            if (chamadoOpt.isPresent()) {
+                Chamado chamado = chamadoOpt.get();
+                response.put("id", chamado.getId());
+                response.put("numero", chamado.getNumero());
+                response.put("assunto", chamado.getAssunto());
+                response.put("status", chamado.getStatus());
+                response.put("prioridade", chamado.getPrioridade());
+                response.put("slaRestante", chamado.getSlaRestante());
+                response.put("sucesso", true);
+            } else {
+                response.put("sucesso", false);
+                response.put("erro", "Chamado não encontrado");
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar chamado {}: {}", id, e.getMessage(), e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("erro", e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    // Teste com template simplificado
+    @GetMapping("/chamados/{id}/simples")
+    public String visualizarChamadoSimples(@PathVariable Long id, Model model) {
+        try {
+            Chamado chamado = chamadoService.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
+            
+            model.addAttribute("chamado", chamado);
+            logger.info("Visualizando chamado simples {}: {}", id, chamado.getNumero());
+        } catch (Exception e) {
+            logger.error("Erro ao visualizar chamado simples {}: {}", id, e.getMessage());
+            model.addAttribute("chamado", null);
+        }
+        
+        return "suporte/visualizar-simples";
     }
 
 }

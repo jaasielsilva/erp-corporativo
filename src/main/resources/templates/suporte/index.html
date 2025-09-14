@@ -10,6 +10,62 @@
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Estilos customizados para o dashboard de suporte -->
+    <style>
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+        .text-gray-800 {
+            color: #5a5c69 !important;
+        }
+        .text-gray-300 {
+            color: #dddfeb !important;
+        }
+        .chart-area {
+            position: relative;
+            height: 300px;
+        }
+        .chart-pie {
+            position: relative;
+            height: 300px;
+        }
+        .floating-btn button:hover {
+            transform: scale(1.1) !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+        }
+        .card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
+        .table th {
+            background-color: #f8f9fc;
+            border-color: #e3e6f0;
+            font-weight: 600;
+            color: #5a5c69;
+        }
+        .btn-group .btn {
+            margin-right: 2px;
+        }
+        .content-area {
+            padding: 1.5rem;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -25,13 +81,207 @@
             <!-- Topbar -->
             <header th:replace="~{components/topbar :: topbar}"></header>
 
-            <!-- Página em branco para Suporte -->
+            <!-- Dashboard de Suporte -->
             <section class="content-area">
                 <div class="container-fluid">
+                    <!-- Cabeçalho -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h1 class="h3 mb-0 text-gray-800">
+                                        <i class="fas fa-headset text-primary me-2"></i>
+                                        Dashboard de Suporte
+                                    </h1>
+                                    <p class="text-muted mb-0">Acompanhe chamados, tickets e status de atendimento</p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-outline-primary" onclick="window.location.reload()">
+                                        <i class="fas fa-sync-alt me-1"></i> Atualizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Linha 1: Cards de Resumo -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Chamados Abertos
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalAbertos ?: '0'}">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Em Andamento
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalAndamento ?: '0'}">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-cogs fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Resolvidos (Mês)
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalResolvidos ?: '0'}">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                SLA Médio
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${slaMedio ?: '0h'}">0h</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Linha 2: Gráficos -->
+                    <div class="row mb-4">
+                        <!-- Gráfico de Barras - Chamados por Categoria -->
+                        <div class="col-xl-6 col-lg-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-chart-bar me-2"></i>Chamados por Categoria
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-area">
+                                        <canvas id="categoriasChart" width="400" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico de Pizza - Chamados por Prioridade -->
+                        <div class="col-xl-6 col-lg-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-chart-pie me-2"></i>Chamados por Prioridade
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-pie pt-4 pb-2">
+                                        <canvas id="prioridadesChart" width="400" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Linha 3: Tabela de Chamados -->
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">📌 Página de Suporte</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-list me-2"></i>Chamados Recentes
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nº</th>
+                                                    <th>Assunto</th>
+                                                    <th>Status</th>
+                                                    <th>Prioridade</th>
+                                                    <th>Técnico Responsável</th>
+                                                    <th>SLA Restante</th>
+                                                    <th>Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:if="${#lists.isEmpty(chamados)}">
+                                                    <td colspan="7" class="text-center text-muted py-4">
+                                                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                        Nenhum chamado encontrado
+                                                    </td>
+                                                </tr>
+                                                <tr th:each="chamado : ${chamados}" th:unless="${#lists.isEmpty(chamados)}">
+                                                    <td th:text="${chamado.numero}">#001</td>
+                                                    <td th:text="${chamado.assunto}">Problema no sistema</td>
+                                                    <td>
+                                                        <span class="badge" 
+                                                              th:classappend="${chamado.status == 'ABERTO'} ? 'bg-danger' : 
+                                                                             (${chamado.status == 'EM_ANDAMENTO'} ? 'bg-warning' : 
+                                                                             (${chamado.status == 'RESOLVIDO'} ? 'bg-success' : 'bg-secondary'))"
+                                                              th:text="${chamado.status}">ABERTO</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge" 
+                                                              th:classappend="${chamado.prioridade == 'ALTA'} ? 'bg-danger' : 
+                                                                             (${chamado.prioridade == 'MEDIA'} ? 'bg-warning' : 'bg-info')"
+                                                              th:text="${chamado.prioridade}">ALTA</span>
+                                                    </td>
+                                                    <td th:text="${chamado.tecnicoResponsavel ?: 'Não atribuído'}">João Silva</td>
+                                                    <td th:text="${chamado.slaRestante ?: 'N/A'}">2h 30m</td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                    th:onclick="'visualizarChamado(' + ${chamado.id} + ')'"
+                                                                    title="Visualizar">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                                    th:onclick="'editarChamado(' + ${chamado.id} + ')'"
+                                                                    title="Editar">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -41,11 +291,132 @@
             <footer th:replace="~{components/footer :: footer}"></footer>
 
         </main>
+
+        <!-- Botão Flutuante "Abrir Chamado" -->
+        <div class="floating-btn">
+            <button type="button" class="btn btn-primary btn-lg rounded-circle shadow" 
+                    onclick="window.location.href='/suporte/novo'" 
+                    title="Abrir Novo Chamado"
+                    style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1000;">
+                <i class="fas fa-plus fa-lg"></i>
+            </button>
+        </div>
+
     </div>
 
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+
+    <!-- Scripts dos Gráficos -->
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dados do servidor (Thymeleaf)
+            const categoriasLabels = /*[[${categoriasLabels}]]*/ ['Técnico', 'Financeiro', 'RH', 'Geral'];
+            const categoriasValues = /*[[${categoriasValues}]]*/ [12, 8, 5, 3];
+            const prioridadesLabels = /*[[${prioridadesLabels}]]*/ ['Alta', 'Média', 'Baixa'];
+            const prioridadesValues = /*[[${prioridadesValues}]]*/ [8, 15, 5];
+
+            // Gráfico de Barras - Chamados por Categoria
+            const ctxCategorias = document.getElementById('categoriasChart').getContext('2d');
+            new Chart(ctxCategorias, {
+                type: 'bar',
+                data: {
+                    labels: categoriasLabels,
+                    datasets: [{
+                        label: 'Número de Chamados',
+                        data: categoriasValues,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de Pizza - Chamados por Prioridade
+            const ctxPrioridades = document.getElementById('prioridadesChart').getContext('2d');
+            new Chart(ctxPrioridades, {
+                type: 'pie',
+                data: {
+                    labels: prioridadesLabels,
+                    datasets: [{
+                        data: prioridadesValues,
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.8)',   // Vermelho para Alta
+                            'rgba(255, 193, 7, 0.8)',   // Amarelo para Média
+                            'rgba(23, 162, 184, 0.8)'   // Azul para Baixa
+                        ],
+                        borderColor: [
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(23, 162, 184, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Funções para ações da tabela
+        function visualizarChamado(id) {
+            window.location.href = '/suporte/chamado/' + id;
+        }
+
+        function editarChamado(id) {
+            window.location.href = '/suporte/chamado/' + id + '/editar';
+        }
+
+        // Efeito hover no botão flutuante
+        document.querySelector('.floating-btn button').addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+
+        document.querySelector('.floating-btn button').addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    </script>
+
 </body>
 
 </html>

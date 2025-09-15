@@ -4,10 +4,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Entity
+@Data
 @Table(name = "chamados")
 public class Chamado {
 
@@ -79,6 +82,8 @@ public class Chamado {
 
     @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
+
+    private LocalDateTime dataInicio;
 
     // Campo transiente para SLA restante (calculado dinamicamente)
     @Transient

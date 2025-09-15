@@ -200,7 +200,7 @@ public class SuporteController {
             return "redirect:/suporte";
         }
         
-        return "suporte/teste-debug";
+        return "suporte/visualizar";
     }
     
     // Página de teste para novo chamado

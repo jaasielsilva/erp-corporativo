@@ -240,10 +240,6 @@
   <script>
     // Carregar colaboradores via AJAX
     document.addEventListener('DOMContentLoaded', function () {
-      // Limpar cache antigo ao carregar a página (para fins de depuração)
-      // localStorage.removeItem('colaboradores_cache');
-      // localStorage.removeItem('colaboradores_cache_time');
-      
       carregarColaboradores();
       configurarEventListeners();
     });
@@ -257,14 +253,12 @@
       const cachedData = localStorage.getItem(cacheKey);
       const cachedTime = localStorage.getItem(cacheTime);
       
-      // Verificar se o cache é válido (menos de 5 minutos)
       if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheValidity) {
-        //console.log('Usando colaboradores do cache');
+        console.log('Usando colaboradores do cache');
         preencherSelectColaboradores(JSON.parse(cachedData));
         return;
       }
       
-      // Se não houver cache válido, buscar do servidor
       fetch('/solicitacoes/colaboradores')
         .then(response => response.json())
         .then(colaboradores => {
@@ -276,32 +270,11 @@
         })
         .catch(error => {
           console.error('Erro ao carregar colaboradores:', error);
-          // Em caso de erro, tentar usar cache mesmo que esteja expirado
-          if (cachedData) {
-            console.log('Usando cache expirado como fallback');
-            preencherSelectColaboradores(JSON.parse(cachedData));
-          }
         });
     }
     
     function preencherSelectColaboradores(colaboradores) {
       const select = document.getElementById('colaborador');
-      // Limpar opções existentes
-      select.innerHTML = '<option value="">Selecione o colaborador...</option>';
-      
-      // Verificar se há colaboradores
-      if (!colaboradores || colaboradores.length === 0) {
-        console.warn('Nenhum colaborador encontrado');
-        // Adicionar opção indicando que não há colaboradores
-        const option = document.createElement('option');
-        option.textContent = 'Nenhum colaborador disponível';
-        option.disabled = true;
-        select.appendChild(option);
-        return;
-      }
-      
-      //console.log('Carregando ' + colaboradores.length + ' colaboradores');
-      
       colaboradores.forEach(colaborador => {
         const option = document.createElement('option');
         option.value = colaborador.id;

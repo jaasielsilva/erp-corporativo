@@ -13,25 +13,33 @@ O módulo de suporte é responsável pelo gerenciamento completo de chamados té
 - **Histórico Completo**: Registro detalhado de todas as interações e mudanças
 - **Numeração Automática**: Sistema de numeração única para cada chamado
 
-### 2. Sistema de SLA (Service Level Agreement)
+### 2. Sistema de Avaliações
+- **Avaliação de Atendimento**: Notas de 1 a 5 estrelas para qualidade do atendimento
+- **Comentários Opcionais**: Feedback detalhado dos usuários sobre a resolução
+- **Métricas de Satisfação**: Cálculo automático de nota média e taxa de satisfação
+- **Dashboard de Qualidade**: Estatísticas de avaliação em tempo real
+- **Relatórios de Performance**: Análise de satisfação por técnico e período
+
+### 3. Sistema de SLA (Service Level Agreement)
 - **Cálculo Automático**: Definição automática de prazos baseados na prioridade
 - **Alertas Inteligentes**: Notificações para chamados próximos ao vencimento
 - **Métricas Avançadas**: Acompanhamento de performance e cumprimento de SLAs
 - **SLA Médio**: Cálculo estatístico do tempo médio de resolução
 
-### 3. Dashboard e Relatórios Avançados
+### 4. Dashboard e Relatórios Avançados
 - **Visão Geral Executiva**: Dashboard com estatísticas em tempo real
 - **Gráficos Interativos**: Visualização de dados por status, prioridade e período
 - **Estatísticas Detalhadas**: Contadores por status e prioridade
 - **Relatórios Exportáveis**: Dados estruturados para análise externa
+- **Métricas de Avaliação**: Indicadores de satisfação e qualidade do atendimento
 
-### 4. Gestão de Status e Workflow
+### 5. Gestão de Status e Workflow
 - **Workflow Estruturado**: Fluxo bem definido de status dos chamados
 - **Atribuição de Técnicos**: Designação e controle de responsáveis
 - **Atualizações Controladas**: Registro sistemático de progresso e soluções
 - **APIs de Atualização**: Endpoints REST para mudanças de status
 
-### 5. Integração e APIs
+### 6. Integração e APIs
 - **API REST Completa**: Endpoints para todas as operações CRUD
 - **Autenticação Integrada**: Sistema de login e controle de acesso
 - **Formato JSON**: Comunicação padronizada via JSON
@@ -41,28 +49,86 @@ O módulo de suporte é responsável pelo gerenciamento completo de chamados té
 
 ### Entidades
 
-#### Chamado.java
+#### Estrutura da Entidade Chamado
+
 ```java
 @Entity
+@Data
 @Table(name = "chamados")
 public class Chamado {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column(name = "numero", unique = true, nullable = false)
     private String numero;           // Número único do chamado
+    
+    @NotBlank(message = "Assunto é obrigatório")
+    @Size(min = 5, max = 200, message = "Assunto deve ter entre 5 e 200 caracteres")
+    @Column(name = "assunto", nullable = false)
     private String assunto;          // Título/assunto do chamado
+    
+    @NotBlank(message = "Descrição é obrigatória")
+    @Size(min = 10, message = "Descrição deve ter pelo menos 10 caracteres")
+    @Column(name = "descricao", nullable = false, columnDefinition = "TEXT")
     private String descricao;        // Descrição detalhada
+    
+    @NotNull(message = "Prioridade é obrigatória")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "prioridade", nullable = false)
     private Prioridade prioridade;   // Nível de prioridade
-    private StatusChamado status;    // Status atual
+    
+    @NotNull(message = "Status é obrigatório")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private StatusChamado status = StatusChamado.ABERTO;    // Status atual
+    
+    @Column(name = "data_abertura", nullable = false)
     private LocalDateTime dataAbertura;
+    
+    @Column(name = "data_inicio_atendimento")
+    private LocalDateTime dataInicioAtendimento;
+    
+    @Column(name = "data_resolucao")
     private LocalDateTime dataResolucao;
+    
+    @Column(name = "data_fechamento")
+    private LocalDateTime dataFechamento;
+    
+    @Column(name = "sla_vencimento")
+    private LocalDateTime slaVencimento;
+    
+    @Column(name = "tecnico_responsavel")
     private String tecnicoResponsavel;
+    
+    @Column(name = "solicitante_nome")
     private String solicitanteNome;
+    
+    @Column(name = "solicitante_email")
     private String solicitanteEmail;
+    
+    @Column(name = "categoria")
     private String categoria;
+    
+    @Column(name = "subcategoria")
+    private String subcategoria;
+    
+    @Column(name = "tempo_resolucao_minutos")
+    private Integer tempoResolucaoMinutos;
+    
+    // Campos de avaliação
+    @Column(name = "avaliacao")
+    private Integer avaliacao;       // Nota de 1 a 5 estrelas
+    
+    @Column(name = "comentario_avaliacao", columnDefinition = "TEXT")
+    private String comentarioAvaliacao; // Comentário opcional do usuário
+    
+    @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
     
+    private LocalDateTime dataInicio; // Campo adicional para controle
+    
+    // Campo transiente para SLA restante (calculado dinamicamente)
     @Transient
     private Long slaRestante;        // SLA restante em horas
 }
@@ -71,16 +137,16 @@ public class Chamado {
 #### Enums
 
 **Prioridade**
-- `BAIXA`: 72 horas úteis
-- `MEDIA`: 48 horas úteis  
-- `ALTA`: 24 horas úteis
-- `URGENTE`: 8 horas úteis
+- `BAIXA("Baixa", 72)`: 72 horas úteis
+- `MEDIA("Média", 48)`: 48 horas úteis  
+- `ALTA("Alta", 24)`: 24 horas úteis
+- `URGENTE("Urgente", 8)`: 8 horas úteis
 
 **StatusChamado**
-- `ABERTO`: Chamado criado, aguardando atendimento
-- `EM_ANDAMENTO`: Chamado sendo atendido
-- `RESOLVIDO`: Chamado resolvido, aguardando confirmação
-- `FECHADO`: Chamado finalizado
+- `ABERTO("Aberto")`: Chamado criado, aguardando atendimento
+- `EM_ANDAMENTO("Em Andamento")`: Chamado sendo atendido
+- `RESOLVIDO("Resolvido")`: Chamado resolvido, aguardando confirmação
+- `FECHADO("Fechado")`: Chamado finalizado
 
 ### Serviços
 
@@ -484,17 +550,28 @@ suporte.dashboard.limite-chamados=10
 - `GET /api/chamados/em-andamento` - Lista chamados em andamento
 - `GET /api/chamados/resolvidos` - Lista chamados resolvidos
 - `GET /api/chamados/estatisticas` - Estatísticas gerais
+- `GET /api/avaliacoes-atendimento` - Métricas de avaliação dos chamados
+- `GET /suporte/api/evolucao-chamados` - Dados para gráfico de evolução de chamados
+- `GET /suporte/chamados/{id}/json` - Busca dados de um chamado em formato JSON
+- `GET /suporte/test` - Endpoint de teste para verificar funcionamento do servidor
+- `POST /api/chamados/{id}/avaliacao` - Permite avaliar um chamado resolvido ou fechado
 
 ### Endpoints de Modificação
 - `POST /api/chamados` - Cria novo chamado
 - `PUT /api/chamados/{id}/status` - Atualiza status
+- `POST /suporte/chamados/{id}/status` - Atualiza status de um chamado específico via web
 
 ### Endpoints Web
 - `GET /suporte` - Dashboard principal
 - `GET /suporte/chamados` - Lista de chamados
 - `GET /suporte/novo` - Formulário de novo chamado
-- `POST /suporte/novo` - Processa criação de chamado
+- `POST /suporte/chamados/novo` - Processa criação de chamado
 - `GET /suporte/chamados/{id}` - Visualiza chamado específico
+- `GET /suporte/chamados/{id}/avaliar` - Página para avaliar chamado resolvido
+- `GET /suporte/chamados/{id}/debug` - Página de debug para desenvolvimento
+- `GET /suporte/teste-chamado` - Página de teste para novo chamado
+- `GET /suporte/teste-simples` - Template simplificado de teste
+- `GET /suporte/novo-simples` - Formulário simplificado de novo chamado
 - `POST /suporte/chamados/{id}/status` - Atualiza status via web
 
 ## Troubleshooting

@@ -66,6 +66,11 @@ public class SuporteController {
             List<Chamado> chamadosSlaVencido = chamadoService.buscarChamadosComSlaVencido();
             List<Chamado> chamadosSlaProximo = chamadoService.buscarChamadosComSlaProximoVencimento();
             
+            // Dados para gráfico de evolução de chamados (últimos 12 meses)
+            List<String> ultimos12MesesLabels = chamadoService.obterLabelsUltimosMeses(12);
+            List<Long> ultimos12MesesChamados = chamadoService.obterEvolucaoChamadosUltimosMeses(12);
+            List<Long> metaChamadosMensal = chamadoService.calcularMetaMensalChamados(12);
+            
             // Adicionar dados ao model
             model.addAttribute("chamadosAbertos", chamadosAbertos);
             model.addAttribute("chamadosEmAndamento", chamadosEmAndamento);
@@ -78,6 +83,11 @@ public class SuporteController {
             model.addAttribute("estatisticasCategoria", estatisticasCategoria);
             model.addAttribute("chamadosSlaVencido", chamadosSlaVencido.size());
             model.addAttribute("chamadosSlaProximo", chamadosSlaProximo.size());
+            
+            // Dados para gráfico de evolução
+            model.addAttribute("ultimos12MesesLabels", ultimos12MesesLabels);
+            model.addAttribute("ultimos12MesesChamados", ultimos12MesesChamados);
+            model.addAttribute("metaChamadosMensal", metaChamadosMensal);
             
             logger.info("Dashboard carregado: {} abertos, {} em andamento, {} resolvidos, SLA médio: {}h", 
                        chamadosAbertos, chamadosEmAndamento, chamadosResolvidos, slaMedio);
@@ -134,6 +144,101 @@ public class SuporteController {
         } catch (Exception e) {
             logger.error("Erro ao buscar dados de status: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    // API para dados do gráfico de evolução de chamados
+    @GetMapping("/api/evolucao-chamados")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getDadosEvolucaoChamados() {
+        try {
+            List<String> labels = chamadoService.obterLabelsUltimosMeses(12);
+            List<Long> chamados = chamadoService.obterEvolucaoChamadosUltimosMeses(12);
+            List<Long> metas = chamadoService.calcularMetaMensalChamados(12);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("labels", labels);
+            response.put("chamados", chamados);
+            response.put("metas", metas);
+            response.put("success", true);
+            
+            logger.info("Dados de evolução enviados: {} meses, {} chamados totais", 
+                       labels.size(), chamados.stream().mapToLong(Long::longValue).sum());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar dados de evolução de chamados: {}", e.getMessage());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * API para dados de tempo de resolução
+     */
+    @GetMapping("/api/tempo-resolucao")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getTempoResolucao() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<String> labels = chamadoService.obterLabelsUltimosMeses(12);
+            List<Double> temposResolucao = chamadoService.obterTempoMedioResolucaoUltimosMeses();
+            List<Double> metasResolucao = chamadoService.calcularMetaTempoResolucao();
+            
+            response.put("success", true);
+            response.put("labels", labels);
+            response.put("temposResolucao", temposResolucao);
+            response.put("metasResolucao", metasResolucao);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter dados de tempo de resolução: {}", e.getMessage());
+            response.put("success", false);
+            response.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * API para métricas de SLA e tempo de resolução por categoria/prioridade
+     */
+    @GetMapping("/api/metricas-resolucao")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getMetricasResolucao() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Tempo médio geral
+            Double tempoMedioGeral = chamadoService.calcularTempoMedioResolucaoGeral();
+            
+            // Tempo médio por prioridade
+            Map<String, Double> temposPorPrioridade = chamadoService.calcularTempoMedioResolucaoPorPrioridade();
+            
+            // Tempo médio por categoria
+            Map<String, Double> temposPorCategoria = chamadoService.calcularTempoMedioResolucaoPorCategoria();
+            
+            // Métricas de SLA
+            Map<String, Object> metricasSLA = chamadoService.calcularMetricasSLA();
+            
+            response.put("success", true);
+            response.put("tempoMedioGeral", tempoMedioGeral);
+            response.put("temposPorPrioridade", temposPorPrioridade);
+            response.put("temposPorCategoria", temposPorCategoria);
+            response.put("metricasSLA", metricasSLA);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter métricas de resolução: {}", e.getMessage());
+            response.put("success", false);
+            response.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(response);
         }
     }
     
@@ -373,6 +478,60 @@ public class SuporteController {
         } catch (Exception e) {
             logger.error("Erro ao carregar página de avaliação para chamado {}: {}", id, e.getMessage());
             return "redirect:/suporte/chamados?erro=sistema";
+        }
+    }
+    
+    // Endpoint para dados de avaliações de atendimento
+    @GetMapping("/api/avaliacoes-atendimento")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getDadosAvaliacoes() {
+        try {
+            List<Chamado> chamadosAvaliados = chamadoService.buscarChamadosAvaliados();
+            
+            Map<String, Object> response = new HashMap<>();
+            
+            // Calcular métricas
+            double notaMedia = chamadosAvaliados.stream()
+                .mapToInt(Chamado::getAvaliacao)
+                .average()
+                .orElse(0.0);
+            
+            long totalAvaliacoes = chamadosAvaliados.size();
+            long avaliacoesPositivas = chamadosAvaliados.stream()
+                .mapToInt(Chamado::getAvaliacao)
+                .filter(nota -> nota >= 4)
+                .count();
+            
+            double taxaSatisfacao = totalAvaliacoes > 0 ? 
+                (avaliacoesPositivas * 100.0) / totalAvaliacoes : 0.0;
+            
+            // Distribuição por nota
+            Map<String, Long> distribuicao = new HashMap<>();
+            for (int i = 1; i <= 5; i++) {
+                final int nota = i;
+                long count = chamadosAvaliados.stream()
+                    .mapToInt(Chamado::getAvaliacao)
+                    .filter(n -> n == nota)
+                    .count();
+                distribuicao.put(String.valueOf(i), count);
+            }
+            
+            response.put("notaMedia", Math.round(notaMedia * 10.0) / 10.0);
+            response.put("totalAvaliacoes", totalAvaliacoes);
+            response.put("taxaSatisfacao", Math.round(taxaSatisfacao * 10.0) / 10.0);
+            response.put("distribuicao", distribuicao);
+            response.put("sucesso", true);
+            
+            logger.info("Dados de avaliações carregados: {} avaliações, nota média: {}", 
+                totalAvaliacoes, notaMedia);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erro ao carregar dados de avaliações: {}", e.getMessage(), e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", false);
+            response.put("erro", e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
     }
     

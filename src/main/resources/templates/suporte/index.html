@@ -10,7 +10,7 @@
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+
     <!-- Estilos customizados para o dashboard de suporte -->
     <style>
         .stats-row {
@@ -19,20 +19,23 @@
             gap: 25px;
             margin-bottom: 40px;
         }
+
         .stat-card {
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             text-align: center;
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
+
         .stat-card::before {
             content: '';
             position: absolute;
@@ -42,6 +45,7 @@
             height: 4px;
             background: linear-gradient(90deg, #667eea, #764ba2);
         }
+
         .stat-icon {
             font-size: 48px;
             margin-bottom: 15px;
@@ -50,8 +54,20 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .stat-number { font-size: 36px; font-weight: 800; color: #1e293b; margin: 10px 0; }
-        .stat-label { font-size: 16px; color: #64748b; font-weight: 500; }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
         .stat-change {
             font-size: 12px;
             margin-top: 8px;
@@ -59,47 +75,69 @@
             border-radius: 20px;
             font-weight: 600;
         }
-        .stat-change.positive { background: #dcfce7; color: #16a34a; }
-        .stat-change.negative { background: #fef2f2; color: #dc2626; }
-        .stat-change.neutral { background: #f1f5f9; color: #64748b; }
+
+        .stat-change.positive {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .stat-change.negative {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .stat-change.neutral {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
         .chart-area {
             position: relative;
             height: 300px;
         }
+
         .chart-container-small {
             height: 250px;
         }
+
         .chart-pie {
             position: relative;
             height: 300px;
         }
+
         .floating-btn button:hover {
             transform: scale(1.1) !important;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
         }
+
         .card {
             transition: transform 0.2s ease-in-out;
         }
+
         .card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
         }
+
         .badge {
             font-size: 0.75rem;
         }
+
         .table th {
             background-color: #f8f9fc;
             border-color: #e3e6f0;
             font-weight: 600;
             color: #5a5c69;
         }
+
         .btn-group .btn {
             margin-right: 2px;
         }
+
         .content-area {
             padding: 1.5rem;
         }
-        
+
         /* Estilos para o card de ações rápidas */
         .actions-card {
             min-height: 280px;
@@ -107,14 +145,14 @@
             flex-direction: column;
             justify-content: space-between;
         }
-        
+
         .quick-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin-top: 15px;
         }
-        
+
         .action-btn {
             display: flex;
             flex-direction: column;
@@ -129,61 +167,72 @@
             text-align: center;
             min-height: 60px;
         }
-        
+
         .action-btn i {
             font-size: 1.2rem;
             margin-bottom: 4px;
         }
-        
+
         .action-btn span {
             font-size: 0.7rem;
             line-height: 1.2;
         }
-        
+
         .action-btn.primary {
             background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
             color: white;
         }
-        
+
         .action-btn.secondary {
             background: linear-gradient(135deg, #5a6c7d 0%, #3a4b5c 100%);
             color: white;
         }
-        
+
         .action-btn.warning {
             background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
             color: white;
         }
-        
+
         .action-btn.info {
             background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
             color: white;
         }
-        
+
         .action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             text-decoration: none;
             color: inherit;
         }
-        
-        .action-btn.primary:hover { color: white; }
-        .action-btn.secondary:hover { color: white; }
-        .action-btn.warning:hover { color: white; }
-        .action-btn.info:hover { color: white; }
-        
+
+        .action-btn.primary:hover {
+            color: white;
+        }
+
+        .action-btn.secondary:hover {
+            color: white;
+        }
+
+        .action-btn.warning:hover {
+            color: white;
+        }
+
+        .action-btn.info:hover {
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .quick-actions {
                 grid-template-columns: 1fr;
                 gap: 6px;
             }
-            
+
             .action-btn {
                 min-height: 50px;
                 padding: 10px 6px;
             }
         }
-        
+
         /* Estilos do Dashboard - Seções de Gráficos */
         .charts-section {
             display: grid;
@@ -191,27 +240,160 @@
             gap: 25px;
             margin-bottom: 30px;
         }
-        
+
         .secondary-charts {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 25px;
             margin-bottom: 30px;
         }
+
+        /* Estilos específicos para o card de Tempo de Resolução */
+        .tempo-resolucao-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tempo-resolucao-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8, #6366f1);
+        }
+
+        .chart-subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 400;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .tempo-resolucao-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 15px 0;
+            padding: 12px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .metric-item {
+            text-align: center;
+            padding: 8px 4px;
+        }
+
+        .metric-label {
+            display: block;
+            font-size: 0.7rem;
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .metric-value.meta-sla {
+            color: #dc2626;
+        }
+
+        .metric-status {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-status.dentro-meta {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .metric-status.fora-meta {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .metric-status.sem-dados {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        /* Métricas de Avaliação */
+        .metrics-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 0 25px;
+        }
         
+        .metric-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .metric-item .metric-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .metric-item .metric-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .tempo-resolucao-metrics {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .metric-item {
+                padding: 6px 4px;
+            }
+            
+            .metrics-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
         .chart-card {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        
+
         .chart-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
-        
+
         .chart-title {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -222,23 +404,23 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .chart-title i {
             font-size: 18px;
         }
-        
+
         .chart-container {
             padding: 25px;
             height: 400px;
             position: relative;
         }
-        
+
         .chart-container-narrow {
             padding: 25px;
             height: 300px;
             position: relative;
         }
-        
+
         /* Performance Cards */
         .performance-cards {
             display: grid;
@@ -246,21 +428,21 @@
             gap: 20px;
             margin-bottom: 30px;
         }
-        
+
         .performance-card {
             background: white;
             border-radius: 12px;
             padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease;
         }
-        
+
         .performance-card:hover {
             transform: translateY(-2px);
         }
-        
+
         .performance-card::before {
             content: '';
             position: absolute;
@@ -270,7 +452,7 @@
             height: 4px;
             background: linear-gradient(90deg, #4e73df, #36b9cc);
         }
-        
+
         .performance-title {
             font-size: 14px;
             color: #5a5c69;
@@ -279,31 +461,47 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         .performance-value {
             font-size: 28px;
             font-weight: 800;
             color: #1e293b;
             margin-bottom: 8px;
         }
-        
+
         .performance-description {
             font-size: 12px;
             color: #64748b;
             line-height: 1.4;
         }
-        
+.floating-btn .btn {
+    background-color: #0d6efd; /* Azul padrão Bootstrap */
+    border: none;
+    color: #fff;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.floating-btn .btn:hover {
+    background-color: #0b5ed7; /* Azul mais escuro */
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+.floating-btn i {
+    pointer-events: none;
+}
+
+
+
         @media (max-width: 1200px) {
             .charts-section {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         @media (max-width: 768px) {
             .secondary-charts {
                 grid-template-columns: 1fr;
             }
-            
+
             .stats-row {
                 grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             }
@@ -369,17 +567,21 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                            <div class="stat-number" th:text="${slaMedio != null ? #numbers.formatDecimal(slaMedio, 1, 1) + 'h' : '0.0h'}">0.0h</div>
+                            <div class="stat-number"
+                                th:text="${slaMedio != null ? #numbers.formatDecimal(slaMedio, 1, 1) + 'h' : '0.0h'}">
+                                0.0h</div>
                             <div class="stat-label">SLA Médio</div>
                             <div class="stat-change neutral">Tempo de resolução</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-star"></i></div>
-                            <div class="stat-number" th:text="${avaliacaoMedia != null ? #numbers.formatDecimal(avaliacaoMedia, 1, 1) : '0,0'}">0,0</div>
+                            <div class="stat-number"
+                                th:text="${avaliacaoMedia != null ? #numbers.formatDecimal(avaliacaoMedia, 1, 1) : '0,0'}">
+                                0,0</div>
                             <div class="stat-label">Avaliação Média</div>
                             <div class="stat-change neutral">Satisfação dos usuários</div>
                         </div>
-                        
+
                         <div class="stat-card actions-card">
                             <div class="stat-icon"><i class="fas fa-bolt"></i></div>
                             <div class="stat-label">Ações Rápidas</div>
@@ -437,10 +639,25 @@
                                 <canvas id="prioridadesChart"></canvas>
                             </div>
                         </div>
-                        <div class="chart-card">
+                        <div class="chart-card tempo-resolucao-card">
                             <div class="chart-title">
-                                <i class="fas fa-clock"></i>
+                                <i class="fas fa-clock text-primary"></i>
                                 Tempo de Resolução
+                                <div class="chart-subtitle">Últimos 12 meses vs Meta SLA</div>
+                            </div>
+                            <div class="tempo-resolucao-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Média Atual:</span>
+                                    <span class="metric-value" id="tempoMedioAtual">--</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Meta SLA:</span>
+                                    <span class="metric-value meta-sla" id="metaSLA">--</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Status:</span>
+                                    <span class="metric-status" id="statusSLA">--</span>
+                                </div>
                             </div>
                             <div class="chart-container-narrow">
                                 <canvas id="tempoResolucaoChart"></canvas>
@@ -450,7 +667,25 @@
                             <div class="chart-title">
                                 <i class="fas fa-star"></i>
                                 Avaliações de Atendimento
+                                <small class="text-muted ms-2">Últimas avaliações</small>
                             </div>
+                            
+                            <!-- Métricas de Avaliação -->
+                            <div class="metrics-row mb-3" id="metricas-avaliacoes">
+                                <div class="metric-item">
+                                    <span class="metric-label">Nota Média:</span>
+                                    <span class="metric-value text-warning" id="nota-media">--</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Satisfação:</span>
+                                    <span class="metric-value text-success" id="taxa-satisfacao">--%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Total:</span>
+                                    <span class="metric-value text-info" id="total-avaliacoes">--</span>
+                                </div>
+                            </div>
+                            
                             <div class="chart-container-narrow">
                                 <canvas id="avaliacoesChart"></canvas>
                             </div>
@@ -461,13 +696,18 @@
                     <div class="performance-cards">
                         <div class="performance-card">
                             <div class="performance-title">Taxa de Resolução no Prazo</div>
-                            <div class="performance-value" th:text="${taxaResolucaoPrazo != null ? #numbers.formatDecimal(taxaResolucaoPrazo, 1, 1) + '%' : '0.0%'}">85.2%</div>
+                            <div class="performance-value"
+                                th:text="${taxaResolucaoPrazo != null ? #numbers.formatDecimal(taxaResolucaoPrazo, 1, 1) + '%' : '0.0%'}">
+                                85.2%</div>
                             <div class="performance-description">Chamados resolvidos dentro do SLA estabelecido</div>
                         </div>
                         <div class="performance-card">
                             <div class="performance-title">Tempo Médio de Primeira Resposta</div>
-                            <div class="performance-value" th:text="${tempoMedioPrimeiraResposta != null ? #numbers.formatDecimal(tempoMedioPrimeiraResposta, 1, 1) + 'h' : '0.0h'}">2.3h</div>
-                            <div class="performance-description">Tempo entre abertura do chamado e primeira resposta</div>
+                            <div class="performance-value"
+                                th:text="${tempoMedioPrimeiraResposta != null ? #numbers.formatDecimal(tempoMedioPrimeiraResposta, 1, 1) + 'h' : '0.0h'}">
+                                2.3h</div>
+                            <div class="performance-description">Tempo entre abertura do chamado e primeira resposta
+                            </div>
                         </div>
                         <div class="performance-card">
                             <div class="performance-title">Chamados Reabertos</div>
@@ -511,52 +751,59 @@
                                                         Nenhum chamado encontrado
                                                     </td>
                                                 </tr>
-                                                <tr th:each="chamado : ${ultimosChamados}" th:unless="${#lists.isEmpty(ultimosChamados)}">
+                                                <tr th:each="chamado : ${ultimosChamados}"
+                                                    th:unless="${#lists.isEmpty(ultimosChamados)}">
                                                     <td th:text="${chamado.numero}">#001</td>
                                                     <td th:text="${chamado.assunto}">Problema no sistema</td>
                                                     <td>
-                                                        <span class="badge" 
-                                                              th:classappend="${chamado.status.name() == 'ABERTO'} ? 'bg-danger' : 
+                                                        <span class="badge"
+                                                            th:classappend="${chamado.status.name() == 'ABERTO'} ? 'bg-danger' : 
                                                                              (${chamado.status.name() == 'EM_ANDAMENTO'} ? 'bg-warning' : 
                                                                              (${chamado.status.name() == 'RESOLVIDO'} ? 'bg-success' : 'bg-secondary'))"
-                                                              th:text="${chamado.status.descricao}">ABERTO</span>
+                                                            th:text="${chamado.status.descricao}">ABERTO</span>
                                                     </td>
                                                     <td>
-                                                        <span class="badge" 
-                                                              th:classappend="${chamado.prioridade.name() == 'URGENTE'} ? 'bg-danger' : 
+                                                        <span class="badge"
+                                                            th:classappend="${chamado.prioridade.name() == 'URGENTE'} ? 'bg-danger' : 
                                                                              (${chamado.prioridade.name() == 'ALTA'} ? 'bg-warning text-dark' : 
                                                                              (${chamado.prioridade.name() == 'MEDIA'} ? 'bg-info' : 'bg-secondary'))"
-                                                              th:text="${chamado.prioridade.descricao}">ALTA</span>
+                                                            th:text="${chamado.prioridade.descricao}">ALTA</span>
                                                     </td>
-                                                    <td th:text="${chamado.tecnicoResponsavel ?: 'Não atribuído'}">João Silva</td>
+                                                    <td th:text="${chamado.tecnicoResponsavel ?: 'Não atribuído'}">João
+                                                        Silva</td>
                                                     <td>
                                                         <!-- Lógica de cores para SLA -->
-                                                        <span th:if="${chamado.slaRestante != null and chamado.slaRestante > 4}" 
-                                                              class="badge bg-success text-white"
-                                                              th:text="${chamado.slaRestante + 'h restantes'}">8h restantes</span>
-                                                        
-                                                        <span th:if="${chamado.slaRestante != null and chamado.slaRestante <= 4 and chamado.slaRestante > 0}" 
-                                                              class="badge bg-warning text-dark"
-                                                              th:text="${chamado.slaRestante + 'h restantes'}">2h restantes</span>
-                                                        
-                                                        <span th:if="${chamado.slaRestante != null and chamado.slaRestante <= 0}" 
-                                              class="badge bg-danger text-white"
-                                              th:text="'SLA vencido (' + ${#numbers.formatInteger(T(java.lang.Math).abs(chamado.slaRestante), 1)} + 'h)'">SLA vencido (2h)</span>
-                                                        
-                                                        <span th:if="${chamado.slaRestante == null}" 
-                                                              class="badge bg-secondary"
-                                                              th:text="'N/A'">N/A</span>
+                                                        <span
+                                                            th:if="${chamado.slaRestante != null and chamado.slaRestante > 4}"
+                                                            class="badge bg-success text-white"
+                                                            th:text="${chamado.slaRestante + 'h restantes'}">8h
+                                                            restantes</span>
+
+                                                        <span
+                                                            th:if="${chamado.slaRestante != null and chamado.slaRestante <= 4 and chamado.slaRestante > 0}"
+                                                            class="badge bg-warning text-dark"
+                                                            th:text="${chamado.slaRestante + 'h restantes'}">2h
+                                                            restantes</span>
+
+                                                        <span
+                                                            th:if="${chamado.slaRestante != null and chamado.slaRestante <= 0}"
+                                                            class="badge bg-danger text-white"
+                                                            th:text="'SLA vencido (' + ${#numbers.formatInteger(T(java.lang.Math).abs(chamado.slaRestante), 1)} + 'h)'">SLA
+                                                            vencido (2h)</span>
+
+                                                        <span th:if="${chamado.slaRestante == null}"
+                                                            class="badge bg-secondary" th:text="'N/A'">N/A</span>
                                                     </td>
                                                     <td>
                                                         <div class="btn-group" role="group">
-                                                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                                    th:onclick="'visualizarChamado(' + ${chamado.id} + ')'"
-                                                                    title="Visualizar">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                                th:onclick="'visualizarChamado(' + ${chamado.id} + ')'"
+                                                                title="Visualizar">
                                                                 <i class="fas fa-eye"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-outline-warning" 
-                                                                    th:onclick="'editarChamado(' + ${chamado.id} + ')'"
-                                                                    title="Editar">
+                                                            <button type="button" class="btn btn-sm btn-outline-warning"
+                                                                th:onclick="'editarChamado(' + ${chamado.id} + ')'"
+                                                                title="Editar">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
                                                         </div>
@@ -579,10 +826,9 @@
 
         <!-- Botão Flutuante "Abrir Chamado" -->
         <div class="floating-btn">
-            <button type="button" class="btn btn-primary btn-lg rounded-circle shadow" 
-                    onclick="window.location.href='/suporte/chamados/novo'" 
-                    title="Abrir Novo Chamado"
-                    style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1000;">
+            <button type="button" class="btn btn-primary btn-lg rounded-circle shadow"
+                onclick="window.location.href='/suporte/chamados/novo'" title="Abrir Novo Chamado"
+                style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1000;">
                 <i class="fas fa-plus fa-lg"></i>
             </button>
         </div>
@@ -595,29 +841,29 @@
 
     <!-- Scripts dos Gráficos -->
     <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Configurações globais dos gráficos
             Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
             Chart.defaults.color = '#64748b';
 
             // Gráfico Evolução de Chamados - Últimos 12 Meses
             const ctxEvolucao = document.getElementById('evolucaoChart').getContext('2d');
-            
+
             // Dados estáticos para teste
             let evolucaoLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
             let evolucaoValores = [45, 52, 38, 67, 73, 89, 95, 78, 82, 91, 105, 118];
             let metaChamados = [60, 60, 60, 70, 70, 70, 80, 80, 80, 90, 90, 90];
-            
+
             // Tentar obter dados dinâmicos
             try {
-                const dynamicLabels = [[${ultimos12MesesLabels}]];
-                const dynamicValores = [[${ultimos12MesesChamados}]];
-                const dynamicMeta = [[${metaChamadosMensal}]];
-                
+                const dynamicLabels = /*[[${ ultimos12MesesLabels }]]*/ [];
+                const dynamicValores = /*[[${ ultimos12MesesChamados }]]*/ [];
+                const dynamicMeta = /*[[${ metaChamadosMensal }]]*/ [];
+
                 console.log('Evolução Chamados - Labels:', dynamicLabels);
                 console.log('Evolução Chamados - Valores:', dynamicValores);
                 console.log('Evolução Chamados - Meta:', dynamicMeta);
-                
+
                 if (dynamicLabels && dynamicLabels.length > 0) {
                     evolucaoLabels = dynamicLabels;
                     evolucaoValores = dynamicValores;
@@ -629,7 +875,7 @@
             } catch (e) {
                 console.log('Erro ao carregar dados de evolução de chamados, usando estáticos:', e);
             }
-            
+
             const chartEvolucao = new Chart(ctxEvolucao, {
                 type: 'line',
                 data: {
@@ -679,7 +925,7 @@
                             borderColor: '#667eea',
                             borderWidth: 1,
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     return context.dataset.label + ': ' + context.parsed.y + ' chamado(s)';
                                 }
                             }
@@ -709,18 +955,18 @@
             });
 
             // Dados do servidor (Thymeleaf) - Estatísticas por Categoria
-            const estatisticasCategoria = /*[[${estatisticasCategoria}]]*/ [];
-            
+            const estatisticasCategoria = /*[[${estatisticasCategoria}]]*/[];
+
             // Processar dados de categoria
             const categoriasLabels = estatisticasCategoria.map(item => item[0] || 'Sem Categoria');
             const categoriasValues = estatisticasCategoria.map(item => item[1] || 0);
             // Processar dados de prioridades do backend
-            const estatisticasPrioridade = /*[[${estatisticasPrioridade}]]*/ [];
+            const estatisticasPrioridade = /*[[${estatisticasPrioridade}]]*/[];
             let prioridadesLabels = [];
             let prioridadesValues = [];
-            
+
             if (estatisticasPrioridade && estatisticasPrioridade.length > 0) {
-                estatisticasPrioridade.forEach(function(item) {
+                estatisticasPrioridade.forEach(function (item) {
                     prioridadesLabels.push(item[0]); // Nome da prioridade
                     prioridadesValues.push(item[1]); // Quantidade
                 });
@@ -732,7 +978,7 @@
 
             // Gráfico de Barras - Chamados por Categoria
             const ctxCategorias = document.getElementById('categoriasChart').getContext('2d');
-            
+
             if (categoriasLabels.length === 0 || categoriasValues.every(val => val === 0)) {
                 // Exibir gráfico vazio com mensagem
                 new Chart(ctxCategorias, {
@@ -765,7 +1011,7 @@
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: function() {
+                                    label: function () {
                                         return 'Nenhum chamado encontrado';
                                     }
                                 }
@@ -785,7 +1031,7 @@
                     'rgba(199, 199, 199, 0.8)',
                     'rgba(83, 102, 255, 0.8)'
                 ];
-                
+
                 const borderColors = [
                     'rgba(54, 162, 235, 1)',
                     'rgba(255, 99, 132, 1)',
@@ -796,7 +1042,7 @@
                     'rgba(199, 199, 199, 1)',
                     'rgba(83, 102, 255, 1)'
                 ];
-                
+
                 new Chart(ctxCategorias, {
                     type: 'doughnut',
                     data: {
@@ -824,7 +1070,7 @@
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: function(context) {
+                                    label: function (context) {
                                         return context.label + ': ' + context.parsed + ' chamado(s)';
                                     }
                                 }
@@ -836,7 +1082,7 @@
 
             // Gráfico de Barras - Chamados por Prioridade
             const ctxPrioridades = document.getElementById('prioridadesChart').getContext('2d');
-            
+
             if (!estatisticasPrioridade || estatisticasPrioridade.length === 0) {
                 // Exibir gráfico vazio quando não há dados
                 new Chart(ctxPrioridades, {
@@ -875,23 +1121,23 @@
                     'MEDIA': { bg: 'rgba(255, 193, 7, 0.8)', border: 'rgba(255, 193, 7, 1)' },
                     'BAIXA': { bg: 'rgba(23, 162, 184, 0.8)', border: 'rgba(23, 162, 184, 1)' }
                 };
-                
+
                 // Cores padrão para prioridades não mapeadas
                 const coresDefault = [
                     { bg: 'rgba(153, 102, 255, 0.8)', border: 'rgba(153, 102, 255, 1)' },
                     { bg: 'rgba(255, 159, 64, 0.8)', border: 'rgba(255, 159, 64, 1)' },
                     { bg: 'rgba(199, 199, 199, 0.8)', border: 'rgba(199, 199, 199, 1)' }
                 ];
-                
+
                 const backgroundColors = [];
                 const borderColors = [];
-                
+
                 prioridadesLabels.forEach((label, index) => {
                     const cor = prioridadeCores[label.toUpperCase()] || coresDefault[index % coresDefault.length];
                     backgroundColors.push(cor.bg);
                     borderColors.push(cor.border);
                 });
-                
+
                 new Chart(ctxPrioridades, {
                     type: 'bar',
                     data: {
@@ -926,6 +1172,217 @@
                     }
                 });
             }
+
+            // Implementação do Gráfico de Tempo de Resolução
+            fetch('/suporte/api/tempo-resolucao')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const ctxTempoResolucao = document.getElementById('tempoResolucaoChart').getContext('2d');
+
+                        const labels = data.labels || [];
+                        const temposResolucao = data.temposResolucao || [];
+                        const metas = data.metasResolucao || [];
+
+                        if (labels.length === 0 || temposResolucao.every(val => val === 0)) {
+                            // Gráfico vazio
+                            new Chart(ctxTempoResolucao, {
+                                type: 'line',
+                                data: {
+                                    labels: ['Nenhum dado'],
+                                    datasets: [{
+                                        label: 'Tempo Médio (horas)',
+                                        data: [0],
+                                        borderColor: 'rgba(108, 117, 125, 0.5)',
+                                        backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                                        borderWidth: 2,
+                                        fill: false
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function () {
+                                                    return 'Nenhum dado disponível';
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            max: 1,
+                                            title: {
+                                                display: true,
+                                                text: 'Horas'
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        } else {
+                            new Chart(ctxTempoResolucao, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Tempo Médio de Resolução',
+                                        data: temposResolucao,
+                                        borderColor: 'rgba(54, 162, 235, 1)',
+                                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                                        borderWidth: 3,
+                                        fill: true,
+                                        tension: 0.4,
+                                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                                        pointBorderColor: '#fff',
+                                        pointBorderWidth: 2,
+                                        pointRadius: 5
+                                    }, {
+                                        label: 'Meta SLA',
+                                        data: metas,
+                                        borderColor: 'rgba(255, 99, 132, 1)',
+                                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                        borderWidth: 2,
+                                        borderDash: [5, 5],
+                                        fill: false,
+                                        pointRadius: 0
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: true,
+                                            position: 'top',
+                                            labels: {
+                                                usePointStyle: true,
+                                                padding: 15
+                                            }
+                                        },
+                                        tooltip: {
+                                            mode: 'index',
+                                            intersect: false,
+                                            callbacks: {
+                                                label: function (context) {
+                                                    const label = context.dataset.label || '';
+                                                    const value = context.parsed.y;
+                                                    return label + ': ' + value.toFixed(1) + 'h';
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            title: {
+                                                display: true,
+                                                text: 'Tempo (horas)'
+                                            },
+                                            grid: {
+                                                color: 'rgba(0, 0, 0, 0.1)'
+                                            }
+                                        },
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: 'Período'
+                                            },
+                                            grid: {
+                                                display: false
+                                            }
+                                        }
+                                    },
+                                    interaction: {
+                                        intersect: false,
+                                        mode: 'index'
+                                    }
+                                }
+                            });
+
+                            // Calcular e exibir métricas
+                            atualizarMetricasTempoResolucao(temposResolucao, metas);
+                        }
+                    } else {
+                        console.error('Erro ao carregar dados de tempo de resolução:', data.message);
+                        // Exibir métricas vazias em caso de erro
+                        atualizarMetricasTempoResolucao([], []);
+                        // Renderizar gráfico vazio em caso de erro
+                        const ctxTempoResolucao = document.getElementById('tempoResolucaoChart').getContext('2d');
+                        new Chart(ctxTempoResolucao, {
+                            type: 'line',
+                            data: {
+                                labels: ['Erro'],
+                                datasets: [{
+                                    label: 'Erro ao carregar',
+                                    data: [0],
+                                    borderColor: 'rgba(220, 53, 69, 0.5)',
+                                    backgroundColor: 'rgba(220, 53, 69, 0.1)'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false }
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na requisição de tempo de resolução:', error);
+                    // Exibir métricas vazias em caso de erro de requisição
+                    atualizarMetricasTempoResolucao([], []);
+                });
+
+            // Função para atualizar as métricas do card de Tempo de Resolução
+            function atualizarMetricasTempoResolucao(temposResolucao, metas) {
+                const mediaAtualElement = document.getElementById('tempoMedioAtual');
+                const metaSlaElement = document.getElementById('metaSLA');
+                const statusElement = document.getElementById('statusSLA');
+
+                if (!mediaAtualElement || !metaSlaElement || !statusElement) {
+                    return; // Elementos não encontrados
+                }
+
+                if (!temposResolucao || temposResolucao.length === 0 || temposResolucao.every(val => val === 0)) {
+                    // Sem dados
+                    mediaAtualElement.textContent = '--';
+                    metaSlaElement.textContent = '--';
+                    statusElement.textContent = 'Sem Dados';
+                    statusElement.className = 'metric-status sem-dados';
+                    return;
+                }
+
+                // Calcular média atual (últimos valores não-zero)
+                const valoresValidos = temposResolucao.filter(val => val > 0);
+                const mediaAtual = valoresValidos.length > 0 ?
+                    valoresValidos.reduce((sum, val) => sum + val, 0) / valoresValidos.length : 0;
+
+                // Obter meta SLA (assumindo que é constante)
+                const metaSla = metas && metas.length > 0 ? metas[0] : 0;
+
+                // Atualizar valores
+                mediaAtualElement.textContent = mediaAtual > 0 ? mediaAtual.toFixed(1) + 'h' : '--';
+                metaSlaElement.textContent = metaSla > 0 ? metaSla.toFixed(1) + 'h' : '--';
+
+                // Determinar status
+                if (mediaAtual === 0 || metaSla === 0) {
+                    statusElement.textContent = 'Sem Dados';
+                    statusElement.className = 'metric-status sem-dados';
+                } else if (mediaAtual <= metaSla) {
+                    statusElement.textContent = 'Dentro da Meta';
+                    statusElement.className = 'metric-status dentro-meta';
+                } else {
+                    statusElement.textContent = 'Fora da Meta';
+                    statusElement.className = 'metric-status fora-meta';
+                }
+            }
         });
 
         // Funções para ações da tabela
@@ -937,13 +1394,90 @@
             window.location.href = '/suporte/chamado/' + id + '/editar';
         }
 
+        // Carregar dados de avaliações
+        fetch('/suporte/api/avaliacoes-atendimento')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Atualizar métricas
+                    document.getElementById('nota-media').textContent = data.notaMedia.toFixed(1);
+                    document.getElementById('taxa-satisfacao').textContent = data.taxaSatisfacao.toFixed(1) + '%';
+                    document.getElementById('total-avaliacoes').textContent = data.totalAvaliacoes;
+
+                    // Criar gráfico de distribuição
+                    const ctxAvaliacoes = document.getElementById('avaliacoesChart').getContext('2d');
+                    new Chart(ctxAvaliacoes, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['⭐ 1 Estrela', '⭐⭐ 2 Estrelas', '⭐⭐⭐ 3 Estrelas', '⭐⭐⭐⭐ 4 Estrelas', '⭐⭐⭐⭐⭐ 5 Estrelas'],
+                            datasets: [{
+                                data: [
+                                    data.distribuicao['1'] || 0,
+                                    data.distribuicao['2'] || 0,
+                                    data.distribuicao['3'] || 0,
+                                    data.distribuicao['4'] || 0,
+                                    data.distribuicao['5'] || 0
+                                ],
+                                backgroundColor: [
+                                    '#ef4444', // 1 estrela - vermelho
+                                    '#f97316', // 2 estrelas - laranja
+                                    '#eab308', // 3 estrelas - amarelo
+                                    '#22c55e', // 4 estrelas - verde claro
+                                    '#16a34a'  // 5 estrelas - verde escuro
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 15,
+                                        usePointStyle: true,
+                                        font: {
+                                            size: 11
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.error('Erro ao carregar dados de avaliações:', data.message);
+                    // Exibir valores padrão em caso de erro
+                    document.getElementById('nota-media').textContent = '--';
+                    document.getElementById('taxa-satisfacao').textContent = '--%';
+                    document.getElementById('total-avaliacoes').textContent = '--';
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição de avaliações:', error);
+                // Exibir valores padrão em caso de erro
+                document.getElementById('nota-media').textContent = '--';
+                document.getElementById('taxa-satisfacao').textContent = '--%';
+                document.getElementById('total-avaliacoes').textContent = '--';
+            });
+
         // Efeito hover no botão flutuante
-        document.querySelector('.floating-btn button').addEventListener('mouseenter', function() {
+        document.querySelector('.floating-btn button').addEventListener('mouseenter', function () {
             this.style.transform = 'scale(1.1)';
             this.style.transition = 'transform 0.2s ease';
         });
 
-        document.querySelector('.floating-btn button').addEventListener('mouseleave', function() {
+        document.querySelector('.floating-btn button').addEventListener('mouseleave', function () {
             this.style.transform = 'scale(1)';
         });
     </script>

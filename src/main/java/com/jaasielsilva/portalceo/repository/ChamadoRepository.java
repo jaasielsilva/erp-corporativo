@@ -38,6 +38,10 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     // Buscar chamados resolvidos
     @Query("SELECT c FROM Chamado c WHERE c.status IN ('RESOLVIDO', 'FECHADO') ORDER BY c.dataResolucao DESC")
     List<Chamado> findChamadosResolvidos();
+    
+    // Buscar chamados que foram avaliados
+    @Query("SELECT c FROM Chamado c WHERE c.avaliacao IS NOT NULL ORDER BY c.dataResolucao DESC")
+    List<Chamado> findChamadosAvaliados();
 
     // Contar chamados por status
     long countByStatus(StatusChamado status);
@@ -69,6 +73,12 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
            "ORDER BY c.dataAbertura DESC")
     List<Chamado> findByPeriodo(@Param("dataInicio") LocalDateTime dataInicio, 
                                @Param("dataFim") LocalDateTime dataFim);
+    
+    // Contar chamados por período (para evolução mensal)
+    @Query("SELECT COUNT(c) FROM Chamado c " +
+           "WHERE c.dataAbertura BETWEEN :dataInicio AND :dataFim")
+    Long countByDataAberturaBetween(@Param("dataInicio") LocalDateTime dataInicio, 
+                                   @Param("dataFim") LocalDateTime dataFim);
 
     // Buscar chamados próximos ao vencimento do SLA
     @Query("SELECT c FROM Chamado c " +

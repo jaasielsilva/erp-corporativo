@@ -59,6 +59,9 @@ public class SuporteController {
             // Estatísticas por status para gráfico
             List<Object[]> estatisticasStatus = chamadoService.getEstatisticasPorStatus();
             
+            // Estatísticas por categoria para gráfico
+            List<Object[]> estatisticasCategoria = chamadoService.getEstatisticasPorCategoria();
+            
             // Chamados com SLA crítico
             List<Chamado> chamadosSlaVencido = chamadoService.buscarChamadosComSlaVencido();
             List<Chamado> chamadosSlaProximo = chamadoService.buscarChamadosComSlaProximoVencimento();
@@ -72,6 +75,7 @@ public class SuporteController {
             model.addAttribute("ultimosChamados", ultimosChamados);
             model.addAttribute("estatisticasPrioridade", estatisticasPrioridade);
             model.addAttribute("estatisticasStatus", estatisticasStatus);
+            model.addAttribute("estatisticasCategoria", estatisticasCategoria);
             model.addAttribute("chamadosSlaVencido", chamadosSlaVencido.size());
             model.addAttribute("chamadosSlaProximo", chamadosSlaProximo.size());
             
@@ -89,6 +93,7 @@ public class SuporteController {
             model.addAttribute("ultimosChamados", List.of());
             model.addAttribute("estatisticasPrioridade", List.of());
             model.addAttribute("estatisticasStatus", List.of());
+            model.addAttribute("estatisticasCategoria", List.of());
             model.addAttribute("chamadosSlaVencido", 0);
             model.addAttribute("chamadosSlaProximo", 0);
         }

@@ -89,6 +89,14 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
            "GROUP BY c.status")
     List<Object[]> countByStatusGrouped();
 
+    // Estatísticas por categoria
+    @Query("SELECT c.categoria, COUNT(c) " +
+           "FROM Chamado c " +
+           "WHERE c.categoria IS NOT NULL " +
+           "GROUP BY c.categoria " +
+           "ORDER BY COUNT(c) DESC")
+    List<Object[]> countByCategoriaGrouped();
+
     // Buscar chamados do mês atual
     @Query("SELECT c FROM Chamado c " +
            "WHERE YEAR(c.dataAbertura) = YEAR(CURRENT_DATE) " +

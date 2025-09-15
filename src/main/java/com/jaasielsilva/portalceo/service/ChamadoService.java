@@ -308,6 +308,12 @@ public class ChamadoService {
         return chamadoRepository.countByStatusGrouped();
     }
 
+    // Obter estatísticas por categoria
+    @Transactional(readOnly = true)
+    public List<Object[]> getEstatisticasPorCategoria() {
+        return chamadoRepository.countByCategoriaGrouped();
+    }
+
     // Deletar chamado
     public void deletarChamado(Long id) {
         Optional<Chamado> chamadoOpt = chamadoRepository.findById(id);

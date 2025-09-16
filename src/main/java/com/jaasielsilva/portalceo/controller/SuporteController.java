@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,16 @@ public class SuporteController {
             List<Chamado> chamadosSlaVencido = chamadoService.buscarChamadosComSlaVencido();
             List<Chamado> chamadosSlaProximo = chamadoService.buscarChamadosComSlaProximoVencimento();
             
+            // Métricas de SLA - Taxa de Resolução no Prazo
+            Map<String, Object> metricasSLA = chamadoService.calcularMetricasSLA();
+            Double taxaResolucaoPrazo = (Double) metricasSLA.get("percentualSLACumprido");
+            
+            // Calcular tempo médio de primeira resposta
+            Double tempoMedioPrimeiraResposta = chamadoService.calcularTempoMedioPrimeiraResposta();
+            
+            // Contar chamados reabertos
+            Long chamadosReabertos = chamadoService.contarChamadosReabertos();
+            
             // Dados para gráfico de evolução de chamados (últimos 12 meses)
             List<String> ultimos12MesesLabels = chamadoService.obterLabelsUltimosMeses(12);
             List<Long> ultimos12MesesChamados = chamadoService.obterEvolucaoChamadosUltimosMeses(12);
@@ -83,6 +94,9 @@ public class SuporteController {
             model.addAttribute("estatisticasCategoria", estatisticasCategoria);
             model.addAttribute("chamadosSlaVencido", chamadosSlaVencido.size());
             model.addAttribute("chamadosSlaProximo", chamadosSlaProximo.size());
+            model.addAttribute("taxaResolucaoPrazo", taxaResolucaoPrazo != null ? taxaResolucaoPrazo : 0.0);
+            model.addAttribute("tempoMedioPrimeiraResposta", tempoMedioPrimeiraResposta != null ? tempoMedioPrimeiraResposta : 0.0);
+            model.addAttribute("chamadosReabertos", chamadosReabertos != null ? chamadosReabertos : 0L);
             
             // Dados para gráfico de evolução
             model.addAttribute("ultimos12MesesLabels", ultimos12MesesLabels);
@@ -106,6 +120,9 @@ public class SuporteController {
             model.addAttribute("estatisticasCategoria", List.of());
             model.addAttribute("chamadosSlaVencido", 0);
             model.addAttribute("chamadosSlaProximo", 0);
+            model.addAttribute("taxaResolucaoPrazo", 0.0);
+            model.addAttribute("tempoMedioPrimeiraResposta", 0.0);
+            model.addAttribute("chamadosReabertos", 0L);
         }
         
         return "suporte/index";
@@ -535,13 +552,7 @@ public class SuporteController {
         }
     }
     
-    // Endpoint de teste simples para debug
-    @GetMapping("/test")
-    @ResponseBody
-    public String testEndpoint() {
-        return "Servidor funcionando corretamente - " + new java.util.Date();
-    }
-    
+
     // Teste de busca de chamado sem template
     @GetMapping("/chamados/{id}/json")
     @ResponseBody

@@ -1398,7 +1398,7 @@
         fetch('/suporte/api/avaliacoes-atendimento')
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.sucesso) {
                     // Atualizar métricas
                     document.getElementById('nota-media').textContent = data.notaMedia.toFixed(1);
                     document.getElementById('taxa-satisfacao').textContent = data.taxaSatisfacao.toFixed(1) + '%';

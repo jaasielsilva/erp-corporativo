@@ -83,6 +83,12 @@ public class Chamado {
     @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
 
+    @Column(name = "data_reabertura")
+    private LocalDateTime dataReabertura;
+
+    @Column(name = "foi_reaberto")
+    private Boolean foiReaberto = false;
+
     private LocalDateTime dataInicio;
 
     // Campo transiente para SLA restante (calculado dinamicamente)
@@ -156,6 +162,21 @@ public class Chamado {
         this.status = StatusChamado.EM_ANDAMENTO;
         this.tecnicoResponsavel = tecnico;
         this.dataInicioAtendimento = LocalDateTime.now();
+    }
+
+    public void reabrir() {
+        if (this.status == StatusChamado.RESOLVIDO || this.status == StatusChamado.FECHADO) {
+            this.status = StatusChamado.ABERTO;
+            this.dataReabertura = LocalDateTime.now();
+            this.foiReaberto = true;
+            // Limpa dados de resolução para permitir novo ciclo
+            this.dataResolucao = null;
+            this.dataFechamento = null;
+        }
+    }
+
+    public boolean foiReaberto() {
+        return this.foiReaberto != null && this.foiReaberto;
     }
 
     // Getters e Setters
@@ -325,6 +346,22 @@ public class Chamado {
 
     public void setComentarioAvaliacao(String comentarioAvaliacao) {
         this.comentarioAvaliacao = comentarioAvaliacao;
+    }
+
+    public LocalDateTime getDataReabertura() {
+        return dataReabertura;
+    }
+
+    public void setDataReabertura(LocalDateTime dataReabertura) {
+        this.dataReabertura = dataReabertura;
+    }
+
+    public Boolean getFoiReaberto() {
+        return foiReaberto;
+    }
+
+    public void setFoiReaberto(Boolean foiReaberto) {
+        this.foiReaberto = foiReaberto;
     }
 
     // Enums

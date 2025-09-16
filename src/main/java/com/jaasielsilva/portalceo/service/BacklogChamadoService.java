@@ -273,8 +273,7 @@ public class BacklogChamadoService {
         // Verifica se é cliente VIP
         verificarClienteVip(backlogItem);
         
-        // Calcula score final
-        backlogItem.calcularScore();
+        // Score será calculado automaticamente pelos getters da entidade
     }
 
     /**
@@ -335,19 +334,18 @@ public class BacklogChamadoService {
         LocalDateTime agora = LocalDateTime.now();
         int minutosEstimados = 30; // Padrão
         
-        switch (backlogItem.getComplexidadeEstimada()) {
-            case BAIXA:
-                minutosEstimados = 15;
-                break;
-            case MEDIA:
-                minutosEstimados = 45;
-                break;
-            case ALTA:
-                minutosEstimados = 120;
-                break;
-            case CRITICA:
-                minutosEstimados = 240;
-                break;
+        if (backlogItem.getComplexidadeEstimada() != null) {
+            switch (backlogItem.getComplexidadeEstimada()) {
+                case BAIXA:
+                    minutosEstimados = 30;
+                    break;
+                case MEDIA:
+                    minutosEstimados = 60;
+                    break;
+                case ALTA:
+                    minutosEstimados = 120;
+                    break;
+            }
         }
         
         // Considera fila atual
@@ -367,13 +365,13 @@ public class BacklogChamadoService {
         boolean slaCritico = false;
         
         if (chamado.getPrioridade() != null) {
-            slaCritico = chamado.getPrioridade().equalsIgnoreCase("ALTA") ||
-                        chamado.getPrioridade().equalsIgnoreCase("CRÍTICA");
+            slaCritico = chamado.getPrioridade() == Chamado.Prioridade.ALTA ||
+                        chamado.getPrioridade() == Chamado.Prioridade.URGENTE;
         }
         
         // Verifica tempo desde criação
-        if (chamado.getDataCriacao() != null) {
-            long horasEspera = ChronoUnit.HOURS.between(chamado.getDataCriacao(), LocalDateTime.now());
+        if (chamado.getDataAbertura() != null) {
+            long horasEspera = ChronoUnit.HOURS.between(chamado.getDataAbertura(), LocalDateTime.now());
             if (horasEspera > 4) { // Mais de 4 horas = crítico
                 slaCritico = true;
             }
@@ -391,12 +389,20 @@ public class BacklogChamadoService {
         // Lógica simplificada - pode integrar com sistema de CRM
         boolean clienteVip = false;
         
-        if (chamado.getUsuario() != null) {
-            String usuario = chamado.getUsuario().toLowerCase();
+        if (chamado.getSolicitanteNome() != null) {
+            String usuario = chamado.getSolicitanteNome().toLowerCase();
             // Lista de usuários VIP (pode vir de banco de dados)
             clienteVip = usuario.contains("diretor") || 
                         usuario.contains("gerente") ||
                         usuario.contains("vip");
+        }
+        
+        // Também verifica pelo email se disponível
+        if (chamado.getSolicitanteEmail() != null) {
+            String email = chamado.getSolicitanteEmail().toLowerCase();
+            clienteVip = clienteVip || email.contains("diretor") || 
+                        email.contains("gerente") ||
+                        email.contains("vip");
         }
         
         backlogItem.setClienteVip(clienteVip);

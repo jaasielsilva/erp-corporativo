@@ -39,7 +39,17 @@ O módulo de suporte é responsável pelo gerenciamento completo de chamados té
 - **Atualizações Controladas**: Registro sistemático de progresso e soluções
 - **APIs de Atualização**: Endpoints REST para mudanças de status
 
-### 6. Integração e APIs
+### 6. Backlog de Chamados (Sistema de Fila Inteligente)
+- **Priorização Automática**: Algoritmo inteligente que calcula score de prioridade baseado em múltiplos fatores
+- **Gestão de Fila**: Posicionamento automático dos chamados na fila de atendimento
+- **Categorização Inteligente**: Classificação automática por urgência, complexidade e impacto no negócio
+- **Sugestão de Técnico**: Recomendação automática do técnico mais adequado baseado na expertise
+- **Estimativa de Atendimento**: Cálculo automático do tempo estimado para atendimento
+- **Recálculo Dinâmico**: Atualização automática das prioridades a cada 5 minutos
+- **Métricas Avançadas**: Estatísticas detalhadas de performance e distribuição da fila
+- **APIs Especializadas**: Endpoints dedicados para gestão do backlog
+
+### 7. Integração e APIs
 - **API REST Completa**: Endpoints para todas as operações CRUD
 - **Autenticação Integrada**: Sistema de login e controle de acesso
 - **Formato JSON**: Comunicação padronizada via JSON
@@ -134,6 +144,136 @@ public class Chamado {
 }
 ```
 
+#### Estrutura da Entidade BacklogChamado
+
+```java
+@Entity
+@Data
+@Table(name = "backlog_chamados")
+public class BacklogChamado {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @OneToOne
+    @JoinColumn(name = "chamado_id", nullable = false, unique = true)
+    private Chamado chamado;                    // Chamado associado
+    
+    @Column(name = "data_entrada_backlog", nullable = false)
+    private LocalDateTime dataEntradaBacklog;   // Quando entrou no backlog
+    
+    @Column(name = "posicao_fila")
+    private Integer posicaoFila;                // Posição atual na fila
+    
+    @Column(name = "score_prioridade")
+    private Double scorePrioridade;             // Score calculado de prioridade
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "categoria_urgencia")
+    private CategoriaUrgencia categoriaUrgencia; // Categoria de urgência
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "complexidade_estimada")
+    private ComplexidadeEstimada complexidadeEstimada; // Complexidade estimada
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "impacto_negocio")
+    private ImpactoNegocio impactoNegocio;      // Impacto no negócio
+    
+    @Column(name = "sla_critico")
+    private Boolean slaCritico = false;         // Se tem SLA crítico
+    
+    @Column(name = "cliente_vip")
+    private Boolean clienteVip = false;         // Se é cliente VIP
+    
+    @Column(name = "tempo_espera_minutos")
+    private Long tempoEsperaMinutos;            // Tempo de espera em minutos
+    
+    @Column(name = "tecnico_sugerido")
+    private String tecnicoSugerido;             // Técnico sugerido
+    
+    @Column(name = "estimativa_atendimento")
+    private LocalDateTime estimativaAtendimento; // Estimativa de quando será atendido
+    
+    // Enums internos
+    public enum CategoriaUrgencia {
+        BAIXA("Baixa", 10.0),
+        MEDIA("Média", 30.0),
+        ALTA("Alta", 60.0),
+        CRITICA("Crítica", 100.0);
+        
+        private final String descricao;
+        private final Double peso;
+    }
+    
+    public enum ComplexidadeEstimada {
+        BAIXA("Baixa", 5.0),
+        MEDIA("Média", 15.0),
+        ALTA("Alta", 30.0),
+        CRITICA("Crítica", 50.0);
+        
+        private final String descricao;
+        private final Double peso;
+    }
+    
+    public enum ImpactoNegocio {
+        BAIXO("Baixo", 5.0),
+        MEDIO("Médio", 20.0),
+        ALTO("Alto", 40.0),
+        CRITICO("Crítico", 80.0);
+        
+        private final String descricao;
+        private final Double peso;
+    }
+    
+    // Métodos de cálculo automático
+    public void calcularScore() {
+        double score = 0.0;
+        
+        // Peso da urgência (30%)
+        if (categoriaUrgencia != null) {
+            score += categoriaUrgencia.getPeso() * 0.30;
+        }
+        
+        // Peso da complexidade (20%)
+        if (complexidadeEstimada != null) {
+            score += complexidadeEstimada.getPeso() * 0.20;
+        }
+        
+        // Peso do impacto (25%)
+        if (impactoNegocio != null) {
+            score += impactoNegocio.getPeso() * 0.25;
+        }
+        
+        // Bônus SLA crítico (15%)
+        if (Boolean.TRUE.equals(slaCritico)) {
+            score += 15.0;
+        }
+        
+        // Bônus cliente VIP (10%)
+        if (Boolean.TRUE.equals(clienteVip)) {
+            score += 10.0;
+        }
+        
+        // Fator tempo de espera
+        if (tempoEsperaMinutos != null && tempoEsperaMinutos > 0) {
+            double fatorTempo = Math.min(tempoEsperaMinutos / 60.0, 24.0); // Máximo 24h
+            score += fatorTempo * 0.5; // 0.5 pontos por hora
+        }
+        
+        this.scorePrioridade = Math.min(score, 100.0); // Máximo 100
+    }
+    
+    public void atualizarTempoEspera() {
+        if (dataEntradaBacklog != null) {
+            this.tempoEsperaMinutos = ChronoUnit.MINUTES.between(
+                dataEntradaBacklog, LocalDateTime.now()
+            );
+        }
+    }
+}
+```
+
 #### Enums
 
 **Prioridade**
@@ -196,6 +336,71 @@ List<Chamado> findChamadosComSlaVencido();
 List<Object[]> countByPrioridadeGrouped();
 ```
 
+#### BacklogChamadoService.java
+
+**Métodos Principais:**
+
+```java
+// Gestão da fila de backlog
+public void adicionarAoBacklog(Chamado chamado);
+public void removerDoBacklog(Long chamadoId);
+public BacklogChamado obterProximoChamado();
+public List<BacklogChamado> obterFilaCompleta();
+
+// Cálculos de priorização
+public void recalcularPrioridades();
+public void atualizarPosicoesFila();
+public Double calcularScorePrioridade(BacklogChamado backlog);
+
+// Categorização automática
+public CategoriaUrgencia determinarUrgencia(Chamado chamado);
+public ComplexidadeEstimada estimarComplexidade(Chamado chamado);
+public ImpactoNegocio avaliarImpacto(Chamado chamado);
+
+// Sugestão de técnico
+public String sugerirTecnico(BacklogChamado backlog);
+public List<String> obterTecnicosDisponiveis();
+
+// Estimativas de tempo
+public LocalDateTime calcularEstimativaAtendimento(BacklogChamado backlog);
+public Long calcularTempoEsperaEstimado(Integer posicaoFila);
+
+// Métricas e relatórios
+public Map<String, Object> obterEstatisticasBacklog();
+public Map<String, Object> obterMetricasPerformance();
+public List<BacklogChamado> obterChamadosComSlaVencendo();
+```
+
+#### BacklogChamadoRepository.java
+
+**Queries Especializadas:**
+
+```java
+// Ordenação por prioridade
+@Query("SELECT b FROM BacklogChamado b ORDER BY b.scorePrioridade DESC, b.dataEntradaBacklog ASC")
+List<BacklogChamado> findAllOrderedByPriority();
+
+// Próximo chamado da fila
+@Query("SELECT b FROM BacklogChamado b WHERE b.posicaoFila = 1")
+Optional<BacklogChamado> findNextInQueue();
+
+// Estatísticas do backlog
+@Query("SELECT COUNT(b), AVG(b.tempoEsperaMinutos), MAX(b.scorePrioridade) FROM BacklogChamado b")
+Object[] getBacklogStatistics();
+
+// Chamados por categoria de urgência
+@Query("SELECT b.categoriaUrgencia, COUNT(b) FROM BacklogChamado b GROUP BY b.categoriaUrgencia")
+List<Object[]> countByUrgenciaCategory();
+
+// Tempo médio de espera por prioridade
+@Query("SELECT c.prioridade, AVG(b.tempoEsperaMinutos) FROM BacklogChamado b JOIN b.chamado c GROUP BY c.prioridade")
+List<Object[]> averageWaitTimeByPriority();
+
+// Chamados com SLA crítico no backlog
+@Query("SELECT b FROM BacklogChamado b WHERE b.slaCritico = true ORDER BY b.scorePrioridade DESC")
+List<BacklogChamado> findCriticalSlaInBacklog();
+```
+
 ### Controller
 
 #### SuporteController.java
@@ -210,6 +415,16 @@ List<Object[]> countByPrioridadeGrouped();
 - `POST /suporte/chamados/{id}/status` - Atualizar status
 - `GET /suporte/api/prioridades` - Dados para gráfico de prioridades
 - `GET /suporte/api/status` - Dados para gráfico de status
+
+**Endpoints do Backlog:**
+
+- `GET /suporte/backlog` - Interface do backlog de chamados
+- `GET /suporte/api/backlog/fila` - Lista completa da fila do backlog
+- `GET /suporte/api/backlog/dados` - Dados e estatísticas do backlog
+- `GET /suporte/api/backlog/proximo` - Próximo chamado da fila
+- `POST /suporte/api/backlog/adicionar/{chamadoId}` - Adicionar chamado ao backlog
+- `DELETE /suporte/api/backlog/remover/{chamadoId}` - Remover chamado do backlog
+- `POST /suporte/api/backlog/recalcular` - Recalcular prioridades da fila
 
 ## Regras de SLA
 
@@ -242,6 +457,97 @@ List<Object[]> countByPrioridadeGrouped();
 - **Filtros**: Por status, prioridade, técnico
 - **Ações Rápidas**: Visualizar, editar, alterar status
 - **Responsividade**: Interface adaptável para diferentes dispositivos
+
+### Interface do Backlog
+
+#### Dashboard do Backlog
+- **Métricas em Tempo Real**: Total de chamados na fila, tempo médio de espera, score máximo
+- **Gráficos Especializados**: 
+  - Distribuição por categoria de urgência
+  - Tempo médio de espera por prioridade
+  - Evolução do backlog ao longo do tempo
+- **Indicadores Visuais**: Cores baseadas no score de prioridade e SLA crítico
+
+#### Fila de Chamados
+- **Ordenação Inteligente**: Baseada no score de prioridade calculado automaticamente
+- **Informações Detalhadas**:
+  - Posição na fila
+  - Score de prioridade (0-100)
+  - Categoria de urgência
+  - Complexidade estimada
+  - Impacto no negócio
+  - Tempo de espera atual
+  - Técnico sugerido
+  - Estimativa de atendimento
+- **Ações Disponíveis**:
+  - Visualizar detalhes do chamado
+  - Remover da fila
+  - Recalcular prioridades
+  - Atender próximo chamado
+
+#### Funcionalidades Avançadas
+- **Categorização Automática**: Sistema inteligente que analisa o conteúdo e classifica automaticamente
+- **Sugestão de Técnico**: Baseada em especialização, disponibilidade e histórico
+- **Estimativas Dinâmicas**: Cálculo em tempo real do tempo estimado de atendimento
+- **Alertas de SLA**: Notificações visuais para chamados com SLA crítico
+- **Recálculo Automático**: Atualização periódica dos scores baseada no tempo de espera
+
+## Algoritmos e Regras de Negócio do Backlog
+
+### Cálculo do Score de Prioridade
+
+O sistema utiliza um algoritmo ponderado que considera múltiplos fatores:
+
+```
+Score = (Urgência × 0.30) + (Complexidade × 0.20) + (Impacto × 0.25) + 
+        Bônus_SLA_Crítico + Bônus_Cliente_VIP + Fator_Tempo_Espera
+
+Onde:
+- Urgência: 10-100 pontos (Baixa=10, Média=30, Alta=60, Crítica=100)
+- Complexidade: 5-50 pontos (Baixa=5, Média=15, Alta=30, Crítica=50)
+- Impacto: 5-80 pontos (Baixo=5, Médio=20, Alto=40, Crítico=80)
+- Bônus SLA Crítico: +15 pontos
+- Bônus Cliente VIP: +10 pontos
+- Fator Tempo: +0.5 pontos por hora de espera (máximo 24h)
+```
+
+### Regras de Categorização Automática
+
+#### Categoria de Urgência
+- **Crítica**: Palavras-chave como "sistema fora do ar", "não consigo trabalhar"
+- **Alta**: "lento", "erro frequente", "impacta produtividade"
+- **Média**: "dúvida", "configuração", "melhoria"
+- **Baixa**: "sugestão", "quando possível", "não urgente"
+
+#### Complexidade Estimada
+- **Crítica**: Problemas de infraestrutura, integrações complexas
+- **Alta**: Desenvolvimento de novas funcionalidades
+- **Média**: Configurações avançadas, correções de bugs
+- **Baixa**: Dúvidas, orientações, configurações simples
+
+#### Impacto no Negócio
+- **Crítico**: Afeta múltiplos usuários ou processos críticos
+- **Alto**: Afeta departamento inteiro ou processo importante
+- **Médio**: Afeta equipe específica
+- **Baixo**: Afeta usuário individual
+
+### Algoritmo de Sugestão de Técnico
+
+1. **Análise de Especialização**: Baseada no histórico de chamados resolvidos
+2. **Verificação de Disponibilidade**: Considera carga atual de trabalho
+3. **Matching de Competências**: Relaciona tipo de problema com expertise
+4. **Balanceamento de Carga**: Distribui chamados equitativamente
+
+### Estimativa de Tempo de Atendimento
+
+```
+Tempo_Estimado = (Posição_Fila - 1) × Tempo_Médio_Atendimento + 
+                 Complexidade_Estimada_Minutos
+
+Onde:
+- Tempo_Médio_Atendimento: Calculado dinamicamente baseado no histórico
+- Complexidade_Estimada_Minutos: Baixa=30, Média=90, Alta=180, Crítica=360
+```
 
 ## Tecnologias Utilizadas
 
@@ -283,6 +589,19 @@ spring.jpa.hibernate.ddl-auto=update
 suporte.sla.horario-inicio=8
 suporte.sla.horario-fim=18
 suporte.dashboard.limite-chamados=10
+
+# Configurações do Backlog
+suporte.backlog.recalculo-automatico=true
+suporte.backlog.intervalo-recalculo-minutos=15
+suporte.backlog.tempo-medio-atendimento-minutos=120
+suporte.backlog.max-score=100
+suporte.backlog.peso-urgencia=0.30
+suporte.backlog.peso-complexidade=0.20
+suporte.backlog.peso-impacto=0.25
+suporte.backlog.bonus-sla-critico=15
+suporte.backlog.bonus-cliente-vip=10
+suporte.backlog.fator-tempo-por-hora=0.5
+suporte.backlog.max-horas-fator-tempo=24
 ```
 
 ## Uso e Operação
@@ -309,12 +628,68 @@ suporte.dashboard.limite-chamados=10
    - Chamado é marcado como FECHADO
    - Métricas são atualizadas
 
+### Fluxo do Backlog de Chamados
+
+1. **Entrada no Backlog**
+   - Chamado é automaticamente adicionado ao backlog quando criado
+   - Sistema executa categorização automática
+   - Calcula score inicial de prioridade
+   - Define posição na fila baseada no score
+
+2. **Priorização Inteligente**
+   - Sistema analisa conteúdo e determina urgência
+   - Estima complexidade baseada em palavras-chave
+   - Avalia impacto no negócio
+   - Aplica bônus para SLA crítico e clientes VIP
+
+3. **Gestão da Fila**
+   - Recálculo automático a cada 15 minutos
+   - Atualização do tempo de espera
+   - Reordenação baseada em novos scores
+   - Sugestão de técnico mais adequado
+
+4. **Atendimento**
+   - Técnico acessa próximo chamado da fila
+   - Chamado é removido automaticamente do backlog
+   - Métricas de performance são atualizadas
+   - Estimativas são recalculadas para fila restante
+
 ### Monitoramento de SLA
 
 - **Dashboard**: Visualização em tempo real
 - **Alertas**: Chamados próximos do vencimento
 - **Relatórios**: Métricas de performance da equipe
 - **Histórico**: Análise de tendências e melhorias
+
+### Métricas e Relatórios do Backlog
+
+#### Métricas em Tempo Real
+- **Total de Chamados na Fila**: Quantidade atual no backlog
+- **Tempo Médio de Espera**: Média de tempo que chamados aguardam atendimento
+- **Score Máximo**: Maior score de prioridade na fila atual
+- **Distribuição por Urgência**: Percentual de chamados por categoria
+- **Chamados com SLA Crítico**: Quantidade de chamados com risco de vencimento
+
+#### Relatórios de Performance
+- **Eficiência da Fila**: Tempo médio entre entrada e atendimento
+- **Precisão da Categorização**: Taxa de acerto da classificação automática
+- **Balanceamento de Carga**: Distribuição de chamados por técnico
+- **Evolução do Backlog**: Histórico de crescimento/redução da fila
+- **Impacto do Score**: Correlação entre score e tempo real de resolução
+
+#### Dashboards Especializados
+- **Gráfico de Distribuição por Urgência**: Pizza com categorias de urgência
+- **Linha do Tempo do Backlog**: Evolução da fila ao longo do dia/semana
+- **Heatmap de Atendimento**: Horários de maior demanda
+- **Ranking de Técnicos**: Performance baseada em chamados do backlog
+- **Análise de Tendências**: Previsão de crescimento da fila
+
+#### Alertas Inteligentes
+- **Fila Crítica**: Quando backlog excede limite configurado
+- **SLA em Risco**: Chamados próximos do vencimento na fila
+- **Desbalanceamento**: Quando um técnico tem carga excessiva
+- **Score Anômalo**: Chamados com score muito alto que precisam atenção
+- **Tempo Excessivo**: Chamados há muito tempo na fila
 
 ## Manutenção e Evolução
 
@@ -331,6 +706,16 @@ suporte.dashboard.limite-chamados=10
 - **Chat**: Sistema de comunicação em tempo real
 - **Base de Conhecimento**: FAQ e documentação
 - **Satisfação**: Pesquisas de satisfação do cliente
+
+#### Melhorias Específicas do Backlog
+- **Machine Learning**: Algoritmos de aprendizado para melhor categorização
+- **Previsão de Demanda**: Análise preditiva para dimensionamento da equipe
+- **Otimização Dinâmica**: Ajuste automático dos pesos do algoritmo de score
+- **Integração com Calendário**: Consideração de feriados e horários especiais
+- **Análise de Sentimento**: Detecção de urgência baseada no tom da mensagem
+- **Gamificação**: Sistema de pontuação para técnicos baseado na eficiência
+- **API de Terceiros**: Integração com ferramentas de monitoramento externas
+- **Workflow Avançado**: Regras complexas de roteamento baseadas em contexto
 
 ## Casos de Uso
 
@@ -400,6 +785,126 @@ suporte.dashboard.limite-chamados=10
 **Fluxos Alternativos**:
 - **2a**: Gestor pode acessar estatísticas via API (`GET /api/chamados/estatisticas`)
 - **4a**: Sistema pode enviar alertas automáticos para SLAs próximos do vencimento
+
+### Caso de Uso 4: Gestão do Backlog de Chamados
+
+**Ator Principal**: Técnico de Suporte
+**Objetivo**: Atender chamados de forma otimizada usando o sistema de fila inteligente
+
+**Fluxo Principal**:
+1. Técnico acessa interface do backlog (`/suporte/backlog`)
+2. Visualiza fila ordenada por prioridade inteligente
+3. Analisa informações do próximo chamado:
+   - Score de prioridade
+   - Categoria de urgência
+   - Complexidade estimada
+   - Tempo de espera
+   - Técnico sugerido
+4. Clica em "Atender Próximo Chamado"
+5. Sistema remove chamado do backlog automaticamente
+6. Técnico inicia atendimento do chamado
+7. Sistema recalcula posições da fila restante
+
+**Fluxos Alternativos**:
+- **3a**: Técnico pode visualizar detalhes completos do chamado antes de aceitar
+- **4a**: Técnico pode pular chamado se não for de sua especialidade
+- **7a**: Sistema pode sugerir técnico alternativo baseado em disponibilidade
+
+### Caso de Uso 5: Monitoramento e Análise do Backlog
+
+**Ator Principal**: Gestor de Suporte
+**Objetivo**: Monitorar eficiência da fila e otimizar processos
+
+**Fluxo Principal**:
+1. Gestor acessa dashboard do backlog (`/suporte/backlog`)
+2. Analisa métricas em tempo real:
+   - Total de chamados na fila
+   - Tempo médio de espera
+   - Distribuição por urgência
+   - Score máximo atual
+3. Visualiza gráficos especializados:
+   - Evolução do backlog ao longo do tempo
+   - Heatmap de atendimento por horário
+   - Ranking de performance dos técnicos
+4. Identifica gargalos e oportunidades:
+   - Chamados com tempo excessivo na fila
+   - Desbalanceamento de carga entre técnicos
+   - Padrões de demanda por categoria
+5. Toma ações corretivas:
+   - Recalcula prioridades manualmente
+   - Redistribui chamados entre técnicos
+   - Ajusta configurações do algoritmo
+
+**Fluxos Alternativos**:
+- **2a**: Gestor pode acessar dados via API (`GET /api/backlog/dados`)
+- **5a**: Sistema pode executar recálculo automático baseado em configuração
+- **5b**: Alertas automáticos podem ser enviados quando limites são ultrapassados
+
+### Caso de Uso 6: Categorização Automática de Chamados
+
+**Ator Principal**: Sistema (Processo Automático)
+**Objetivo**: Classificar automaticamente novos chamados no backlog
+
+**Fluxo Principal**:
+1. Novo chamado é criado no sistema
+2. Sistema analisa conteúdo (assunto + descrição)
+3. Executa algoritmos de categorização:
+   - Determina categoria de urgência baseada em palavras-chave
+   - Estima complexidade baseada no tipo de problema
+   - Avalia impacto no negócio baseado no contexto
+4. Aplica bônus especiais:
+   - Verifica se é SLA crítico
+   - Identifica se é cliente VIP
+5. Calcula score de prioridade usando algoritmo ponderado
+6. Sugere técnico mais adequado baseado em:
+   - Especialização no tipo de problema
+   - Disponibilidade atual
+   - Histórico de performance
+7. Insere chamado na posição correta da fila
+8. Calcula estimativa de tempo de atendimento
+
+**Fluxos Alternativos**:
+- **3a**: Se categorização automática falhar, usa valores padrão
+- **6a**: Se nenhum técnico especializado disponível, usa balanceamento de carga
+- **7a**: Se fila estiver vazia, chamado vai para primeira posição
+
+## Resumo das Funcionalidades do Backlog
+
+### Principais Benefícios
+
+✅ **Priorização Inteligente**: Algoritmo avançado que considera múltiplos fatores para ordenar chamados
+
+✅ **Categorização Automática**: Sistema que analisa conteúdo e classifica automaticamente urgência, complexidade e impacto
+
+✅ **Sugestão de Técnico**: Matching inteligente baseado em especialização e disponibilidade
+
+✅ **Estimativas Precisas**: Cálculo dinâmico de tempo de atendimento baseado na posição na fila
+
+✅ **Métricas Avançadas**: Dashboard especializado com indicadores de performance da fila
+
+✅ **Recálculo Automático**: Atualização periódica das prioridades baseada no tempo de espera
+
+✅ **Interface Intuitiva**: Visualização clara da fila com todas as informações relevantes
+
+✅ **APIs RESTful**: Endpoints especializados para integração e automação
+
+### Impacto na Operação
+
+- **Redução do Tempo de Resposta**: Priorização inteligente garante que chamados críticos sejam atendidos primeiro
+- **Melhoria na Satisfação**: Estimativas precisas e comunicação proativa com usuários
+- **Otimização de Recursos**: Distribuição equilibrada de chamados entre técnicos
+- **Visibilidade Gerencial**: Métricas detalhadas para tomada de decisão
+- **Automação de Processos**: Redução de tarefas manuais de triagem e classificação
+- **Escalabilidade**: Sistema preparado para crescimento da demanda
+
+### Tecnologias e Arquitetura
+
+- **Entidade Dedicada**: `BacklogChamado` com relacionamento 1:1 com `Chamado`
+- **Service Especializado**: `BacklogChamadoService` com lógica de negócio complexa
+- **Repository Otimizado**: Queries especializadas para performance
+- **Controller RESTful**: Endpoints dedicados para operações do backlog
+- **Algoritmos Configuráveis**: Pesos e parâmetros ajustáveis via properties
+- **Cálculos em Tempo Real**: Atualização dinâmica de scores e posições
 
 ## Fluxograma do Sistema
 

@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.model.Chamado.StatusChamado;
 import com.jaasielsilva.portalceo.model.Chamado.Prioridade;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ChamadoService;
+import com.jaasielsilva.portalceo.service.BacklogChamadoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class SuporteController {
 
     @Autowired
     private ChamadoService chamadoService;
+    
+    @Autowired
+    private BacklogChamadoService backlogChamadoService;
 
     // Dashboard principal do suporte
     @GetMapping
@@ -77,6 +81,11 @@ public class SuporteController {
             // Contar chamados reabertos
             Long chamadosReabertos = chamadoService.contarChamadosReabertos();
             
+            // Métricas do Backlog de Chamados
+            Long totalBacklog = backlogChamadoService.contarTotalBacklog();
+            Map<String, Object> estatisticasBacklog = backlogChamadoService.obterEstatisticasBacklog();
+            Map<String, Object> metricasPerformanceBacklog = backlogChamadoService.obterMetricasPerformance();
+            
             // Dados para gráfico de evolução de chamados (últimos 12 meses)
             List<String> ultimos12MesesLabels = chamadoService.obterLabelsUltimosMeses(12);
             List<Long> ultimos12MesesChamados = chamadoService.obterEvolucaoChamadosUltimosMeses(12);
@@ -97,6 +106,11 @@ public class SuporteController {
             model.addAttribute("taxaResolucaoPrazo", taxaResolucaoPrazo != null ? taxaResolucaoPrazo : 0.0);
             model.addAttribute("tempoMedioPrimeiraResposta", tempoMedioPrimeiraResposta != null ? tempoMedioPrimeiraResposta : 0.0);
             model.addAttribute("chamadosReabertos", chamadosReabertos != null ? chamadosReabertos : 0L);
+            
+            // Métricas do Backlog
+            model.addAttribute("totalBacklog", totalBacklog != null ? totalBacklog : 0L);
+            model.addAttribute("estatisticasBacklog", estatisticasBacklog);
+            model.addAttribute("metricasPerformanceBacklog", metricasPerformanceBacklog);
             
             // Dados para gráfico de evolução
             model.addAttribute("ultimos12MesesLabels", ultimos12MesesLabels);
@@ -123,6 +137,9 @@ public class SuporteController {
             model.addAttribute("taxaResolucaoPrazo", 0.0);
             model.addAttribute("tempoMedioPrimeiraResposta", 0.0);
             model.addAttribute("chamadosReabertos", 0L);
+            model.addAttribute("totalBacklog", 0L);
+            model.addAttribute("estatisticasBacklog", new HashMap<>());
+            model.addAttribute("metricasPerformanceBacklog", new HashMap<>());
         }
         
         return "suporte/index";
@@ -582,6 +599,140 @@ public class SuporteController {
             response.put("sucesso", false);
             response.put("erro", e.getMessage());
             return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    // Endpoints específicos para Backlog de Chamados
+    
+    @GetMapping("/backlog")
+    public String backlog(Model model) {
+        try {
+            logger.info("Carregando página do backlog de chamados");
+            
+            // Mock de usuário logado
+            Usuario usuarioLogado = new Usuario();
+            usuarioLogado.setId(1L);
+            usuarioLogado.setNome("Administrador");
+            model.addAttribute("usuarioLogado", usuarioLogado);
+            
+            // Dados do backlog
+            Long totalBacklog = backlogChamadoService.contarTotalBacklog();
+            List<com.jaasielsilva.portalceo.model.BacklogChamado> backlogOrdenado = 
+                backlogChamadoService.listarBacklogOrdenado();
+            Map<String, Object> estatisticas = backlogChamadoService.obterEstatisticasBacklog();
+            Map<String, Object> metricas = backlogChamadoService.obterMetricasPerformance();
+            
+            model.addAttribute("totalBacklog", totalBacklog);
+            model.addAttribute("backlogChamados", backlogOrdenado);
+            model.addAttribute("estatisticasBacklog", estatisticas);
+            model.addAttribute("metricasBacklog", metricas);
+            
+            return "suporte/backlog";
+            
+        } catch (Exception e) {
+            logger.error("Erro ao carregar backlog: {}", e.getMessage(), e);
+            model.addAttribute("erro", "Erro ao carregar dados do backlog");
+            return "suporte/backlog";
+        }
+    }
+    
+    @GetMapping("/api/backlog")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getBacklogData() {
+        try {
+            Map<String, Object> response = new HashMap<>();
+            
+            Long total = backlogChamadoService.contarTotalBacklog();
+            Map<String, Object> estatisticas = backlogChamadoService.obterEstatisticasBacklog();
+            Map<String, Object> metricas = backlogChamadoService.obterMetricasPerformance();
+            
+            response.put("total", total);
+            response.put("estatisticas", estatisticas);
+            response.put("metricas", metricas);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar dados do backlog: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("erro", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+    
+    @GetMapping("/api/backlog/proximo")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getProximoChamado() {
+        try {
+            Optional<com.jaasielsilva.portalceo.model.BacklogChamado> proximo = 
+                backlogChamadoService.obterProximoChamado();
+            
+            Map<String, Object> response = new HashMap<>();
+            if (proximo.isPresent()) {
+                response.put("chamado", proximo.get());
+                response.put("encontrado", true);
+            } else {
+                response.put("encontrado", false);
+                response.put("mensagem", "Nenhum chamado na fila");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar próximo chamado: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("erro", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+    
+    @PostMapping("/api/backlog/adicionar/{chamadoId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> adicionarAoBacklog(@PathVariable Long chamadoId) {
+        try {
+            Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(chamadoId);
+            
+            if (chamadoOpt.isEmpty()) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("erro", "Chamado não encontrado");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            com.jaasielsilva.portalceo.model.BacklogChamado backlogItem = 
+                backlogChamadoService.adicionarAoBacklog(chamadoOpt.get());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("backlogItem", backlogItem);
+            response.put("mensagem", "Chamado adicionado ao backlog com sucesso");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao adicionar chamado ao backlog: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("erro", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+    
+    @DeleteMapping("/api/backlog/remover/{chamadoId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> removerDoBacklog(@PathVariable Long chamadoId) {
+        try {
+            backlogChamadoService.removerDoBacklog(chamadoId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("sucesso", true);
+            response.put("mensagem", "Chamado removido do backlog com sucesso");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao remover chamado do backlog: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("erro", e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
     

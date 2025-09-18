@@ -308,14 +308,9 @@
                                                       th:class="${chamado.tecnicoResponsavel == null ? 'text-muted' : ''}">Técnico</span>
                                             </td>
                                             <td>
-                                                <span th:if="${chamado.slaRestante != null}"
-                                                      th:class="${
-                                                          chamado.slaRestante <= 0 ? 'sla-vermelho' :
-                                                          chamado.slaRestante <= 4 ? 'sla-amarelo' :
-                                                          'sla-verde'
-                                                      }">
+                                                <span th:if="${chamado.slaRestante != null}" th:class="${chamado.slaRestante < 0 ? 'sla-vermelho' : (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde')}">
                                                     <i class="fas fa-clock me-1"></i>
-                                                    <span th:text="${chamado.slaRestante > 0 ? chamado.slaRestante + 'h' : 'Vencido'}">24h</span>
+                                                    <span th:text="${chamado.slaRestante > 0 ? chamado.slaRestante + 'h' : (chamado.slaRestante == 0 ? 'Menos de 1h' : 'Vencido')}">24h</span>
                                                 </span>
                                                 <span th:unless="${chamado.slaRestante != null}" class="text-muted">-</span>
                                             </td>

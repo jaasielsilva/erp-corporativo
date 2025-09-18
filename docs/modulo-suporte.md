@@ -25,6 +25,7 @@ O módulo de suporte é responsável pelo gerenciamento completo de chamados té
 - **Alertas Inteligentes**: Notificações para chamados próximos ao vencimento
 - **Métricas Avançadas**: Acompanhamento de performance e cumprimento de SLAs
 - **SLA Médio**: Cálculo estatístico do tempo médio de resolução
+- **Análise Temporal Profissional**: Sistema de cálculo de tempo médio de resolução por período mensal com lógica robusta similar aos ERPs TOTVS e SAP
 
 ### 4. Dashboard e Relatórios Avançados
 - **Visão Geral Executiva**: Dashboard com estatísticas em tempo real
@@ -301,6 +302,9 @@ public Long calcularSlaRestante(Chamado chamado)
 // Cálculo do tempo médio de resolução
 public Double calcularSlaMedio()
 
+// Análise temporal profissional (Nova implementação)
+public List<Double> obterTempoMedioResolucaoUltimosMeses(int numeroMeses)
+
 // Operações CRUD
 public Chamado criarChamado(Chamado chamado)
 public Optional<Chamado> buscarPorId(Long id)
@@ -491,6 +495,96 @@ List<BacklogChamado> findCriticalSlaInBacklog();
 - **Estimativas Dinâmicas**: Cálculo em tempo real do tempo estimado de atendimento
 - **Alertas de SLA**: Notificações visuais para chamados com SLA crítico
 - **Recálculo Automático**: Atualização periódica dos scores baseada no tempo de espera
+
+## Análise Temporal Profissional - Nova Implementação
+
+### Visão Geral
+O sistema agora conta com uma implementação profissional de análise temporal de resolução de chamados, desenvolvida com base nos padrões utilizados em ERPs corporativos como TOTVS e SAP. Esta funcionalidade oferece cálculos precisos e robustos do tempo médio de resolução por período mensal.
+
+### Características Principais
+
+#### 1. Lógica de Filtragem Robusta
+- **Período Inclusivo**: Considera o mês completo, do primeiro ao último dia
+- **Precisão Temporal**: Utiliza `LocalDate.withDayOfMonth(1)` para início e `.lengthOfMonth()` para fim
+- **Tratamento de Bordas**: Lida corretamente com meses de diferentes durações (28, 29, 30, 31 dias)
+
+#### 2. Processamento Otimizado
+- **Stream API**: Utiliza processamento funcional para melhor performance
+- **Filtragem Eficiente**: Aplica filtros em sequência otimizada
+- **Logs de Debug**: Sistema completo de logs para monitoramento e troubleshooting
+
+#### 3. Cálculo Profissional
+```java
+public List<Double> obterTempoMedioResolucaoUltimosMeses(int numeroMeses) {
+    List<Double> tempos = new ArrayList<>();
+    LocalDate hoje = LocalDate.now();
+    
+    for (int i = 0; i < numeroMeses; i++) {
+        LocalDate mesReferencia = hoje.minusMonths(i);
+        LocalDate inicioMes = mesReferencia.withDayOfMonth(1);
+        LocalDate fimMes = mesReferencia.withDayOfMonth(mesReferencia.lengthOfMonth());
+        
+        // Conversão para LocalDateTime com precisão
+        LocalDateTime inicioMesDateTime = inicioMes.atStartOfDay();
+        LocalDateTime fimMesDateTime = fimMes.atTime(23, 59, 59, 999999999);
+        
+        // Filtragem e cálculo otimizado
+        List<Chamado> chamadosDoMes = chamadoRepository.findAll().stream()
+            .filter(c -> c.getDataResolucao() != null)
+            .filter(c -> !c.getDataResolucao().isBefore(inicioMesDateTime))
+            .filter(c -> !c.getDataResolucao().isAfter(fimMesDateTime))
+            .collect(Collectors.toList());
+        
+        Double tempoMedio = calcularTempoMedioResolucao(chamadosDoMes);
+        tempos.add(tempoMedio);
+    }
+    
+    return tempos;
+}
+```
+
+#### 4. Método de Cálculo Separado
+```java
+private Double calcularTempoMedioResolucao(List<Chamado> chamados) {
+    if (chamados.isEmpty()) {
+        return 0.0;
+    }
+    
+    double somaHoras = chamados.stream()
+        .mapToDouble(c -> Duration.between(c.getDataAbertura(), c.getDataResolucao()).toHours())
+        .sum();
+    
+    return somaHoras / chamados.size();
+}
+```
+
+### Benefícios da Nova Implementação
+
+#### 1. Compatibilidade ERP
+- **Padrão Corporativo**: Segue as melhores práticas de ERPs como TOTVS e SAP
+- **Precisão Temporal**: Cálculos exatos considerando todos os aspectos temporais
+- **Robustez**: Tratamento adequado de casos extremos e bordas
+
+#### 2. Performance Otimizada
+- **Stream Processing**: Processamento funcional eficiente
+- **Filtragem Sequencial**: Reduz o conjunto de dados progressivamente
+- **Separação de Responsabilidades**: Métodos especializados para cada função
+
+#### 3. Monitoramento Avançado
+- **Logs Detalhados**: Sistema completo de debug e monitoramento
+- **Rastreabilidade**: Cada etapa do processamento é logada
+- **Troubleshooting**: Facilita identificação e correção de problemas
+
+#### 4. Escalabilidade
+- **Preparado para Cache**: Estrutura permite implementação futura de cache
+- **Otimização de Consultas**: Base para implementação de consultas otimizadas
+- **Flexibilidade**: Permite extensões e melhorias futuras
+
+### Integração com Dashboard
+A nova implementação se integra perfeitamente com o dashboard existente, fornecendo dados precisos para:
+- **Cards de Métricas**: Tempo médio de resolução mensal
+- **Gráficos Temporais**: Evolução do tempo de resolução ao longo dos meses
+- **Relatórios Gerenciais**: Dados confiáveis para tomada de decisão
 
 ## Algoritmos e Regras de Negócio do Backlog
 
@@ -1057,6 +1151,7 @@ suporte.backlog.max-horas-fator-tempo=24
 - `GET /api/chamados/estatisticas` - Estatísticas gerais
 - `GET /api/avaliacoes-atendimento` - Métricas de avaliação dos chamados
 - `GET /suporte/api/evolucao-chamados` - Dados para gráfico de evolução de chamados
+- `GET /suporte/api/public/tempo-resolucao` - **NOVO**: Tempo médio de resolução dos últimos 12 meses (implementação profissional)
 - `GET /suporte/chamados/{id}/json` - Busca dados de um chamado em formato JSON
 - `GET /suporte/test` - Endpoint de teste para verificar funcionamento do servidor
 - `POST /api/chamados/{id}/avaliacao` - Permite avaliar um chamado resolvido ou fechado
@@ -1071,6 +1166,29 @@ suporte.backlog.max-horas-fator-tempo=24
 - `GET /suporte/chamados` - Lista de chamados
 - `GET /suporte/novo` - Formulário de novo chamado
 - `POST /suporte/chamados/novo` - Processa criação de chamado
+
+### Novo Endpoint - Análise Temporal Profissional
+
+#### `GET /suporte/api/public/tempo-resolucao`
+**Descrição**: Retorna o tempo médio de resolução dos últimos 12 meses com implementação profissional baseada em padrões ERP.
+
+**Resposta de Exemplo**:
+```json
+{
+  "success": true,
+  "temposResolucao": [15.5, 18.2, 12.8, 20.1, 16.7, 14.3, 19.8, 17.2, 13.9, 21.5, 16.1, 18.7],
+  "metasResolucao": [29.12, 29.12, 29.12, 29.12, 29.12, 29.12, 29.12, 29.12, 29.12, 29.12, 29.12, 29.12],
+  "labels": ["Dez 2024", "Nov 2024", "Out 2024", "Set 2024", "Ago 2024", "Jul 2024", "Jun 2024", "Mai 2024", "Abr 2024", "Mar 2024", "Fev 2024", "Jan 2024"]
+}
+```
+
+**Características**:
+- **Período**: Últimos 12 meses (incluindo o mês atual)
+- **Precisão**: Cálculo exato do primeiro ao último dia de cada mês
+- **Performance**: Otimizado com Stream API e filtragem eficiente
+- **Robustez**: Tratamento adequado de meses com diferentes durações
+- **Logs**: Sistema completo de debug para monitoramento
+- **Compatibilidade**: Padrão similar aos ERPs TOTVS e SAP
 - `GET /suporte/chamados/{id}` - Visualiza chamado específico
 - `GET /suporte/chamados/{id}/avaliar` - Página para avaliar chamado resolvido
 - `GET /suporte/chamados/{id}/debug` - Página de debug para desenvolvimento

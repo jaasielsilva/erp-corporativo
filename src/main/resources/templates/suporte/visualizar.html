@@ -324,9 +324,11 @@
                                     <div th:if="${chamado.slaRestante != null}">
                                         <label class="form-label fw-bold">SLA Restante:</label>
                                         <p class="mb-0">
-                                            <span th:class="${chamado.slaRestante <= 0 ? 'sla-vermelho' : (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde')}">
+                                            <span th:class="${chamado.slaRestante < 0 ? 'sla-vermelho' : (chamado.slaRestante == 0 && chamado.slaVencimento != null && chamado.slaVencimento.isBefore(#temporals.createNow()) ? 'sla-vermelho' : (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde'))}">
                                                 <i class="fas fa-clock me-1"></i>
-                                                <span th:text="${chamado.slaRestante > 0 ? chamado.slaRestante + ' horas' : 'SLA Vencido'}">24 horas</span>
+                                                <span th:if="${chamado.slaRestante > 0}" th:text="${chamado.slaRestante + ' horas'}">24 horas</span>
+                                                <span th:if="${chamado.slaRestante == 0 && chamado.slaVencimento != null && chamado.slaVencimento.isAfter(#temporals.createNow())}" th:text="${'Menos de 1 hora'}">Menos de 1 hora</span>
+                                                <span th:if="${chamado.slaRestante < 0 || (chamado.slaRestante == 0 && chamado.slaVencimento != null && chamado.slaVencimento.isBefore(#temporals.createNow()))}" th:text="${'SLA Vencido'}">SLA Vencido</span>
                                             </span>
                                         </p>
                                     </div>

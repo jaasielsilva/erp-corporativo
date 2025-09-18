@@ -6,6 +6,7 @@ import com.jaasielsilva.portalceo.model.Chamado.Prioridade;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ChamadoService;
 import com.jaasielsilva.portalceo.service.BacklogChamadoService;
+import com.jaasielsilva.portalceo.dto.CategoriaChamadoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -276,6 +281,64 @@ public class SuporteController {
         }
     }
     
+    /**
+     * API para métricas de SLA dos últimos N dias
+     */
+    @GetMapping("/api/metricas-sla-periodo")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getMetricasSLAPeriodo(@RequestParam(defaultValue = "30") int dias) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Map<String, Object> metricasSLA = chamadoService.calcularMetricasSLAUltimosDias(dias);
+            
+            response.put("success", true);
+            response.put("periodo", dias + " dias");
+            response.putAll(metricasSLA);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter métricas de SLA por período: {}", e.getMessage());
+            response.put("success", false);
+            response.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * API para comparar métricas de SLA entre diferentes períodos
+     */
+    @GetMapping("/api/metricas-sla-comparativo")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getMetricasSLAComparativo() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Métricas dos últimos 7 dias
+            Map<String, Object> ultimos7Dias = chamadoService.calcularMetricasSLAUltimosDias(7);
+            
+            // Métricas dos últimos 30 dias
+            Map<String, Object> ultimos30Dias = chamadoService.calcularMetricasSLAUltimosDias(30);
+            
+            // Métricas gerais (todos os chamados)
+            Map<String, Object> metricasGerais = chamadoService.calcularMetricasSLA();
+            
+            response.put("success", true);
+            response.put("ultimos7Dias", ultimos7Dias);
+            response.put("ultimos30Dias", ultimos30Dias);
+            response.put("geral", metricasGerais);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter métricas comparativas de SLA: {}", e.getMessage());
+            response.put("success", false);
+            response.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
     // Listar todos os chamados
     @GetMapping("/chamados")
     public String listarChamados(Model model) {
@@ -354,6 +417,81 @@ public class SuporteController {
         model.addAttribute("prioridades", Prioridade.values());
         model.addAttribute("chamado", new Chamado());
         return "suporte/teste-chamado";
+    }
+    
+    // API para obter categorias e subcategorias
+    @GetMapping("/api/categorias")
+    @ResponseBody
+    public ResponseEntity<List<CategoriaChamadoDTO>> obterCategorias() {
+        try {
+            List<CategoriaChamadoDTO> categorias = new ArrayList<>();
+            
+            // Categoria Técnico
+            List<CategoriaChamadoDTO.SubcategoriaDTO> subcategoriasTecnico = Arrays.asList(
+                new CategoriaChamadoDTO.SubcategoriaDTO("TECNICO_HARDWARE", "Hardware", "Problemas com computadores, impressoras, equipamentos de rede, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("TECNICO_SOFTWARE", "Software", "Problemas com programas, sistemas, aplicativos, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("TECNICO_REDE", "Rede", "Problemas com internet, wi-fi, conexões de rede, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("TECNICO_EMAIL", "E-mail", "Problemas com contas de e-mail, configurações, acesso, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("TECNICO_SITE", "Site/E-commerce", "Problemas com o site da empresa, loja virtual, etc.")
+            );
+            categorias.add(new CategoriaChamadoDTO("TECNICO", "Técnico", subcategoriasTecnico));
+            
+            // Categoria Financeiro
+            List<CategoriaChamadoDTO.SubcategoriaDTO> subcategoriasFinanceiro = Arrays.asList(
+                new CategoriaChamadoDTO.SubcategoriaDTO("FINANCEIRO_CONTAS_PAGAR", "Contas a Pagar", "Dúvidas sobre contas, pagamentos, vencimentos, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("FINANCEIRO_CONTAS_RECEBER", "Contas a Receber", "Dúvidas sobre recebimentos, clientes, inadimplência, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("FINANCEIRO_FLUXO_CAIXA", "Fluxo de Caixa", "Relatórios, análises, projeções de caixa, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("FINANCEIRO_ORCAMENTO", "Orçamento", "Elaboração, análise e controle de orçamentos"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("FINANCEIRO_IMPOSTOS", "Impostos", "Dúvidas sobre tributação, guias, declarações, etc.")
+            );
+            categorias.add(new CategoriaChamadoDTO("FINANCEIRO", "Financeiro", subcategoriasFinanceiro));
+            
+            // Categoria RH
+            List<CategoriaChamadoDTO.SubcategoriaDTO> subcategoriasRH = Arrays.asList(
+                new CategoriaChamadoDTO.SubcategoriaDTO("RH_FOLHA_PAGAMENTO", "Folha de Pagamento", "Dúvidas sobre salários, descontos, benefícios, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("RH_ADMISSAO", "Admissão", "Processos de contratação, documentação, integração, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("RH_DEMISSAO", "Demissão", "Processos de desligamento, rescisões, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("RH_FERIAS", "Férias", "Solicitações, agendamentos, cálculos de férias, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("RH_BENEFICIOS", "Benefícios", "Plano de saúde, odontológico, vale transporte, etc.")
+            );
+            categorias.add(new CategoriaChamadoDTO("RH", "Recursos Humanos", subcategoriasRH));
+            
+            // Categoria Vendas
+            List<CategoriaChamadoDTO.SubcategoriaDTO> subcategoriasVendas = Arrays.asList(
+                new CategoriaChamadoDTO.SubcategoriaDTO("VENDAS_PEDIDOS", "Pedidos", "Dúvidas sobre pedidos, alterações, cancelamentos, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("VENDAS_CLIENTES", "Clientes", "Cadastro, atualização, dúvidas sobre clientes, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("VENDAS_COMISSOES", "Comissões", "Cálculos, pagamentos, relatórios de comissões, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("VENDAS_PROMOCOES", "Promoções", "Criação, acompanhamento de promoções e campanhas"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("VENDAS_RELATORIOS", "Relatórios", "Relatórios de vendas, performance, etc.")
+            );
+            categorias.add(new CategoriaChamadoDTO("VENDAS", "Vendas", subcategoriasVendas));
+            
+            // Categoria Estoque
+            List<CategoriaChamadoDTO.SubcategoriaDTO> subcategoriasEstoque = Arrays.asList(
+                new CategoriaChamadoDTO.SubcategoriaDTO("ESTOQUE_MOVIMENTACAO", "Movimentação", "Entradas, saídas, transferências de estoque"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("ESTOQUE_PRODUTOS", "Produtos", "Cadastro, atualização, informações de produtos"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("ESTOQUE_INVENTARIO", "Inventário", "Contagens, ajustes, reconciliações de estoque"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("ESTOQUE_FORNECEDORES", "Fornecedores", "Cadastro, atualização, dúvidas sobre fornecedores"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("ESTOQUE_COMPRAS", "Compras", "Solicitações, cotações, compras de produtos"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("ESTOQUE_RELATORIOS", "Relatórios", "Relatórios de estoque, movimentações, etc.")
+            );
+            categorias.add(new CategoriaChamadoDTO("ESTOQUE", "Estoque", subcategoriasEstoque));
+            
+            // Categoria Geral
+            List<CategoriaChamadoDTO.SubcategoriaDTO> subcategoriasGeral = Arrays.asList(
+                new CategoriaChamadoDTO.SubcategoriaDTO("GERAL_ADMINISTRATIVO", "Administrativo", "Questões administrativas gerais da empresa"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("GERAL_COMUNICACAO", "Comunicação", "Dúvidas sobre comunicação interna, avisos, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("GERAL_SEGURANCA", "Segurança", "Questões de segurança física e digital"),
+                new CategoriaChamadoDTO.SubcategoriaDTO("GERAL_MANUTENCAO", "Manutenção", "Solicitações de manutenção predial, equipamentos, etc."),
+                new CategoriaChamadoDTO.SubcategoriaDTO("GERAL_OUTROS", "Outros", "Outras questões que não se enquadram nas categorias acima")
+            );
+            categorias.add(new CategoriaChamadoDTO("GERAL", "Geral", subcategoriasGeral));
+            
+            return ResponseEntity.ok(categorias);
+        } catch (Exception e) {
+            logger.error("Erro ao obter categorias: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
     
     @GetMapping("/teste-simples")
@@ -751,6 +889,56 @@ public class SuporteController {
         }
         
         return "suporte/visualizar-simples";
+    }
+
+    @GetMapping("/api/public/debug-dados")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> debugDados() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Contar total de chamados
+            List<Chamado> todosChamados = chamadoService.listarTodos();
+            long totalChamados = todosChamados.size();
+            
+            // Contar chamados resolvidos
+            List<Chamado> chamadosResolvidos = chamadoService.listarResolvidos();
+            long totalResolvidos = chamadosResolvidos.size();
+            
+            // Calcular tempo médio
+            Double tempoMedio = chamadoService.calcularTempoMedioResolucaoGeral();
+            
+            // Calcular SLA médio
+            Double slaMedio = chamadoService.calcularSlaMedio();
+            
+            // Métricas de SLA
+            Map<String, Object> metricasSLA = chamadoService.calcularMetricasSLA();
+            
+            response.put("success", true);
+            response.put("totalChamados", totalChamados);
+            response.put("totalResolvidos", totalResolvidos);
+            response.put("tempoMedioResolucao", tempoMedio);
+            response.put("slaMedio", slaMedio);
+            response.put("metricasSLA", metricasSLA);
+            response.put("chamadosDetalhes", todosChamados.stream()
+                .limit(5)
+                .map(c -> Map.of(
+                    "id", c.getId(),
+                    "numero", c.getNumero(),
+                    "status", c.getStatus().toString(),
+                    "dataAbertura", c.getDataAbertura().toString(),
+                    "dataResolucao", c.getDataResolucao() != null ? c.getDataResolucao().toString() : "null"
+                ))
+                .collect(java.util.stream.Collectors.toList()));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter dados de debug: {}", e.getMessage(), e);
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
 }

@@ -213,11 +213,12 @@ public class ChamadoService {
         try {
             LocalDateTime agora = LocalDateTime.now();
             
-            // Calcular horas restantes até o vencimento
-            long horasRestantes = ChronoUnit.HOURS.between(agora, chamado.getSlaVencimento());
+            // Calcular minutos restantes até o vencimento e converter para horas
+            long minutosRestantes = ChronoUnit.MINUTES.between(agora, chamado.getSlaVencimento());
+            long horasRestantes = minutosRestantes / 60;
             
-            logger.debug("Chamado {}: {} horas restantes até vencimento", 
-                        chamado.getNumero(), horasRestantes);
+            logger.debug("Chamado {}: {} minutos ({} horas) restantes até vencimento", 
+                        chamado.getNumero(), minutosRestantes, horasRestantes);
             
             return horasRestantes;
             
@@ -508,41 +509,68 @@ public class ChamadoService {
     }
     
     /**
-     * Calcula métricas de SLA - percentual de chamados resolvidos dentro do prazo
+     * Calcula métricas de SLA (percentual de cumprimento) - apenas chamados fechados
      */
     @Transactional(readOnly = true)
     public java.util.Map<String, Object> calcularMetricasSLA() {
+        return calcularMetricasSLAPorPeriodo(null, null);
+    }
+    
+    /**
+     * Calcula métricas de SLA por período específico - apenas chamados fechados
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> calcularMetricasSLAPorPeriodo(LocalDateTime dataInicio, LocalDateTime dataFim) {
         java.util.Map<String, Object> metricasSLA = new java.util.HashMap<>();
         
         try {
-            List<Chamado> chamadosResolvidos = chamadoRepository.findChamadosResolvidos();
+            // Buscar apenas chamados FECHADOS (não apenas resolvidos)
+            List<Chamado> chamadosFechados;
             
-            if (chamadosResolvidos.isEmpty()) {
+            if (dataInicio != null && dataFim != null) {
+                chamadosFechados = chamadoRepository.findByStatusAndDataFechamentoBetween(
+                    StatusChamado.FECHADO, dataInicio, dataFim);
+            } else {
+                chamadosFechados = chamadoRepository.findByStatus(StatusChamado.FECHADO);
+            }
+            
+            if (chamadosFechados.isEmpty()) {
                 metricasSLA.put("percentualSLACumprido", 0.0);
                 metricasSLA.put("totalChamados", 0);
                 metricasSLA.put("chamadosNoPrazo", 0);
                 metricasSLA.put("chamadosForaPrazo", 0);
+                metricasSLA.put("slaMedioHoras", 0.0);
                 return metricasSLA;
             }
             
             int chamadosNoPrazo = 0;
-            int totalChamados = chamadosResolvidos.size();
+            int totalChamados = chamadosFechados.size();
+            double somaTempoResolucao = 0.0;
             
-            for (Chamado chamado : chamadosResolvidos) {
-                if (chamado.getDataResolucao() != null) {
+            for (Chamado chamado : chamadosFechados) {
+                if (chamado.getDataFechamento() != null && chamado.getDataAbertura() != null) {
                     LocalDateTime slaVencimento = calcularSlaVencimento(chamado);
-                    if (slaVencimento != null && chamado.getDataResolucao().isBefore(slaVencimento)) {
+                    
+                    // Verificar se foi resolvido dentro do SLA
+                    if (slaVencimento != null && chamado.getDataFechamento().isBefore(slaVencimento)) {
                         chamadosNoPrazo++;
                     }
+                    
+                    // Calcular tempo de resolução em horas
+                    long minutosResolucao = ChronoUnit.MINUTES.between(
+                        chamado.getDataAbertura(), chamado.getDataFechamento());
+                    somaTempoResolucao += minutosResolucao / 60.0;
                 }
             }
             
-            double percentualSLA = (double) chamadosNoPrazo / totalChamados * 100;
+            double percentualSLA = totalChamados > 0 ? (double) chamadosNoPrazo / totalChamados * 100 : 0.0;
+            double slaMedioHoras = totalChamados > 0 ? somaTempoResolucao / totalChamados : 0.0;
             
             metricasSLA.put("percentualSLACumprido", Math.round(percentualSLA * 100.0) / 100.0);
             metricasSLA.put("totalChamados", totalChamados);
             metricasSLA.put("chamadosNoPrazo", chamadosNoPrazo);
             metricasSLA.put("chamadosForaPrazo", totalChamados - chamadosNoPrazo);
+            metricasSLA.put("slaMedioHoras", Math.round(slaMedioHoras * 100.0) / 100.0);
             
         } catch (Exception e) {
             logger.error("Erro ao calcular métricas de SLA: {}", e.getMessage());
@@ -550,9 +578,20 @@ public class ChamadoService {
             metricasSLA.put("totalChamados", 0);
             metricasSLA.put("chamadosNoPrazo", 0);
             metricasSLA.put("chamadosForaPrazo", 0);
+            metricasSLA.put("slaMedioHoras", 0.0);
         }
         
         return metricasSLA;
+    }
+    
+    /**
+     * Calcula métricas de SLA para os últimos N dias
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> calcularMetricasSLAUltimosDias(int dias) {
+        LocalDateTime dataFim = LocalDateTime.now();
+        LocalDateTime dataInicio = dataFim.minusDays(dias);
+        return calcularMetricasSLAPorPeriodo(dataInicio, dataFim);
     }
     
     /**
@@ -561,75 +600,131 @@ public class ChamadoService {
     @Transactional(readOnly = true)
     public List<Double> obterTempoMedioResolucaoUltimosMeses() {
         List<Double> temposResolucao = new ArrayList<>();
-        LocalDate hoje = LocalDate.now();
         
-        // Buscar todos os chamados resolvidos para verificar se há dados
-        List<Chamado> todosResolvidos = chamadoRepository.findChamadosResolvidos()
-            .stream()
-            .filter(c -> c.getDataResolucao() != null)
-            .collect(java.util.stream.Collectors.toList());
+        // Configuração de período - últimos 12 meses (padrão ERP)
+        final int PERIODO_MESES = 12;
+        LocalDate dataReferencia = LocalDate.now();
         
-        // Se não há chamados resolvidos, usar dados simulados baseados nos existentes
-        if (todosResolvidos.isEmpty()) {
-            logger.warn("Nenhum chamado resolvido encontrado, usando dados simulados");
-            for (int i = 0; i < 12; i++) {
-                temposResolucao.add(0.0);
-            }
-            return temposResolucao;
-        }
+        logger.info("=== INICIANDO ANÁLISE DE TEMPO MÉDIO DE RESOLUÇÃO ===");
+        logger.info("Data de referência: {}", dataReferencia);
         
-        // Verificar se há dados nos últimos 12 meses
-        LocalDateTime inicioUltimos12Meses = hoje.minusMonths(12).atStartOfDay();
-        boolean temDadosRecentes = todosResolvidos.stream()
-            .anyMatch(c -> c.getDataResolucao().isAfter(inicioUltimos12Meses));
-        
-        if (!temDadosRecentes) {
-            logger.info("Não há dados nos últimos 12 meses, distribuindo dados históricos");
-            // Calcular média geral dos chamados históricos
-            double mediaGeral = todosResolvidos.stream()
-                .mapToDouble(c -> java.time.Duration.between(c.getDataAbertura(), c.getDataResolucao()).toHours())
-                .average()
-                .orElse(0.0);
+        try {
+            // Buscar todos os chamados resolvidos (otimização: uma única consulta)
+            List<Chamado> todosResolvidos = chamadoRepository.findChamadosResolvidos();
+            logger.info("Total de chamados resolvidos encontrados: {}", todosResolvidos.size());
             
-            // Distribuir com variação para simular dados mensais
-            for (int i = 0; i < 12; i++) {
-                double variacao = 0.8 + (Math.random() * 0.4); // Variação entre 80% e 120%
-                double valorMes = mediaGeral * variacao;
-                temposResolucao.add(Math.round(valorMes * 100.0) / 100.0);
-            }
-            return temposResolucao;
-        }
-        
-        // Processar dados dos últimos 12 meses normalmente
-        for (int i = 11; i >= 0; i--) {
-            LocalDate mesReferencia = hoje.minusMonths(i);
-            LocalDateTime inicioMes = mesReferencia.withDayOfMonth(1).atStartOfDay();
-            LocalDateTime fimMes = mesReferencia.withDayOfMonth(mesReferencia.lengthOfMonth()).atTime(23, 59, 59);
+            // Log dos chamados para debug
+            todosResolvidos.forEach(c -> 
+                logger.debug("Chamado {}: Abertura={}, Resolução={}, Status={}", 
+                    c.getNumero(), c.getDataAbertura(), c.getDataResolucao(), c.getStatus())
+            );
             
-            try {
-                List<Chamado> chamadosDoMes = chamadoRepository.findByPeriodo(inicioMes, fimMes)
-                    .stream()
-                    .filter(c -> c.getStatus() == StatusChamado.RESOLVIDO || c.getStatus() == StatusChamado.FECHADO)
-                    .filter(c -> c.getDataResolucao() != null)
-                    .collect(java.util.stream.Collectors.toList());
+            // Processar cada mês dos últimos 12 meses (do mais antigo para o mais recente)
+            for (int i = PERIODO_MESES - 1; i >= 0; i--) {
+                LocalDate mesReferencia = dataReferencia.minusMonths(i);
                 
-                if (!chamadosDoMes.isEmpty()) {
-                    double somaHoras = chamadosDoMes.stream()
-                        .mapToDouble(c -> java.time.Duration.between(c.getDataAbertura(), c.getDataResolucao()).toHours())
-                        .sum();
+                // Definir período do mês com precisão (padrão ERP corporativo)
+                LocalDateTime inicioMes = mesReferencia
+                    .withDayOfMonth(1)
+                    .atStartOfDay();
                     
-                    double media = somaHoras / chamadosDoMes.size();
-                    temposResolucao.add(Math.round(media * 100.0) / 100.0);
-                } else {
-                    temposResolucao.add(0.0);
-                }
-            } catch (Exception e) {
-                logger.error("Erro ao calcular tempo médio do mês {}: {}", mesReferencia, e.getMessage());
+                LocalDateTime fimMes = mesReferencia
+                    .withDayOfMonth(mesReferencia.lengthOfMonth())
+                    .atTime(23, 59, 59, 999_999_999); // Máxima precisão
+                
+                logger.info("Processando período: {}/{} - {} até {}", 
+                    mesReferencia.getMonthValue(), mesReferencia.getYear(), 
+                    inicioMes, fimMes);
+                
+                // Filtrar chamados do período usando lógica robusta de intervalo
+                List<Chamado> chamadosDoMes = todosResolvidos.stream()
+                    .filter(chamado -> chamado.getDataResolucao() != null)
+                    .filter(chamado -> {
+                        LocalDateTime dataResolucao = chamado.getDataResolucao();
+                        // Lógica de intervalo inclusivo (padrão ERP)
+                        boolean dentroDoIntervalo = 
+                            (dataResolucao.isEqual(inicioMes) || dataResolucao.isAfter(inicioMes)) &&
+                            (dataResolucao.isEqual(fimMes) || dataResolucao.isBefore(fimMes));
+                        
+                        if (dentroDoIntervalo) {
+                            logger.debug("✓ Chamado {} incluído no período {}/{}", 
+                                chamado.getNumero(), mesReferencia.getMonthValue(), mesReferencia.getYear());
+                        }
+                        
+                        return dentroDoIntervalo;
+                    })
+                    .filter(chamado -> 
+                        chamado.getStatus() == StatusChamado.RESOLVIDO || 
+                        chamado.getStatus() == StatusChamado.FECHADO
+                    )
+                    .collect(Collectors.toList());
+                
+                // Calcular tempo médio de resolução do período
+                double tempoMedioMes = calcularTempoMedioResolucao(chamadosDoMes, mesReferencia);
+                temposResolucao.add(tempoMedioMes);
+                
+                logger.info("Resultado mês {}/{}: {} chamados, tempo médio: {} horas", 
+                    mesReferencia.getMonthValue(), mesReferencia.getYear(), 
+                    chamadosDoMes.size(), tempoMedioMes);
+            }
+            
+        } catch (Exception e) {
+            logger.error("Erro crítico no cálculo de tempo médio de resolução", e);
+            // Em caso de erro, retornar array com zeros (comportamento seguro)
+            for (int i = 0; i < PERIODO_MESES; i++) {
                 temposResolucao.add(0.0);
             }
         }
+        
+        logger.info("=== ANÁLISE CONCLUÍDA ===");
+        logger.info("Tempos de resolução por mês: {}", temposResolucao);
         
         return temposResolucao;
+    }
+    
+    /**
+     * Calcula o tempo médio de resolução para uma lista de chamados
+     * Implementação robusta com tratamento de edge cases (padrão ERP)
+     */
+    private double calcularTempoMedioResolucao(List<Chamado> chamados, LocalDate mesReferencia) {
+        if (chamados == null || chamados.isEmpty()) {
+            logger.debug("Nenhum chamado encontrado para o mês {}/{}", 
+                mesReferencia.getMonthValue(), mesReferencia.getYear());
+            return 0.0;
+        }
+        
+        try {
+            // Calcular tempo de resolução para cada chamado
+            List<Double> temposResolucao = chamados.stream()
+                .filter(chamado -> chamado.getDataAbertura() != null && chamado.getDataResolucao() != null)
+                .map(chamado -> {
+                    Duration duracao = Duration.between(chamado.getDataAbertura(), chamado.getDataResolucao());
+                    double horas = duracao.toMinutes() / 60.0; // Precisão em minutos convertida para horas
+                    
+                    logger.debug("Chamado {}: {} horas de resolução", 
+                        chamado.getNumero(), String.format("%.2f", horas));
+                    
+                    return horas;
+                })
+                .filter(horas -> horas >= 0) // Filtrar valores inválidos
+                .collect(Collectors.toList());
+            
+            if (temposResolucao.isEmpty()) {
+                return 0.0;
+            }
+            
+            // Calcular média com precisão decimal (padrão financeiro ERP)
+            double soma = temposResolucao.stream().mapToDouble(Double::doubleValue).sum();
+            double media = soma / temposResolucao.size();
+            
+            // Arredondar para 2 casas decimais (padrão corporativo)
+            return Math.round(media * 100.0) / 100.0;
+            
+        } catch (Exception e) {
+            logger.error("Erro ao calcular tempo médio para o mês {}/{}: {}", 
+                mesReferencia.getMonthValue(), mesReferencia.getYear(), e.getMessage());
+            return 0.0;
+        }
     }
     
     /**

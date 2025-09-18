@@ -68,16 +68,32 @@
                                         <div class="mb-3">
                                             <label for="categoria" class="form-label">
                                                 <i class="fas fa-folder"></i> Categoria <span class="text-danger">*</span>
+                                                <i class="fas fa-info-circle ms-1" data-bs-toggle="tooltip" 
+                                                   title="Selecione a categoria mais apropriada para seu chamado"></i>
                                             </label>
-                                            <select class="form-select" id="categoria" name="categoria" required>
-                                                <option value="">Selecione uma categoria</option>
-                                                <option value="TECNICO">Técnico</option>
-                                                <option value="FINANCEIRO">Financeiro</option>
-                                                <option value="RH">Recursos Humanos</option>
-                                                <option value="VENDAS">Vendas</option>
-                                                <option value="ESTOQUE">Estoque</option>
-                                                <option value="GERAL">Geral</option>
-                                            </select>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <select class="form-select" id="categoriaPrincipal" name="categoria" required>
+                                                        <option value="">Categoria Principal</option>
+                                                        <option value="TECNICO">Técnico</option>
+                                                        <option value="FINANCEIRO">Financeiro</option>
+                                                        <option value="RH">Recursos Humanos</option>
+                                                        <option value="VENDAS">Vendas</option>
+                                                        <option value="ESTOQUE">Estoque</option>
+                                                        <option value="GERAL">Geral</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <select class="form-select" id="subcategoria" name="subcategoria">
+                                                        <option value="">Subcategoria (opcional)</option>
+                                                        <!-- Populado dinamicamente com base na categoria principal -->
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-text mt-2" id="descricaoExemplo" style="display: none;">
+                                                <i class="fas fa-lightbulb me-1"></i>
+                                                Exemplo: <span id="exemploTexto"></span>
+                                            </div>
                                         </div>
 
                                         <!-- Assunto -->
@@ -167,11 +183,103 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
 
-    <!-- Script para enviar via API REST -->
+    <!-- Script para funcionalidades avançadas de chamados -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+        // Variável global para armazenar as categorias
+        let categoriasData = [];
+        
+        // Função para carregar categorias
+        async function carregarCategorias() {
+            try {
+                console.log('Carregando categorias...');
+                const response = await fetch('/suporte/api/categorias');
+                if (response.ok) {
+                    categoriasData = await response.json();
+                    console.log('Categorias carregadas:', categoriasData);
+                } else {
+                    console.error('Erro ao carregar categorias. Status:', response.status);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+            }
+        }
+        
+        // Função para atualizar subcategorias com base na categoria principal
+        function atualizarSubcategorias() {
+            console.log('Atualizando subcategorias...');
+            const categoriaPrincipal = document.getElementById('categoriaPrincipal').value;
+            console.log('Categoria principal selecionada:', categoriaPrincipal);
+            const subcategoriaSelect = document.getElementById('subcategoria');
+            const descricaoExemplo = document.getElementById('descricaoExemplo');
+            const exemploTexto = document.getElementById('exemploTexto');
+            
+            // Limpar opções atuais
+            subcategoriaSelect.innerHTML = '<option value="">Subcategoria (opcional)</option>';
+            
+            // Esconder exemplo inicialmente
+            descricaoExemplo.style.display = 'none';
+            
+            if (categoriaPrincipal && categoriasData.length > 0) {
+                // Encontrar a categoria selecionada
+                const categoria = categoriasData.find(cat => cat.codigo === categoriaPrincipal);
+                console.log('Categoria encontrada:', categoria);
+                
+                if (categoria && categoria.subcategorias && categoria.subcategorias.length > 0) {
+                    // Adicionar subcategorias
+                    categoria.subcategorias.forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub.codigo;
+                        option.textContent = sub.nome;
+                        subcategoriaSelect.appendChild(option);
+                    });
+                    console.log('Subcategorias atualizadas');
+                }
+            }
+        }
+        
+        // Função para mostrar exemplo quando uma subcategoria é selecionada
+        function mostrarExemplo() {
+            console.log('Mostrando exemplo...');
+            const categoriaPrincipal = document.getElementById('categoriaPrincipal').value;
+            const subcategoria = document.getElementById('subcategoria').value;
+            console.log('Categoria:', categoriaPrincipal, 'Subcategoria:', subcategoria);
+            const descricaoExemplo = document.getElementById('descricaoExemplo');
+            const exemploTexto = document.getElementById('exemploTexto');
+            
+            if (categoriaPrincipal && subcategoria && categoriasData.length > 0) {
+                // Encontrar a categoria e subcategoria selecionadas
+                const categoria = categoriasData.find(cat => cat.codigo === categoriaPrincipal);
+                
+                if (categoria && categoria.subcategorias) {
+                    const sub = categoria.subcategorias.find(s => s.codigo === subcategoria);
+                    
+                    if (sub && sub.descricaoExemplo) {
+                        exemploTexto.textContent = sub.descricaoExemplo;
+                        descricaoExemplo.style.display = 'block';
+                        console.log('Exemplo mostrado:', sub.descricaoExemplo);
+                        return;
+                    }
+                }
+            }
+            
+            // Esconder se não houver exemplo
+            descricaoExemplo.style.display = 'none';
+            console.log('Exemplo escondido');
+        }
+        
+        // Script para enviar via API REST
+        document.addEventListener("DOMContentLoaded", async () => {
+            console.log('DOM carregado, inicializando funcionalidades...');
             const form = document.getElementById("chamadoForm");
             const alertArea = document.getElementById("alertArea");
+            
+            // Carregar categorias
+            await carregarCategorias();
+            
+            // Adicionar listeners para atualização dinâmica
+            document.getElementById('categoriaPrincipal').addEventListener('change', atualizarSubcategorias);
+            document.getElementById('subcategoria').addEventListener('change', mostrarExemplo);
+            console.log('Listeners adicionados');
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
@@ -179,7 +287,8 @@
                 // Coleta os dados do formulário
                 const chamado = {
                     numero: document.getElementById("numero").value,
-                    categoria: document.getElementById("categoria").value,
+                    categoria: document.getElementById("categoriaPrincipal").value,
+                    subcategoria: document.getElementById("subcategoria").value,
                     assunto: document.getElementById("assunto").value,
                     prioridade: document.getElementById("prioridade").value,
                     solicitanteNome: document.getElementById("solicitanteNome").value,
@@ -204,6 +313,9 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>`;
                         form.reset();
+                        // Resetar subcategorias
+                        document.getElementById('subcategoria').innerHTML = '<option value="">Subcategoria (opcional)</option>';
+                        document.getElementById('descricaoExemplo').style.display = 'none';
                     } else {
                         alertArea.innerHTML = `
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">

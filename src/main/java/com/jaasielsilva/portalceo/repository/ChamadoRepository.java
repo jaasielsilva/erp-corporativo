@@ -130,6 +130,9 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
 
     // Buscar chamados por solicitante
     List<Chamado> findBySolicitanteEmailOrderByDataAberturaDesc(String email);
+    
+    // Buscar chamados fechados por período
+    List<Chamado> findByStatusAndDataFechamentoBetween(StatusChamado status, LocalDateTime dataInicio, LocalDateTime dataFim);
 
     // Query para dashboard - contadores
     @Query("SELECT " +

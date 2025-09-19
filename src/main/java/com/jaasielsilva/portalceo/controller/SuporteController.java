@@ -43,12 +43,6 @@ public class SuporteController {
         try {
             logger.info("Carregando dashboard de suporte");
             
-            // Mock de usuário logado para o topbar
-            Usuario usuarioLogado = new Usuario();
-            usuarioLogado.setId(1L);
-            usuarioLogado.setNome("Administrador");
-            model.addAttribute("usuarioLogado", usuarioLogado);
-            
             // Estatísticas gerais
             long chamadosAbertos = chamadoService.contarPorStatus(StatusChamado.ABERTO);
             long chamadosEmAndamento = chamadoService.contarPorStatus(StatusChamado.EM_ANDAMENTO);
@@ -386,12 +380,6 @@ public class SuporteController {
     @GetMapping("/chamados")
     public String listarChamados(Model model) {
         try {
-            // Mock de usuário logado para o topbar
-            Usuario usuarioLogado = new Usuario();
-            usuarioLogado.setId(1L);
-            usuarioLogado.setNome("Administrador");
-            model.addAttribute("usuarioLogado", usuarioLogado);
-            
             List<Chamado> chamados = chamadoService.listarTodos();
             model.addAttribute("chamados", chamados);
         } catch (Exception e) {
@@ -414,11 +402,7 @@ public class SuporteController {
             model.addAttribute("prioridades", Prioridade.values());
             model.addAttribute("chamado", new Chamado());
             
-            // Adicionar usuário logado (mock para teste)
-            Usuario usuarioMock = new Usuario();
-            usuarioMock.setId(1L);
-            usuarioMock.setNome("Usuário Teste");
-            model.addAttribute("usuarioLogado", usuarioMock);
+
             
             logger.info("Próximo número de chamado gerado: {}", proximoNumero);
             
@@ -434,12 +418,6 @@ public class SuporteController {
     @GetMapping("/chamados/{id}")
     public String visualizarChamado(@PathVariable Long id, Model model) {
         try {
-            // Mock de usuário logado para o topbar
-            Usuario usuarioLogado = new Usuario();
-            usuarioLogado.setId(1L);
-            usuarioLogado.setNome("Administrador");
-            model.addAttribute("usuarioLogado", usuarioLogado);
-            
             Chamado chamado = chamadoService.buscarPorId(id)
                 .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
             
@@ -790,11 +768,7 @@ public class SuporteController {
         try {
             logger.info("Carregando página do backlog de chamados");
             
-            // Mock de usuário logado
-            Usuario usuarioLogado = new Usuario();
-            usuarioLogado.setId(1L);
-            usuarioLogado.setNome("Administrador");
-            model.addAttribute("usuarioLogado", usuarioLogado);
+
             
             // Dados do backlog
             Long totalBacklog = backlogChamadoService.contarTotalBacklog();

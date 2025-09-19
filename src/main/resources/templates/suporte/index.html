@@ -537,6 +537,15 @@
             <!-- Dashboard de Suporte -->
             <section class="content-area">
                 <div class="container-fluid">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <i class="fas fa-headset me-1"></i>Suporte
+                            </li>
+                        </ol>
+                    </nav>
+
                     <!-- Cabeçalho -->
                     <div class="row mb-4">
                         <div class="col-12">
@@ -549,7 +558,13 @@
                                     <p class="text-muted mb-0">Acompanhe chamados, tickets e status de atendimento</p>
                                 </div>
                                 <div>
-                                    <button class="btn btn-outline-primary ms-2" onclick="window.location.reload()">
+                                    <a href="/suporte/chamados" class="btn btn-outline-primary">
+                                        <i class="fas fa-list me-1"></i> Lista de Chamados
+                                    </a>
+                                    <a href="/suporte/chamados/novo" class="btn btn-primary ms-2">
+                                        <i class="fas fa-plus me-1"></i> Novo Chamado
+                                    </a>
+                                    <button class="btn btn-outline-secondary ms-2" onclick="window.location.reload()">
                                         <i class="fas fa-sync-alt me-1"></i> Atualizar
                                     </button>
                                 </div>

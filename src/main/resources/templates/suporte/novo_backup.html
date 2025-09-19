@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Novo Chamado - Suporte - ERP Empresarial</title>
+    
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Estilos customizados para o formulário de novo chamado -->
+    <style>
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: none;
+            overflow: hidden;
+        }
+
+        .form-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 25px 30px;
+        }
+
+        .form-card .card-body {
+            padding: 40px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-text {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-outline-secondary {
+            border: 2px solid #e2e8f0;
+            color: #4a5568;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f7fafc;
+            border-color: #cbd5e0;
+            color: #2d3748;
+        }
+
+        .text-danger {
+            color: #e53e3e !important;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+            padding: 16px 20px;
+            margin-bottom: 25px;
+        }
+
+        .alert-success {
+            background-color: #f0fff4;
+            color: #22543d;
+            border-left: 4px solid #38a169;
+        }
+
+        .alert-danger {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 0;
+        }
+
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 25px;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #764ba2;
+        }
+
+        .breadcrumb-item.active {
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .form-card .card-body {
+                padding: 25px;
+            }
+            
+            .page-header h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="/suporte" class="text-decoration-none">
+                                    <i class="fas fa-headset me-1"></i>Suporte
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="/suporte/chamados" class="text-decoration-none">
+                                    <i class="fas fa-list me-1"></i>Lista de Chamados
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <i class="fas fa-plus me-1"></i>Novo Chamado
+                            </li>
+                        </ol>
+                    </nav>
+
+                    <!-- Header -->
+                    <div class="page-header">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-ticket-alt text-primary me-2"></i>
+                            Novo Chamado
+                        </h1>
+                        <p class="text-muted mb-0">Abra um novo chamado de suporte técnico</p>
+                    </div>
+
+                    <div class="row justify-content-center">
+                        <div class="col-lg-9">
+                            <div class="form-card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-edit me-2"></i>
+                                        Informações do Chamado
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+
+                                    <!-- ALERTA -->
+                                    <div id="alertArea"></div>
+
+                                    <!-- FORM INICIO -->
+                                    <form id="chamadoForm" novalidate>
+
+                                        <!-- Primeira linha - 4 colunas -->
+                                        <div class="row mb-3">
+                                            <!-- Número do Chamado -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="numero" class="form-label">
+                                                    <i class="fas fa-hashtag"></i> Número do Chamado
+                                                </label>
+                                                <input type="text" class="form-control" id="numero" name="numero"
+                                                       th:value="${proximoNumero}" readonly>
+                                                <div class="form-text">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    Gerado automaticamente
+                                                </div>
+                                            </div>
+
+                                            <!-- Categoria Principal -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="categoriaPrincipal" class="form-label">
+                                                    <i class="fas fa-folder"></i> Categoria <span class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="categoriaPrincipal" name="categoria" required>
+                                                    <option value="">Selecione a categoria</option>
+                                                    <option value="TECNICO">Técnico</option>
+                                                    <option value="FINANCEIRO">Financeiro</option>
+                                                    <option value="RH">Recursos Humanos</option>
+                                                    <option value="VENDAS">Vendas</option>
+                                                    <option value="ESTOQUE">Estoque</option>
+                                                    <option value="GERAL">Geral</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Subcategoria -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="subcategoria" class="form-label">
+                                                    <i class="fas fa-tags"></i> Subcategoria
+                                                </label>
+                                                <select class="form-select" id="subcategoria" name="subcategoria">
+                                                    <option value="">Subcategoria (opcional)</option>
+                                                    <!-- Populado dinamicamente com base na categoria principal -->
+                                                </select>
+                                            </div>
+
+                                            <!-- Prioridade -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="prioridade" class="form-label">
+                                                    <i class="fas fa-flag"></i> Prioridade <span class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="prioridade" name="prioridade" required>
+                                                    <option value="">Selecione a prioridade</option>
+                                                    <option value="BAIXA">Baixa (72h úteis)</option>
+                                                    <option value="MEDIA">Média (48h úteis)</option>
+                                                    <option value="ALTA">Alta (24h úteis)</option>
+                                                    <option value="URGENTE">Urgente (8h úteis)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Segunda linha - 2 colunas para dados do solicitante -->
+                                        <div class="row mb-3">
+                                            <!-- Nome do Solicitante -->
+                                            <div class="col-lg-6 col-md-6 mb-3">
+                                                <label for="solicitanteNome" class="form-label">
+                                                    <i class="fas fa-user-circle"></i> Nome Completo <span class="text-danger">*</span>
+                                                </label>
+                                                <input type="text" class="form-control" id="solicitanteNome" name="solicitanteNome"
+                                                       maxlength="100" placeholder="Digite seu nome completo" required>
+                                            </div>
+
+                                            <!-- Email do Solicitante -->
+                                            <div class="col-lg-6 col-md-6 mb-3">
+                                                <label for="solicitanteEmail" class="form-label">
+                                                    <i class="fas fa-envelope"></i> Email <span class="text-danger">*</span>
+                                                </label>
+                                                <input type="email" class="form-control" id="solicitanteEmail" name="solicitanteEmail"
+                                                       placeholder="seu.email@empresa.com" required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Terceira linha - Assunto (largura total) -->
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <label for="assunto" class="form-label">
+                                                    <i class="fas fa-tag"></i> Assunto <span class="text-danger">*</span>
+                                                </label>
+                                                <input type="text" class="form-control" id="assunto" name="assunto" maxlength="100"
+                                                       placeholder="Descreva brevemente o problema ou solicitação" required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Exemplo dinâmico -->
+                                        <div class="row mb-3" id="descricaoExemplo" style="display: none;">
+                                            <div class="col-12">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-lightbulb me-1"></i>
+                                                    <strong>Exemplo:</strong> <span id="exemploTexto"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Descrição -->
+                                        <div class="mb-3">
+                                            <label for="descricao" class="form-label">
+                                                <i class="fas fa-file-alt"></i> Descrição do Problema <span class="text-danger">*</span>
+                                            </label>
+                                            <textarea class="form-control" id="descricao" name="descricao" rows="6" maxlength="2000"
+                                                      placeholder="Explique detalhadamente o problema..." required></textarea>
+                                        </div>
+
+                                        <!-- Anexos -->
+                                        <div class="mb-3">
+                                            <label for="anexos" class="form-label">
+                                                <i class="fas fa-paperclip"></i> Anexos (opcional)
+                                            </label>
+                                            <input type="file" class="form-control" id="anexos" name="anexos" multiple>
+                                        </div>
+
+                                        <!-- Botões -->
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <a th:href="@{/suporte}" class="btn btn-outline-secondary">
+                                                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                                </a>
+                                                <a href="/suporte/chamados" class="btn btn-outline-primary ms-2">
+                                                    <i class="fas fa-list me-1"></i> Lista de Chamados
+                                                </a>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-paper-plane me-1"></i> Abrir Chamado
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <!-- FORM FIM -->
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/notifications.js"></script>
+
+    <!-- Script para funcionalidades avançadas de chamados -->
+    <script>
+        // Variável global para armazenar as categorias
+        let categoriasData = [];
+        
+        // Função para carregar categorias
+        async function carregarCategorias() {
+            try {
+                console.log('Carregando categorias...');
+                const response = await fetch('/suporte/api/categorias');
+                if (response.ok) {
+                    categoriasData = await response.json();
+                    console.log('Categorias carregadas:', categoriasData);
+                } else {
+                    console.error('Erro ao carregar categorias. Status:', response.status);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+            }
+        }
+        
+        // Função para atualizar subcategorias com base na categoria principal
+        function atualizarSubcategorias() {
+            console.log('Atualizando subcategorias...');
+            const categoriaPrincipal = document.getElementById('categoriaPrincipal').value;
+            console.log('Categoria principal selecionada:', categoriaPrincipal);
+            const subcategoriaSelect = document.getElementById('subcategoria');
+            const descricaoExemplo = document.getElementById('descricaoExemplo');
+            const exemploTexto = document.getElementById('exemploTexto');
+            
+            // Limpar opções atuais
+            subcategoriaSelect.innerHTML = '<option value="">Subcategoria (opcional)</option>';
+            
+            // Esconder exemplo inicialmente
+            descricaoExemplo.style.display = 'none';
+            
+            if (categoriaPrincipal && categoriasData.length > 0) {
+                // Encontrar a categoria selecionada
+                const categoria = categoriasData.find(cat => cat.codigo === categoriaPrincipal);
+                console.log('Categoria encontrada:', categoria);
+                
+                if (categoria && categoria.subcategorias && categoria.subcategorias.length > 0) {
+                    // Adicionar subcategorias
+                    categoria.subcategorias.forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub.codigo;
+                        option.textContent = sub.nome;
+                        subcategoriaSelect.appendChild(option);
+                    });
+                    console.log('Subcategorias atualizadas');
+                }
+            }
+        }
+        
+        // Função para mostrar exemplo quando uma subcategoria é selecionada
+        function mostrarExemplo() {
+            const categoriaPrincipal = document.getElementById('categoriaPrincipal').value;
+            const subcategoria = document.getElementById('subcategoria').value;
+            const descricaoExemplo = document.getElementById('descricaoExemplo');
+            const exemploTexto = document.getElementById('exemploTexto');
+            
+            if (categoriaPrincipal && subcategoria && categoriasData.length > 0) {
+                const categoria = categoriasData.find(cat => cat.codigo === categoriaPrincipal);
+                if (categoria && categoria.subcategorias) {
+                    const sub = categoria.subcategorias.find(s => s.codigo === subcategoria);
+                    if (sub && sub.exemplo) {
+                        exemploTexto.textContent = sub.exemplo;
+                        descricaoExemplo.style.display = 'block';
+                        return;
+                    }
+                }
+            }
+            
+            // Se não encontrou exemplo, esconder
+            descricaoExemplo.style.display = 'none';
+        }
+        
+        // Função para validar formulário
+        function validarFormulario() {
+            const form = document.getElementById('chamadoForm');
+            const campos = form.querySelectorAll('[required]');
+            let valido = true;
+            
+            campos.forEach(campo => {
+                if (!campo.value.trim()) {
+                    campo.classList.add('is-invalid');
+                    valido = false;
+                } else {
+                    campo.classList.remove('is-invalid');
+                }
+            });
+            
+            // Validação específica para email
+            const email = document.getElementById('solicitanteEmail');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email.value && !emailRegex.test(email.value)) {
+                email.classList.add('is-invalid');
+                valido = false;
+            }
+            
+            return valido;
+        }
+        
+        // Função para mostrar alerta
+        function mostrarAlerta(tipo, mensagem) {
+            const alertArea = document.getElementById('alertArea');
+            alertArea.innerHTML = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+        
+        // Função para enviar formulário
+        async function enviarFormulario(event) {
+            event.preventDefault();
+            
+            if (!validarFormulario()) {
+                mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios corretamente.');
+                return;
+            }
+            
+            const form = document.getElementById('chamadoForm');
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/suporte/chamados/salvar', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    mostrarAlerta('success', 'Chamado criado com sucesso! Redirecionando...');
+                    setTimeout(() => {
+                        window.location.href = '/suporte/chamados';
+                    }, 2000);
+                } else {
+                    const errorText = await response.text();
+                    mostrarAlerta('danger', 'Erro ao criar chamado: ' + errorText);
+                }
+            } catch (error) {
+                console.error('Erro ao enviar formulário:', error);
+                mostrarAlerta('danger', 'Erro de conexão. Tente novamente.');
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar categorias ao inicializar
+            carregarCategorias();
+            
+            // Event listeners para mudanças nos selects
+            document.getElementById('categoriaPrincipal').addEventListener('change', atualizarSubcategorias);
+            document.getElementById('subcategoria').addEventListener('change', mostrarExemplo);
+            
+            // Event listener para envio do formulário
+            document.getElementById('chamadoForm').addEventListener('submit', enviarFormulario);
+            
+            // Remover classe de erro quando o usuário começar a digitar
+            const campos = document.querySelectorAll('[required]');
+            campos.forEach(campo => {
+                campo.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

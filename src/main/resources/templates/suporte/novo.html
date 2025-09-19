@@ -1,192 +1,606 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abrir Chamado - ERP Empresarial</title>
-
-    <!-- Bootstrap 5 via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Estilos da empresa -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Novo Chamado - Suporte - ERP Corporativo</title>
+    
+    <!-- CSS Files -->
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-aberto {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status-em-andamento {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .status-resolvido {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .status-fechado {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .prioridade-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .prioridade-baixa {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+        
+        .prioridade-media {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .prioridade-alta {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .prioridade-urgente {
+            background-color: #ffcdd2;
+            color: #c62828;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin: 0 0.125rem;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .form-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
 
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        .form-section {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-section-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .alert {
+            border-radius: 0.5rem;
+            border: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-outline-primary, .btn-outline-secondary {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ced4da;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background-color: #e6f0ff;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background-color: #e9ecef;
+            z-index: 1;
+        }
+
+        .progress-step:last-child::before {
+            display: none;
+        }
+
+        .progress-step.active::before {
+            background-color: #667eea;
+        }
+
+        .progress-step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .progress-step.active .progress-step-circle {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .progress-step.completed .progress-step-circle {
+            background-color: #28a745;
+            color: white;
+        }
+
+        /* Remover barra de rolagem e otimizar layout */
+        body {
+            overflow-x: hidden;
+        }
+        
+        .main-content {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        .content-area {
+            flex: 1;
+            padding-bottom: 2rem;
+        }
+        
+        .container-fluid {
+            max-width: 100%;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-card {
+                padding: 1rem;
+            }
+            
+            .form-section {
+                padding: 1rem;
+            }
+            
+            .progress-indicator {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .progress-step::before {
+                display: none;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
     <div class="app-container">
-
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
         <!-- Main Content -->
         <main class="main-content">
-
             <!-- Topbar -->
             <header th:replace="~{components/topbar :: topbar}"></header>
 
-            <!-- Conteúdo da página -->
+            <!-- Content Area -->
             <section class="content-area">
                 <div class="container-fluid">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-9">
-                            <div class="card shadow-sm rounded-3 mt-4 mb-5">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-ticket-alt me-2"></i>
-                                        Abrir Novo Chamado
-                                    </h5>
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="/dashboard" class="text-decoration-none">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="/suporte" class="text-decoration-none">
+                                    <i class="fas fa-headset me-1"></i>Suporte
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="/suporte/chamados" class="text-decoration-none">
+                                    <i class="fas fa-list me-1"></i>Lista de Chamados
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <i class="fas fa-plus me-1"></i>Novo Chamado
+                            </li>
+                        </ol>
+                    </nav>
+
+                    <!-- Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h1 class="h3 mb-0 text-gray-800">
+                                        <i class="fas fa-plus text-primary me-2"></i>
+                                        Novo Chamado
+                                    </h1>
+                                    <p class="text-muted mb-0">Abra um novo chamado de suporte técnico</p>
                                 </div>
-                                <div class="card-body">
+                                <div>
+                                    <a href="/suporte/chamados" class="btn btn-outline-primary">
+                                        <i class="fas fa-list me-1"></i> Lista de Chamados
+                                    </a>
+                                    <a href="/dashboard" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                    <!-- ALERTA -->
-                                    <div id="alertArea"></div>
+                    <!-- Progress Indicator -->
+                    <div class="progress-indicator">
+                        <div class="progress-step active">
+                            <div class="progress-step-circle">1</div>
+                            <div class="progress-step-label">Informações Básicas</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="progress-step-circle">2</div>
+                            <div class="progress-step-label">Detalhes do Problema</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="progress-step-circle">3</div>
+                            <div class="progress-step-label">Anexos e Finalização</div>
+                        </div>
+                    </div>
 
-                                    <!-- FORM INICIO -->
-                                    <form id="chamadoForm" novalidate>
+                    <!-- Alert Area -->
+                    <div id="alertArea"></div>
 
-                                        <!-- Número do Chamado -->
-                                        <div class="mb-3">
-                                            <label for="numero" class="form-label">
-                                                <i class="fas fa-hashtag"></i> Número do Chamado
-                                            </label>
-                                            <input type="text" class="form-control" id="numero" name="numero"
-                                                   th:value="${proximoNumero}" readonly>
-                                            <div class="form-text">
-                                                <i class="fas fa-info-circle me-1"></i>
-                                                Gerado automaticamente pelo sistema
+                    <!-- Main Form Card -->
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-edit me-2"></i>
+                                Formulário de Novo Chamado
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="form-card">
+                                <form id="chamadoForm" novalidate>
+                                    
+                                    <!-- Seção 1: Informações Básicas -->
+                                    <div class="form-section" id="secao1">
+                                        <h5 class="form-section-title">
+                                            <i class="fas fa-info-circle text-primary me-2"></i>
+                                            Informações Básicas
+                                        </h5>
+                                        
+                                        <div class="row">
+                                            <!-- Número do Chamado -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="numero" class="form-label">
+                                                    <i class="fas fa-hashtag me-1"></i>Número do Chamado
+                                                </label>
+                                                <input type="text" class="form-control" id="numero" name="numero"
+                                                       th:value="${proximoNumero}" readonly>
+                                                <div class="form-text">
+                                                    <i class="fas fa-info-circle me-1"></i>Gerado automaticamente
+                                                </div>
+                                            </div>
+
+                                            <!-- Categoria -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="categoriaPrincipal" class="form-label required-field">
+                                                    <i class="fas fa-folder me-1"></i>Categoria
+                                                </label>
+                                                <select class="form-select" id="categoriaPrincipal" name="categoria" required>
+                                                    <option value="">Selecione a categoria</option>
+                                                    <option value="TECNICO">Técnico</option>
+                                                    <option value="FINANCEIRO">Financeiro</option>
+                                                    <option value="RH">Recursos Humanos</option>
+                                                    <option value="VENDAS">Vendas</option>
+                                                    <option value="ESTOQUE">Estoque</option>
+                                                    <option value="GERAL">Geral</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Subcategoria -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="subcategoria" class="form-label">
+                                                    <i class="fas fa-tags me-1"></i>Subcategoria
+                                                </label>
+                                                <select class="form-select" id="subcategoria" name="subcategoria">
+                                                    <option value="">Subcategoria (opcional)</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Prioridade -->
+                                            <div class="col-lg-3 col-md-6 mb-3">
+                                                <label for="prioridade" class="form-label required-field">
+                                                    <i class="fas fa-flag me-1"></i>Prioridade
+                                                </label>
+                                                <select class="form-select" id="prioridade" name="prioridade" required>
+                                                    <option value="">Selecione a prioridade</option>
+                                                    <option value="BAIXA">Baixa (72h úteis)</option>
+                                                    <option value="MEDIA">Média (48h úteis)</option>
+                                                    <option value="ALTA">Alta (24h úteis)</option>
+                                                    <option value="URGENTE">Urgente (8h úteis)</option>
+                                                </select>
                                             </div>
                                         </div>
 
-                                        <!-- Categoria -->
-                                        <div class="mb-3">
-                                            <label for="categoria" class="form-label">
-                                                <i class="fas fa-folder"></i> Categoria <span class="text-danger">*</span>
-                                                <i class="fas fa-info-circle ms-1" data-bs-toggle="tooltip" 
-                                                   title="Selecione a categoria mais apropriada para seu chamado"></i>
-                                            </label>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <select class="form-select" id="categoriaPrincipal" name="categoria" required>
-                                                        <option value="">Categoria Principal</option>
-                                                        <option value="TECNICO">Técnico</option>
-                                                        <option value="FINANCEIRO">Financeiro</option>
-                                                        <option value="RH">Recursos Humanos</option>
-                                                        <option value="VENDAS">Vendas</option>
-                                                        <option value="ESTOQUE">Estoque</option>
-                                                        <option value="GERAL">Geral</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <select class="form-select" id="subcategoria" name="subcategoria">
-                                                        <option value="">Subcategoria (opcional)</option>
-                                                        <!-- Populado dinamicamente com base na categoria principal -->
-                                                    </select>
-                                                </div>
+                                        <div class="row">
+                                            <!-- Nome do Solicitante -->
+                                            <div class="col-lg-6 mb-3">
+                                                <label for="solicitanteNome" class="form-label required-field">
+                                                    <i class="fas fa-user-circle me-1"></i>Nome Completo
+                                                </label>
+                                                <input type="text" class="form-control" id="solicitanteNome" name="solicitanteNome"
+                                                       maxlength="100" placeholder="Digite seu nome completo" required>
                                             </div>
-                                            <div class="form-text mt-2" id="descricaoExemplo" style="display: none;">
-                                                <i class="fas fa-lightbulb me-1"></i>
-                                                Exemplo: <span id="exemploTexto"></span>
+
+                                            <!-- Email do Solicitante -->
+                                            <div class="col-lg-6 mb-3">
+                                                <label for="solicitanteEmail" class="form-label required-field">
+                                                    <i class="fas fa-envelope me-1"></i>Email
+                                                </label>
+                                                <input type="email" class="form-control" id="solicitanteEmail" name="solicitanteEmail"
+                                                       placeholder="seu.email@empresa.com" required>
                                             </div>
                                         </div>
+
+                                        <div class="d-flex justify-content-end">
+                                            <button type="button" class="btn btn-primary" onclick="proximaSecao(2)">
+                                                Próximo <i class="fas fa-arrow-right ms-1"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Seção 2: Detalhes do Problema -->
+                                    <div class="form-section" id="secao2" style="display: none;">
+                                        <h5 class="form-section-title">
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                            Detalhes do Problema
+                                        </h5>
 
                                         <!-- Assunto -->
                                         <div class="mb-3">
-                                            <label for="assunto" class="form-label">
-                                                <i class="fas fa-tag"></i> Assunto <span class="text-danger">*</span>
+                                            <label for="assunto" class="form-label required-field">
+                                                <i class="fas fa-tag me-1"></i>Assunto
                                             </label>
                                             <input type="text" class="form-control" id="assunto" name="assunto" maxlength="100"
                                                    placeholder="Descreva brevemente o problema ou solicitação" required>
                                         </div>
 
-                                        <!-- Prioridade -->
-                                        <div class="mb-3">
-                                            <label for="prioridade" class="form-label">
-                                                <i class="fas fa-flag"></i> Prioridade <span class="text-danger">*</span>
-                                            </label>
-                                            <select class="form-select" id="prioridade" name="prioridade" required>
-                                                <option value="">Selecione a prioridade</option>
-                                                <option value="BAIXA">Baixa (72h úteis)</option>
-                                                <option value="MEDIA">Média (48h úteis)</option>
-                                                <option value="ALTA">Alta (24h úteis)</option>
-                                                <option value="URGENTE">Urgente (8h úteis)</option>
-                                            </select>
-                                        </div>
-
-                                        <!-- Nome do Solicitante -->
-                                        <div class="mb-3">
-                                            <label for="solicitanteNome" class="form-label">
-                                                <i class="fas fa-user-circle"></i> Nome Completo <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text" class="form-control" id="solicitanteNome" name="solicitanteNome"
-                                                   maxlength="100" placeholder="Digite seu nome completo" required>
-                                        </div>
-
-                                        <!-- Email do Solicitante -->
-                                        <div class="mb-3">
-                                            <label for="solicitanteEmail" class="form-label">
-                                                <i class="fas fa-envelope"></i> Email <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="email" class="form-control" id="solicitanteEmail" name="solicitanteEmail"
-                                                   placeholder="seu.email@empresa.com" required>
+                                        <!-- Exemplo dinâmico -->
+                                        <div id="descricaoExemplo" style="display: none;">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-lightbulb me-1"></i>
+                                                <strong>Exemplo:</strong> <span id="exemploTexto"></span>
+                                            </div>
                                         </div>
 
                                         <!-- Descrição -->
                                         <div class="mb-3">
-                                            <label for="descricao" class="form-label">
-                                                <i class="fas fa-file-alt"></i> Descrição do Problema <span class="text-danger">*</span>
+                                            <label for="descricao" class="form-label required-field">
+                                                <i class="fas fa-file-alt me-1"></i>Descrição Detalhada
                                             </label>
-                                            <textarea class="form-control" id="descricao" name="descricao" rows="6" maxlength="2000"
-                                                      placeholder="Explique detalhadamente o problema..." required></textarea>
+                                            <textarea class="form-control" id="descricao" name="descricao" rows="8" maxlength="2000"
+                                                      placeholder="Explique detalhadamente o problema, incluindo:&#10;- O que você estava fazendo quando o problema ocorreu?&#10;- Qual erro ou comportamento inesperado você observou?&#10;- Já tentou alguma solução? Se sim, qual?&#10;- O problema afeta outros usuários ou sistemas?" required></textarea>
+                                            <div class="form-text">
+                                                <span id="contadorCaracteres">0</span>/2000 caracteres
+                                            </div>
                                         </div>
 
-                                        <!-- Anexos -->
-                                        <div class="mb-3">
-                                            <label for="anexos" class="form-label">
-                                                <i class="fas fa-paperclip"></i> Anexos (opcional)
-                                            </label>
-                                            <input type="file" class="form-control" id="anexos" name="anexos" multiple>
-                                        </div>
-
-                                        <!-- Botões -->
                                         <div class="d-flex justify-content-between">
-                                            <a th:href="@{/suporte}" class="btn btn-outline-secondary">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="voltarSecao(1)">
                                                 <i class="fas fa-arrow-left me-1"></i> Voltar
-                                            </a>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-paper-plane me-1"></i> Abrir Chamado
+                                            </button>
+                                            <button type="button" class="btn btn-primary" onclick="proximaSecao(3)">
+                                                Próximo <i class="fas fa-arrow-right ms-1"></i>
                                             </button>
                                         </div>
-                                    </form>
-                                    <!-- FORM FIM -->
+                                    </div>
 
-                                </div>
+                                    <!-- Seção 3: Anexos e Finalização -->
+                                    <div class="form-section" id="secao3" style="display: none;">
+                                        <h5 class="form-section-title">
+                                            <i class="fas fa-paperclip text-success me-2"></i>
+                                            Anexos e Finalização
+                                        </h5>
+
+                                        <!-- Anexos -->
+                                        <div class="mb-4">
+                                            <label class="form-label">
+                                                <i class="fas fa-cloud-upload-alt me-1"></i>Anexos (opcional)
+                                            </label>
+                                            <div class="file-upload-area" id="fileUploadArea">
+                                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                                <h5 class="text-muted">Arraste arquivos aqui ou clique para selecionar</h5>
+                                                <p class="text-muted mb-3">Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, JPEG</p>
+                                                <input type="file" class="form-control" id="anexos" name="anexos" multiple 
+                                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="display: none;">
+                                                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('anexos').click()">
+                                                    <i class="fas fa-folder-open me-1"></i>Selecionar Arquivos
+                                                </button>
+                                            </div>
+                                            <div id="listaArquivos" class="mt-3"></div>
+                                        </div>
+
+                                        <!-- Resumo do Chamado -->
+                                        <div class="alert alert-info">
+                                            <h6><i class="fas fa-clipboard-list me-2"></i>Resumo do Chamado</h6>
+                                            <div id="resumoChamado">
+                                                <p><strong>Categoria:</strong> <span id="resumoCategoria">-</span></p>
+                                                <p><strong>Prioridade:</strong> <span id="resumoPrioridade">-</span></p>
+                                                <p><strong>Solicitante:</strong> <span id="resumoSolicitante">-</span></p>
+                                                <p><strong>Assunto:</strong> <span id="resumoAssunto">-</span></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="voltarSecao(2)">
+                                                <i class="fas fa-arrow-left me-1"></i> Voltar
+                                            </button>
+                                            <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
+                                <span id="btnText">
+                                    <i class="fas fa-paper-plane me-1"></i> Abrir Chamado
+                                </span>
+                                <span id="btnLoading" class="d-none">
+                                    <i class="fas fa-spinner fa-spin me-1"></i> Enviando...
+                                </span>
+                            </button>
+                                        </div>
+                                    </div>
+
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
-
+            
             <!-- Footer -->
             <footer th:replace="~{components/footer :: footer}"></footer>
-
         </main>
     </div>
 
-    <script src="/js/sidebar.js" defer></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
+    <script src="/js/sidebar.js"></script>
+    <script src="/js/notifications.js"></script>
 
-    <!-- Script para funcionalidades avançadas de chamados -->
     <script>
-        // Variável global para armazenar as categorias
+        // Variáveis globais
         let categoriasData = [];
+        let secaoAtual = 1;
         
         // Função para carregar categorias
         async function carregarCategorias() {
@@ -204,136 +618,265 @@
             }
         }
         
-        // Função para atualizar subcategorias com base na categoria principal
+        // Função para navegar entre seções
+        function proximaSecao(secao) {
+            if (validarSecaoAtual()) {
+                document.getElementById(`secao${secaoAtual}`).style.display = 'none';
+                document.getElementById(`secao${secao}`).style.display = 'block';
+                
+                // Atualizar indicador de progresso
+                document.querySelector(`.progress-step:nth-child(${secaoAtual})`).classList.add('completed');
+                document.querySelector(`.progress-step:nth-child(${secao})`).classList.add('active');
+                
+                secaoAtual = secao;
+                
+                if (secao === 3) {
+                    atualizarResumo();
+                }
+            }
+        }
+        
+        function voltarSecao(secao) {
+            document.getElementById(`secao${secaoAtual}`).style.display = 'none';
+            document.getElementById(`secao${secao}`).style.display = 'block';
+            
+            // Atualizar indicador de progresso
+            document.querySelector(`.progress-step:nth-child(${secaoAtual})`).classList.remove('active');
+            document.querySelector(`.progress-step:nth-child(${secao})`).classList.add('active');
+            
+            secaoAtual = secao;
+        }
+        
+        // Função para validar seção atual
+        function validarSecaoAtual() {
+            const secao = document.getElementById(`secao${secaoAtual}`);
+            const campos = secao.querySelectorAll('[required]');
+            let valido = true;
+            
+            campos.forEach(campo => {
+                if (!campo.value.trim()) {
+                    campo.classList.add('is-invalid');
+                    valido = false;
+                } else {
+                    campo.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!valido) {
+                mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios antes de continuar.');
+            }
+            
+            return valido;
+        }
+        
+        // Função para validar todo o formulário (usada no submit final)
+        function validarFormularioCompleto() {
+            const form = document.getElementById('chamadoForm');
+            const campos = form.querySelectorAll('[required]');
+            let valido = true;
+            
+            campos.forEach(campo => {
+                if (!campo.value.trim()) {
+                    campo.classList.add('is-invalid');
+                    valido = false;
+                } else {
+                    campo.classList.remove('is-invalid');
+                }
+            });
+            
+            // Validação específica para email
+            const email = document.getElementById('solicitanteEmail');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email.value && !emailRegex.test(email.value)) {
+                email.classList.add('is-invalid');
+                valido = false;
+            }
+            
+            return valido;
+        }
+        
+        // Função para atualizar subcategorias
         function atualizarSubcategorias() {
-            console.log('Atualizando subcategorias...');
             const categoriaPrincipal = document.getElementById('categoriaPrincipal').value;
-            console.log('Categoria principal selecionada:', categoriaPrincipal);
             const subcategoriaSelect = document.getElementById('subcategoria');
             const descricaoExemplo = document.getElementById('descricaoExemplo');
-            const exemploTexto = document.getElementById('exemploTexto');
             
-            // Limpar opções atuais
             subcategoriaSelect.innerHTML = '<option value="">Subcategoria (opcional)</option>';
-            
-            // Esconder exemplo inicialmente
             descricaoExemplo.style.display = 'none';
             
             if (categoriaPrincipal && categoriasData.length > 0) {
-                // Encontrar a categoria selecionada
                 const categoria = categoriasData.find(cat => cat.codigo === categoriaPrincipal);
-                console.log('Categoria encontrada:', categoria);
                 
                 if (categoria && categoria.subcategorias && categoria.subcategorias.length > 0) {
-                    // Adicionar subcategorias
                     categoria.subcategorias.forEach(sub => {
                         const option = document.createElement('option');
                         option.value = sub.codigo;
                         option.textContent = sub.nome;
                         subcategoriaSelect.appendChild(option);
                     });
-                    console.log('Subcategorias atualizadas');
                 }
             }
         }
         
-        // Função para mostrar exemplo quando uma subcategoria é selecionada
+        // Função para mostrar exemplo
         function mostrarExemplo() {
-            console.log('Mostrando exemplo...');
             const categoriaPrincipal = document.getElementById('categoriaPrincipal').value;
             const subcategoria = document.getElementById('subcategoria').value;
-            console.log('Categoria:', categoriaPrincipal, 'Subcategoria:', subcategoria);
             const descricaoExemplo = document.getElementById('descricaoExemplo');
             const exemploTexto = document.getElementById('exemploTexto');
             
             if (categoriaPrincipal && subcategoria && categoriasData.length > 0) {
-                // Encontrar a categoria e subcategoria selecionadas
                 const categoria = categoriasData.find(cat => cat.codigo === categoriaPrincipal);
-                
                 if (categoria && categoria.subcategorias) {
                     const sub = categoria.subcategorias.find(s => s.codigo === subcategoria);
-                    
-                    if (sub && sub.descricaoExemplo) {
-                        exemploTexto.textContent = sub.descricaoExemplo;
+                    if (sub && sub.exemplo) {
+                        exemploTexto.textContent = sub.exemplo;
                         descricaoExemplo.style.display = 'block';
-                        console.log('Exemplo mostrado:', sub.descricaoExemplo);
                         return;
                     }
                 }
             }
             
-            // Esconder se não houver exemplo
             descricaoExemplo.style.display = 'none';
-            console.log('Exemplo escondido');
         }
         
-        // Script para enviar via API REST
-        document.addEventListener("DOMContentLoaded", async () => {
-            console.log('DOM carregado, inicializando funcionalidades...');
-            const form = document.getElementById("chamadoForm");
-            const alertArea = document.getElementById("alertArea");
+        // Função para atualizar resumo
+        function atualizarResumo() {
+            const categoria = document.getElementById('categoriaPrincipal');
+            const prioridade = document.getElementById('prioridade');
+            const nome = document.getElementById('solicitanteNome').value;
+            const email = document.getElementById('solicitanteEmail').value;
+            const assunto = document.getElementById('assunto').value;
             
-            // Carregar categorias
-            await carregarCategorias();
+            document.getElementById('resumoCategoria').textContent = categoria.options[categoria.selectedIndex]?.text || '-';
+            document.getElementById('resumoPrioridade').textContent = prioridade.options[prioridade.selectedIndex]?.text || '-';
+            document.getElementById('resumoSolicitante').textContent = nome ? `${nome} (${email})` : '-';
+            document.getElementById('resumoAssunto').textContent = assunto || '-';
+        }
+        
+        // Função para mostrar alerta
+        function mostrarAlerta(tipo, mensagem) {
+            const alertArea = document.getElementById('alertArea');
+            alertArea.innerHTML = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+        
+        // Função para enviar formulário
+        async function enviarFormulario(event) {
+            event.preventDefault();
             
-            // Adicionar listeners para atualização dinâmica
+            if (!validarFormularioCompleto()) {
+                mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios corretamente.');
+                return;
+            }
+            
+            const form = document.getElementById('chamadoForm');
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/suporte/chamados/novo', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    mostrarAlerta('Chamado criado com sucesso! Redirecionando...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/suporte/chamados';
+                    }, 2000);
+                } else {
+                    const errorText = await response.text();
+                    mostrarAlerta('Erro ao criar chamado: ' + errorText, 'danger');
+                }
+            } catch (error) {
+                console.error('Erro ao enviar formulário:', error);
+                mostrarAlerta('Erro ao criar chamado. Tente novamente.', 'danger');
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarCategorias();
+            
+            // Event listeners para mudanças nos selects
             document.getElementById('categoriaPrincipal').addEventListener('change', atualizarSubcategorias);
             document.getElementById('subcategoria').addEventListener('change', mostrarExemplo);
-            console.log('Listeners adicionados');
-
-            form.addEventListener("submit", async (e) => {
+            
+            // Event listener para envio do formulário
+            document.getElementById('chamadoForm').addEventListener('submit', enviarFormulario);
+            
+            // Contador de caracteres
+            const descricao = document.getElementById('descricao');
+            const contador = document.getElementById('contadorCaracteres');
+            descricao.addEventListener('input', function() {
+                contador.textContent = this.value.length;
+            });
+            
+            // Upload de arquivos
+            const fileInput = document.getElementById('anexos');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const listaArquivos = document.getElementById('listaArquivos');
+            
+            fileUploadArea.addEventListener('click', () => fileInput.click());
+            
+            fileUploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
-
-                // Coleta os dados do formulário
-                const chamado = {
-                    numero: document.getElementById("numero").value,
-                    categoria: document.getElementById("categoriaPrincipal").value,
-                    subcategoria: document.getElementById("subcategoria").value,
-                    assunto: document.getElementById("assunto").value,
-                    prioridade: document.getElementById("prioridade").value,
-                    solicitanteNome: document.getElementById("solicitanteNome").value,
-                    solicitanteEmail: document.getElementById("solicitanteEmail").value,
-                    descricao: document.getElementById("descricao").value
-                };
-
-                try {
-                    const response = await fetch("/api/chamados", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(chamado)
-                    });
-
-                    const result = await response.json();
-
-                    if (result.sucesso) {
-                        alertArea.innerHTML = `
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>
-                                ${result.mensagem}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>`;
-                        form.reset();
-                        // Resetar subcategorias
-                        document.getElementById('subcategoria').innerHTML = '<option value="">Subcategoria (opcional)</option>';
-                        document.getElementById('descricaoExemplo').style.display = 'none';
-                    } else {
-                        alertArea.innerHTML = `
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Erro: ${result.erro || "Falha ao criar chamado."}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>`;
-                    }
-                } catch (error) {
-                    alertArea.innerHTML = `
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Erro inesperado: ${error.message}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>`;
-                }
+                fileUploadArea.classList.add('dragover');
+            });
+            
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('dragover');
+            });
+            
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                atualizarListaArquivos();
+            });
+            
+            fileInput.addEventListener('change', atualizarListaArquivos);
+            
+            function atualizarListaArquivos() {
+                listaArquivos.innerHTML = '';
+                Array.from(fileInput.files).forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'alert alert-info d-flex justify-content-between align-items-center';
+                    fileItem.innerHTML = `
+                        <span><i class="fas fa-file me-2"></i>${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerArquivo(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    listaArquivos.appendChild(fileItem);
+                });
+            }
+            
+            // Remover classe de erro quando o usuário começar a digitar
+            const campos = document.querySelectorAll('[required]');
+            campos.forEach(campo => {
+                campo.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                });
             });
         });
+        
+        function removerArquivo(index) {
+            const fileInput = document.getElementById('anexos');
+            const dt = new DataTransfer();
+            
+            Array.from(fileInput.files).forEach((file, i) => {
+                if (i !== index) dt.items.add(file);
+            });
+            
+            fileInput.files = dt.files;
+            document.querySelector('#listaArquivos').children[index].remove();
+        }
     </script>
 </body>
 </html>

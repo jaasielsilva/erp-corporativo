@@ -294,6 +294,28 @@ public class SuporteController {
     }
 
     /**
+     * API para tempo médio de primeira resposta
+     */
+    @GetMapping("/api/tempo-medio-primeira-resposta")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getTempoMedioPrimeiraResposta() {
+        try {
+            Double tempoMedio = chamadoService.calcularTempoMedioPrimeiraResposta();
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("tempoMedio", tempoMedio);
+            response.put("unidade", "horas");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erro ao obter tempo médio de primeira resposta: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
      * API para métricas de SLA dos últimos N dias
      */
     @GetMapping("/api/metricas-sla-periodo")
@@ -570,6 +592,9 @@ public class SuporteController {
                     break;
                 case "fechar":
                     chamado = chamadoService.fecharChamado(id);
+                    break;
+                case "reabrir":
+                    chamado = chamadoService.reabrirChamado(id);
                     break;
                 default:
                     throw new IllegalArgumentException("Ação inválida: " + acao);

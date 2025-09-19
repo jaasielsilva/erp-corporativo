@@ -230,6 +230,11 @@
                                         th:onclick="'fecharChamado(' + ${chamado.id} + ')'">
                                     <i class="fas fa-times me-1"></i> Fechar
                                 </button>
+                                <button th:if="${chamado.status.name() == 'FECHADO'}" 
+                                        class="btn btn-warning btn-action" 
+                                        th:onclick="'reabrirChamado(' + ${chamado.id} + ')'">
+                                    <i class="fas fa-redo me-1"></i> Reabrir
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -454,6 +459,13 @@
             console.log('Função fecharChamado chamada com ID:', id);
             if (confirm('Deseja fechar este chamado definitivamente?')) {
                 atualizarStatusChamado(id, 'fechar');
+            }
+        }
+        
+        function reabrirChamado(id) {
+            console.log('Função reabrirChamado chamada com ID:', id);
+            if (confirm('Deseja reabrir este chamado? Ele voltará ao status ABERTO.')) {
+                atualizarStatusChamado(id, 'reabrir');
             }
         }
         

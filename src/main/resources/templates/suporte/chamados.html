@@ -195,6 +195,7 @@
                                     <option value="ABERTO">Aberto</option>
                                     <option value="EM_ANDAMENTO">Em Andamento</option>
                                     <option value="RESOLVIDO">Resolvido</option>
+                                    <option value="REABERTO">Reaberto</option>
                                     <option value="FECHADO">Fechado</option>
                                 </select>
                             </div>
@@ -480,6 +481,17 @@
                 }
             });
         }
+
+        // Aplicar filtros baseados nos parâmetros da URL
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusParam = urlParams.get('status');
+            
+            if (statusParam) {
+                $('#filtroStatus').val(statusParam);
+                filtrarTabela(); // Aplicar o filtro automaticamente
+            }
+        });
     </script>
 </body>
 </html>

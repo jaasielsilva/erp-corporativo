@@ -157,13 +157,18 @@
             left: -100%;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
             animation: shimmer 2s infinite;
         }
 
         @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
         }
 
         .metric-card-enhanced {
@@ -207,7 +212,7 @@
         .kpi-highlight {
             font-size: 1.8rem;
             font-weight: bold;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
 
@@ -326,12 +331,12 @@
             padding: 12px 16px;
             margin: 0 25px;
         }
-        
+
         .metric-item {
             text-align: center;
             flex: 1;
         }
-        
+
         .metric-item .metric-label {
             display: block;
             font-size: 0.75rem;
@@ -339,7 +344,7 @@
             font-weight: 500;
             margin-bottom: 4px;
         }
-        
+
         .metric-item .metric-value {
             font-size: 1.1rem;
             font-weight: 700;
@@ -354,7 +359,7 @@
             .metric-item {
                 padding: 6px 4px;
             }
-            
+
             .metrics-row {
                 flex-direction: column;
                 gap: 8px;
@@ -386,11 +391,11 @@
             .metric-card-sla {
                 margin-bottom: 15px;
             }
-            
+
             .metric-value-sla {
                 font-size: 1.5rem;
             }
-            
+
             .metric-icon-sla {
                 width: 40px;
                 height: 40px;
@@ -491,20 +496,25 @@
             color: #64748b;
             line-height: 1.4;
         }
-.floating-btn .btn {
-    background-color: #0d6efd; /* Azul padrão Bootstrap */
-    border: none;
-    color: #fff;
-    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-.floating-btn .btn:hover {
-    background-color: #0b5ed7; /* Azul mais escuro */
-    transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-}
-.floating-btn i {
-    pointer-events: none;
-}
+
+        .floating-btn .btn {
+            background-color: #0d6efd;
+            /* Azul padrão Bootstrap */
+            border: none;
+            color: #fff;
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .floating-btn .btn:hover {
+            background-color: #0b5ed7;
+            /* Azul mais escuro */
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .floating-btn i {
+            pointer-events: none;
+        }
 
 
 
@@ -598,6 +608,13 @@
                             <div class="stat-label">Resolvidos (Mês)</div>
                             <div class="stat-change positive">Concluídos com sucesso</div>
                         </div>
+                        <div class="stat-card" onclick="window.location.href='/suporte/chamados?status=REABERTO'"
+                            style="cursor: pointer;">
+                            <div class="stat-icon"><i class="fas fa-redo-alt"></i></div>
+                            <div class="stat-number" th:text="${chamadosReabertos ?: '0'}">0</div>
+                            <div class="stat-label">Chamados Reabertos</div>
+                            <div class="stat-change warning">Reabertos após resolução</div>
+                        </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-clock"></i></div>
                             <div class="stat-number"
@@ -681,7 +698,7 @@
                                 Avaliações de Atendimento
                                 <small class="text-muted ms-2">Últimas avaliações</small>
                             </div>
-                            
+
                             <!-- Métricas de Avaliação -->
                             <div class="metrics-row mb-3" id="metricas-avaliacoes">
                                 <div class="metric-item">
@@ -697,7 +714,7 @@
                                     <span class="metric-value text-info" id="total-avaliacoes">--</span>
                                 </div>
                             </div>
-                            
+
                             <div class="chart-container-narrow">
                                 <canvas id="avaliacoesChart"></canvas>
                             </div>
@@ -750,16 +767,20 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-3">
                                         <small class="text-muted">
-                                            <i class="fas fa-clock me-1"></i>Atualizado: <span id="ultimaAtualizacao">agora</span>
+                                            <i class="fas fa-clock me-1"></i>Atualizado: <span
+                                                id="ultimaAtualizacao">agora</span>
                                         </small>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary active" onclick="carregarMetricasSLA(7)">
+                                            <button type="button" class="btn btn-sm btn-outline-primary active"
+                                                onclick="carregarMetricasSLA(7)">
                                                 7 dias
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="carregarMetricasSLA(30)">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                onclick="carregarMetricasSLA(30)">
                                                 30 dias
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="carregarMetricasSLA(0)">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                onclick="carregarMetricasSLA(0)">
                                                 Geral
                                             </button>
                                         </div>
@@ -776,7 +797,9 @@
                                         </div>
                                         <div class="stat-card">
                                             <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                                            <div class="stat-number" id="slaMedioHoras">--</div>
+                                            <div class="stat-number"
+                                                th:text="${slaMedio != null ? #numbers.formatDecimal(slaMedio, 1, 1) + 'h' : '0.0h'}">
+                                                0.0h</div>
                                             <div class="stat-label">SLA Médio</div>
                                             <div class="stat-change neutral">Tempo de resolução</div>
                                         </div>
@@ -793,7 +816,7 @@
                                             <div class="stat-change negative">Acima do SLA</div>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Comparativo de Períodos -->
                                     <div class="row mt-3">
                                         <div class="col-12">
@@ -831,7 +854,8 @@
                         <div class="col-md-6">
                             <div class="card chart-card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Tendência de Cumprimento SLA</h6>
+                                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Tendência de Cumprimento SLA
+                                    </h6>
                                     <small class="text-muted">Últimos 30 dias</small>
                                 </div>
                                 <div class="card-body">
@@ -860,7 +884,8 @@
                         <div class="col-md-12">
                             <div class="card chart-card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Distribuição de Chamados por Status SLA</h6>
+                                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Distribuição de Chamados por
+                                        Status SLA</h6>
                                     <small class="text-muted">Período atual</small>
                                 </div>
                                 <div class="card-body">
@@ -882,7 +907,8 @@
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-2">
                                                         <span>Fora do Prazo:</span>
-                                                        <span class="fw-bold text-danger" id="resumo-fora-prazo">-</span>
+                                                        <span class="fw-bold text-danger"
+                                                            id="resumo-fora-prazo">-</span>
                                                     </div>
                                                     <div class="d-flex justify-content-between mb-2">
                                                         <span>Taxa de Sucesso:</span>
@@ -1037,9 +1063,9 @@
 
             // Tentar obter dados dinâmicos
             try {
-                const dynamicLabels = /*[[${ ultimos12MesesLabels }]]*/ [];
-                const dynamicValores = /*[[${ ultimos12MesesChamados }]]*/ [];
-                const dynamicMeta = /*[[${ metaChamadosMensal }]]*/ [];
+                const dynamicLabels = /*[[${ ultimos12MesesLabels }]]*/[];
+                const dynamicValores = /*[[${ ultimos12MesesChamados }]]*/[];
+                const dynamicMeta = /*[[${ metaChamadosMensal }]]*/[];
 
                 console.log('Evolução Chamados - Labels:', dynamicLabels);
                 console.log('Evolução Chamados - Valores:', dynamicValores);
@@ -1633,7 +1659,7 @@
                                 },
                                 tooltip: {
                                     callbacks: {
-                                        label: function(context) {
+                                        label: function (context) {
                                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                             const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
                                             return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
@@ -1674,26 +1700,31 @@
 
         function carregarMetricasSLA(dias) {
             currentPeriod = dias;
-            
+
             // Atualizar botões ativos
-             document.querySelectorAll('.btn-group .btn').forEach(btn => {
-                 btn.classList.remove('active');
-             });
-             const activeBtn = document.querySelector(`[onclick="carregarMetricasSLA(${dias})"]`);
-             if (activeBtn) {
-                 activeBtn.classList.add('active');
-             }
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.querySelector(`[onclick="carregarMetricasSLA(${dias})"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
 
             // Carregar métricas do período
             fetch(`/suporte/api/metricas-sla-periodo?dias=${dias}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                         // Atualizar métricas
-                         document.getElementById('percentualSLA').textContent = data.percentualSLACumprido.toFixed(1) + '%';
-                         document.getElementById('slaMedioHoras').textContent = data.slaMedioHoras.toFixed(1) + 'h';
-                         document.getElementById('chamadosNoPrazo').textContent = data.chamadosNoPrazo;
-                         document.getElementById('chamadosForaPrazo').textContent = data.chamadosForaPrazo;
+                        // Atualizar métricas com verificação de null
+                        const percentualSLA = document.getElementById('percentualSLA');
+                        const slaMedioHoras = document.getElementById('slaMedioHoras');
+                        const chamadosNoPrazo = document.getElementById('chamadosNoPrazo');
+                        const chamadosForaPrazo = document.getElementById('chamadosForaPrazo');
+                        
+                        if (percentualSLA) percentualSLA.textContent = data.percentualSLACumprido.toFixed(1) + '%';
+                        if (slaMedioHoras) slaMedioHoras.textContent = data.slaMedioHoras.toFixed(1) + 'h';
+                        if (chamadosNoPrazo) chamadosNoPrazo.textContent = data.chamadosNoPrazo;
+                        if (chamadosForaPrazo) chamadosForaPrazo.textContent = data.chamadosForaPrazo;
                     }
                 })
                 .catch(error => {
@@ -1749,367 +1780,372 @@
         }
 
         // Carregar dados iniciais
-          carregarMetricasSLA(7);
-          loadComparativoSLA();
+        carregarMetricasSLA(7);
+        loadComparativoSLA();
 
-         // Variáveis para os gráficos
-         let slaChart, tempoMedioChart, statusSlaChart;
+        // Variáveis para os gráficos
+        let slaChart, tempoMedioChart, statusSlaChart;
 
-         // Função para criar gráfico de tendência SLA
-         function createSlaChart() {
-             const ctx = document.getElementById('slaChart').getContext('2d');
-             
-             // Carregar dados reais do backend
-             fetch('/suporte/api/tendencia-sla?dias=30')
-                 .then(response => response.json())
-                 .then(data => {
-                     if (data.success) {
-                         const labels = data.labels || [];
-                         const slaData = data.percentuais || [];
-                         const meta = data.meta || 90;
-                         
-                         slaChart = new Chart(ctx, {
-                             type: 'line',
-                             data: {
-                                 labels: labels,
-                                 datasets: [{
-                                     label: 'Cumprimento SLA (%)',
-                                     data: slaData,
-                                     borderColor: '#667eea',
-                                     backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                                     borderWidth: 3,
-                                     fill: true,
-                                     tension: 0.4,
-                                     pointBackgroundColor: '#667eea',
-                                     pointBorderColor: '#fff',
-                                     pointBorderWidth: 2,
-                                     pointRadius: 4
-                                 }, {
-                                     label: `Meta (${meta}%)`,
-                                     data: new Array(labels.length).fill(meta),
-                                     borderColor: '#ef4444',
-                                     backgroundColor: 'transparent',
-                                     borderWidth: 2,
-                                     borderDash: [5, 5],
-                                     fill: false,
-                                     pointRadius: 0
-                                 }]
-                             },
-                             options: {
-                                 responsive: true,
-                                 maintainAspectRatio: false,
-                                 plugins: {
-                                     legend: {
-                                         display: true,
-                                         position: 'top'
-                                     },
-                                     tooltip: {
-                                         callbacks: {
-                                             label: function(context) {
-                                                 return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
-                                             }
-                                         }
-                                     }
-                                 },
-                                 scales: {
-                                     y: {
-                                         beginAtZero: false,
-                                         min: 80,
-                                         max: 100,
-                                         title: {
-                                             display: true,
-                                             text: 'Percentual (%)'
-                                         }
-                                     },
-                                     x: {
-                                         title: {
-                                             display: true,
-                                             text: 'Data'
-                                         }
-                                     }
-                                 }
-                             }
-                         });
-                     } else {
-                         console.error('Erro ao carregar dados de tendência SLA:', data.error);
-                         // Criar gráfico com dados vazios em caso de erro
-                         createEmptySlaChart(ctx);
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Erro ao carregar tendência SLA:', error);
-                     // Criar gráfico com dados vazios em caso de erro
-                     createEmptySlaChart(ctx);
-                 });
-         }
-         
-         // Função auxiliar para criar gráfico SLA vazio em caso de erro
-         function createEmptySlaChart(ctx) {
-             slaChart = new Chart(ctx, {
-                 type: 'line',
-                 data: {
-                     labels: ['Sem dados'],
-                     datasets: [{
-                         label: 'Cumprimento SLA (%)',
-                         data: [0],
-                         borderColor: '#667eea',
-                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                         borderWidth: 3,
-                         fill: true,
-                         tension: 0.4
-                     }]
-                 },
-                 options: {
-                     responsive: true,
-                     maintainAspectRatio: false,
-                     plugins: {
-                         legend: {
-                             display: true,
-                             position: 'top'
-                         }
-                     },
-                     scales: {
-                         y: {
-                             beginAtZero: true,
-                             max: 100,
-                             title: {
-                                 display: true,
-                                 text: 'Percentual (%)'
-                             }
-                         }
-                     }
-                 }
-             });
-         }
+        // Função para criar gráfico de tendência SLA
+        function createSlaChart() {
+            const ctx = document.getElementById('slaChart').getContext('2d');
 
-         // Função para criar gráfico de tempo médio com dados reais
-         function createTempoMedioChart() {
-             console.log('Iniciando requisição para tempo médio dos últimos 30 dias...');
-             
-             fetch('/suporte/api/tempo-medio-ultimos-dias?dias=30')
-                 .then(response => {
-                     console.log('Response status:', response.status);
-                     return response.json();
-                 })
-                 .then(data => {
-                     console.log('Dados de tempo médio recebidos:', data);
-                     
-                     const ctx = document.getElementById('tempoMedioChart').getContext('2d');
-                     
-                     if (data.success) {
-                         const labels = data.labels || [];
-                         const tempoData = data.temposResolucao || [];
-                         
-                         // Se não há dados, mostrar gráfico vazio
-                         if (labels.length === 0 || tempoData.every(val => val === 0)) {
-                             tempoMedioChart = new Chart(ctx, {
-                                 type: 'bar',
-                                 data: {
-                                     labels: ['Nenhum dado disponível'],
-                                     datasets: [{
-                                         label: 'Tempo Médio (horas)',
-                                         data: [0],
-                                         backgroundColor: 'rgba(156, 163, 175, 0.5)',
-                                         borderColor: '#9ca3af',
-                                         borderWidth: 1
-                                     }]
-                                 },
-                                 options: {
-                                     responsive: true,
-                                     maintainAspectRatio: false,
-                                     plugins: {
-                                         legend: { display: false }
-                                     },
-                                     scales: {
-                                         y: { beginAtZero: true, max: 1 }
-                                     }
-                                 }
-                             });
-                         } else {
-                             tempoMedioChart = new Chart(ctx, {
-                                 type: 'bar',
-                                 data: {
-                                     labels: labels,
-                                     datasets: [{
-                                         label: 'Tempo Médio (horas)',
-                                         data: tempoData,
-                                         backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                                         borderColor: '#22c55e',
-                                         borderWidth: 1
-                                     }]
-                                 },
-                                 options: {
-                                     responsive: true,
-                                     maintainAspectRatio: false,
-                                     plugins: {
-                                         legend: {
-                                             display: true,
-                                             position: 'top'
-                                         },
-                                         tooltip: {
-                                             callbacks: {
-                                                 label: function(context) {
-                                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + 'h';
-                                                 }
-                                             }
-                                         }
-                                     },
-                                     scales: {
-                                         y: {
-                                             beginAtZero: true,
-                                             title: {
-                                                 display: true,
-                                                 text: 'Tempo (horas)'
-                                             }
-                                         },
-                                         x: {
-                                             title: {
-                                                 display: true,
-                                                 text: 'Data'
-                                             }
-                                         }
-                                     }
-                                 }
-                             });
-                         }
-                         
-                         console.log('Gráfico de tempo médio criado com sucesso');
-                     } else {
-                         console.error('Erro nos dados recebidos:', data.error);
-                         // Criar gráfico vazio em caso de erro
-                         tempoMedioChart = new Chart(ctx, {
-                             type: 'bar',
-                             data: {
-                                 labels: ['Erro ao carregar dados'],
-                                 datasets: [{
-                                     label: 'Tempo Médio (horas)',
-                                     data: [0],
-                                     backgroundColor: 'rgba(239, 68, 68, 0.5)',
-                                     borderColor: '#ef4444',
-                                     borderWidth: 1
-                                 }]
-                             },
-                             options: {
-                                 responsive: true,
-                                 maintainAspectRatio: false,
-                                 plugins: {
-                                     legend: { display: false }
-                                 },
-                                 scales: {
-                                     y: { beginAtZero: true, max: 1 }
-                                 }
-                             }
-                         });
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Erro na requisição de tempo médio:', error);
-                     // Criar gráfico de erro
-                     const ctx = document.getElementById('tempoMedioChart').getContext('2d');
-                     tempoMedioChart = new Chart(ctx, {
-                         type: 'bar',
-                         data: {
-                             labels: ['Erro de conexão'],
-                             datasets: [{
-                                 label: 'Tempo Médio (horas)',
-                                 data: [0],
-                                 backgroundColor: 'rgba(239, 68, 68, 0.5)',
-                                 borderColor: '#ef4444',
-                                 borderWidth: 1
-                             }]
-                         },
-                         options: {
-                             responsive: true,
-                             maintainAspectRatio: false,
-                             plugins: {
-                                 legend: { display: false }
-                             },
-                             scales: {
-                                 y: { beginAtZero: true, max: 1 }
-                             }
-                         }
-                     });
-                 });
-         }
+            // Carregar dados reais do backend
+            fetch('/suporte/api/tendencia-sla?dias=30')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const labels = data.labels || [];
+                        const slaData = data.percentuais || [];
+                        const meta = data.meta || 90;
 
-         // Função para criar gráfico de status SLA
-         function createStatusSlaChart() {
-             const ctx = document.getElementById('statusSlaChart').getContext('2d');
+                        slaChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Cumprimento SLA (%)',
+                                    data: slaData,
+                                    borderColor: '#667eea',
+                                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointBackgroundColor: '#667eea',
+                                    pointBorderColor: '#fff',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4
+                                }, {
+                                    label: `Meta (${meta}%)`,
+                                    data: new Array(labels.length).fill(meta),
+                                    borderColor: '#ef4444',
+                                    backgroundColor: 'transparent',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    fill: false,
+                                    pointRadius: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'top'
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: false,
+                                        min: 80,
+                                        max: 100,
+                                        title: {
+                                            display: true,
+                                            text: 'Percentual (%)'
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Data'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        console.error('Erro ao carregar dados de tendência SLA:', data.error);
+                        // Criar gráfico com dados vazios em caso de erro
+                        createEmptySlaChart(ctx);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar tendência SLA:', error);
+                    // Criar gráfico com dados vazios em caso de erro
+                    createEmptySlaChart(ctx);
+                });
+        }
 
-             statusSlaChart = new Chart(ctx, {
-                 type: 'doughnut',
-                 data: {
-                     labels: ['No Prazo', 'Fora do Prazo'],
-                     datasets: [{
-                         data: [85, 15], // Dados iniciais
-                         backgroundColor: ['#22c55e', '#ef4444'],
-                         borderWidth: 3,
-                         borderColor: '#ffffff'
-                     }]
-                 },
-                 options: {
-                     responsive: true,
-                     maintainAspectRatio: false,
-                     plugins: {
-                         legend: {
-                             position: 'bottom',
-                             labels: {
-                                 padding: 20,
-                                 usePointStyle: true
-                             }
-                         },
-                         tooltip: {
-                             callbacks: {
-                                 label: function(context) {
-                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                     const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                     return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                 }
-                             }
-                         }
-                     }
-                 }
-             });
-         }
+        // Função auxiliar para criar gráfico SLA vazio em caso de erro
+        function createEmptySlaChart(ctx) {
+            slaChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sem dados'],
+                    datasets: [{
+                        label: 'Cumprimento SLA (%)',
+                        data: [0],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentual (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
-         // Função para atualizar o resumo
-         function updateResumo(data) {
-             document.getElementById('resumo-prazo').textContent = data.chamadosNoPrazo;
-             document.getElementById('resumo-fora-prazo').textContent = data.chamadosForaPrazo;
-             document.getElementById('resumo-taxa').textContent = data.percentualSLACumprido.toFixed(1) + '%';
-             document.getElementById('resumo-total').textContent = data.totalChamados;
-             
-             // Atualizar gráfico de status
-             if (statusSlaChart) {
-                 statusSlaChart.data.datasets[0].data = [data.chamadosNoPrazo, data.chamadosForaPrazo];
-                 statusSlaChart.update();
-             }
-         }
+        // Função para criar gráfico de tempo médio com dados reais
+        function createTempoMedioChart() {
+            console.log('Iniciando requisição para tempo médio dos últimos 30 dias...');
 
-         // Modificar a função carregarMetricasSLA para atualizar o resumo
-         const originalCarregarMetricasSLA = carregarMetricasSLA;
-         carregarMetricasSLA = function(dias) {
-             originalCarregarMetricasSLA(dias);
-             
-             // Carregar métricas do período para o resumo
-             fetch(`/suporte/api/metricas-sla-periodo?dias=${dias}`)
-                 .then(response => response.json())
-                 .then(data => {
-                     if (data.success) {
-                     updateResumo(data);
-                 }
-                 })
-                 .catch(error => {
-                     console.error('Erro ao carregar dados para resumo:', error);
-                 });
-         };
+            fetch('/suporte/api/tempo-medio-ultimos-dias?dias=30')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Dados de tempo médio recebidos:', data);
+
+                    const ctx = document.getElementById('tempoMedioChart').getContext('2d');
+
+                    if (data.success) {
+                        const labels = data.labels || [];
+                        const tempoData = data.temposResolucao || [];
+
+                        // Se não há dados, mostrar gráfico vazio
+                        if (labels.length === 0 || tempoData.every(val => val === 0)) {
+                            tempoMedioChart = new Chart(ctx, {
+                                type: 'bar',
+                                data: {
+                                    labels: ['Nenhum dado disponível'],
+                                    datasets: [{
+                                        label: 'Tempo Médio (horas)',
+                                        data: [0],
+                                        backgroundColor: 'rgba(156, 163, 175, 0.5)',
+                                        borderColor: '#9ca3af',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false }
+                                    },
+                                    scales: {
+                                        y: { beginAtZero: true, max: 1 }
+                                    }
+                                }
+                            });
+                        } else {
+                            tempoMedioChart = new Chart(ctx, {
+                                type: 'bar',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Tempo Médio (horas)',
+                                        data: tempoData,
+                                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                                        borderColor: '#22c55e',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: true,
+                                            position: 'top'
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function (context) {
+                                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + 'h';
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            title: {
+                                                display: true,
+                                                text: 'Tempo (horas)'
+                                            }
+                                        },
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: 'Data'
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        console.log('Gráfico de tempo médio criado com sucesso');
+                    } else {
+                        console.error('Erro nos dados recebidos:', data.error);
+                        // Criar gráfico vazio em caso de erro
+                        tempoMedioChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['Erro ao carregar dados'],
+                                datasets: [{
+                                    label: 'Tempo Médio (horas)',
+                                    data: [0],
+                                    backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                                    borderColor: '#ef4444',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false }
+                                },
+                                scales: {
+                                    y: { beginAtZero: true, max: 1 }
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na requisição de tempo médio:', error);
+                    // Criar gráfico de erro
+                    const ctx = document.getElementById('tempoMedioChart').getContext('2d');
+                    tempoMedioChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Erro de conexão'],
+                            datasets: [{
+                                label: 'Tempo Médio (horas)',
+                                data: [0],
+                                backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                                borderColor: '#ef4444',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, max: 1 }
+                            }
+                        }
+                    });
+                });
+        }
+
+        // Função para criar gráfico de status SLA
+        function createStatusSlaChart() {
+            const ctx = document.getElementById('statusSlaChart').getContext('2d');
+
+            statusSlaChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['No Prazo', 'Fora do Prazo'],
+                    datasets: [{
+                        data: [85, 15], // Dados iniciais
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 3,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para atualizar o resumo
+        function updateResumo(data) {
+            const resumoPrazo = document.getElementById('resumo-prazo');
+            const resumoForaPrazo = document.getElementById('resumo-fora-prazo');
+            const resumoTaxa = document.getElementById('resumo-taxa');
+            const resumoTotal = document.getElementById('resumo-total');
+            
+            if (resumoPrazo) resumoPrazo.textContent = data.chamadosNoPrazo;
+            if (resumoForaPrazo) resumoForaPrazo.textContent = data.chamadosForaPrazo;
+            if (resumoTaxa) resumoTaxa.textContent = data.percentualSLACumprido.toFixed(1) + '%';
+            if (resumoTotal) resumoTotal.textContent = data.totalChamados;
+
+            // Atualizar gráfico de status
+            if (statusSlaChart) {
+                statusSlaChart.data.datasets[0].data = [data.chamadosNoPrazo, data.chamadosForaPrazo];
+                statusSlaChart.update();
+            }
+        }
+
+        // Modificar a função carregarMetricasSLA para atualizar o resumo
+        const originalCarregarMetricasSLA = carregarMetricasSLA;
+        carregarMetricasSLA = function (dias) {
+            originalCarregarMetricasSLA(dias);
+
+            // Carregar métricas do período para o resumo
+            fetch(`/suporte/api/metricas-sla-periodo?dias=${dias}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateResumo(data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar dados para resumo:', error);
+                });
+        };
 
 
 
-         // Inicializar gráficos
-         createSlaChart();
-         createTempoMedioChart();
-         createStatusSlaChart();
+        // Inicializar gráficos
+        createSlaChart();
+        createTempoMedioChart();
+        createStatusSlaChart();
     </script>
 
     <!-- Bootstrap JS -->

@@ -188,6 +188,27 @@ public class ChamadoService {
         throw new RuntimeException("Chamado não encontrado com ID: " + id);
     }
 
+    // Reabrir chamado
+    public Chamado reabrirChamado(Long id) {
+        Optional<Chamado> chamadoOpt = chamadoRepository.findById(id);
+        
+        if (chamadoOpt.isPresent()) {
+            Chamado chamado = chamadoOpt.get();
+            
+            // Verificar se o chamado pode ser reaberto
+            if (chamado.getStatus() != StatusChamado.RESOLVIDO && chamado.getStatus() != StatusChamado.FECHADO) {
+                throw new IllegalStateException("Apenas chamados RESOLVIDOS ou FECHADOS podem ser reabertos");
+            }
+            
+            chamado.reabrir();
+            
+            logger.info("Chamado {} reaberto", chamado.getNumero());
+            return atualizarChamado(chamado);
+        }
+        
+        throw new RuntimeException("Chamado não encontrado com ID: " + id);
+    }
+
     // Calcular SLA de vencimento baseado na prioridade
     public LocalDateTime calcularSlaVencimento(Chamado chamado) {
         if (chamado.getDataAbertura() == null || chamado.getPrioridade() == null) {
@@ -755,20 +776,31 @@ public class ChamadoService {
     @Transactional(readOnly = true)
     public Double calcularTempoMedioPrimeiraResposta() {
         try {
-            List<Chamado> chamadosComAtendimento = chamadoRepository.findAll()
+            List<Chamado> todosChamados = chamadoRepository.findAll();
+            logger.info("Total de chamados encontrados: {}", todosChamados.size());
+            
+            List<Chamado> chamadosComAtendimento = todosChamados
                 .stream()
                 .filter(c -> c.getDataInicioAtendimento() != null)
                 .collect(java.util.stream.Collectors.toList());
             
+            logger.info("Chamados com dataInicioAtendimento: {}", chamadosComAtendimento.size());
+            
             if (chamadosComAtendimento.isEmpty()) {
+                logger.warn("Nenhum chamado com dataInicioAtendimento encontrado");
                 return 0.0;
             }
             
             double somaHoras = chamadosComAtendimento.stream()
-                .mapToDouble(c -> java.time.Duration.between(c.getDataAbertura(), c.getDataInicioAtendimento()).toHours())
+                .mapToDouble(c -> {
+                    double horas = java.time.Duration.between(c.getDataAbertura(), c.getDataInicioAtendimento()).toHours();
+                    logger.debug("Chamado {}: {} horas entre abertura e início do atendimento", c.getId(), horas);
+                    return horas;
+                })
                 .sum();
             
             double media = somaHoras / chamadosComAtendimento.size();
+            logger.info("Tempo médio de primeira resposta calculado: {} horas", media);
             return Math.round(media * 100.0) / 100.0;
             
         } catch (Exception e) {

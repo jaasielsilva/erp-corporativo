@@ -1850,45 +1850,104 @@
          function createSlaChart() {
              const ctx = document.getElementById('slaChart').getContext('2d');
              
-             // Dados simulados para os últimos 30 dias
-             const labels = [];
-             const slaData = [];
-             const today = new Date();
-             
-             for (let i = 29; i >= 0; i--) {
-                 const date = new Date(today);
-                 date.setDate(date.getDate() - i);
-                 labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-                 
-                 // Simular dados de SLA (entre 85% e 100%)
-                 slaData.push(Math.random() * 15 + 85);
-             }
-
+             // Carregar dados reais do backend
+             fetch('/suporte/api/tendencia-sla?dias=30')
+                 .then(response => response.json())
+                 .then(data => {
+                     if (data.success) {
+                         const labels = data.labels || [];
+                         const slaData = data.percentuais || [];
+                         const meta = data.meta || 90;
+                         
+                         slaChart = new Chart(ctx, {
+                             type: 'line',
+                             data: {
+                                 labels: labels,
+                                 datasets: [{
+                                     label: 'Cumprimento SLA (%)',
+                                     data: slaData,
+                                     borderColor: '#667eea',
+                                     backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                     borderWidth: 3,
+                                     fill: true,
+                                     tension: 0.4,
+                                     pointBackgroundColor: '#667eea',
+                                     pointBorderColor: '#fff',
+                                     pointBorderWidth: 2,
+                                     pointRadius: 4
+                                 }, {
+                                     label: `Meta (${meta}%)`,
+                                     data: new Array(labels.length).fill(meta),
+                                     borderColor: '#ef4444',
+                                     backgroundColor: 'transparent',
+                                     borderWidth: 2,
+                                     borderDash: [5, 5],
+                                     fill: false,
+                                     pointRadius: 0
+                                 }]
+                             },
+                             options: {
+                                 responsive: true,
+                                 maintainAspectRatio: false,
+                                 plugins: {
+                                     legend: {
+                                         display: true,
+                                         position: 'top'
+                                     },
+                                     tooltip: {
+                                         callbacks: {
+                                             label: function(context) {
+                                                 return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                             }
+                                         }
+                                     }
+                                 },
+                                 scales: {
+                                     y: {
+                                         beginAtZero: false,
+                                         min: 80,
+                                         max: 100,
+                                         title: {
+                                             display: true,
+                                             text: 'Percentual (%)'
+                                         }
+                                     },
+                                     x: {
+                                         title: {
+                                             display: true,
+                                             text: 'Data'
+                                         }
+                                     }
+                                 }
+                             }
+                         });
+                     } else {
+                         console.error('Erro ao carregar dados de tendência SLA:', data.error);
+                         // Criar gráfico com dados vazios em caso de erro
+                         createEmptySlaChart(ctx);
+                     }
+                 })
+                 .catch(error => {
+                     console.error('Erro ao carregar tendência SLA:', error);
+                     // Criar gráfico com dados vazios em caso de erro
+                     createEmptySlaChart(ctx);
+                 });
+         }
+         
+         // Função auxiliar para criar gráfico SLA vazio em caso de erro
+         function createEmptySlaChart(ctx) {
              slaChart = new Chart(ctx, {
                  type: 'line',
                  data: {
-                     labels: labels,
+                     labels: ['Sem dados'],
                      datasets: [{
                          label: 'Cumprimento SLA (%)',
-                         data: slaData,
+                         data: [0],
                          borderColor: '#667eea',
                          backgroundColor: 'rgba(102, 126, 234, 0.1)',
                          borderWidth: 3,
                          fill: true,
-                         tension: 0.4,
-                         pointBackgroundColor: '#667eea',
-                         pointBorderColor: '#fff',
-                         pointBorderWidth: 2,
-                         pointRadius: 4
-                     }, {
-                         label: 'Meta (90%)',
-                         data: new Array(30).fill(90),
-                         borderColor: '#ef4444',
-                         backgroundColor: 'transparent',
-                         borderWidth: 2,
-                         borderDash: [5, 5],
-                         fill: false,
-                         pointRadius: 0
+                         tension: 0.4
                      }]
                  },
                  options: {
@@ -1898,29 +1957,15 @@
                          legend: {
                              display: true,
                              position: 'top'
-                         },
-                         tooltip: {
-                             callbacks: {
-                                 label: function(context) {
-                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
-                                 }
-                             }
                          }
                      },
                      scales: {
                          y: {
-                             beginAtZero: false,
-                             min: 80,
+                             beginAtZero: true,
                              max: 100,
                              title: {
                                  display: true,
                                  text: 'Percentual (%)'
-                             }
-                         },
-                         x: {
-                             title: {
-                                 display: true,
-                                 text: 'Data'
                              }
                          }
                      }
@@ -1928,68 +1973,154 @@
              });
          }
 
-         // Função para criar gráfico de tempo médio
+         // Função para criar gráfico de tempo médio com dados reais
          function createTempoMedioChart() {
-             const ctx = document.getElementById('tempoMedioChart').getContext('2d');
+             console.log('Iniciando requisição para tempo médio dos últimos 30 dias...');
              
-             const labels = [];
-             const tempoData = [];
-             const today = new Date();
-             
-             for (let i = 29; i >= 0; i--) {
-                 const date = new Date(today);
-                 date.setDate(date.getDate() - i);
-                 labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-                 
-                 // Simular dados de tempo (entre 0.1 e 2 horas)
-                 tempoData.push(Math.random() * 1.9 + 0.1);
-             }
-
-             tempoMedioChart = new Chart(ctx, {
-                 type: 'bar',
-                 data: {
-                     labels: labels,
-                     datasets: [{
-                         label: 'Tempo Médio (horas)',
-                         data: tempoData,
-                         backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                         borderColor: '#22c55e',
-                         borderWidth: 1
-                     }]
-                 },
-                 options: {
-                     responsive: true,
-                     maintainAspectRatio: false,
-                     plugins: {
-                         legend: {
-                             display: true,
-                             position: 'top'
-                         },
-                         tooltip: {
-                             callbacks: {
-                                 label: function(context) {
-                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + 'h';
+             fetch('/suporte/api/tempo-medio-ultimos-dias?dias=30')
+                 .then(response => {
+                     console.log('Response status:', response.status);
+                     return response.json();
+                 })
+                 .then(data => {
+                     console.log('Dados de tempo médio recebidos:', data);
+                     
+                     const ctx = document.getElementById('tempoMedioChart').getContext('2d');
+                     
+                     if (data.success) {
+                         const labels = data.labels || [];
+                         const tempoData = data.temposResolucao || [];
+                         
+                         // Se não há dados, mostrar gráfico vazio
+                         if (labels.length === 0 || tempoData.every(val => val === 0)) {
+                             tempoMedioChart = new Chart(ctx, {
+                                 type: 'bar',
+                                 data: {
+                                     labels: ['Nenhum dado disponível'],
+                                     datasets: [{
+                                         label: 'Tempo Médio (horas)',
+                                         data: [0],
+                                         backgroundColor: 'rgba(156, 163, 175, 0.5)',
+                                         borderColor: '#9ca3af',
+                                         borderWidth: 1
+                                     }]
+                                 },
+                                 options: {
+                                     responsive: true,
+                                     maintainAspectRatio: false,
+                                     plugins: {
+                                         legend: { display: false }
+                                     },
+                                     scales: {
+                                         y: { beginAtZero: true, max: 1 }
+                                     }
+                                 }
+                             });
+                         } else {
+                             tempoMedioChart = new Chart(ctx, {
+                                 type: 'bar',
+                                 data: {
+                                     labels: labels,
+                                     datasets: [{
+                                         label: 'Tempo Médio (horas)',
+                                         data: tempoData,
+                                         backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                                         borderColor: '#22c55e',
+                                         borderWidth: 1
+                                     }]
+                                 },
+                                 options: {
+                                     responsive: true,
+                                     maintainAspectRatio: false,
+                                     plugins: {
+                                         legend: {
+                                             display: true,
+                                             position: 'top'
+                                         },
+                                         tooltip: {
+                                             callbacks: {
+                                                 label: function(context) {
+                                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + 'h';
+                                                 }
+                                             }
+                                         }
+                                     },
+                                     scales: {
+                                         y: {
+                                             beginAtZero: true,
+                                             title: {
+                                                 display: true,
+                                                 text: 'Tempo (horas)'
+                                             }
+                                         },
+                                         x: {
+                                             title: {
+                                                 display: true,
+                                                 text: 'Data'
+                                             }
+                                         }
+                                     }
+                                 }
+                             });
+                         }
+                         
+                         console.log('Gráfico de tempo médio criado com sucesso');
+                     } else {
+                         console.error('Erro nos dados recebidos:', data.error);
+                         // Criar gráfico vazio em caso de erro
+                         tempoMedioChart = new Chart(ctx, {
+                             type: 'bar',
+                             data: {
+                                 labels: ['Erro ao carregar dados'],
+                                 datasets: [{
+                                     label: 'Tempo Médio (horas)',
+                                     data: [0],
+                                     backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                                     borderColor: '#ef4444',
+                                     borderWidth: 1
+                                 }]
+                             },
+                             options: {
+                                 responsive: true,
+                                 maintainAspectRatio: false,
+                                 plugins: {
+                                     legend: { display: false }
+                                 },
+                                 scales: {
+                                     y: { beginAtZero: true, max: 1 }
                                  }
                              }
-                         }
-                     },
-                     scales: {
-                         y: {
-                             beginAtZero: true,
-                             title: {
-                                 display: true,
-                                 text: 'Tempo (horas)'
-                             }
-                         },
-                         x: {
-                             title: {
-                                 display: true,
-                                 text: 'Data'
-                             }
-                         }
+                         });
                      }
-                 }
-             });
+                 })
+                 .catch(error => {
+                     console.error('Erro na requisição de tempo médio:', error);
+                     // Criar gráfico de erro
+                     const ctx = document.getElementById('tempoMedioChart').getContext('2d');
+                     tempoMedioChart = new Chart(ctx, {
+                         type: 'bar',
+                         data: {
+                             labels: ['Erro de conexão'],
+                             datasets: [{
+                                 label: 'Tempo Médio (horas)',
+                                 data: [0],
+                                 backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                                 borderColor: '#ef4444',
+                                 borderWidth: 1
+                             }]
+                         },
+                         options: {
+                             responsive: true,
+                             maintainAspectRatio: false,
+                             plugins: {
+                                 legend: { display: false }
+                             },
+                             scales: {
+                                 y: { beginAtZero: true, max: 1 }
+                             }
+                         }
+                     });
+                 });
          }
 
          // Função para criar gráfico de status SLA

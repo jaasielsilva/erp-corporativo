@@ -1,7 +1,5 @@
 package com.jaasielsilva.portalceo.dto;
 
-import com.jaasielsilva.portalceo.model.Usuario.Genero;
-import com.jaasielsilva.portalceo.model.Usuario.NivelAcesso;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,12 +26,6 @@ public class UsuarioDTO {
     @Email(message = "Email deve ser válido")
     @Size(max = 100, message = "O email deve ter no máximo 100 caracteres")
     private String email;
-
-    @NotNull(message = "O gênero é obrigatório")
-    private Genero genero;
-
-    @NotNull(message = "O nível de acesso é obrigatório")
-    private NivelAcesso nivelAcesso;
 
     private Boolean ativo;
 

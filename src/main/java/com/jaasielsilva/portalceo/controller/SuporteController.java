@@ -282,6 +282,24 @@ public class SuporteController {
     }
     
     /**
+     * API para tempo médio de resolução dos últimos N dias
+     */
+    @GetMapping("/api/tempo-medio-ultimos-dias")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getTempoMedioUltimosDias(@RequestParam(defaultValue = "30") int dias) {
+        try {
+            Map<String, Object> dados = chamadoService.obterTempoMedioResolucaoUltimosDias(dias);
+            return ResponseEntity.ok(dados);
+        } catch (Exception e) {
+            logger.error("Erro ao obter tempo médio dos últimos {} dias: {}", dias, e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    /**
      * API para métricas de SLA dos últimos N dias
      */
     @GetMapping("/api/metricas-sla-periodo")
@@ -333,6 +351,31 @@ public class SuporteController {
             
         } catch (Exception e) {
             logger.error("Erro ao obter métricas comparativas de SLA: {}", e.getMessage());
+            response.put("success", false);
+            response.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * API para tendência de cumprimento SLA dos últimos N dias
+     */
+    @GetMapping("/api/tendencia-sla")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getTendenciaSLA(@RequestParam(defaultValue = "30") int dias) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Map<String, Object> tendenciaSLA = chamadoService.calcularTendenciaSLA(dias);
+            
+            response.put("success", true);
+            response.put("periodo", dias + " dias");
+            response.putAll(tendenciaSLA);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter tendência de SLA: {}", e.getMessage());
             response.put("success", false);
             response.put("error", "Erro interno do servidor");
             return ResponseEntity.internalServerError().body(response);

@@ -796,4 +796,144 @@ public class ChamadoService {
             return 0L;
         }
     }
+    
+    /**
+     * Calcula tendência de cumprimento SLA dos últimos N dias
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> calcularTendenciaSLA(int dias) {
+        java.util.Map<String, Object> tendencia = new java.util.HashMap<>();
+        
+        try {
+            LocalDateTime dataFim = LocalDateTime.now();
+            LocalDateTime dataInicio = dataFim.minusDays(dias);
+            
+            List<String> labels = new ArrayList<>();
+            List<Double> percentuais = new ArrayList<>();
+            
+            // Calcular SLA para cada dia dos últimos N dias
+            for (int i = dias - 1; i >= 0; i--) {
+                LocalDateTime diaInicio = dataFim.minusDays(i).withHour(0).withMinute(0).withSecond(0);
+                LocalDateTime diaFim = diaInicio.plusDays(1).minusSeconds(1);
+                
+                // Buscar chamados fechados neste dia
+                List<Chamado> chamadosDoDia = chamadoRepository.findByStatusAndDataFechamentoBetween(
+                    StatusChamado.FECHADO, diaInicio, diaFim);
+                
+                double percentualSLA = 0.0;
+                
+                if (!chamadosDoDia.isEmpty()) {
+                    int chamadosNoPrazo = 0;
+                    
+                    for (Chamado chamado : chamadosDoDia) {
+                        if (chamado.getDataFechamento() != null && chamado.getDataAbertura() != null) {
+                            LocalDateTime slaVencimento = calcularSlaVencimento(chamado);
+                            
+                            // Verificar se foi resolvido dentro do SLA
+                            if (slaVencimento != null && chamado.getDataFechamento().isBefore(slaVencimento)) {
+                                chamadosNoPrazo++;
+                            }
+                        }
+                    }
+                    
+                    percentualSLA = (double) chamadosNoPrazo / chamadosDoDia.size() * 100;
+                }
+                
+                // Formatar data para exibição
+                String dataFormatada = diaInicio.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM"));
+                labels.add(dataFormatada);
+                percentuais.add(Math.round(percentualSLA * 100.0) / 100.0);
+            }
+            
+            tendencia.put("labels", labels);
+            tendencia.put("percentuais", percentuais);
+            tendencia.put("meta", 90.0); // Meta de 90% de cumprimento SLA
+            
+            // Calcular estatísticas do período
+            double mediaPercentual = percentuais.stream()
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
+            
+            tendencia.put("mediaPercentual", Math.round(mediaPercentual * 100.0) / 100.0);
+            
+            logger.info("Tendência SLA calculada para {} dias: média {}%", dias, mediaPercentual);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao calcular tendência de SLA: {}", e.getMessage());
+            tendencia.put("labels", new ArrayList<>());
+            tendencia.put("percentuais", new ArrayList<>());
+            tendencia.put("meta", 90.0);
+            tendencia.put("mediaPercentual", 0.0);
+        }
+        
+        return tendencia;
+    }
+    
+    /**
+     * Calcula o tempo médio de resolução dos últimos N dias
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> obterTempoMedioResolucaoUltimosDias(int dias) {
+        Map<String, Object> resultado = new HashMap<>();
+        List<String> labels = new ArrayList<>();
+        List<Double> temposResolucao = new ArrayList<>();
+        
+        try {
+            LocalDate hoje = LocalDate.now();
+            
+            for (int i = dias - 1; i >= 0; i--) {
+                LocalDate data = hoje.minusDays(i);
+                LocalDateTime inicioData = data.atStartOfDay();
+                LocalDateTime fimData = data.atTime(23, 59, 59);
+                
+                // Buscar chamados resolvidos neste dia
+                List<Chamado> chamadosResolvidosNoDia = chamadoRepository.findByPeriodo(inicioData, fimData)
+                    .stream()
+                    .filter(c -> c.getStatus() == StatusChamado.RESOLVIDO || c.getStatus() == StatusChamado.FECHADO)
+                    .filter(c -> c.getDataResolucao() != null)
+                    .filter(c -> c.getDataResolucao().toLocalDate().equals(data))
+                    .collect(Collectors.toList());
+                
+                // Calcular tempo médio para este dia
+                double tempoMedio = 0.0;
+                if (!chamadosResolvidosNoDia.isEmpty()) {
+                    double somaHoras = chamadosResolvidosNoDia.stream()
+                        .mapToDouble(c -> Duration.between(c.getDataAbertura(), c.getDataResolucao()).toHours())
+                        .sum();
+                    tempoMedio = somaHoras / chamadosResolvidosNoDia.size();
+                }
+                
+                // Formatar label da data
+                String label = data.format(DateTimeFormatter.ofPattern("dd/MM"));
+                labels.add(label);
+                temposResolucao.add(Math.round(tempoMedio * 100.0) / 100.0);
+            }
+            
+            resultado.put("success", true);
+            resultado.put("labels", labels);
+            resultado.put("temposResolucao", temposResolucao);
+            
+            // Calcular estatísticas adicionais
+            double tempoMedioGeral = temposResolucao.stream()
+                .mapToDouble(Double::doubleValue)
+                .filter(t -> t > 0)
+                .average()
+                .orElse(0.0);
+            
+            resultado.put("tempoMedioGeral", Math.round(tempoMedioGeral * 100.0) / 100.0);
+            
+            logger.info("Tempo médio de resolução calculado para {} dias: {} horas", dias, tempoMedioGeral);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao calcular tempo médio de resolução dos últimos {} dias: {}", dias, e.getMessage());
+            resultado.put("success", false);
+            resultado.put("error", "Erro interno do servidor");
+            resultado.put("labels", new ArrayList<>());
+            resultado.put("temposResolucao", new ArrayList<>());
+            resultado.put("tempoMedioGeral", 0.0);
+        }
+        
+        return resultado;
+    }
 }

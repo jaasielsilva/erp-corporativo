@@ -1,7 +1,10 @@
 package com.jaasielsilva.portalceo.controller;
 
 import com.jaasielsilva.portalceo.model.Chamado;
+import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.service.ChamadoService;
+import com.jaasielsilva.portalceo.service.AtribuicaoColaboradorService;
+import com.jaasielsilva.portalceo.service.ColaboradorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +24,12 @@ public class ChamadoRestController {
 
     @Autowired
     private ChamadoService chamadoService;
+
+    @Autowired
+    private AtribuicaoColaboradorService atribuicaoService;
+
+    @Autowired
+    private ColaboradorService colaboradorService;
 
     /**
      * Lista todos os chamados
@@ -213,6 +222,126 @@ public class ChamadoRestController {
             response.put("sucesso", false);
             response.put("erro", e.getMessage());
             return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    /**
+     * Atribuir colaborador específico ao chamado
+     */
+    @PostMapping("/{id}/atribuir")
+    public ResponseEntity<Map<String, Object>> atribuirColaborador(
+            @PathVariable Long id,
+            @RequestParam Long colaboradorId) {
+        
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Chamado chamado = atribuicaoService.atribuirColaboradorEspecifico(id, colaboradorId);
+            response.put("sucesso", true);
+            response.put("chamado", chamado);
+            response.put("mensagem", "Colaborador atribuído com sucesso!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("sucesso", false);
+            response.put("erro", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Atribuição automática de colaborador
+     */
+    @PostMapping("/{id}/atribuir-automatico")
+    public ResponseEntity<Map<String, Object>> atribuirAutomatico(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Chamado chamado = atribuicaoService.atribuirColaboradorAutomatico(id);
+            response.put("sucesso", true);
+            response.put("chamado", chamado);
+            response.put("mensagem", "Colaborador atribuído automaticamente!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("sucesso", false);
+            response.put("erro", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Remover atribuição de colaborador
+     */
+    @DeleteMapping("/{id}/atribuir")
+    public ResponseEntity<Map<String, Object>> removerAtribuicao(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Chamado chamado = atribuicaoService.removerAtribuicao(id);
+            response.put("sucesso", true);
+            response.put("chamado", chamado);
+            response.put("mensagem", "Atribuição removida com sucesso!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("sucesso", false);
+            response.put("erro", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Listar colaboradores disponíveis para atribuição
+     */
+    @GetMapping("/colaboradores-disponiveis")
+    public ResponseEntity<List<Map<String, Object>>> listarColaboradoresDisponiveis() {
+        try {
+            List<Colaborador> colaboradores = atribuicaoService.listarColaboradoresDisponiveis();
+            List<Map<String, Object>> response = colaboradores.stream()
+                .map(colaborador -> {
+                    Map<String, Object> colabMap = new HashMap<>();
+                    colabMap.put("id", colaborador.getId());
+                    colabMap.put("nome", colaborador.getNome());
+                    colabMap.put("matricula", colaborador.getMatricula());
+                    colabMap.put("cargo", colaborador.getCargo() != null ? colaborador.getCargo().getNome() : "Não definido");
+                    colabMap.put("email", colaborador.getEmail());
+                    colabMap.put("disponivel", atribuicaoService.verificarDisponibilidade(colaborador.getId()));
+                    return colabMap;
+                })
+                .toList();
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Listar chamados atribuídos a um colaborador
+     */
+    @GetMapping("/colaborador/{colaboradorId}")
+    public ResponseEntity<List<Chamado>> listarChamadosColaborador(@PathVariable Long colaboradorId) {
+        try {
+            List<Chamado> chamados = atribuicaoService.listarChamadosColaborador(colaboradorId);
+            return ResponseEntity.ok(chamados);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Verificar disponibilidade de colaborador
+     */
+    @GetMapping("/colaborador/{colaboradorId}/disponibilidade")
+    public ResponseEntity<Map<String, Object>> verificarDisponibilidade(@PathVariable Long colaboradorId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean disponivel = atribuicaoService.verificarDisponibilidade(colaboradorId);
+            int chamadosAtivos = atribuicaoService.contarChamadosAtivos(colaboradorId);
+            
+            response.put("disponivel", disponivel);
+            response.put("chamadosAtivos", chamadosAtivos);
+            response.put("limiteMaximo", 10); // Limite configurável
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("erro", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }

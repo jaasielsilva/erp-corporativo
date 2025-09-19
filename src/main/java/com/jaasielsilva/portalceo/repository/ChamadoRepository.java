@@ -49,6 +49,25 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     // Contar chamados por prioridade
     long countByPrioridade(Prioridade prioridade);
 
+    // Buscar chamados por colaborador responsável
+    List<Chamado> findByColaboradorResponsavelId(Long colaboradorId);
+
+    // Buscar chamados ativos por colaborador responsável
+    @Query("SELECT c FROM Chamado c WHERE c.colaboradorResponsavel.id = :colaboradorId AND c.status IN ('ABERTO', 'EM_ANDAMENTO')")
+    List<Chamado> findChamadosAtivosByColaborador(@Param("colaboradorId") Long colaboradorId);
+
+    // Contar chamados ativos por colaborador
+    @Query("SELECT COUNT(c) FROM Chamado c WHERE c.colaboradorResponsavel.id = :colaboradorId AND c.status IN ('ABERTO', 'EM_ANDAMENTO')")
+    int countChamadosAtivosByColaborador(@Param("colaboradorId") Long colaboradorId);
+
+    // Buscar chamados sem colaborador atribuído
+    @Query("SELECT c FROM Chamado c WHERE c.colaboradorResponsavel IS NULL AND c.status = 'ABERTO' ORDER BY c.prioridade DESC, c.dataAbertura ASC")
+    List<Chamado> findChamadosSemAtribuicao();
+
+    // Buscar chamados próximos do vencimento do SLA
+    @Query("SELECT c FROM Chamado c WHERE c.slaVencimento IS NOT NULL AND c.slaVencimento <= :dataLimite AND c.status IN ('ABERTO', 'EM_ANDAMENTO')")
+    List<Chamado> findChamadosProximosVencimentoSla(@Param("dataLimite") LocalDateTime dataLimite);
+
     // Query para calcular tempo médio de resolução (em horas)
     @Query("SELECT AVG(TIMESTAMPDIFF(HOUR, c.dataAbertura, c.dataResolucao)) " +
            "FROM Chamado c " +
@@ -130,6 +149,12 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
 
     // Buscar chamados por solicitante
     List<Chamado> findBySolicitanteEmailOrderByDataAberturaDesc(String email);
+    
+    // Buscar chamados por colaborador responsável
+    List<Chamado> findByColaboradorResponsavel(com.jaasielsilva.portalceo.model.Colaborador colaborador);
+    
+    // Contar chamados por colaborador responsável e status
+    int countByColaboradorResponsavelAndStatusIn(com.jaasielsilva.portalceo.model.Colaborador colaborador, List<StatusChamado> status);
     
     // Buscar chamados fechados por período
     List<Chamado> findByStatusAndDataFechamentoBetween(StatusChamado status, LocalDateTime dataInicio, LocalDateTime dataFim);

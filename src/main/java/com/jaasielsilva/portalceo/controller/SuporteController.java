@@ -6,6 +6,7 @@ import com.jaasielsilva.portalceo.model.Chamado.Prioridade;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ChamadoService;
 import com.jaasielsilva.portalceo.service.BacklogChamadoService;
+import com.jaasielsilva.portalceo.service.SlaMonitoramentoService;
 import com.jaasielsilva.portalceo.dto.CategoriaChamadoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,9 @@ public class SuporteController {
     
     @Autowired
     private BacklogChamadoService backlogChamadoService;
+
+    @Autowired
+    private SlaMonitoramentoService slaMonitoramentoService;
 
     // Dashboard principal do suporte
     @GetMapping
@@ -289,6 +293,31 @@ public class SuporteController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("error", "Erro interno do servidor");
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    // Endpoint para estatísticas de SLA
+    @GetMapping("/api/sla-estatisticas")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> obterEstatisticasSla() {
+        try {
+            SlaMonitoramentoService.SlaEstatisticas stats = slaMonitoramentoService.calcularEstatisticasSla();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("chamadosVencidos", stats.getChamadosVencidos());
+            response.put("chamadosProximaHora", stats.getChamadosProximaHora());
+            response.put("chamadosProximasDuasHoras", stats.getChamadosProximasDuasHoras());
+            response.put("chamadosProximasQuatroHoras", stats.getChamadosProximasQuatroHoras());
+            response.put("sucesso", true);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter estatísticas de SLA: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("erro", e.getMessage());
+            errorResponse.put("sucesso", false);
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }

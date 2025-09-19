@@ -91,6 +91,11 @@ public class Chamado {
 
     private LocalDateTime dataInicio;
 
+    // Relacionamento com colaborador responsável
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "colaborador_id")
+    private Colaborador colaboradorResponsavel;
+
     // Campo transiente para SLA restante (calculado dinamicamente)
     @Transient
     private Long slaRestante;

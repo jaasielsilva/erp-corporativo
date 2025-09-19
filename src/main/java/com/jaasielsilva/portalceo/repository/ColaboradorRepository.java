@@ -54,5 +54,8 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
 
     @Query("SELECT c FROM Colaborador c JOIN FETCH c.cargo WHERE c.ativo = true")
     List<Colaborador> findAllWithCargo();
+    
+    @Query("SELECT c FROM Colaborador c WHERE c.ativo = true AND LOWER(c.cargo.nome) LIKE LOWER(CONCAT('%', :cargoNome, '%'))")
+    List<Colaborador> findByAtivoTrueAndCargoNomeContainingIgnoreCase(@Param("cargoNome") String cargoNome);
 
 }

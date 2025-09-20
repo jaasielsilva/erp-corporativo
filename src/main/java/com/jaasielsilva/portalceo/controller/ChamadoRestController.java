@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
+import com.jaasielsilva.portalceo.dto.ChamadoDTO;
 import com.jaasielsilva.portalceo.model.Chamado;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.service.ChamadoService;
@@ -32,12 +33,12 @@ public class ChamadoRestController {
     private ColaboradorService colaboradorService;
 
     /**
-     * Lista todos os chamados
+     * Lista todos os chamados como DTO (evita problemas de lazy loading)
      */
     @GetMapping
-    public ResponseEntity<List<Chamado>> listarTodos() {
+    public ResponseEntity<List<ChamadoDTO>> listarTodos() {
         try {
-            List<Chamado> chamados = chamadoService.listarTodos();
+            List<ChamadoDTO> chamados = chamadoService.listarTodosDTO();
             return ResponseEntity.ok(chamados);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -45,12 +46,12 @@ public class ChamadoRestController {
     }
 
     /**
-     * Busca chamado por ID
+     * Busca chamado por ID como DTO
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Chamado> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ChamadoDTO> buscarPorId(@PathVariable Long id) {
         try {
-            Optional<Chamado> chamado = chamadoService.buscarPorId(id);
+            Optional<ChamadoDTO> chamado = chamadoService.buscarPorIdDTO(id);
             return chamado.map(ResponseEntity::ok)
                          .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -59,12 +60,12 @@ public class ChamadoRestController {
     }
 
     /**
-     * Busca chamado por número
+     * Busca chamado por número como DTO
      */
     @GetMapping("/numero/{numero}")
-    public ResponseEntity<Chamado> buscarPorNumero(@PathVariable String numero) {
+    public ResponseEntity<ChamadoDTO> buscarPorNumero(@PathVariable String numero) {
         try {
-            Optional<Chamado> chamado = chamadoService.buscarPorNumero(numero);
+            Optional<ChamadoDTO> chamado = chamadoService.buscarPorNumeroDTO(numero);
             return chamado.map(ResponseEntity::ok)
                          .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -73,12 +74,12 @@ public class ChamadoRestController {
     }
 
     /**
-     * Lista chamados abertos
+     * Lista chamados abertos como DTO
      */
     @GetMapping("/abertos")
-    public ResponseEntity<List<Chamado>> listarAbertos() {
+    public ResponseEntity<List<ChamadoDTO>> listarAbertos() {
         try {
-            List<Chamado> chamados = chamadoService.listarAbertos();
+            List<ChamadoDTO> chamados = chamadoService.listarAbertosDTO();
             return ResponseEntity.ok(chamados);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -86,12 +87,12 @@ public class ChamadoRestController {
     }
 
     /**
-     * Lista chamados em andamento
+     * Lista chamados em andamento como DTO
      */
     @GetMapping("/em-andamento")
-    public ResponseEntity<List<Chamado>> listarEmAndamento() {
+    public ResponseEntity<List<ChamadoDTO>> listarEmAndamento() {
         try {
-            List<Chamado> chamados = chamadoService.listarEmAndamento();
+            List<ChamadoDTO> chamados = chamadoService.listarEmAndamentoDTO();
             return ResponseEntity.ok(chamados);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

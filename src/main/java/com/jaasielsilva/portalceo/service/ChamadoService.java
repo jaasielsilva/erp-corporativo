@@ -1,9 +1,12 @@
 package com.jaasielsilva.portalceo.service;
 
+import com.jaasielsilva.portalceo.dto.ChamadoDTO;
 import com.jaasielsilva.portalceo.model.Chamado;
 import com.jaasielsilva.portalceo.model.Chamado.StatusChamado;
 import com.jaasielsilva.portalceo.model.Chamado.Prioridade;
+import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.repository.ChamadoRepository;
+import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,9 @@ public class ChamadoService {
 
     @Autowired
     private ChamadoRepository chamadoRepository;
+    
+    @Autowired
+    private ColaboradorRepository colaboradorRepository;
 
     // Criar novo chamado
     public Chamado criarChamado(Chamado chamado) {
@@ -116,6 +122,84 @@ public class ChamadoService {
     @Transactional(readOnly = true)
     public List<Chamado> buscarChamadosAvaliados() {
         return chamadoRepository.findChamadosAvaliados();
+    }
+
+    // Listar chamados por status
+    @Transactional(readOnly = true)
+    public List<Chamado> listarPorStatus(StatusChamado status) {
+        List<Chamado> chamados = chamadoRepository.findByStatus(status);
+        chamados.forEach(chamado -> chamado.setSlaRestante(calcularSlaRestante(chamado)));
+        return chamados;
+    }
+
+    // Listar chamados não atribuídos (sem técnico responsável)
+    @Transactional(readOnly = true)
+    public List<Chamado> listarChamadosNaoAtribuidos() {
+        List<Chamado> chamados = chamadoRepository.findChamadosSemAtribuicao();
+        chamados.forEach(chamado -> chamado.setSlaRestante(calcularSlaRestante(chamado)));
+        return chamados;
+    }
+
+    // Buscar técnicos disponíveis (sem chamados abertos atribuídos)
+    @Transactional(readOnly = true)
+    public List<Colaborador> buscarTecnicosDisponiveis() {
+        // Buscar colaboradores ativos que não têm chamados abertos atribuídos
+        List<Colaborador> todosColaboradores = colaboradorRepository.findByAtivoTrueAndStatusOrderByNome(
+            Colaborador.StatusColaborador.ATIVO);
+        
+        return todosColaboradores.stream()
+            .filter(colaborador -> {
+                // Verificar se o colaborador não tem chamados abertos
+                List<Chamado> chamadosAbertos = chamadoRepository.findByColaboradorResponsavelAndStatusIn(
+                    colaborador, List.of(StatusChamado.ABERTO, StatusChamado.EM_ANDAMENTO));
+                return chamadosAbertos.isEmpty();
+            })
+            .collect(Collectors.toList());
+    }
+
+    // Verificar se um colaborador específico está disponível
+    @Transactional(readOnly = true)
+    public boolean isColaboradorDisponivel(Colaborador colaborador) {
+        if (colaborador == null || !colaborador.getAtivo() || 
+            colaborador.getStatus() != Colaborador.StatusColaborador.ATIVO) {
+            return false;
+        }
+        
+        // Verificar se não tem chamados abertos
+        List<Chamado> chamadosAbertos = chamadoRepository.findByColaboradorResponsavelAndStatusIn(
+            colaborador, List.of(StatusChamado.ABERTO, StatusChamado.EM_ANDAMENTO));
+        return chamadosAbertos.isEmpty();
+    }
+
+    // Atribuir chamado automaticamente para usuário logado se disponível
+    @Transactional
+    public Chamado atribuirChamadoAutomaticamente(Long chamadoId, Colaborador colaboradorLogado) {
+        Optional<Chamado> chamadoOpt = buscarPorId(chamadoId);
+        if (chamadoOpt.isEmpty()) {
+            throw new RuntimeException("Chamado não encontrado");
+        }
+        
+        Chamado chamado = chamadoOpt.get();
+        
+        // Verificar se o chamado ainda não foi atribuído
+        if (chamado.getColaboradorResponsavel() != null) {
+            throw new RuntimeException("Chamado já foi atribuído a outro colaborador");
+        }
+        
+        // Verificar se o colaborador está disponível
+        if (!isColaboradorDisponivel(colaboradorLogado)) {
+            throw new RuntimeException("Colaborador não está disponível para receber novos chamados");
+        }
+        
+        // Atribuir o chamado
+        chamado.setColaboradorResponsavel(colaboradorLogado);
+        chamado.setStatus(StatusChamado.EM_ANDAMENTO);
+        chamado.setDataInicioAtendimento(LocalDateTime.now());
+        
+        logger.info("Chamado {} atribuído automaticamente para {}", 
+                   chamado.getNumero(), colaboradorLogado.getNome());
+        
+        return chamadoRepository.save(chamado);
     }
 
     // Listar últimos chamados para dashboard
@@ -967,5 +1051,88 @@ public class ChamadoService {
         }
         
         return resultado;
+    }
+
+    // ==================== MÉTODOS PARA RETORNAR DTOs COM FETCH JOIN ====================
+    
+    /**
+     * Lista todos os chamados como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public List<ChamadoDTO> listarTodosDTO() {
+        List<Chamado> chamados = chamadoRepository.findAllWithColaborador();
+        return ChamadoDTO.fromList(chamados);
+    }
+    
+    /**
+     * Lista chamados abertos como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public List<ChamadoDTO> listarAbertosDTO() {
+        List<Chamado> chamados = chamadoRepository.findChamadosAbertosWithColaborador();
+        return ChamadoDTO.fromList(chamados);
+    }
+    
+    /**
+     * Lista chamados em andamento como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public List<ChamadoDTO> listarEmAndamentoDTO() {
+        List<Chamado> chamados = chamadoRepository.findChamadosEmAndamentoWithColaborador();
+        return ChamadoDTO.fromList(chamados);
+    }
+    
+    /**
+     * Lista chamados resolvidos como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public List<ChamadoDTO> listarResolvidosDTO() {
+        List<Chamado> chamados = chamadoRepository.findChamadosResolvidosWithColaborador();
+        return ChamadoDTO.fromList(chamados);
+    }
+    
+    /**
+     * Busca chamado por ID e retorna como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public Optional<ChamadoDTO> buscarPorIdDTO(Long id) {
+        Optional<Chamado> chamado = chamadoRepository.findByIdWithColaborador(id);
+        return chamado.map(ChamadoDTO::new);
+    }
+    
+    /**
+     * Busca chamado por número e retorna como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public Optional<ChamadoDTO> buscarPorNumeroDTO(String numero) {
+        Optional<Chamado> chamado = chamadoRepository.findByNumeroWithColaborador(numero);
+        return chamado.map(ChamadoDTO::new);
+    }
+    
+    /**
+     * Lista chamados por status como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public List<ChamadoDTO> listarPorStatusDTO(StatusChamado status) {
+        List<Chamado> chamados = chamadoRepository.findByStatusWithColaborador(status);
+        return ChamadoDTO.fromList(chamados);
+    }
+    
+    /**
+     * Lista chamados não atribuídos como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public List<ChamadoDTO> listarChamadosNaoAtribuidosDTO() {
+        List<Chamado> chamados = chamadoRepository.findChamadosSemAtribuicaoWithColaborador();
+        return ChamadoDTO.fromList(chamados);
+    }
+    
+    /**
+     * Lista chamados com SLA próximo do vencimento como DTO (com fetch join para evitar N+1)
+     */
+    @Transactional(readOnly = true)
+    public List<ChamadoDTO> buscarChamadosComSlaProximoVencimentoDTO() {
+        List<Chamado> chamados = chamadoRepository.findChamadosComSlaProximoVencimentoWithColaborador();
+        return ChamadoDTO.fromList(chamados);
     }
 }

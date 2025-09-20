@@ -97,7 +97,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
                                 "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
                                 .permitAll()
-                                .requestMatchers("/api/produto/**", "/api/processar", "/api/beneficios/**", "/api/rh/**", "/api/chamados/**", "/api/tempo-resolucao", "/suporte/api/avaliacoes-atendimento", "/suporte/api/categorias", "/suporte/api/public/**", "/suporte/api/metricas-sla-periodo", "/suporte/api/metricas-sla-comparativo", "/suporte/api/tempo-resolucao", "/suporte/api/tempo-medio-primeira-resposta").permitAll()
+                                .requestMatchers("/api/produto/**", "/api/processar", "/api/beneficios/**", "/api/rh/**", "/api/chamados/**", "/api/suporte/**", "/api/tempo-resolucao", "/suporte/api/avaliacoes-atendimento", "/suporte/api/categorias", "/suporte/api/public/**", "/suporte/api/metricas-sla-periodo", "/suporte/api/metricas-sla-comparativo", "/suporte/api/tempo-resolucao", "/suporte/api/tempo-medio-primeira-resposta").permitAll()
                                                 .requestMatchers("/rh/colaboradores/adesao/**").permitAll()
                                                 
                                                 .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()

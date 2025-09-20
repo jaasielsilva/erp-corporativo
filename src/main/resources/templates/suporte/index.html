@@ -142,6 +142,75 @@
             padding: 1.5rem;
         }
 
+        /* Estilos para Ações Rápidas */
+        .quick-action-card {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            height: 100%;
+            text-decoration: none !important;
+            color: inherit;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: #cbd5e1;
+            text-decoration: none !important;
+            color: inherit;
+        }
+
+        .quick-action-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .quick-action-icon i {
+            font-size: 24px;
+            color: white;
+        }
+
+        .quick-action-content {
+            flex: 1;
+        }
+
+        .quick-action-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .quick-action-desc {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .quick-action-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 15px;
+            }
+
+            .quick-action-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+
 
 
         /* Estilos para indicadores de performance gerencial */
@@ -572,14 +641,18 @@
                                     </h1>
                                     <p class="text-muted mb-0">Acompanhe chamados, tickets e status de atendimento</p>
                                 </div>
-                                <div>
+                                <div class="d-flex flex-wrap gap-2">
                                     <a href="/suporte/chamados" class="btn btn-outline-primary">
                                         <i class="fas fa-list me-1"></i> Lista de Chamados
                                     </a>
-                                    <a href="/suporte/chamados/novo" class="btn btn-primary ms-2">
-                                        <i class="fas fa-plus me-1"></i> Novo Chamado
+                                   
+                                    <a href="/suporte/status" class="btn btn-outline-success">
+                                        <i class="fas fa-tasks me-1"></i> Gerenciar Status
                                     </a>
-                                    <button class="btn btn-outline-primary ms-2" onclick="window.location.reload()">
+                                    <a href="/suporte/atribuir" class="btn btn-outline-warning">
+                                        <i class="fas fa-user-cog me-1"></i> Atribuir Chamados
+                                    </a>
+                                    <button class="btn btn-outline-secondary" onclick="window.location.reload()">
                                         <i class="fas fa-sync-alt me-1"></i> Atualizar
                                     </button>
                                 </div>
@@ -633,6 +706,67 @@
                         </div>
 
 
+                    </div>
+
+                    <!-- Ações Rápidas -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3 col-sm-6">
+                                            <a href="/suporte/novo" class="quick-action-card text-decoration-none">
+                                                <div class="quick-action-icon bg-primary">
+                                                    <i class="fas fa-plus"></i>
+                                                </div>
+                                                <div class="quick-action-content">
+                                                    <h6 class="quick-action-title">Novo Chamado</h6>
+                                                    <p class="quick-action-desc">Criar um novo ticket de suporte</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6">
+                                            <a href="/suporte/chamados" class="quick-action-card text-decoration-none">
+                                                <div class="quick-action-icon bg-info">
+                                                    <i class="fas fa-list"></i>
+                                                </div>
+                                                <div class="quick-action-content">
+                                                    <h6 class="quick-action-title">Lista de Chamados</h6>
+                                                    <p class="quick-action-desc">Visualizar todos os chamados</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6">
+                                            <a href="/suporte/status" class="quick-action-card text-decoration-none">
+                                                <div class="quick-action-icon bg-success">
+                                                    <i class="fas fa-tasks"></i>
+                                                </div>
+                                                <div class="quick-action-content">
+                                                    <h6 class="quick-action-title">Gerenciar Status</h6>
+                                                    <p class="quick-action-desc">Atualizar status dos chamados</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 col-sm-6">
+                                            <a href="/suporte/atribuir" class="quick-action-card text-decoration-none">
+                                                <div class="quick-action-icon bg-warning">
+                                                    <i class="fas fa-user-cog"></i>
+                                                </div>
+                                                <div class="quick-action-content">
+                                                    <h6 class="quick-action-title">Atribuir Chamados</h6>
+                                                    <p class="quick-action-desc">Designar técnicos aos chamados</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Gráficos Principais -->

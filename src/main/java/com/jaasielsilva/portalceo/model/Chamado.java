@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -94,6 +95,7 @@ public class Chamado {
     // Relacionamento com colaborador responsável
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "colaborador_id")
+    @JsonIgnoreProperties({"supervisor", "cargo", "departamento", "usuario", "chamados"})
     private Colaborador colaboradorResponsavel;
 
     // Campo transiente para SLA restante (calculado dinamicamente)

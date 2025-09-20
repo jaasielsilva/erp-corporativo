@@ -13,124 +13,328 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
+        /* Badges de Status */
         .status-badge {
-            padding: 0.25rem 0.75rem;
+            padding: 0.35rem 0.85rem;
             border-radius: 50px;
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
         
         .status-aberto {
-            background-color: #e3f2fd;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
             color: #1976d2;
+            border: 1px solid #90caf9;
         }
         
         .status-em-andamento {
-            background-color: #fff3e0;
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
             color: #f57c00;
+            border: 1px solid #ffcc02;
         }
         
         .status-resolvido {
-            background-color: #e8f5e8;
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
             color: #388e3c;
+            border: 1px solid #81c784;
         }
         
         .status-fechado {
-            background-color: #f3e5f5;
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
             color: #7b1fa2;
+            border: 1px solid #ba68c8;
         }
         
+        .status-reaberto {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            color: #ff8f00;
+            border: 1px solid #ffb74d;
+        }
+        
+        /* Badges de Prioridade */
         .prioridade-badge {
-            padding: 0.25rem 0.75rem;
+            padding: 0.35rem 0.85rem;
             border-radius: 50px;
             font-size: 0.75rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
         
         .prioridade-baixa {
-            background-color: #e8f5e8;
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
             color: #388e3c;
+            border: 1px solid #81c784;
         }
         
         .prioridade-media {
-            background-color: #fff3e0;
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
             color: #f57c00;
+            border: 1px solid #ffcc02;
         }
         
         .prioridade-alta {
-            background-color: #ffebee;
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
             color: #d32f2f;
+            border: 1px solid #ef5350;
         }
         
         .prioridade-urgente {
-            background-color: #ffcdd2;
+            background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
             color: #c62828;
+            border: 1px solid #e57373;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(198, 40, 40, 0.3);
         }
         
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.02);
+            }
+            100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+        }
+        
+        /* SLA Indicators */
+        .sla-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
         }
         
         .sla-verde {
+            background-color: #e8f5e8;
             color: #388e3c;
-            font-weight: 600;
+            border: 1px solid #c8e6c9;
         }
         
         .sla-amarelo {
+            background-color: #fff3e0;
             color: #f57c00;
-            font-weight: 600;
+            border: 1px solid #ffe0b2;
         }
         
         .sla-vermelho {
+            background-color: #ffebee;
             color: #d32f2f;
-            font-weight: 600;
+            border: 1px solid #ffcdd2;
             animation: pulse 2s infinite;
         }
         
-        .table-hover tbody tr:hover {
-            background-color: #f8f9fa;
+        /* Tabela Melhorada */
+        .table-modern {
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
         
-        .btn-action {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.75rem;
-            margin: 0 0.125rem;
-        }
-        
-        .card-header {
+        .table-modern thead th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border: none;
+            padding: 1rem 0.75rem;
         }
         
-        .filters-card {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
+        .table-modern tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f1f3f4;
         }
-
-        /* Estilos para avaliação por estrelas */
+        
+        .table-modern tbody tr:hover {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f5f7ff 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .table-modern tbody td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+            border: none;
+        }
+        
+        /* Botões de Ação Melhorados */
+        .btn-action {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            margin: 0 0.125rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Card Header Melhorado */
+        .card-header-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+        }
+        
+        /* Filtros Melhorados */
+        .filters-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 1px solid #e9ecef;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .filters-card .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filters-card .form-control,
+        .filters-card .form-select {
+            border-radius: 0.5rem;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .filters-card .form-control:focus,
+        .filters-card .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Avaliação por Estrelas */
         .rating-stars {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.125rem;
         }
 
         .rating-stars .star {
-            font-size: 14px;
+            font-size: 16px;
             color: #ddd;
-            margin-right: 2px;
+            transition: color 0.3s ease;
         }
 
         .rating-stars .star.filled {
             color: #ffc107;
+            text-shadow: 0 0 4px rgba(255, 193, 7, 0.5);
         }
 
         .rating-stars .star.empty {
             color: #e9ecef;
+        }
+        
+        /* Loading States */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(2px);
+        }
+        
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 0.3rem solid #f3f3f3;
+            border-top: 0.3rem solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Estatísticas Cards */
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #e9ecef;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .stats-card .stats-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .stats-card .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-card .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+            
+            .btn-action {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+            }
+            
+            .status-badge,
+            .prioridade-badge {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+            }
         }
     </style>
 </head>
@@ -174,13 +378,62 @@
                                     <p class="text-muted mb-0">Gerencie todos os chamados de suporte</p>
                                 </div>
                                 <div>
-                                    <a href="/suporte/chamados/novo" class="btn btn-primary">
+                                    <a href="/suporte/novo" class="btn btn-primary">
                                         <i class="fas fa-plus me-1"></i> Novo Chamado
                                     </a>
-                                    <button class="btn btn-outline-primary ms-2" onclick="window.location.reload()">
+                                    <button class="btn btn-outline-primary ms-2" onclick="atualizarDados()">
                                         <i class="fas fa-sync-alt me-1"></i> Atualizar
                                     </button>
+                                    <div class="btn-group ms-2" role="group">
+                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                            <i class="fas fa-download me-1"></i> Exportar
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="exportarExcel()"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="exportarPDF()"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+                                        </ul>
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas -->
+                    <div class="row mb-4" id="estatisticas">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                    <i class="fas fa-ticket-alt"></i>
+                                </div>
+                                <div class="stats-number text-primary" id="totalChamados">0</div>
+                                <div class="stats-label">Total de Chamados</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stats-number text-warning" id="chamadosAbertos">0</div>
+                                <div class="stats-label">Chamados Abertos</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <div class="stats-number text-info" id="chamadosAndamento">0</div>
+                                <div class="stats-label">Em Andamento</div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stats-card">
+                                <div class="stats-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stats-number text-success" id="chamadosResolvidos">0</div>
+                                <div class="stats-label">Resolvidos Hoje</div>
                             </div>
                         </div>
                     </div>
@@ -222,16 +475,40 @@
 
                     <!-- Tabela de Chamados -->
                     <div class="card shadow">
-                        <div class="card-header">
-                            <h6 class="m-0 font-weight-bold">
-                                <i class="fas fa-table me-2"></i>
-                                Chamados de Suporte
-                                <span class="badge bg-light text-dark ms-2" th:text="${#lists.size(chamados)}">0</span>
-                            </h6>
+                        <div class="card-header-modern">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 font-weight-bold">
+                                    <i class="fas fa-table me-2"></i>
+                                    Chamados de Suporte
+                                    <span class="badge bg-light text-dark ms-2" id="contadorChamados">0</span>
+                                </h6>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="autoRefresh">
+                                        <label class="form-check-label text-white" for="autoRefresh">
+                                            Auto-atualizar
+                                        </label>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-light btn-sm" onclick="alternarVisualizacao('tabela')" id="btnTabela">
+                                            <i class="fas fa-table"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-light btn-sm" onclick="alternarVisualizacao('cards')" id="btnCards">
+                                            <i class="fas fa-th-large"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                            <!-- Loading Overlay -->
+                            <div class="loading-overlay d-none" id="loadingOverlay">
+                                <div class="loading-spinner"></div>
+                            </div>
+                            
+                            <!-- Visualização em Tabela -->
+                            <div class="table-responsive" id="visualizacaoTabela">
+                                <table class="table table-modern mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Número</th>
@@ -309,8 +586,10 @@
                                                       th:class="${chamado.tecnicoResponsavel == null ? 'text-muted' : ''}">Técnico</span>
                                             </td>
                                             <td>
-                                                <span th:if="${chamado.slaRestante != null}" th:class="${chamado.slaRestante < 0 ? 'sla-vermelho' : (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde')}">
-                                                    <i class="fas fa-clock me-1"></i>
+                                                <span th:if="${chamado.slaRestante != null}" 
+                                                      class="sla-indicator"
+                                                      th:classappend="${chamado.slaRestante < 0 ? 'sla-vermelho' : (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde')}">
+                                                    <i class="fas fa-clock"></i>
                                                     <span th:text="${chamado.slaRestante > 0 ? chamado.slaRestante + 'h' : (chamado.slaRestante == 0 ? 'Menos de 1h' : 'Vencido')}">24h</span>
                                                 </span>
                                                 <span th:unless="${chamado.slaRestante != null}" class="text-muted">-</span>
@@ -371,6 +650,23 @@
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            <!-- Visualização em Cards -->
+                            <div class="d-none" id="visualizacaoCards">
+                                <div class="row p-4" id="containerCards">
+                                    <!-- Cards serão inseridos aqui via JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <!-- Mensagem quando não há dados -->
+                            <div class="text-center py-5 d-none" id="mensagemVazia">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nenhum chamado encontrado</h5>
+                                <p class="text-muted mb-0">Não há chamados que correspondam aos filtros aplicados.</p>
+                                <a href="/suporte/novo" class="btn btn-primary mt-3">
+                                    <i class="fas fa-plus me-1"></i> Criar Primeiro Chamado
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -388,110 +684,485 @@
     <script th:src="@{/js/notifications.js}"></script>
     
     <script>
-        // Filtros da tabela
+        // Variáveis globais
+        let chamadosData = [];
+        let filtrosAtivos = {};
+        let visualizacaoAtual = 'tabela';
+        let autoRefreshInterval = null;
+        
+        // Inicialização
         $(document).ready(function() {
-            // Filtro por status
-            $('#filtroStatus').on('change', function() {
-                filtrarTabela();
-            });
+            inicializarEventListeners();
+            carregarDados();
+            aplicarFiltrosURL();
             
-            // Filtro por prioridade
-            $('#filtroPrioridade').on('change', function() {
-                filtrarTabela();
-            });
-            
-            // Filtro por técnico
-            $('#filtroTecnico').on('keyup', function() {
-                filtrarTabela();
-            });
-            
-            // Filtro de busca geral
-            $('#filtroBusca').on('keyup', function() {
-                filtrarTabela();
+            // Auto-refresh
+            $('#autoRefresh').on('change', function() {
+                if (this.checked) {
+                    autoRefreshInterval = setInterval(carregarDados, 30000); // 30 segundos
+                } else {
+                    clearInterval(autoRefreshInterval);
+                }
             });
         });
         
-        function filtrarTabela() {
-            const status = $('#filtroStatus').val().toLowerCase();
-            const prioridade = $('#filtroPrioridade').val().toLowerCase();
-            const tecnico = $('#filtroTecnico').val().toLowerCase();
-            const busca = $('#filtroBusca').val().toLowerCase();
+        // Event Listeners
+        function inicializarEventListeners() {
+            $('#filtroStatus').on('change', aplicarFiltros);
+            $('#filtroPrioridade').on('change', aplicarFiltros);
+            $('#filtroTecnico').on('keyup', debounce(aplicarFiltros, 300));
+            $('#filtroBusca').on('keyup', debounce(aplicarFiltros, 300));
+        }
+        
+        // Debounce function para otimizar performance
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // Carregar dados via API
+        async function carregarDados() {
+            mostrarLoading(true);
             
-            $('tbody tr').each(function() {
-                const row = $(this);
-                const statusRow = row.find('td:eq(2)').text().toLowerCase();
-                const prioridadeRow = row.find('td:eq(3)').text().toLowerCase();
-                const tecnicoRow = row.find('td:eq(5)').text().toLowerCase();
-                const numeroRow = row.find('td:eq(0)').text().toLowerCase();
-                const assuntoRow = row.find('td:eq(1)').text().toLowerCase();
+            try {
+                const response = await fetch('/api/chamados');
+                const data = await response.json();
                 
-                let mostrar = true;
-                
-                if (status && !statusRow.includes(status)) mostrar = false;
-                if (prioridade && !prioridadeRow.includes(prioridade)) mostrar = false;
-                if (tecnico && !tecnicoRow.includes(tecnico)) mostrar = false;
-                if (busca && !numeroRow.includes(busca) && !assuntoRow.includes(busca)) mostrar = false;
-                
-                row.toggle(mostrar);
-            });
-        }
-        
-        // Funções para ações dos chamados
-        function iniciarAtendimento(id) {
-            const tecnico = prompt('Nome do técnico responsável:');
-            if (tecnico) {
-                atualizarStatusChamado(id, 'iniciar', tecnico);
+                if (data.sucesso) {
+                    chamadosData = data.dados;
+                    atualizarEstatisticas();
+                    renderizarDados();
+                } else {
+                    mostrarAlerta('danger', 'Erro ao carregar chamados: ' + data.erro);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                mostrarAlerta('danger', 'Erro ao conectar com o servidor');
+            } finally {
+                mostrarLoading(false);
             }
         }
         
-        function resolverChamado(id) {
-            if (confirm('Deseja marcar este chamado como resolvido?')) {
-                atualizarStatusChamado(id, 'resolver');
-            }
+        // Atualizar estatísticas
+        function atualizarEstatisticas() {
+            const stats = calcularEstatisticas(chamadosData);
+            
+            $('#totalChamados').text(stats.total);
+            $('#chamadosAbertos').text(stats.abertos);
+            $('#chamadosAndamento').text(stats.andamento);
+            $('#chamadosResolvidos').text(stats.resolvidosHoje);
+            $('#contadorChamados').text(stats.total);
         }
         
-        function fecharChamado(id) {
-            if (confirm('Deseja fechar este chamado definitivamente?')) {
-                atualizarStatusChamado(id, 'fechar');
-            }
+        // Calcular estatísticas
+        function calcularEstatisticas(dados) {
+            const hoje = new Date().toDateString();
+            
+            return {
+                total: dados.length,
+                abertos: dados.filter(c => c.status === 'ABERTO').length,
+                andamento: dados.filter(c => c.status === 'EM_ANDAMENTO').length,
+                resolvidosHoje: dados.filter(c => 
+                    c.status === 'RESOLVIDO' && 
+                    new Date(c.dataResolucao).toDateString() === hoje
+                ).length
+            };
         }
         
-        function atualizarStatusChamado(id, acao, tecnico = null) {
-            const data = {
-                acao: acao
+        // Aplicar filtros
+        function aplicarFiltros() {
+            filtrosAtivos = {
+                status: $('#filtroStatus').val(),
+                prioridade: $('#filtroPrioridade').val(),
+                tecnico: $('#filtroTecnico').val().toLowerCase(),
+                busca: $('#filtroBusca').val().toLowerCase()
             };
             
-            if (tecnico) {
-                data.tecnico = tecnico;
-            }
-            
-            $.ajax({
-                url: `/suporte/chamados/${id}/status`,
-                method: 'POST',
-                data: data,
-                success: function(response) {
-                    if (response.sucesso) {
-                        location.reload();
-                    } else {
-                        alert('Erro: ' + response.erro);
-                    }
-                },
-                error: function() {
-                    alert('Erro ao atualizar status do chamado.');
+            renderizarDados();
+        }
+        
+        // Filtrar dados
+        function filtrarDados(dados) {
+            return dados.filter(chamado => {
+                if (filtrosAtivos.status && chamado.status !== filtrosAtivos.status) return false;
+                if (filtrosAtivos.prioridade && chamado.prioridade !== filtrosAtivos.prioridade) return false;
+                if (filtrosAtivos.tecnico && !chamado.tecnicoResponsavel?.toLowerCase().includes(filtrosAtivos.tecnico)) return false;
+                if (filtrosAtivos.busca) {
+                    const busca = filtrosAtivos.busca;
+                    return chamado.numero.toLowerCase().includes(busca) || 
+                           chamado.assunto.toLowerCase().includes(busca) ||
+                           chamado.descricao.toLowerCase().includes(busca);
                 }
+                return true;
             });
         }
-
-        // Aplicar filtros baseados nos parâmetros da URL
-        $(document).ready(function() {
+        
+        // Renderizar dados
+        function renderizarDados() {
+            const dadosFiltrados = filtrarDados(chamadosData);
+            
+            if (dadosFiltrados.length === 0) {
+                mostrarMensagemVazia(true);
+                return;
+            }
+            
+            mostrarMensagemVazia(false);
+            
+            if (visualizacaoAtual === 'tabela') {
+                renderizarTabela(dadosFiltrados);
+            } else {
+                renderizarCards(dadosFiltrados);
+            }
+        }
+        
+        // Renderizar tabela
+        function renderizarTabela(dados) {
+            const tbody = $('tbody');
+            tbody.empty();
+            
+            dados.forEach(chamado => {
+                const row = criarLinhaTabela(chamado);
+                tbody.append(row);
+            });
+        }
+        
+        // Criar linha da tabela
+        function criarLinhaTabela(chamado) {
+            const slaClass = chamado.slaRestante < 0 ? 'sla-vermelho' : 
+                           (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde');
+            
+            return `
+                <tr>
+                    <td><strong>${chamado.numero}</strong></td>
+                    <td>
+                        <div>
+                            <strong>${chamado.assunto}</strong><br>
+                            <small class="text-muted">${chamado.descricao.substring(0, 50)}...</small>
+                        </div>
+                    </td>
+                    <td>${criarBadgeStatus(chamado.status)}</td>
+                    <td>${criarBadgePrioridade(chamado.prioridade)}</td>
+                    <td>
+                        ${chamado.categoria || 'Geral'}
+                        ${chamado.subcategoria ? `<br><small class="text-muted">${chamado.subcategoria}</small>` : ''}
+                    </td>
+                    <td>
+                        <strong>${chamado.solicitanteNome || 'N/A'}</strong><br>
+                        <small class="text-muted">${chamado.solicitanteEmail || ''}</small>
+                    </td>
+                    <td>${chamado.tecnicoResponsavel || '<span class="text-muted">Não atribuído</span>'}</td>
+                    <td>
+                        ${chamado.slaRestante !== null ? 
+                            `<span class="sla-indicator ${slaClass}">
+                                <i class="fas fa-clock"></i>
+                                ${formatarSLA(chamado.slaRestante)}
+                            </span>` : 
+                            '<span class="text-muted">-</span>'
+                        }
+                    </td>
+                    <td><small>${formatarData(chamado.dataAbertura)}</small></td>
+                    <td>${chamado.tempoResolucaoMinutos ? formatarTempo(chamado.tempoResolucaoMinutos) : '<span class="text-muted">-</span>'}</td>
+                    <td>${chamado.avaliacao ? criarEstrelas(chamado.avaliacao) : '<span class="text-muted">-</span>'}</td>
+                    <td>${criarBotoesAcao(chamado)}</td>
+                </tr>
+            `;
+        }
+        
+        // Renderizar cards
+        function renderizarCards(dados) {
+            const container = $('#containerCards');
+            container.empty();
+            
+            dados.forEach(chamado => {
+                const card = criarCard(chamado);
+                container.append(card);
+            });
+        }
+        
+        // Criar card
+        function criarCard(chamado) {
+            const slaClass = chamado.slaRestante < 0 ? 'sla-vermelho' : 
+                           (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde');
+            
+            return `
+                <div class="col-xl-4 col-lg-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><strong>${chamado.numero}</strong></h6>
+                                <div>
+                                    ${criarBadgeStatus(chamado.status)}
+                                    ${criarBadgePrioridade(chamado.prioridade)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">${chamado.assunto}</h6>
+                            <p class="card-text text-muted small">${chamado.descricao.substring(0, 100)}...</p>
+                            
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Solicitante</small><br>
+                                    <strong>${chamado.solicitanteNome || 'N/A'}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Técnico</small><br>
+                                    <strong>${chamado.tecnicoResponsavel || 'Não atribuído'}</strong>
+                                </div>
+                            </div>
+                            
+                            ${chamado.slaRestante !== null ? 
+                                `<div class="text-center mb-3">
+                                    <span class="sla-indicator ${slaClass}">
+                                        <i class="fas fa-clock"></i>
+                                        SLA: ${formatarSLA(chamado.slaRestante)}
+                                    </span>
+                                </div>` : ''
+                            }
+                        </div>
+                        <div class="card-footer bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${formatarData(chamado.dataAbertura)}</small>
+                                <div class="btn-group">
+                                    ${criarBotoesAcao(chamado)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Funções auxiliares
+        function criarBadgeStatus(status) {
+            const classes = {
+                'ABERTO': 'status-aberto',
+                'EM_ANDAMENTO': 'status-em-andamento',
+                'RESOLVIDO': 'status-resolvido',
+                'FECHADO': 'status-fechado',
+                'REABERTO': 'status-reaberto'
+            };
+            
+            const textos = {
+                'ABERTO': 'Aberto',
+                'EM_ANDAMENTO': 'Em Andamento',
+                'RESOLVIDO': 'Resolvido',
+                'FECHADO': 'Fechado',
+                'REABERTO': 'Reaberto'
+            };
+            
+            return `<span class="status-badge ${classes[status]}">${textos[status]}</span>`;
+        }
+        
+        function criarBadgePrioridade(prioridade) {
+            const classes = {
+                'BAIXA': 'prioridade-baixa',
+                'MEDIA': 'prioridade-media',
+                'ALTA': 'prioridade-alta',
+                'URGENTE': 'prioridade-urgente'
+            };
+            
+            const textos = {
+                'BAIXA': 'Baixa',
+                'MEDIA': 'Média',
+                'ALTA': 'Alta',
+                'URGENTE': 'Urgente'
+            };
+            
+            return `<span class="prioridade-badge ${classes[prioridade]}">${textos[prioridade]}</span>`;
+        }
+        
+        function criarBotoesAcao(chamado) {
+            let botoes = `<a href="/suporte/chamados/${chamado.id}" class="btn btn-outline-primary btn-action" title="Visualizar">
+                            <i class="fas fa-eye"></i>
+                          </a>`;
+            
+            if (chamado.status === 'ABERTO') {
+                botoes += `<button class="btn btn-outline-success btn-action" title="Iniciar Atendimento" onclick="iniciarAtendimento(${chamado.id})">
+                            <i class="fas fa-play"></i>
+                           </button>`;
+            }
+            
+            if (chamado.status === 'EM_ANDAMENTO') {
+                botoes += `<button class="btn btn-outline-warning btn-action" title="Resolver" onclick="resolverChamado(${chamado.id})">
+                            <i class="fas fa-check"></i>
+                           </button>`;
+            }
+            
+            if (chamado.status === 'RESOLVIDO') {
+                botoes += `<button class="btn btn-outline-secondary btn-action" title="Fechar" onclick="fecharChamado(${chamado.id})">
+                            <i class="fas fa-times"></i>
+                           </button>`;
+            }
+            
+            if ((chamado.status === 'RESOLVIDO' || chamado.status === 'FECHADO') && !chamado.avaliacao) {
+                botoes += `<a href="/suporte/chamados/${chamado.id}/avaliar" class="btn btn-outline-warning btn-action" title="Avaliar">
+                            <i class="fas fa-star"></i>
+                           </a>`;
+            }
+            
+            return botoes;
+        }
+        
+        function criarEstrelas(avaliacao) {
+            let estrelas = '<div class="rating-stars">';
+            for (let i = 1; i <= 5; i++) {
+                estrelas += `<span class="star ${i <= avaliacao ? 'filled' : 'empty'}">★</span>`;
+            }
+            estrelas += `<br><small class="text-muted">${avaliacao}/5</small></div>`;
+            return estrelas;
+        }
+        
+        function formatarSLA(sla) {
+            if (sla > 0) return sla + 'h';
+            if (sla === 0) return 'Menos de 1h';
+            return 'Vencido';
+        }
+        
+        function formatarData(data) {
+            return new Date(data).toLocaleString('pt-BR');
+        }
+        
+        function formatarTempo(minutos) {
+            if (minutos < 60) return minutos + 'min';
+            const horas = Math.floor(minutos / 60);
+            const mins = minutos % 60;
+            return `${horas}h ${mins}min`;
+        }
+        
+        // Alternar visualização
+        function alternarVisualizacao(tipo) {
+            visualizacaoAtual = tipo;
+            
+            if (tipo === 'tabela') {
+                $('#visualizacaoTabela').removeClass('d-none');
+                $('#visualizacaoCards').addClass('d-none');
+                $('#btnTabela').removeClass('btn-outline-light').addClass('btn-light');
+                $('#btnCards').removeClass('btn-light').addClass('btn-outline-light');
+            } else {
+                $('#visualizacaoTabela').addClass('d-none');
+                $('#visualizacaoCards').removeClass('d-none');
+                $('#btnCards').removeClass('btn-outline-light').addClass('btn-light');
+                $('#btnTabela').removeClass('btn-light').addClass('btn-outline-light');
+            }
+            
+            renderizarDados();
+        }
+        
+        // Mostrar/ocultar loading
+        function mostrarLoading(mostrar) {
+            if (mostrar) {
+                $('#loadingOverlay').removeClass('d-none');
+            } else {
+                $('#loadingOverlay').addClass('d-none');
+            }
+        }
+        
+        // Mostrar/ocultar mensagem vazia
+        function mostrarMensagemVazia(mostrar) {
+            if (mostrar) {
+                $('#visualizacaoTabela').addClass('d-none');
+                $('#visualizacaoCards').addClass('d-none');
+                $('#mensagemVazia').removeClass('d-none');
+            } else {
+                $('#mensagemVazia').addClass('d-none');
+                if (visualizacaoAtual === 'tabela') {
+                    $('#visualizacaoTabela').removeClass('d-none');
+                } else {
+                    $('#visualizacaoCards').removeClass('d-none');
+                }
+            }
+        }
+        
+        // Aplicar filtros da URL
+        function aplicarFiltrosURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const statusParam = urlParams.get('status');
             
             if (statusParam) {
                 $('#filtroStatus').val(statusParam);
-                filtrarTabela(); // Aplicar o filtro automaticamente
+                aplicarFiltros();
             }
-        });
+        }
+        
+        // Atualizar dados
+        function atualizarDados() {
+            carregarDados();
+        }
+        
+        // Ações dos chamados
+        async function iniciarAtendimento(id) {
+            const tecnico = prompt('Nome do técnico responsável:');
+            if (tecnico) {
+                await atualizarStatusChamado(id, 'EM_ANDAMENTO', { tecnicoResponsavel: tecnico });
+            }
+        }
+        
+        async function resolverChamado(id) {
+            if (confirm('Deseja marcar este chamado como resolvido?')) {
+                await atualizarStatusChamado(id, 'RESOLVIDO');
+            }
+        }
+        
+        async function fecharChamado(id) {
+            if (confirm('Deseja fechar este chamado definitivamente?')) {
+                await atualizarStatusChamado(id, 'FECHADO');
+            }
+        }
+        
+        // Atualizar status do chamado
+        async function atualizarStatusChamado(id, novoStatus, dadosAdicionais = {}) {
+            mostrarLoading(true);
+            
+            try {
+                const response = await fetch(`/api/chamados/${id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: novoStatus,
+                        ...dadosAdicionais
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.sucesso) {
+                    mostrarAlerta('success', 'Status atualizado com sucesso!');
+                    carregarDados();
+                } else {
+                    mostrarAlerta('danger', 'Erro: ' + result.erro);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+                mostrarAlerta('danger', 'Erro ao conectar com o servidor');
+            } finally {
+                mostrarLoading(false);
+            }
+        }
+        
+        // Exportar dados
+        function exportarExcel() {
+            window.open('/api/chamados/export/excel', '_blank');
+        }
+        
+        function exportarPDF() {
+            window.open('/api/chamados/export/pdf', '_blank');
+        }
+        
+        // Mostrar alertas
+        function mostrarAlerta(tipo, mensagem) {
+            // Implementar sistema de alertas/toasts
+            console.log(`${tipo}: ${mensagem}`);
+        }
     </script>
 </body>
 </html>

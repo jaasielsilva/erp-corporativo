@@ -13,39 +13,101 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.75rem;
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 0.5rem 0.5rem 0 0 !important;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-section-title {
+            color: #495057;
             font-weight: 600;
-            text-transform: uppercase;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        
-        .status-aberto {
-            background-color: #e3f2fd;
-            color: #1976d2;
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
         }
-        
-        .status-em-andamento {
-            background-color: #fff3e0;
-            color: #f57c00;
+
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
         }
-        
-        .status-resolvido {
-            background-color: #e8f5e8;
-            color: #388e3c;
+
+        .form-control, .form-select {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            transition: all 0.15s ease-in-out;
         }
-        
-        .status-fechado {
-            background-color: #f3e5f5;
-            color: #7b1fa2;
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
-        
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-outline-secondary {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ced4da;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background-color: #e6f0ff;
+        }
+
         .prioridade-badge {
             padding: 0.25rem 0.75rem;
             border-radius: 50px;
             font-size: 0.75rem;
             font-weight: 600;
+            margin-left: 0.5rem;
         }
         
         .prioridade-baixa {
@@ -74,33 +136,42 @@
             50% { opacity: 0.7; }
             100% { opacity: 1; }
         }
-        
-        .btn-action {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.75rem;
-            margin: 0 0.125rem;
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .form-card {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+
+        .alert {
             border-radius: 0.5rem;
-            padding: 1.5rem;
+            border: none;
             margin-bottom: 1.5rem;
         }
 
-        .form-section {
-            background: white;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
         }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .colaborador-info {
+            background-color: #f8f9fa;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
+         
 
         .form-section-title {
             color: #495057;
@@ -420,13 +491,7 @@
                                                     <i class="fas fa-folder me-1"></i>Categoria
                                                 </label>
                                                 <select class="form-select" id="categoriaPrincipal" name="categoria" required>
-                                                    <option value="">Selecione a categoria</option>
-                                                    <option value="TECNICO">Técnico</option>
-                                                    <option value="FINANCEIRO">Financeiro</option>
-                                                    <option value="RH">Recursos Humanos</option>
-                                                    <option value="VENDAS">Vendas</option>
-                                                    <option value="ESTOQUE">Estoque</option>
-                                                    <option value="GERAL">Geral</option>
+                                                    <option value="">Carregando categorias...</option>
                                                 </select>
                                             </div>
 
@@ -610,6 +675,17 @@
                 if (response.ok) {
                     categoriasData = await response.json();
                     console.log('Categorias carregadas:', categoriasData);
+                    
+                    // Popular o select de categoria principal
+                    const categoriaPrincipalSelect = document.getElementById('categoriaPrincipal');
+                    categoriaPrincipalSelect.innerHTML = '<option value="">Selecione a categoria</option>';
+                    
+                    categoriasData.forEach(categoria => {
+                        const option = document.createElement('option');
+                        option.value = categoria.codigo;
+                        option.textContent = categoria.nome;
+                        categoriaPrincipalSelect.appendChild(option);
+                    });
                 } else {
                     console.error('Erro ao carregar categorias. Status:', response.status);
                 }
@@ -807,6 +883,117 @@
             document.getElementById('categoriaPrincipal').addEventListener('change', atualizarSubcategorias);
             document.getElementById('subcategoria').addEventListener('change', mostrarExemplo);
             
+            // Contador de caracteres para descrição
+            document.getElementById('descricao').addEventListener('input', function() {
+                const contador = document.getElementById('contadorCaracteres');
+                contador.textContent = this.value.length;
+                
+                if (this.value.length > 1800) {
+                    contador.style.color = '#dc3545';
+                } else if (this.value.length > 1500) {
+                    contador.style.color = '#f57c00';
+                } else {
+                    contador.style.color = '#6c757d';
+                }
+            });
+            
+            // Atualizar badge de prioridade
+            document.getElementById('prioridade').addEventListener('change', function() {
+                const prioridade = this.value.toLowerCase();
+                const badge = document.querySelector('.prioridade-badge');
+                if (badge) badge.remove();
+                
+                if (prioridade) {
+                    const newBadge = document.createElement('span');
+                    newBadge.className = `prioridade-badge prioridade-${prioridade}`;
+                    newBadge.textContent = this.options[this.selectedIndex].text;
+                    this.parentNode.appendChild(newBadge);
+                }
+            });
+            
+            // Upload de arquivos
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const fileInput = document.getElementById('anexos');
+            
+            fileUploadArea.addEventListener('click', () => fileInput.click());
+            
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('dragover');
+            });
+            
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('dragover');
+            });
+            
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                atualizarListaArquivos();
+            });
+            
+            fileInput.addEventListener('change', atualizarListaArquivos);
+            
+            // Submit do formulário
+            document.getElementById('chamadoForm').addEventListener('submit', enviarFormulario);
+        });
+        
+        // Função para atualizar lista de arquivos
+        function atualizarListaArquivos() {
+            const fileInput = document.getElementById('anexos');
+            const listaArquivos = document.getElementById('listaArquivos');
+            
+            listaArquivos.innerHTML = '';
+            
+            if (fileInput.files.length > 0) {
+                const lista = document.createElement('div');
+                lista.className = 'mt-3';
+                
+                Array.from(fileInput.files).forEach((file, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'alert alert-light d-flex justify-content-between align-items-center';
+                    item.innerHTML = `
+                        <div>
+                            <i class="fas fa-file me-2"></i>
+                            <strong>${file.name}</strong>
+                            <small class="text-muted ms-2">(${formatarTamanhoArquivo(file.size)})</small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerArquivo(${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    lista.appendChild(item);
+                });
+                
+                listaArquivos.appendChild(lista);
+            }
+        }
+        
+        // Função para remover arquivo
+        function removerArquivo(index) {
+            const fileInput = document.getElementById('anexos');
+            const dt = new DataTransfer();
+            
+            Array.from(fileInput.files).forEach((file, i) => {
+                if (i !== index) {
+                    dt.items.add(file);
+                }
+            });
+            
+            fileInput.files = dt.files;
+            atualizarListaArquivos();
+        }
+        
+        // Função para formatar tamanho do arquivo
+        function formatarTamanhoArquivo(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
             // Event listener para envio do formulário
             document.getElementById('chamadoForm').addEventListener('submit', enviarFormulario);
             
@@ -842,8 +1029,22 @@
             
             fileInput.addEventListener('change', atualizarListaArquivos);
             
-            function atualizarListaArquivos() {
-                listaArquivos.innerHTML = '';
+            // Remover classe de erro quando o usuário começar a digitar
+            const campos = document.querySelectorAll('[required]');
+            campos.forEach(campo => {
+                campo.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                });
+            });
+        
+        // Função para atualizar lista de arquivos
+        function atualizarListaArquivos() {
+            const fileInput = document.getElementById('anexos');
+            const listaArquivos = document.getElementById('listaArquivos');
+            
+            listaArquivos.innerHTML = '';
+            
+            if (fileInput.files.length > 0) {
                 Array.from(fileInput.files).forEach((file, index) => {
                     const fileItem = document.createElement('div');
                     fileItem.className = 'alert alert-info d-flex justify-content-between align-items-center';
@@ -856,16 +1057,8 @@
                     listaArquivos.appendChild(fileItem);
                 });
             }
-            
-            // Remover classe de erro quando o usuário começar a digitar
-            const campos = document.querySelectorAll('[required]');
-            campos.forEach(campo => {
-                campo.addEventListener('input', function() {
-                    this.classList.remove('is-invalid');
-                });
-            });
-        });
-        
+        }
+
         function removerArquivo(index) {
             const fileInput = document.getElementById('anexos');
             const dt = new DataTransfer();
@@ -875,7 +1068,7 @@
             });
             
             fileInput.files = dt.files;
-            document.querySelector('#listaArquivos').children[index].remove();
+            atualizarListaArquivos();
         }
     </script>
 </body>

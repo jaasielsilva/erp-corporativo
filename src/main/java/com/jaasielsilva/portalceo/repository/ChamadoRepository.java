@@ -156,6 +156,9 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     // Contar chamados por colaborador responsável e status
     int countByColaboradorResponsavelAndStatusIn(com.jaasielsilva.portalceo.model.Colaborador colaborador, List<StatusChamado> status);
     
+    // Buscar chamados por colaborador responsável e status
+    List<Chamado> findByColaboradorResponsavelAndStatusIn(com.jaasielsilva.portalceo.model.Colaborador colaborador, List<StatusChamado> status);
+    
     // Buscar chamados fechados por período
     List<Chamado> findByStatusAndDataFechamentoBetween(StatusChamado status, LocalDateTime dataInicio, LocalDateTime dataFim);
 
@@ -191,4 +194,108 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
            ") " +
            "ORDER BY c.prioridade DESC, c.dataAbertura ASC")
     List<Chamado> findChamadosComSlaVencido();
+
+    // ==================== MÉTODOS COM FETCH JOIN PARA EVITAR N+1 ====================
+    
+    /**
+     * Buscar todos os chamados com colaborador responsável (fetch join)
+     */
+    @Query("SELECT DISTINCT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "ORDER BY c.dataAbertura DESC")
+    List<Chamado> findAllWithColaborador();
+    
+    /**
+     * Buscar chamado por ID com colaborador responsável (fetch join)
+     */
+    @Query("SELECT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.id = :id")
+    Optional<Chamado> findByIdWithColaborador(@Param("id") Long id);
+    
+    /**
+     * Buscar chamado por número com colaborador responsável (fetch join)
+     */
+    @Query("SELECT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.numero = :numero")
+    Optional<Chamado> findByNumeroWithColaborador(@Param("numero") String numero);
+    
+    /**
+     * Buscar chamados abertos com colaborador responsável (fetch join)
+     */
+    @Query("SELECT DISTINCT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.status = 'ABERTO' " +
+           "ORDER BY c.prioridade DESC, c.dataAbertura ASC")
+    List<Chamado> findChamadosAbertosWithColaborador();
+    
+    /**
+     * Buscar chamados em andamento com colaborador responsável (fetch join)
+     */
+    @Query("SELECT DISTINCT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.status = 'EM_ANDAMENTO' " +
+           "ORDER BY c.prioridade DESC, c.dataAbertura ASC")
+    List<Chamado> findChamadosEmAndamentoWithColaborador();
+    
+    /**
+     * Buscar chamados resolvidos com colaborador responsável (fetch join)
+     */
+    @Query("SELECT DISTINCT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.status IN ('RESOLVIDO', 'FECHADO') " +
+           "ORDER BY c.dataResolucao DESC")
+    List<Chamado> findChamadosResolvidosWithColaborador();
+    
+    /**
+     * Buscar chamados por status com colaborador responsável (fetch join)
+     */
+    @Query("SELECT DISTINCT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.status = :status " +
+           "ORDER BY c.dataAbertura DESC")
+    List<Chamado> findByStatusWithColaborador(@Param("status") StatusChamado status);
+    
+    /**
+     * Buscar chamados sem atribuição com colaborador responsável (fetch join)
+     */
+    @Query("SELECT DISTINCT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.colaboradorResponsavel IS NULL AND c.status = 'ABERTO' " +
+           "ORDER BY c.prioridade DESC, c.dataAbertura ASC")
+    List<Chamado> findChamadosSemAtribuicaoWithColaborador();
+    
+    /**
+     * Buscar chamados com SLA próximo do vencimento com colaborador responsável (fetch join)
+     */
+    @Query("SELECT DISTINCT c FROM Chamado c " +
+           "LEFT JOIN FETCH c.colaboradorResponsavel col " +
+           "LEFT JOIN FETCH col.cargo " +
+           "LEFT JOIN FETCH col.departamento " +
+           "WHERE c.status IN ('ABERTO', 'EM_ANDAMENTO') " +
+           "AND (" +
+           "  (c.prioridade = 'URGENTE' AND TIMESTAMPDIFF(HOUR, c.dataAbertura, NOW()) >= 4) OR " +
+           "  (c.prioridade = 'ALTA' AND TIMESTAMPDIFF(HOUR, c.dataAbertura, NOW()) >= 20) OR " +
+           "  (c.prioridade = 'MEDIA' AND TIMESTAMPDIFF(HOUR, c.dataAbertura, NOW()) >= 44) OR " +
+           "  (c.prioridade = 'BAIXA' AND TIMESTAMPDIFF(HOUR, c.dataAbertura, NOW()) >= 68)" +
+           ") " +
+           "ORDER BY c.prioridade DESC, c.dataAbertura ASC")
+    List<Chamado> findChamadosComSlaProximoVencimentoWithColaborador();
 }

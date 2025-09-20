@@ -44,12 +44,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Endpoint principal para conexão WebSocket
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*") // Permitir todas as origens (ajustar para produção)
+                .setAllowedOriginPatterns("http://localhost:8080", "https://localhost:8080", "http://127.0.0.1:8080") // Origens específicas e seguras
                 .withSockJS(); // Habilitar fallback SockJS para navegadores sem suporte WebSocket
         
         // Endpoint alternativo sem SockJS (para clientes que suportam WebSocket nativo)
         registry.addEndpoint("/ws-native")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOriginPatterns("http://localhost:8080", "https://localhost:8080", "http://127.0.0.1:8080");
     }
     
     /**

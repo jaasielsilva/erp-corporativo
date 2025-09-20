@@ -94,17 +94,28 @@ public class SecurityConfig {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
+                                .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
                                 "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
                                 .permitAll()
-                                .requestMatchers("/api/produto/**", "/api/processar", "/api/beneficios/**", "/api/rh/**", "/api/chamados/**", "/api/suporte/**", "/api/tempo-resolucao", "/suporte/api/avaliacoes-atendimento", "/suporte/api/categorias", "/suporte/api/public/**", "/suporte/api/metricas-sla-periodo", "/suporte/api/metricas-sla-comparativo", "/suporte/api/tempo-resolucao", "/suporte/api/tempo-medio-primeira-resposta").permitAll()
-                                                .requestMatchers("/rh/colaboradores/adesao/**").permitAll()
-                                                
-                                                .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
-                                                .requestMatchers("/api/chat/**").authenticated()
-                                                .requestMatchers("/api/notifications/**").authenticated()
-                                                .requestMatchers("/error", "/error/**").permitAll()
-                                                .anyRequest().authenticated())
+                                // Endpoints públicos específicos (apenas os necessários)
+                                .requestMatchers("/api/processar", "/suporte/api/public/**").permitAll()
+                                // Endpoints de produtos que devem ser autenticados
+                                .requestMatchers("/api/produto/**", "/api/produtos/**").authenticated()
+                                // Endpoints de adesão específicos (apenas formulário público)
+                                .requestMatchers("/rh/colaboradores/adesao/formulario-publico").permitAll()
+                                // WebSocket endpoints (manter público para funcionalidade)
+                                .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
+                                // Endpoints que DEVEM ser autenticados
+                                .requestMatchers("/api/rh/**").authenticated()
+                                .requestMatchers("/api/chamados/**").authenticated()
+                                .requestMatchers("/api/beneficios/**").authenticated()
+                                .requestMatchers("/api/suporte/**").authenticated()
+                                .requestMatchers("/api/chat/**").authenticated()
+                                .requestMatchers("/api/notifications/**").authenticated()
+                                .requestMatchers("/rh/colaboradores/adesao/**").authenticated()
+                                // Páginas de erro
+                                .requestMatchers("/error", "/error/**").permitAll()
+                                .anyRequest().authenticated())
 
                                 .formLogin(form -> form
                                                 .loginPage("/login")

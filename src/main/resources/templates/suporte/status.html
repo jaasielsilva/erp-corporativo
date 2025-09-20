@@ -405,6 +405,9 @@
                         <!-- Chamados serão carregados aqui via JavaScript -->
                     </div>
 
+                    <!-- Alert Area -->
+                    <div id="alertArea"></div>
+
                     <!-- Loading Overlay -->
                     <div class="loading-overlay" id="loadingOverlay">
                         <div class="text-center">
@@ -490,9 +493,35 @@
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
+            // Carregar dados iniciais
             carregarChamados();
-            configurarEventListeners();
+            
+            // Configurar botões de filtro
+            configurarFiltros();
+            
+            // Configurar auto-refresh a cada 30 segundos
+            setInterval(carregarChamados, 30000);
         });
+        
+        function configurarFiltros() {
+             // Filtros de status
+             document.querySelectorAll('[onclick*="filtrarPorStatus"]').forEach(btn => {
+                 btn.addEventListener('click', function(e) {
+                     e.preventDefault();
+                     const status = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                     filtrarPorStatus(status);
+                 });
+             });
+             
+             // Filtros de prioridade
+             document.querySelectorAll('[onclick*="filtrarPorPrioridade"]').forEach(btn => {
+                 btn.addEventListener('click', function(e) {
+                     e.preventDefault();
+                     const prioridade = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                     filtrarPorPrioridade(prioridade);
+                 });
+             });
+         }
 
         // Event Listeners
         function configurarEventListeners() {
@@ -808,8 +837,34 @@
         }
 
         function mostrarAlerta(mensagem, tipo) {
-            // Implementar sistema de alertas
-            console.log(`${tipo.toUpperCase()}: ${mensagem}`);
+            const alertArea = document.getElementById('alertArea');
+            const alertId = 'alert-' + Date.now();
+            
+            const iconMap = {
+                'success': 'fas fa-check-circle',
+                'danger': 'fas fa-exclamation-triangle',
+                'warning': 'fas fa-exclamation-circle',
+                'info': 'fas fa-info-circle'
+            };
+            
+            const alertHtml = `
+                <div id="${alertId}" class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="${iconMap[tipo] || 'fas fa-info-circle'} me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            
+            alertArea.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                const alertElement = document.getElementById(alertId);
+                if (alertElement) {
+                    const bsAlert = new bootstrap.Alert(alertElement);
+                    bsAlert.close();
+                }
+            }, 5000);
         }
 
         function atualizarDados() {

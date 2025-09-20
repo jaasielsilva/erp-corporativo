@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Agenda - ERP Corporativo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Date Range Picker -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <!-- Custom CSS -->
+    <link th:href="@{/css/agenda.css}" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        
+        <!-- Page Content -->
+        <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">
+                                <i class="fas fa-chart-bar me-2"></i>Relatórios da Agenda
+                            </h1>
+                            <p class="text-muted mb-0">Análises e estatísticas dos seus eventos</p>
+                        </div>
+                        <div>
+                            <a th:href="@{/agenda}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-home me-1"></i>Voltar à Agenda
+                            </a>
+                            <button type="button" class="btn btn-primary" onclick="gerarRelatorioCompleto()">
+                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros de Relatório</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="filtrosForm">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="periodoRelatorio" class="form-label">Período</label>
+                                        <input type="text" class="form-control" id="periodoRelatorio" name="periodo" placeholder="Selecione o período">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="tipoEvento" class="form-label">Tipo de Evento</label>
+                                        <select class="form-select" id="tipoEvento" name="tipoEvento">
+                                            <option value="">Todos os tipos</option>
+                                            <option value="reuniao">Reunião</option>
+                                            <option value="tarefa">Tarefa</option>
+                                            <option value="compromisso">Compromisso</option>
+                                            <option value="evento">Evento</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="statusEvento" class="form-label">Status</label>
+                                        <select class="form-select" id="statusEvento" name="statusEvento">
+                                            <option value="">Todos os status</option>
+                                            <option value="agendado">Agendado</option>
+                                            <option value="concluido">Concluído</option>
+                                            <option value="cancelado">Cancelado</option>
+                                            <option value="adiado">Adiado</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="participante" class="form-label">Participante</label>
+                                        <select class="form-select" id="participante" name="participante">
+                                            <option value="">Todos os participantes</option>
+                                            <option th:each="usuario : ${usuarios}" th:value="${usuario.id}" th:text="${usuario.nome}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-primary" onclick="aplicarFiltros()">
+                                            <i class="fas fa-search me-1"></i>Aplicar Filtros
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="limparFiltros()">
+                                            <i class="fas fa-times me-1"></i>Limpar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cards de Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total de Eventos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalEventos">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Eventos Concluídos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="eventosConcluidos">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Taxa de Conclusão
+                                    </div>
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col-auto">
+                                            <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800" id="taxaConclusao">0%</div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="progress progress-sm mr-2">
+                                                <div class="progress-bar bg-info" role="progressbar" id="progressConclusao" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Tempo Médio (horas)
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="tempoMedio">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gráficos -->
+            <div class="row mb-4">
+                <!-- Gráfico de Eventos por Mês -->
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Eventos por Mês</h6>
+                            <div class="dropdown no-arrow">
+                                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right shadow">
+                                    <a class="dropdown-item" href="#" onclick="exportarGrafico('eventosPorMes')">Exportar PNG</a>
+                                    <a class="dropdown-item" href="#" onclick="exportarGrafico('eventosPorMes', 'pdf')">Exportar PDF</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-area">
+                                <canvas id="eventosPorMesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gráfico de Pizza - Tipos de Evento -->
+                <div class="col-xl-4 col-lg-5">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Tipos de Evento</h6>
+                            <div class="dropdown no-arrow">
+                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right shadow">
+                                    <a class="dropdown-item" href="#" onclick="exportarGrafico('tiposEvento')">Exportar PNG</a>
+                                    <a class="dropdown-item" href="#" onclick="exportarGrafico('tiposEvento', 'pdf')">Exportar PDF</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-pie pt-4 pb-2">
+                                <canvas id="tiposEventoChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Segunda linha de gráficos -->
+            <div class="row mb-4">
+                <!-- Gráfico de Status dos Eventos -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Status dos Eventos</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-bar">
+                                <canvas id="statusEventosChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gráfico de Produtividade por Dia da Semana -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Produtividade por Dia da Semana</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-bar">
+                                <canvas id="produtividadeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabela de Eventos Detalhados -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Eventos Detalhados</h6>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportarTabela('csv')">
+                                    <i class="fas fa-file-csv me-1"></i>CSV
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportarTabela('excel')">
+                                    <i class="fas fa-file-excel me-1"></i>Excel
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="tabelaEventos" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Título</th>
+                                            <th>Data/Hora</th>
+                                            <th>Tipo</th>
+                                            <th>Status</th>
+                                            <th>Duração</th>
+                                            <th>Participantes</th>
+                                            <th>Local</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="corpoTabelaEventos">
+                                        <!-- Dados serão carregados via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Paginação -->
+                            <nav aria-label="Navegação da tabela">
+                                <ul class="pagination justify-content-center" id="paginacaoTabela">
+                                    <!-- Paginação será gerada via JavaScript -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    
+    <script>
+        let chartEventosPorMes, chartTiposEvento, chartStatusEventos, chartProdutividade;
+        let dadosEventos = [];
+        let paginaAtual = 1;
+        const itensPorPagina = 10;
+        
+        $(document).ready(function() {
+            // Inicializar date range picker
+            $('#periodoRelatorio').daterangepicker({
+                startDate: moment().subtract(29, 'days'),
+                endDate: moment(),
+                locale: {
+                    format: 'DD/MM/YYYY',
+                    separator: ' - ',
+                    applyLabel: 'Aplicar',
+                    cancelLabel: 'Cancelar',
+                    fromLabel: 'De',
+                    toLabel: 'Até',
+                    customRangeLabel: 'Personalizado',
+                    weekLabel: 'S',
+                    daysOfWeek: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                    monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+                    firstDay: 1
+                },
+                ranges: {
+                    'Hoje': [moment(), moment()],
+                    'Ontem': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Últimos 7 dias': [moment().subtract(6, 'days'), moment()],
+                    'Últimos 30 dias': [moment().subtract(29, 'days'), moment()],
+                    'Este mês': [moment().startOf('month'), moment().endOf('month')],
+                    'Mês passado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                }
+            });
+            
+            // Carregar dados iniciais
+            carregarDadosRelatorio();
+        });
+        
+        function carregarDadosRelatorio() {
+            const filtros = obterFiltros();
+            
+            $.ajax({
+                url: '/agenda/relatorios/dados',
+                type: 'GET',
+                data: filtros,
+                success: function(response) {
+                    dadosEventos = response.eventos;
+                    atualizarEstatisticas(response.estatisticas);
+                    criarGraficos(response.graficos);
+                    atualizarTabela();
+                },
+                error: function(xhr) {
+                    console.error('Erro ao carregar dados do relatório:', xhr.responseText);
+                }
+            });
+        }
+        
+        function obterFiltros() {
+            const periodo = $('#periodoRelatorio').val().split(' - ');
+            return {
+                dataInicio: periodo[0] || '',
+                dataFim: periodo[1] || '',
+                tipoEvento: $('#tipoEvento').val(),
+                statusEvento: $('#statusEvento').val(),
+                participante: $('#participante').val()
+            };
+        }
+        
+        function aplicarFiltros() {
+            carregarDadosRelatorio();
+        }
+        
+        function limparFiltros() {
+            $('#filtrosForm')[0].reset();
+            $('#periodoRelatorio').data('daterangepicker').setStartDate(moment().subtract(29, 'days'));
+            $('#periodoRelatorio').data('daterangepicker').setEndDate(moment());
+            carregarDadosRelatorio();
+        }
+        
+        function atualizarEstatisticas(stats) {
+            $('#totalEventos').text(stats.totalEventos || 0);
+            $('#eventosConcluidos').text(stats.eventosConcluidos || 0);
+            
+            const taxa = stats.totalEventos > 0 ? Math.round((stats.eventosConcluidos / stats.totalEventos) * 100) : 0;
+            $('#taxaConclusao').text(taxa + '%');
+            $('#progressConclusao').css('width', taxa + '%');
+            
+            $('#tempoMedio').text(stats.tempoMedio || 0);
+        }
+        
+        function criarGraficos(dados) {
+            criarGraficoEventosPorMes(dados.eventosPorMes);
+            criarGraficoTiposEvento(dados.tiposEvento);
+            criarGraficoStatusEventos(dados.statusEventos);
+            criarGraficoProdutividade(dados.produtividade);
+        }
+        
+        function criarGraficoEventosPorMes(dados) {
+            const ctx = document.getElementById('eventosPorMesChart').getContext('2d');
+            
+            if (chartEventosPorMes) {
+                chartEventosPorMes.destroy();
+            }
+            
+            chartEventosPorMes = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dados.labels || [],
+                    datasets: [{
+                        label: 'Eventos',
+                        data: dados.valores || [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Evolução de Eventos por Mês'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function criarGraficoTiposEvento(dados) {
+            const ctx = document.getElementById('tiposEventoChart').getContext('2d');
+            
+            if (chartTiposEvento) {
+                chartTiposEvento.destroy();
+            }
+            
+            chartTiposEvento = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: dados.labels || [],
+                    datasets: [{
+                        data: dados.valores || [],
+                        backgroundColor: [
+                            '#4e73df',
+                            '#1cc88a',
+                            '#36b9cc',
+                            '#f6c23e',
+                            '#e74a3b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function criarGraficoStatusEventos(dados) {
+            const ctx = document.getElementById('statusEventosChart').getContext('2d');
+            
+            if (chartStatusEventos) {
+                chartStatusEventos.destroy();
+            }
+            
+            chartStatusEventos = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dados.labels || [],
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: dados.valores || [],
+                        backgroundColor: [
+                            '#4e73df',
+                            '#1cc88a',
+                            '#e74a3b',
+                            '#f6c23e'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function criarGraficoProdutividade(dados) {
+            const ctx = document.getElementById('produtividadeChart').getContext('2d');
+            
+            if (chartProdutividade) {
+                chartProdutividade.destroy();
+            }
+            
+            chartProdutividade = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+                    datasets: [{
+                        label: 'Eventos Concluídos',
+                        data: dados.valores || [0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: '#1cc88a'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function atualizarTabela() {
+            const inicio = (paginaAtual - 1) * itensPorPagina;
+            const fim = inicio + itensPorPagina;
+            const eventosPagina = dadosEventos.slice(inicio, fim);
+            
+            let html = '';
+            eventosPagina.forEach(evento => {
+                const statusClass = {
+                    'agendado': 'badge bg-primary',
+                    'concluido': 'badge bg-success',
+                    'cancelado': 'badge bg-danger',
+                    'adiado': 'badge bg-warning'
+                }[evento.status] || 'badge bg-secondary';
+                
+                html += `
+                    <tr>
+                        <td>${evento.titulo}</td>
+                        <td>${formatarDataHora(evento.dataHora)}</td>
+                        <td>${evento.tipo}</td>
+                        <td><span class="${statusClass}">${evento.status}</span></td>
+                        <td>${evento.duracao}</td>
+                        <td>${evento.participantes}</td>
+                        <td>${evento.local || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            $('#corpoTabelaEventos').html(html);
+            atualizarPaginacao();
+        }
+        
+        function atualizarPaginacao() {
+            const totalPaginas = Math.ceil(dadosEventos.length / itensPorPagina);
+            let html = '';
+            
+            // Botão anterior
+            html += `<li class="page-item ${paginaAtual === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="mudarPagina(${paginaAtual - 1})">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                     </li>`;
+            
+            // Números das páginas
+            for (let i = 1; i <= totalPaginas; i++) {
+                if (i === paginaAtual || i === 1 || i === totalPaginas || (i >= paginaAtual - 2 && i <= paginaAtual + 2)) {
+                    html += `<li class="page-item ${i === paginaAtual ? 'active' : ''}">
+                                <a class="page-link" href="#" onclick="mudarPagina(${i})">${i}</a>
+                             </li>`;
+                } else if (i === paginaAtual - 3 || i === paginaAtual + 3) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+            
+            // Botão próximo
+            html += `<li class="page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="mudarPagina(${paginaAtual + 1})">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                     </li>`;
+            
+            $('#paginacaoTabela').html(html);
+        }
+        
+        function mudarPagina(novaPagina) {
+            const totalPaginas = Math.ceil(dadosEventos.length / itensPorPagina);
+            if (novaPagina >= 1 && novaPagina <= totalPaginas) {
+                paginaAtual = novaPagina;
+                atualizarTabela();
+            }
+        }
+        
+        function formatarDataHora(dataHora) {
+            return moment(dataHora).format('DD/MM/YYYY HH:mm');
+        }
+        
+        function exportarGrafico(tipoGrafico, formato = 'png') {
+            let chart;
+            switch (tipoGrafico) {
+                case 'eventosPorMes':
+                    chart = chartEventosPorMes;
+                    break;
+                case 'tiposEvento':
+                    chart = chartTiposEvento;
+                    break;
+                case 'statusEventos':
+                    chart = chartStatusEventos;
+                    break;
+                case 'produtividade':
+                    chart = chartProdutividade;
+                    break;
+            }
+            
+            if (chart) {
+                const url = chart.toBase64Image();
+                const link = document.createElement('a');
+                link.download = `grafico_${tipoGrafico}.${formato}`;
+                link.href = url;
+                link.click();
+            }
+        }
+        
+        function exportarTabela(formato) {
+            const filtros = obterFiltros();
+            const params = new URLSearchParams({
+                ...filtros,
+                formato: formato
+            });
+            
+            window.open('/agenda/relatorios/exportar?' + params.toString(), '_blank');
+        }
+        
+        function gerarRelatorioCompleto() {
+            const filtros = obterFiltros();
+            const params = new URLSearchParams({
+                ...filtros,
+                formato: 'pdf',
+                completo: true
+            });
+            
+            window.open('/agenda/relatorios/pdf?' + params.toString(), '_blank');
+        }
+    </script>
+    
+    <style>
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+        
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+        
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+        
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+        
+        .chart-area {
+            position: relative;
+            height: 400px;
+        }
+        
+        .chart-pie {
+            position: relative;
+            height: 300px;
+        }
+        
+        .chart-bar {
+            position: relative;
+            height: 300px;
+        }
+        
+        .progress-sm {
+            height: 0.5rem;
+        }
+        
+        .text-xs {
+            font-size: 0.7rem;
+        }
+        
+        .font-weight-bold {
+            font-weight: 700;
+        }
+        
+        .text-uppercase {
+            text-transform: uppercase;
+        }
+        
+        .text-gray-800 {
+            color: #5a5c69;
+        }
+        
+        .text-gray-300 {
+            color: #dddfeb;
+        }
+    </style>
+</body>
+</html>

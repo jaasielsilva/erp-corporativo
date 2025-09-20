@@ -1,56 +1,794 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurações - Agenda</title>
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/sidebar.css" rel="stylesheet">
-    <link href="/css/notifications.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>Configurações - Agenda - ERP Corporativo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap Switch -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-switch@3.3.4/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/agenda.css}" rel="stylesheet">
 </head>
-
 <body>
-<div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-    <main class="main-content">
-        <header th:replace="~{components/topbar :: topbar}"></header>
-
-        <section class="content-area">
-            <div class="container-fluid">
-                <h1 class="mb-4"><i class="fas fa-cogs"></i> Configurações da Agenda</h1>
-
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label">Horário padrão de início</label>
-                        <input type="time" class="form-control">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        
+        <!-- Page Content -->
+        <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">
+                                <i class="fas fa-cog me-2"></i>Configurações da Agenda
+                            </h1>
+                            <p class="text-muted mb-0">Personalize suas preferências e configurações</p>
+                        </div>
+                        <div>
+                            <a th:href="@{/agenda}" class="btn btn-outline-secondary">
+                                <i class="fas fa-home me-1"></i>Voltar à Agenda
+                            </a>
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Horário padrão de fim</label>
-                        <input type="time" class="form-control">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Notificações por e-mail</label>
-                        <select class="form-select">
-                            <option>Ativar</option>
-                            <option>Desativar</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Salvar Configurações
-                    </button>
-                </form>
+                </div>
             </div>
-        </section>
-
-        <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-</div>
+            
+            <!-- Alert Messages -->
+            <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${mensagem}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${erro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Configurações Tabs -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" id="configTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="geral-tab" data-bs-toggle="tab" data-bs-target="#geral" type="button" role="tab">
+                                        <i class="fas fa-cog me-2"></i>Geral
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="notificacoes-tab" data-bs-toggle="tab" data-bs-target="#notificacoes" type="button" role="tab">
+                                        <i class="fas fa-bell me-2"></i>Notificações
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="calendario-tab" data-bs-toggle="tab" data-bs-target="#calendario" type="button" role="tab">
+                                        <i class="fas fa-calendar me-2"></i>Calendário
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="integracao-tab" data-bs-toggle="tab" data-bs-target="#integracao" type="button" role="tab">
+                                        <i class="fas fa-link me-2"></i>Integrações
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup" type="button" role="tab">
+                                        <i class="fas fa-download me-2"></i>Backup
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="tab-content" id="configTabsContent">
+                                <!-- Aba Geral -->
+                                <div class="tab-pane fade show active" id="geral" role="tabpanel">
+                                    <form id="formGeral">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h5 class="mb-3"><i class="fas fa-user me-2"></i>Preferências Pessoais</h5>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="fusoHorario" class="form-label">Fuso Horário</label>
+                                                    <select class="form-select" id="fusoHorario" name="fusoHorario">
+                                                        <option value="America/Sao_Paulo" selected>Brasília (GMT-3)</option>
+                                                        <option value="America/New_York">Nova York (GMT-5)</option>
+                                                        <option value="Europe/London">Londres (GMT+0)</option>
+                                                        <option value="Asia/Tokyo">Tóquio (GMT+9)</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="idioma" class="form-label">Idioma</label>
+                                                    <select class="form-select" id="idioma" name="idioma">
+                                                        <option value="pt-BR" selected>Português (Brasil)</option>
+                                                        <option value="en-US">English (US)</option>
+                                                        <option value="es-ES">Español</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="formatoData" class="form-label">Formato de Data</label>
+                                                    <select class="form-select" id="formatoData" name="formatoData">
+                                                        <option value="dd/MM/yyyy" selected>DD/MM/AAAA</option>
+                                                        <option value="MM/dd/yyyy">MM/DD/AAAA</option>
+                                                        <option value="yyyy-MM-dd">AAAA-MM-DD</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="formatoHora" class="form-label">Formato de Hora</label>
+                                                    <select class="form-select" id="formatoHora" name="formatoHora">
+                                                        <option value="24h" selected>24 horas</option>
+                                                        <option value="12h">12 horas (AM/PM)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <h5 class="mb-3"><i class="fas fa-eye me-2"></i>Visualização</h5>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="visualizacaoPadrao" class="form-label">Visualização Padrão</label>
+                                                    <select class="form-select" id="visualizacaoPadrao" name="visualizacaoPadrao">
+                                                        <option value="month" selected>Mês</option>
+                                                        <option value="week">Semana</option>
+                                                        <option value="day">Dia</option>
+                                                        <option value="list">Lista</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="primeiroDiaSemana" class="form-label">Primeiro Dia da Semana</label>
+                                                    <select class="form-select" id="primeiroDiaSemana" name="primeiroDiaSemana">
+                                                        <option value="0">Domingo</option>
+                                                        <option value="1" selected>Segunda-feira</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="horaInicio" class="form-label">Hora de Início do Dia</label>
+                                                    <input type="time" class="form-control" id="horaInicio" name="horaInicio" value="08:00">
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="horaFim" class="form-label">Hora de Fim do Dia</label>
+                                                    <input type="time" class="form-control" id="horaFim" name="horaFim" value="18:00">
+                                                </div>
+                                                
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="mostrarFinsemana" name="mostrarFinsemana" checked>
+                                                    <label class="form-check-label" for="mostrarFinsemana">
+                                                        Mostrar fins de semana
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-primary" onclick="salvarConfiguracoes('geral')">
+                                                <i class="fas fa-save me-1"></i>Salvar Configurações Gerais
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Aba Notificações -->
+                                <div class="tab-pane fade" id="notificacoes" role="tabpanel">
+                                    <form id="formNotificacoes">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h5 class="mb-3"><i class="fas fa-envelope me-2"></i>E-mail</h5>
+                                                
+                                                <div class="form-check form-switch mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="emailAtivo" name="emailAtivo" checked>
+                                                    <label class="form-check-label" for="emailAtivo">
+                                                        Receber notificações por e-mail
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="emailPrincipal" class="form-label">E-mail Principal</label>
+                                                    <input type="email" class="form-control" id="emailPrincipal" name="emailPrincipal" 
+                                                           th:value="${usuario.email}" placeholder="seu@email.com">
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tipos de Notificação por E-mail</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="emailNovoEvento" name="emailNovoEvento" checked>
+                                                        <label class="form-check-label" for="emailNovoEvento">Novos eventos</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="emailLembretes" name="emailLembretes" checked>
+                                                        <label class="form-check-label" for="emailLembretes">Lembretes</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="emailAlteracoes" name="emailAlteracoes" checked>
+                                                        <label class="form-check-label" for="emailAlteracoes">Alterações em eventos</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="emailCancelamentos" name="emailCancelamentos" checked>
+                                                        <label class="form-check-label" for="emailCancelamentos">Cancelamentos</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <h5 class="mb-3"><i class="fas fa-mobile-alt me-2"></i>Push Notifications</h5>
+                                                
+                                                <div class="form-check form-switch mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="pushAtivo" name="pushAtivo" checked>
+                                                    <label class="form-check-label" for="pushAtivo">
+                                                        Receber notificações push
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tipos de Push Notification</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pushLembretes" name="pushLembretes" checked>
+                                                        <label class="form-check-label" for="pushLembretes">Lembretes</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pushEventosUrgentes" name="pushEventosUrgentes" checked>
+                                                        <label class="form-check-label" for="pushEventosUrgentes">Eventos urgentes</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="pushConvites" name="pushConvites" checked>
+                                                        <label class="form-check-label" for="pushConvites">Convites para eventos</label>
+                                                    </div>
+                                                </div>
+                                                
+                                                <h5 class="mb-3 mt-4"><i class="fas fa-clock me-2"></i>Horários</h5>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="horarioInicioNotif" class="form-label">Não enviar notificações antes de</label>
+                                                    <input type="time" class="form-control" id="horarioInicioNotif" name="horarioInicioNotif" value="08:00">
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="horarioFimNotif" class="form-label">Não enviar notificações depois de</label>
+                                                    <input type="time" class="form-control" id="horarioFimNotif" name="horarioFimNotif" value="22:00">
+                                                </div>
+                                                
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="notifFinsemana" name="notifFinsemana">
+                                                    <label class="form-check-label" for="notifFinsemana">
+                                                        Enviar notificações nos fins de semana
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-primary" onclick="salvarConfiguracoes('notificacoes')">
+                                                <i class="fas fa-save me-1"></i>Salvar Configurações de Notificação
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Aba Calendário -->
+                                <div class="tab-pane fade" id="calendario" role="tabpanel">
+                                    <form id="formCalendario">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h5 class="mb-3"><i class="fas fa-palette me-2"></i>Cores e Categorias</h5>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Categorias de Eventos</label>
+                                                    <div id="categorias-list">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <input type="color" class="form-control form-control-color me-2" value="#007bff" style="width: 50px;">
+                                                            <input type="text" class="form-control me-2" value="Reunião">
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerCategoria(this)">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <input type="color" class="form-control form-control-color me-2" value="#28a745" style="width: 50px;">
+                                                            <input type="text" class="form-control me-2" value="Tarefa">
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerCategoria(this)">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <input type="color" class="form-control form-control-color me-2" value="#dc3545" style="width: 50px;">
+                                                            <input type="text" class="form-control me-2" value="Urgente">
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerCategoria(this)">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarCategoria()">
+                                                        <i class="fas fa-plus me-1"></i>Adicionar Categoria
+                                                    </button>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="corPadrao" class="form-label">Cor Padrão para Novos Eventos</label>
+                                                    <input type="color" class="form-control form-control-color" id="corPadrao" name="corPadrao" value="#007bff">
+                                                </div>
+                                                
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="mostrarCoresBorda" name="mostrarCoresBorda" checked>
+                                                    <label class="form-check-label" for="mostrarCoresBorda">
+                                                        Mostrar cores nas bordas dos eventos
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <h5 class="mb-3"><i class="fas fa-calendar-alt me-2"></i>Configurações de Exibição</h5>
+                                                
+                                                <div class="mb-3">
+                                                    <label for="eventosSimultaneos" class="form-label">Máximo de Eventos Simultâneos Exibidos</label>
+                                                    <select class="form-select" id="eventosSimultaneos" name="eventosSimultaneos">
+                                                        <option value="3">3 eventos</option>
+                                                        <option value="5" selected>5 eventos</option>
+                                                        <option value="10">10 eventos</option>
+                                                        <option value="-1">Ilimitado</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="mostrarHorarios" name="mostrarHorarios" checked>
+                                                    <label class="form-check-label" for="mostrarHorarios">
+                                                        Mostrar horários nos eventos
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="mostrarDescricoes" name="mostrarDescricoes">
+                                                    <label class="form-check-label" for="mostrarDescricoes">
+                                                        Mostrar descrições nos eventos
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="destacarEventosHoje" name="destacarEventosHoje" checked>
+                                                    <label class="form-check-label" for="destacarEventosHoje">
+                                                        Destacar eventos de hoje
+                                                    </label>
+                                                </div>
+                                                
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="mostrarFeriados" name="mostrarFeriados" checked>
+                                                    <label class="form-check-label" for="mostrarFeriados">
+                                                        Mostrar feriados nacionais
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-primary" onclick="salvarConfiguracoes('calendario')">
+                                                <i class="fas fa-save me-1"></i>Salvar Configurações do Calendário
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- Aba Integrações -->
+                                <div class="tab-pane fade" id="integracao" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5 class="mb-3"><i class="fab fa-google me-2"></i>Google Calendar</h5>
+                                            
+                                            <div class="card border-primary mb-3">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <span>Status da Integração</span>
+                                                        <span class="badge bg-secondary">Desconectado</span>
+                                                    </div>
+                                                    
+                                                    <div class="form-check form-switch mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="googleCalendarSync" name="googleCalendarSync">
+                                                        <label class="form-check-label" for="googleCalendarSync">
+                                                            Sincronização automática
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="googleCalendarImport" name="googleCalendarImport">
+                                                        <label class="form-check-label" for="googleCalendarImport">
+                                                            Importar eventos do Google
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="googleCalendarExport" name="googleCalendarExport">
+                                                        <label class="form-check-label" for="googleCalendarExport">
+                                                            Exportar eventos para o Google
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <button type="button" class="btn btn-primary btn-sm" onclick="conectarGoogle()">
+                                                        <i class="fab fa-google me-1"></i>Conectar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <h5 class="mb-3"><i class="fab fa-microsoft me-2"></i>Outlook</h5>
+                                            
+                                            <div class="card border-info mb-3">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <span>Status da Integração</span>
+                                                        <span class="badge bg-secondary">Desconectado</span>
+                                                    </div>
+                                                    
+                                                    <div class="form-check form-switch mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="outlookSync" name="outlookSync">
+                                                        <label class="form-check-label" for="outlookSync">
+                                                            Sincronização automática
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="outlookImport" name="outlookImport">
+                                                        <label class="form-check-label" for="outlookImport">
+                                                            Importar eventos do Outlook
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="outlookExport" name="outlookExport">
+                                                        <label class="form-check-label" for="outlookExport">
+                                                            Exportar eventos para o Outlook
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <button type="button" class="btn btn-info btn-sm" onclick="conectarOutlook()">
+                                                        <i class="fab fa-microsoft me-1"></i>Conectar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <h5 class="mb-3"><i class="fas fa-sync me-2"></i>Sincronização</h5>
+                                            
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="intervaloSync" class="form-label">Intervalo de Sincronização</label>
+                                                                <select class="form-select" id="intervaloSync" name="intervaloSync">
+                                                                    <option value="5">5 minutos</option>
+                                                                    <option value="15" selected>15 minutos</option>
+                                                                    <option value="30">30 minutos</option>
+                                                                    <option value="60">1 hora</option>
+                                                                    <option value="manual">Manual</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Última Sincronização</label>
+                                                                <p class="form-control-plaintext">Nunca</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <button type="button" class="btn btn-outline-primary" onclick="sincronizarAgora()">
+                                                        <i class="fas fa-sync me-1"></i>Sincronizar Agora
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-primary" onclick="salvarConfiguracoes('integracao')">
+                                            <i class="fas fa-save me-1"></i>Salvar Configurações de Integração
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Aba Backup -->
+                                <div class="tab-pane fade" id="backup" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5 class="mb-3"><i class="fas fa-download me-2"></i>Exportar Dados</h5>
+                                            
+                                            <div class="card border-success mb-3">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Backup Completo</h6>
+                                                    <p class="card-text">Exporta todos os eventos, lembretes e configurações.</p>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="formatoBackup" class="form-label">Formato</label>
+                                                        <select class="form-select" id="formatoBackup" name="formatoBackup">
+                                                            <option value="json">JSON</option>
+                                                            <option value="csv">CSV</option>
+                                                            <option value="ics">iCalendar (.ics)</option>
+                                                            <option value="pdf">PDF</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div class="row mb-3">
+                                                        <div class="col-6">
+                                                            <label for="dataInicioBackup" class="form-label">Data Início</label>
+                                                            <input type="date" class="form-control" id="dataInicioBackup" name="dataInicioBackup">
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label for="dataFimBackup" class="form-label">Data Fim</label>
+                                                            <input type="date" class="form-control" id="dataFimBackup" name="dataFimBackup">
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <button type="button" class="btn btn-success" onclick="exportarDados()">
+                                                        <i class="fas fa-download me-1"></i>Exportar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <h5 class="mb-3"><i class="fas fa-upload me-2"></i>Importar Dados</h5>
+                                            
+                                            <div class="card border-warning mb-3">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Restaurar Backup</h6>
+                                                    <p class="card-text">Importa eventos de um arquivo de backup.</p>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="arquivoBackup" class="form-label">Arquivo de Backup</label>
+                                                        <input type="file" class="form-control" id="arquivoBackup" name="arquivoBackup" 
+                                                               accept=".json,.csv,.ics">
+                                                    </div>
+                                                    
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="substituirEventos" name="substituirEventos">
+                                                        <label class="form-check-label" for="substituirEventos">
+                                                            Substituir eventos existentes
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <button type="button" class="btn btn-warning" onclick="importarDados()">
+                                                        <i class="fas fa-upload me-1"></i>Importar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h5 class="mb-3"><i class="fas fa-clock me-2"></i>Backup Automático</h5>
+                                            
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <div class="form-check form-switch mb-3">
+                                                        <input class="form-check-input" type="checkbox" id="backupAutomatico" name="backupAutomatico">
+                                                        <label class="form-check-label" for="backupAutomatico">
+                                                            Ativar backup automático
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="frequenciaBackup" class="form-label">Frequência</label>
+                                                                <select class="form-select" id="frequenciaBackup" name="frequenciaBackup">
+                                                                    <option value="diario">Diário</option>
+                                                                    <option value="semanal" selected>Semanal</option>
+                                                                    <option value="mensal">Mensal</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="horarioBackup" class="form-label">Horário</label>
+                                                                <input type="time" class="form-control" id="horarioBackup" name="horarioBackup" value="02:00">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Último Backup Automático</label>
+                                                        <p class="form-control-plaintext">Nunca</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-primary" onclick="salvarConfiguracoes('backup')">
+                                            <i class="fas fa-save me-1"></i>Salvar Configurações de Backup
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Configurar datas padrão para backup (último mês)
+            const hoje = new Date();
+            const umMesAtras = new Date(hoje.getFullYear(), hoje.getMonth() - 1, hoje.getDate());
+            
+            $('#dataInicioBackup').val(umMesAtras.toISOString().split('T')[0]);
+            $('#dataFimBackup').val(hoje.toISOString().split('T')[0]);
+        });
+        
+        function salvarConfiguracoes(aba) {
+            const form = $('#form' + aba.charAt(0).toUpperCase() + aba.slice(1));
+            const formData = new FormData(form[0]);
+            
+            $.ajax({
+                url: '/agenda/configuracoes/salvar/' + aba,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    mostrarMensagem('Configurações salvas com sucesso!', 'success');
+                },
+                error: function(xhr) {
+                    mostrarMensagem('Erro ao salvar configurações: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+        
+        function adicionarCategoria() {
+            const container = $('#categorias-list');
+            const novaCategoria = `
+                <div class="d-flex align-items-center mb-2">
+                    <input type="color" class="form-control form-control-color me-2" value="#007bff" style="width: 50px;">
+                    <input type="text" class="form-control me-2" placeholder="Nome da categoria">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerCategoria(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.append(novaCategoria);
+        }
+        
+        function removerCategoria(button) {
+            $(button).closest('.d-flex').remove();
+        }
+        
+        function conectarGoogle() {
+            // Implementar OAuth do Google
+            window.open('/agenda/integracao/google/auth', 'google_auth', 'width=500,height=600');
+        }
+        
+        function desconectarGoogle() {
+            if (confirm('Tem certeza que deseja desconectar do Google Calendar?')) {
+                $.post('/agenda/integracao/google/disconnect', function() {
+                    location.reload();
+                });
+            }
+        }
+        
+        function conectarOutlook() {
+            // Implementar OAuth do Outlook
+            window.open('/agenda/integracao/outlook/auth', 'outlook_auth', 'width=500,height=600');
+        }
+        
+        function desconectarOutlook() {
+            if (confirm('Tem certeza que deseja desconectar do Outlook?')) {
+                $.post('/agenda/integracao/outlook/disconnect', function() {
+                    location.reload();
+                });
+            }
+        }
+        
+        function sincronizarAgora() {
+            const btn = $(event.target);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Sincronizando...');
+            
+            $.post('/agenda/integracao/sincronizar', function() {
+                mostrarMensagem('Sincronização concluída com sucesso!', 'success');
+                btn.prop('disabled', false).html('<i class="fas fa-sync me-1"></i>Sincronizar Agora');
+                location.reload();
+            }).fail(function() {
+                mostrarMensagem('Erro na sincronização.', 'error');
+                btn.prop('disabled', false).html('<i class="fas fa-sync me-1"></i>Sincronizar Agora');
+            });
+        }
+        
+        function exportarDados() {
+            const formato = $('#formatoBackup').val();
+            const dataInicio = $('#dataInicioBackup').val();
+            const dataFim = $('#dataFimBackup').val();
+            
+            const params = new URLSearchParams({
+                formato: formato,
+                dataInicio: dataInicio,
+                dataFim: dataFim
+            });
+            
+            window.open('/agenda/backup/exportar?' + params.toString(), '_blank');
+        }
+        
+        function importarDados() {
+            const arquivo = $('#arquivoBackup')[0].files[0];
+            
+            if (!arquivo) {
+                alert('Selecione um arquivo para importar.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('arquivo', arquivo);
+            formData.append('substituir', $('#substituirEventos').is(':checked'));
+            
+            $.ajax({
+                url: '/agenda/backup/importar',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    mostrarMensagem('Dados importados com sucesso!', 'success');
+                    $('#arquivoBackup').val('');
+                },
+                error: function(xhr) {
+                    mostrarMensagem('Erro ao importar dados: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+        
+        function mostrarMensagem(mensagem, tipo) {
+            const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            const alert = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas ${icon} me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            $('.container-fluid').prepend(alert);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
+    </script>
 </body>
 </html>

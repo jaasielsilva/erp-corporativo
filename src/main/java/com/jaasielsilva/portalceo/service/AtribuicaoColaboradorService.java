@@ -187,7 +187,7 @@ public class AtribuicaoColaboradorService {
     public boolean verificarDisponibilidade(Long colaboradorId) {
         Optional<Colaborador> colaboradorOpt = colaboradorRepository.findById(colaboradorId);
         if (colaboradorOpt.isPresent()) {
-            return verificarDisponibilidade(colaboradorOpt.get());
+            return podeAssumirChamado(colaboradorOpt.get());
         }
         return false;
     }

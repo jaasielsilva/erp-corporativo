@@ -1,5 +1,7 @@
 package com.jaasielsilva.portalceo.controller.agenda;
 
+import java.util.Collections;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,23 +18,28 @@ import com.jaasielsilva.portalceo.service.agenda.AgendaService;
 @RequestMapping("/agenda")
 public class AgendaController {
 
-
     @Autowired
     private AgendaService agendaService;
-    
+
     @GetMapping
     public String agenda(Model model) {
         // TODO: Implementar lógica da agenda
         // Calendário de compromissos, reuniões
         // Agendamentos, lembretes, notificações
         // Integração com outros módulos (RH, vendas)
+        model.addAttribute("eventosHoje", 0);
+        model.addAttribute("eventosSemana", 0);
+        model.addAttribute("proximosLembretes", 0);
+        model.addAttribute("totalEventos", 0);
+        model.addAttribute("proximosEventos", Collections.emptyList());
+        model.addAttribute("eventos", Collections.emptyList());
         return "agenda/index";
     }
 
     @GetMapping("/eventos")
     public String listarEventos(Model model) {
         model.addAttribute("eventos", agendaService.listarTodos());
-        return "agenda/eventos";
+        return "agenda/visualizar-eventos";
     }
 
     @GetMapping("/novo-evento")
@@ -50,7 +57,7 @@ public class AgendaController {
     @GetMapping("/editar/{id}")
     public String editarEvento(@PathVariable Long id, Model model) {
         model.addAttribute("evento", agendaService.buscarPorId(id));
-        return "agenda/novo-evento"; // pode reaproveitar a mesma view
+        return "agenda/editar-evento";
     }
 
     @GetMapping("/deletar/{id}")
@@ -62,7 +69,7 @@ public class AgendaController {
     @GetMapping("/calendario")
     public String calendario(Model model) {
         model.addAttribute("eventos", agendaService.listarTodos());
-        return "agenda/calendario";
+        return "agenda/agenda";
     }
 
     @GetMapping("/lembretes")

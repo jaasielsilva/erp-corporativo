@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Eventos - Agenda - ERP Corporativo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/agenda.css}" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        
+        <!-- Page Content -->
+        <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">
+                                <i class="fas fa-calendar-alt me-2"></i>Visualizar Eventos
+                            </h1>
+                            <p class="text-muted mb-0">Gerencie e visualize todos os seus eventos</p>
+                        </div>
+                        <div>
+                            <a th:href="@{/agenda/novo-evento}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Novo Evento
+                            </a>
+                            <a th:href="@{/agenda}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-arrow-left me-1"></i>Voltar à Agenda
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alert Messages -->
+            <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${mensagem}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${erro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Filtros e Controles -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-filter me-2"></i>Filtros e Controles
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Filtro por Data -->
+                        <div class="col-md-3 mb-3">
+                            <label for="filtroDataInicio" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Data Início
+                            </label>
+                            <input type="date" class="form-control" id="filtroDataInicio">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="filtroDataFim" class="form-label">
+                                <i class="fas fa-calendar-check me-1"></i>Data Fim
+                            </label>
+                            <input type="date" class="form-control" id="filtroDataFim">
+                        </div>
+                        
+                        <!-- Filtro por Categoria -->
+                        <div class="col-md-3 mb-3">
+                            <label for="filtroCategoria" class="form-label">
+                                <i class="fas fa-tags me-1"></i>Categoria
+                            </label>
+                            <select class="form-select" id="filtroCategoria">
+                                <option value="">Todas as categorias</option>
+                                <option value="REUNIAO">Reunião</option>
+                                <option value="COMPROMISSO">Compromisso</option>
+                                <option value="EVENTO">Evento</option>
+                                <option value="TAREFA">Tarefa</option>
+                                <option value="LEMBRETE">Lembrete</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Filtro por Prioridade -->
+                        <div class="col-md-3 mb-3">
+                            <label for="filtroPrioridade" class="form-label">
+                                <i class="fas fa-flag me-1"></i>Prioridade
+                            </label>
+                            <select class="form-select" id="filtroPrioridade">
+                                <option value="">Todas as prioridades</option>
+                                <option value="BAIXA">Baixa</option>
+                                <option value="MEDIA">Média</option>
+                                <option value="ALTA">Alta</option>
+                                <option value="URGENTE">Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Busca por Texto -->
+                        <div class="col-md-6 mb-3">
+                            <label for="buscaTexto" class="form-label">
+                                <i class="fas fa-search me-1"></i>Buscar por título ou descrição
+                            </label>
+                            <input type="text" class="form-control" id="buscaTexto" placeholder="Digite para buscar...">
+                        </div>
+                        
+                        <!-- Modo de Visualização -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-eye me-1"></i>Modo de Visualização
+                            </label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="modoVisualizacao" id="modoLista" value="lista" checked>
+                                <label class="btn btn-outline-primary" for="modoLista">
+                                    <i class="fas fa-list me-1"></i>Lista
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="modoVisualizacao" id="modoCards" value="cards">
+                                <label class="btn btn-outline-primary" for="modoCards">
+                                    <i class="fas fa-th me-1"></i>Cards
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="modoVisualizacao" id="modoCalendario" value="calendario">
+                                <label class="btn btn-outline-primary" for="modoCalendario">
+                                    <i class="fas fa-calendar me-1"></i>Calendário
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary" onclick="limparFiltros()">
+                                <i class="fas fa-eraser me-1"></i>Limpar Filtros
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-success" onclick="exportarEventos()">
+                                <i class="fas fa-download me-1"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visualização em Lista -->
+            <div id="visualizacaoLista" class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-2"></i>Lista de Eventos
+                        <span class="badge bg-secondary ms-2" id="totalEventos">0 eventos</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="tabelaEventos">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Data/Hora</th>
+                                    <th>Categoria</th>
+                                    <th>Prioridade</th>
+                                    <th>Local</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="evento : ${eventos}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-calendar-day me-2 text-primary"></i>
+                                            <div>
+                                                <strong th:text="${evento.titulo}">Título do Evento</strong>
+                                                <br>
+                                                <small class="text-muted" th:text="${#strings.abbreviate(evento.descricao, 50)}">Descrição...</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <i class="fas fa-clock me-1"></i>
+                                            <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                                        </div>
+                                        <div th:if="${evento.dataFim}" class="text-muted small">
+                                            até <span th:text="${#temporals.format(evento.dataFim, 'dd/MM/yyyy HH:mm')}">01/01/2024 11:00</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${evento.categoria == 'REUNIAO' ? 'bg-primary' : 
+                                                                              evento.categoria == 'COMPROMISSO' ? 'bg-info' : 
+                                                                              evento.categoria == 'EVENTO' ? 'bg-success' : 
+                                                                              evento.categoria == 'TAREFA' ? 'bg-warning' : 
+                                                                              evento.categoria == 'LEMBRETE' ? 'bg-secondary' : 'bg-dark'}" 
+                                              th:text="${evento.categoria}">Categoria</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${evento.prioridade == 'URGENTE' ? 'bg-danger' : 
+                                                                              evento.prioridade == 'ALTA' ? 'bg-warning' : 
+                                                                              evento.prioridade == 'MEDIA' ? 'bg-info' : 'bg-secondary'}" 
+                                              th:text="${evento.prioridade}">Prioridade</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${evento.local}" th:text="${evento.local}">Local</span>
+                                        <span th:unless="${evento.local}" class="text-muted">-</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${evento.status == 'ATIVO' ? 'bg-success' : 
+                                                                              evento.status == 'CANCELADO' ? 'bg-danger' : 
+                                                                              evento.status == 'ADIADO' ? 'bg-warning' : 'bg-secondary'}" 
+                                              th:text="${evento.status}">Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    th:onclick="'visualizarDetalhes(' + ${evento.id} + ')'" 
+                                                    data-bs-toggle="tooltip" title="Visualizar Detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a th:href="@{/agenda/editar/{id}(id=${evento.id})}" 
+                                               class="btn btn-sm btn-outline-warning" 
+                                               data-bs-toggle="tooltip" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    th:onclick="'confirmarExclusao(' + ${evento.id} + ')'"
+                                                    data-bs-toggle="tooltip" title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visualização em Cards -->
+            <div id="visualizacaoCards" class="row" style="display: none;">
+                <div class="col-md-4 mb-4" th:each="evento : ${eventos}">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0" th:text="${evento.titulo}">Título do Evento</h6>
+                            <span class="badge" th:classappend="${evento.prioridade == 'URGENTE' ? 'bg-danger' : 
+                                                                  evento.prioridade == 'ALTA' ? 'bg-warning' : 
+                                                                  evento.prioridade == 'MEDIA' ? 'bg-info' : 'bg-secondary'}" 
+                                  th:text="${evento.prioridade}">Prioridade</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text" th:text="${#strings.abbreviate(evento.descricao, 100)}">Descrição do evento...</p>
+                            
+                            <div class="mb-2">
+                                <i class="fas fa-clock text-primary me-1"></i>
+                                <small th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+                            </div>
+                            
+                            <div class="mb-2" th:if="${evento.local}">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                <small th:text="${evento.local}">Local</small>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <span class="badge" th:classappend="${evento.categoria == 'REUNIAO' ? 'bg-primary' : 
+                                                                      evento.categoria == 'COMPROMISSO' ? 'bg-info' : 
+                                                                      evento.categoria == 'EVENTO' ? 'bg-success' : 
+                                                                      evento.categoria == 'TAREFA' ? 'bg-warning' : 
+                                                                      evento.categoria == 'LEMBRETE' ? 'bg-secondary' : 'bg-dark'}" 
+                                      th:text="${evento.categoria}">Categoria</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        th:onclick="'visualizarDetalhes(' + ${evento.id} + ')'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <a th:href="@{/agenda/editar/{id}(id=${evento.id})}" 
+                                   class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        th:onclick="'confirmarExclusao(' + ${evento.id} + ')'">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visualização em Calendário -->
+            <div id="visualizacaoCalendario" class="card shadow" style="display: none;">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-calendar me-2"></i>Calendário de Eventos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Detalhes do Evento -->
+    <div class="modal fade" id="modalDetalhesEvento" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-day me-2"></i>Detalhes do Evento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="conteudoDetalhesEvento">
+                    <!-- Conteúdo carregado dinamicamente -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditarEvento">Editar Evento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalConfirmarExclusao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirmar Exclusão
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir este evento?</p>
+                    <p class="text-muted">Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    
+    <script>
+        let tabelaEventos;
+        let calendar;
+        let eventoParaExcluir = null;
+        
+        $(document).ready(function() {
+            // Inicializar DataTable
+            tabelaEventos = $('#tabelaEventos').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                },
+                pageLength: 10,
+                responsive: true,
+                order: [[1, 'asc']], // Ordenar por data
+                columnDefs: [
+                    { orderable: false, targets: [6] } // Desabilitar ordenação na coluna de ações
+                ]
+            });
+            
+            // Inicializar tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Configurar filtros
+            configurarFiltros();
+            
+            // Configurar mudança de modo de visualização
+            $('input[name="modoVisualizacao"]').on('change', function() {
+                alterarModoVisualizacao($(this).val());
+            });
+            
+            // Atualizar contador de eventos
+            atualizarContadorEventos();
+        });
+        
+        function configurarFiltros() {
+            // Filtro por data
+            $('#filtroDataInicio, #filtroDataFim').on('change', function() {
+                aplicarFiltros();
+            });
+            
+            // Filtro por categoria
+            $('#filtroCategoria').on('change', function() {
+                aplicarFiltros();
+            });
+            
+            // Filtro por prioridade
+            $('#filtroPrioridade').on('change', function() {
+                aplicarFiltros();
+            });
+            
+            // Busca por texto
+            $('#buscaTexto').on('keyup', function() {
+                tabelaEventos.search($(this).val()).draw();
+                atualizarContadorEventos();
+            });
+        }
+        
+        function aplicarFiltros() {
+            const dataInicio = $('#filtroDataInicio').val();
+            const dataFim = $('#filtroDataFim').val();
+            const categoria = $('#filtroCategoria').val();
+            const prioridade = $('#filtroPrioridade').val();
+            
+            // Aplicar filtros customizados no DataTable
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                // Filtro por categoria
+                if (categoria && !data[2].includes(categoria)) {
+                    return false;
+                }
+                
+                // Filtro por prioridade
+                if (prioridade && !data[3].includes(prioridade)) {
+                    return false;
+                }
+                
+                // Filtro por data (implementação simplificada)
+                // Em uma implementação real, seria necessário parsing das datas
+                
+                return true;
+            });
+            
+            tabelaEventos.draw();
+            atualizarContadorEventos();
+            
+            // Limpar filtros customizados
+            $.fn.dataTable.ext.search.pop();
+        }
+        
+        function limparFiltros() {
+            $('#filtroDataInicio').val('');
+            $('#filtroDataFim').val('');
+            $('#filtroCategoria').val('');
+            $('#filtroPrioridade').val('');
+            $('#buscaTexto').val('');
+            
+            tabelaEventos.search('').draw();
+            atualizarContadorEventos();
+        }
+        
+        function alterarModoVisualizacao(modo) {
+            // Ocultar todas as visualizações
+            $('#visualizacaoLista').hide();
+            $('#visualizacaoCards').hide();
+            $('#visualizacaoCalendario').hide();
+            
+            // Mostrar visualização selecionada
+            switch(modo) {
+                case 'lista':
+                    $('#visualizacaoLista').show();
+                    break;
+                case 'cards':
+                    $('#visualizacaoCards').show();
+                    break;
+                case 'calendario':
+                    $('#visualizacaoCalendario').show();
+                    inicializarCalendario();
+                    break;
+            }
+        }
+        
+        function inicializarCalendario() {
+            if (calendar) {
+                calendar.destroy();
+            }
+            
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: '/agenda/api/eventos', // Endpoint para carregar eventos
+                eventClick: function(info) {
+                    visualizarDetalhes(info.event.id);
+                }
+            });
+            
+            calendar.render();
+        }
+        
+        function visualizarDetalhes(eventoId) {
+            // Carregar detalhes do evento via AJAX
+            $.get('/agenda/api/evento/' + eventoId, function(data) {
+                $('#conteudoDetalhesEvento').html(data);
+                $('#btnEditarEvento').attr('onclick', 'window.location.href="/agenda/editar/' + eventoId + '"');
+                $('#modalDetalhesEvento').modal('show');
+            }).fail(function() {
+                alert('Erro ao carregar detalhes do evento.');
+            });
+        }
+        
+        function confirmarExclusao(eventoId) {
+            eventoParaExcluir = eventoId;
+            $('#modalConfirmarExclusao').modal('show');
+        }
+        
+        $('#btnConfirmarExclusao').on('click', function() {
+            if (eventoParaExcluir) {
+                excluirEvento(eventoParaExcluir);
+            }
+        });
+        
+        function excluirEvento(eventoId) {
+            $.ajax({
+                url: '/agenda/excluir/' + eventoId,
+                type: 'DELETE',
+                success: function() {
+                    $('#modalConfirmarExclusao').modal('hide');
+                    location.reload(); // Recarregar página
+                },
+                error: function() {
+                    alert('Erro ao excluir evento.');
+                }
+            });
+        }
+        
+        function exportarEventos() {
+            const formato = prompt('Escolha o formato de exportação:\n1 - CSV\n2 - PDF\n3 - Excel', '1');
+            
+            let url = '/agenda/exportar?formato=';
+            switch(formato) {
+                case '1':
+                    url += 'csv';
+                    break;
+                case '2':
+                    url += 'pdf';
+                    break;
+                case '3':
+                    url += 'excel';
+                    break;
+                default:
+                    return;
+            }
+            
+            // Adicionar filtros à URL
+            const params = new URLSearchParams();
+            if ($('#filtroDataInicio').val()) params.append('dataInicio', $('#filtroDataInicio').val());
+            if ($('#filtroDataFim').val()) params.append('dataFim', $('#filtroDataFim').val());
+            if ($('#filtroCategoria').val()) params.append('categoria', $('#filtroCategoria').val());
+            if ($('#filtroPrioridade').val()) params.append('prioridade', $('#filtroPrioridade').val());
+            if ($('#buscaTexto').val()) params.append('busca', $('#buscaTexto').val());
+            
+            if (params.toString()) {
+                url += '&' + params.toString();
+            }
+            
+            window.open(url, '_blank');
+        }
+        
+        function atualizarContadorEventos() {
+            const total = tabelaEventos ? tabelaEventos.rows({search: 'applied'}).count() : 0;
+            $('#totalEventos').text(total + ' evento' + (total !== 1 ? 's' : ''));
+        }
+    </script>
+</body>
+</html>

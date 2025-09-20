@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo Evento - Agenda - ERP Corporativo</title>
+    <title>Editar Evento - Agenda - ERP Corporativo</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,20 +13,15 @@
     <link href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.7.7/dist/css/tempus-dominus.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link th:href="@{/css/agenda.css}" rel="stylesheet">
-
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/sidebar.css" rel="stylesheet">
-    <link href="/css/notifications.css" rel="stylesheet">
-    
 </head>
 <body>
     <!-- Sidebar -->
-    <div th:replace="~{components/sidebar :: sidebar}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
     
     <!-- Main Content -->
     <div class="main-content">
         <!-- Top Bar -->
-        <div th:replace="~{components/topbar :: topbar}"></div>
+        <div th:replace="~{fragments/topbar :: topbar}"></div>
         
         <!-- Page Content -->
         <div class="container-fluid p-4">
@@ -36,13 +31,16 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h1 class="h3 mb-0 text-gray-800">
-                                <i class="fas fa-plus-circle me-2"></i>Novo Evento
+                                <i class="fas fa-edit me-2"></i>Editar Evento
                             </h1>
-                            <p class="text-muted mb-0">Crie um novo evento na sua agenda</p>
+                            <p class="text-muted mb-0">Modifique as informações do evento</p>
                         </div>
                         <div>
-                            <a th:href="@{/agenda}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-1"></i>Voltar à Agenda
+                            <a th:href="@{/agenda/visualizar-eventos}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Voltar à Lista
+                            </a>
+                            <a th:href="@{/agenda}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-home me-1"></i>Agenda
                             </a>
                         </div>
                     </div>
@@ -62,17 +60,49 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             
+            <!-- Informações do Evento Atual -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-info-circle me-2"></i>Informações Atuais do Evento
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Título:</strong> <span th:text="${evento.titulo}">Título do Evento</span></p>
+                            <p><strong>Data de Criação:</strong> <span th:text="${#temporals.format(evento.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
+                            <p><strong>Última Modificação:</strong> <span th:text="${#temporals.format(evento.dataModificacao, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                <span class="badge" th:classappend="${evento.status == 'ATIVO' ? 'bg-success' : 
+                                                                      evento.status == 'CANCELADO' ? 'bg-danger' : 
+                                                                      evento.status == 'ADIADO' ? 'bg-warning' : 'bg-secondary'}" 
+                                      th:text="${evento.status}">Status</span>
+                            </p>
+                            <p><strong>Criado por:</strong> <span th:text="${evento.criadoPor}">Usuário</span></p>
+                            <p><strong>ID do Evento:</strong> <span th:text="${evento.id}" class="text-muted">#123</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Form Card -->
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <div class="card shadow">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-calendar-plus me-2"></i>Informações do Evento
+                                <i class="fas fa-calendar-edit me-2"></i>Editar Informações do Evento
                             </h6>
                         </div>
                         <div class="card-body">
-                            <form th:action="@{/agenda/novo-evento}" method="post" th:object="${evento}" id="formNovoEvento">
+                            <form th:action="@{/agenda/editar/{id}(id=${evento.id})}" method="post" th:object="${evento}" id="formEditarEvento">
+                                <input type="hidden" th:field="*{id}">
+                                <input type="hidden" th:field="*{dataCriacao}">
+                                <input type="hidden" th:field="*{criadoPor}">
+                                
                                 <div class="row">
                                     <!-- Título -->
                                     <div class="col-md-8 mb-3">
@@ -84,16 +114,47 @@
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></div>
                                     </div>
                                     
-                                    <!-- Prioridade -->
+                                    <!-- Status -->
                                     <div class="col-md-4 mb-3">
+                                        <label for="status" class="form-label">
+                                            <i class="fas fa-toggle-on me-1"></i>Status
+                                        </label>
+                                        <select class="form-select" id="status" th:field="*{status}">
+                                            <option value="ATIVO">Ativo</option>
+                                            <option value="CANCELADO">Cancelado</option>
+                                            <option value="ADIADO">Adiado</option>
+                                            <option value="CONCLUIDO">Concluído</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <!-- Prioridade -->
+                                    <div class="col-md-6 mb-3">
                                         <label for="prioridade" class="form-label">
                                             <i class="fas fa-flag me-1"></i>Prioridade
                                         </label>
                                         <select class="form-select" id="prioridade" th:field="*{prioridade}">
                                             <option value="BAIXA">Baixa</option>
-                                            <option value="MEDIA" selected>Média</option>
+                                            <option value="MEDIA">Média</option>
                                             <option value="ALTA">Alta</option>
                                             <option value="URGENTE">Urgente</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Categoria -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="categoria" class="form-label">
+                                            <i class="fas fa-tags me-1"></i>Categoria
+                                        </label>
+                                        <select class="form-select" id="categoria" th:field="*{categoria}">
+                                            <option value="">Selecione uma categoria</option>
+                                            <option value="REUNIAO">Reunião</option>
+                                            <option value="COMPROMISSO">Compromisso</option>
+                                            <option value="EVENTO">Evento</option>
+                                            <option value="TAREFA">Tarefa</option>
+                                            <option value="LEMBRETE">Lembrete</option>
+                                            <option value="OUTRO">Outro</option>
                                         </select>
                                     </div>
                                 </div>
@@ -152,20 +213,16 @@
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('local')}" th:errors="*{local}"></div>
                                     </div>
                                     
-                                    <!-- Categoria -->
+                                    <!-- Cor do Evento -->
                                     <div class="col-md-6 mb-3">
-                                        <label for="categoria" class="form-label">
-                                            <i class="fas fa-tags me-1"></i>Categoria
+                                        <label for="cor" class="form-label">
+                                            <i class="fas fa-palette me-1"></i>Cor do Evento
                                         </label>
-                                        <select class="form-select" id="categoria" th:field="*{categoria}">
-                                            <option value="">Selecione uma categoria</option>
-                                            <option value="REUNIAO">Reunião</option>
-                                            <option value="COMPROMISSO">Compromisso</option>
-                                            <option value="EVENTO">Evento</option>
-                                            <option value="TAREFA">Tarefa</option>
-                                            <option value="LEMBRETE">Lembrete</option>
-                                            <option value="OUTRO">Outro</option>
-                                        </select>
+                                        <div class="input-group">
+                                            <input type="color" class="form-control form-control-color" id="cor" th:field="*{cor}" 
+                                                   title="Escolha uma cor para o evento">
+                                            <span class="input-group-text">Cor no calendário</span>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -210,7 +267,7 @@
                                         </div>
                                         
                                         <!-- Recorrência (mostrar apenas se recorrente estiver marcado) -->
-                                        <div id="recorrenciaConfig" class="row" style="display: none;">
+                                        <div id="recorrenciaConfig" class="row" th:style="${evento.recorrente} ? 'display: block;' : 'display: none;'">
                                             <div class="col-md-6 mb-3">
                                                 <label for="tipoRecorrencia" class="form-label">
                                                     <i class="fas fa-repeat me-1"></i>Tipo de Recorrência
@@ -280,19 +337,45 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Histórico de Alterações -->
+                                <div class="card mt-4" th:if="${evento.historicoAlteracoes}">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-history me-2"></i>Histórico de Alterações
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="timeline">
+                                            <div class="timeline-item" th:each="alteracao : ${evento.historicoAlteracoes}">
+                                                <div class="timeline-marker"></div>
+                                                <div class="timeline-content">
+                                                    <h6 class="timeline-title" th:text="${alteracao.descricao}">Alteração realizada</h6>
+                                                    <p class="timeline-text text-muted">
+                                                        <i class="fas fa-user me-1"></i><span th:text="${alteracao.usuario}">Usuário</span>
+                                                        <i class="fas fa-clock ms-3 me-1"></i><span th:text="${#temporals.format(alteracao.dataHora, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <!-- Botões de Ação -->
                                 <div class="d-flex justify-content-between mt-4">
                                     <div>
-                                        <a th:href="@{/agenda}" class="btn btn-outline-secondary">
+                                        <a th:href="@{/agenda/visualizar-eventos}" class="btn btn-outline-secondary">
                                             <i class="fas fa-times me-1"></i>Cancelar
                                         </a>
+                                        <button type="button" class="btn btn-outline-danger ms-2" onclick="confirmarExclusao()">
+                                            <i class="fas fa-trash me-1"></i>Excluir Evento
+                                        </button>
                                     </div>
                                     <div>
                                         <button type="button" class="btn btn-outline-primary me-2" onclick="salvarRascunho()">
                                             <i class="fas fa-save me-1"></i>Salvar Rascunho
                                         </button>
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-check me-1"></i>Criar Evento
+                                            <i class="fas fa-check me-1"></i>Atualizar Evento
                                         </button>
                                     </div>
                                 </div>
@@ -304,8 +387,37 @@
         </div>
     </div>
     
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalConfirmarExclusao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirmar Exclusão
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir este evento?</p>
+                    <p class="text-muted">Esta ação não pode ser desfeita e removerá permanentemente:</p>
+                    <ul class="text-muted">
+                        <li>Todas as informações do evento</li>
+                        <li>Lembretes configurados</li>
+                        <li>Histórico de alterações</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">
+                        <i class="fas fa-trash me-1"></i>Excluir Definitivamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Footer -->
-    <div th:replace="~{components/footer :: footer}"></div>
+    <div th:replace="~{fragments/footer :: footer}"></div>
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -313,24 +425,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.7.7/dist/js/tempus-dominus.min.js"></script>
     
-
-    <script src="/js/sidebar.js" defer></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
     <script>
         $(document).ready(function() {
-            // Configurar data/hora padrão
-            const agora = new Date();
-            const dataAtual = agora.toISOString().slice(0, 16);
-            
-            if (!$('#dataInicio').val()) {
-                $('#dataInicio').val(dataAtual);
-            }
-            
             // Configurar data fim automaticamente (1 hora depois)
             $('#dataInicio').on('change', function() {
                 const dataInicio = new Date($(this).val());
-                if (dataInicio) {
+                if (dataInicio && !$('#dataFim').val()) {
                     const dataFim = new Date(dataInicio.getTime() + 60 * 60 * 1000); // +1 hora
                     $('#dataFim').val(dataFim.toISOString().slice(0, 16));
                 }
@@ -365,7 +465,7 @@
             });
             
             // Validação do formulário
-            $('#formNovoEvento').on('submit', function(e) {
+            $('#formEditarEvento').on('submit', function(e) {
                 const dataInicio = new Date($('#dataInicio').val());
                 const dataFim = new Date($('#dataFim').val());
                 
@@ -386,8 +486,15 @@
                         type: 'hidden',
                         name: 'lembretesMinutos',
                         value: lembretesSelecionados.join(',')
-                    }).appendTo('#formNovoEvento');
+                    }).appendTo('#formEditarEvento');
                 }
+                
+                // Adicionar campo de data de modificação
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'dataModificacao',
+                    value: new Date().toISOString()
+                }).appendTo('#formEditarEvento');
             });
             
             // Contador de caracteres para descrição
@@ -404,14 +511,56 @@
                     $(this).siblings('.form-text').removeClass('text-warning');
                 }
             });
+            
+            // Carregar lembretes existentes
+            carregarLembretesExistentes();
+            
+            // Detectar mudanças no formulário
+            detectarMudancas();
         });
         
+        function carregarLembretesExistentes() {
+            // Carregar lembretes existentes do evento
+            const lembretesExistentes = /*[[${evento.lembretes}]]*/ [];
+            
+            if (lembretesExistentes && lembretesExistentes.length > 0) {
+                lembretesExistentes.forEach(function(lembrete) {
+                    $('input[name="lembretes"][value="' + lembrete + '"]').prop('checked', true);
+                });
+            }
+        }
+        
+        function detectarMudancas() {
+            let formularioOriginal = $('#formEditarEvento').serialize();
+            let mudancasDetectadas = false;
+            
+            $('#formEditarEvento input, #formEditarEvento select, #formEditarEvento textarea').on('change input', function() {
+                const formularioAtual = $('#formEditarEvento').serialize();
+                mudancasDetectadas = formularioOriginal !== formularioAtual;
+                
+                if (mudancasDetectadas) {
+                    $('button[type="submit"]').removeClass('btn-primary').addClass('btn-warning');
+                    $('button[type="submit"] i').removeClass('fa-check').addClass('fa-exclamation-triangle');
+                } else {
+                    $('button[type="submit"]').removeClass('btn-warning').addClass('btn-primary');
+                    $('button[type="submit"] i').removeClass('fa-exclamation-triangle').addClass('fa-check');
+                }
+            });
+            
+            // Aviso ao sair da página com mudanças não salvas
+            $(window).on('beforeunload', function() {
+                if (mudancasDetectadas) {
+                    return 'Você tem alterações não salvas. Deseja realmente sair?';
+                }
+            });
+        }
+        
         function salvarRascunho() {
-            const formData = new FormData($('#formNovoEvento')[0]);
+            const formData = new FormData($('#formEditarEvento')[0]);
             formData.append('rascunho', 'true');
             
             $.ajax({
-                url: '/agenda/salvar-rascunho',
+                url: '/agenda/salvar-rascunho/' + /*[[${evento.id}]]*/ 0,
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -424,6 +573,26 @@
                 }
             });
         }
+        
+        function confirmarExclusao() {
+            $('#modalConfirmarExclusao').modal('show');
+        }
+        
+        $('#btnConfirmarExclusao').on('click', function() {
+            const eventoId = /*[[${evento.id}]]*/ 0;
+            
+            $.ajax({
+                url: '/agenda/excluir/' + eventoId,
+                type: 'DELETE',
+                success: function() {
+                    $('#modalConfirmarExclusao').modal('hide');
+                    window.location.href = '/agenda/visualizar-eventos';
+                },
+                error: function() {
+                    alert('Erro ao excluir evento.');
+                }
+            });
+        });
     </script>
 </body>
 </html>

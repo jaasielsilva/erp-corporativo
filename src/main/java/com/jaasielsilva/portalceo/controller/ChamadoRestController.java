@@ -273,11 +273,16 @@ public class ChamadoRestController {
     public ResponseEntity<Map<String, Object>> removerAtribuicao(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
         try {
-            Chamado chamado = atribuicaoService.removerAtribuicao(id);
-            response.put("sucesso", true);
-            response.put("chamado", chamado);
-            response.put("mensagem", "Atribuição removida com sucesso!");
-            return ResponseEntity.ok(response);
+            boolean sucesso = atribuicaoService.removerAtribuicao(id);
+            if (sucesso) {
+                response.put("sucesso", true);
+                response.put("mensagem", "Atribuição removida com sucesso!");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("sucesso", false);
+                response.put("erro", "Não foi possível remover a atribuição");
+                return ResponseEntity.badRequest().body(response);
+            }
         } catch (Exception e) {
             response.put("sucesso", false);
             response.put("erro", e.getMessage());
@@ -297,7 +302,7 @@ public class ChamadoRestController {
                     Map<String, Object> colabMap = new HashMap<>();
                     colabMap.put("id", colaborador.getId());
                     colabMap.put("nome", colaborador.getNome());
-                    colabMap.put("matricula", colaborador.getMatricula());
+                    colabMap.put("matricula", colaborador.getCpf());
                     colabMap.put("cargo", colaborador.getCargo() != null ? colaborador.getCargo().getNome() : "Não definido");
                     colabMap.put("email", colaborador.getEmail());
                     colabMap.put("disponivel", atribuicaoService.verificarDisponibilidade(colaborador.getId()));

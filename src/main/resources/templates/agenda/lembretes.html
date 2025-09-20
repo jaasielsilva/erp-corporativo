@@ -1,39 +1,544 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lembretes - Agenda</title>
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/sidebar.css" rel="stylesheet">
-    <link href="/css/notifications.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>Lembretes - Agenda - ERP Corporativo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/agenda.css}" rel="stylesheet">
 </head>
-
 <body>
-<div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-    <main class="main-content">
-        <header th:replace="~{components/topbar :: topbar}"></header>
-
-        <section class="content-area">
-            <div class="container-fluid">
-                <h1 class="mb-4"><i class="fas fa-bell"></i> Lembretes</h1>
-
-                <ul class="list-group">
-                    <li th:each="evento : ${eventos}" class="list-group-item">
-                        <strong th:text="${evento.titulo}"></strong> - 
-                        <span th:text="${#temporals.format(evento.dataHoraInicio, 'dd/MM/yyyy HH:mm')}"></span>
-                    </li>
-                </ul>
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        
+        <!-- Page Content -->
+        <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">
+                                <i class="fas fa-bell me-2"></i>Lembretes
+                            </h1>
+                            <p class="text-muted mb-0">Gerencie notificações e alertas dos seus eventos</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoLembrete">
+                                <i class="fas fa-plus me-1"></i>Novo Lembrete
+                            </button>
+                            <a th:href="@{/agenda}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-home me-1"></i>Agenda
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
-
-        <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-</div>
+            
+            <!-- Alert Messages -->
+            <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${mensagem}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${erro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Estatísticas Rápidas -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Lembretes Ativos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${estatisticas.lembretesAtivos}">12</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-bell fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Enviados Hoje
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${estatisticas.enviadosHoje}">8</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-paper-plane fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Pendentes
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${estatisticas.pendentes}">5</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-danger shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                        Falharam
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${estatisticas.falharam}">2</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-filter me-2"></i>Filtros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="formFiltros">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="filtroStatus" class="form-label">Status</label>
+                                <select class="form-select" id="filtroStatus" name="status">
+                                    <option value="">Todos os Status</option>
+                                    <option value="ATIVO">Ativo</option>
+                                    <option value="ENVIADO">Enviado</option>
+                                    <option value="PENDENTE">Pendente</option>
+                                    <option value="FALHOU">Falhou</option>
+                                    <option value="CANCELADO">Cancelado</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="filtroTipo" class="form-label">Tipo</label>
+                                <select class="form-select" id="filtroTipo" name="tipo">
+                                    <option value="">Todos os Tipos</option>
+                                    <option value="EMAIL">E-mail</option>
+                                    <option value="PUSH">Push Notification</option>
+                                    <option value="SMS">SMS</option>
+                                    <option value="SISTEMA">Sistema</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="filtroDataInicio" class="form-label">Data Início</label>
+                                <input type="date" class="form-control" id="filtroDataInicio" name="dataInicio">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="filtroDataFim" class="form-label">Data Fim</label>
+                                <input type="date" class="form-control" id="filtroDataFim" name="dataFim">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="filtroBusca" class="form-label">Buscar</label>
+                                <input type="text" class="form-control" id="filtroBusca" name="busca" 
+                                       placeholder="Buscar por evento, descrição...">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary me-2" onclick="aplicarFiltros()">
+                                    <i class="fas fa-search me-1"></i>Filtrar
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="limparFiltros()">
+                                    <i class="fas fa-times me-1"></i>Limpar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Lista de Lembretes -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list me-2"></i>Lista de Lembretes
+                    </h6>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="atualizarLista()">
+                            <i class="fas fa-sync-alt me-1"></i>Atualizar
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="exportarLembretes()">
+                            <i class="fas fa-download me-1"></i>Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="tabelaLembretes" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Evento</th>
+                                    <th>Tipo</th>
+                                    <th>Tempo Antecedência</th>
+                                    <th>Data/Hora Envio</th>
+                                    <th>Status</th>
+                                    <th>Destinatário</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="lembrete : ${lembretes}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="color-indicator me-2" th:style="'background-color: ' + ${lembrete.evento.cor}"></div>
+                                            <div>
+                                                <strong th:text="${lembrete.evento.titulo}">Título do Evento</strong>
+                                                <br>
+                                                <small class="text-muted" th:text="${#temporals.format(lembrete.evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${lembrete.tipo == 'EMAIL' ? 'bg-primary' : 
+                                                                              lembrete.tipo == 'PUSH' ? 'bg-info' : 
+                                                                              lembrete.tipo == 'SMS' ? 'bg-warning' : 'bg-secondary'}">
+                                            <i class="fas" th:classappend="${lembrete.tipo == 'EMAIL' ? 'fa-envelope' : 
+                                                                           lembrete.tipo == 'PUSH' ? 'fa-mobile-alt' : 
+                                                                           lembrete.tipo == 'SMS' ? 'fa-sms' : 'fa-bell'}"></i>
+                                            <span th:text="${lembrete.tipo}">EMAIL</span>
+                                        </span>
+                                    </td>
+                                    <td th:text="${lembrete.minutosAntecedencia + ' min'}">15 min</td>
+                                    <td th:text="${#temporals.format(lembrete.dataHoraEnvio, 'dd/MM/yyyy HH:mm')}">01/01/2024 09:45</td>
+                                    <td>
+                                        <span class="badge" th:classappend="${lembrete.status == 'ENVIADO' ? 'bg-success' : 
+                                                                              lembrete.status == 'PENDENTE' ? 'bg-warning' : 
+                                                                              lembrete.status == 'FALHOU' ? 'bg-danger' : 
+                                                                              lembrete.status == 'CANCELADO' ? 'bg-secondary' : 'bg-primary'}" 
+                                              th:text="${lembrete.status}">PENDENTE</span>
+                                    </td>
+                                    <td th:text="${lembrete.destinatario}">usuario@email.com</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    th:onclick="'visualizarLembrete(' + ${lembrete.id} + ')'" 
+                                                    title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning" 
+                                                    th:onclick="'editarLembrete(' + ${lembrete.id} + ')'" 
+                                                    title="Editar"
+                                                    th:disabled="${lembrete.status == 'ENVIADO'}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" 
+                                                    th:onclick="'reenviarLembrete(' + ${lembrete.id} + ')'" 
+                                                    title="Reenviar"
+                                                    th:if="${lembrete.status == 'FALHOU'}">
+                                                <i class="fas fa-redo"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    th:onclick="'excluirLembrete(' + ${lembrete.id} + ')'" 
+                                                    title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Novo Lembrete -->
+    <div class="modal fade" id="modalNovoLembrete" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Novo Lembrete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNovoLembrete">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="eventoId" class="form-label">Evento *</label>
+                                <select class="form-select" id="eventoId" name="eventoId" required>
+                                    <option value="">Selecione um evento</option>
+                                    <option th:each="evento : ${eventos}" th:value="${evento.id}" th:text="${evento.titulo}">Evento</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="tipoLembrete" class="form-label">Tipo *</label>
+                                <select class="form-select" id="tipoLembrete" name="tipo" required>
+                                    <option value="EMAIL">E-mail</option>
+                                    <option value="PUSH">Push Notification</option>
+                                    <option value="SMS">SMS</option>
+                                    <option value="SISTEMA">Sistema</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="minutosAntecedencia" class="form-label">Minutos de Antecedência *</label>
+                                <select class="form-select" id="minutosAntecedencia" name="minutosAntecedencia" required>
+                                    <option value="5">5 minutos</option>
+                                    <option value="15">15 minutos</option>
+                                    <option value="30">30 minutos</option>
+                                    <option value="60">1 hora</option>
+                                    <option value="120">2 horas</option>
+                                    <option value="1440">1 dia</option>
+                                    <option value="custom">Personalizado</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3" id="minutosCustom" style="display: none;">
+                                <label for="minutosPersonalizado" class="form-label">Minutos Personalizado</label>
+                                <input type="number" class="form-control" id="minutosPersonalizado" name="minutosPersonalizado" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="destinatarioLembrete" class="form-label">Destinatário *</label>
+                            <input type="text" class="form-control" id="destinatarioLembrete" name="destinatario" 
+                                   placeholder="E-mail, telefone ou usuário" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="mensagemPersonalizada" class="form-label">Mensagem Personalizada</label>
+                            <textarea class="form-control" id="mensagemPersonalizada" name="mensagemPersonalizada" 
+                                      rows="3" placeholder="Mensagem personalizada (opcional)"></textarea>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
+                            <label class="form-check-label" for="ativo">
+                                Lembrete ativo
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="salvarLembrete()">
+                        <i class="fas fa-save me-1"></i>Salvar Lembrete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Inicializar DataTable
+            $('#tabelaLembretes').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                },
+                order: [[3, 'desc']], // Ordenar por data de envio
+                pageLength: 25,
+                responsive: true,
+                columnDefs: [
+                    { orderable: false, targets: [6] } // Desabilitar ordenação na coluna de ações
+                ]
+            });
+            
+            // Configurar select de minutos personalizados
+            $('#minutosAntecedencia').on('change', function() {
+                if ($(this).val() === 'custom') {
+                    $('#minutosCustom').show();
+                    $('#minutosPersonalizado').prop('required', true);
+                } else {
+                    $('#minutosCustom').hide();
+                    $('#minutosPersonalizado').prop('required', false);
+                }
+            });
+            
+            // Auto-atualização da lista a cada 30 segundos
+            setInterval(function() {
+                atualizarEstatisticas();
+            }, 30000);
+        });
+        
+        function aplicarFiltros() {
+            const filtros = {
+                status: $('#filtroStatus').val(),
+                tipo: $('#filtroTipo').val(),
+                dataInicio: $('#filtroDataInicio').val(),
+                dataFim: $('#filtroDataFim').val(),
+                busca: $('#filtroBusca').val()
+            };
+            
+            // Aplicar filtros na DataTable
+            const table = $('#tabelaLembretes').DataTable();
+            
+            // Filtro de busca global
+            table.search(filtros.busca).draw();
+            
+            // Filtros específicos por coluna
+            if (filtros.status) {
+                table.column(4).search(filtros.status).draw();
+            }
+            if (filtros.tipo) {
+                table.column(1).search(filtros.tipo).draw();
+            }
+        }
+        
+        function limparFiltros() {
+            $('#formFiltros')[0].reset();
+            const table = $('#tabelaLembretes').DataTable();
+            table.search('').columns().search('').draw();
+        }
+        
+        function atualizarLista() {
+            location.reload();
+        }
+        
+        function atualizarEstatisticas() {
+            $.get('/agenda/lembretes/estatisticas', function(data) {
+                // Atualizar estatísticas sem recarregar a página
+                $('.border-left-primary .h5').text(data.lembretesAtivos);
+                $('.border-left-success .h5').text(data.enviadosHoje);
+                $('.border-left-warning .h5').text(data.pendentes);
+                $('.border-left-danger .h5').text(data.falharam);
+            });
+        }
+        
+        function salvarLembrete() {
+            const form = $('#formNovoLembrete');
+            
+            if (form[0].checkValidity()) {
+                const formData = new FormData(form[0]);
+                
+                // Usar minutos personalizado se selecionado
+                if ($('#minutosAntecedencia').val() === 'custom') {
+                    formData.set('minutosAntecedencia', $('#minutosPersonalizado').val());
+                }
+                
+                $.ajax({
+                    url: '/agenda/lembretes/salvar',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#modalNovoLembrete').modal('hide');
+                        location.reload();
+                    },
+                    error: function(xhr) {
+                        alert('Erro ao salvar lembrete: ' + xhr.responseText);
+                    }
+                });
+            } else {
+                form[0].reportValidity();
+            }
+        }
+        
+        function visualizarLembrete(id) {
+            $.get('/agenda/lembretes/' + id, function(data) {
+                $('#conteudoLembrete').html(data);
+                $('#modalVisualizarLembrete').modal('show');
+            });
+        }
+        
+        function editarLembrete(id) {
+            window.location.href = '/agenda/lembretes/editar/' + id;
+        }
+        
+        function reenviarLembrete(id) {
+            if (confirm('Deseja reenviar este lembrete?')) {
+                $.post('/agenda/lembretes/reenviar/' + id, function() {
+                    location.reload();
+                }).fail(function() {
+                    alert('Erro ao reenviar lembrete.');
+                });
+            }
+        }
+        
+        function excluirLembrete(id) {
+            if (confirm('Tem certeza que deseja excluir este lembrete?')) {
+                $.ajax({
+                    url: '/agenda/lembretes/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        location.reload();
+                    },
+                    error: function() {
+                        alert('Erro ao excluir lembrete.');
+                    }
+                });
+            }
+        }
+        
+        function exportarLembretes() {
+            const filtros = new URLSearchParams({
+                status: $('#filtroStatus').val() || '',
+                tipo: $('#filtroTipo').val() || '',
+                dataInicio: $('#filtroDataInicio').val() || '',
+                dataFim: $('#filtroDataFim').val() || '',
+                busca: $('#filtroBusca').val() || ''
+            });
+            
+            window.open('/agenda/lembretes/exportar?' + filtros.toString(), '_blank');
+        }
+    </script>
 </body>
 </html>

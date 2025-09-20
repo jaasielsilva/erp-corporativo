@@ -1,51 +1,315 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda - ERP Empresarial</title>
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <title>Agenda - ERP Corporativo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/agenda.css}" rel="stylesheet">
+
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-
 <body>
-    <div class="app-container">
-
-        <!-- Sidebar -->
-        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-
-            <!-- Topbar -->
-            <header th:replace="~{components/topbar :: topbar}"></header>
-
-            <!-- Conteúdo da página Agenda -->
-            <section class="content-area">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted"><i class="fas fa-calendar-alt"></i> Agenda</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+    <!-- Sidebar -->
+    <div th:replace="~{components/sidebar :: sidebar}"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div th:replace="~{components/topbar :: topbar}"></div>
+        
+        <!-- Page Content -->
+        <div class="container-fluid p-4">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">
+                                <i class="fas fa-calendar-alt me-2"></i>Agenda
+                            </h1>
+                            <p class="text-muted mb-0">Gerencie seus eventos e compromissos</p>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <a th:href="@{/agenda/novo-evento}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Novo Evento
+                            </a>
+                            <a th:href="@{/agenda/lembretes}" class="btn btn-outline-info">
+                                <i class="fas fa-bell me-1"></i>Lembretes
+                            </a>
+                            <a th:href="@{/agenda/configuracoes}" class="btn btn-outline-secondary">
+                                <i class="fas fa-cog me-1"></i>Configurações
+                            </a>
                         </div>
                     </div>
                 </div>
-            </section>
-
-            <!-- Footer -->
-            <footer th:replace="~{components/footer :: footer}"></footer>
-
-        </main>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Eventos Hoje
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="eventosHoje">
+                                        <span th:text="${eventosHoje ?: 0}">0</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Esta Semana
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="eventosSemana">
+                                        <span th:text="${eventosSemana ?: 0}">0</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-week fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Próximos Lembretes
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="proximosLembretes">
+                                        <span th:text="${proximosLembretes ?: 0}">0</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-bell fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Total de Eventos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalEventos">
+                                        <span th:text="${totalEventos ?: 0}">0</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content Row -->
+            <div class="row">
+                <!-- Calendar Section -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-calendar-alt me-2"></i>Calendário
+                            </h6>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" id="btnMes">Mês</button>
+                                <button type="button" class="btn btn-outline-primary" id="btnSemana">Semana</button>
+                                <button type="button" class="btn btn-outline-primary" id="btnDia">Dia</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="calendar"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Events List Section -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-list me-2"></i>Próximos Eventos
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush" id="proximosEventosList">
+                                <div th:if="${proximosEventos != null and !proximosEventos.isEmpty()}">
+                                    <div th:each="evento : ${proximosEventos}" class="list-group-item list-group-item-action border-0 px-0">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1" th:text="${evento.titulo}">Título do Evento</h6>
+                                            <small class="text-muted" th:text="${#temporals.format(evento.dataInicio, 'dd/MM')}">Data</small>
+                                        </div>
+                                        <p class="mb-1 text-muted small" th:text="${evento.descricao}">Descrição do evento</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            <span th:text="${#temporals.format(evento.dataInicio, 'HH:mm')}">Horário</span>
+                                            <span th:if="${evento.local}" class="ms-2">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                <span th:text="${evento.local}">Local</span>
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div th:if="${proximosEventos == null or proximosEventos.isEmpty()}" class="text-center py-4">
+                                    <i class="fas fa-calendar-times fa-3x text-gray-300 mb-3"></i>
+                                    <p class="text-muted">Nenhum evento próximo encontrado</p>
+                                    <a th:href="@{/agenda/novo-evento}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i>Criar Primeiro Evento
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="card shadow mt-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/agenda/novo-evento}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-2"></i>Novo Evento
+                                </a>
+                                <a th:href="@{/agenda/lembretes}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-bell me-2"></i>Ver Lembretes
+                                </a>
+                                <button type="button" class="btn btn-success btn-sm" onclick="exportarCalendario()">
+                                    <i class="fas fa-download me-2"></i>Exportar Calendário
+                                </button>
+                                <a th:href="@{/agenda/configuracoes}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-cog me-2"></i>Configurações
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <script src="/js/sidebar.js" defer></script>
     
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
+    <!-- Footer -->
+    <div th:replace="~{components/footer :: footer}"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/pt-br.global.min.js"></script>
+    
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Inicializar FullCalendar
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: {
+                    today: 'Hoje',
+                    month: 'Mês',
+                    week: 'Semana',
+                    day: 'Dia'
+                },
+                events: /*[[${eventos}]]*/ [],
+                eventClick: function(info) {
+                    window.location.href = '/agenda/evento/' + info.event.id;
+                },
+                dateClick: function(info) {
+                    window.location.href = '/agenda/novo-evento?data=' + info.dateStr;
+                },
+                eventDidMount: function(info) {
+                    // Adicionar tooltip aos eventos
+                    $(info.el).tooltip({
+                        title: info.event.extendedProps.description || info.event.title,
+                        placement: 'top',
+                        trigger: 'hover',
+                        container: 'body'
+                    });
+                }
+            });
+            
+            calendar.render();
+            
+            // Botões de visualização
+            $('#btnMes').click(function() {
+                calendar.changeView('dayGridMonth');
+                $('.btn-group .btn').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            $('#btnSemana').click(function() {
+                calendar.changeView('timeGridWeek');
+                $('.btn-group .btn').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            $('#btnDia').click(function() {
+                calendar.changeView('timeGridDay');
+                $('.btn-group .btn').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            // Atualizar estatísticas a cada 5 minutos
+            setInterval(atualizarEstatisticas, 300000);
+        });
+        
+        function atualizarEstatisticas() {
+            $.get('/api/agenda/estatisticas', function(data) {
+                $('#eventosHoje').text(data.eventosHoje || 0);
+                $('#eventosSemana').text(data.eventosSemana || 0);
+                $('#proximosLembretes').text(data.proximosLembretes || 0);
+                $('#totalEventos').text(data.totalEventos || 0);
+            }).fail(function() {
+                console.log('Erro ao atualizar estatísticas');
+            });
+        }
+        
+        function exportarCalendario() {
+            window.open('/agenda/exportar?formato=ics', '_blank');
+        }
+    </script>
 </body>
-
 </html>

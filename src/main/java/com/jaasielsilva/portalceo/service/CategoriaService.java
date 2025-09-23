@@ -33,4 +33,8 @@ public class CategoriaService {
     public List<Categoria> findAll() {
         return categoriaRepository.findAll();
     }
+
+    public void deletar(Long id) {
+        categoriaRepository.deleteById(id);
+    }
 }

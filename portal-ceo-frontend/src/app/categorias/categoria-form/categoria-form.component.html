@@ -14,7 +14,27 @@
         {{ error }}
       </div>
 
-      <form (ngSubmit)="salvar()" class="form-container" *ngIf="!loading">
+      <!-- Mensagem de sucesso com opções de navegação -->
+      <div *ngIf="showNavigationOptions" class="alert alert-success">
+        <h4><i class="fas fa-check-circle"></i> {{ isEditMode ? 'Categoria atualizada' : 'Categoria criada' }} com sucesso!</h4>
+        <p>O que você gostaria de fazer agora?</p>
+        
+        <div class="navigation-options">
+          <button type="button" class="btn btn-primary" (click)="voltarParaLista()">
+            <i class="fas fa-list"></i> Voltar para Lista de Categorias
+          </button>
+          
+          <button type="button" class="btn btn-success ml-2" (click)="criarNova()" *ngIf="!isEditMode">
+            <i class="fas fa-plus"></i> Criar Nova Categoria
+          </button>
+          
+          <button type="button" class="btn btn-secondary ml-2" (click)="permanecerNoFormulario()">
+            <i class="fas fa-edit"></i> Continuar Editando
+          </button>
+        </div>
+      </div>
+
+      <form (ngSubmit)="salvar()" class="form-container" *ngIf="!loading && !showNavigationOptions">
         <div class="form-group">
           <label for="nome">Nome da Categoria:</label>
           <input 

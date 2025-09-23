@@ -98,7 +98,7 @@ public class SecurityConfig {
                                 "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
                                 .permitAll()
                                 // Endpoints públicos específicos (apenas os necessários)
-                                .requestMatchers("/api/processar", "/suporte/api/public/**").permitAll()
+                                .requestMatchers("/api/processar", "/suporte/api/public/**", "/api/categorias/**").permitAll()
                                 // Endpoints de produtos que devem ser autenticados
                                 .requestMatchers("/api/produto/**", "/api/produtos/**").authenticated()
                                 // Endpoints de adesão específicos (apenas formulário público)

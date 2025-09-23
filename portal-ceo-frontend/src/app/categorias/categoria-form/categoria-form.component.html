@@ -1,0 +1,43 @@
+<div class="app-container">
+  <main class="main-content">
+    <section class="content-area">
+      <h1 class="form-title">
+        <i class="fas fa-tags"></i> 
+        {{ isEditMode ? 'Editar Categoria' : 'Nova Categoria' }}
+      </h1>
+
+      <div *ngIf="loading" class="loading">
+        <i class="fas fa-spinner fa-spin"></i> Carregando...
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
+      <form (ngSubmit)="salvar()" class="form-container" *ngIf="!loading">
+        <div class="form-group">
+          <label for="nome">Nome da Categoria:</label>
+          <input 
+            type="text" 
+            id="nome" 
+            name="nome"
+            [(ngModel)]="categoria.nome"
+            required 
+            placeholder="Ex: Bebidas, Limpeza, Alimentos"
+            class="form-control" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success" [disabled]="loading">
+            <i class="fas fa-save"></i> 
+            {{ isEditMode ? 'Atualizar Categoria' : 'Salvar Categoria' }}
+          </button>
+          
+          <button type="button" class="btn btn-secondary ml-2" (click)="cancelar()">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>

@@ -27,7 +27,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                     "/fonts/**",
                     "/favicon.ico",
                     "/error",
-                    "/actuator/**"
+                    "/actuator/**",
+                    "/api/categorias/**"
                 );
     }
 }

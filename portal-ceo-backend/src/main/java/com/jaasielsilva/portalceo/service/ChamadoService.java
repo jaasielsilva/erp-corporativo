@@ -4,9 +4,13 @@ import com.jaasielsilva.portalceo.dto.ChamadoDTO;
 import com.jaasielsilva.portalceo.model.Chamado;
 import com.jaasielsilva.portalceo.model.Chamado.StatusChamado;
 import com.jaasielsilva.portalceo.model.Chamado.Prioridade;
+import com.jaasielsilva.portalceo.model.Cargo;
 import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.model.Departamento;
 import com.jaasielsilva.portalceo.repository.ChamadoRepository;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
+import com.jaasielsilva.portalceo.repository.CargoRepository;
+import com.jaasielsilva.portalceo.repository.DepartamentoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +44,12 @@ public class ChamadoService {
     
     @Autowired
     private ColaboradorRepository colaboradorRepository;
+    
+    @Autowired
+    private CargoRepository cargoRepository;
+    
+    @Autowired
+    private DepartamentoRepository departamentoRepository;
 
     // Criar novo chamado
     public Chamado criarChamado(Chamado chamado) {
@@ -143,18 +153,145 @@ public class ChamadoService {
     // Buscar técnicos disponíveis (sem chamados abertos atribuídos)
     @Transactional(readOnly = true)
     public List<Colaborador> buscarTecnicosDisponiveis() {
-        // Buscar colaboradores ativos que não têm chamados abertos atribuídos
+        // Buscar colaboradores ativos da área de TI com cargos específicos de suporte
         List<Colaborador> todosColaboradores = colaboradorRepository.findByAtivoTrueAndStatusOrderByNome(
             Colaborador.StatusColaborador.ATIVO);
         
         return todosColaboradores.stream()
             .filter(colaborador -> {
+                // Verificar se é da área de TI/Suporte
+                boolean isDaTI = isDepartamentoTI(colaborador);
+                
+                // Verificar se tem cargo específico de suporte técnico
+                boolean isCargoSuporte = isCargoSuporteTecnico(colaborador);
+                
                 // Verificar se o colaborador não tem chamados abertos
                 List<Chamado> chamadosAbertos = chamadoRepository.findByColaboradorResponsavelAndStatusIn(
                     colaborador, List.of(StatusChamado.ABERTO, StatusChamado.EM_ANDAMENTO));
-                return chamadosAbertos.isEmpty();
+                boolean isDisponivel = chamadosAbertos.isEmpty();
+                
+                // Retornar apenas se for da TI, tiver cargo de suporte e estiver disponível
+                return isDaTI && isCargoSuporte && isDisponivel;
             })
             .collect(Collectors.toList());
+    }
+    
+    /**
+     * Verifica se o colaborador pertence ao departamento de TI/Suporte
+     */
+    private boolean isDepartamentoTI(Colaborador colaborador) {
+        if (colaborador.getDepartamento() == null) {
+            return false;
+        }
+        
+        String nomeDepartamento = colaborador.getDepartamento().getNome().toLowerCase();
+        return nomeDepartamento.contains("ti") || 
+               nomeDepartamento.contains("tecnologia") || 
+               nomeDepartamento.contains("suporte") ||
+               nomeDepartamento.contains("informática");
+    }
+    
+    /**
+     * Verifica se o colaborador tem cargo específico de suporte técnico
+     */
+    private boolean isCargoSuporteTecnico(Colaborador colaborador) {
+        if (colaborador.getCargo() == null) {
+            return false;
+        }
+        
+        String nomeCargo = colaborador.getCargo().getNome().toLowerCase();
+        return nomeCargo.contains("suporte") || 
+               nomeCargo.contains("técnico") || 
+               nomeCargo.contains("analista") ||
+               nomeCargo.contains("desenvolvedor") ||
+               nomeCargo.contains("especialista") ||
+               nomeCargo.contains("coordenador") ||
+               nomeCargo.contains("gerente de ti") ||
+               nomeCargo.contains("diretor de tecnologia");
+    }
+    
+    /**
+     * Busca todos os colaboradores ativos (método para debug)
+     */
+    @Transactional(readOnly = true)
+    public List<Colaborador> buscarColaboradoresAtivos() {
+        return colaboradorRepository.findByAtivoTrueAndStatusOrderByNome(
+            Colaborador.StatusColaborador.ATIVO);
+    }
+    
+    /**
+     * Cria colaboradores de TI de teste (método temporário)
+     */
+    @Transactional
+    public List<String> criarColaboradoresTITeste() {
+        List<String> colaboradoresCriados = new ArrayList<>();
+        
+        // Buscar departamento TI
+        Departamento departamentoTI = departamentoRepository.findByNome("TI")
+            .orElseThrow(() -> new RuntimeException("Departamento TI não encontrado"));
+        
+        // Buscar cargos de TI
+        Cargo cargoTecnicoSuporte = cargoRepository.findByNome("Técnico de Suporte")
+            .orElseThrow(() -> new RuntimeException("Cargo Técnico de Suporte não encontrado"));
+        
+        Cargo cargoAnalistaSistemas = cargoRepository.findByNome("Analista de Sistemas")
+            .orElseThrow(() -> new RuntimeException("Cargo Analista de Sistemas não encontrado"));
+        
+        Cargo cargoDesenvolvedorSenior = cargoRepository.findByNome("Desenvolvedor Senior")
+            .orElseThrow(() -> new RuntimeException("Cargo Desenvolvedor Senior não encontrado"));
+        
+        // Criar colaboradores de teste se não existirem
+        String[] colaboradoresData = {
+            "João Silva|joao.silva@empresa.com|Técnico de Suporte",
+            "Maria Santos|maria.santos@empresa.com|Analista de Sistemas", 
+            "Pedro Oliveira|pedro.oliveira@empresa.com|Desenvolvedor Senior",
+            "Ana Costa|ana.costa@empresa.com|Técnico de Suporte"
+        };
+        
+        for (String data : colaboradoresData) {
+            String[] parts = data.split("\\|");
+            String nome = parts[0];
+            String email = parts[1];
+            String cargoNome = parts[2];
+            
+            // Verificar se já existe
+            if (colaboradorRepository.findByEmail(email).isEmpty()) {
+                Colaborador colaborador = new Colaborador();
+                colaborador.setNome(nome);
+                colaborador.setEmail(email);
+                colaborador.setCpf("000000000" + String.format("%02d", colaboradoresCriados.size() + 1));
+                colaborador.setTelefone("(11) 9999-000" + (colaboradoresCriados.size() + 1));
+                colaborador.setDataNascimento(java.time.LocalDate.of(1990, 1, 1));
+                colaborador.setSexo(Colaborador.Sexo.MASCULINO);
+                colaborador.setStatus(Colaborador.StatusColaborador.ATIVO);
+                colaborador.setAtivo(true);
+                colaborador.setDepartamento(departamentoTI);
+                
+                // Definir cargo baseado no nome
+                switch (cargoNome) {
+                    case "Técnico de Suporte":
+                        colaborador.setCargo(cargoTecnicoSuporte);
+                        break;
+                    case "Analista de Sistemas":
+                        colaborador.setCargo(cargoAnalistaSistemas);
+                        break;
+                    case "Desenvolvedor Senior":
+                        colaborador.setCargo(cargoDesenvolvedorSenior);
+                        break;
+                }
+                
+                colaborador.setDataAdmissao(java.time.LocalDate.now());
+                colaborador.setLogradouro("Rua Teste, " + (colaboradoresCriados.size() + 100));
+                colaborador.setCidade("São Paulo");
+                colaborador.setEstado("SP");
+                colaborador.setCep("01000-00" + (colaboradoresCriados.size() + 1));
+                
+                colaboradorRepository.save(colaborador);
+                colaboradoresCriados.add(nome + " (" + cargoNome + ")");
+            }
+        }
+        
+        return colaboradoresCriados;
     }
 
     // Verificar se um colaborador específico está disponível

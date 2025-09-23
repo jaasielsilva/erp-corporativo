@@ -312,6 +312,9 @@
                         </div>
                     </div>
 
+                    <!-- Container para alertas -->
+                    <div id="alertContainer" class="mb-3"></div>
+
                     <div class="row">
                         <!-- Informações do Chamado -->
                         <div class="col-lg-5 mb-4">
@@ -334,19 +337,7 @@
                             </div>
 
                             <!-- Histórico de Atribuições -->
-                            <div class="form-card mt-4">
-                                <div class="card-header-modern">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-history me-2"></i>
-                                        Histórico de Atribuições
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div id="historicoAtribuicoes">
-                                        <!-- Carregado via JavaScript -->
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Seção de histórico removida temporariamente -->
                         </div>
 
                         <!-- Seleção de Técnico -->
@@ -451,8 +442,8 @@
             chamadoId = urlParams.get('id');
             
             if (!chamadoId) {
-                mostrarAlerta('danger', 'ID do chamado não informado');
-                setTimeout(() => window.location.href = '/suporte/chamados', 2000);
+                // Se não há ID específico, mostrar lista de chamados não atribuídos
+                mostrarListaChamadosNaoAtribuidos();
                 return;
             }
             
@@ -484,8 +475,7 @@
             try {
                 await Promise.all([
                     carregarChamado(),
-                    carregarColaboradores(),
-                    carregarHistorico()
+                    carregarColaboradores()
                 ]);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
@@ -497,14 +487,14 @@
         async function carregarChamado() {
             try {
                 const response = await fetch(`/api/chamados/${chamadoId}`);
-                const data = await response.json();
                 
-                if (data.sucesso) {
-                    chamadoData = data.dados;
-                    renderizarChamado();
-                } else {
-                    throw new Error(data.erro);
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
                 }
+                
+                const data = await response.json();
+                chamadoData = data;
+                renderizarChamado();
             } catch (error) {
                 console.error('Erro ao carregar chamado:', error);
                 mostrarAlerta('danger', 'Erro ao carregar informações do chamado');
@@ -529,22 +519,7 @@
             }
         }
         
-        // Carregar histórico de atribuições
-        async function carregarHistorico() {
-            try {
-                const response = await fetch(`/api/chamados/${chamadoId}/historico-atribuicoes`);
-                const data = await response.json();
-                
-                if (data.sucesso) {
-                    renderizarHistorico(data.dados);
-                } else {
-                    console.warn('Erro ao carregar histórico:', data.erro);
-                }
-            } catch (error) {
-                console.warn('Erro ao carregar histórico:', error);
-                $('#historicoAtribuicoes').html('<p class="text-muted">Nenhum histórico disponível</p>');
-            }
-        }
+
         
         // Renderizar informações do chamado
         function renderizarChamado() {
@@ -674,29 +649,7 @@
             $('#btnAtribuir').prop('disabled', false);
         }
         
-        // Renderizar histórico
-        function renderizarHistorico(historico) {
-            if (!historico || historico.length === 0) {
-                $('#historicoAtribuicoes').html('<p class="text-muted">Nenhuma atribuição anterior</p>');
-                return;
-            }
-            
-            const html = historico.map(item => `
-                <div class="historico-item">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">${item.acao}</h6>
-                            <p class="mb-1">${item.tecnicoNome}</p>
-                            <small class="text-muted">${formatarData(item.dataAcao)}</small>
-                        </div>
-                        <span class="badge bg-primary">${item.usuarioAcao}</span>
-                    </div>
-                    ${item.observacoes ? `<p class="mt-2 mb-0 small">${item.observacoes}</p>` : ''}
-                </div>
-            `).join('');
-            
-            $('#historicoAtribuicoes').html(html);
-        }
+
         
         // Atribuir chamado
         async function atribuirChamado() {
@@ -711,14 +664,11 @@
             
             try {
                 const response = await fetch(`/api/chamados/${chamadoId}/atribuir`, {
-                    method: 'PUT',
+                    method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: JSON.stringify({
-                        tecnicoId: colaboradorSelecionado.id,
-                        observacoes: observacoes
-                    })
+                    body: `colaboradorId=${colaboradorSelecionado.id}`
                 });
                 
                 const result = await response.json();
@@ -793,19 +743,111 @@
         }
         
         function mostrarAlerta(tipo, mensagem) {
-            // Implementar sistema de alertas/toasts
-            console.log(`${tipo}: ${mensagem}`);
+            const alertaHtml = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
             
-            // Alerta simples por enquanto
-            if (tipo === 'success') {
-                alert('✅ ' + mensagem);
-            } else if (tipo === 'danger') {
-                alert('❌ ' + mensagem);
-            } else if (tipo === 'warning') {
-                alert('⚠️ ' + mensagem);
-            } else {
-                alert(mensagem);
+            $('#alertContainer').html(alertaHtml);
+            
+            // Auto-hide após 5 segundos
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+        
+        // Mostrar lista de chamados não atribuídos
+        async function mostrarListaChamadosNaoAtribuidos() {
+            try {
+                // Modificar o título da página
+                $('h1').html('<i class="fas fa-list text-primary me-2"></i>Chamados Não Atribuídos');
+                $('p.text-muted').text('Selecione um chamado para atribuir a um técnico');
+                
+                // Modificar o conteúdo da primeira coluna para mostrar lista de chamados
+                const response = await fetch('/api/chamados/abertos');
+                const data = await response.json();
+                
+                if (response.ok && Array.isArray(data)) {
+                    const chamadosNaoAtribuidos = data.filter(chamado => !chamado.tecnicoResponsavel);
+                    
+                    if (chamadosNaoAtribuidos.length === 0) {
+                        $('#chamadoInfo').html(`
+                            <div class="text-center py-4">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <h5 class="text-muted">Todos os chamados estão atribuídos!</h5>
+                                <p class="text-muted">Não há chamados pendentes de atribuição no momento.</p>
+                                <a href="/suporte/chamados" class="btn btn-primary">
+                                    <i class="fas fa-list me-1"></i> Ver Todos os Chamados
+                                </a>
+                            </div>
+                        `);
+                    } else {
+                        const listaChamados = chamadosNaoAtribuidos.map(chamado => `
+                            <div class="card mb-3 chamado-card" style="cursor: pointer;" onclick="selecionarChamado(${chamado.id})">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">#${chamado.numero} - ${chamado.assunto}</h6>
+                                        <div>
+                                            ${criarBadgeStatus(chamado.status)}
+                                            ${criarBadgePrioridade(chamado.prioridade)}
+                                        </div>
+                                    </div>
+                                    <p class="card-text small text-muted mb-2">${chamado.descricao.substring(0, 100)}...</p>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">
+                                                <i class="fas fa-user me-1"></i>
+                                                ${chamado.solicitanteNome}
+                                            </small>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                ${formatarData(chamado.dataAbertura)}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        $('#chamadoInfo').html(`
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    ${chamadosNaoAtribuidos.length} chamado(s) aguardando atribuição
+                                </h6>
+                            </div>
+                            ${listaChamados}
+                        `);
+                    }
+                } else {
+                    throw new Error(data.erro);
+                }
+                
+                // Esconder a seção de histórico
+                $('.form-card').eq(1).hide();
+                
+                // Modificar a segunda coluna para mostrar instruções
+                $('.col-lg-7 .card-body').html(`
+                    <div class="text-center py-5">
+                        <i class="fas fa-hand-pointer fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Selecione um chamado</h5>
+                        <p class="text-muted">Clique em um chamado da lista ao lado para iniciar o processo de atribuição.</p>
+                    </div>
+                `);
+                
+            } catch (error) {
+                console.error('Erro ao carregar chamados não atribuídos:', error);
+                mostrarAlerta('danger', 'Erro ao carregar lista de chamados não atribuídos');
             }
+        }
+        
+        // Selecionar chamado da lista
+        function selecionarChamado(id) {
+            window.location.href = `/suporte/atribuir?id=${id}`;
         }
     </script>
 </body>

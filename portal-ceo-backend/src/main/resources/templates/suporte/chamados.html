@@ -378,7 +378,7 @@
                                     <p class="text-muted mb-0">Gerencie todos os chamados de suporte</p>
                                 </div>
                                 <div>
-                                    <a href="/suporte/novo" class="btn btn-primary">
+                                    <a href="/suporte/chamados/novo" class="btn btn-primary">
                                         <i class="fas fa-plus me-1"></i> Novo Chamado
                                     </a>
                                     <button class="btn btn-outline-primary ms-2" onclick="atualizarDados()">
@@ -694,16 +694,23 @@
         $(document).ready(function() {
             inicializarEventListeners();
             carregarDados();
+            carregarEstatisticasIniciais(); // Carregar estatísticas imediatamente
             aplicarFiltrosURL();
             
             // Auto-refresh
             $('#autoRefresh').on('change', function() {
                 if (this.checked) {
-                    autoRefreshInterval = setInterval(carregarDados, 30000); // 30 segundos
+                    autoRefreshInterval = setInterval(() => {
+                        carregarDados();
+                        atualizarEstatisticas(); // Atualizar estatísticas também
+                    }, 30000); // 30 segundos
                 } else {
                     clearInterval(autoRefreshInterval);
                 }
             });
+            
+            // Atualizar estatísticas a cada 15 segundos independentemente
+            setInterval(atualizarEstatisticas, 15000);
         });
         
         // Event Listeners
@@ -751,14 +758,42 @@
         }
         
         // Atualizar estatísticas
-        function atualizarEstatisticas() {
-            const stats = calcularEstatisticas(chamadosData);
-            
-            $('#totalChamados').text(stats.total);
-            $('#chamadosAbertos').text(stats.abertos);
-            $('#chamadosAndamento').text(stats.andamento);
-            $('#chamadosResolvidos').text(stats.resolvidosHoje);
-            $('#contadorChamados').text(stats.total);
+        async function atualizarEstatisticas() {
+            try {
+                // Carregar estatísticas da API
+                const response = await fetch('/api/chamados/estatisticas');
+                const data = await response.json();
+                
+                if (data.sucesso) {
+                    // Atualizar cards com dados reais da API
+                    $('#totalChamados').text(data.total || 0);
+                    $('#chamadosAbertos').text(data.abertos || 0);
+                    $('#chamadosAndamento').text(data.emAndamento || 0);
+                    $('#chamadosResolvidos').text(data.resolvidos || 0);
+                    $('#contadorChamados').text(data.total || 0);
+                    
+                    // Adicionar animação aos números
+                    animarContadores();
+                } else {
+                    console.error('Erro ao carregar estatísticas:', data.erro);
+                    // Fallback para cálculo local se a API falhar
+                    const stats = calcularEstatisticas(chamadosData);
+                    $('#totalChamados').text(stats.total);
+                    $('#chamadosAbertos').text(stats.abertos);
+                    $('#chamadosAndamento').text(stats.andamento);
+                    $('#chamadosResolvidos').text(stats.resolvidosHoje);
+                    $('#contadorChamados').text(stats.total);
+                }
+            } catch (error) {
+                console.error('Erro ao conectar com API de estatísticas:', error);
+                // Fallback para cálculo local se houver erro de conexão
+                const stats = calcularEstatisticas(chamadosData);
+                $('#totalChamados').text(stats.total);
+                $('#chamadosAbertos').text(stats.abertos);
+                $('#chamadosAndamento').text(stats.andamento);
+                $('#chamadosResolvidos').text(stats.resolvidosHoje);
+                $('#contadorChamados').text(stats.total);
+            }
         }
         
         // Calcular estatísticas
@@ -774,6 +809,26 @@
                     new Date(c.dataResolucao).toDateString() === hoje
                 ).length
             };
+        }
+        
+        // Animar contadores com efeito visual
+        function animarContadores() {
+            const contadores = ['#totalChamados', '#chamadosAbertos', '#chamadosAndamento', '#chamadosResolvidos'];
+            
+            contadores.forEach(selector => {
+                const elemento = $(selector);
+                elemento.addClass('animate__animated animate__pulse');
+                
+                // Remover animação após completar
+                setTimeout(() => {
+                    elemento.removeClass('animate__animated animate__pulse');
+                }, 1000);
+            });
+        }
+        
+        // Carregar estatísticas iniciais (sem aguardar carregamento completo dos dados)
+        async function carregarEstatisticasIniciais() {
+            await atualizarEstatisticas();
         }
         
         // Aplicar filtros
@@ -1095,6 +1150,8 @@
         // Atualizar dados
         function atualizarDados() {
             carregarDados();
+            atualizarEstatisticas(); // Atualizar estatísticas também
+            mostrarAlerta('success', 'Dados atualizados com sucesso!');
         }
         
         // Ações dos chamados

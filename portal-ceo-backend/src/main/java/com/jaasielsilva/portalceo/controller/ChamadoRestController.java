@@ -351,3 +351,115 @@ public class ChamadoRestController {
         }
     }
 }
+
+/**
+ * REST Controller para colaboradores técnicos
+ */
+@RestController
+@RequestMapping("/api/colaboradores")
+class ColaboradorRestController {
+
+    @Autowired
+    private ChamadoService chamadoService;
+
+    @Autowired
+    private AtribuicaoColaboradorService atribuicaoService;
+
+    /**
+     * Lista técnicos disponíveis para atribuição de chamados
+     */
+    @GetMapping("/tecnicos")
+    public ResponseEntity<Map<String, Object>> listarTecnicos() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Colaborador> tecnicos = chamadoService.buscarTecnicosDisponiveis();
+            
+            List<Map<String, Object>> tecnicosData = tecnicos.stream()
+                .map(colaborador -> {
+                    Map<String, Object> tecnicoMap = new HashMap<>();
+                    tecnicoMap.put("id", colaborador.getId());
+                    tecnicoMap.put("nome", colaborador.getNome());
+                    tecnicoMap.put("email", colaborador.getEmail());
+                    tecnicoMap.put("cargo", colaborador.getCargo() != null ? colaborador.getCargo().getNome() : "Técnico");
+                    tecnicoMap.put("departamento", colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : "Suporte");
+                    tecnicoMap.put("disponivel", atribuicaoService.verificarDisponibilidade(colaborador.getId()));
+                    tecnicoMap.put("chamadosAtivos", atribuicaoService.contarChamadosAtivos(colaborador.getId()));
+                    return tecnicoMap;
+                })
+                .toList();
+            
+            response.put("sucesso", true);
+            response.put("dados", tecnicosData);
+            response.put("total", tecnicosData.size());
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("sucesso", false);
+            response.put("erro", "Erro ao carregar técnicos: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * Endpoint de debug para verificar todos os colaboradores e filtros aplicados
+     */
+    @GetMapping("/tecnicos/debug")
+    public ResponseEntity<Map<String, Object>> debugTecnicos() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Buscar todos os colaboradores ativos
+            List<Colaborador> todosColaboradores = chamadoService.buscarColaboradoresAtivos();
+            
+            List<Map<String, Object>> todosData = todosColaboradores.stream()
+                .map(colaborador -> {
+                    Map<String, Object> colabMap = new HashMap<>();
+                    colabMap.put("id", colaborador.getId());
+                    colabMap.put("nome", colaborador.getNome());
+                    colabMap.put("email", colaborador.getEmail());
+                    colabMap.put("cargo", colaborador.getCargo() != null ? colaborador.getCargo().getNome() : "Sem cargo");
+                    colabMap.put("departamento", colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : "Sem departamento");
+                    colabMap.put("status", colaborador.getStatus());
+                    return colabMap;
+                })
+                .toList();
+            
+            // Buscar apenas os técnicos filtrados
+            List<Colaborador> tecnicos = chamadoService.buscarTecnicosDisponiveis();
+            
+            response.put("sucesso", true);
+            response.put("todosColaboradores", todosData);
+            response.put("totalColaboradores", todosData.size());
+            response.put("tecnicosFiltrados", tecnicos.size());
+            response.put("filtroAplicado", "Departamento TI + Cargos de Suporte");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("sucesso", false);
+            response.put("erro", "Erro no debug: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
+     * Endpoint temporário para criar colaboradores de TI de teste
+     */
+    @PostMapping("/tecnicos/criar-teste")
+    public ResponseEntity<Map<String, Object>> criarColaboradoresTeste() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<String> colaboradoresCriados = chamadoService.criarColaboradoresTITeste();
+            
+            response.put("sucesso", true);
+            response.put("colaboradoresCriados", colaboradoresCriados);
+            response.put("total", colaboradoresCriados.size());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("sucesso", false);
+            response.put("erro", "Erro ao criar colaboradores de teste: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+}

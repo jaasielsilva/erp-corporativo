@@ -99,6 +99,10 @@ public class SecurityConfig {
                                 .permitAll()
                                 // Endpoints públicos específicos (apenas os necessários)
                                 .requestMatchers("/api/processar", "/suporte/api/public/**", "/api/categorias/**").permitAll()
+                                // Endpoints de exportação de chamados (temporário para teste)
+                                .requestMatchers("/api/chamados/export/**", "/suporte/api/chamados/export/**").permitAll()
+                                // Endpoints temporários para teste (REMOVER EM PRODUÇÃO)
+                                .requestMatchers("/api/colaboradores/tecnicos/**").permitAll()
                                 // Endpoints de produtos que devem ser autenticados
                                 .requestMatchers("/api/produto/**", "/api/produtos/**").authenticated()
                                 // Endpoints de adesão específicos (apenas formulário público)

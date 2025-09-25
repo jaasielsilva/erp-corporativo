@@ -1,21 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lista de Chamados - Suporte - ERP Corporativo</title>
-    
+
     <!-- CSS Files -->
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <style>
-        /* Badges de Status */
-        .status-badge {
-            padding: 0.35rem 0.85rem;
+        /* ===== PADRÃO EMPRESARIAL - CORES CONSISTENTES ===== */
+        :root {
+            --primary-color: #1e293b;
+            --secondary-color: #334155;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --light-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* ===== LAYOUT PRINCIPAL ===== */
+        .content-area {
+            background-color: var(--light-bg);
+            min-height: calc(100vh - 80px);
+            padding: 2rem 0;
+        }
+
+        /* ===== CARDS PADRONIZADOS ===== */
+        .card-empresarial {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .card-empresarial:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header-empresarial {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            padding: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* ===== BADGES DE STATUS PADRONIZADOS ===== */
+        .badge-status {
+            padding: 0.5rem 1rem;
             border-radius: 50px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -23,42 +72,36 @@
             letter-spacing: 0.5px;
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.5rem;
         }
-        
-        .status-aberto {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            color: #1976d2;
-            border: 1px solid #90caf9;
+
+        .badge-aberto {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #93c5fd;
         }
-        
-        .status-em-andamento {
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-            color: #f57c00;
-            border: 1px solid #ffcc02;
+
+        .badge-em-andamento {
+            background-color: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fcd34d;
         }
-        
-        .status-resolvido {
-            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-            color: #388e3c;
-            border: 1px solid #81c784;
+
+        .badge-resolvido {
+            background-color: #d1fae5;
+            color: #059669;
+            border: 1px solid #6ee7b7;
         }
-        
-        .status-fechado {
-            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-            color: #7b1fa2;
-            border: 1px solid #ba68c8;
+
+        .badge-fechado {
+            background-color: #f3e8ff;
+            color: #7c3aed;
+            border: 1px solid #c4b5fd;
         }
-        
-        .status-reaberto {
-            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
-            color: #ff8f00;
-            border: 1px solid #ffb74d;
-        }
-        
-        /* Badges de Prioridade */
-        .prioridade-badge {
-            padding: 0.35rem 0.85rem;
+
+        /* ===== BADGES DE PRIORIDADE PADRONIZADOS ===== */
+        .badge-prioridade {
+            padding: 0.5rem 1rem;
             border-radius: 50px;
             font-size: 0.75rem;
             font-weight: 600;
@@ -66,192 +109,259 @@
             letter-spacing: 0.5px;
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.5rem;
         }
-        
-        .prioridade-baixa {
-            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-            color: #388e3c;
-            border: 1px solid #81c784;
+
+        .badge-baixa {
+            background-color: #d1fae5;
+            color: #059669;
+            border: 1px solid #6ee7b7;
         }
-        
-        .prioridade-media {
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-            color: #f57c00;
-            border: 1px solid #ffcc02;
+
+        .badge-media {
+            background-color: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fcd34d;
         }
-        
-        .prioridade-alta {
-            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-            color: #d32f2f;
-            border: 1px solid #ef5350;
+
+        .badge-alta {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
         }
-        
-        .prioridade-urgente {
-            background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
-            color: #c62828;
-            border: 1px solid #e57373;
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 10px rgba(198, 40, 40, 0.3);
+
+        .badge-urgente {
+            background-color: #fecaca;
+            color: #b91c1c;
+            border: 1px solid #f87171;
+            animation: pulse-urgente 2s infinite;
         }
-        
-        @keyframes pulse {
-            0% { 
-                opacity: 1; 
-                transform: scale(1);
-            }
-            50% { 
-                opacity: 0.8; 
-                transform: scale(1.02);
-            }
-            100% { 
-                opacity: 1; 
-                transform: scale(1);
-            }
+
+        @keyframes pulse-urgente {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
         }
-        
-        /* SLA Indicators */
+
+        /* ===== INDICADORES SLA ===== */
         .sla-indicator {
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
             font-weight: 600;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.375rem;
-            font-size: 0.8rem;
         }
-        
-        .sla-verde {
-            background-color: #e8f5e8;
-            color: #388e3c;
-            border: 1px solid #c8e6c9;
+
+        .sla-ok {
+            background-color: #d1fae5;
+            color: #059669;
         }
-        
-        .sla-amarelo {
-            background-color: #fff3e0;
-            color: #f57c00;
-            border: 1px solid #ffe0b2;
+
+        .sla-atencao {
+            background-color: #fef3c7;
+            color: #d97706;
         }
-        
-        .sla-vermelho {
-            background-color: #ffebee;
-            color: #d32f2f;
-            border: 1px solid #ffcdd2;
-            animation: pulse 2s infinite;
+
+        .sla-vencido {
+            background-color: #fee2e2;
+            color: #dc2626;
+            animation: pulse-urgente 2s infinite;
         }
-        
-        /* Tabela Melhorada */
-        .table-modern {
-            border-radius: 0.5rem;
+
+        /* ===== TABELA MODERNA ===== */
+        .table-empresarial {
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
+            background: var(--card-bg);
         }
-        
-        .table-modern thead th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .table-empresarial thead th {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.75rem;
             letter-spacing: 0.5px;
             border: none;
-            padding: 1rem 0.75rem;
+            padding: 1rem;
         }
-        
-        .table-modern tbody tr {
+
+        .table-empresarial tbody tr {
             transition: all 0.3s ease;
-            border-bottom: 1px solid #f1f3f4;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        .table-modern tbody tr:hover {
-            background: linear-gradient(135deg, #f8f9ff 0%, #f5f7ff 100%);
+
+        .table-empresarial tbody tr:hover {
+            background-color: #f8fafc;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        
-        .table-modern tbody td {
-            padding: 1rem 0.75rem;
+
+        .table-empresarial tbody td {
+            padding: 1rem;
             vertical-align: middle;
             border: none;
         }
-        
-        /* Botões de Ação Melhorados */
-        .btn-action {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.75rem;
-            margin: 0 0.125rem;
-            border-radius: 0.375rem;
+
+        /* ===== BOTÕES PADRONIZADOS ===== */
+        .btn-empresarial {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
             transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-empresarial:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary-empresarial {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-success-empresarial {
+            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-warning-empresarial {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-danger-empresarial {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+            color: white;
+        }
+
+        /* ===== CARDS DE ESTATÍSTICAS ===== */
+        .stats-card-empresarial {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .stats-card-empresarial:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stats-icon-empresarial {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .stats-number-empresarial {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .stats-label-empresarial {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* ===== FILTROS ===== */
+        .filters-card-empresarial {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-control-empresarial,
+        .form-select-empresarial {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control-empresarial:focus,
+        .form-select-empresarial:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+        /* ===== AVALIAÇÃO POR ESTRELAS ===== */
+        .rating-stars {
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
         }
-        
-        .btn-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        /* Card Header Melhorado */
-        .card-header-modern {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 1.5rem;
-        }
-        
-        /* Filtros Melhorados */
-        .filters-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border: 1px solid #e9ecef;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .filters-card .form-label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 0.5rem;
-        }
-        
-        .filters-card .form-control,
-        .filters-card .form-select {
-            border-radius: 0.5rem;
-            border: 1px solid #dee2e6;
-            transition: all 0.3s ease;
-        }
-        
-        .filters-card .form-control:focus,
-        .filters-card .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        /* Avaliação por Estrelas */
-        .rating-stars {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.125rem;
-        }
 
-        .rating-stars .star {
+        .star {
             font-size: 16px;
-            color: #ddd;
+            color: #e5e7eb;
             transition: color 0.3s ease;
         }
 
-        .rating-stars .star.filled {
-            color: #ffc107;
-            text-shadow: 0 0 4px rgba(255, 193, 7, 0.5);
+        .star.filled {
+            color: #fbbf24;
         }
 
-        .rating-stars .star.empty {
-            color: #e9ecef;
+        /* ===== BREADCRUMB PERSONALIZADO ===== */
+        .breadcrumb-empresarial {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 2rem;
         }
-        
-        /* Loading States */
+
+        .breadcrumb-empresarial .breadcrumb-item a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb-empresarial .breadcrumb-item.active {
+            color: var(--text-secondary);
+        }
+
+        /* ===== RESPONSIVIDADE ===== */
+        @media (max-width: 768px) {
+            .content-area {
+                padding: 1rem 0;
+            }
+            
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .btn-empresarial {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+            
+            .badge-status,
+            .badge-prioridade {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* ===== LOADING OVERLAY ===== */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -265,76 +375,19 @@
             z-index: 9999;
             backdrop-filter: blur(2px);
         }
-        
+
         .loading-spinner {
             width: 3rem;
             height: 3rem;
-            border: 0.3rem solid #f3f3f3;
-            border-top: 0.3rem solid #667eea;
+            border: 0.3rem solid #f3f4f6;
+            border-top: 0.3rem solid var(--accent-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        
-        /* Estatísticas Cards */
-        .stats-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border: 1px solid #e9ecef;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .stats-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        }
-        
-        .stats-card .stats-icon {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            font-size: 1.25rem;
-        }
-        
-        .stats-card .stats-number {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stats-card .stats-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .table-responsive {
-                font-size: 0.85rem;
-            }
-            
-            .btn-action {
-                padding: 0.25rem 0.5rem;
-                font-size: 0.7rem;
-            }
-            
-            .status-badge,
-            .prioridade-badge {
-                padding: 0.25rem 0.5rem;
-                font-size: 0.7rem;
-            }
         }
     </style>
 </head>
@@ -353,10 +406,10 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <!-- Breadcrumb -->
-                    <nav aria-label="breadcrumb" class="mb-4">
+                    <nav aria-label="breadcrumb" class="breadcrumb-empresarial">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item">
-                                <a href="/suporte" class="text-decoration-none">
+                                <a href="/suporte">
                                     <i class="fas fa-headset me-1"></i>Suporte
                                 </a>
                             </li>
@@ -369,28 +422,32 @@
                     <!-- Header -->
                     <div class="row mb-4">
                         <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                                 <div>
-                                    <h1 class="h3 mb-0 text-gray-800">
-                                        <i class="fas fa-list text-primary me-2"></i>
+                                    <h1 class="h3 mb-0" style="color: var(--text-primary);">
+                                        <i class="fas fa-list me-2" style="color: var(--accent-color);"></i>
                                         Lista de Chamados
                                     </h1>
-                                    <p class="text-muted mb-0">Gerencie todos os chamados de suporte</p>
+                                    <p class="mb-0" style="color: var(--text-secondary);">Gerencie todos os chamados de suporte</p>
                                 </div>
-                                <div>
-                                    <a href="/suporte/chamados/novo" class="btn btn-primary">
-                                        <i class="fas fa-plus me-1"></i> Novo Chamado
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="/suporte/chamados/novo" class="btn btn-primary-empresarial">
+                                        <i class="fas fa-plus"></i> Novo Chamado
                                     </a>
-                                    <button class="btn btn-outline-primary ms-2" onclick="atualizarDados()">
-                                        <i class="fas fa-sync-alt me-1"></i> Atualizar
+                                    <button class="btn btn-empresarial" style="background: var(--secondary-color); color: white;" onclick="atualizarDados()">
+                                        <i class="fas fa-sync-alt"></i> Atualizar
                                     </button>
-                                    <div class="btn-group ms-2" role="group">
-                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                            <i class="fas fa-download me-1"></i> Exportar
+                                    <div class="dropdown">
+                                        <button class="btn btn-empresarial dropdown-toggle" style="background: var(--info-color); color: white;" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-download"></i> Exportar
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#" onclick="exportarExcel()"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
-                                            <li><a class="dropdown-item" href="#" onclick="exportarPDF()"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="exportarExcel()">
+                                                <i class="fas fa-file-excel me-2 text-success"></i>Excel
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="exportarPDF()">
+                                                <i class="fas fa-file-pdf me-2 text-danger"></i>PDF
+                                            </a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -401,49 +458,49 @@
                     <!-- Estatísticas -->
                     <div class="row mb-4" id="estatisticas">
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <div class="stats-card-empresarial">
+                                <div class="stats-icon-empresarial" style="background: linear-gradient(135deg, var(--accent-color) 0%, #2563eb 100%);">
                                     <i class="fas fa-ticket-alt"></i>
                                 </div>
-                                <div class="stats-number text-primary" id="totalChamados">0</div>
-                                <div class="stats-label">Total de Chamados</div>
+                                <div class="stats-number-empresarial" id="totalChamados">0</div>
+                                <div class="stats-label-empresarial">Total de Chamados</div>
                             </div>
                         </div>
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                            <div class="stats-card-empresarial">
+                                <div class="stats-icon-empresarial" style="background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);">
                                     <i class="fas fa-clock"></i>
                                 </div>
-                                <div class="stats-number text-warning" id="chamadosAbertos">0</div>
-                                <div class="stats-label">Chamados Abertos</div>
+                                <div class="stats-number-empresarial" style="color: var(--warning-color);" id="chamadosAbertos">0</div>
+                                <div class="stats-label-empresarial">Chamados Abertos</div>
                             </div>
                         </div>
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                            <div class="stats-card-empresarial">
+                                <div class="stats-icon-empresarial" style="background: linear-gradient(135deg, var(--info-color) 0%, #0891b2 100%);">
                                     <i class="fas fa-cogs"></i>
                                 </div>
-                                <div class="stats-number text-info" id="chamadosAndamento">0</div>
-                                <div class="stats-label">Em Andamento</div>
+                                <div class="stats-number-empresarial" style="color: var(--info-color);" id="chamadosAndamento">0</div>
+                                <div class="stats-label-empresarial">Em Andamento</div>
                             </div>
                         </div>
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                            <div class="stats-card-empresarial">
+                                <div class="stats-icon-empresarial" style="background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
-                                <div class="stats-number text-success" id="chamadosResolvidos">0</div>
-                                <div class="stats-label">Resolvidos Hoje</div>
+                                <div class="stats-number-empresarial" style="color: var(--success-color);" id="chamadosResolvidos">0</div>
+                                <div class="stats-label-empresarial">Resolvidos Hoje</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Filtros -->
-                    <div class="filters-card">
-                        <div class="row">
+                    <div class="filters-card-empresarial">
+                        <div class="row g-3">
                             <div class="col-md-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select" id="filtroStatus">
+                                <label class="form-label fw-semibold" style="color: var(--text-primary);">Status</label>
+                                <select class="form-select form-select-empresarial" id="filtroStatus">
                                     <option value="">Todos os Status</option>
                                     <option value="ABERTO">Aberto</option>
                                     <option value="EM_ANDAMENTO">Em Andamento</option>
@@ -453,8 +510,8 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Prioridade</label>
-                                <select class="form-select" id="filtroPrioridade">
+                                <label class="form-label fw-semibold" style="color: var(--text-primary);">Prioridade</label>
+                                <select class="form-select form-select-empresarial" id="filtroPrioridade">
                                     <option value="">Todas as Prioridades</option>
                                     <option value="URGENTE">Urgente</option>
                                     <option value="ALTA">Alta</option>
@@ -463,21 +520,21 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Técnico</label>
-                                <input type="text" class="form-control" id="filtroTecnico" placeholder="Nome do técnico">
+                                <label class="form-label fw-semibold" style="color: var(--text-primary);">Técnico</label>
+                                <input type="text" class="form-control form-control-empresarial" id="filtroTecnico" placeholder="Nome do técnico">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Buscar</label>
-                                <input type="text" class="form-control" id="filtroBusca" placeholder="Número ou assunto">
+                                <label class="form-label fw-semibold" style="color: var(--text-primary);">Buscar</label>
+                                <input type="text" class="form-control form-control-empresarial" id="filtroBusca" placeholder="Número ou assunto">
                             </div>
                         </div>
                     </div>
 
                     <!-- Tabela de Chamados -->
-                    <div class="card shadow">
-                        <div class="card-header-modern">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 font-weight-bold">
+                    <div class="card-empresarial">
+                        <div class="card-header-empresarial">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <h6 class="m-0 fw-bold">
                                     <i class="fas fa-table me-2"></i>
                                     Chamados de Suporte
                                     <span class="badge bg-light text-dark ms-2" id="contadorChamados">0</span>
@@ -489,14 +546,6 @@
                                             Auto-atualizar
                                         </label>
                                     </div>
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-light btn-sm" onclick="alternarVisualizacao('tabela')" id="btnTabela">
-                                            <i class="fas fa-table"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-light btn-sm" onclick="alternarVisualizacao('cards')" id="btnCards">
-                                            <i class="fas fa-th-large"></i>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -505,11 +554,11 @@
                             <div class="loading-overlay d-none" id="loadingOverlay">
                                 <div class="loading-spinner"></div>
                             </div>
-                            
-                            <!-- Visualização em Tabela -->
-                            <div class="table-responsive" id="visualizacaoTabela">
-                                <table class="table table-modern mb-0">
-                                    <thead class="table-light">
+
+                            <!-- Tabela -->
+                            <div class="table-responsive">
+                                <table class="table table-empresarial mb-0">
+                                    <thead>
                                         <tr>
                                             <th>Número</th>
                                             <th>Assunto</th>
@@ -528,120 +577,116 @@
                                     <tbody>
                                         <!-- Mensagem quando não há chamados -->
                                         <tr th:if="${#lists.isEmpty(chamados)}">
-                                            <td colspan="12" class="text-center text-muted py-5">
-                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                                <h5>Nenhum chamado encontrado</h5>
-                                                <p class="mb-0">Não há chamados cadastrados no sistema.</p>
-                                                <a href="/suporte/chamados/novo" class="btn btn-primary mt-3">
-                                                    <i class="fas fa-plus me-1"></i> Criar Primeiro Chamado
-                                                </a>
+                                            <td colspan="12" class="text-center py-5">
+                                                <div style="color: var(--text-secondary);">
+                                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                    <h5>Nenhum chamado encontrado</h5>
+                                                    <p class="mb-0">Não há chamados cadastrados no sistema.</p>
+                                                    <a href="/suporte/chamados/novo" class="btn btn-primary-empresarial mt-3">
+                                                        <i class="fas fa-plus"></i> Criar Primeiro Chamado
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
-                                        
+
                                         <!-- Lista de chamados -->
                                         <tr th:each="chamado : ${chamados}" th:unless="${#lists.isEmpty(chamados)}">
                                             <td>
-                                                <strong th:text="${chamado.numero}">#001</strong>
+                                                <strong th:text="${chamado.numero}" style="color: var(--accent-color);">#001</strong>
                                             </td>
                                             <td>
                                                 <div>
-                                                    <strong th:text="${chamado.assunto}">Problema no sistema</strong>
+                                                    <strong th:text="${chamado.assunto}" style="color: var(--text-primary);">Problema no sistema</strong>
                                                     <br>
-                                                    <small class="text-muted" th:text="${#strings.abbreviate(chamado.descricao, 50)}">Descrição resumida...</small>
+                                                    <small th:text="${#strings.abbreviate(chamado.descricao, 50)}" style="color: var(--text-secondary);">Descrição resumida...</small>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="status-badge" 
-                                                      th:classappend="${
-                                                          chamado.status.name() == 'ABERTO' ? 'status-aberto' :
-                                                          chamado.status.name() == 'EM_ANDAMENTO' ? 'status-em-andamento' :
-                                                          chamado.status.name() == 'RESOLVIDO' ? 'status-resolvido' :
-                                                          'status-fechado'
-                                                      }"
-                                                      th:text="${chamado.status.descricao}">Aberto</span>
+                                                <span class="badge-status" th:classappend="${
+                                                          chamado.status.name() == 'ABERTO' ? 'badge-aberto' :
+                                                          chamado.status.name() == 'EM_ANDAMENTO' ? 'badge-em-andamento' :
+                                                          chamado.status.name() == 'RESOLVIDO' ? 'badge-resolvido' :
+                                                          'badge-fechado'
+                                                      }" th:text="${chamado.status.descricao}">
+                                                    <i class="fas fa-circle me-1"></i>Aberto
+                                                </span>
                                             </td>
                                             <td>
-                                                <span class="prioridade-badge"
-                                                      th:classappend="${
-                                                          chamado.prioridade.name() == 'BAIXA' ? 'prioridade-baixa' :
-                                                          chamado.prioridade.name() == 'MEDIA' ? 'prioridade-media' :
-                                                          chamado.prioridade.name() == 'ALTA' ? 'prioridade-alta' :
-                                                          'prioridade-urgente'
-                                                      }"
-                                                      th:text="${chamado.prioridade.descricao}">Média</span>
+                                                <span class="badge-prioridade" th:classappend="${
+                                                          chamado.prioridade.name() == 'BAIXA' ? 'badge-baixa' :
+                                                          chamado.prioridade.name() == 'MEDIA' ? 'badge-media' :
+                                                          chamado.prioridade.name() == 'ALTA' ? 'badge-alta' :
+                                                          'badge-urgente'
+                                                      }" th:text="${chamado.prioridade.descricao}">
+                                                    <i class="fas fa-flag me-1"></i>Média
+                                                </span>
                                             </td>
                                             <td>
-                                                <span th:text="${chamado.categoria ?: 'Geral'}">Geral</span>
-                                                <small th:if="${chamado.subcategoria}" class="text-muted d-block" th:text="${chamado.subcategoria}">Subcategoria</small>
+                                                <span th:text="${chamado.categoria ?: 'Geral'}" style="color: var(--text-primary);">Geral</span>
+                                                <small th:if="${chamado.subcategoria}" class="d-block" style="color: var(--text-secondary);" th:text="${chamado.subcategoria}">Subcategoria</small>
                                             </td>
                                             <td>
                                                 <div>
-                                                    <strong th:text="${chamado.solicitanteNome ?: 'N/A'}">João Silva</strong>
+                                                    <strong th:text="${chamado.solicitanteNome ?: 'N/A'}" style="color: var(--text-primary);">João Silva</strong>
                                                     <br>
-                                                    <small class="text-muted" th:text="${chamado.solicitanteEmail ?: ''}">joao@empresa.com</small>
+                                                    <small th:text="${chamado.solicitanteEmail ?: ''}" style="color: var(--text-secondary);">joao@empresa.com</small>
                                                 </div>
                                             </td>
                                             <td>
                                                 <span th:text="${chamado.tecnicoResponsavel ?: 'Não atribuído'}" 
-                                                      th:class="${chamado.tecnicoResponsavel == null ? 'text-muted' : ''}">Técnico</span>
+                                                      th:style="${chamado.tecnicoResponsavel == null ? 'color: var(--text-secondary);' : 'color: var(--text-primary);'}">Técnico</span>
                                             </td>
                                             <td>
-                                                <span th:if="${chamado.slaRestante != null}" 
-                                                      class="sla-indicator"
-                                                      th:classappend="${chamado.slaRestante < 0 ? 'sla-vermelho' : (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde')}">
+                                                <span th:if="${chamado.slaRestante != null}" class="sla-indicator"
+                                                    th:classappend="${chamado.slaRestante < 0 ? 'sla-vencido' : (chamado.slaRestante <= 4 ? 'sla-atencao' : 'sla-ok')}">
                                                     <i class="fas fa-clock"></i>
                                                     <span th:text="${chamado.slaRestante > 0 ? chamado.slaRestante + 'h' : (chamado.slaRestante == 0 ? 'Menos de 1h' : 'Vencido')}">24h</span>
                                                 </span>
-                                                <span th:unless="${chamado.slaRestante != null}" class="text-muted">-</span>
+                                                <span th:unless="${chamado.slaRestante != null}" style="color: var(--text-secondary);">-</span>
                                             </td>
                                             <td>
-                                                <small th:text="${#temporals.format(chamado.dataAbertura, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+                                                <small th:text="${#temporals.format(chamado.dataAbertura, 'dd/MM/yyyy HH:mm')}" style="color: var(--text-secondary);">01/01/2024 10:00</small>
                                             </td>
                                             <td>
-                                                <span th:if="${chamado.tempoResolucaoMinutos != null}" 
-                                                      th:text="${chamado.tempoResolucaoMinutos < 60 ? chamado.tempoResolucaoMinutos + 'min' : 
-                                                               (chamado.tempoResolucaoMinutos / 60) + 'h ' + (chamado.tempoResolucaoMinutos % 60) + 'min'}">2h 30min</span>
-                                                <span th:unless="${chamado.tempoResolucaoMinutos != null}" class="text-muted">-</span>
+                                                <span th:if="${chamado.tempoResolucaoMinutos != null}"
+                                                    th:text="${chamado.tempoResolucaoMinutos < 60 ? chamado.tempoResolucaoMinutos + 'min' : 
+                                                               (chamado.tempoResolucaoMinutos / 60) + 'h ' + (chamado.tempoResolucaoMinutos % 60) + 'min'}"
+                                                    style="color: var(--text-primary);">2h 30min</span>
+                                                <span th:unless="${chamado.tempoResolucaoMinutos != null}" style="color: var(--text-secondary);">-</span>
                                             </td>
                                             <td>
                                                 <div th:if="${chamado.avaliacao != null}" class="rating-stars">
-                                                    <span th:each="i : ${#numbers.sequence(1, 5)}" 
-                                                          th:class="'star ' + ${i <= chamado.avaliacao ? 'filled' : 'empty'}">★</span>
-                                                    <small class="text-muted d-block" th:text="${chamado.avaliacao + '/5'}">5/5</small>
+                                                    <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                                        th:class="'star ' + ${i <= chamado.avaliacao ? 'filled' : ''}">★</span>
+                                                    <small class="d-block" style="color: var(--text-secondary);" th:text="${chamado.avaliacao + '/5'}">5/5</small>
                                                 </div>
-                                                <span th:unless="${chamado.avaliacao != null}" class="text-muted">-</span>
+                                                <span th:unless="${chamado.avaliacao != null}" style="color: var(--text-secondary);">-</span>
                                             </td>
                                             <td>
-                                                <div class="btn-group" role="group">
-                                                    <a th:href="@{/suporte/chamados/{id}(id=${chamado.id})}" 
-                                                       class="btn btn-outline-primary btn-action" 
-                                                       title="Visualizar">
+                                                <div class="d-flex gap-1">
+                                                    <a th:href="@{/suporte/chamados/{id}(id=${chamado.id})}"
+                                                        class="btn btn-empresarial btn-sm" style="background: var(--info-color); color: white;" title="Visualizar">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <button th:if="${chamado.status.name() == 'ABERTO'}" 
-                                                            class="btn btn-outline-success btn-action" 
-                                                            title="Iniciar Atendimento"
-                                                            onclick="iniciarAtendimento([[${chamado.id}]])">
-                                                        <i class="fas fa-play"></i>
+                                                    <button th:if="${chamado.status.name() == 'ABERTO'}"
+                                                        class="btn btn-success-empresarial btn-sm" title="Assumir Atendimento"
+                                                        th:onclick="'iniciarAtendimento(' + ${chamado.id} + ')'">
+                                                        <i class="fas fa-user-check"></i>
                                                     </button>
-                                                    <button th:if="${chamado.status.name() == 'EM_ANDAMENTO'}" 
-                                                            class="btn btn-outline-warning btn-action" 
-                                                            title="Resolver"
-                                                            onclick="resolverChamado([[${chamado.id}]])">
+                                                    <button th:if="${chamado.status.name() == 'EM_ANDAMENTO'}"
+                                                        class="btn btn-warning-empresarial btn-sm" title="Resolver"
+                                                        th:onclick="'resolverChamado(' + ${chamado.id} + ')'">
                                                         <i class="fas fa-check"></i>
                                                     </button>
-                                                    <button th:if="${chamado.status.name() == 'RESOLVIDO'}" 
-                                                            class="btn btn-outline-secondary btn-action" 
-                                                            title="Fechar"
-                                                            onclick="fecharChamado([[${chamado.id}]])">
+                                                    <button th:if="${chamado.status.name() == 'RESOLVIDO'}"
+                                                        class="btn btn-empresarial btn-sm" style="background: var(--secondary-color); color: white;" title="Fechar"
+                                                        th:onclick="'fecharChamado(' + ${chamado.id} + ')'">
                                                         <i class="fas fa-times"></i>
                                                     </button>
-                                                    
-                                                    <!-- Botão de Avaliação -->
-                                                    <a th:href="@{/suporte/chamados/{id}/avaliar(id=${chamado.id})}" 
-                                                       class="btn btn-outline-warning btn-action"
-                                                       th:if="${(chamado.status.name() == 'RESOLVIDO' or chamado.status.name() == 'FECHADO') and chamado.avaliacao == null}"
-                                                       title="Avaliar atendimento">
+                                                    <a th:href="@{/suporte/chamados/{id}/avaliar(id=${chamado.id})}"
+                                                        class="btn btn-warning-empresarial btn-sm"
+                                                        th:if="${(chamado.status.name() == 'RESOLVIDO' or chamado.status.name() == 'FECHADO') and chamado.avaliacao == null}"
+                                                        title="Avaliar atendimento">
                                                         <i class="fas fa-star"></i>
                                                     </a>
                                                 </div>
@@ -649,23 +694,6 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
-                            
-                            <!-- Visualização em Cards -->
-                            <div class="d-none" id="visualizacaoCards">
-                                <div class="row p-4" id="containerCards">
-                                    <!-- Cards serão inseridos aqui via JavaScript -->
-                                </div>
-                            </div>
-                            
-                            <!-- Mensagem quando não há dados -->
-                            <div class="text-center py-5 d-none" id="mensagemVazia">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Nenhum chamado encontrado</h5>
-                                <p class="text-muted mb-0">Não há chamados que correspondam aos filtros aplicados.</p>
-                                <a href="/suporte/novo" class="btn btn-primary mt-3">
-                                    <i class="fas fa-plus me-1"></i> Criar Primeiro Chamado
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -678,525 +706,208 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="/js/sidebar.js" defer></script>
     <script th:src="@{/js/notifications.js}"></script>
-    
+
     <script>
-        // Variáveis globais
+        // ===== VARIÁVEIS GLOBAIS =====
         let chamadosData = [];
-        let filtrosAtivos = {};
-        let visualizacaoAtual = 'tabela';
-        let autoRefreshInterval = null;
-        
-        // Inicialização
+        let autoRefreshInterval;
+
+        // ===== INICIALIZAÇÃO =====
         $(document).ready(function() {
-            inicializarEventListeners();
             carregarDados();
-            carregarEstatisticasIniciais(); // Carregar estatísticas imediatamente
+            atualizarEstatisticas();
+            configurarFiltros();
+            configurarAutoRefresh();
             aplicarFiltrosURL();
-            
-            // Auto-refresh
-            $('#autoRefresh').on('change', function() {
-                if (this.checked) {
-                    autoRefreshInterval = setInterval(() => {
-                        carregarDados();
-                        atualizarEstatisticas(); // Atualizar estatísticas também
-                    }, 30000); // 30 segundos
-                } else {
-                    clearInterval(autoRefreshInterval);
-                }
-            });
-            
-            // Atualizar estatísticas a cada 15 segundos independentemente
-            setInterval(atualizarEstatisticas, 15000);
         });
-        
-        // Event Listeners
-        function inicializarEventListeners() {
-            $('#filtroStatus').on('change', aplicarFiltros);
-            $('#filtroPrioridade').on('change', aplicarFiltros);
-            $('#filtroTecnico').on('keyup', debounce(aplicarFiltros, 300));
-            $('#filtroBusca').on('keyup', debounce(aplicarFiltros, 300));
-        }
-        
-        // Debounce function para otimizar performance
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-        
-        // Carregar dados via API
+
+        // ===== CARREGAMENTO DE DADOS =====
         async function carregarDados() {
             mostrarLoading(true);
             
             try {
                 const response = await fetch('/api/chamados');
-                const data = await response.json();
-                
-                if (data.sucesso) {
-                    chamadosData = data.dados;
-                    atualizarEstatisticas();
+                if (response.ok) {
+                    chamadosData = await response.json();
                     renderizarDados();
+                    atualizarContador();
                 } else {
-                    mostrarAlerta('danger', 'Erro ao carregar chamados: ' + data.erro);
+                    console.error('Erro ao carregar chamados:', response.statusText);
+                    mostrarAlerta('danger', 'Erro ao carregar dados dos chamados');
                 }
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                mostrarAlerta('danger', 'Erro ao conectar com o servidor');
+                console.error('Erro na requisição:', error);
+                mostrarAlerta('danger', 'Erro de conexão com o servidor');
             } finally {
                 mostrarLoading(false);
             }
         }
-        
-        // Atualizar estatísticas
+
+        // ===== ATUALIZAÇÃO DE ESTATÍSTICAS =====
         async function atualizarEstatisticas() {
             try {
-                // Carregar estatísticas da API
                 const response = await fetch('/api/chamados/estatisticas');
-                const data = await response.json();
-                
-                if (data.sucesso) {
-                    // Atualizar cards com dados reais da API
-                    $('#totalChamados').text(data.total || 0);
-                    $('#chamadosAbertos').text(data.abertos || 0);
-                    $('#chamadosAndamento').text(data.emAndamento || 0);
-                    $('#chamadosResolvidos').text(data.resolvidos || 0);
-                    $('#contadorChamados').text(data.total || 0);
-                    
-                    // Adicionar animação aos números
-                    animarContadores();
-                } else {
-                    console.error('Erro ao carregar estatísticas:', data.erro);
-                    // Fallback para cálculo local se a API falhar
-                    const stats = calcularEstatisticas(chamadosData);
-                    $('#totalChamados').text(stats.total);
-                    $('#chamadosAbertos').text(stats.abertos);
-                    $('#chamadosAndamento').text(stats.andamento);
-                    $('#chamadosResolvidos').text(stats.resolvidosHoje);
-                    $('#contadorChamados').text(stats.total);
+                if (response.ok) {
+                    const stats = await response.json();
+                    $('#totalChamados').text(stats.total || 0);
+                    $('#chamadosAbertos').text(stats.abertos || 0);
+                    $('#chamadosAndamento').text(stats.emAndamento || 0);
+                    $('#chamadosResolvidos').text(stats.resolvidosHoje || 0);
                 }
             } catch (error) {
-                console.error('Erro ao conectar com API de estatísticas:', error);
-                // Fallback para cálculo local se houver erro de conexão
-                const stats = calcularEstatisticas(chamadosData);
-                $('#totalChamados').text(stats.total);
-                $('#chamadosAbertos').text(stats.abertos);
-                $('#chamadosAndamento').text(stats.andamento);
-                $('#chamadosResolvidos').text(stats.resolvidosHoje);
-                $('#contadorChamados').text(stats.total);
+                console.error('Erro ao carregar estatísticas:', error);
             }
         }
-        
-        // Calcular estatísticas
-        function calcularEstatisticas(dados) {
-            const hoje = new Date().toDateString();
-            
-            return {
-                total: dados.length,
-                abertos: dados.filter(c => c.status === 'ABERTO').length,
-                andamento: dados.filter(c => c.status === 'EM_ANDAMENTO').length,
-                resolvidosHoje: dados.filter(c => 
-                    c.status === 'RESOLVIDO' && 
-                    new Date(c.dataResolucao).toDateString() === hoje
-                ).length
-            };
-        }
-        
-        // Animar contadores com efeito visual
-        function animarContadores() {
-            const contadores = ['#totalChamados', '#chamadosAbertos', '#chamadosAndamento', '#chamadosResolvidos'];
-            
-            contadores.forEach(selector => {
-                const elemento = $(selector);
-                elemento.addClass('animate__animated animate__pulse');
-                
-                // Remover animação após completar
-                setTimeout(() => {
-                    elemento.removeClass('animate__animated animate__pulse');
-                }, 1000);
-            });
-        }
-        
-        // Carregar estatísticas iniciais (sem aguardar carregamento completo dos dados)
-        async function carregarEstatisticasIniciais() {
-            await atualizarEstatisticas();
-        }
-        
-        // Aplicar filtros
-        function aplicarFiltros() {
-            filtrosAtivos = {
-                status: $('#filtroStatus').val(),
-                prioridade: $('#filtroPrioridade').val(),
-                tecnico: $('#filtroTecnico').val().toLowerCase(),
-                busca: $('#filtroBusca').val().toLowerCase()
-            };
-            
-            renderizarDados();
-        }
-        
-        // Filtrar dados
-        function filtrarDados(dados) {
-            return dados.filter(chamado => {
-                if (filtrosAtivos.status && chamado.status !== filtrosAtivos.status) return false;
-                if (filtrosAtivos.prioridade && chamado.prioridade !== filtrosAtivos.prioridade) return false;
-                if (filtrosAtivos.tecnico && !chamado.tecnicoResponsavel?.toLowerCase().includes(filtrosAtivos.tecnico)) return false;
-                if (filtrosAtivos.busca) {
-                    const busca = filtrosAtivos.busca;
-                    return chamado.numero.toLowerCase().includes(busca) || 
-                           chamado.assunto.toLowerCase().includes(busca) ||
-                           chamado.descricao.toLowerCase().includes(busca);
-                }
-                return true;
-            });
-        }
-        
-        // Renderizar dados
+
+        // ===== RENDERIZAÇÃO DE DADOS =====
         function renderizarDados() {
-            const dadosFiltrados = filtrarDados(chamadosData);
-            
-            if (dadosFiltrados.length === 0) {
-                mostrarMensagemVazia(true);
-                return;
-            }
-            
-            mostrarMensagemVazia(false);
-            
-            if (visualizacaoAtual === 'tabela') {
-                renderizarTabela(dadosFiltrados);
-            } else {
-                renderizarCards(dadosFiltrados);
-            }
+            const dadosFiltrados = aplicarFiltros();
+            // A tabela já está sendo renderizada pelo Thymeleaf
+            // Aqui podemos adicionar lógica adicional se necessário
         }
-        
-        // Renderizar tabela
-        function renderizarTabela(dados) {
-            const tbody = $('tbody');
-            tbody.empty();
-            
-            dados.forEach(chamado => {
-                const row = criarLinhaTabela(chamado);
-                tbody.append(row);
+
+        // ===== FILTROS =====
+        function configurarFiltros() {
+            $('#filtroStatus, #filtroPrioridade, #filtroTecnico, #filtroBusca').on('change keyup', function() {
+                aplicarFiltros();
             });
         }
-        
-        // Criar linha da tabela
-        function criarLinhaTabela(chamado) {
-            const slaClass = chamado.slaRestante < 0 ? 'sla-vermelho' : 
-                           (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde');
-            
-            return `
-                <tr>
-                    <td><strong>${chamado.numero}</strong></td>
-                    <td>
-                        <div>
-                            <strong>${chamado.assunto}</strong><br>
-                            <small class="text-muted">${chamado.descricao.substring(0, 50)}...</small>
-                        </div>
-                    </td>
-                    <td>${criarBadgeStatus(chamado.status)}</td>
-                    <td>${criarBadgePrioridade(chamado.prioridade)}</td>
-                    <td>
-                        ${chamado.categoria || 'Geral'}
-                        ${chamado.subcategoria ? `<br><small class="text-muted">${chamado.subcategoria}</small>` : ''}
-                    </td>
-                    <td>
-                        <strong>${chamado.solicitanteNome || 'N/A'}</strong><br>
-                        <small class="text-muted">${chamado.solicitanteEmail || ''}</small>
-                    </td>
-                    <td>${chamado.tecnicoResponsavel || '<span class="text-muted">Não atribuído</span>'}</td>
-                    <td>
-                        ${chamado.slaRestante !== null ? 
-                            `<span class="sla-indicator ${slaClass}">
-                                <i class="fas fa-clock"></i>
-                                ${formatarSLA(chamado.slaRestante)}
-                            </span>` : 
-                            '<span class="text-muted">-</span>'
-                        }
-                    </td>
-                    <td><small>${formatarData(chamado.dataAbertura)}</small></td>
-                    <td>${chamado.tempoResolucaoMinutos ? formatarTempo(chamado.tempoResolucaoMinutos) : '<span class="text-muted">-</span>'}</td>
-                    <td>${chamado.avaliacao ? criarEstrelas(chamado.avaliacao) : '<span class="text-muted">-</span>'}</td>
-                    <td>${criarBotoesAcao(chamado)}</td>
-                </tr>
-            `;
-        }
-        
-        // Renderizar cards
-        function renderizarCards(dados) {
-            const container = $('#containerCards');
-            container.empty();
-            
-            dados.forEach(chamado => {
-                const card = criarCard(chamado);
-                container.append(card);
-            });
-        }
-        
-        // Criar card
-        function criarCard(chamado) {
-            const slaClass = chamado.slaRestante < 0 ? 'sla-vermelho' : 
-                           (chamado.slaRestante <= 4 ? 'sla-amarelo' : 'sla-verde');
-            
-            return `
-                <div class="col-xl-4 col-lg-6 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header bg-light">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><strong>${chamado.numero}</strong></h6>
-                                <div>
-                                    ${criarBadgeStatus(chamado.status)}
-                                    ${criarBadgePrioridade(chamado.prioridade)}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <h6 class="card-title">${chamado.assunto}</h6>
-                            <p class="card-text text-muted small">${chamado.descricao.substring(0, 100)}...</p>
-                            
-                            <div class="row text-center mb-3">
-                                <div class="col-6">
-                                    <small class="text-muted">Solicitante</small><br>
-                                    <strong>${chamado.solicitanteNome || 'N/A'}</strong>
-                                </div>
-                                <div class="col-6">
-                                    <small class="text-muted">Técnico</small><br>
-                                    <strong>${chamado.tecnicoResponsavel || 'Não atribuído'}</strong>
-                                </div>
-                            </div>
-                            
-                            ${chamado.slaRestante !== null ? 
-                                `<div class="text-center mb-3">
-                                    <span class="sla-indicator ${slaClass}">
-                                        <i class="fas fa-clock"></i>
-                                        SLA: ${formatarSLA(chamado.slaRestante)}
-                                    </span>
-                                </div>` : ''
-                            }
-                        </div>
-                        <div class="card-footer bg-light">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">${formatarData(chamado.dataAbertura)}</small>
-                                <div class="btn-group">
-                                    ${criarBotoesAcao(chamado)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Funções auxiliares
-        function criarBadgeStatus(status) {
-            const classes = {
-                'ABERTO': 'status-aberto',
-                'EM_ANDAMENTO': 'status-em-andamento',
-                'RESOLVIDO': 'status-resolvido',
-                'FECHADO': 'status-fechado',
-                'REABERTO': 'status-reaberto'
-            };
-            
-            const textos = {
-                'ABERTO': 'Aberto',
-                'EM_ANDAMENTO': 'Em Andamento',
-                'RESOLVIDO': 'Resolvido',
-                'FECHADO': 'Fechado',
-                'REABERTO': 'Reaberto'
-            };
-            
-            return `<span class="status-badge ${classes[status]}">${textos[status]}</span>`;
-        }
-        
-        function criarBadgePrioridade(prioridade) {
-            const classes = {
-                'BAIXA': 'prioridade-baixa',
-                'MEDIA': 'prioridade-media',
-                'ALTA': 'prioridade-alta',
-                'URGENTE': 'prioridade-urgente'
-            };
-            
-            const textos = {
-                'BAIXA': 'Baixa',
-                'MEDIA': 'Média',
-                'ALTA': 'Alta',
-                'URGENTE': 'Urgente'
-            };
-            
-            return `<span class="prioridade-badge ${classes[prioridade]}">${textos[prioridade]}</span>`;
-        }
-        
-        function criarBotoesAcao(chamado) {
-            let botoes = `<a href="/suporte/chamados/${chamado.id}" class="btn btn-outline-primary btn-action" title="Visualizar">
-                            <i class="fas fa-eye"></i>
-                          </a>`;
-            
-            if (chamado.status === 'ABERTO') {
-                botoes += `<button class="btn btn-outline-success btn-action" title="Iniciar Atendimento" onclick="iniciarAtendimento(${chamado.id})">
-                            <i class="fas fa-play"></i>
-                           </button>`;
+
+        function aplicarFiltros() {
+            const status = $('#filtroStatus').val();
+            const prioridade = $('#filtroPrioridade').val();
+            const tecnico = $('#filtroTecnico').val().toLowerCase();
+            const busca = $('#filtroBusca').val().toLowerCase();
+
+            let dadosFiltrados = chamadosData;
+
+            if (status) {
+                dadosFiltrados = dadosFiltrados.filter(c => c.status === status);
             }
-            
-            if (chamado.status === 'EM_ANDAMENTO') {
-                botoes += `<button class="btn btn-outline-warning btn-action" title="Resolver" onclick="resolverChamado(${chamado.id})">
-                            <i class="fas fa-check"></i>
-                           </button>`;
+
+            if (prioridade) {
+                dadosFiltrados = dadosFiltrados.filter(c => c.prioridade === prioridade);
             }
-            
-            if (chamado.status === 'RESOLVIDO') {
-                botoes += `<button class="btn btn-outline-secondary btn-action" title="Fechar" onclick="fecharChamado(${chamado.id})">
-                            <i class="fas fa-times"></i>
-                           </button>`;
+
+            if (tecnico) {
+                dadosFiltrados = dadosFiltrados.filter(c => 
+                    c.tecnicoResponsavel && c.tecnicoResponsavel.toLowerCase().includes(tecnico)
+                );
             }
-            
-            if ((chamado.status === 'RESOLVIDO' || chamado.status === 'FECHADO') && !chamado.avaliacao) {
-                botoes += `<a href="/suporte/chamados/${chamado.id}/avaliar" class="btn btn-outline-warning btn-action" title="Avaliar">
-                            <i class="fas fa-star"></i>
-                           </a>`;
+
+            if (busca) {
+                dadosFiltrados = dadosFiltrados.filter(c => 
+                    c.numero.toString().includes(busca) || 
+                    c.assunto.toLowerCase().includes(busca)
+                );
             }
-            
-            return botoes;
+
+            atualizarContador(dadosFiltrados.length);
+            return dadosFiltrados;
         }
-        
-        function criarEstrelas(avaliacao) {
-            let estrelas = '<div class="rating-stars">';
-            for (let i = 1; i <= 5; i++) {
-                estrelas += `<span class="star ${i <= avaliacao ? 'filled' : 'empty'}">★</span>`;
-            }
-            estrelas += `<br><small class="text-muted">${avaliacao}/5</small></div>`;
-            return estrelas;
-        }
-        
-        function formatarSLA(sla) {
-            if (sla > 0) return sla + 'h';
-            if (sla === 0) return 'Menos de 1h';
-            return 'Vencido';
-        }
-        
-        function formatarData(data) {
-            return new Date(data).toLocaleString('pt-BR');
-        }
-        
-        function formatarTempo(minutos) {
-            if (minutos < 60) return minutos + 'min';
-            const horas = Math.floor(minutos / 60);
-            const mins = minutos % 60;
-            return `${horas}h ${mins}min`;
-        }
-        
-        // Alternar visualização
-        function alternarVisualizacao(tipo) {
-            visualizacaoAtual = tipo;
-            
-            if (tipo === 'tabela') {
-                $('#visualizacaoTabela').removeClass('d-none');
-                $('#visualizacaoCards').addClass('d-none');
-                $('#btnTabela').removeClass('btn-outline-light').addClass('btn-light');
-                $('#btnCards').removeClass('btn-light').addClass('btn-outline-light');
-            } else {
-                $('#visualizacaoTabela').addClass('d-none');
-                $('#visualizacaoCards').removeClass('d-none');
-                $('#btnCards').removeClass('btn-outline-light').addClass('btn-light');
-                $('#btnTabela').removeClass('btn-light').addClass('btn-outline-light');
-            }
-            
-            renderizarDados();
-        }
-        
-        // Mostrar/ocultar loading
-        function mostrarLoading(mostrar) {
-            if (mostrar) {
-                $('#loadingOverlay').removeClass('d-none');
-            } else {
-                $('#loadingOverlay').addClass('d-none');
-            }
-        }
-        
-        // Mostrar/ocultar mensagem vazia
-        function mostrarMensagemVazia(mostrar) {
-            if (mostrar) {
-                $('#visualizacaoTabela').addClass('d-none');
-                $('#visualizacaoCards').addClass('d-none');
-                $('#mensagemVazia').removeClass('d-none');
-            } else {
-                $('#mensagemVazia').addClass('d-none');
-                if (visualizacaoAtual === 'tabela') {
-                    $('#visualizacaoTabela').removeClass('d-none');
-                } else {
-                    $('#visualizacaoCards').removeClass('d-none');
-                }
-            }
-        }
-        
-        // Aplicar filtros da URL
+
         function aplicarFiltrosURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const statusParam = urlParams.get('status');
-            
+
             if (statusParam) {
                 $('#filtroStatus').val(statusParam);
                 aplicarFiltros();
             }
         }
-        
-        // Atualizar dados
-        function atualizarDados() {
-            carregarDados();
-            atualizarEstatisticas(); // Atualizar estatísticas também
-            mostrarAlerta('success', 'Dados atualizados com sucesso!');
+
+        // ===== AUTO-REFRESH =====
+        function configurarAutoRefresh() {
+            $('#autoRefresh').on('change', function() {
+                if (this.checked) {
+                    autoRefreshInterval = setInterval(() => {
+                        carregarDados();
+                        atualizarEstatisticas();
+                    }, 30000); // 30 segundos
+                } else {
+                    clearInterval(autoRefreshInterval);
+                }
+            });
         }
-        
-        // Ações dos chamados
+
+        // ===== AÇÕES DOS CHAMADOS =====
         async function iniciarAtendimento(id) {
-            const tecnico = prompt('Nome do técnico responsável:');
-            if (tecnico) {
-                await atualizarStatusChamado(id, 'EM_ANDAMENTO', { tecnicoResponsavel: tecnico });
+            try {
+                // Obter usuário logado automaticamente
+                const response = await fetch('/suporte/api/usuario/atual');
+                
+                if (!response.ok) {
+                    mostrarAlerta('error', 'Erro ao obter dados do usuário logado');
+                    return;
+                }
+                
+                const usuarioLogado = await response.json();
+                
+                // Verificar se usuário pode atender chamados
+                if (!usuarioLogado.podeAtenderChamados) {
+                    mostrarAlerta('warning', 'Você não tem permissão para atender chamados');
+                    return;
+                }
+                
+                // Confirmar antes de assumir o atendimento
+                if (confirm(`Deseja assumir o atendimento deste chamado como ${usuarioLogado.nome}?`)) {
+                    await atualizarStatusChamado(id, 'EM_ANDAMENTO', { 
+                        tecnicoResponsavel: usuarioLogado.nome,
+                        tecnicoId: usuarioLogado.id
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Erro ao iniciar atendimento:', error);
+                mostrarAlerta('error', 'Erro ao iniciar atendimento. Tente novamente.');
             }
         }
-        
+
         async function resolverChamado(id) {
             if (confirm('Deseja marcar este chamado como resolvido?')) {
                 await atualizarStatusChamado(id, 'RESOLVIDO');
             }
         }
-        
+
         async function fecharChamado(id) {
             if (confirm('Deseja fechar este chamado definitivamente?')) {
                 await atualizarStatusChamado(id, 'FECHADO');
             }
         }
-        
-        // Atualizar status do chamado
+
+        // ===== ATUALIZAÇÃO DE STATUS =====
         async function atualizarStatusChamado(id, novoStatus, dadosAdicionais = {}) {
             mostrarLoading(true);
-            
+
             try {
                 const response = await fetch(`/api/chamados/${id}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
                         status: novoStatus,
                         ...dadosAdicionais
                     })
                 });
-                
-                const result = await response.json();
-                
-                if (result.sucesso) {
-                    mostrarAlerta('success', 'Status atualizado com sucesso!');
-                    carregarDados();
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.sucesso) {
+                        mostrarAlerta('success', 'Status atualizado com sucesso!');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        mostrarAlerta('danger', 'Erro: ' + (result.erro || 'Erro desconhecido'));
+                    }
                 } else {
-                    mostrarAlerta('danger', 'Erro: ' + result.erro);
+                    mostrarAlerta('danger', 'Erro na comunicação com o servidor');
                 }
             } catch (error) {
                 console.error('Erro ao atualizar status:', error);
@@ -1205,21 +916,57 @@
                 mostrarLoading(false);
             }
         }
-        
-        // Exportar dados
+
+        // ===== UTILITÁRIOS =====
+        function atualizarContador(count = null) {
+            const total = count !== null ? count : chamadosData.length;
+            $('#contadorChamados').text(total);
+        }
+
+        function mostrarLoading(mostrar) {
+            if (mostrar) {
+                $('#loadingOverlay').removeClass('d-none');
+            } else {
+                $('#loadingOverlay').addClass('d-none');
+            }
+        }
+
+        function atualizarDados() {
+            carregarDados();
+            atualizarEstatisticas();
+            mostrarAlerta('success', 'Dados atualizados com sucesso!');
+        }
+
+        // ===== EXPORTAÇÃO =====
         function exportarExcel() {
             window.open('/api/chamados/export/excel', '_blank');
         }
-        
+
         function exportarPDF() {
             window.open('/api/chamados/export/pdf', '_blank');
         }
-        
-        // Mostrar alertas
+
+        // ===== SISTEMA DE ALERTAS =====
         function mostrarAlerta(tipo, mensagem) {
-            // Implementar sistema de alertas/toasts
-            console.log(`${tipo}: ${mensagem}`);
+            // Criar elemento de alerta
+            const alertDiv = $(`
+                <div class="alert alert-${tipo} alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 10000; min-width: 300px;">
+                    <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+
+            // Adicionar ao body
+            $('body').append(alertDiv);
+
+            // Remover automaticamente após 5 segundos
+            setTimeout(() => {
+                alertDiv.alert('close');
+            }, 5000);
         }
     </script>
 </body>
+
 </html>

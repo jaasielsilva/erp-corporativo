@@ -649,7 +649,7 @@
             switch (chamado.status) {
                 case 'ABERTO':
                     botoes.push(`<button class="action-btn btn-iniciar" onclick="atualizarStatusRapido(${chamado.id}, 'EM_ANDAMENTO')">
-                        <i class="fas fa-play me-1"></i>Iniciar Atendimento
+                        <i class="fas fa-user-check me-1"></i>Assumir Atendimento
                     </button>`);
                     break;
                 case 'EM_ANDAMENTO':
@@ -711,16 +711,34 @@
             try {
                 mostrarLoading(true);
                 
+                let requestBody = {
+                    status: novoStatus,
+                    observacoes: `Status atualizado automaticamente para ${formatarStatus(novoStatus)}`
+                };
+                
+                // Se for iniciar atendimento, obter usuário logado
+                if (novoStatus === 'EM_ANDAMENTO') {
+                    const userResponse = await fetch('/suporte/api/usuario/atual');
+                    if (userResponse.ok) {
+                        const usuarioLogado = await userResponse.json();
+                        
+                        if (!usuarioLogado.podeAtenderChamados) {
+                            mostrarAlerta('Você não tem permissão para atender chamados', 'warning');
+                            return;
+                        }
+                        
+                        requestBody.tecnicoResponsavel = usuarioLogado.nome;
+                        requestBody.tecnicoId = usuarioLogado.id;
+                    }
+                }
+                
                 // Simular chamada à API
                 const response = await fetch(`/api/suporte/chamados/${chamadoId}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        status: novoStatus,
-                        observacoes: `Status atualizado automaticamente para ${formatarStatus(novoStatus)}`
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (response.ok) {

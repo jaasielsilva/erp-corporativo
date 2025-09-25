@@ -785,6 +785,10 @@ public class SuporteController {
         try {
             String status = (String) requestBody.get("status");
             String tecnicoResponsavel = (String) requestBody.get("tecnicoResponsavel");
+            String observacoes = (String) requestBody.get("observacoes");
+            
+            // Log para debug
+            logger.info("Recebendo requisição PUT para chamado {}: status={}, tecnico={}", id, status, tecnicoResponsavel);
             
             // Mapear status para ação
             String acao;
@@ -807,6 +811,9 @@ public class SuporteController {
             
             // Criar request padronizado
             AtualizarStatusRequest request = new AtualizarStatusRequest(acao, tecnicoResponsavel);
+            if (observacoes != null) {
+                request.setObservacoes(observacoes);
+            }
             ResponseEntity<ChamadoStatusResponse> response = atualizarStatusPadronizado(id, request);
             
             // Converter resposta para formato esperado pelo JavaScript
@@ -835,7 +842,7 @@ public class SuporteController {
     }
 
     // Novo endpoint padronizado com validações
-    @PostMapping("/api/chamados/{id}/status")
+    @PostMapping("/api/chamados/{id}/status-padronizado")
     @ResponseBody
     public ResponseEntity<ChamadoStatusResponse> atualizarStatusPadronizado(
             @PathVariable Long id,
@@ -1753,6 +1760,42 @@ public class SuporteController {
         PdfPCell valueCell = new PdfPCell(new Phrase(displayValue, valueFont));
         valueCell.setPadding(5);
         table.addCell(valueCell);
+    }
+
+    // ENDPOINT PARA OBTER USUÁRIO ATUAL
+    @GetMapping("/api/usuario/atual")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> obterUsuarioAtual() {
+        try {
+            Usuario usuarioLogado = obterUsuarioLogado();
+            
+            if (usuarioLogado == null) {
+                return ResponseEntity.status(401)
+                    .body(Map.of("erro", "Usuário não autenticado"));
+            }
+
+            // Verificar se usuário pode atender chamados
+            boolean podeAtenderChamados = permissaoService.podeGerenciarChamados(usuarioLogado);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", usuarioLogado.getId());
+            response.put("nome", usuarioLogado.getNome());
+            response.put("email", usuarioLogado.getEmail());
+            response.put("podeAtenderChamados", podeAtenderChamados);
+            
+            if (usuarioLogado.getColaborador() != null) {
+                response.put("colaboradorId", usuarioLogado.getColaborador().getId());
+                response.put("cargo", usuarioLogado.getColaborador().getCargo());
+                response.put("departamento", usuarioLogado.getColaborador().getDepartamento());
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter usuário atual: {}", e.getMessage());
+            return ResponseEntity.status(500)
+                .body(Map.of("erro", "Erro interno do servidor"));
+        }
     }
 
 }

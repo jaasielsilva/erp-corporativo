@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.security;
 
+import com.jaasielsilva.portalceo.model.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -129,6 +130,24 @@ public class PermissaoBusinessService {
         return temAlgumaPermissao(perfil, 
                                  Permissao.CHAMADO_CRIAR, 
                                  Permissao.USUARIO_CRIAR_CHAMADOS);
+    }
+
+    /**
+     * Verifica se um usuário pode gerenciar chamados (atender/iniciar)
+     */
+    public boolean podeGerenciarChamados(Usuario usuario) {
+        if (usuario == null || usuario.getPerfis() == null) {
+            return false;
+        }
+        
+        // Verifica se algum dos perfis do usuário tem as permissões necessárias
+        return usuario.getPerfis().stream()
+            .flatMap(perfil -> perfil.getPermissoes().stream())
+            .anyMatch(permissao -> 
+                "TECNICO_ATENDER_CHAMADOS".equals(permissao.getNome()) ||
+                "CHAMADO_INICIAR".equals(permissao.getNome()) ||
+                "CHAMADO_ATRIBUIR".equals(permissao.getNome())
+            );
     }
 
     /**

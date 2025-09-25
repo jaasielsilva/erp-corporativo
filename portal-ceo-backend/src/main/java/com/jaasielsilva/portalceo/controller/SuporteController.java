@@ -5,7 +5,9 @@ import com.jaasielsilva.portalceo.model.Chamado.StatusChamado;
 import com.jaasielsilva.portalceo.model.Chamado.Prioridade;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.model.suporte.ChamadoAnexo;
 import com.jaasielsilva.portalceo.service.ChamadoService;
+import com.jaasielsilva.portalceo.service.ChamadoAnexoService;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import com.jaasielsilva.portalceo.service.BacklogChamadoService;
 import com.jaasielsilva.portalceo.service.SlaMonitoramentoService;
@@ -28,6 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
@@ -68,6 +71,9 @@ public class SuporteController {
 
     @Autowired
     private PermissaoBusinessService permissaoService;
+
+    @Autowired
+    private ChamadoAnexoService chamadoAnexoService;
 
     // Dashboard principal do suporte
     @GetMapping
@@ -732,10 +738,34 @@ public class SuporteController {
 
     // Criar novo chamado
     @PostMapping("/chamados/novo")
-    public String criarChamado(@ModelAttribute Chamado chamado) {
+    public String criarChamado(@ModelAttribute Chamado chamado, 
+                              @RequestParam(value = "anexos", required = false) MultipartFile[] anexos) {
         try {
+            // Definir data de início automaticamente
+            if (chamado.getDataInicio() == null) {
+                chamado.setDataInicio(java.time.LocalDateTime.now());
+            }
+            
+            // Criar o chamado
             Chamado chamadoCriado = chamadoService.criarChamado(chamado);
             logger.info("Novo chamado criado: {}", chamadoCriado.getNumero());
+            
+            // Processar anexos se existirem
+            if (anexos != null && anexos.length > 0) {
+                Usuario usuarioLogado = obterUsuarioLogado();
+                for (MultipartFile arquivo : anexos) {
+                    if (!arquivo.isEmpty()) {
+                        try {
+                            chamadoAnexoService.salvarAnexo(arquivo, chamadoCriado, usuarioLogado);
+                            logger.info("Anexo salvo para o chamado {}: {}", chamadoCriado.getNumero(), arquivo.getOriginalFilename());
+                        } catch (Exception e) {
+                            logger.error("Erro ao salvar anexo {} para o chamado {}: {}", 
+                                       arquivo.getOriginalFilename(), chamadoCriado.getNumero(), e.getMessage());
+                        }
+                    }
+                }
+            }
+            
             return "redirect:/suporte/chamados/" + chamadoCriado.getId();
         } catch (Exception e) {
             logger.error("Erro ao criar chamado: {}", e.getMessage());

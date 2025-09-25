@@ -572,16 +572,28 @@
                                         </div>
 
                                         <!-- Descrição -->
-                                        <div class="mb-3">
-                                            <label for="descricao" class="form-label required-field">
-                                                <i class="fas fa-file-alt me-1"></i>Descrição Detalhada
-                                            </label>
-                                            <textarea class="form-control" id="descricao" name="descricao" rows="8" maxlength="2000"
-                                                      placeholder="Explique detalhadamente o problema, incluindo:&#10;- O que você estava fazendo quando o problema ocorreu?&#10;- Qual erro ou comportamento inesperado você observou?&#10;- Já tentou alguma solução? Se sim, qual?&#10;- O problema afeta outros usuários ou sistemas?" required></textarea>
-                                            <div class="form-text">
-                                                <span id="contadorCaracteres">0</span>/2000 caracteres
-                                            </div>
-                                        </div>
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label required-field">
+                                <i class="fas fa-file-alt me-1"></i>Descrição Detalhada
+                            </label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="8" maxlength="2000"
+                                      placeholder="Explique detalhadamente o problema, incluindo:&#10;- O que você estava fazendo quando o problema ocorreu?&#10;- Qual erro ou comportamento inesperado você observou?&#10;- Já tentou alguma solução? Se sim, qual?&#10;- O problema afeta outros usuários ou sistemas?" required></textarea>
+                            <div class="form-text">
+                                <span id="contadorCaracteres">0</span>/2000 caracteres
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="mb-3">
+                            <label for="observacoes" class="form-label">
+                                <i class="fas fa-sticky-note me-1"></i>Observações Adicionais
+                            </label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="4" maxlength="1000"
+                                      placeholder="Informações adicionais, contexto ou observações relevantes (opcional)"></textarea>
+                            <div class="form-text">
+                                <span id="contadorObservacoes">0</span>/1000 caracteres
+                            </div>
+                        </div>
 
                                         <div class="d-flex justify-content-between">
                                             <button type="button" class="btn btn-outline-secondary" onclick="voltarSecao(1)">
@@ -891,6 +903,20 @@
                 if (this.value.length > 1800) {
                     contador.style.color = '#dc3545';
                 } else if (this.value.length > 1500) {
+                    contador.style.color = '#f57c00';
+                } else {
+                    contador.style.color = '#6c757d';
+                }
+            });
+
+            // Contador de caracteres para observações
+            document.getElementById('observacoes').addEventListener('input', function() {
+                const contador = document.getElementById('contadorObservacoes');
+                contador.textContent = this.value.length;
+                
+                if (this.value.length > 900) {
+                    contador.style.color = '#dc3545';
+                } else if (this.value.length > 750) {
                     contador.style.color = '#f57c00';
                 } else {
                     contador.style.color = '#6c757d';

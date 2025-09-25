@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.jaasielsilva.portalceo.model.suporte.ChamadoAnexo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +10,8 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -97,6 +100,9 @@ public class Chamado {
     @JoinColumn(name = "colaborador_id")
     @JsonIgnoreProperties({"supervisor", "cargo", "departamento", "usuario", "chamados"})
     private Colaborador colaboradorResponsavel;
+
+    // Relacionamento com anexos removido temporariamente para evitar conflito com MultipartFile
+    // Os anexos serão gerenciados através do ChamadoAnexoService
 
     // Campo transiente para SLA restante (calculado dinamicamente)
     @Transient

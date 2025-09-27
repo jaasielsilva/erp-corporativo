@@ -1,47 +1,327 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TI - ERP Corporativo</title>
-
-    <!-- CSS padrão -->
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/sidebar.css" rel="stylesheet">
-    <link href="/css/notifications.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">TI - Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- CSS customizado -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    
+    <style>
+        .status-online { color: #28a745; }
+        .status-offline { color: #dc3545; }
+        .status-warning { color: #ffc107; }
+        .metric-card { transition: transform 0.2s; }
+        .metric-card:hover { transform: translateY(-2px); }
+        .event-item { border-left: 4px solid #007bff; padding-left: 15px; margin-bottom: 15px; }
+        .event-info { border-left-color: #17a2b8; }
+        .event-warning { border-left-color: #ffc107; }
+        .event-error { border-left-color: #dc3545; }
+        .system-status { font-size: 0.9em; }
+    </style>
 </head>
-
 <body>
-<div class="app-container">
-
     <!-- Sidebar -->
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    
     <!-- Main Content -->
-    <main class="main-content">
-
+    <div class="main-content">
         <!-- Topbar -->
-        <header th:replace="~{components/topbar :: topbar}"></header>
-
-        <!-- Conteúdo da página TI -->
-        <section class="content-area">
-            <div class="container-fluid text-center py-5">
-                <h1 class="display-6 text-muted"><i class="fas fa-desktop"></i> TI</h1>
-                <p class="text-muted">Bem-vindo à página principal de Tecnologia da Informação.</p>
+        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        
+        <!-- Page Content -->
+        <div class="container-fluid">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0"><i class="fas fa-desktop me-2"></i>Dashboard TI</h1>
+                            <p class="text-muted mb-0">Monitoramento e gestão da infraestrutura tecnológica</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm me-2" onclick="atualizarDashboard()">
+                                <i class="fas fa-sync-alt"></i> Atualizar
+                            </button>
+                            <span class="badge bg-success">Sistemas Operacionais</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
 
-        <!-- Footer -->
-        <footer th:replace="~{components/footer :: footer}"></footer>
+            <!-- Métricas Principais -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Sistemas Ativos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${sistemasAtivos}">3</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-server fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    </main>
-</div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Chamados Abertos
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${chamadosAbertos}">8</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-<!-- Scripts -->
-<script src="/js/sidebar.js" defer></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script th:src="@{/js/notifications.js}"></script>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Backups Recentes
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${#lists.size(backupsRecentes)}">2</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-database fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-danger shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                        Alertas Segurança
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${#lists.size(alertasSeguranca)}">1</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/ti/sistemas" class="btn btn-outline-primary w-100 py-3">
+                                        <i class="fas fa-server fa-2x d-block mb-2"></i>
+                                        <strong>Monitorar Sistemas</strong>
+                                        <small class="d-block text-muted">Status e performance</small>
+                                    </a>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/ti/suporte" class="btn btn-outline-warning w-100 py-3">
+                                        <i class="fas fa-headset fa-2x d-block mb-2"></i>
+                                        <strong>Suporte Técnico</strong>
+                                        <small class="d-block text-muted">Chamados e tickets</small>
+                                    </a>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/ti/backup" class="btn btn-outline-success w-100 py-3">
+                                        <i class="fas fa-database fa-2x d-block mb-2"></i>
+                                        <strong>Gestão Backup</strong>
+                                        <small class="d-block text-muted">Backups e restauração</small>
+                                    </a>
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/ti/seguranca" class="btn btn-outline-danger w-100 py-3">
+                                        <i class="fas fa-shield-alt fa-2x d-block mb-2"></i>
+                                        <strong>Segurança</strong>
+                                        <small class="d-block text-muted">Logs e políticas</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status dos Sistemas e Últimos Eventos -->
+            <div class="row">
+                <!-- Status dos Sistemas -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-server me-2"></i>Status dos Sistemas
+                            </h6>
+                            <button class="btn btn-sm btn-outline-primary" onclick="atualizarStatusSistemas()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Sistema</th>
+                                            <th>Status</th>
+                                            <th>Uptime</th>
+                                            <th>Última Verificação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="sistema : ${statusSistemas}">
+                                            <td>
+                                                <i class="fas fa-server me-2"></i>
+                                                <span th:text="${sistema.nome}">Sistema</span>
+                                            </td>
+                                            <td>
+                                                <span th:class="${sistema.status == 'ONLINE'} ? 'badge bg-success' : 'badge bg-danger'"
+                                                      th:text="${sistema.status}">ONLINE</span>
+                                            </td>
+                                            <td>
+                                                <span class="system-status" th:text="${sistema.uptime}">99.9%</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted" th:text="${#temporals.format(sistema.ultimaVerificacao, 'HH:mm:ss')}">
+                                                    há 1 min
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Últimos Eventos -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-bell me-2"></i>Últimos Eventos
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div th:each="evento : ${ultimosEventos}" 
+                                 th:class="'event-item event-' + ${evento.severidade.toLowerCase()}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1" th:text="${evento.tipo}">Tipo</h6>
+                                        <p class="mb-1 small" th:text="${evento.descricao}">Descrição do evento</p>
+                                        <small class="text-muted" th:text="${#temporals.format(evento.data, 'dd/MM HH:mm')}">
+                                            Data
+                                        </small>
+                                    </div>
+                                    <span th:class="'badge bg-' + ${evento.severidade == 'INFO' ? 'info' : (evento.severidade == 'WARNING' ? 'warning' : 'danger')}"
+                                          th:text="${evento.severidade}">INFO</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <a href="/ti/sistemas" class="btn btn-sm btn-outline-primary">
+                                    Ver Todos os Eventos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alertas e Notificações -->
+            <div class="row" th:if="${#lists.size(alertasSeguranca) > 0}">
+                <div class="col-12">
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Alertas de Segurança
+                        </h6>
+                        <div th:each="alerta : ${alertasSeguranca}">
+                            <strong th:text="${alerta.tipo}">Tipo do Alerta</strong>: 
+                            <span th:text="${alerta.ip}">IP</span> - 
+                            <small th:text="${#temporals.format(alerta.data, 'dd/MM/yyyy HH:mm')}">Data</small>
+                        </div>
+                        <hr>
+                        <div class="mb-0">
+                            <a href="/ti/seguranca" class="btn btn-sm btn-outline-warning">
+                                Ver Detalhes de Segurança
+                            </a>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JS customizado -->
+    <script th:src="@{/js/app.js}"></script>
+    
+    <script>
+        function atualizarDashboard() {
+            // Simular atualização
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                location.reload();
+            }, 2000);
+        }
+        
+        function atualizarStatusSistemas() {
+            fetch('/ti/api/sistemas/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Status atualizado:', data);
+                    // Aqui você pode atualizar a tabela dinamicamente
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar status:', error);
+                });
+        }
+        
+        // Auto-refresh a cada 30 segundos
+        setInterval(atualizarStatusSistemas, 30000);
+    </script>
 </body>
 </html>

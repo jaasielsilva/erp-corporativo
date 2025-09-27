@@ -4,12 +4,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Jurídico - ERP Corporativo</title>
+    <title>Jurídico - Dashboard - ERP Corporativo</title>
     
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-card .metric-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        .metric-card .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        .metric-card .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .quick-action-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            height: 100%;
+        }
+        .quick-action-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+        .quick-action-card .action-icon {
+            font-size: 2rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .contract-item, .process-item, .activity-item {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0 5px 5px 0;
+        }
+        .contract-item.expiring {
+            border-left-color: #ffc107;
+        }
+        .process-item.urgent {
+            border-left-color: #dc3545;
+        }
+        .activity-item.recent {
+            border-left-color: #28a745;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -18,16 +94,232 @@
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
             <section class="content-area">
-                <div class="container-fluid text-center py-5">
-                    <h1 class="display-6 text-muted"><i class="fas fa-gavel"></i> Jurídico</h1>
-                    <p class="text-muted">Página inicial do módulo Jurídico.</p>
+                <div class="container-fluid">
+                    <!-- Header -->
+                    <div class="page-header text-center">
+                        <h1><i class="fas fa-gavel"></i> Dashboard Jurídico</h1>
+                        <p class="mb-0">Gestão completa dos aspectos jurídicos da empresa</p>
+                    </div>
+
+                    <!-- Métricas Principais -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="metric-value" th:text="${contratosAtivos}">45</div>
+                                        <div class="metric-label">Contratos Ativos</div>
+                                    </div>
+                                    <div class="metric-icon">
+                                        <i class="fas fa-file-contract"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="metric-value" th:text="${processosAndamento}">12</div>
+                                        <div class="metric-label">Processos em Andamento</div>
+                                    </div>
+                                    <div class="metric-icon">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="metric-value" th:text="${prazosVencendo}">8</div>
+                                        <div class="metric-label">Prazos Vencendo</div>
+                                    </div>
+                                    <div class="metric-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="metric-value" th:text="${alertasCompliance}">3</div>
+                                        <div class="metric-label">Alertas Compliance</div>
+                                    </div>
+                                    <div class="metric-icon">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ações Rápidas -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h3 class="mb-3"><i class="fas fa-bolt"></i> Ações Rápidas</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="quick-action-card" onclick="window.location.href='/juridico/contratos'">
+                                <div class="action-icon">
+                                    <i class="fas fa-file-contract"></i>
+                                </div>
+                                <h5>Gestão de Contratos</h5>
+                                <p class="text-muted">Visualizar e gerenciar contratos</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="quick-action-card" onclick="window.location.href='/juridico/processos'">
+                                <div class="action-icon">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                                <h5>Processos Jurídicos</h5>
+                                <p class="text-muted">Acompanhar processos e prazos</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="quick-action-card" onclick="window.location.href='/juridico/compliance'">
+                                <div class="action-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <h5>Compliance</h5>
+                                <p class="text-muted">Monitorar conformidade</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="quick-action-card" onclick="window.location.href='/juridico/documentos'">
+                                <div class="action-icon">
+                                    <i class="fas fa-folder-open"></i>
+                                </div>
+                                <h5>Biblioteca de Documentos</h5>
+                                <p class="text-muted">Gerenciar documentos jurídicos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Contratos Próximos ao Vencimento -->
+                        <div class="col-md-6">
+                            <div class="status-card">
+                                <h5><i class="fas fa-exclamation-triangle text-warning"></i> Contratos Próximos ao Vencimento</h5>
+                                <div class="mt-3" th:if="${contratosVencimento != null and !contratosVencimento.isEmpty()}">
+                                    <div th:each="contrato : ${contratosVencimento}" class="contract-item expiring">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1" th:text="${contrato.titulo}">Contrato de Prestação de Serviços</h6>
+                                                <small class="text-muted" th:text="${contrato.contraparte}">TechCorp Ltda</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-warning" th:text="${contrato.dataVencimento}">15 dias</span>
+                                                    <span class="badge bg-info" th:text="${contrato.valor}">R$ 50.000,00</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div th:if="${contratosVencimento == null or contratosVencimento.isEmpty()}" class="text-center text-muted py-3">
+                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                    <p>Nenhum contrato próximo ao vencimento</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Processos Urgentes -->
+                        <div class="col-md-6">
+                            <div class="status-card">
+                                <h5><i class="fas fa-fire text-danger"></i> Processos com Prazos Urgentes</h5>
+                                <div class="mt-3" th:if="${processosUrgentes != null and !processosUrgentes.isEmpty()}">
+                                    <div th:each="processo : ${processosUrgentes}" class="process-item urgent">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1" th:text="${processo.numero}">1234567-89.2023.8.26.0100</h6>
+                                                <small class="text-muted" th:text="${processo.parte}">João Silva vs. Empresa</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-danger" th:text="${processo.proximoPrazo}">3 dias</span>
+                                                    <span class="badge bg-secondary" th:text="${processo.acao}">Contestação</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div th:if="${processosUrgentes == null or processosUrgentes.isEmpty()}" class="text-center text-muted py-3">
+                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                    <p>Nenhum processo com prazo urgente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Últimas Atividades -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="status-card">
+                                <h5><i class="fas fa-history"></i> Últimas Atividades</h5>
+                                <div class="mt-3" th:if="${ultimasAtividades != null and !ultimasAtividades.isEmpty()}">
+                                    <div th:each="atividade : ${ultimasAtividades}" class="activity-item recent">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1" th:text="${atividade.descricao}">Contrato de prestação de serviços aprovado</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user"></i> <span th:text="${atividade.usuario}">Dr. Carlos Oliveira</span>
+                                                    <i class="fas fa-clock ms-2"></i> <span th:text="${atividade.data}">2 horas atrás</span>
+                                                </small>
+                                            </div>
+                                            <span class="badge bg-primary" th:text="${atividade.tipo}">Contrato</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div th:if="${ultimasAtividades == null or ultimasAtividades.isEmpty()}" class="text-center text-muted py-3">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p>Nenhuma atividade recente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
+
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    
+    <script>
+        // Atualização automática do dashboard
+        function atualizarDashboard() {
+            fetch('/juridico/api/dashboard/estatisticas')
+                .then(response => response.json())
+                .then(data => {
+                    // Atualizar métricas
+                    document.querySelector('.metric-card:nth-child(1) .metric-value').textContent = data.contratosAtivos;
+                    document.querySelector('.metric-card:nth-child(2) .metric-value').textContent = data.processosAndamento;
+                    document.querySelector('.metric-card:nth-child(3) .metric-value').textContent = data.prazosVencendo;
+                    document.querySelector('.metric-card:nth-child(4) .metric-value').textContent = data.alertasCompliance;
+                })
+                .catch(error => console.error('Erro ao atualizar dashboard:', error));
+        }
+
+        // Atualizar a cada 5 minutos
+        setInterval(atualizarDashboard, 300000);
+
+        // Animação de entrada dos cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.metric-card, .quick-action-card, .status-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
 </body>
 </html>

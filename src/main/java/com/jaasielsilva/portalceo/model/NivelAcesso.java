@@ -90,6 +90,13 @@ public enum NivelAcesso {
     }
 
     /**
+     * Retorna true se o nível pode gerenciar vendas
+     */
+    public boolean podeGerenciarVendas() {
+        return this == MASTER || this == ADMIN || this == GERENTE;
+    }
+
+    /**
      * Retorna true se o nível é protegido (não pode ser editado/excluído)
      */
     public boolean ehProtegido() {

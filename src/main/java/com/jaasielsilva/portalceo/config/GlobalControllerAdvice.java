@@ -86,6 +86,12 @@ public class GlobalControllerAdvice {
         return usuario != null && usuario.getNivelAcesso().podeGerenciarRH();
     }
 
+    @ModelAttribute("podeGerenciarVendas")
+    public boolean podeGerenciarVendas() {
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
+        return usuario != null && usuario.getNivelAcesso().podeGerenciarVendas();
+    }
+
     @ModelAttribute("nivelAcesso")
     public String nivelAcesso() {
         Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado

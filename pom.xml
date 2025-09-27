@@ -131,20 +131,6 @@
     </dependencies>
 
     <build>
-        <!-- Configure source and resource directories -->
-        <sourceDirectory>portal-ceo-backend/src/main/java</sourceDirectory>
-        <resources>
-            <resource>
-                <directory>portal-ceo-backend/src/main/resources</directory>
-            </resource>
-        </resources>
-        <testSourceDirectory>portal-ceo-backend/src/test/java</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>portal-ceo-backend/src/test/resources</directory>
-            </testResource>
-        </testResources>
-
         <plugins>
             <!-- Compiler Plugin -->
             <plugin>

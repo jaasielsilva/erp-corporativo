@@ -486,7 +486,7 @@
         // Carregar informações do chamado
         async function carregarChamado() {
             try {
-                const response = await fetch(`/api/chamados/${chamadoId}`);
+                const response = await fetch(`/suporte/api/chamados/${chamadoId}`);
                 
                 if (!response.ok) {
                     throw new Error(`Erro HTTP: ${response.status}`);
@@ -663,7 +663,7 @@
             mostrarLoading(true);
             
             try {
-                const response = await fetch(`/api/chamados/${chamadoId}/atribuir`, {
+                const response = await fetch(`/suporte/api/chamados/${chamadoId}/atribuir`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -766,7 +766,7 @@
                 $('p.text-muted').text('Selecione um chamado para atribuir a um técnico');
                 
                 // Modificar o conteúdo da primeira coluna para mostrar lista de chamados
-                const response = await fetch('/api/chamados/abertos');
+                const response = await fetch('/suporte/api/chamados/abertos');
                 const data = await response.json();
                 
                 if (response.ok && Array.isArray(data)) {

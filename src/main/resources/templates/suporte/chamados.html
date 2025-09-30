@@ -730,7 +730,7 @@
             mostrarLoading(true);
             
             try {
-                const response = await fetch('/api/chamados');
+                const response = await fetch('/suporte/api/chamados');
                 if (response.ok) {
                     chamadosData = await response.json();
                     renderizarDados();
@@ -750,7 +750,7 @@
         // ===== ATUALIZAÇÃO DE ESTATÍSTICAS =====
         async function atualizarEstatisticas() {
             try {
-                const response = await fetch('/api/chamados/estatisticas');
+                const response = await fetch('/suporte/api/chamados/estatisticas');
                 if (response.ok) {
                     const stats = await response.json();
                     $('#totalChamados').text(stats.total || 0);
@@ -884,7 +884,7 @@
             mostrarLoading(true);
 
             try {
-                const response = await fetch(`/api/chamados/${id}/status`, {
+                const response = await fetch(`/suporte/api/chamados/${id}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

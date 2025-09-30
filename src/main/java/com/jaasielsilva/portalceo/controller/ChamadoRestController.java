@@ -131,42 +131,7 @@ public class ChamadoRestController {
         }
     }
 
-    /**
-     * Atualizar status do chamado
-     */
-    @PutMapping("/{id}/status")
-    public ResponseEntity<Chamado> atualizarStatus(
-            @PathVariable Long id,
-            @RequestParam Chamado.StatusChamado status,
-            @RequestParam(required = false) String tecnicoResponsavel) {
-        
-        try {
-            Chamado chamado = chamadoService.buscarPorId(id)
-                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
-            
-            // Atualizar status baseado no valor recebido
-            switch (status) {
-                case EM_ANDAMENTO:
-                    if (tecnicoResponsavel != null) {
-                        chamado = chamadoService.iniciarAtendimento(id, tecnicoResponsavel);
-                    }
-                    break;
-                case RESOLVIDO:
-                    chamado = chamadoService.resolverChamado(id);
-                    break;
-                case FECHADO:
-                    chamado = chamadoService.fecharChamado(id);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Status inválido: " + status);
-            }
-            
-            return ResponseEntity.ok(chamado);
-            
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+
     
     /**
      * Avaliar chamado resolvido

@@ -267,7 +267,32 @@ public class SecurityConfig {
                                                 return permissaoRepository.save(p);
                                         });
 
-                        // Perfis
+                        // Permissões específicas para suporte/chamados
+                        Permissao tecnicoAtenderChamados = permissaoRepository.findByNome("TECNICO_ATENDER_CHAMADOS")
+                                        .orElseGet(() -> {
+                                                Permissao p = new Permissao();
+                                                p.setNome("TECNICO_ATENDER_CHAMADOS");
+                                                p.setCategoria("Suporte");
+                                                return permissaoRepository.save(p);
+                                        });
+
+                        Permissao chamadoIniciar = permissaoRepository.findByNome("CHAMADO_INICIAR")
+                                        .orElseGet(() -> {
+                                                Permissao p = new Permissao();
+                                                p.setNome("CHAMADO_INICIAR");
+                                                p.setCategoria("Suporte");
+                                                return permissaoRepository.save(p);
+                                        });
+
+                        Permissao chamadoAtribuir = permissaoRepository.findByNome("CHAMADO_ATRIBUIR")
+                                        .orElseGet(() -> {
+                                                Permissao p = new Permissao();
+                                                p.setNome("CHAMADO_ATRIBUIR");
+                                                p.setCategoria("Suporte");
+                                                return permissaoRepository.save(p);
+                                        });
+
+                        // Perfis básicos (mantidos para compatibilidade)
                         Perfil adminPerfil = perfilRepository.findByNome("ADMIN")
                                         .orElseGet(() -> {
                                                 Perfil p = new Perfil();
@@ -281,6 +306,51 @@ public class SecurityConfig {
                                         .orElseGet(() -> {
                                                 Perfil p = new Perfil();
                                                 p.setNome("USER");
+                                                p.setPermissoes(new HashSet<>());
+                                                p.getPermissoes().add(roleUser);
+                                                return perfilRepository.save(p);
+                                        });
+
+                        // Perfis específicos para o sistema
+                        Perfil administradorPerfil = perfilRepository.findByNome("ADMINISTRADOR")
+                                        .orElseGet(() -> {
+                                                Perfil p = new Perfil();
+                                                p.setNome("ADMINISTRADOR");
+                                                p.setPermissoes(new HashSet<>());
+                                                p.getPermissoes().add(roleAdmin);
+                                                p.getPermissoes().add(tecnicoAtenderChamados);
+                                                p.getPermissoes().add(chamadoIniciar);
+                                                p.getPermissoes().add(chamadoAtribuir);
+                                                return perfilRepository.save(p);
+                                        });
+
+                        Perfil tecnicoPerfil = perfilRepository.findByNome("TECNICO")
+                                        .orElseGet(() -> {
+                                                Perfil p = new Perfil();
+                                                p.setNome("TECNICO");
+                                                p.setPermissoes(new HashSet<>());
+                                                p.getPermissoes().add(roleUser);
+                                                p.getPermissoes().add(tecnicoAtenderChamados);
+                                                p.getPermissoes().add(chamadoIniciar);
+                                                return perfilRepository.save(p);
+                                        });
+
+                        Perfil supervisorPerfil = perfilRepository.findByNome("SUPERVISOR")
+                                        .orElseGet(() -> {
+                                                Perfil p = new Perfil();
+                                                p.setNome("SUPERVISOR");
+                                                p.setPermissoes(new HashSet<>());
+                                                p.getPermissoes().add(roleUser);
+                                                p.getPermissoes().add(tecnicoAtenderChamados);
+                                                p.getPermissoes().add(chamadoIniciar);
+                                                p.getPermissoes().add(chamadoAtribuir);
+                                                return perfilRepository.save(p);
+                                        });
+
+                        Perfil usuarioPerfil = perfilRepository.findByNome("USUARIO")
+                                        .orElseGet(() -> {
+                                                Perfil p = new Perfil();
+                                                p.setNome("USUARIO");
                                                 p.setPermissoes(new HashSet<>());
                                                 p.getPermissoes().add(roleUser);
                                                 return perfilRepository.save(p);

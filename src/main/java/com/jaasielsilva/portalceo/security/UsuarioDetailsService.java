@@ -19,11 +19,17 @@ public class UsuarioDetailsService implements UserDetailsService {
     private UsuarioRepository usuarioRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Tentar buscar por email primeiro
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
+        
+        // Se não encontrar por email, tentar por matrícula
+        if (usuarioOpt.isEmpty()) {
+            usuarioOpt = usuarioRepository.findByMatricula(username);
+        }
 
         if (usuarioOpt.isEmpty()) {
-            throw new UsernameNotFoundException("Usuário não encontrado com email: " + email);
+            throw new UsernameNotFoundException("Usuário não encontrado com email ou matrícula: " + username);
         }
 
         Usuario usuario = usuarioOpt.get();

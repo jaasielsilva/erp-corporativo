@@ -1366,9 +1366,17 @@ public class SuporteController {
             if (authentication != null && authentication.isAuthenticated() &&
                     !authentication.getName().equals("anonymousUser")) {
 
-                String email = authentication.getName(); // Spring Security normalmente coloca email ou login aqui
-                return usuarioRepository.findByEmail(email)
-                        .orElse(null);
+                String username = authentication.getName(); // Pode ser email ou matrícula
+                
+                // Tentar buscar por email primeiro
+                Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
+                
+                // Se não encontrar por email, tentar por matrícula
+                if (usuarioOpt.isEmpty()) {
+                    usuarioOpt = usuarioRepository.findByMatricula(username);
+                }
+                
+                return usuarioOpt.orElse(null);
             }
         } catch (Exception e) {
             logger.error("Erro ao obter usuário logado: {}", e.getMessage());

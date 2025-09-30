@@ -410,10 +410,21 @@ public class SuporteController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Map<String, Object> metricasSLA = chamadoService.calcularMetricasSLAUltimosDias(dias);
+            Map<String, Object> metricasSLA;
+            String periodo;
+            
+            if (dias == 0) {
+                // Para período "Geral", calcular métricas de todos os chamados
+                metricasSLA = chamadoService.calcularMetricasSLA();
+                periodo = "Geral";
+            } else {
+                // Para períodos específicos, calcular dos últimos N dias
+                metricasSLA = chamadoService.calcularMetricasSLAUltimosDias(dias);
+                periodo = dias + " dias";
+            }
 
             response.put("success", true);
-            response.put("periodo", dias + " dias");
+            response.put("periodo", periodo);
             response.putAll(metricasSLA);
 
             return ResponseEntity.ok(response);

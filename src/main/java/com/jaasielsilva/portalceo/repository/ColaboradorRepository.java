@@ -1,6 +1,8 @@
 package com.jaasielsilva.portalceo.repository;
 
 import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.model.Usuario;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -60,5 +62,10 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
 
     @Query("SELECT c FROM Colaborador c WHERE c.ativo = true AND c.status = :status ORDER BY c.nome")
     List<Colaborador> findByAtivoTrueAndStatusOrderByNome(@Param("status") Colaborador.StatusColaborador status);
+
+    Optional<Colaborador> findByUsuario(Usuario usuario);
+
+    @Query("SELECT c FROM Colaborador c JOIN Usuario u ON u.colaborador = c WHERE u.matricula = :matricula")
+    Optional<Colaborador> findByUsuarioMatricula(@Param("matricula") String matricula);
 
 }

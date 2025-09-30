@@ -280,6 +280,14 @@ public class ColaboradorService {
 
         historicoRepository.save(historico);
     }
+    public Optional<Colaborador> buscarPorUsuario(Usuario usuario) {
+    return colaboradorRepository.findByUsuario(usuario);
+}
+
+public Optional<Colaborador> buscarPorMatriculaUsuario(String matricula) {
+    return colaboradorRepository.findByUsuarioMatricula(matricula);
+}
+
 
 
 }

@@ -1,745 +1,333 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registros de Ponto - ERP Corporativo</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Corporativo - Registro de Ponto</title>
 
+    <!-- Seus CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* pode manter ou mover para style.css */
+        body {
+            background: #f4f6f9; /* layout fica mais neutro */
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 25px;
+            text-align: center;
+        }
+        .time-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .status-badge {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .status-in {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-out {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .history-item {
+            border-left: 3px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
 <body>
-  <div class="app-container">
+<div class="app-container">
+
+    <!-- Sidebar -->
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
+    <!-- Main Content -->
     <main class="main-content">
-      <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <section class="content-area">
-        <h1>Registros de Ponto</h1>
-        <h2>Controle de horários e frequência dos colaboradores</h2>
+        <!-- Topbar -->
+        <header th:replace="~{components/topbar :: topbar}"></header>
 
-        <div class="action-buttons">
-          <button onclick="abrirModalRegistro()" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Novo Registro
-          </button>
-          <button onclick="importarPonto()" class="btn btn-info">
-            <i class="fas fa-upload"></i> Importar REP
-          </button>
-          <button onclick="exportarRelatorio()" class="btn btn-success">
-            <i class="fas fa-download"></i> Exportar
-          </button>
-        </div>
+        <!-- Conteúdo da página Registro de Ponto -->
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="logo">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <h2 class="mb-0">ERP Corporativo</h2>
+                                <p class="mb-0">Sistema de Registro de Ponto</p>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <!-- Lado Esquerdo -->
+                                    <div class="col-md-6">
+                                        <div class="time-display" id="current-time">
+                                            00:00:00
+                                        </div>
+                                        <div class="text-center mb-4">
+                                            <span class="status-badge status-in" id="status-badge">
+                                                <i class="fas fa-door-open"></i> Pronto para registrar entrada
+                                            </span>
+                                        </div>
 
-        <!-- Resumo do Dia -->
-        <article class="card">
-          <h3><i class="fas fa-calendar-day"></i> Resumo do Dia - 29/11/2023</h3>
-          <div class="resumo-dia">
-            <div class="resumo-grid">
-              <div class="resumo-item presentes">
-                <div class="resumo-icon">
-                  <i class="fas fa-user-check"></i>
+                                        <form id="ponto-form">
+                                            <div class="mb-3">
+                                                <label for="employeeId" class="form-label">Matrícula do Funcionário</label>
+                                                <input type="text" class="form-control" id="employeeId" placeholder="Digite sua matrícula" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="password" class="form-label">Senha</label>
+                                                <input type="password" class="form-control" id="password" placeholder="Digite sua senha" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-fingerprint"></i> Registrar Ponto
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Lado Direito -->
+                                    <div class="col-md-6">
+                                        <h5 class="mb-3">
+                                            <i class="fas fa-history"></i> Últimos Registros
+                                        </h5>
+                                        <div class="history-list">
+                                            <div class="history-item">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>08:00</strong>
+                                                    <span class="text-success">Entrada</span>
+                                                </div>
+                                                <small class="text-muted">Hoje, 08:00 - Matrícula: 12345</small>
+                                            </div>
+                                            <div class="history-item">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>12:00</strong>
+                                                    <span class="text-warning">Almoço</span>
+                                                </div>
+                                                <small class="text-muted">Hoje, 12:00 - Matrícula: 12345</small>
+                                            </div>
+                                            <div class="history-item">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>13:00</strong>
+                                                    <span class="text-info">Retorno</span>
+                                                </div>
+                                                <small class="text-muted">Hoje, 13:00 - Matrícula: 12345</small>
+                                            </div>
+                                            <div class="history-item">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>18:00</strong>
+                                                    <span class="text-danger">Saída</span>
+                                                </div>
+                                                <small class="text-muted">Ontem, 18:00 - Matrícula: 12345</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Rodapé do card -->
+                            <div class="card-footer text-center text-muted small">
+                                <i class="fas fa-shield-alt"></i> Sistema seguro e auditado | ERP Corporativo v2.1
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="resumo-info">
-                  <h4>Presentes</h4>
-                  <div class="resumo-valor">12</div>
-                  <div class="resumo-detalhes">de 15 colaboradores</div>
-                </div>
-              </div>
-              
-              <div class="resumo-item ausentes">
-                <div class="resumo-icon">
-                  <i class="fas fa-user-times"></i>
-                </div>
-                <div class="resumo-info">
-                  <h4>Ausentes</h4>
-                  <div class="resumo-valor">2</div>
-                  <div class="resumo-detalhes">Justificadas</div>
-                </div>
-              </div>
-              
-              <div class="resumo-item atrasos">
-                <div class="resumo-icon">
-                  <i class="fas fa-clock"></i>
-                </div>
-                <div class="resumo-info">
-                  <h4>Atrasos</h4>
-                  <div class="resumo-valor">3</div>
-                  <div class="resumo-detalhes">Hoje</div>
-                </div>
-              </div>
-              
-              <div class="resumo-item extras">
-                <div class="resumo-icon">
-                  <i class="fas fa-plus-circle"></i>
-                </div>
-                <div class="resumo-info">
-                  <h4>Horas Extras</h4>
-                  <div class="resumo-valor">8h 30m</div>
-                  <div class="resumo-detalhes">Total do dia</div>
-                </div>
-              </div>
             </div>
-          </div>
-        </article>
+        </section>
 
-        <!-- Filtros -->
-        <article class="card">
-          <h3><i class="fas fa-filter"></i> Filtros</h3>
-          <form class="form-container">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="dataInicio">Data Início</label>
-                <input type="date" id="dataInicio" name="dataInicio" class="form-control" value="2023-11-29">
-              </div>
-              <div class="form-group">
-                <label for="dataFim">Data Fim</label>
-                <input type="date" id="dataFim" name="dataFim" class="form-control" value="2023-11-29">
-              </div>
-              <div class="form-group">
-                <label for="colaboradorFiltro">Colaborador</label>
-                <select id="colaboradorFiltro" name="colaborador" class="form-control">
-                  <option value="">Todos os colaboradores</option>
-                  <option value="1">João Silva</option>
-                  <option value="2">Maria Santos</option>
-                  <option value="3">Carlos Oliveira</option>
-                  <option value="4">Ana Costa</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="departamentoFiltro">Departamento</label>
-                <select id="departamentoFiltro" name="departamento" class="form-control">
-                  <option value="">Todos os departamentos</option>
-                  <option value="ti">TI</option>
-                  <option value="vendas">Vendas</option>
-                  <option value="financeiro">Financeiro</option>
-                  <option value="rh">RH</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <button type="button" onclick="filtrarRegistros()" class="btn btn-primary">
-                  <i class="fas fa-search"></i> Filtrar
-                </button>
-              </div>
-            </div>
-          </form>
-        </article>
+        <!-- Footer -->
+        <footer th:replace="~{components/footer :: footer}"></footer>
 
-        <!-- Registros de Ponto -->
-        <article class="card">
-          <h3><i class="fas fa-list"></i> Registros de Ponto - 29/11/2023</h3>
-          <table class="table-list">
-            <thead>
-              <tr>
-                <th>Colaborador</th>
-                <th>Entrada</th>
-                <th>Saída Almoço</th>
-                <th>Volta Almoço</th>
-                <th>Saída</th>
-                <th>Horas Trabalhadas</th>
-                <th>Horas Extras</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>João Silva</strong><br>
-                    <small>TI - Mat: 001</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>08:00</strong><br>
-                    <small class="status-ok">No horário</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>12:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>13:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>18:30</strong><br>
-                    <small class="status-extra">+30min</small>
-                  </div>
-                </td>
-                <td class="text-center"><strong>8h 30m</strong></td>
-                <td class="text-center"><span class="extra-badge">30min</span></td>
-                <td><span class="status-badge status-presente">Presente</span></td>
-                <td>
-                  <button onclick="editarRegistro(1)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(1)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Maria Santos</strong><br>
-                    <small>Vendas - Mat: 002</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>08:15</strong><br>
-                    <small class="status-atraso">+15min atraso</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>12:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>13:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>18:00</strong><br>
-                    <small class="status-ok">No horário</small>
-                  </div>
-                </td>
-                <td class="text-center"><strong>7h 45m</strong></td>
-                <td class="text-center">-</td>
-                <td><span class="status-badge status-atraso">Atraso</span></td>
-                <td>
-                  <button onclick="editarRegistro(2)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(2)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Carlos Oliveira</strong><br>
-                    <small>Financeiro - Mat: 003</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>07:45</strong><br>
-                    <small class="status-ok">Antecipado</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>12:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>13:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>19:00</strong><br>
-                    <small class="status-extra">+1h</small>
-                  </div>
-                </td>
-                <td class="text-center"><strong>9h 15m</strong></td>
-                <td class="text-center"><span class="extra-badge">1h 15m</span></td>
-                <td><span class="status-badge status-presente">Presente</span></td>
-                <td>
-                  <button onclick="editarRegistro(3)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(3)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Ana Costa</strong><br>
-                    <small>Design - Mat: 004</small>
-                  </div>
-                </td>
-                <td colspan="4" class="text-center">
-                  <div class="ausencia-info">
-                    <i class="fas fa-calendar-times"></i>
-                    <strong>Férias</strong><br>
-                    <small>15/11 a 30/11/2023</small>
-                  </div>
-                </td>
-                <td class="text-center">-</td>
-                <td class="text-center">-</td>
-                <td><span class="status-badge status-ferias">Férias</span></td>
-                <td>
-                  <button onclick="verDetalhes(4)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Pedro Lima</strong><br>
-                    <small>Marketing - Mat: 005</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>08:30</strong><br>
-                    <small class="status-atraso">+30min atraso</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>12:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>13:00</strong><br>
-                    <small class="status-ok">Normal</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-info">
-                    <strong>18:30</strong><br>
-                    <small class="status-ok">Compensação</small>
-                  </div>
-                </td>
-                <td class="text-center"><strong>8h 00m</strong></td>
-                <td class="text-center">-</td>
-                <td><span class="status-badge status-presente">Presente</span></td>
-                <td>
-                  <button onclick="editarRegistro(5)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(5)" class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="total-row">
-                <td><strong>TOTAIS</strong></td>
-                <td colspan="4"><strong>Colaboradores Presentes: 4</strong></td>
-                <td><strong>41h 30m</strong></td>
-                <td><strong>2h 15m</strong></td>
-                <td colspan="2"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </article>
-
-        <!-- Relatório de Inconsistências -->
-        <article class="card">
-          <h3><i class="fas fa-exclamation-triangle"></i> Inconsistências Detectadas</h3>
-          <table class="table-list">
-            <thead>
-              <tr>
-                <th>Colaborador</th>
-                <th>Data</th>
-                <th>Tipo</th>
-                <th>Descrição</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Maria Santos</td>
-                <td>29/11/2023</td>
-                <td><span class="inconsistencia-badge atraso">Atraso</span></td>
-                <td>Entrada 15 minutos após o horário</td>
-                <td><span class="status-badge status-pendente">Pendente</span></td>
-                <td>
-                  <button onclick="justificarInconsistencia(1)" class="btn-icon btn-warning" title="Justificar">
-                    <i class="fas fa-comment"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Pedro Lima</td>
-                <td>29/11/2023</td>
-                <td><span class="inconsistencia-badge atraso">Atraso</span></td>
-                <td>Entrada 30 minutos após o horário</td>
-                <td><span class="status-badge status-justificada">Justificada</span></td>
-                <td>
-                  <button onclick="verJustificativa(2)" class="btn-icon" title="Ver Justificativa">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>João Silva</td>
-                <td>28/11/2023</td>
-                <td><span class="inconsistencia-badge falta-registro">Falta Registro</span></td>
-                <td>Não registrou saída para almoço</td>
-                <td><span class="status-badge status-corrigida">Corrigida</span></td>
-                <td>
-                  <button onclick="verCorrecao(3)" class="btn-icon" title="Ver Correção">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-      </section>
-
-      <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
-  </div>
+</div>
 
-  <!-- Modal Novo Registro -->
-  <div id="modalRegistro" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-plus"></i> Novo Registro de Ponto</h3>
-        <button onclick="fecharModalRegistro()" class="btn-close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      
-      <form class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="colaboradorRegistro">Colaborador *</label>
-            <select id="colaboradorRegistro" name="colaborador" required class="form-control">
-              <option value="">Selecione um colaborador...</option>
-              <option value="1">João Silva - TI</option>
-              <option value="2">Maria Santos - Vendas</option>
-              <option value="3">Carlos Oliveira - Financeiro</option>
-              <option value="4">Ana Costa - Design</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="dataRegistro">Data *</label>
-            <input type="date" id="dataRegistro" name="dataRegistro" required class="form-control">
-          </div>
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label for="tipoRegistro">Tipo de Registro *</label>
-            <select id="tipoRegistro" name="tipoRegistro" required class="form-control">
-              <option value="">Selecione...</option>
-              <option value="entrada">Entrada</option>
-              <option value="saida-almoco">Saída para Almoço</option>
-              <option value="volta-almoco">Volta do Almoço</option>
-              <option value="saida">Saída</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="horarioRegistro">Horário *</label>
-            <input type="time" id="horarioRegistro" name="horarioRegistro" required class="form-control">
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="observacoesRegistro">Observações</label>
-          <textarea id="observacoesRegistro" name="observacoesRegistro" class="form-control" rows="3" placeholder="Justificativa ou observações sobre o registro..."></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="registroManual" name="registroManual" checked>
-            Registro manual (não automático)
-          </label>
-        </div>
-      </form>
-      
-      <div class="modal-footer">
-        <button type="button" onclick="fecharModalRegistro()" class="btn btn-secondary">
-          <i class="fas fa-times"></i> Cancelar
-        </button>
-        <button type="button" onclick="salvarRegistro()" class="btn btn-primary">
-          <i class="fas fa-save"></i> Salvar Registro
-        </button>
-      </div>
-    </div>
-  </div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script>
+    // Atualiza o relógio em tempo real
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('pt-BR');
+        document.getElementById('current-time').textContent = timeString;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-  <script th:src="@{/js/script.js}"></script>
-  <script>
-    function abrirModalRegistro() {
-      document.getElementById('modalRegistro').style.display = 'flex';
-      // Definir data atual
-      document.getElementById('dataRegistro').value = new Date().toISOString().split('T')[0];
-    }
-    
-    function fecharModalRegistro() {
-      document.getElementById('modalRegistro').style.display = 'none';
-      document.querySelector('#modalRegistro form').reset();
-    }
-    
-    function salvarRegistro() {
-      const form = document.querySelector('#modalRegistro form');
-      if (form.checkValidity()) {
-        alert('Registro salvo com sucesso!');
-        fecharModalRegistro();
-        location.reload();
-      } else {
-        alert('Por favor, preencha todos os campos obrigatórios.');
-      }
-    }
-    
-    function importarPonto() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.rep,.txt,.csv';
-      input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          alert(`Importando arquivo: ${file.name}`);
-          // Simular importação
-          setTimeout(() => {
-            alert('Arquivo importado com sucesso!');
-            location.reload();
-          }, 2000);
+    // Variáveis globais
+    let colaboradorValidado = null;
+    let proximoTipo = null;
+
+    // Validação de matrícula em tempo real
+    document.getElementById('employeeId').addEventListener('blur', function() {
+        const matricula = this.value.trim();
+        if (matricula) {
+            validarMatricula(matricula);
+        } else {
+            limparValidacao();
         }
-      };
-      input.click();
-    }
-    
-    function editarRegistro(id) {
-      alert(`Editando registro ${id}`);
-    }
-    
-    function verDetalhes(id) {
-      alert(`Visualizando detalhes do registro ${id}`);
-    }
-    
-    function justificarInconsistencia(id) {
-      const justificativa = prompt('Digite a justificativa para a inconsistência:');
-      if (justificativa) {
-        alert(`Inconsistência ${id} justificada: ${justificativa}`);
-        location.reload();
-      }
-    }
-    
-    function verJustificativa(id) {
-      alert(`Visualizando justificativa da inconsistência ${id}`);
-    }
-    
-    function verCorrecao(id) {
-      alert(`Visualizando correção da inconsistência ${id}`);
-    }
-    
-    function filtrarRegistros() {
-      alert('Aplicando filtros...');
-    }
-    
-    function exportarRelatorio() {
-      alert('Exportando relatório de registros de ponto...');
-    }
-  </script>
-  
-  <style>
-    .resumo-dia {
-      margin: 20px 0;
-    }
-    
-    .resumo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-    }
-    
-    .resumo-item {
-      display: flex;
-      align-items: center;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .resumo-item.presentes {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    
-    .resumo-item.ausentes {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-    }
-    
-    .resumo-item.atrasos {
-      background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
-      color: white;
-    }
-    
-    .resumo-item.extras {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      color: white;
-    }
-    
-    .resumo-icon {
-      font-size: 32px;
-      margin-right: 20px;
-      opacity: 0.9;
-    }
-    
-    .resumo-valor {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-    
-    .resumo-detalhes {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-    
-    .colaborador-info strong {
-      display: block;
-      margin-bottom: 2px;
-    }
-    
-    .horario-info strong {
-      display: block;
-      margin-bottom: 2px;
-    }
-    
-    .horario-info small {
-      font-size: 11px;
-    }
-    
-    .status-ok {
-      color: #28a745;
-    }
-    
-    .status-atraso {
-      color: #dc3545;
-    }
-    
-    .status-extra {
-      color: #007bff;
-    }
-    
-    .text-center {
-      text-align: center;
-    }
-    
-    .total-row {
-      background: #f8f9fa;
-      font-weight: bold;
-    }
-    
-    .extra-badge {
-      background: #007bff;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-    
-    .status-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    
-    .status-badge.status-presente {
-      background: #28a745;
-      color: white;
-    }
-    
-    .status-badge.status-atraso {
-      background: #ffc107;
-      color: #333;
-    }
-    
-    .status-badge.status-ferias {
-      background: #17a2b8;
-      color: white;
-    }
-    
-    .status-badge.status-pendente {
-      background: #ffc107;
-      color: #333;
-    }
-    
-    .status-badge.status-justificada {
-      background: #28a745;
-      color: white;
-    }
-    
-    .status-badge.status-corrigida {
-      background: #6c757d;
-      color: white;
-    }
-    
-    .inconsistencia-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    
-    .inconsistencia-badge.atraso {
-      background: #ffc107;
-      color: #333;
-    }
-    
-    .inconsistencia-badge.falta-registro {
-      background: #dc3545;
-      color: white;
-    }
-    
-    .ausencia-info {
-      color: #6c757d;
-      font-style: italic;
-    }
-    
-    .ausencia-info i {
-      margin-right: 8px;
-      font-size: 18px;
-    }
-  </style>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    });
 
+    // Função para validar matrícula
+    function validarMatricula(matricula) {
+        const statusBadge = document.getElementById('status-badge');
+        statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando matrícula...';
+        statusBadge.className = 'status-badge status-in';
 
+        $.ajax({
+            url: '/rh/ponto-escalas/registros/validar-matricula',
+            type: 'POST',
+            data: { matricula: matricula },
+            success: function(response) {
+                if (response.success && response.valida) {
+                    colaboradorValidado = response.colaborador;
+                    proximoTipo = response.proximoTipo;
+                    
+                    statusBadge.innerHTML = `<i class="fas fa-check-circle"></i> Colaborador: ${response.colaborador} - Próximo: ${proximoTipo}`;
+                    statusBadge.className = 'status-badge status-out';
+                    
+                    // Habilitar o botão de registrar
+                    document.querySelector('button[type="submit"]').disabled = false;
+                } else {
+                    colaboradorValidado = null;
+                    proximoTipo = null;
+                    
+                    statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Matrícula não encontrada ou colaborador inativo';
+                    statusBadge.className = 'status-badge status-in';
+                    
+                    // Desabilitar o botão de registrar
+                    document.querySelector('button[type="submit"]').disabled = true;
+                }
+            },
+            error: function() {
+                statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro ao validar matrícula';
+                statusBadge.className = 'status-badge status-in';
+                document.querySelector('button[type="submit"]').disabled = true;
+            }
+        });
+    }
 
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    // Função para limpar validação
+    function limparValidacao() {
+        colaboradorValidado = null;
+        proximoTipo = null;
+        document.getElementById('status-badge').innerHTML = '<i class="fas fa-clock"></i> Digite sua matrícula para registrar o ponto';
+        document.getElementById('status-badge').className = 'status-badge status-in';
+        document.querySelector('button[type="submit"]').disabled = true;
+    }
 
+    // Manipulador do formulário
+    document.getElementById('ponto-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const matricula = document.getElementById('employeeId').value.trim();
+        const senha = document.getElementById('password').value;
 
+        if (!colaboradorValidado) {
+            showNotification('Por favor, digite uma matrícula válida!', 'warning');
+            return;
+        }
 
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
+        // Desabilitar o botão durante o processamento
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+        $.ajax({
+            url: '/rh/ponto-escalas/registros/registrar-por-matricula',
+            type: 'POST',
+            data: { 
+                matricula: matricula,
+                senha: senha 
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Atualizar status
+                    const statusBadge = document.getElementById('status-badge');
+                    statusBadge.innerHTML = `<i class="fas fa-check-circle"></i> Ponto registrado às ${response.horario}`;
+                    statusBadge.className = 'status-badge status-out';
+
+                    // Adicionar ao histórico
+                    const historyList = document.querySelector('.history-list');
+                    const newRecord = document.createElement('div');
+                    newRecord.className = 'history-item';
+                    newRecord.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <strong>${response.horario}</strong>
+                            <span class="text-success">${response.proximoTipo}</span>
+                        </div>
+                        <small class="text-muted">Hoje, ${response.horario} - ${response.colaborador}</small>
+                    `;
+                    historyList.insertBefore(newRecord, historyList.firstChild);
+
+                    // Limpar formulário
+                    document.getElementById('ponto-form').reset();
+                    limparValidacao();
+
+                    showNotification(response.message, 'success');
+                } else {
+                    showNotification(response.message, 'error');
+                }
+            },
+            error: function() {
+                showNotification('Erro ao registrar ponto. Tente novamente.', 'error');
+            },
+            complete: function() {
+                // Reabilitar o botão
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+    });
+
+    // Inicializar estado
+    document.addEventListener('DOMContentLoaded', function() {
+        limparValidacao();
+    });
+</script>
+
+<script>
+function showNotification(message, type) {
+    let color = type === "success" ? "green" : type === "error" ? "red" : "orange";
+    let notification = document.createElement("div");
+    notification.style.position = "fixed";
+    notification.style.bottom = "20px";
+    notification.style.right = "20px";
+    notification.style.background = color;
+    notification.style.color = "white";
+    notification.style.padding = "15px";
+    notification.style.borderRadius = "5px";
+    notification.style.boxShadow = "0 2px 10px rgba(0,0,0,0.3)";
+    notification.innerText = message;
+    document.body.appendChild(notification);
+    setTimeout(() => document.body.removeChild(notification), 3000);
+}
+</script>
 
 </body>
-
 </html>

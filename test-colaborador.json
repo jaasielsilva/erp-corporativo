@@ -1,0 +1,26 @@
+{
+  "nome": "João Silva Santos",
+  "cpf": "12345678901",
+  "email": "joao.silva@empresa.com",
+  "telefone": "(11) 99999-9999",
+  "dataNascimento": "1990-05-15",
+  "dataAdmissao": "2024-01-15",
+  "sexo": "MASCULINO",
+  "estadoCivil": "SOLTEIRO",
+  "status": "ATIVO",
+  "ativo": true,
+  "cargo": {
+    "id": 1
+  },
+  "departamento": {
+    "id": 1
+  },
+  "endereco": {
+    "cep": "01234567",
+    "logradouro": "Rua das Flores",
+    "numero": "123",
+    "bairro": "Centro",
+    "cidade": "São Paulo",
+    "estado": "SP"
+  }
+}

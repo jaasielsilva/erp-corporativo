@@ -90,4 +90,10 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
             @Param("dataFim") LocalDate dataFim,
             @Param("statuses") List<RegistroPonto.StatusPonto> statuses
     );
+
+    List<RegistroPonto> findByColaboradorAndDataOrderByEntrada1Desc(
+        Colaborador colaborador, LocalDate data
+);
+
+    
 }

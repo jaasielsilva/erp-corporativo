@@ -13,6 +13,7 @@ import com.jaasielsilva.portalceo.service.HistoricoColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -96,8 +99,70 @@ public class ColaboradorController {
         // Salva os benefícios do colaborador
         beneficioService.salvarBeneficiosDoColaborador(colaborador);
 
+        // 🔹 Criar e vincular automaticamente o usuário
+        usuarioService.criarUsuarioParaColaborador(colaborador);
+
         redirectAttributes.addFlashAttribute("mensagem", "Colaborador e benefícios salvos com sucesso!");
         return "redirect:/rh/colaboradores/listar";
+    }
+
+    /**
+     * Endpoint REST para criação de novo colaborador com usuário automático
+     * POST /rh/colaboradores/novo
+     */
+    @PostMapping(value = "/novo", produces = "application/json")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> criarNovoColaborador(@Valid @RequestBody Colaborador colaborador) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Validar se CPF já existe
+            if (colaboradorService.existeByCpf(colaborador.getCpf())) {
+                response.put("success", false);
+                response.put("message", "CPF já cadastrado no sistema");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Validar se email já existe
+            if (colaboradorService.existeByEmail(colaborador.getEmail())) {
+                response.put("success", false);
+                response.put("message", "Email já cadastrado no sistema");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Salvar o colaborador
+            Colaborador colaboradorSalvo = colaboradorService.salvar(colaborador);
+            
+            // Salvar os benefícios do colaborador se existirem
+            if (colaborador.getBeneficios() != null && !colaborador.getBeneficios().isEmpty()) {
+                beneficioService.salvarBeneficiosDoColaborador(colaboradorSalvo);
+            }
+            
+            // Criar e vincular automaticamente o usuário
+            usuarioService.criarUsuarioParaColaborador(colaboradorSalvo);
+            
+            // Recarregar o colaborador com o usuário vinculado
+            colaboradorSalvo = colaboradorService.findById(colaboradorSalvo.getId());
+            
+            response.put("success", true);
+            response.put("message", "Colaborador criado com sucesso!");
+            response.put("colaborador", Map.of(
+                "id", colaboradorSalvo.getId(),
+                "nome", colaboradorSalvo.getNome(),
+                "email", colaboradorSalvo.getEmail(),
+                "cpf", colaboradorSalvo.getCpf(),
+                "matricula", colaboradorSalvo.getUsuario() != null ? colaboradorSalvo.getUsuario().getMatricula() : null,
+                "cargo", colaboradorSalvo.getCargo() != null ? colaboradorSalvo.getCargo().getNome() : null,
+                "departamento", colaboradorSalvo.getDepartamento() != null ? colaboradorSalvo.getDepartamento().getNome() : null
+            ));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Erro ao criar colaborador: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     @GetMapping("/editar/{id}")
@@ -138,16 +203,16 @@ public class ColaboradorController {
     }
 
     public String formatarUltimoAcesso(LocalDateTime dataHora) {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
-    LocalDateTime agora = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+        LocalDateTime agora = LocalDateTime.now();
 
-    if (dataHora.toLocalDate().equals(agora.toLocalDate())) {
-        // Se foi hoje, exibe só hora
-        return "Hoje, " + dataHora.format(DateTimeFormatter.ofPattern("HH:mm"));
-    } else {
-        return dataHora.format(formatter);
+        if (dataHora.toLocalDate().equals(agora.toLocalDate())) {
+            // Se foi hoje, exibe só hora
+            return "Hoje, " + dataHora.format(DateTimeFormatter.ofPattern("HH:mm"));
+        } else {
+            return dataHora.format(formatter);
+        }
     }
-}
 
     // metodo para exibir a ficha do colaborador
     @GetMapping("/ficha/{id}")
@@ -185,20 +250,20 @@ public class ColaboradorController {
             return "rh/colaboradores/listar";
         }
         List<HistoricoColaborador> historico = historicoColaboradorService.listarPorColaborador(id);
-        
+
         model.addAttribute("colaborador", colaborador);
         model.addAttribute("historico", historico);
-        
+
         return "rh/colaboradores/historico";
     }
 
     // método para processar a promoção do colaborador
     @PostMapping("/promover/{id}")
-    public String promover(@PathVariable Long id, 
-                          @RequestParam Long novoCargoId,
-                          @RequestParam java.math.BigDecimal novoSalario,
-                          @RequestParam(required = false) String descricao,
-                          RedirectAttributes redirectAttributes) {
+    public String promover(@PathVariable Long id,
+            @RequestParam Long novoCargoId,
+            @RequestParam java.math.BigDecimal novoSalario,
+            @RequestParam(required = false) String descricao,
+            RedirectAttributes redirectAttributes) {
         try {
             Colaborador colaborador = colaboradorService.findById(id);
             if (colaborador == null) {
@@ -232,8 +297,8 @@ public class ColaboradorController {
             colaborador.setSalario(novoSalario);
             colaboradorService.salvar(colaborador);
 
-            redirectAttributes.addFlashAttribute("mensagem", 
-                "Colaborador promovido com sucesso para " + novoCargo.getNome() + "!");
+            redirectAttributes.addFlashAttribute("mensagem",
+                    "Colaborador promovido com sucesso para " + novoCargo.getNome() + "!");
             return "redirect:/rh/colaboradores/ficha/" + id;
 
         } catch (Exception e) {
@@ -245,7 +310,7 @@ public class ColaboradorController {
     @GetMapping("/relatorio")
     public String relatorioColaboradores(Model model) {
         // Adicione dados ao model se precisar
-        return "rh/colaboradores/relatorios"; 
+        return "rh/colaboradores/relatorios";
     }
 
 }

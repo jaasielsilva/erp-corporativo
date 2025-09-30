@@ -1,10 +1,12 @@
 package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
+import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.NivelAcesso;
 import com.jaasielsilva.portalceo.model.PasswordResetToken;
 import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.PasswordResetTokenRepository;
 import com.jaasielsilva.portalceo.repository.PerfilRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
@@ -41,6 +43,9 @@ public class UsuarioService {
     private JavaMailSender mailSender;
     @Autowired
     private PasswordResetTokenRepository tokenRepository;
+
+    @Autowired
+    private ColaboradorRepository colaboradorRepository;
 
     // ===============================
     // MÉTODOS DE CADASTRO E ATUALIZAÇÃO
@@ -556,4 +561,55 @@ public class UsuarioService {
             usuarioRepository.save(usuario);
         });
     }
+
+
+    @Transactional
+    public void criarUsuarioParaColaborador(Colaborador colaborador) {
+        // Verificar se o colaborador já possui um usuário
+        if (colaborador.getUsuario() != null) {
+            System.out.println("Colaborador já possui usuário vinculado: " + colaborador.getUsuario().getMatricula());
+            return;
+        }
+
+        Usuario usuario = new Usuario();
+        
+        // Copiar campos necessários do colaborador para o usuário
+        usuario.setNome(colaborador.getNome());
+        usuario.setEmail(colaborador.getEmail());
+        usuario.setCpf(colaborador.getCpf());
+        usuario.setTelefone(colaborador.getTelefone());
+        
+        // Copiar cargo e departamento se existirem
+        if (colaborador.getCargo() != null) {
+            usuario.setCargo(colaborador.getCargo());
+        }
+        if (colaborador.getDepartamento() != null) {
+            usuario.setDepartamento(colaborador.getDepartamento());
+        }
+        
+        // Copiar dados pessoais
+        usuario.setDataNascimento(colaborador.getDataNascimento());
+        usuario.setDataAdmissao(colaborador.getDataAdmissao());
+        
+        // Gerar matrícula única
+        usuario.setMatricula(gerarMatriculaUnica());
+        
+        // Configurações padrão do usuário
+        usuario.setSenha(passwordEncoder.encode("senha123")); // senha inicial padrão
+        usuario.setStatus(Usuario.Status.ATIVO);
+        usuario.setNivelAcesso(NivelAcesso.USER); // nível de acesso padrão
+        usuario.setColaborador(colaborador);
+        usuario.setOnline(false);
+        
+        // Salvar o usuário
+        usuarioRepository.save(usuario);
+
+        // Vincular usuário ao colaborador
+        colaborador.setUsuario(usuario);
+        colaboradorRepository.save(colaborador);
+        
+        System.out.println("Usuário criado automaticamente para colaborador: " + colaborador.getNome() + 
+                          " - Matrícula: " + usuario.getMatricula());
+    }
+
 }

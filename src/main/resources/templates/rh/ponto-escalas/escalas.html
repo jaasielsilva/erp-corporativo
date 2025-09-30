@@ -131,12 +131,14 @@
           <h3><i class="fas fa-calendar-alt"></i> Calendário de Escalas - Novembro 2023</h3>
           <div class="calendario-escala">
             <div class="calendario-header">
-              <button onclick="mesAnterior()" class="btn-nav">
+              <button onclick="mesAnterior()" class="btn-nav" title="Mês anterior" aria-label="Mês anterior">
                 <i class="fas fa-chevron-left"></i>
+                <span class="sr-only" style="position:absolute;left:-9999px;">Mês anterior</span>
               </button>
               <h4>Novembro 2023</h4>
-              <button onclick="proximoMes()" class="btn-nav">
+              <button onclick="proximoMes()" class="btn-nav" title="Próximo mês" aria-label="Próximo mês">
                 <i class="fas fa-chevron-right"></i>
+                <span class="sr-only" style="position:absolute;left:-9999px;">Próximo mês</span>
               </button>
             </div>
             

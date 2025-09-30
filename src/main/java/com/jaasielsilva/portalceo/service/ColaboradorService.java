@@ -281,13 +281,25 @@ public class ColaboradorService {
         historicoRepository.save(historico);
     }
     public Optional<Colaborador> buscarPorUsuario(Usuario usuario) {
-    return colaboradorRepository.findByUsuario(usuario);
-}
+        return colaboradorRepository.findByUsuario(usuario);
+    }
 
-public Optional<Colaborador> buscarPorMatriculaUsuario(String matricula) {
-    return colaboradorRepository.findByUsuarioMatricula(matricula);
-}
+    public Optional<Colaborador> buscarPorMatriculaUsuario(String matricula) {
+        return colaboradorRepository.findByUsuarioMatricula(matricula);
+    }
 
+    /**
+     * Verifica se já existe um colaborador com o CPF informado
+     */
+    public boolean existeByCpf(String cpf) {
+        return colaboradorRepository.existsByCpf(cpf);
+    }
 
+    /**
+     * Verifica se já existe um colaborador com o email informado
+     */
+    public boolean existeByEmail(String email) {
+        return colaboradorRepository.existsByEmail(email);
+    }
 
 }

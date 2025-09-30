@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Endpoint SLA</title>
+</head>
+<body>
+    <h1>Teste do Endpoint de Métricas SLA</h1>
+    <div id="resultado"></div>
+    
+    <script>
+        // Testar endpoint para 7 dias
+        fetch('/suporte/api/metricas-sla-periodo?dias=7')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Dados recebidos:', data);
+                document.getElementById('resultado').innerHTML = `
+                    <h2>Resultados para 7 dias:</h2>
+                    <p><strong>Success:</strong> ${data.success}</p>
+                    <p><strong>Total Chamados:</strong> ${data.totalChamados}</p>
+                    <p><strong>Chamados no Prazo:</strong> ${data.chamadosNoPrazo}</p>
+                    <p><strong>Chamados Fora do Prazo:</strong> ${data.chamadosForaPrazo}</p>
+                    <p><strong>Percentual SLA:</strong> ${data.percentualSLACumprido}%</p>
+                    <p><strong>SLA Médio (horas):</strong> ${data.slaMedioHoras}h</p>
+                `;
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                document.getElementById('resultado').innerHTML = `<p style="color: red;">Erro: ${error}</p>`;
+            });
+            
+        // Testar endpoint para período geral (0 dias)
+        fetch('/suporte/api/metricas-sla-periodo?dias=0')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Dados recebidos (Geral):', data);
+                document.getElementById('resultado').innerHTML += `
+                    <h2>Resultados para período Geral:</h2>
+                    <p><strong>Success:</strong> ${data.success}</p>
+                    <p><strong>Total Chamados:</strong> ${data.totalChamados}</p>
+                    <p><strong>Chamados no Prazo:</strong> ${data.chamadosNoPrazo}</p>
+                    <p><strong>Chamados Fora do Prazo:</strong> ${data.chamadosForaPrazo}</p>
+                    <p><strong>Percentual SLA:</strong> ${data.percentualSLACumprido}%</p>
+                    <p><strong>SLA Médio (horas):</strong> ${data.slaMedioHoras}h</p>
+                `;
+            })
+            .catch(error => {
+                console.error('Erro (Geral):', error);
+                document.getElementById('resultado').innerHTML += `<p style="color: red;">Erro (Geral): ${error}</p>`;
+            });
+    </script>
+</body>
+</html>

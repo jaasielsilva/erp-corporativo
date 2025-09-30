@@ -793,8 +793,8 @@ public class ChamadoService {
                 if (chamado.getDataFechamento() != null && chamado.getDataAbertura() != null) {
                     LocalDateTime slaVencimento = calcularSlaVencimento(chamado);
                     
-                    // Verificar se foi resolvido dentro do SLA
-                    if (slaVencimento != null && chamado.getDataFechamento().isBefore(slaVencimento)) {
+                    // Verificar se foi resolvido dentro do SLA (incluindo exatamente no prazo)
+                    if (slaVencimento != null && (chamado.getDataFechamento().isBefore(slaVencimento) || chamado.getDataFechamento().isEqual(slaVencimento))) {
                         chamadosNoPrazo++;
                     }
                     

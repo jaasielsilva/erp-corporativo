@@ -1878,33 +1878,33 @@
                         const row7 = tbody.insertRow();
                         row7.innerHTML = `
                             <td><strong>Últimos 7 dias</strong></td>
+                            <td>${data.ultimos7Dias.totalChamados}</td>
                             <td><span class="badge bg-${data.ultimos7Dias.percentualSLACumprido >= 90 ? 'success' : data.ultimos7Dias.percentualSLACumprido >= 70 ? 'warning' : 'danger'}">${data.ultimos7Dias.percentualSLACumprido.toFixed(1)}%</span></td>
                             <td>${data.ultimos7Dias.slaMedioHoras.toFixed(1)}h</td>
                             <td>${data.ultimos7Dias.chamadosNoPrazo}</td>
                             <td>${data.ultimos7Dias.chamadosForaPrazo}</td>
-                            <td>${data.ultimos7Dias.totalChamados}</td>
                         `;
 
                         // Adicionar linha para últimos 30 dias
                         const row30 = tbody.insertRow();
                         row30.innerHTML = `
                             <td><strong>Últimos 30 dias</strong></td>
+                            <td>${data.ultimos30Dias.totalChamados}</td>
                             <td><span class="badge bg-${data.ultimos30Dias.percentualSLACumprido >= 90 ? 'success' : data.ultimos30Dias.percentualSLACumprido >= 70 ? 'warning' : 'danger'}">${data.ultimos30Dias.percentualSLACumprido.toFixed(1)}%</span></td>
                             <td>${data.ultimos30Dias.slaMedioHoras.toFixed(1)}h</td>
                             <td>${data.ultimos30Dias.chamadosNoPrazo}</td>
                             <td>${data.ultimos30Dias.chamadosForaPrazo}</td>
-                            <td>${data.ultimos30Dias.totalChamados}</td>
                         `;
 
                         // Adicionar linha para geral
                         const rowGeral = tbody.insertRow();
                         rowGeral.innerHTML = `
                             <td><strong>Geral</strong></td>
+                            <td>${data.geral.totalChamados}</td>
                             <td><span class="badge bg-${data.geral.percentualSLACumprido >= 90 ? 'success' : data.geral.percentualSLACumprido >= 70 ? 'warning' : 'danger'}">${data.geral.percentualSLACumprido.toFixed(1)}%</span></td>
                             <td>${data.geral.slaMedioHoras.toFixed(1)}h</td>
                             <td>${data.geral.chamadosNoPrazo}</td>
                             <td>${data.geral.chamadosForaPrazo}</td>
-                            <td>${data.geral.totalChamados}</td>
                         `;
                     }
                 })

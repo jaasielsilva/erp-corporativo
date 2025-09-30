@@ -153,6 +153,7 @@ public class UsuarioController {
     /**
      * Salva as alterações feitas no usuário após edição.
      * Se for data de desligamento, exclui o usuário.
+     * Preserva campos não editados como colaborador_id.
      */
     @PostMapping("/{id}/editar")
 public String salvarEdicaoUsuario(@PathVariable Long id,
@@ -163,10 +164,9 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
                                   Model model,
                                   Principal principal) {
 
-    // Busca o usuário original no banco para garantir que dataAdmissao não seja alterada
+    // Busca o usuário original no banco para preservar campos não editados
     Usuario usuarioBanco = usuarioService.buscarPorId(id)
         .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-    usuario.setDataAdmissao(usuarioBanco.getDataAdmissao());
 
     if (!usuario.getSenha().equals(confirmSenha)) {
         bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
@@ -187,7 +187,28 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
             return "redirect:/usuarios";
         }
 
+        // Preservar campos não editados do usuário original
         usuario.setId(id);
+        usuario.setDataAdmissao(usuarioBanco.getDataAdmissao());
+        usuario.setColaborador(usuarioBanco.getColaborador()); // Preserva a relação com colaborador
+        usuario.setMatricula(usuarioBanco.getMatricula()); // Preserva matrícula se não foi alterada
+        usuario.setUltimoAcesso(usuarioBanco.getUltimoAcesso()); // Preserva último acesso
+        usuario.setOnline(usuarioBanco.isOnline()); // Preserva status online
+        usuario.setFotoPerfil(usuarioBanco.getFotoPerfil()); // Preserva foto de perfil
+        
+        // Preservar cargo e departamento se não foram alterados (campos bloqueados no form)
+        if (usuario.getCargo() == null) {
+            usuario.setCargo(usuarioBanco.getCargo());
+        }
+        if (usuario.getDepartamento() == null) {
+            usuario.setDepartamento(usuarioBanco.getDepartamento());
+        }
+        
+        // Preservar nível de acesso se não foi alterado (campo bloqueado no form)
+        if (usuario.getNivelAcesso() == null) {
+            usuario.setNivelAcesso(usuarioBanco.getNivelAcesso());
+        }
+
         usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
                 .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
 

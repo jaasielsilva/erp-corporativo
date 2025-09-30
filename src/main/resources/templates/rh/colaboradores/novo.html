@@ -267,8 +267,8 @@
               <div class="form-row">
                 
                 <div class="form-group">
-                  <label for="beneficioPlanoSaude">Plano de Saúde</label>
-                  <select name="beneficios[0].beneficio.id" class="form-control">
+                  <label for="beneficioPlanoSaudeSelect">Plano de Saúde</label>
+                  <select id="beneficioPlanoSaudeSelect" name="beneficios[0].beneficio.id" class="form-control">
                     <option value="">Selecione...</option>
                     <option th:each="b : ${beneficios}" th:if="${b.nome.equals('Plano de Saúde')}"
                       th:value="${b.id}" th:text="${b.nome}">
@@ -278,8 +278,8 @@
                   <label>Valor</label>
                   <input type="text" name="beneficios[0].valor" class="form-control" placeholder="120,00">
 
-                  <label>Status</label>
-                  <select name="beneficios[0].status" class="form-control">
+                  <label for="beneficioPlanoSaudeStatus">Status</label>
+                  <select id="beneficioPlanoSaudeStatus" name="beneficios[0].status" class="form-control">
                     <option value="ATIVO">Ativo</option>
                     <option value="INATIVO">Inativo</option>
                   </select>
@@ -295,8 +295,8 @@
                   </select>
                   <label>Valor</label>
                   <input type="text" name="beneficios[1].valor" class="form-control" placeholder="220,00">
-                  <label>Status</label>
-                  <select name="beneficios[1].status" class="form-control">
+                  <label for="beneficioValeTransporteStatus">Status</label>
+                  <select id="beneficioValeTransporteStatus" name="beneficios[1].status" class="form-control">
                     <option value="ATIVO">Ativo</option>
                     <option value="INATIVO">Inativo</option>
                   </select>
@@ -311,8 +311,8 @@
                   </select>
                   <label>Valor</label>
                   <input type="text" name="beneficios[2].valor" class="form-control" placeholder="600,00">
-                  <label>Status</label>
-                  <select name="beneficios[2].status" class="form-control">
+                  <label for="beneficioValeRefeicaoStatus">Status</label>
+                  <select id="beneficioValeRefeicaoStatus" name="beneficios[2].status" class="form-control">
                     <option value="ATIVO">Ativo</option>
                     <option value="INATIVO">Inativo</option>
                   </select>

@@ -63,6 +63,9 @@ public class AdesaoColaboradorService {
     @Autowired
     private WorkflowAdesaoService workflowService;
 
+    @Autowired
+    private UsuarioService usuarioService;
+
     /**
      * Verifica se CPF já existe no sistema
      */
@@ -345,6 +348,17 @@ public class AdesaoColaboradorService {
             // Criar colaborador
             Colaborador colaborador = criarColaboradorFromDTO(dadosAdesao);
             colaborador = colaboradorRepository.save(colaborador);
+
+            // Criar e vincular automaticamente o usuário
+            usuarioService.criarUsuarioParaColaborador(colaborador);
+            
+            // Recarregar o colaborador com o usuário vinculado
+            colaborador = colaboradorRepository.findById(colaborador.getId())
+                    .orElseThrow(() -> new RuntimeException("Erro ao recarregar colaborador"));
+
+            logger.info("Usuário criado automaticamente para colaborador: {} - Matrícula: {}", 
+                    colaborador.getNome(), 
+                    colaborador.getUsuario() != null ? colaborador.getUsuario().getMatricula() : "N/A");
 
             // Mover documentos para o diretório do colaborador
             documentoService.moverDocumentosParaColaborador(sessionId, colaborador.getId());

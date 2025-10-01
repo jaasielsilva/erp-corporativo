@@ -95,5 +95,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
         Colaborador colaborador, LocalDate data
 );
 
+    // Buscar os últimos registros ordenados por data de criação
+    List<RegistroPonto> findTop10ByOrderByDataCriacaoDesc();
     
 }

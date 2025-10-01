@@ -14,7 +14,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +154,78 @@ public class PontoEscalaController {
         List<RegistroPonto> registros = registroPontoRepository
                 .findByColaboradorAndDataBetweenOrderByDataDesc(colaborador, LocalDate.now(), LocalDate.now());
         return ResponseEntity.ok(registros);
+    }
+
+    // Buscar últimos registros formatados para exibição
+    @GetMapping("/registros/ultimos")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> ultimosRegistros() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Buscar os últimos 10 registros de todos os colaboradores
+            List<RegistroPonto> registros = registroPontoRepository
+                    .findTop10ByOrderByDataCriacaoDesc();
+            
+            List<Map<String, Object>> registrosFormatados = new ArrayList<>();
+            
+            for (RegistroPonto registro : registros) {
+                // Processar cada batida do registro
+                adicionarBatida(registrosFormatados, registro, registro.getEntrada1(), "Entrada", registro.getData());
+                adicionarBatida(registrosFormatados, registro, registro.getSaida1(), "Saída", registro.getData());
+                adicionarBatida(registrosFormatados, registro, registro.getEntrada2(), "Retorno", registro.getData());
+                adicionarBatida(registrosFormatados, registro, registro.getSaida2(), "Saída", registro.getData());
+                adicionarBatida(registrosFormatados, registro, registro.getEntrada3(), "Entrada", registro.getData());
+                adicionarBatida(registrosFormatados, registro, registro.getSaida3(), "Saída", registro.getData());
+                adicionarBatida(registrosFormatados, registro, registro.getEntrada4(), "Entrada", registro.getData());
+                adicionarBatida(registrosFormatados, registro, registro.getSaida4(), "Saída", registro.getData());
+            }
+            
+            // Ordenar por data/hora mais recente primeiro
+            registrosFormatados.sort((a, b) -> {
+                LocalDateTime dataA = (LocalDateTime) a.get("dataHora");
+                LocalDateTime dataB = (LocalDateTime) b.get("dataHora");
+                return dataB.compareTo(dataA);
+            });
+            
+            // Limitar aos 10 mais recentes
+            if (registrosFormatados.size() > 10) {
+                registrosFormatados = registrosFormatados.subList(0, 10);
+            }
+            
+            response.put("success", true);
+            response.put("registros", registrosFormatados);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return ResponseEntity.ok(response);
+    }
+    
+    private void adicionarBatida(List<Map<String, Object>> lista, RegistroPonto registro, 
+                                LocalTime horario, String tipo, LocalDate data) {
+        if (horario != null) {
+            Map<String, Object> batida = new HashMap<>();
+            batida.put("horarioFormatado", horario.format(DateTimeFormatter.ofPattern("HH:mm")));
+            batida.put("tipo", tipo);
+            batida.put("colaboradorNome", registro.getColaborador().getNome());
+            batida.put("matricula", registro.getColaborador().getUsuario().getMatricula());
+            batida.put("data", data);
+            batida.put("dataHora", LocalDateTime.of(data, horario));
+            
+            // Determinar se é hoje, ontem ou outra data
+            LocalDate hoje = LocalDate.now();
+            String dataTexto;
+            if (data.equals(hoje)) {
+                dataTexto = "Hoje";
+            } else if (data.equals(hoje.minusDays(1))) {
+                dataTexto = "Ontem";
+            } else {
+                dataTexto = data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            }
+            batida.put("dataFormatada", dataTexto);
+            
+            lista.add(batida);
+        }
     }
 
 }

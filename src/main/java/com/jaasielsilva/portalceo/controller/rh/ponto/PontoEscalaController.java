@@ -6,6 +6,7 @@ import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.RegistroPontoRepository;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
+import com.jaasielsilva.portalceo.service.EspelhoPontoProfissionalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/rh/ponto-escalas")
@@ -46,6 +48,9 @@ public class PontoEscalaController {
 
     @Autowired
     private ColaboradorService colaboradorService;
+
+    @Autowired
+    private EspelhoPontoProfissionalService espelhoPontoProfissionalService;
 
     @GetMapping("/registros")
     public String registros(Model model) {
@@ -315,6 +320,52 @@ public class PontoEscalaController {
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment", 
                 String.format("espelho_ponto_%s_%02d_%d.pdf", matricula, mes, ano));
+
+            return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/relatorios/espelho-profissional/{matricula}")
+    public ResponseEntity<byte[]> gerarEspelhoProfissional(
+            @PathVariable String matricula,
+            @RequestParam int ano,
+            @RequestParam int mes) {
+        
+        try {
+            // Buscar usuário pela matrícula
+            Optional<Usuario> usuarioOpt = usuarioService.buscarPorMatricula(matricula);
+            if (!usuarioOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Usuario usuario = usuarioOpt.get();
+            
+            Colaborador colaborador = usuario.getColaborador();
+            if (colaborador == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Buscar registros do mês
+            YearMonth yearMonth = YearMonth.of(ano, mes);
+            LocalDate inicioMes = yearMonth.atDay(1);
+            LocalDate fimMes = yearMonth.atEndOfMonth();
+            
+            List<RegistroPonto> registros = registroPontoRepository
+                .findByColaboradorAndDataBetweenOrderByDataDesc(colaborador, inicioMes, fimMes);
+
+            // Gerar PDF Profissional
+            byte[] pdfBytes = espelhoPontoProfissionalService.gerarEspelhoProfissional(colaborador, registros, ano, mes);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", 
+                String.format("espelho_ponto_profissional_%s_%02d_%d.pdf", matricula, mes, ano));
 
             return ResponseEntity.ok()
                 .headers(headers)

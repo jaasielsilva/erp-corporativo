@@ -69,7 +69,7 @@ public class PontoEscalaController {
         return ResponseEntity.ok(response);
     }
 
-    // Registrar ponto por matrícula (com 4 batidas automáticas)
+    // Registrar ponto por matrícula (máximo 4 batidas por dia com intervalo mínimo de 1 hora)
     @PostMapping("/registros/registrar-por-matricula")
     @ResponseBody
     public Map<String, Object> registrarPorMatricula(@RequestParam String matricula, @RequestParam String senha) {
@@ -97,6 +97,25 @@ public class PontoEscalaController {
             registro.setTipoRegistro(RegistroPonto.TipoRegistro.AUTOMATICO);
 
             LocalTime agora = LocalTime.now();
+            
+            // Validar máximo de 4 batidas por dia
+            int totalBatidas = contarBatidasDoDia(registro);
+            if (totalBatidas >= 4) {
+                throw new IllegalArgumentException("Limite máximo de 4 batidas por dia já atingido");
+            }
+            
+            // Validar intervalo mínimo de 1 hora entre batidas
+            LocalTime ultimaBatida = obterUltimaBatida(registro);
+            if (ultimaBatida != null) {
+                long minutosDecorridos = java.time.Duration.between(ultimaBatida, agora).toMinutes();
+                if (minutosDecorridos < 60) {
+                    long minutosRestantes = 60 - minutosDecorridos;
+                    throw new IllegalArgumentException(
+                        String.format("Intervalo mínimo de 1 hora não respeitado. Aguarde mais %d minutos", minutosRestantes)
+                    );
+                }
+            }
+
             String proximaBatida;
 
             if (registro.getEntrada1() == null) {
@@ -111,29 +130,19 @@ public class PontoEscalaController {
             } else if (registro.getSaida2() == null) {
                 registro.setSaida2(agora);
                 proximaBatida = "Saída 2";
-            } else if (registro.getEntrada3() == null) {
-                registro.setEntrada3(agora);
-                proximaBatida = "Entrada 3";
-            } else if (registro.getSaida3() == null) {
-                registro.setSaida3(agora);
-                proximaBatida = "Saída 3";
-            } else if (registro.getEntrada4() == null) {
-                registro.setEntrada4(agora);
-                proximaBatida = "Entrada 4";
-            } else if (registro.getSaida4() == null) {
-                registro.setSaida4(agora);
-                proximaBatida = "Saída 4";
             } else {
-                throw new IllegalArgumentException("Todas as batidas já registradas para hoje");
+                throw new IllegalArgumentException("Limite máximo de 4 batidas por dia já atingido");
             }
 
             registroPontoRepository.save(registro);
 
             response.put("success", true);
-            response.put("horario", agora.toString());
-            response.put("colaborador", colaborador.getNome());
+            response.put("horarioFormatado", agora.format(DateTimeFormatter.ofPattern("HH:mm")));
+            response.put("colaboradorNome", colaborador.getNome());
             response.put("proximaBatida", proximaBatida);
             response.put("message", "Batida registrada com sucesso!");
+            response.put("totalBatidas", totalBatidas + 1);
+            response.put("batidasRestantes", 4 - (totalBatidas + 1));
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
@@ -226,6 +235,36 @@ public class PontoEscalaController {
             
             lista.add(batida);
         }
+    }
+
+    // Método auxiliar para contar quantas batidas já foram registradas no dia
+    private int contarBatidasDoDia(RegistroPonto registro) {
+        int count = 0;
+        if (registro.getEntrada1() != null) count++;
+        if (registro.getSaida1() != null) count++;
+        if (registro.getEntrada2() != null) count++;
+        if (registro.getSaida2() != null) count++;
+        return count;
+    }
+
+    // Método auxiliar para obter o horário da última batida registrada
+    private LocalTime obterUltimaBatida(RegistroPonto registro) {
+        LocalTime ultimaBatida = null;
+        
+        if (registro.getEntrada1() != null) {
+            ultimaBatida = registro.getEntrada1();
+        }
+        if (registro.getSaida1() != null) {
+            ultimaBatida = registro.getSaida1();
+        }
+        if (registro.getEntrada2() != null) {
+            ultimaBatida = registro.getEntrada2();
+        }
+        if (registro.getSaida2() != null) {
+            ultimaBatida = registro.getSaida2();
+        }
+        
+        return ultimaBatida;
     }
 
 }

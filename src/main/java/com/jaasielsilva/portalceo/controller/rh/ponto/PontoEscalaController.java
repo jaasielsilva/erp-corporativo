@@ -8,15 +8,24 @@ import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+// Imports para PDF
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -265,6 +274,170 @@ public class PontoEscalaController {
         }
         
         return ultimaBatida;
+    }
+
+    @GetMapping("/relatorios")
+    public String relatorios(Model model) {
+        return "rh/ponto-escalas/relatorios";
+    }
+
+    @GetMapping("/relatorio-mensal/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioPDF(
+            @RequestParam String matricula,
+            @RequestParam int ano,
+            @RequestParam int mes) {
+        
+        try {
+            // Buscar colaborador pela matrícula do usuário
+            Usuario usuario = usuarioService.buscarPorMatricula(matricula)
+                    .orElse(null);
+            if (usuario == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Colaborador colaborador = usuario.getColaborador();
+            if (colaborador == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Buscar registros do mês
+            YearMonth yearMonth = YearMonth.of(ano, mes);
+            LocalDate inicioMes = yearMonth.atDay(1);
+            LocalDate fimMes = yearMonth.atEndOfMonth();
+            
+            List<RegistroPonto> registros = registroPontoRepository
+                .findByColaboradorAndDataBetweenOrderByDataDesc(colaborador, inicioMes, fimMes);
+
+            // Gerar PDF
+            byte[] pdfBytes = gerarPDFEspelhoPonto(colaborador, registros, ano, mes);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", 
+                String.format("espelho_ponto_%s_%02d_%d.pdf", matricula, mes, ano));
+
+            return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    private byte[] gerarPDFEspelhoPonto(Colaborador colaborador, List<RegistroPonto> registros, 
+                                       int ano, int mes) throws DocumentException, IOException {
+        
+        Document document = new Document(PageSize.A4);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, baos);
+
+        document.open();
+
+        // Título
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+        Paragraph title = new Paragraph("ESPELHO DE PONTO", titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        document.add(title);
+
+        document.add(new Paragraph(" ")); // Espaço
+
+        // Informações do colaborador
+        Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+        Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+        
+        document.add(new Paragraph("Colaborador: " + colaborador.getNome(), boldFont));
+        document.add(new Paragraph("Matrícula: " + colaborador.getUsuario().getMatricula(), normalFont));
+        document.add(new Paragraph("Período: " + String.format("%02d/%d", mes, ano), normalFont));
+        
+        document.add(new Paragraph(" ")); // Espaço
+
+        // Tabela de registros
+        PdfPTable table = new PdfPTable(6);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{2, 2, 2, 2, 2, 2});
+
+        // Cabeçalho da tabela
+        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+        addTableHeader(table, "Data", headerFont);
+        addTableHeader(table, "Entrada 1", headerFont);
+        addTableHeader(table, "Saída 1", headerFont);
+        addTableHeader(table, "Entrada 2", headerFont);
+        addTableHeader(table, "Saída 2", headerFont);
+        addTableHeader(table, "Total Horas", headerFont);
+
+        // Dados da tabela
+        Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        for (RegistroPonto registro : registros) {
+            addTableCell(table, registro.getData().format(dateFormatter), cellFont);
+            addTableCell(table, registro.getEntrada1() != null ? 
+                registro.getEntrada1().format(timeFormatter) : "-", cellFont);
+            addTableCell(table, registro.getSaida1() != null ? 
+                registro.getSaida1().format(timeFormatter) : "-", cellFont);
+            addTableCell(table, registro.getEntrada2() != null ? 
+                registro.getEntrada2().format(timeFormatter) : "-", cellFont);
+            addTableCell(table, registro.getSaida2() != null ? 
+                registro.getSaida2().format(timeFormatter) : "-", cellFont);
+            
+            // Calcular total de horas
+            String totalHoras = calcularTotalHoras(registro);
+            addTableCell(table, totalHoras, cellFont);
+        }
+
+        document.add(table);
+
+        // Rodapé
+        document.add(new Paragraph(" "));
+        Paragraph footer = new Paragraph("Relatório gerado em: " + 
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), 
+            FontFactory.getFont(FontFactory.HELVETICA, 8));
+        footer.setAlignment(Element.ALIGN_RIGHT);
+        document.add(footer);
+
+        document.close();
+        return baos.toByteArray();
+    }
+
+    private void addTableHeader(PdfPTable table, String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setPadding(5);
+        table.addCell(cell);
+    }
+
+    private void addTableCell(PdfPTable table, String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setPadding(3);
+        table.addCell(cell);
+    }
+
+    private String calcularTotalHoras(RegistroPonto registro) {
+        if (registro.getEntrada1() == null || registro.getSaida1() == null) {
+            return "-";
+        }
+
+        long minutosTotais = 0;
+
+        // Período manhã
+        if (registro.getEntrada1() != null && registro.getSaida1() != null) {
+            minutosTotais += java.time.Duration.between(registro.getEntrada1(), registro.getSaida1()).toMinutes();
+        }
+
+        // Período tarde
+        if (registro.getEntrada2() != null && registro.getSaida2() != null) {
+            minutosTotais += java.time.Duration.between(registro.getEntrada2(), registro.getSaida2()).toMinutes();
+        }
+
+        long horas = minutosTotais / 60;
+        long minutos = minutosTotais % 60;
+
+        return String.format("%02d:%02d", horas, minutos);
     }
 
 }

@@ -63,54 +63,55 @@ public class ContratosController {
         model.addAttribute("contratos", contratos);
         return "contrato/listar";
     }
-@GetMapping("/novo")
-public String novoContrato(Model model, @ModelAttribute("usuarioLogado") Usuario usuarioLogado) {
-    Contrato contrato = new Contrato();
-    model.addAttribute("contrato", contrato);
 
-    // Obter departamento e perfil do usuário
-    String departamentoNome = usuarioLogado.getDepartamento() != null ? usuarioLogado.getDepartamento().getNome() : "";
-    boolean isAdmin = usuarioLogado.getPerfis().stream()
-            .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+    @GetMapping("/novo")
+    public String novoContrato(Model model, @ModelAttribute("usuarioLogado") Usuario usuarioLogado) {
+        Contrato contrato = new Contrato();
+        model.addAttribute("contrato", contrato);
 
-    List<TipoContrato> tiposPermitidos;
+        // Obter departamento e perfil do usuário
+        String departamentoNome = usuarioLogado.getDepartamento() != null ? usuarioLogado.getDepartamento().getNome()
+                : "";
+        boolean isAdmin = usuarioLogado.getPerfis().stream()
+                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
 
-    if (isAdmin) {
-        switch (departamentoNome) {
-            case "RH":
-                tiposPermitidos = List.of(TipoContrato.TRABALHISTA);
-                break;
-            case "TI":
-                tiposPermitidos = List.of(TipoContrato.PRESTADOR_SERVICO, TipoContrato.FORNECEDOR);
-                break;
-            case "COMPRAS":
-                tiposPermitidos = List.of(TipoContrato.FORNECEDOR);
-                break;
-            case "VENDAS":
-                tiposPermitidos = List.of(TipoContrato.CLIENTE);
-                break;
-            case "ADMIN":
-                tiposPermitidos = Arrays.asList(TipoContrato.values());
-                break;
-            default:
-                tiposPermitidos = List.of();
-                break;
+        List<TipoContrato> tiposPermitidos;
+
+        if (isAdmin) {
+            switch (departamentoNome) {
+                case "RH":
+                    tiposPermitidos = List.of(TipoContrato.TRABALHISTA);
+                    break;
+                case "TI":
+                    tiposPermitidos = List.of(TipoContrato.PRESTADOR_SERVICO, TipoContrato.FORNECEDOR);
+                    break;
+                case "COMPRAS":
+                    tiposPermitidos = List.of(TipoContrato.FORNECEDOR);
+                    break;
+                case "VENDAS":
+                    tiposPermitidos = List.of(TipoContrato.CLIENTE);
+                    break;
+                case "ADMIN":
+                    tiposPermitidos = Arrays.asList(TipoContrato.values());
+                    break;
+                default:
+                    tiposPermitidos = List.of();
+                    break;
+            }
+        } else {
+            return "redirect:/acesso-negado";
         }
-    } else {
-        return "redirect:/acesso-negado";
+
+        model.addAttribute("tiposContrato", tiposPermitidos);
+        model.addAttribute("statusContrato", StatusContrato.values());
+        model.addAttribute("fornecedores", fornecedorService.listarAtivos());
+        model.addAttribute("clientes", clienteService.listarAtivosPorTipo("PJ"));
+        model.addAttribute("prestadoresServico", prestadorServicoService.findAllAtivos());
+        model.addAttribute("departamentoUsuario", usuarioLogado.getDepartamento());
+        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+
+        return "contrato/contrato-form";
     }
-
-    model.addAttribute("tiposContrato", tiposPermitidos); // ✅ Mantém esta
-    model.addAttribute("statusContrato", StatusContrato.values());
-    model.addAttribute("fornecedores", fornecedorService.listarAtivos());
-    model.addAttribute("clientes", clienteService.listarAtivosPorTipo("PJ"));
-    model.addAttribute("prestadoresServico", prestadorServicoService.findAllAtivos());
-    model.addAttribute("departamentoUsuario", usuarioLogado.getDepartamento());
-    model.addAttribute("colaboradores", colaboradorService.listarAtivos());
-
-    return "contrato/contrato-form";
-}
-
 
     @PostMapping("/salvar")
     @PreAuthorize("hasAuthority('ADMIN')")

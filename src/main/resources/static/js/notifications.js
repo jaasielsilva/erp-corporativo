@@ -21,12 +21,12 @@ $(document).ready(function () {
     `);
 
     const $list = $center.find('.notification-list');
-    const $badge = $('#notificationBadge');
-    const $chatBadge = $('#chatBadge');
+    const $badges = $('.notification-badge');
+    const $chatBadges = $('.chat-badge');
     let currentFilter = 'all';
 
     // Abrir/fechar central
-    $(document).on('click', '#notificationTrigger', function (e) {
+    $(document).on('click', '.notification-trigger', function (e) {
         e.preventDefault();
         e.stopPropagation();
         $center.toggleClass('show');
@@ -182,18 +182,18 @@ $(document).ready(function () {
     function updateBadges(systemCount, chatCount) {
         // Verificar se há notificações não lidas (novas)
         const totalUnread = systemCount + chatCount;
-        const hadUnreadBefore = $badge.is(':visible') || $chatBadge.is(':visible');
+        const hadUnreadBefore = ($badges.filter(':visible').length > 0) || ($chatBadges.filter(':visible').length > 0);
         
         if (systemCount > 0) {
-            $badge.text(systemCount).show();
+            $badges.text(systemCount).show();
         } else {
-            $badge.hide();
+            $badges.hide();
         }
         
         if (chatCount > 0) {
-            $chatBadge.text(chatCount).show();
+            $chatBadges.text(chatCount).show();
         } else {
-            $chatBadge.hide();
+            $chatBadges.hide();
         }
         
         // Tocar som apenas se há novas notificações não lidas

@@ -52,6 +52,11 @@ public class PontoEscalaController {
     @Autowired
     private EspelhoPontoProfissionalService espelhoPontoProfissionalService;
 
+    @GetMapping("/correcoes")
+    public String correcoes(Model model) {
+        return "rh/ponto-escalas/correcoes";
+    }
+
     @GetMapping("/registros")
     public String registros(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());

@@ -47,7 +47,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Pendentes</h4>
-                  <div class="resumo-valor">8</div>
+                  <div id="resumoPendentes" class="resumo-valor">-</div>
                   <div class="resumo-detalhes">Aguardando aprovação</div>
                 </div>
               </div>
@@ -58,8 +58,8 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Aprovadas</h4>
-                  <div class="resumo-valor">15</div>
-                  <div class="resumo-detalhes">Este mês</div>
+                  <div id="resumoAprovadas" class="resumo-valor">-</div>
+                  <div class="resumo-detalhes">Período selecionado</div>
                 </div>
               </div>
               
@@ -69,8 +69,8 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Rejeitadas</h4>
-                  <div class="resumo-valor">3</div>
-                  <div class="resumo-detalhes">Este mês</div>
+                  <div id="resumoRejeitadas" class="resumo-valor">-</div>
+                  <div class="resumo-detalhes">Período selecionado</div>
                 </div>
               </div>
               
@@ -80,7 +80,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Tempo Médio</h4>
-                  <div class="resumo-valor">2.5 dias</div>
+                  <div id="resumoTempoMedio" class="resumo-valor">-</div>
                   <div class="resumo-detalhes">Para aprovação</div>
                 </div>
               </div>
@@ -97,31 +97,32 @@
                 <label for="statusFiltro">Status</label>
                 <select id="statusFiltro" name="status" class="form-control">
                   <option value="">Todos os status</option>
-                  <option value="pendente">Pendente</option>
-                  <option value="aprovada">Aprovada</option>
-                  <option value="rejeitada">Rejeitada</option>
-                  <option value="cancelada">Cancelada</option>
+                  <option value="PENDENTE">Pendente</option>
+                  <option value="APROVADA">Aprovada</option>
+                  <option value="REJEITADA">Rejeitada</option>
+                  <option value="CANCELADA">Cancelada</option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="colaboradorFiltro">Colaborador</label>
                 <select id="colaboradorFiltro" name="colaborador" class="form-control">
                   <option value="">Todos os colaboradores</option>
-                  <option value="1">João Silva</option>
-                  <option value="2">Maria Santos</option>
-                  <option value="3">Carlos Oliveira</option>
-                  <option value="4">Ana Costa</option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="tipoCorrecao">Tipo de Correção</label>
                 <select id="tipoCorrecao" name="tipoCorrecao" class="form-control">
                   <option value="">Todos os tipos</option>
-                  <option value="atraso">Atraso</option>
-                  <option value="falta">Falta</option>
-                  <option value="hora-extra">Hora Extra</option>
-                  <option value="ajuste-horario">Ajuste de Horário</option>
-                  <option value="registro-perdido">Registro Perdido</option>
+                  <option value="ENTRADA_1">1ª Entrada</option>
+                  <option value="SAIDA_1">1ª Saída</option>
+                  <option value="ENTRADA_2">2ª Entrada</option>
+                  <option value="SAIDA_2">2ª Saída</option>
+                  <option value="ENTRADA_3">3ª Entrada</option>
+                  <option value="SAIDA_3">3ª Saída</option>
+                  <option value="ENTRADA_4">4ª Entrada</option>
+                  <option value="SAIDA_4">4ª Saída</option>
+                  <option value="ABONO_FALTA">Abono de Falta</option>
+                  <option value="JUSTIFICATIVA_ATRASO">Justificativa de Atraso</option>
                 </select>
               </div>
               <div class="form-group">
@@ -161,226 +162,12 @@
                 <th>Solicitado em</th>
                 <th>Ações</th>
               </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <input type="checkbox" name="correcaoSelecionada" value="1">
-                </td>
-                <td><strong>#COR-001</strong></td>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>João Silva</strong><br>
-                    <small>TI - Mat: 001</small>
-                  </div>
-                </td>
-                <td>28/11/2023</td>
-                <td><span class="tipo-badge atraso">Atraso</span></td>
-                <td>
-                  <div class="horario-original">
-                    <strong>Entrada:</strong> 08:00<br>
-                    <small>Registrado: 08:30</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-solicitado">
-                    <strong>Entrada:</strong> 08:00<br>
-                    <small class="justificativa-horario">Correção solicitada</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="justificativa-resumo">
-                    Problema no transporte público...
-                    <button onclick="verJustificativaCompleta(1)" class="btn-link">
-                      <i class="fas fa-eye"></i> Ver completa
-                    </button>
-                  </div>
-                </td>
-                <td><span class="status-badge status-pendente">Pendente</span></td>
-                <td>
-                  <div class="data-solicitacao">
-                    <strong>29/11/2023</strong><br>
-                    <small>09:15</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="acoes-correcao">
-                    <button onclick="aprovarCorrecao(1)" class="btn-icon btn-success" title="Aprovar">
-                      <i class="fas fa-check"></i>
-                    </button>
-                    <button onclick="rejeitarCorrecao(1)" class="btn-icon btn-danger" title="Rejeitar">
-                      <i class="fas fa-times"></i>
-                    </button>
-                    <button onclick="editarCorrecao(1)" class="btn-icon" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="verDetalhes(1)" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <input type="checkbox" name="correcaoSelecionada" value="2">
-                </td>
-                <td><strong>#COR-002</strong></td>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Maria Santos</strong><br>
-                    <small>Vendas - Mat: 002</small>
-                  </div>
-                </td>
-                <td>27/11/2023</td>
-                <td><span class="tipo-badge registro-perdido">Registro Perdido</span></td>
-                <td>
-                  <div class="horario-original">
-                    <strong>Saída Almoço:</strong> --<br>
-                    <small>Não registrado</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-solicitado">
-                    <strong>Saída Almoço:</strong> 12:00<br>
-                    <small class="justificativa-horario">Registro manual</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="justificativa-resumo">
-                    Esqueci de registrar a saída...
-                    <button onclick="verJustificativaCompleta(2)" class="btn-link">
-                      <i class="fas fa-eye"></i> Ver completa
-                    </button>
-                  </div>
-                </td>
-                <td><span class="status-badge status-aprovada">Aprovada</span></td>
-                <td>
-                  <div class="data-solicitacao">
-                    <strong>28/11/2023</strong><br>
-                    <small>14:30</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="acoes-correcao">
-                    <button onclick="verDetalhes(2)" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="verAprovacao(2)" class="btn-icon btn-info" title="Ver Aprovação">
-                      <i class="fas fa-info-circle"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <input type="checkbox" name="correcaoSelecionada" value="3">
-                </td>
-                <td><strong>#COR-003</strong></td>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Carlos Oliveira</strong><br>
-                    <small>Financeiro - Mat: 003</small>
-                  </div>
-                </td>
-                <td>26/11/2023</td>
-                <td><span class="tipo-badge hora-extra">Hora Extra</span></td>
-                <td>
-                  <div class="horario-original">
-                    <strong>Saída:</strong> 18:00<br>
-                    <small>Registrado: 20:00</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-solicitado">
-                    <strong>Saída:</strong> 20:00<br>
-                    <small class="justificativa-horario">Hora extra autorizada</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="justificativa-resumo">
-                    Fechamento mensal urgente...
-                    <button onclick="verJustificativaCompleta(3)" class="btn-link">
-                      <i class="fas fa-eye"></i> Ver completa
-                    </button>
-                  </div>
-                </td>
-                <td><span class="status-badge status-pendente">Pendente</span></td>
-                <td>
-                  <div class="data-solicitacao">
-                    <strong>27/11/2023</strong><br>
-                    <small>08:00</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="acoes-correcao">
-                    <button onclick="aprovarCorrecao(3)" class="btn-icon btn-success" title="Aprovar">
-                      <i class="fas fa-check"></i>
-                    </button>
-                    <button onclick="rejeitarCorrecao(3)" class="btn-icon btn-danger" title="Rejeitar">
-                      <i class="fas fa-times"></i>
-                    </button>
-                    <button onclick="editarCorrecao(3)" class="btn-icon" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="verDetalhes(3)" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <input type="checkbox" name="correcaoSelecionada" value="4">
-                </td>
-                <td><strong>#COR-004</strong></td>
-                <td>
-                  <div class="colaborador-info">
-                    <strong>Pedro Lima</strong><br>
-                    <small>Marketing - Mat: 005</small>
-                  </div>
-                </td>
-                <td>25/11/2023</td>
-                <td><span class="tipo-badge ajuste-horario">Ajuste Horário</span></td>
-                <td>
-                  <div class="horario-original">
-                    <strong>Entrada:</strong> 08:00<br>
-                    <strong>Saída:</strong> 18:00
-                  </div>
-                </td>
-                <td>
-                  <div class="horario-solicitado">
-                    <strong>Entrada:</strong> 09:00<br>
-                    <strong>Saída:</strong> 19:00
-                  </div>
-                </td>
-                <td>
-                  <div class="justificativa-resumo">
-                    Consulta médica agendada...
-                    <button onclick="verJustificativaCompleta(4)" class="btn-link">
-                      <i class="fas fa-eye"></i> Ver completa
-                    </button>
-                  </div>
-                </td>
-                <td><span class="status-badge status-rejeitada">Rejeitada</span></td>
-                <td>
-                  <div class="data-solicitacao">
-                    <strong>24/11/2023</strong><br>
-                    <small>16:45</small>
-                  </div>
-                </td>
-                <td>
-                  <div class="acoes-correcao">
-                    <button onclick="verDetalhes(4)" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="verRejeicao(4)" class="btn-icon btn-warning" title="Ver Motivo da Rejeição">
-                      <i class="fas fa-exclamation-triangle"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                </thead>
+            <tbody id="correcoesBody">
+              <!-- Linhas dinâmicas serão inseridas via JS -->
             </tbody>
           </table>
+          <div id="paginacao" class="pagination"></div>
         </article>
 
         <!-- Histórico de Aprovações -->
@@ -561,14 +348,72 @@
       }
     }
     
-    function salvarCorrecao() {
+    async function salvarCorrecao() {
       const form = document.querySelector('#modalCorrecao form');
-      if (form.checkValidity()) {
+      if (!form.checkValidity()) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+      }
+
+      const colaboradorId = parseInt(document.getElementById('colaboradorCorrecao').value);
+      const data = document.getElementById('dataCorrecao').value;
+      const tipoModal = document.getElementById('tipoCorrecaoModal').value; // atraso, falta, hora-extra, ajuste-horario, registro-perdido
+      const tipoRegistro = document.getElementById('tipoRegistroCorrecao')?.value || null;
+      const horarioAnterior = document.getElementById('horarioOriginal').value || null;
+      const horarioNovo = document.getElementById('horarioSolicitado').value || null;
+      const justificativa = document.getElementById('justificativaCorrecao').value;
+
+      // Mapear tipo do modal para enum TipoCorrecao usado no backend
+      let tipoCorrecaoEnum;
+      switch (tipoModal) {
+        case 'atraso':
+          tipoCorrecaoEnum = 'JUSTIFICATIVA_ATRASO';
+          break;
+        case 'falta':
+          tipoCorrecaoEnum = 'ABONO_FALTA';
+          break;
+        case 'ajuste-horario':
+        case 'hora-extra':
+        case 'registro-perdido':
+          // Usar tipoRegistro para decidir entrada/saída específica
+          const mapa = {
+            'entrada': 'ENTRADA_1',
+            'saida-almoco': 'SAIDA_1',
+            'volta-almoco': 'ENTRADA_2',
+            'saida': 'SAIDA_2'
+          };
+          tipoCorrecaoEnum = mapa[tipoRegistro] || 'ENTRADA_1';
+          break;
+        default:
+          alert('Tipo de correção inválido.');
+          return;
+      }
+
+      const payload = {
+        colaboradorId,
+        data,
+        tipoRegistro,
+        tipoCorrecao: tipoCorrecaoEnum,
+        horarioAnterior,
+        horarioNovo,
+        justificativa
+      };
+
+      try {
+        const resp = await fetch('/api/rh/ponto-escalas/correcoes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(text || 'Falha ao enviar a correção');
+        }
         alert('Solicitação de correção enviada com sucesso!');
         fecharModalCorrecao();
         location.reload();
-      } else {
-        alert('Por favor, preencha todos os campos obrigatórios.');
+      } catch (e) {
+        alert('Erro ao enviar correção: ' + e.message);
       }
     }
     
@@ -834,22 +679,7 @@
       margin-top: 5px;
     }
   </style>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
 
 </body>
 

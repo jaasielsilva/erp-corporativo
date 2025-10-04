@@ -18,7 +18,7 @@ public class NotificacaoSuporteService {
     private EmailService emailService;
 
     @Autowired
-    private NotificacaoService notificacaoService;
+    private NotificationService notificacaoService;
 
     /**
      * Notifica colaborador sobre novo chamado atribuído

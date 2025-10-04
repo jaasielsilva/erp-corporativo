@@ -62,7 +62,6 @@ public class NotificationRestController {
                 notificationsPage = new PageImpl<>(unreadNotifications, pageable, unreadNotifications.size());
             } else if ("recent".equals(filter)) {
                 // Últimas 24 horas
-                LocalDateTime since = LocalDateTime.now().minusHours(24);
                 List<Notification> recentNotifications = notificationService.getRecentNotifications(user);
                 notificationsPage = new PageImpl<>(recentNotifications, pageable, recentNotifications.size());
             } else if (priority != null && !priority.isEmpty()) {
@@ -131,18 +130,17 @@ public class NotificationRestController {
      */
     @PutMapping("/mark-all-read")
     public ResponseEntity<Map<String, String>> markAllAsRead(Authentication authentication) {
-        
         try {
             Usuario user = usuarioService.buscarPorEmail(authentication.getName()).orElse(null);
             if (user == null) {
                 return ResponseEntity.badRequest().build();
             }
 
-            notificationService.markAllAsRead(user);
+            int updated = notificationService.markAllAsRead(user);
             
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "Todas as notificações foram marcadas como lidas");
+            response.put("message", updated + " notificações marcadas como lidas");
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -203,5 +201,145 @@ public class NotificationRestController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    // ===== ENDPOINTS DE COMPATIBILIDADE COM NotificacaoController =====
+
+    /**
+     * Obtém todas as notificações do usuário (compatibilidade com /api/notificacoes)
+     */
+    @GetMapping("/legacy")
+    public ResponseEntity<List<Map<String, Object>>> obterNotificacoesLegacy(Authentication authentication) {
+        try {
+            Usuario user = usuarioService.buscarPorEmail(authentication.getName()).orElse(null);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            List<Notification> notifications = notificationService.getNotificationsForUser(user, 
+                PageRequest.of(0, 50, Sort.by(Sort.Direction.DESC, "timestamp"))).getContent();
+            
+            List<Map<String, Object>> response = notifications.stream()
+                .map(this::convertToLegacyFormat)
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Obtém apenas as notificações não lidas (compatibilidade com /api/notificacoes/nao-lidas)
+     */
+    @GetMapping("/legacy/nao-lidas")
+    public ResponseEntity<List<Map<String, Object>>> obterNotificacaoesNaoLidasLegacy(Authentication authentication) {
+        try {
+            Usuario user = usuarioService.buscarPorEmail(authentication.getName()).orElse(null);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            List<Notification> notifications = notificationService.getUnreadNotificationsForUser(user);
+            
+            List<Map<String, Object>> response = notifications.stream()
+                .map(this::convertToLegacyFormat)
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Obtém o contador de notificações não lidas (compatibilidade com /api/notificacoes/contador)
+     */
+    @GetMapping("/legacy/contador")
+    public ResponseEntity<Map<String, Object>> obterContadorNotificacoesLegacy(Authentication authentication) {
+        try {
+            Usuario user = usuarioService.buscarPorEmail(authentication.getName()).orElse(null);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            long contador = notificationService.countUnreadNotificationsForUser(user);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("contador", contador);
+            response.put("temNovas", contador > 0);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Marca uma notificação específica como lida (compatibilidade com /api/notificacoes/{id}/marcar-lida)
+     */
+    @PostMapping("/legacy/{notificacaoId}/marcar-lida")
+    public ResponseEntity<Map<String, String>> marcarComoLidaLegacy(
+            @PathVariable String notificacaoId,
+            Authentication authentication) {
+        try {
+            Usuario user = usuarioService.buscarPorEmail(authentication.getName()).orElse(null);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            boolean success = notificationService.markAsRead(Long.parseLong(notificacaoId), user);
+            
+            Map<String, String> response = new HashMap<>();
+            if (success) {
+                response.put("status", "success");
+                response.put("message", "Notificação marcada como lida");
+            } else {
+                response.put("status", "error");
+                response.put("message", "Erro ao marcar notificação como lida");
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Marca todas as notificações como lidas (compatibilidade com /api/notificacoes/marcar-todas-lidas)
+     */
+    @PostMapping("/legacy/marcar-todas-lidas")
+    public ResponseEntity<Map<String, String>> marcarTodasComoLidasLegacy(Authentication authentication) {
+        try {
+            Usuario user = usuarioService.buscarPorEmail(authentication.getName()).orElse(null);
+            if (user == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            int updated = notificationService.markAllAsRead(user);
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", updated + " notificações marcadas como lidas");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Converte Notification para formato legacy (compatibilidade com NotificacaoService)
+     */
+    private Map<String, Object> convertToLegacyFormat(Notification notification) {
+        Map<String, Object> legacy = new HashMap<>();
+        legacy.put("id", notification.getId().toString());
+        legacy.put("titulo", notification.getTitle());
+        legacy.put("mensagem", notification.getMessage());
+        legacy.put("tipo", notification.getType());
+        legacy.put("url", notification.getActionUrl());
+        legacy.put("dataHora", notification.getTimestamp());
+        legacy.put("lida", notification.getIsRead());
+        return legacy;
     }
 }

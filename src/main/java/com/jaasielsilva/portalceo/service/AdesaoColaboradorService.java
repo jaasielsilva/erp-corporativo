@@ -52,7 +52,7 @@ public class AdesaoColaboradorService {
     private ColaboradorService colaboradorService;
 
     @Autowired
-    private NotificacaoService notificationService;
+    private NotificationService notificationService;
 
     @Autowired
     private EmailService emailService;

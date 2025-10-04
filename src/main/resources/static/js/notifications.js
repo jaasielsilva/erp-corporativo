@@ -52,7 +52,7 @@ $(document).ready(function () {
     function loadNotifications() {
         $list.html('<div class="notification-loading"><i class="fas fa-spinner"></i> Carregando...</div>');
 
-        // Carregar notificações do sistema
+        // Carregar notificações do sistema unificado
         let apiUrl = '/api/notifications';
         const params = new URLSearchParams();
         
@@ -71,8 +71,8 @@ $(document).ready(function () {
         }
 
         const systemPromise = $.getJSON(apiUrl);
-        // Carregar notificações de chat
-        const chatPromise = $.getJSON('/api/notificacoes?apenasNaoLidas=true');
+        // Carregar notificações de chat (usando endpoint legacy para compatibilidade)
+        const chatPromise = $.getJSON('/api/notifications/legacy/nao-lidas');
 
         Promise.all([systemPromise, chatPromise]).then(([systemData, chatData]) => {
             $list.empty();
@@ -218,9 +218,9 @@ $(document).ready(function () {
                 }
             });
         } else {
-            // Para notificações de chat, usar o endpoint existente
+            // Para notificações de chat, usar endpoint legacy
             $.ajax({
-                url: `/api/notificacoes/${id}/marcar-lida`,
+                url: `/api/notifications/legacy/${id}/marcar-lida`,
                 type: 'POST',
                 success: function () {
                     loadNotifications(); // atualiza lista e badge
@@ -257,7 +257,7 @@ $(document).ready(function () {
         } else {
             // Para notificações de chat, marcar como lida (não há silenciar)
             $.ajax({
-                url: `/api/notificacoes/${id}/marcar-lida`,
+                url: `/api/notifications/legacy/${id}/marcar-lida`,
                 type: 'POST',
                 success: function () {
                     loadNotifications(); // atualiza lista e badge

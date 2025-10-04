@@ -6,8 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Usuários - Painel do CEO</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <!-- CSS -->
+  <link th:href="@{/css/style.css}" rel="stylesheet" />
+  <link th:href="@{/css/sidebar.css}" rel="stylesheet" />
+  <link th:href="@{/css/notifications.css}" rel="stylesheet" />
+  <link th:href="@{/css/chat.css}" rel="stylesheet" />
+
+  <!-- Bootstrap CSS -->
+  <link th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}" rel="stylesheet" />
+
+  
 </head>
 
 <body>
@@ -41,7 +49,6 @@
           </div>
         </div>
 
-
         <!-- Divisor de seção -->
         <div class="section-divider">
           <hr />
@@ -58,13 +65,10 @@
             <i class="fas fa-user-plus"></i>
             Novo Usuário
           </a>
-
-          <!-- Estatísticas detalhadas -->
           <a th:href="@{/usuarios/relatorio}" class="link-card">
             <i class="fas fa-chart-pie"></i>
             Relatório Geral
           </a>
-
         </div>
 
         <!-- Últimas ações com usuários -->
@@ -81,29 +85,17 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>04/07/2025</td>
-                  <td>Resetou senha</td>
-                  <td>maria.santos</td>
-                  <td>admin</td>
-                </tr>
-                <tr>
-                  <td>03/07/2025</td>
-                  <td>Adicionou novo usuário</td>
-                  <td>roberto.lima</td>
-                  <td>admin</td>
-                </tr>
-                <tr>
-                  <td>03/07/2025</td>
-                  <td>Editou permissões</td>
-                  <td>jose.almeida</td>
-                  <td>admin</td>
+                <!-- Loop Thymeleaf -->
+                <tr th:each="acao : ${ultimasAcoes}">
+                  <td th:text="${#dates.format(acao.data, 'dd/MM/yyyy')}">00/00/0000</td>
+                  <td th:text="${acao.acao}">Ação</td>
+                  <td th:text="${acao.usuario}">usuario.exemplo</td>
+                  <td th:text="${acao.responsavel}">responsavel.exemplo</td>
                 </tr>
               </tbody>
             </table>
           </article>
         </div>
-
 
         <div class="info-section">
           <div class="card-tips">
@@ -120,11 +112,7 @@
   </div>
 
   <script th:src="@{/js/script.js}"></script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
   <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 

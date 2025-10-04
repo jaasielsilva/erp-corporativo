@@ -1,7 +1,6 @@
 package com.jaasielsilva.portalceo.controller.rh.colaborador;
 
 import com.jaasielsilva.portalceo.service.AdesaoSecurityService;
-import com.jaasielsilva.portalceo.service.AuditService;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService.DocumentoInfo;
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService.DocumentoException;
@@ -43,9 +42,6 @@ public class DocumentoAdesaoController {
     @Autowired
     private AdesaoSecurityService securityService;
 
-    @Autowired
-    private AuditService auditService;
-
     /**
      * Upload de documento
      */
@@ -62,7 +58,7 @@ public class DocumentoAdesaoController {
         try {
             // Verificar rate limiting
             if (!securityService.checkRateLimit(clientIp)) {
-                auditService.logRateLimitExcedido(clientIp, "/upload", request.getHeader("User-Agent"));
+                logger.warn("Rate limit excedido para IP: {}", clientIp);
                 response.put("success", false);
                 response.put("message", "Muitas tentativas. Tente novamente em alguns minutos.");
                 return ResponseEntity.status(429).body(response);
@@ -70,7 +66,7 @@ public class DocumentoAdesaoController {
 
             // Verificar se sessão está bloqueada
             if (securityService.isSessionBlocked(sessionId)) {
-                auditService.logAcessoBloqueado(sessionId, "Sessão bloqueada", clientIp, request.getHeader("User-Agent"));
+                logger.warn("Sessão bloqueada: {} - IP: {}", sessionId, clientIp);
                 response.put("success", false);
                 response.put("message", "Sessão temporariamente bloqueada por motivos de segurança");
                 return ResponseEntity.status(423).body(response);
@@ -79,8 +75,8 @@ public class DocumentoAdesaoController {
             // Validar arquivo com segurança
             AdesaoSecurityService.ValidationResult validation = securityService.validateFileUpload(arquivo, sessionId);
             if (!validation.isValid()) {
-                auditService.logUploadRejeitado(sessionId, validation.getFirstError(),
-                        arquivo.getOriginalFilename(), arquivo.getContentType(), arquivo.getSize(), clientIp);
+                logger.warn("Upload rejeitado - Sessão: {}, Erro: {}, Arquivo: {}, IP: {}", 
+                    sessionId, validation.getFirstError(), arquivo.getOriginalFilename(), clientIp);
                 response.put("success", false);
                 response.put("message", validation.getFirstError());
                 response.put("errors", validation.getErrors());
@@ -91,8 +87,8 @@ public class DocumentoAdesaoController {
             DocumentoInfo documentoInfo = documentoService.processarUpload(arquivo, tipoDocumento, sessionId);
 
             // Log de auditoria
-            auditService.logDocumentoEnviado(sessionId, tipoDocumento, arquivo.getOriginalFilename(),
-                    arquivo.getSize(), clientIp);
+            logger.info("Documento enviado - Sessão: {}, Tipo: {}, Arquivo: {}, Tamanho: {}, IP: {}", 
+                sessionId, tipoDocumento, arquivo.getOriginalFilename(), arquivo.getSize(), clientIp);
 
             response.put("success", true);
             response.put("message", "Documento enviado com sucesso");

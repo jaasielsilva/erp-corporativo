@@ -5,7 +5,10 @@ import com.jaasielsilva.portalceo.model.Notification;
 import com.jaasielsilva.portalceo.model.ProcessoAdesao;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.NotificationRepository;
+import com.jaasielsilva.portalceo.repository.UsuarioRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -28,13 +31,40 @@ public class NotificationService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    // Método para obter RealtimeNotificationService sem dependência circular
+    private RealtimeNotificationService getRealtimeNotificationService() {
+        try {
+            return applicationContext.getBean(RealtimeNotificationService.class);
+        } catch (Exception e) {
+            // Se não conseguir obter o bean, retorna null (modo silencioso)
+            return null;
+        }
+    }
+
     /**
      * Cria uma nova notificação
      */
     public Notification createNotification(String type, String title, String message,
             Notification.Priority priority, Usuario user) {
         Notification notification = new Notification(type, title, message, priority, user);
-        return notificationRepository.save(notification);
+        notification = notificationRepository.save(notification);
+
+        // Enviar notificação em tempo real
+        if (user != null) {
+            RealtimeNotificationService realtimeService = getRealtimeNotificationService();
+            if (realtimeService != null) {
+                realtimeService.sendNotificationToUser(user, notification);
+                realtimeService.sendUnreadCountUpdate(user);
+            }
+        }
+
+        return notification;
     }
 
     /**
@@ -43,7 +73,15 @@ public class NotificationService {
     public Notification createGlobalNotification(String type, String title, String message,
             Notification.Priority priority) {
         Notification notification = new Notification(type, title, message, priority);
-        return notificationRepository.save(notification);
+        notification = notificationRepository.save(notification);
+
+        // Enviar notificação global em tempo real
+        RealtimeNotificationService realtimeService = getRealtimeNotificationService();
+        if (realtimeService != null) {
+            realtimeService.sendGlobalNotification(notification);
+        }
+
+        return notification;
     }
 
     /**
@@ -53,7 +91,15 @@ public class NotificationService {
             Notification.Priority priority, Set<String> profiles) {
         Notification notification = new Notification(type, title, message, priority);
         notification.setRelevantProfiles(profiles);
-        return notificationRepository.save(notification);
+        notification = notificationRepository.save(notification);
+
+        // Enviar notificação para perfis específicos em tempo real
+        RealtimeNotificationService realtimeService = getRealtimeNotificationService();
+        if (realtimeService != null) {
+            realtimeService.sendNotificationToProfiles(notification, profiles);
+        }
+
+        return notification;
     }
 
     /**
@@ -112,14 +158,35 @@ public class NotificationService {
      * Marca uma notificação como lida
      */
     public boolean markAsRead(Long notificationId, Usuario user) {
-        return notificationRepository.markAsReadForUser(notificationId, user) > 0;
+        boolean success = notificationRepository.markAsReadForUser(notificationId, user) > 0;
+
+        if (success) {
+            // Enviar atualização em tempo real
+            RealtimeNotificationService realtimeService = getRealtimeNotificationService();
+            if (realtimeService != null) {
+                realtimeService.sendNotificationReadUpdate(user, notificationId);
+                realtimeService.sendUnreadCountUpdate(user);
+            }
+        }
+
+        return success;
     }
 
     /**
      * Marca todas as notificações de um usuário como lidas
      */
     public int markAllAsRead(Usuario user) {
-        return notificationRepository.markAllAsReadForUser(user);
+        int updated = notificationRepository.markAllAsReadForUser(user);
+
+        if (updated > 0) {
+            // Enviar atualização em tempo real
+            RealtimeNotificationService realtimeService = getRealtimeNotificationService();
+            if (realtimeService != null) {
+                realtimeService.sendUnreadCountUpdate(user);
+            }
+        }
+
+        return updated;
     }
 
     /**
@@ -182,7 +249,8 @@ public class NotificationService {
     @Scheduled(fixedRate = 1800000) // 30 minutos
     @Async
     public void checkPendingDocumentations() {
-        // Esta implementação seria feita em uma próxima fase quando tivermos acesso ao serviço de workflow
+        // Esta implementação seria feita em uma próxima fase quando tivermos acesso ao
+        // serviço de workflow
         // Por enquanto, deixamos o método vazio
     }
 
@@ -271,7 +339,8 @@ public class NotificationService {
         return createNotification(
                 "hr_admission",
                 "Novo Colaborador em Admissão",
-                String.format("Novo colaborador %s (%s) está em processo de admissão e aguarda integração.", employeeName, employeeEmail),
+                String.format("Novo colaborador %s (%s) está em processo de admissão e aguarda integração.",
+                        employeeName, employeeEmail),
                 Notification.Priority.HIGH,
                 recipient);
     }
@@ -283,7 +352,8 @@ public class NotificationService {
         return createNotification(
                 "hr_document_pending",
                 "Pendência Documental - Colaborador",
-                String.format("Colaborador %s (%s) possui documentação pendente no processo de admissão.", employeeName, employeeEmail),
+                String.format("Colaborador %s (%s) possui documentação pendente no processo de admissão.", employeeName,
+                        employeeEmail),
                 Notification.Priority.HIGH,
                 recipient);
     }
@@ -308,35 +378,42 @@ public class NotificationService {
     // ===== MÉTODOS MIGRADOS DO NotificacaoService =====
 
     /**
-     * Adiciona uma notificação para um usuário específico (compatibilidade com NotificacaoService)
+     * Adiciona uma notificação para um usuário específico (compatibilidade com
+     * NotificacaoService)
      */
-    public Notification adicionarNotificacao(String emailUsuario, String titulo, String mensagem, String tipo, String url) {
+    public Notification adicionarNotificacao(String emailUsuario, String titulo, String mensagem, String tipo,
+            String url) {
         // Buscar usuário por email
-        Usuario usuario = null;
-        try {
-            // Assumindo que existe um UsuarioService para buscar por email
-            // Se não existir, criar notificação global
-        } catch (Exception e) {
-            // Se não encontrar usuário, criar notificação global
-        }
-        
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElse(null); // ou lançar exceção se preferir
+
         Notification.Priority priority = Notification.Priority.MEDIUM;
         if ("error".equals(tipo)) {
             priority = Notification.Priority.HIGH;
         } else if ("success".equals(tipo)) {
             priority = Notification.Priority.LOW;
         }
-        
+
         Notification notification = new Notification(tipo, titulo, mensagem, priority, usuario);
         if (url != null && !url.isEmpty()) {
             notification.setActionUrl(url);
         }
-        
-        return notificationRepository.save(notification);
+
+        notification = notificationRepository.save(notification);
+
+        // Enviar notificação em tempo real
+        RealtimeNotificationService realtimeService = getRealtimeNotificationService();
+        if (realtimeService != null && usuario != null) {
+            realtimeService.sendNotificationToUser(usuario, notification);
+            realtimeService.sendUnreadCountUpdate(usuario);
+        }
+
+        return notification;
     }
 
     /**
-     * Obtém todas as notificações de um usuário (compatibilidade com NotificacaoService)
+     * Obtém todas as notificações de um usuário (compatibilidade com
+     * NotificacaoService)
      */
     @Transactional(readOnly = true)
     public List<Notification> obterNotificacoes(String emailUsuario) {
@@ -346,12 +423,14 @@ public class NotificationService {
     }
 
     /**
-     * Obtém notificações não lidas de um usuário (compatibilidade com NotificacaoService)
+     * Obtém notificações não lidas de um usuário (compatibilidade com
+     * NotificacaoService)
      */
     @Transactional(readOnly = true)
     public List<Notification> obterNotificacaoesNaoLidas(String emailUsuario) {
         // Buscar usuário por email e retornar suas notificações não lidas
-        // Por enquanto, retornar notificações globais não lidas se não encontrar usuário
+        // Por enquanto, retornar notificações globais não lidas se não encontrar
+        // usuário
         return notificationRepository.findUnreadGlobalNotifications(LocalDateTime.now());
     }
 
@@ -361,22 +440,23 @@ public class NotificationService {
     public void marcarComoLida(String emailUsuario, String notificacaoId) {
         try {
             Long id = Long.parseLong(notificacaoId);
-            // Buscar usuário por email
-            Usuario usuario = null; // Implementar busca por email
+            // Buscar usuário por email - implementar quando necessário
+            Usuario usuario = null;
             if (usuario != null) {
                 markAsRead(id, usuario);
             }
         } catch (NumberFormatException e) {
-            // ID inválido
+            // ID inválido - ignorar
         }
     }
 
     /**
-     * Marca todas as notificações como lidas (compatibilidade com NotificacaoService)
+     * Marca todas as notificações como lidas (compatibilidade com
+     * NotificacaoService)
      */
     public void marcarTodasComoLidas(String emailUsuario) {
-        // Buscar usuário por email
-        Usuario usuario = null; // Implementar busca por email
+        // Buscar usuário por email - implementar quando necessário
+        Usuario usuario = null;
         if (usuario != null) {
             markAllAsRead(usuario);
         }
@@ -387,8 +467,8 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public long contarNotificacaoesNaoLidas(String emailUsuario) {
-        // Buscar usuário por email
-        Usuario usuario = null; // Implementar busca por email
+        // Buscar usuário por email - implementar quando necessário
+        Usuario usuario = null;
         if (usuario != null) {
             return countUnreadNotificationsForUser(usuario);
         }
@@ -401,18 +481,17 @@ public class NotificationService {
     public void notificarNovoProcessoAdesao(ProcessoAdesao processo) {
         // Criar notificação para usuários com perfil RH
         Set<String> perfisRH = Set.of("RH", "ADMIN", "MASTER", "GERENCIAL");
-        
+
         String titulo = "Novo Processo de Adesão";
-        String mensagem = String.format("Novo processo de adesão criado para %s (%s) aguarda aprovação.", 
-            processo.getNomeColaborador(), processo.getCpfColaborador());
-        
+        String mensagem = String.format("Novo processo de adesão criado para %s (%s) aguarda aprovação.",
+                processo.getNomeColaborador(), processo.getCpfColaborador());
+
         createNotificationForProfiles(
-            "hr_admission",
-            titulo,
-            mensagem,
-            Notification.Priority.HIGH,
-            perfisRH
-        );
+                "hr_admission",
+                titulo,
+                mensagem,
+                Notification.Priority.HIGH,
+                perfisRH);
     }
 
     /**
@@ -422,15 +501,14 @@ public class NotificationService {
         // Buscar usuário por email do colaborador
         // Por enquanto, criar notificação global
         String titulo = "Processo de Adesão Aprovado";
-        String mensagem = String.format("O processo de adesão de %s foi aprovado com sucesso.", 
-            processo.getNomeColaborador());
-        
+        String mensagem = String.format("O processo de adesão de %s foi aprovado com sucesso.",
+                processo.getNomeColaborador());
+
         createGlobalNotification(
-            "hr_approved",
-            titulo,
-            mensagem,
-            Notification.Priority.MEDIUM
-        );
+                "hr_approved",
+                titulo,
+                mensagem,
+                Notification.Priority.MEDIUM);
     }
 
     /**
@@ -440,14 +518,33 @@ public class NotificationService {
         // Buscar usuário por email do colaborador
         // Por enquanto, criar notificação global
         String titulo = "Processo de Adesão Rejeitado";
-        String mensagem = String.format("O processo de adesão de %s foi rejeitado. Motivo: %s", 
-            processo.getNomeColaborador(), processo.getMotivoRejeicao());
-        
+        String mensagem = String.format("O processo de adesão de %s foi rejeitado. Motivo: %s",
+                processo.getNomeColaborador(), processo.getMotivoRejeicao());
+
         createGlobalNotification(
-            "hr_rejected",
-            titulo,
-            mensagem,
-            Notification.Priority.MEDIUM
-        );
+                "hr_rejected",
+                titulo,
+                mensagem,
+                Notification.Priority.MEDIUM);
+    }
+
+    /**
+     * Notifica sobre novo colaborador (compatibilidade com
+     * AdesaoColaboradorService)
+     */
+    public void notificarNovoColaborador(com.jaasielsilva.portalceo.model.Colaborador colaborador) {
+        // Criar notificação para usuários com perfil RH
+        Set<String> perfisRH = Set.of("RH", "ADMIN", "MASTER", "GERENCIAL");
+
+        String titulo = "Novo Colaborador Adicionado";
+        String mensagem = String.format("Novo colaborador %s (%s) foi adicionado ao sistema.",
+                colaborador.getNome(), colaborador.getEmail());
+
+        createNotificationForProfiles(
+                "hr_new_employee",
+                titulo,
+                mensagem,
+                Notification.Priority.MEDIUM,
+                perfisRH);
     }
 }

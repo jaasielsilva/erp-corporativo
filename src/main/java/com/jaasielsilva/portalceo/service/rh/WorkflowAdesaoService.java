@@ -9,7 +9,7 @@ import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.HistoricoProcessoAdesaoRepository;
 import com.jaasielsilva.portalceo.repository.ProcessoAdesaoRepository;
 
-import com.jaasielsilva.portalceo.service.NotificacaoService;
+import com.jaasielsilva.portalceo.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class WorkflowAdesaoService {
 
     @Autowired
     @Lazy
-    private NotificacaoService notificacaoService;
+    private NotificationService notificacaoService;
 
     @Autowired
     private HistoricoProcessoAdesaoRepository historicoRepository;

@@ -123,6 +123,9 @@
 </head>
 
 <body>
+    <!-- Dados do usuário para WebSocket -->
+    <div data-user-email="[[${#authentication.name}]]" style="display: none;"></div>
+    
     <div class="app-container">
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -751,7 +754,7 @@
         }
         
         function carregarNotificacoes(filtro = 'todas') {
-            const endpoint = filtro === 'nao-lidas' ? '/api/notificacoes/nao-lidas' : '/api/notificacoes';
+            const endpoint = filtro === 'nao-lidas' ? '/api/notifications/legacy/nao-lidas' : '/api/notifications/legacy';
             
             fetch(endpoint)
                 .then(response => response.json())
@@ -831,7 +834,7 @@
         }
         
         function marcarComoLida(notificacaoId) {
-            fetch(`/api/notificacoes/${notificacaoId}/marcar-lida`, {
+            fetch(`/api/notifications/legacy/${notificacaoId}/marcar-lida`, {
                 method: 'POST'
             })
             .then(response => response.json())
@@ -855,7 +858,7 @@
         }
         
         function marcarTodasComoLidas() {
-            fetch('/api/notificacoes/marcar-todas-lidas', {
+            fetch('/api/notifications/legacy/marcar-todas-lidas', {
                 method: 'POST'
             })
             .then(response => response.json())
@@ -877,15 +880,15 @@
         }
         
         function verificarNovasNotificacoes() {
-            fetch('/api/notificacoes/contador')
+            fetch('/api/notifications/unread-count')
                 .then(response => response.json())
                 .then(data => {
                     const badge = document.querySelector('.badge.bg-danger');
                     const botaoNotificacoes = document.querySelector('button[onclick="abrirNotificacoes()"]');
                     
-                    if (data.contador > 0) {
+                    if (data.count > 0) {
                         if (badge) {
-                            badge.textContent = data.contador;
+                            badge.textContent = data.count;
                         }
                         if (botaoNotificacoes && !botaoNotificacoes.closest('.position-relative')) {
                             // Criar indicador se não existir
@@ -930,8 +933,15 @@
 <!-- jQuery necessário -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
+<!-- WebSocket Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
 <!-- Seu JS de notificações (que depende de jQuery) -->
 <script th:src="@{/js/notifications.js}" defer></script>
+
+<!-- WebSocket para notificações em tempo real -->
+<script src="/js/websocket-notifications.js" defer></script>
 
 <!-- Seu sidebar.js (se não depende de jQuery, pode ficar antes ou depois) -->
 <script src="/js/sidebar.js" defer></script>

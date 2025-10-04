@@ -144,4 +144,20 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByDateRange(@Param("startDate") LocalDateTime startDate,
                                        @Param("endDate") LocalDateTime endDate,
                                        @Param("user") Usuario user);
+    
+    /**
+     * Busca notificações globais ativas (compatibilidade com NotificacaoService)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.active = true AND n.user IS NULL AND " +
+           "(n.expiresAt IS NULL OR n.expiresAt > :now) " +
+           "ORDER BY n.timestamp DESC")
+    List<Notification> findActiveGlobalNotifications(@Param("now") LocalDateTime now);
+    
+    /**
+     * Busca notificações globais não lidas (compatibilidade com NotificacaoService)
+     */
+    @Query("SELECT n FROM Notification n WHERE n.active = true AND n.isRead = false AND n.user IS NULL AND " +
+           "(n.expiresAt IS NULL OR n.expiresAt > :now) " +
+           "ORDER BY n.timestamp DESC")
+    List<Notification> findUnreadGlobalNotifications(@Param("now") LocalDateTime now);
 }

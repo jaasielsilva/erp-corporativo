@@ -606,18 +606,25 @@
         // Gráfico Adesão RH
         const ctxAdesaoRH = document.getElementById('graficoAdesaoRH').getContext('2d');
         
-        // Dados estáticos para teste
+        // Dados estáticos para teste (fallback)
         let adesaoLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
         let adesaoValores = [12, 18, 15, 22, 19, 25];
         
-        // Tentar obter dados dinâmicos
+        // Tentar obter dados dinâmicos dos últimos 6 meses
         try {
-            const dynamicAdesao = [[${adesaoRHMensal}]];
-            console.log('Adesão RH - Valores:', dynamicAdesao);
+            const dynamicLabels = [[${adesaoRHLabels}]];
+            const dynamicValores = [[${adesaoRHValores}]];
+            console.log('Adesão RH - Labels:', dynamicLabels);
+            console.log('Adesão RH - Valores:', dynamicValores);
             
-            if (dynamicAdesao && dynamicAdesao.length > 0) {
-                adesaoValores = dynamicAdesao;
-                console.log('Usando dados dinâmicos para adesão RH');
+            if (dynamicLabels && dynamicLabels.length > 0) {
+                adesaoLabels = dynamicLabels;
+                console.log('Usando labels dinâmicos para adesão RH');
+            }
+            
+            if (dynamicValores && dynamicValores.length > 0) {
+                adesaoValores = dynamicValores;
+                console.log('Usando valores dinâmicos para adesão RH');
             } else {
                 console.log('Usando dados estáticos para adesão RH');
             }

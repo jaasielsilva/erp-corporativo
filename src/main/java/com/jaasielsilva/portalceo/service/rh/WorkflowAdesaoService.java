@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -360,6 +359,41 @@ public class WorkflowAdesaoService {
      */
     public DashboardEstatisticas obterEstatisticasDashboard() {
         return obterEstatisticas(); // reutiliza seu método existente
+    }
+
+    /**
+     * Obtém dados de adesão dos últimos 6 meses para o gráfico
+     */
+    public List<Integer> obterDadosAdesaoUltimos6Meses() {
+        List<Integer> dadosMensais = new ArrayList<>();
+        LocalDateTime agora = LocalDateTime.now();
+        
+        // Gerar dados para os últimos 6 meses
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime inicioMes = agora.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime fimMes = inicioMes.plusMonths(1).minusSeconds(1);
+            
+            List<ProcessoAdesao> processosMes = processoRepository.findByPeriodoCriacao(inicioMes, fimMes);
+            dadosMensais.add(processosMes.size());
+        }
+        
+        return dadosMensais;
+    }
+
+    /**
+     * Obtém labels dos últimos 6 meses para o gráfico
+     */
+    public List<String> obterLabelsUltimos6Meses() {
+        List<String> labels = new ArrayList<>();
+        LocalDateTime agora = LocalDateTime.now();
+        
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime mes = agora.minusMonths(i);
+            String label = mes.getMonth().name().substring(0, 3) + "/" + String.valueOf(mes.getYear()).substring(2);
+            labels.add(label);
+        }
+        
+        return labels;
     }
 
     // Métodos auxiliares

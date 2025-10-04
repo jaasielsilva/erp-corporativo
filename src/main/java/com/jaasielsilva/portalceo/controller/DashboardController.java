@@ -1,7 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.security.Principal;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -13,9 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.model.Usuario;
-import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.EstoqueService;
@@ -105,6 +102,10 @@ public class DashboardController {
         long processosAdesaoTotal = estatisticasAdesao.getProcessosPorStatus().values().stream()
                 .mapToLong(Long::longValue).sum();
         long processosAguardandoAprovacao = estatisticasAdesao.getProcessosAguardandoAprovacao();
+
+        // Dados para gráfico de adesão RH dos últimos 6 meses
+        List<String> adesaoRHLabels = workflowAdesaoService.obterLabelsUltimos6Meses();
+        List<Integer> adesaoRHValores = workflowAdesaoService.obterDadosAdesaoUltimos6Meses();
 
         // Percentual da meta (simulado)
         String percentualMeta = "87%";
@@ -200,6 +201,8 @@ public class DashboardController {
         model.addAttribute("categoriasValores", categoriasValores);
         model.addAttribute("solicitacoesStatus", solicitacoesStatus);
         model.addAttribute("performanceIndicadores", performanceIndicadores);
+        model.addAttribute("adesaoRHLabels", adesaoRHLabels);
+        model.addAttribute("adesaoRHValores", adesaoRHValores);
 
         // Métricas de performance
         model.addAttribute("margemLucro", margemLucro);

@@ -19,31 +19,15 @@ public class AcaoUsuarioDTO {
         return data;
     }
 
-    public void setData(LocalDateTime data) {
-        this.data = data;
-    }
-
     public String getAcao() {
         return acao;
-    }
-
-    public void setAcao(String acao) {
-        this.acao = acao;
     }
 
     public String getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(String usuario) {
-        this.usuario = usuario;
-    }
-
     public String getResponsavel() {
         return responsavel;
-    }
-
-    public void setResponsavel(String responsavel) {
-        this.responsavel = responsavel;
     }
 }

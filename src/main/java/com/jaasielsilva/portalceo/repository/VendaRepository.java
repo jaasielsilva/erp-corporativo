@@ -108,4 +108,13 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
     @Query("SELECT AVG(v.total) FROM Venda v WHERE v.dataVenda BETWEEN :inicio AND :fim")
     BigDecimal calcularTicketMedioPorPeriodo(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
+
+    @Query(value = "SELECT ROUND(SUM(v.total) / COUNT(v.id), 2) FROM venda v WHERE v.status = 'FINALIZADA'", nativeQuery = true)
+    Double calcularTicketMedio();
+
+    @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venda v WHERE v.status = 'FINALIZADA'")
+    BigDecimal somarTotalVendas();
+
+    @Query("SELECT COUNT(v) FROM Venda v WHERE v.status = 'FINALIZADA'")
+    long contarTotalVendas();
 }

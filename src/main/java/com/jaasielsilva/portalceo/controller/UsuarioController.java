@@ -10,8 +10,10 @@ import com.lowagie.text.pdf.PdfWriter;
 import com.jaasielsilva.portalceo.dto.EstatisticasUsuariosDTO;
 import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.repository.*;
+import com.jaasielsilva.portalceo.service.AcaoUsuarioService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -31,38 +33,50 @@ public class UsuarioController {
     private final CargoRepository cargoRepository;
     private final DepartamentoRepository departamentoRepository;
 
+    @Autowired
+    private AcaoUsuarioService acaoUsuarioService;
+
     public UsuarioController(UsuarioService usuarioService,
-                             PerfilRepository perfilRepository,
-                             CargoRepository cargoRepository,
-                             DepartamentoRepository departamentoRepository) {
+            PerfilRepository perfilRepository,
+            CargoRepository cargoRepository,
+            DepartamentoRepository departamentoRepository) {
         this.usuarioService = usuarioService;
         this.perfilRepository = perfilRepository;
         this.cargoRepository = cargoRepository;
         this.departamentoRepository = departamentoRepository;
     }
 
-        /**
+    /**
      * Lista os usuários cadastrados no sistema.
      * Caso haja parâmetro de busca, filtra por nome ou email.
      * Exibe apenas usuários com status ATIVO (usuários DEMITIDOS não aparecem).
      */
 
     @GetMapping
-    public String listarUsuarios(@RequestParam(value = "busca", required = false) String busca, Model model) {
-    List<Usuario> usuarios = (busca == null || busca.isEmpty())
-            ? usuarioService.buscarTodos()
-                .stream()
-                .filter(u -> u.getStatus() == Usuario.Status.ATIVO)
-                .toList()
-            : usuarioService.buscarPorNomeOuEmail(busca)
-                .stream()
-                .filter(u -> u.getStatus() == Usuario.Status.ATIVO)
-                .toList();
-                
-    model.addAttribute("usuarios", usuarios);
-    return "usuarios/listar";
-}
+    public String listarUsuarios(
+            @RequestParam(value = "busca", required = false) String busca,
+            @RequestParam(value = "pagina", defaultValue = "0") int pagina,
+            Model model) {
 
+        var usuarios = (busca == null || busca.isEmpty())
+                ? usuarioService.buscarTodos()
+                        .stream()
+                        .filter(u -> u.getStatus() == Usuario.Status.ATIVO)
+                        .toList()
+                : usuarioService.buscarPorNomeOuEmail(busca)
+                        .stream()
+                        .filter(u -> u.getStatus() == Usuario.Status.ATIVO)
+                        .toList();
+
+        model.addAttribute("usuarios", usuarios);
+
+        var acoesPage = acaoUsuarioService.buscarUltimasAcoes(pagina, 10);
+        model.addAttribute("ultimasAcoes", acoesPage.getContent());
+        model.addAttribute("totalPaginas", acoesPage.getTotalPages());
+        model.addAttribute("paginaAtual", pagina);
+
+        return "usuarios/listar";
+    }
 
     /**
      * Exibe as estatísticas gerais dos usuários no sistema.
@@ -100,10 +114,10 @@ public class UsuarioController {
      */
     @PostMapping("/cadastrar")
     public String cadastrarUsuario(@Valid @ModelAttribute("usuario") Usuario usuario,
-                                   BindingResult bindingResult,
-                                   @RequestParam("confirmSenha") String confirmSenha,
-                                   @RequestParam("perfilId") Long perfilId,
-                                   Model model) {
+            BindingResult bindingResult,
+            @RequestParam("confirmSenha") String confirmSenha,
+            @RequestParam("perfilId") Long perfilId,
+            Model model) {
 
         if (!usuario.getSenha().equals(confirmSenha)) {
             bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
@@ -138,17 +152,14 @@ public class UsuarioController {
      */
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEditar(@PathVariable Long id, Model model) {
-    Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-    if (usuarioOpt.isEmpty()) {
-        return "redirect:/usuarios";
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
+        if (usuarioOpt.isEmpty()) {
+            return "redirect:/usuarios";
+        }
+        model.addAttribute("usuario", usuarioOpt.get());
+        adicionarAtributosComuns(model);
+        return "usuarios/editar";
     }
-    model.addAttribute("usuario", usuarioOpt.get());
-    adicionarAtributosComuns(model);
-    return "usuarios/editar";
-}
-
-
-
 
     /**
      * Salva as alterações feitas no usuário após edição.
@@ -156,72 +167,73 @@ public class UsuarioController {
      * Preserva campos não editados como colaborador_id.
      */
     @PostMapping("/{id}/editar")
-public String salvarEdicaoUsuario(@PathVariable Long id,
-                                  @Valid @ModelAttribute("usuario") Usuario usuario,
-                                  BindingResult bindingResult,
-                                  @RequestParam("confirmSenha") String confirmSenha,
-                                  @RequestParam("perfilId") Long perfilId,
-                                  Model model,
-                                  Principal principal) {
+    public String salvarEdicaoUsuario(@PathVariable Long id,
+            @Valid @ModelAttribute("usuario") Usuario usuario,
+            BindingResult bindingResult,
+            @RequestParam("confirmSenha") String confirmSenha,
+            @RequestParam("perfilId") Long perfilId,
+            Model model,
+            Principal principal) {
 
-    // Busca o usuário original no banco para preservar campos não editados
-    Usuario usuarioBanco = usuarioService.buscarPorId(id)
-        .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+        // Busca o usuário original no banco para preservar campos não editados
+        Usuario usuarioBanco = usuarioService.buscarPorId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
-    if (!usuario.getSenha().equals(confirmSenha)) {
-        bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
+        if (!usuario.getSenha().equals(confirmSenha)) {
+            bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
+        }
+
+        if (bindingResult.hasErrors()) {
+            adicionarAtributosComuns(model);
+            return "usuarios/editar";
+        }
+
+        try {
+            if (usuario.getDataDesligamento() != null) {
+                String emailLogado = principal.getName();
+                Usuario usuarioLogado = usuarioService.buscarPorEmail(emailLogado)
+                        .orElseThrow(() -> new IllegalStateException("Usuário logado não encontrado"));
+
+                usuarioService.excluirUsuario(id, usuarioLogado.getMatricula());
+                return "redirect:/usuarios";
+            }
+
+            // Preservar campos não editados do usuário original
+            usuario.setId(id);
+            usuario.setDataAdmissao(usuarioBanco.getDataAdmissao());
+            usuario.setColaborador(usuarioBanco.getColaborador()); // Preserva a relação com colaborador
+            usuario.setMatricula(usuarioBanco.getMatricula()); // Preserva matrícula se não foi alterada
+            usuario.setUltimoAcesso(usuarioBanco.getUltimoAcesso()); // Preserva último acesso
+            usuario.setOnline(usuarioBanco.isOnline()); // Preserva status online
+            usuario.setFotoPerfil(usuarioBanco.getFotoPerfil()); // Preserva foto de perfil
+
+            // Preservar cargo e departamento se não foram alterados (campos bloqueados no
+            // form)
+            if (usuario.getCargo() == null) {
+                usuario.setCargo(usuarioBanco.getCargo());
+            }
+            if (usuario.getDepartamento() == null) {
+                usuario.setDepartamento(usuarioBanco.getDepartamento());
+            }
+
+            // Preservar nível de acesso se não foi alterado (campo bloqueado no form)
+            if (usuario.getNivelAcesso() == null) {
+                usuario.setNivelAcesso(usuarioBanco.getNivelAcesso());
+            }
+
+            usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
+                    .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
+
+            usuarioService.salvarUsuario(usuario);
+
+        } catch (Exception e) {
+            model.addAttribute("erro", e.getMessage());
+            adicionarAtributosComuns(model);
+            return "usuarios/editar";
+        }
+
+        return "redirect:/usuarios";
     }
-
-    if (bindingResult.hasErrors()) {
-        adicionarAtributosComuns(model);
-        return "usuarios/editar";
-    }
-
-    try {
-        if (usuario.getDataDesligamento() != null) {
-            String emailLogado = principal.getName();
-            Usuario usuarioLogado = usuarioService.buscarPorEmail(emailLogado)
-                                        .orElseThrow(() -> new IllegalStateException("Usuário logado não encontrado"));
-
-            usuarioService.excluirUsuario(id, usuarioLogado.getMatricula());
-            return "redirect:/usuarios";
-        }
-
-        // Preservar campos não editados do usuário original
-        usuario.setId(id);
-        usuario.setDataAdmissao(usuarioBanco.getDataAdmissao());
-        usuario.setColaborador(usuarioBanco.getColaborador()); // Preserva a relação com colaborador
-        usuario.setMatricula(usuarioBanco.getMatricula()); // Preserva matrícula se não foi alterada
-        usuario.setUltimoAcesso(usuarioBanco.getUltimoAcesso()); // Preserva último acesso
-        usuario.setOnline(usuarioBanco.isOnline()); // Preserva status online
-        usuario.setFotoPerfil(usuarioBanco.getFotoPerfil()); // Preserva foto de perfil
-        
-        // Preservar cargo e departamento se não foram alterados (campos bloqueados no form)
-        if (usuario.getCargo() == null) {
-            usuario.setCargo(usuarioBanco.getCargo());
-        }
-        if (usuario.getDepartamento() == null) {
-            usuario.setDepartamento(usuarioBanco.getDepartamento());
-        }
-        
-        // Preservar nível de acesso se não foi alterado (campo bloqueado no form)
-        if (usuario.getNivelAcesso() == null) {
-            usuario.setNivelAcesso(usuarioBanco.getNivelAcesso());
-        }
-
-        usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
-                .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
-
-        usuarioService.salvarUsuario(usuario);
-
-    } catch (Exception e) {
-        model.addAttribute("erro", e.getMessage());
-        adicionarAtributosComuns(model);
-        return "usuarios/editar";
-    }
-
-    return "redirect:/usuarios";
-}
 
     /**
      * Busca usuário por CPF e redireciona para página de edição.
@@ -265,7 +277,8 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("erro", "Erro inesperado ao excluir usuário."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("erro", "Erro inesperado ao excluir usuário."));
         }
     }
 
@@ -304,7 +317,8 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
     @GetMapping("/{id}/detalhes")
     public String exibirDetalhesUsuario(@PathVariable Long id, Model model) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-        if (usuarioOpt.isEmpty()) return "redirect:/usuarios";
+        if (usuarioOpt.isEmpty())
+            return "redirect:/usuarios";
         model.addAttribute("usuario", usuarioOpt.get());
         return "usuarios/detalhes";
     }
@@ -315,7 +329,8 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
     @GetMapping("/relatorio")
     public String meusDados(Model model, Principal principal) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(principal.getName());
-        if (usuarioOpt.isEmpty()) return "redirect:/logout";
+        if (usuarioOpt.isEmpty())
+            return "redirect:/logout";
         model.addAttribute("usuario", usuarioOpt.get());
         return "usuarios/relatorio-usuarios";
     }
@@ -374,7 +389,6 @@ public String salvarEdicaoUsuario(@PathVariable Long id,
         return "redirect:/usuarios/relatorio";
     }
 
-    
     // ===============================
     // BLOCO: RELATÓRIOS PDF
     // ===============================

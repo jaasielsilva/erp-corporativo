@@ -11,28 +11,29 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-
-
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
+
         .stat-card {
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             text-align: center;
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
+
         .stat-card::before {
             content: '';
             position: absolute;
@@ -42,6 +43,7 @@
             height: 4px;
             background: linear-gradient(90deg, #667eea, #764ba2);
         }
+
         .stat-icon {
             font-size: 48px;
             margin-bottom: 15px;
@@ -50,8 +52,20 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .stat-number { font-size: 36px; font-weight: 800; color: #1e293b; margin: 10px 0; }
-        .stat-label { font-size: 16px; color: #64748b; font-weight: 500; }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
         .stat-change {
             font-size: 12px;
             margin-top: 8px;
@@ -59,8 +73,16 @@
             border-radius: 20px;
             font-weight: 600;
         }
-        .stat-change.positive { background: #dcfce7; color: #16a34a; }
-        .stat-change.negative { background: #fef2f2; color: #dc2626; }
+
+        .stat-change.positive {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .stat-change.negative {
+            background: #fef2f2;
+            color: #dc2626;
+        }
 
         .charts-section {
             display: grid;
@@ -68,12 +90,14 @@
             gap: 25px;
             margin-bottom: 40px;
         }
+
         .chart-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
+
         .chart-title {
             font-size: 18px;
             font-weight: 600;
@@ -83,9 +107,20 @@
             align-items: center;
             gap: 10px;
         }
-        .chart-container { height: 350px; }
-        .chart-container-small { height: 250px; }
-        .chart-container-narrow { height: 200px; width: 60%; margin: 0 auto; }
+
+        .chart-container {
+            height: 350px;
+        }
+
+        .chart-container-small {
+            height: 250px;
+        }
+
+        .chart-container-narrow {
+            height: 200px;
+            width: 60%;
+            margin: 0 auto;
+        }
 
         .secondary-charts {
             display: grid;
@@ -102,12 +137,14 @@
             gap: 25px;
             margin-bottom: 40px;
         }
+
         .performance-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
+
         .performance-metric {
             display: flex;
             justify-content: space-between;
@@ -115,17 +152,27 @@
             padding: 12px 0;
             border-bottom: 1px solid #f1f5f9;
         }
-        .performance-metric:last-child { border-bottom: none; }
-        .metric-label { font-weight: 500; color: #64748b; }
-        .metric-value { font-weight: 700; color: #1e293b; }
 
+        .performance-metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .metric-value {
+            font-weight: 700;
+            color: #1e293b;
+        }
     </style>
 </head>
 
 <body>
     <!-- Dados do usuário para WebSocket -->
     <div data-user-email="[[${#authentication.name}]]" style="display: none;"></div>
-    
+
     <div class="app-container">
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -133,7 +180,7 @@
         <!-- Conteúdo principal -->
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
-            
+
             <section class="content-area">
                 <div class="container">
                     <!-- Header -->
@@ -142,186 +189,202 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h2 class="mb-0">Dashboard Executivo</h2>
-                                   
+
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
                                     <!-- Indicador de Notificações -->
                                     <div class="position-relative" th:if="${notificacaoesNaoLidas > 0}">
-                                        <button class="btn btn-outline-primary position-relative" onclick="abrirNotificacoes()">
+                                        <button class="btn btn-outline-primary position-relative"
+                                            onclick="abrirNotificacoes()">
                                             <i class="fas fa-bell"></i>
-                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
-                                                  th:text="${notificacaoesNaoLidas}" 
-                                                  th:if="${notificacaoesNaoLidas > 0}">
+                                            <span
+                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                                th:text="${notificacaoesNaoLidas}" th:if="${notificacaoesNaoLidas > 0}">
                                                 <span class="visually-hidden">notificações não lidas</span>
                                             </span>
                                         </button>
                                     </div>
-                                    
+
                                 </div>
                             </div>
                         </div>
                     </div>
-            <!-- Cards de indicadores-chave -->
-            <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-number" th:text="${faturamentoMensal}">R$ 2.847.350</div>
-                    <div class="stat-label">Faturamento Últimos 12 Meses</div>
-                    <div class="stat-change" th:class="${crescimentoFaturamento.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}" th:text="${crescimentoFaturamento} + ' vs mês anterior'">+12.5% vs mês anterior</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
-                    <div class="stat-number" th:text="${totalVendas}">1.247</div>
-                    <div class="stat-label">Quantidade de Vendas</div>
-                    <div class="stat-change" th:class="${crescimentoVendas.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}" th:text="${crescimentoVendas} + ' vs mês anterior'">+8.3% vs mês anterior</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-number" th:text="${totalClientes}">3.892</div>
-                    <div class="stat-label">Clientes Ativos</div>
-                    <div class="stat-change positive" th:text="'+' + ${novosClientes30Dias} + ' novos nos últimos 30 dias'">+156 novos nos últimos 30 dias</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-boxes"></i></div>
-                    <div class="stat-number" th:text="${totalProdutos}">847</div>
-                    <div class="stat-label">Produtos em Estoque</div>
-                    <div class="stat-change negative" th:text="'-' + ${produtosCriticos} + ' produto crítico'">-23 produtos críticos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
-                    <div class="stat-number" th:text="${totalFuncionarios}">156</div>
-                    <div class="stat-label">Funcionários Ativos</div>
-                    <div class="stat-change positive" th:text="'+' + ${contratacoes12Meses} + ' contratações nos últimos 12 meses'">+5 contratações nos últimos 12 meses</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
-                    <div class="stat-number" th:text="${processosAdesaoTotal}">23</div>
-                    <div class="stat-label">Processos de Adesão</div>
-                    <div class="stat-change" th:class="${processosAguardandoAprovacao > 0 ? 'stat-change negative' : 'stat-change positive'}" th:text="${processosAguardandoAprovacao} + ' aguardando aprovação'">
-                        5 aguardando aprovação
-                    </div>
-                </div>
+                    <!-- Cards de indicadores-chave -->
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                            <div class="stat-number" th:text="${faturamentoMensal}">R$ 2.847.350</div>
+                            <div class="stat-label">Faturamento Últimos 12 Meses</div>
+                            <div class="stat-change"
+                                th:class="${crescimentoFaturamento.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}"
+                                th:text="${crescimentoFaturamento} + ' vs mês anterior'">+12.5% vs mês anterior</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+                            <div class="stat-number" th:text="${totalVendas}">1.247</div>
+                            <div class="stat-label">Quantidade de Vendas</div>
+                            <div class="stat-change"
+                                th:class="${crescimentoVendas.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}"
+                                th:text="${crescimentoVendas} + ' vs mês anterior'">+8.3% vs mês anterior</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-number" th:text="${totalClientes}">3.892</div>
+                            <div class="stat-label">Clientes Ativos</div>
+                            <div class="stat-change positive"
+                                th:text="'+' + ${novosClientes30Dias} + ' novos nos últimos 30 dias'">+156 novos nos
+                                últimos 30 dias</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+                            <div class="stat-number" th:text="${totalProdutos}">847</div>
+                            <div class="stat-label">Produtos em Estoque</div>
+                            <div class="stat-change negative" th:text="'-' + ${produtosCriticos} + ' produto crítico'">
+                                -23 produtos críticos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+                            <div class="stat-number" th:text="${totalFuncionarios}">156</div>
+                            <div class="stat-label">Funcionários Ativos</div>
+                            <div class="stat-change positive"
+                                th:text="'+' + ${contratacoes12Meses} + ' contratações nos últimos 12 meses'">+5
+                                contratações nos últimos 12 meses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+                            <div class="stat-number" th:text="${processosAdesaoTotal}">23</div>
+                            <div class="stat-label">Processos de Adesão</div>
+                            <div class="stat-change"
+                                th:class="${processosAguardandoAprovacao > 0 ? 'stat-change negative' : 'stat-change positive'}"
+                                th:text="${processosAguardandoAprovacao} + ' aguardando aprovação'">
+                                5 aguardando aprovação
+                            </div>
+                        </div>
 
-            </div>
+                    </div>
 
-            <!-- Gráficos Principais -->
-            <div class="charts-section">
-                <div class="chart-card">
-                    <div class="chart-title">
-                        <i class="fas fa-chart-line"></i>
-                        Evolução de Vendas - Últimos 12 Meses
+                    <!-- Gráficos Principais -->
+                    <div class="charts-section">
+                        <div class="chart-card">
+                            <div class="chart-title">
+                                <i class="fas fa-chart-line"></i>
+                                Evolução de Vendas - Últimos 12 Meses
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="graficoVendas"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-title">
+                                <i class="fas fa-chart-pie"></i>
+                                Vendas por Categoria
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="graficoCategorias"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="graficoVendas"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <div class="chart-title">
-                        <i class="fas fa-chart-pie"></i>
-                        Vendas por Categoria
-                    </div>
-                    <div class="chart-container-small">
-                        <canvas id="graficoCategorias"></canvas>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Gráficos Secundários -->
-            <div class="secondary-charts">
-                <div class="chart-card">
-                    <div class="chart-title">
-                        <i class="fas fa-user-lock"></i>
-                        Solicitações de Acesso ao Sistema
+                    <!-- Gráficos Secundários -->
+                    <div class="secondary-charts">
+                        <div class="chart-card">
+                            <div class="chart-title">
+                                <i class="fas fa-user-lock"></i>
+                                Solicitações de Acesso ao Sistema
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="graficoSolicitacoes"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-title">
+                                <i class="fas fa-user-plus"></i>
+                                Processos de Adesão RH
+                            </div>
+                            <div class="chart-container-narrow">
+                                <canvas id="graficoAdesaoRH"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Performance Mensal
+                            </div>
+                            <div class="chart-container-small">
+                                <canvas id="graficoPerformance"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="chart-container-small">
-                        <canvas id="graficoSolicitacoes"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <div class="chart-title">
-                        <i class="fas fa-user-plus"></i>
-                        Processos de Adesão RH
-                    </div>
-                    <div class="chart-container-narrow">
-                        <canvas id="graficoAdesaoRH"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <div class="chart-title">
-                        <i class="fas fa-chart-bar"></i>
-                        Performance Mensal
-                    </div>
-                    <div class="chart-container-small">
-                        <canvas id="graficoPerformance"></canvas>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Métricas de Performance -->
-            <div class="performance-grid">
-                <div class="performance-card">
-                    <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-chart-line"></i> Indicadores Financeiros</h4>
-                    <div class="performance-metric">
-                        <span class="metric-label">Margem de Lucro</span>
-                        <span class="metric-value" th:text="${margemLucro}">23.5%</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Ticket Médio</span>
-                        <span class="metric-value" th:text="${ticketMedio}">R$ 2.284</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">ROI Mensal</span>
-                        <span class="metric-value" th:text="${roiMensal}">18.7%</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Inadimplência</span>
-                        <span class="metric-value" th:text="${inadimplencia}">2.1%</span>
+                    <!-- Métricas de Performance -->
+                    <div class="performance-grid">
+                        <div class="performance-card">
+                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-chart-line"></i>
+                                Indicadores Financeiros</h4>
+                            <div class="performance-metric">
+                                <span class="metric-label">Margem de Lucro</span>
+                                <span class="metric-value" th:text="${margemLucro}">23.5%</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Ticket Médio</span>
+                                <span class="metric-value" th:text="${ticketMedio}">R$ 0,00</span>
+                            </div>
+
+                            <div class="performance-metric">
+                                <span class="metric-label">ROI Mensal</span>
+                                <span class="metric-value" th:text="${roiMensal}">18.7%</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Inadimplência</span>
+                                <span class="metric-value" th:text="${inadimplencia}">2.1%</span>
+                            </div>
+                        </div>
+                        <div class="performance-card">
+                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-users"></i> Recursos
+                                Humanos</h4>
+                            <div class="performance-metric">
+                                <span class="metric-label">Taxa de Retenção</span>
+                                <span class="metric-value" th:text="${taxaRetencao}">94.2%</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Produtividade Média</span>
+                                <span class="metric-value" th:text="${produtividadeMedia}">87.3%</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Processos Aprovados</span>
+                                <span class="metric-value" th:text="${processosAprovados}">18</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Tempo Médio Aprovação</span>
+                                <span class="metric-value" th:text="${tempoMedioAprovacao}">2.3 dias</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Satisfação Interna</span>
+                                <span class="metric-value" th:text="${satisfacaoInterna}">8.7/10</span>
+                            </div>
+                        </div>
+                        <div class="performance-card">
+                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-warehouse"></i> Operações
+                            </h4>
+                            <div class="performance-metric">
+                                <span class="metric-label">Giro de Estoque</span>
+                                <span class="metric-value" th:text="${giroEstoque}">4.2x</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Tempo Médio Entrega</span>
+                                <span class="metric-value" th:text="${tempoEntrega}">2.3 dias</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Taxa de Devolução</span>
+                                <span class="metric-value" th:text="${taxaDevolucao}">1.8%</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Eficiência Logística</span>
+                                <span class="metric-value" th:text="${eficienciaLogistica}">91.5%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="performance-card">
-                    <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-users"></i> Recursos Humanos</h4>
-                    <div class="performance-metric">
-                        <span class="metric-label">Taxa de Retenção</span>
-                        <span class="metric-value" th:text="${taxaRetencao}">94.2%</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Produtividade Média</span>
-                        <span class="metric-value" th:text="${produtividadeMedia}">87.3%</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Processos Aprovados</span>
-                        <span class="metric-value" th:text="${processosAprovados}">18</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Tempo Médio Aprovação</span>
-                        <span class="metric-value" th:text="${tempoMedioAprovacao}">2.3 dias</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Satisfação Interna</span>
-                        <span class="metric-value" th:text="${satisfacaoInterna}">8.7/10</span>
-                    </div>
-                </div>
-                <div class="performance-card">
-                    <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-warehouse"></i> Operações</h4>
-                    <div class="performance-metric">
-                        <span class="metric-label">Giro de Estoque</span>
-                        <span class="metric-value" th:text="${giroEstoque}">4.2x</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Tempo Médio Entrega</span>
-                        <span class="metric-value" th:text="${tempoEntrega}">2.3 dias</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Taxa de Devolução</span>
-                        <span class="metric-value" th:text="${taxaDevolucao}">1.8%</span>
-                    </div>
-                    <div class="performance-metric">
-                        <span class="metric-label">Eficiência Logística</span>
-                        <span class="metric-value" th:text="${eficienciaLogistica}">91.5%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Footer -->
@@ -335,22 +398,22 @@
 
         // Gráfico Vendas últimos 12 meses
         const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
-        
+
         // Dados estáticos para teste
         let vendasLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         let vendasValores = [15000, 18000, 22000, 19000, 25000, 28000, 32000, 29000, 31000, 35000, 38000, 42000];
         let metaValores = [20000, 20000, 20000, 25000, 25000, 25000, 30000, 30000, 30000, 35000, 35000, 35000];
-        
+
         // Tentar obter dados dinâmicos
         try {
-            const dynamicLabels = [[${ultimos12MesesLabels}]];
-            const dynamicValores = [[${ultimos12MesesValores}]];
-            const dynamicMeta = [[${metaVendasMensal}]];
-            
+            const dynamicLabels = [[${ ultimos12MesesLabels }]];
+            const dynamicValores = [[${ ultimos12MesesValores }]];
+            const dynamicMeta = [[${ metaVendasMensal }]];
+
             console.log('Vendas - Labels:', dynamicLabels);
             console.log('Vendas - Valores:', dynamicValores);
             console.log('Vendas - Meta:', dynamicMeta);
-            
+
             if (dynamicLabels && dynamicLabels.length > 0) {
                 vendasLabels = dynamicLabels;
                 vendasValores = dynamicValores;
@@ -362,7 +425,7 @@
         } catch (e) {
             console.log('Erro ao carregar dados de vendas, usando estáticos:', e);
         }
-        
+
         const chartVendas = new Chart(ctxVendas, {
             type: 'line',
             data: {
@@ -406,7 +469,7 @@
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 0, 0, 0.1)' },
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return 'R$ ' + value.toLocaleString('pt-BR');
                             }
                         }
@@ -420,19 +483,19 @@
 
         // Gráfico Vendas por Categoria
         const ctxCategorias = document.getElementById('graficoCategorias').getContext('2d');
-        
+
         // Dados estáticos para teste
         let categoriasLabels = ['Eletrônicos', 'Roupas', 'Casa e Jardim', 'Livros'];
         let categoriasValores = [2500, 1800, 1200, 800];
-        
+
         // Tentar obter dados dinâmicos
         try {
-            const dynamicLabels = [[${categoriasLabels}]];
-            const dynamicValores = [[${categoriasValores}]];
-            
+            const dynamicLabels = [[${ categoriasLabels }]];
+            const dynamicValores = [[${ categoriasValores }]];
+
             console.log('Dados dinâmicos - Labels:', dynamicLabels);
             console.log('Dados dinâmicos - Valores:', dynamicValores);
-            
+
             if (dynamicLabels && dynamicLabels.length > 0) {
                 categoriasLabels = dynamicLabels;
                 // Se todos os valores são zero, usar dados estáticos
@@ -449,7 +512,7 @@
         } catch (e) {
             console.log('Erro ao carregar dados dinâmicos, usando estáticos:', e);
         }
-        
+
         const chartCategorias = new Chart(ctxCategorias, {
             type: 'doughnut',
             data: {
@@ -472,8 +535,8 @@
                     legend: { position: 'bottom', labels: { padding: 20 } },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                return context.label + ': R$ ' + 
+                            label: function (context) {
+                                return context.label + ': R$ ' +
                                     context.parsed.toLocaleString('pt-BR');
                             }
                         }
@@ -484,25 +547,25 @@
 
         // Gráfico Solicitações por Status
         const ctxSolicitacoes = document.getElementById('graficoSolicitacoes').getContext('2d');
-        
+
         // Dados estáticos para teste
         let solicitacoesLabels = ['Pendentes', 'Aprovadas', 'Rejeitadas', 'Em Análise'];
         let solicitacoesValores = [25, 45, 8, 12];
-        
+
         // Tentar obter dados dinâmicos
         try {
-            const dynamicSolicitacoes = [[${solicitacoesStatus}]];
+            const dynamicSolicitacoes = [[${ solicitacoesStatus }]];
             console.log('=== DEBUG FRONTEND SOLICITAÇÕES ===');
             console.log('Dados recebidos do backend:', dynamicSolicitacoes);
             console.log('Tipo dos dados:', typeof dynamicSolicitacoes);
             console.log('É array?', Array.isArray(dynamicSolicitacoes));
             console.log('Tamanho do array:', dynamicSolicitacoes ? dynamicSolicitacoes.length : 'null/undefined');
-            
+
             if (dynamicSolicitacoes && dynamicSolicitacoes.length > 0) {
                 // Se todos os valores são zero, usar dados estáticos
                 const hasNonZeroValues = dynamicSolicitacoes.some(val => val > 0);
                 console.log('Tem valores não-zero?', hasNonZeroValues);
-                
+
                 if (hasNonZeroValues) {
                     solicitacoesValores = dynamicSolicitacoes;
                     console.log('✅ Usando dados dinâmicos para solicitações:', solicitacoesValores);
@@ -517,7 +580,7 @@
         } catch (e) {
             console.log('❌ Erro ao carregar dados de solicitações, usando estáticos:', e);
         }
-        
+
         const chartSolicitacoes = new Chart(ctxSolicitacoes, {
             type: 'doughnut',
             data: {
@@ -541,16 +604,16 @@
 
         // Gráfico Performance Mensal
         const ctxPerformance = document.getElementById('graficoPerformance').getContext('2d');
-        
+
         // Dados estáticos para teste
         let performanceLabels = ['Vendas', 'Atendimento', 'Logística', 'Qualidade', 'Financeiro'];
         let performanceValores = [85, 92, 78, 88, 91];
-        
+
         // Tentar obter dados dinâmicos
         try {
-            const dynamicPerformance = [[${performanceIndicadores}]];
+            const dynamicPerformance = [[${ performanceIndicadores }]];
             console.log('Performance - Valores:', dynamicPerformance);
-            
+
             if (dynamicPerformance && dynamicPerformance.length > 0) {
                 performanceValores = dynamicPerformance;
                 console.log('Usando dados dinâmicos para performance');
@@ -560,7 +623,7 @@
         } catch (e) {
             console.log('Erro ao carregar dados de performance, usando estáticos:', e);
         }
-        
+
         const chartPerformance = new Chart(ctxPerformance, {
             type: 'bar',
             data: {
@@ -594,7 +657,7 @@
                         max: 100,
                         grid: { color: 'rgba(0, 0, 0, 0.1)' },
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return value + '%';
                             }
                         }
@@ -608,23 +671,23 @@
 
         // Gráfico Adesão RH
         const ctxAdesaoRH = document.getElementById('graficoAdesaoRH').getContext('2d');
-        
+
         // Dados estáticos para teste (fallback)
         let adesaoLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
         let adesaoValores = [12, 18, 15, 22, 19, 25];
-        
+
         // Tentar obter dados dinâmicos dos últimos 6 meses
         try {
-            const dynamicLabels = [[${adesaoRHLabels}]];
-            const dynamicValores = [[${adesaoRHValores}]];
+            const dynamicLabels = [[${ adesaoRHLabels }]];
+            const dynamicValores = [[${ adesaoRHValores }]];
             console.log('Adesão RH - Labels:', dynamicLabels);
             console.log('Adesão RH - Valores:', dynamicValores);
-            
+
             if (dynamicLabels && dynamicLabels.length > 0) {
                 adesaoLabels = dynamicLabels;
                 console.log('Usando labels dinâmicos para adesão RH');
             }
-            
+
             if (dynamicValores && dynamicValores.length > 0) {
                 adesaoValores = dynamicValores;
                 console.log('Usando valores dinâmicos para adesão RH');
@@ -634,7 +697,7 @@
         } catch (e) {
             console.log('Erro ao carregar dados de adesão RH, usando estáticos:', e);
         }
-        
+
         const chartAdesaoRH = new Chart(ctxAdesaoRH, {
             type: 'bar',
             data: {
@@ -701,22 +764,22 @@
             document.getElementById('lastUpdate').textContent = new Date().toLocaleString('pt-BR');
             verificarNovasNotificacoes();
         }, 300000); // A cada 5 minutos
-        
+
         // Função para abrir painel de notificações
         function abrirNotificacoes() {
             // Criar modal de notificações se não existir
             if (!document.getElementById('modalNotificacoes')) {
                 criarModalNotificacoes();
             }
-            
+
             // Carregar notificações
             carregarNotificacoes();
-            
+
             // Mostrar modal
             const modal = new bootstrap.Modal(document.getElementById('modalNotificacoes'));
             modal.show();
         }
-        
+
         function criarModalNotificacoes() {
             const modalHtml = `
                 <div class="modal fade" id="modalNotificacoes" tabindex="-1">
@@ -749,13 +812,13 @@
                     </div>
                 </div>
             `;
-            
+
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         }
-        
+
         function carregarNotificacoes(filtro = 'todas') {
             const endpoint = filtro === 'nao-lidas' ? '/api/notifications/legacy/nao-lidas' : '/api/notifications/legacy';
-            
+
             fetch(endpoint)
                 .then(response => response.json())
                 .then(notificacoes => {
@@ -771,10 +834,10 @@
                     `;
                 });
         }
-        
+
         function renderizarNotificacoes(notificacoes) {
             const lista = document.getElementById('listaNotificacoes');
-            
+
             if (!notificacoes || notificacoes.length === 0) {
                 lista.innerHTML = `
                     <div class="text-center py-4">
@@ -784,13 +847,13 @@
                 `;
                 return;
             }
-            
+
             let html = '';
             notificacoes.forEach(notificacao => {
                 const tipoClass = getTipoNotificacaoClass(notificacao.tipo);
                 const tipoIcon = getTipoNotificacaoIcon(notificacao.tipo);
                 const dataFormatada = new Date(notificacao.dataHora).toLocaleString('pt-BR');
-                
+
                 html += `
                     <div class="card mb-2 ${notificacao.lida ? 'opacity-75' : 'border-primary'}" data-notificacao-id="${notificacao.id}">
                         <div class="card-body py-2">
@@ -820,72 +883,72 @@
                     </div>
                 `;
             });
-            
+
             lista.innerHTML = html;
         }
-        
+
         function filtrarNotificacoes(filtro) {
             // Atualizar botões
             document.getElementById('btnTodas').className = filtro === 'todas' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
             document.getElementById('btnNaoLidas').className = filtro === 'nao-lidas' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-primary';
-            
+
             // Carregar notificações
             carregarNotificacoes(filtro);
         }
-        
+
         function marcarComoLida(notificacaoId) {
             fetch(`/api/notifications/legacy/${notificacaoId}/marcar-lida`, {
                 method: 'POST'
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Remover da lista ou atualizar visualmente
-                    const elemento = document.querySelector(`[data-notificacao-id="${notificacaoId}"]`);
-                    if (elemento) {
-                        elemento.classList.add('opacity-75');
-                        elemento.classList.remove('border-primary');
-                        elemento.querySelector('.btn-outline-primary')?.remove();
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Remover da lista ou atualizar visualmente
+                        const elemento = document.querySelector(`[data-notificacao-id="${notificacaoId}"]`);
+                        if (elemento) {
+                            elemento.classList.add('opacity-75');
+                            elemento.classList.remove('border-primary');
+                            elemento.querySelector('.btn-outline-primary')?.remove();
+                        }
+
+                        // Atualizar contador
+                        verificarNovasNotificacoes();
                     }
-                    
-                    // Atualizar contador
-                    verificarNovasNotificacoes();
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao marcar notificação como lida:', error);
-            });
+                })
+                .catch(error => {
+                    console.error('Erro ao marcar notificação como lida:', error);
+                });
         }
-        
+
         function marcarTodasComoLidas() {
             fetch('/api/notifications/legacy/marcar-todas-lidas', {
                 method: 'POST'
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Recarregar notificações
-                    carregarNotificacoes();
-                    
-                    // Atualizar contador
-                    verificarNovasNotificacoes();
-                    
-                    // Mostrar mensagem de sucesso
-                    alert('Todas as notificações foram marcadas como lidas!');
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao marcar todas as notificações como lidas:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Recarregar notificações
+                        carregarNotificacoes();
+
+                        // Atualizar contador
+                        verificarNovasNotificacoes();
+
+                        // Mostrar mensagem de sucesso
+                        alert('Todas as notificações foram marcadas como lidas!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao marcar todas as notificações como lidas:', error);
+                });
         }
-        
+
         function verificarNovasNotificacoes() {
             fetch('/api/notifications/unread-count')
                 .then(response => response.json())
                 .then(data => {
                     const badge = document.querySelector('.badge.bg-danger');
                     const botaoNotificacoes = document.querySelector('button[onclick="abrirNotificacoes()"]');
-                    
+
                     if (data.count > 0) {
                         if (badge) {
                             badge.textContent = data.count;
@@ -904,7 +967,7 @@
                     console.error('Erro ao verificar notificações:', error);
                 });
         }
-        
+
         function getTipoNotificacaoClass(tipo) {
             const classes = {
                 'info': 'text-info',
@@ -914,7 +977,7 @@
             };
             return classes[tipo] || 'text-secondary';
         }
-        
+
         function getTipoNotificacaoIcon(tipo) {
             const icons = {
                 'info': 'fas fa-info-circle',
@@ -925,27 +988,28 @@
             return icons[tipo] || 'fas fa-bell';
         }
     </script>
-                </div>
-            </section>
-        </main>
+    </div>
+    </section>
+    </main>
     </div>
 
-<!-- jQuery necessário -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- jQuery necessário -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-<!-- WebSocket Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <!-- WebSocket Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
-<!-- Seu JS de notificações (que depende de jQuery) -->
-<script th:src="@{/js/notifications.js}" defer></script>
+    <!-- Seu JS de notificações (que depende de jQuery) -->
+    <script th:src="@{/js/notifications.js}" defer></script>
 
-<!-- WebSocket para notificações em tempo real -->
-<script src="/js/websocket-notifications.js" defer></script>
+    <!-- WebSocket para notificações em tempo real -->
+    <script src="/js/websocket-notifications.js" defer></script>
 
-<!-- Seu sidebar.js (se não depende de jQuery, pode ficar antes ou depois) -->
-<script src="/js/sidebar.js" defer></script>
+    <!-- Seu sidebar.js (se não depende de jQuery, pode ficar antes ou depois) -->
+    <script src="/js/sidebar.js" defer></script>
 
 
 </body>
+
 </html>

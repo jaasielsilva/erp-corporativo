@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -23,10 +25,221 @@
             <!-- Conteúdo da página -->
             <section class="content-area">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
+                    <div class="row mb-4">
+                        <div class="col-12">
                             <h1 class="display-6 text-muted"><i class="fas fa-plus-circle"></i> Nova Venda</h1>
-                            <p class="text-muted">Conteúdo específico para nova venda.</p>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Nova Venda -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-shopping-cart"></i> Dados da Venda</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="vendaForm" th:action="@{/vendas/salvar}" th:object="${vendaForm}"
+                                        method="post">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="clienteId" class="form-label">Cliente</label>
+                                                <select class="form-select" id="clienteId" name="clienteId">
+                                                    <option value="">Selecione um cliente</option>
+                                                    <option th:each="cliente : ${clientes}" th:value="${cliente.id}"
+                                                        th:text="${cliente.nome}">Cliente Exemplo</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="dataVenda" class="form-label">Data da Venda *</label>
+                                                <input type="date" class="form-control" id="dataVenda" name="dataVenda"
+                                                    required
+                                                    th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
+                                                <div class="invalid-feedback">
+                                                    Por favor, informe a data da venda.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Seção de Produtos -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h5><i class="fas fa-box"></i> Produtos</h5>
+                                                <div class="table-responsive">
+                                                    <table class="table" id="produtosTable">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Produto</th>
+                                                                <th>Quantidade</th>
+                                                                <th>Preço Unitário</th>
+                                                                <th>Total</th>
+                                                                <th>Ações</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="produto-item">
+                                                                <td>
+                                                                    <select class="form-select produto-select"
+                                                                        name="itens[0].produtoId" required>
+                                                                        <option value="">Selecione um produto</option>
+                                                                        <option th:each="produto : ${produtos}"
+                                                                            th:value="${produto.id}"
+                                                                            th:data-preco="${produto.preco}"
+                                                                            th:text="${produto.nome + ' - R$ ' + #numbers.formatDecimal(produto.preco, 1, 2)}">
+                                                                            Produto Exemplo</option>
+                                                                    </select>
+                                                                    <input type="hidden" class="preco-unitario-hidden"
+                                                                        name="itens[0].precoUnitario" value="0">
+                                                                </td>
+                                                                <td>
+                                                                    <input type="number" class="form-control quantidade"
+                                                                        name="itens[0].quantidade" min="1" value="1"
+                                                                        required>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text"
+                                                                        class="form-control preco-unitario"
+                                                                        value="R$ 0,00" readonly>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control total-item"
+                                                                        value="R$ 0,00" readonly>
+                                                                </td>
+                                                                <td>
+                                                                    <button type="button"
+                                                                        class="btn btn-danger btn-sm remover-item">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="5" class="text-end">
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-primary"
+                                                                        id="adicionarProduto">
+                                                                        <i class="fas fa-plus"></i> Adicionar Produto
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Resumo da Venda -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-6 offset-md-6">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h5><i class="fas fa-calculator"></i> Resumo</h5>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row mb-2">
+                                                            <div class="col-6">Subtotal:</div>
+                                                            <div class="col-6 text-end" id="subtotal">R$ 0,00</div>
+                                                        </div>
+                                                        <div class="row mb-2">
+                                                            <div class="col-6">
+                                                                <label for="desconto"
+                                                                    class="form-label">Descontos:</label>
+                                                            </div>
+                                                            <div class="col-6 text-end">
+                                                                <input type="text"
+                                                                    class="form-control form-control-sm text-end"
+                                                                    id="desconto" value="R$ 0,00">
+                                                                <input type="hidden" id="descontoHidden" name="desconto"
+                                                                    value="0">
+
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb-2">
+                                                            <div class="col-6">Taxas:</div>
+                                                            <div class="col-6 text-end">R$ 0,00</div>
+                                                        </div>
+                                                        <hr>
+                                                        <div class="row fw-bold">
+                                                            <div class="col-6">Total:</div>
+                                                            <div class="col-6 text-end" id="total">R$ 0,00</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Forma de Pagamento -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <h5><i class="fas fa-money-bill-wave"></i> Forma de Pagamento</h5>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="formaPagamento"
+                                                        id="dinheiro" value="Dinheiro" checked>
+                                                    <label class="form-check-label" for="dinheiro">
+                                                        Dinheiro
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="formaPagamento"
+                                                        id="cartaoDebito" value="Cartão de Débito">
+                                                    <label class="form-check-label" for="cartaoDebito">
+                                                        Cartão de Débito
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="formaPagamento"
+                                                        id="cartaoCredito" value="Cartão de Crédito">
+                                                    <label class="form-check-label" for="cartaoCredito">
+                                                        Cartão de Crédito
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="formaPagamento"
+                                                        id="pix" value="PIX">
+                                                    <label class="form-check-label" for="pix">
+                                                        PIX
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3" id="parcelasSection" style="display: none;">
+                                                <label for="parcelas" class="form-label">Parcelas</label>
+                                                <select class="form-select" id="parcelas" name="parcelas">
+                                                    <option value="1" selected>1x</option>
+                                                    <option value="2">2x</option>
+                                                    <option value="3">3x</option>
+                                                    <option value="4">4x</option>
+                                                    <option value="5">5x</option>
+                                                    <option value="6">6x</option>
+                                                    <option value="7">7x</option>
+                                                    <option value="8">8x</option>
+                                                    <option value="9">9x</option>
+                                                    <option value="10">10x</option>
+                                                    <option value="11">11x</option>
+                                                    <option value="12">12x</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3" id="valorPagoSection" style="display: none;">
+                                                <label for="valorPago" class="form-label">Valor Pago</label>
+                                                <input type="text" class="form-control" id="valorPago" name="valorPago"
+                                                    placeholder="R$ 0,00">
+                                                <div class="form-text">Troco: <span id="troco">R$ 0,00</span></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Botões de Ação -->
+                                        <div class="row">
+                                            <div class="col-12 text-end">
+                                                <button type="button" class="btn btn-secondary me-2"
+                                                    onclick="window.location.href='/vendas'">
+                                                    <i class="fas fa-times"></i> Cancelar
+                                                </button>
+                                                <button type="submit" class="btn btn-success" id="salvarVenda">
+                                                    <i class="fas fa-save"></i> Salvar Venda
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -40,5 +253,171 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        $(document).ready(function () {
+            // Função para formatar valores monetários
+            function formatarMoeda(valor) {
+                return 'R$ ' + valor.toFixed(2).replace('.', ',');
+            }
+
+            // Função para parsear valores monetários
+            function parsearMoeda(valor) {
+                if (!valor) return 0;
+                return parseFloat(valor.replace('R$ ', '').replace(',', '.'));
+            }
+
+            // Atualizar preço unitário e total quando selecionar produto
+            $(document).on('change', '.produto-select', function () {
+                const select = $(this);
+                const produtoId = select.val();
+                const row = select.closest('.produto-item');
+
+                if (produtoId) {
+                    // Carregar dados do produto via AJAX
+                    $.ajax({
+                        url: '/vendas/produto/' + produtoId,
+                        method: 'GET',
+                        success: function (data) {
+                            const preco = data.preco || 0;
+                            row.find('.preco-unitario').val(formatarMoeda(preco));
+                            row.find('.preco-unitario-hidden').val(preco);
+                            calcularTotalItem(row);
+                            calcularTotais();
+                        },
+                        error: function () {
+                            // Usar dados do option se AJAX falhar
+                            const preco = parseFloat(select.find('option:selected').data('preco')) || 0;
+                            row.find('.preco-unitario').val(formatarMoeda(preco));
+                            row.find('.preco-unitario-hidden').val(preco);
+                            calcularTotalItem(row);
+                            calcularTotais();
+                        }
+                    });
+                } else {
+                    row.find('.preco-unitario').val('R$ 0,00');
+                    row.find('.preco-unitario-hidden').val('0');
+                    row.find('.total-item').val('R$ 0,00');
+                    calcularTotais();
+                }
+            });
+
+            // Atualizar total quando mudar quantidade
+            $(document).on('input', '.quantidade', function () {
+                const row = $(this).closest('.produto-item');
+                calcularTotalItem(row);
+                calcularTotais();
+            });
+
+            // Calcular total do item
+            function calcularTotalItem(row) {
+                const preco = parsearMoeda(row.find('.preco-unitario').val()) || 0;
+                const quantidade = parseInt(row.find('.quantidade').val()) || 0;
+                const total = preco * quantidade;
+                row.find('.total-item').val(formatarMoeda(total));
+            }
+
+            // Calcular totais gerais
+            function calcularTotais() {
+                let subtotal = 0;
+
+                $('.produto-item').each(function () {
+                    const totalItem = parsearMoeda($(this).find('.total-item').val()) || 0;
+                    subtotal += totalItem;
+                });
+
+                const desconto = parsearMoeda($('#desconto').val()) || 0;
+                const total = subtotal - desconto;
+
+                $('#subtotal').text(formatarMoeda(subtotal));
+                $('#total').text(formatarMoeda(total));
+                $('#descontoHidden').val(desconto);
+            }
+
+            // Adicionar novo produto
+            $('#adicionarProduto').click(function () {
+                const rowCount = $('.produto-item').length;
+                const newRow = $('.produto-item').first().clone();
+
+                // Atualizar índices dos campos
+                newRow.find('select').attr('name', 'itens[' + rowCount + '].produtoId');
+                newRow.find('input.quantidade').attr('name', 'itens[' + rowCount + '].quantidade');
+                newRow.find('input.preco-unitario-hidden').attr('name', 'itens[' + rowCount + '].precoUnitario');
+
+                // Limpar valores
+                newRow.find('select').val('');
+                newRow.find('input').val('');
+                newRow.find('.preco-unitario').val('R$ 0,00');
+                newRow.find('.total-item').val('R$ 0,00');
+                newRow.find('.preco-unitario-hidden').val('0');
+
+                newRow.insertBefore('#adicionarProduto').closest('tr');
+            });
+
+            // Remover item
+            $(document).on('click', '.remover-item', function () {
+                if ($('.produto-item').length > 1) {
+                    $(this).closest('.produto-item').remove();
+                    calcularTotais();
+
+                    // Atualizar índices dos campos restantes
+                    $('.produto-item').each(function (index) {
+                        $(this).find('select').attr('name', 'itens[' + index + '].produtoId');
+                        $(this).find('input.quantidade').attr('name', 'itens[' + index + '].quantidade');
+                        $(this).find('input.preco-unitario-hidden').attr('name', 'itens[' + index + '].precoUnitario');
+                    });
+                } else {
+                    alert('É necessário ter pelo menos um produto na venda.');
+                }
+            });
+
+            // Mostrar/ocultar campo de parcelas e valor pago
+            $('input[name="formaPagamento"]').change(function () {
+                const formaPagamento = $(this).val();
+
+                if (formaPagamento === 'Dinheiro') {
+                    $('#parcelasSection').hide();
+                    $('#valorPagoSection').show();
+                } else if (formaPagamento === 'Cartão de Crédito') {
+                    $('#parcelasSection').show();
+                    $('#valorPagoSection').hide();
+                    $('#valorPago').val('');
+                    $('#troco').text('R$ 0,00');
+                } else {
+                    $('#parcelasSection').hide();
+                    $('#valorPagoSection').hide();
+                    $('#valorPago').val('');
+                    $('#troco').text('R$ 0,00');
+                }
+            });
+
+            // Calcular troco
+            $('#valorPago').on('input', function () {
+                const total = parsearMoeda($('#total').text()) || 0;
+                const valorPago = parsearMoeda($(this).val()) || 0;
+                const troco = valorPago - total;
+                $('#troco').text(formatarMoeda(Math.max(0, troco)));
+            });
+
+            // Atualizar desconto
+            $('#desconto').on('input', function () {
+                calcularTotais();
+
+                // Calcular troco novamente se for dinheiro
+                if ($('input[name="formaPagamento"]:checked').val() === 'Dinheiro') {
+                    const total = parsearMoeda($('#total').text()) || 0;
+                    const valorPago = parsearMoeda($('#valorPago').val()) || 0;
+                    const troco = valorPago - total;
+                    $('#troco').text(formatarMoeda(Math.max(0, troco)));
+                }
+            });
+
+            // Inicializar cálculos
+            calcularTotais();
+
+            // Inicializar seletores de produtos
+            $('.produto-select').trigger('change');
+        });
+    </script>
 </body>
+
 </html>

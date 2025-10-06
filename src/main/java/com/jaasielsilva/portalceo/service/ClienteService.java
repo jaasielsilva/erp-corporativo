@@ -154,6 +154,11 @@ public class ClienteService {
         return repository.findById(id).orElse(null);
     }
     
+    // Buscar cliente por nome exato
+    public Optional<Cliente> buscarPorNomeExato(String nome) {
+        return repository.findByNome(nome);
+    }
+    
     // Calcula performance de qualidade baseada na satisfação e retenção de clientes
     public int calcularPerformanceQualidade() {
         long totalClientes = contarTotal();

@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.repository;
 import com.jaasielsilva.portalceo.model.Cliente;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -84,5 +85,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     // Clientes inativos (exemplo: último acesso antes de uma data)
     @Query("SELECT c FROM Cliente c WHERE c.ultimoAcesso < :data")
     List<Cliente> findClientesInativos(@Param("data") LocalDate data);
+    
+    // Buscar cliente por nome exato
+    Optional<Cliente> findByNome(String nome);
 
     }

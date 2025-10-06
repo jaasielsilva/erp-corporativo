@@ -80,7 +80,8 @@
                                                             <tr class="produto-item">
                                                                 <td>
                                                                     <select class="form-select produto-select"
-                                                                        name="itens[0].produtoId" required>
+                                                                        name="itens[0].produtoId" required
+                                                                        title="Selecione o produto">
                                                                         <option value="">Selecione um produto</option>
                                                                         <option th:each="produto : ${produtos}"
                                                                             th:value="${produto.id}"
@@ -94,20 +95,27 @@
                                                                 <td>
                                                                     <input type="number" class="form-control quantidade"
                                                                         name="itens[0].quantidade" min="1" value="1"
-                                                                        required>
+                                                                        required
+                                                                        placeholder="Quantidade"
+                                                                        title="Informe a quantidade do produto">
                                                                 </td>
                                                                 <td>
                                                                     <input type="text"
                                                                         class="form-control preco-unitario"
-                                                                        value="R$ 0,00" readonly>
+                                                                        value="R$ 0,00" readonly
+                                                                        placeholder="Preço unitário"
+                                                                        title="Preço unitário do produto">
                                                                 </td>
                                                                 <td>
                                                                     <input type="text" class="form-control total-item"
-                                                                        value="R$ 0,00" readonly>
+                                                                        value="R$ 0,00" readonly
+                                                                        placeholder="Total do item"
+                                                                        title="Total do item">
                                                                 </td>
                                                                 <td>
                                                                     <button type="button"
-                                                                        class="btn btn-danger btn-sm remover-item">
+                                                                        class="btn btn-danger btn-sm remover-item"
+                                                                        title="Remover item">
                                                                         <i class="fas fa-trash"></i>
                                                                     </button>
                                                                 </td>

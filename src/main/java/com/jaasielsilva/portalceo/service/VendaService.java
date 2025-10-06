@@ -49,6 +49,10 @@ public class VendaService {
                 throw new RuntimeException("Estoque insuficiente para o produto: " + produto.getNome());
             }
 
+            // Calcular e definir o subtotal do item
+            BigDecimal subtotal = item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()));
+            item.setSubtotal(subtotal);
+
             produto.setEstoque(novaQuantidade);
             produtoService.salvar(produto); // atualiza o estoque no banco
         }
@@ -266,10 +270,14 @@ public class VendaService {
         venda.setDataVenda(LocalDateTime.now());
         venda.setStatus("FINALIZADA");
 
-        // Calcular totais
-        BigDecimal subtotal = venda.getItens().stream()
-                .map(item -> item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Calcular totais e subtotal para cada item
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (VendaItem item : venda.getItens()) {
+            // Calcular e definir o subtotal do item
+            BigDecimal itemSubtotal = item.getPrecoUnitario().multiply(BigDecimal.valueOf(item.getQuantidade()));
+            item.setSubtotal(itemSubtotal);
+            subtotal = subtotal.add(itemSubtotal);
+        }
 
         venda.setSubtotal(subtotal);
         venda.setTotal(subtotal.subtract(venda.getDesconto() != null ? venda.getDesconto() : BigDecimal.ZERO));

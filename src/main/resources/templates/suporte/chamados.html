@@ -750,7 +750,7 @@
         // ===== ATUALIZAÇÃO DE ESTATÍSTICAS =====
         async function atualizarEstatisticas() {
             try {
-                const response = await fetch('/suporte/api/chamados/estatisticas');
+                const response = await fetch('/api/chamados/estatisticas');
                 if (response.ok) {
                     const stats = await response.json();
                     $('#totalChamados').text(stats.total || 0);

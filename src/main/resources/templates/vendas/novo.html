@@ -158,7 +158,7 @@
                                                                     id="desconto" value="R$ 0,00">
                                                                 <input type="hidden" id="descontoHidden" name="desconto"
                                                                     value="0">
-
+                                                                <small class="form-text text-muted">Opcional</small>
                                                             </div>
                                                         </div>
                                                         <div class="row mb-2">
@@ -333,7 +333,15 @@
                     subtotal += totalItem;
                 });
 
-                const desconto = parsearMoeda($('#desconto').val()) || 0;
+                // Tratar desconto como opcional, com valor padrão 0
+                let desconto = 0;
+                try {
+                    desconto = parsearMoeda($('#desconto').val()) || 0;
+                } catch (e) {
+                    // Se houver erro ao parsear, manter desconto como 0
+                    desconto = 0;
+                }
+                
                 const total = subtotal - desconto;
 
                 $('#subtotal').text(formatarMoeda(subtotal));
@@ -408,6 +416,10 @@
 
             // Atualizar desconto
             $('#desconto').on('input', function () {
+                // Limpar campo se estiver vazio ou com valor inválido
+                if ($(this).val() === '') {
+                    $(this).val('R$ 0,00');
+                }
                 calcularTotais();
 
                 // Calcular troco novamente se for dinheiro

@@ -122,10 +122,15 @@ public class DashboardController {
                 clienteService.calcularPerformanceQualidade(),
                 usuarioService.calcularPerformanceFinanceiro());
 
-        // MÉTRICAS FINANCEIRAS
-        String margemLucro = "23.5%";
-        String roiMensal = "18.7%";
-        String inadimplencia = "2.1%";
+        // MÉTRICAS FINANCEIRAS - Usando dados reais
+        BigDecimal margemLucroValor = indicadorService.getMargemLucro();
+        String margemLucro = indicadorService.formatarPercentual(margemLucroValor);
+        
+        BigDecimal roiMensalValor = indicadorService.getRoiMensal();
+        String roiMensal = indicadorService.formatarPercentual(roiMensalValor);
+        
+        BigDecimal inadimplenciaValor = indicadorService.getInadimplencia();
+        String inadimplencia = indicadorService.formatarPercentual(inadimplenciaValor);
 
         // MÉTRICAS DE RH
         String taxaRetencao = "94.2%";

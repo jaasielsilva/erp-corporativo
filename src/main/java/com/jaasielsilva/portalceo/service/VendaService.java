@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
 
 @Service
 public class VendaService {
@@ -73,6 +74,76 @@ public class VendaService {
     // Lista todas as vendas
     public List<Venda> listarTodas() {
         return vendaRepository.findAll();
+    }
+
+    // Lista todas as vendas com paginação
+    public Page<Venda> listarTodasPaginado(Pageable pageable) {
+        return vendaRepository.findAll(pageable);
+    }
+    
+    // Lista vendas com filtros e paginação
+    public Page<Venda> listarVendasComFiltros(String cliente, LocalDate dataInicio, LocalDate dataFim, String status, Pageable pageable) {
+        System.out.println("Filtros recebidos - Cliente: " + cliente + ", Data Início: " + dataInicio + ", Data Fim: " + dataFim + ", Status: " + status);
+        
+        // Se não houver filtros, retorna todas as vendas paginadas
+        if ((cliente == null || cliente.isEmpty()) && dataInicio == null && dataFim == null && (status == null || status.isEmpty())) {
+            System.out.println("Sem filtros aplicados, retornando todas as vendas");
+            return vendaRepository.findAll(pageable);
+        }
+        
+        // Se houver apenas filtro por status
+        if ((cliente == null || cliente.isEmpty()) && dataInicio == null && dataFim == null && status != null && !status.isEmpty()) {
+            System.out.println("Filtrando apenas por status: " + status);
+            return vendaRepository.findByStatus(status, pageable);
+        }
+        
+        // Se houver apenas filtro por cliente
+        if (cliente != null && !cliente.isEmpty() && dataInicio == null && dataFim == null && (status == null || status.isEmpty())) {
+            System.out.println("Filtrando apenas por cliente: " + cliente);
+            return vendaRepository.findByClienteNomeContainingIgnoreCase(cliente, pageable);
+        }
+        
+        // Se houver apenas filtro por período
+        if ((cliente == null || cliente.isEmpty()) && dataInicio != null && dataFim != null && (status == null || status.isEmpty())) {
+            LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
+            LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59);
+            System.out.println("Filtrando apenas por período: " + inicioDateTime + " a " + fimDateTime);
+            return vendaRepository.findByDataVendaBetween(inicioDateTime, fimDateTime, pageable);
+        }
+        
+        // Se houver filtro por período e status
+        if ((cliente == null || cliente.isEmpty()) && dataInicio != null && dataFim != null && status != null && !status.isEmpty()) {
+            LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
+            LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59);
+            System.out.println("Filtrando por período e status: " + inicioDateTime + " a " + fimDateTime + ", status: " + status);
+            return vendaRepository.findByDataVendaBetweenAndStatus(inicioDateTime, fimDateTime, status, pageable);
+        }
+        
+        // Se houver filtro por cliente e status
+        if (cliente != null && !cliente.isEmpty() && dataInicio == null && dataFim == null && status != null && !status.isEmpty()) {
+            System.out.println("Filtrando por cliente e status: cliente=" + cliente + ", status=" + status);
+            return vendaRepository.findByClienteNomeContainingIgnoreCaseAndStatus(cliente, status, pageable);
+        }
+        
+        // Se houver filtro por cliente e período
+        if (cliente != null && !cliente.isEmpty() && dataInicio != null && dataFim != null && (status == null || status.isEmpty())) {
+            LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
+            LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59);
+            System.out.println("Filtrando por cliente e período: cliente=" + cliente + ", período=" + inicioDateTime + " a " + fimDateTime);
+            return vendaRepository.findByClienteNomeContainingIgnoreCaseAndDataVendaBetween(cliente, inicioDateTime, fimDateTime, pageable);
+        }
+        
+        // Se houver todos os filtros
+        if (cliente != null && !cliente.isEmpty() && dataInicio != null && dataFim != null && status != null && !status.isEmpty()) {
+            LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
+            LocalDateTime fimDateTime = dataFim.atTime(23, 59, 59);
+            System.out.println("Filtrando por todos os critérios: cliente=" + cliente + ", período=" + inicioDateTime + " a " + fimDateTime + ", status=" + status);
+            return vendaRepository.findByClienteNomeContainingIgnoreCaseAndDataVendaBetweenAndStatus(cliente, inicioDateTime, fimDateTime, status, pageable);
+        }
+        
+        // Caso padrão - retorna todas as vendas paginadas
+        System.out.println("Caso padrão, retornando todas as vendas");
+        return vendaRepository.findAll(pageable);
     }
 
     // Conta quantas vendas um determinado cliente fez
@@ -334,6 +405,16 @@ public class VendaService {
                 .stream()
                 .map(Venda::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+    
+    /**
+     * Calcula o total de custos das vendas
+     * @return Total de custos
+     */
+    public BigDecimal calcularTotalDeCustos() {
+        // Implementação simulada para demonstração - considerando 70% do valor das vendas como custo
+        BigDecimal totalVendas = calcularTotalDeVendas();
+        return totalVendas.multiply(new BigDecimal("0.70")).setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 
     // Relatório resumido de vendas do dia

@@ -76,7 +76,7 @@ public class VendasController {
         
         model.addAttribute("titulo", "Lista de Vendas");
         
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, 10); // 10 vendas por página
         
         // Converter datas se fornecidas
         LocalDate inicio = null;
@@ -98,17 +98,11 @@ public class VendasController {
             }
         }
         
-        // Obter vendas com filtros
-        List<Venda> vendas;
-        if (inicio != null || fim != null || !cliente.isEmpty() || !status.isEmpty()) {
-            // TODO: Implementar filtro real no serviço
-            vendas = vendaService.listarTodas();
-        } else {
-            vendas = vendaService.listarTodas();
-        }
+        // Obter vendas com filtros e paginação
+        Page<Venda> vendaPage = vendaService.listarVendasComFiltros(cliente, inicio, fim, status, pageable);
         
         // Converter para DTOs
-        List<VendaDTO> vendaDTOs = vendas.stream()
+        List<VendaDTO> vendaDTOs = vendaPage.getContent().stream()
                 .map(vendaMapper::toDTO)
                 .collect(Collectors.toList());
         
@@ -117,6 +111,9 @@ public class VendasController {
         model.addAttribute("dataInicio", dataInicio);
         model.addAttribute("dataFim", dataFim);
         model.addAttribute("status", status);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", vendaPage.getTotalPages());
+        model.addAttribute("totalElements", vendaPage.getTotalElements());
         
         return "vendas/lista";
     }
@@ -309,8 +306,13 @@ public class VendasController {
             }
             
             venda.setSubtotal(subtotal);
-            venda.setDesconto(vendaForm.getDesconto() != null ? vendaForm.getDesconto() : BigDecimal.ZERO);
-            venda.setTotal(subtotal.subtract(venda.getDesconto()));
+            // Tratar desconto como opcional, com valor padrão BigDecimal.ZERO
+            BigDecimal desconto = vendaForm.getDesconto();
+            if (desconto == null) {
+                desconto = BigDecimal.ZERO;
+            }
+            venda.setDesconto(desconto);
+            venda.setTotal(subtotal.subtract(desconto));
             
             // Calcular troco se pagamento em dinheiro
             if ("Dinheiro".equalsIgnoreCase(venda.getFormaPagamento()) && venda.getValorPago() != null) {

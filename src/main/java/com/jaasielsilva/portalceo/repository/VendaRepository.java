@@ -35,7 +35,35 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
 
     // Busca genérica com ordenação por data (pode ser usada com qualquer quantidade via Pageable)
     List<Venda> findAllByOrderByDataVendaDesc(Pageable pageable);
-
+    
+    // Método para buscar vendas com paginação
+    Page<Venda> findAll(Pageable pageable);
+    
+    // Método para buscar vendas por status com paginação
+    Page<Venda> findByStatus(String status, Pageable pageable);
+    
+    // Método para buscar vendas por cliente (nome) com paginação
+    @Query("SELECT v FROM Venda v JOIN v.cliente c WHERE LOWER(c.nome) LIKE LOWER(CONCAT('%', :cliente, '%'))")
+    Page<Venda> findByClienteNomeContainingIgnoreCase(@Param("cliente") String cliente, Pageable pageable);
+    
+    // Método para buscar vendas por período com paginação
+    Page<Venda> findByDataVendaBetween(LocalDateTime inicio, LocalDateTime fim, Pageable pageable);
+    
+    // Método para buscar vendas por período e status com paginação
+    Page<Venda> findByDataVendaBetweenAndStatus(LocalDateTime inicio, LocalDateTime fim, String status, Pageable pageable);
+    
+    // Método para buscar vendas por cliente e status com paginação
+    @Query("SELECT v FROM Venda v JOIN v.cliente c WHERE LOWER(c.nome) LIKE LOWER(CONCAT('%', :cliente, '%')) AND v.status = :status")
+    Page<Venda> findByClienteNomeContainingIgnoreCaseAndStatus(@Param("cliente") String cliente, @Param("status") String status, Pageable pageable);
+    
+    // Método para buscar vendas por cliente e período com paginação
+    @Query("SELECT v FROM Venda v JOIN v.cliente c WHERE LOWER(c.nome) LIKE LOWER(CONCAT('%', :cliente, '%')) AND v.dataVenda BETWEEN :inicio AND :fim")
+    Page<Venda> findByClienteNomeContainingIgnoreCaseAndDataVendaBetween(@Param("cliente") String cliente, @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim, Pageable pageable);
+    
+    // Método para buscar vendas por cliente, período e status com paginação
+    @Query("SELECT v FROM Venda v JOIN v.cliente c WHERE LOWER(c.nome) LIKE LOWER(CONCAT('%', :cliente, '%')) AND v.dataVenda BETWEEN :inicio AND :fim AND v.status = :status")
+    Page<Venda> findByClienteNomeContainingIgnoreCaseAndDataVendaBetweenAndStatus(@Param("cliente") String cliente, @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim, @Param("status") String status, Pageable pageable);
+    
     // método para totalizar vendas por mês desde uma data
     @Query("SELECT YEAR(v.dataVenda), MONTH(v.dataVenda), SUM(v.total) " +
            "FROM Venda v " +

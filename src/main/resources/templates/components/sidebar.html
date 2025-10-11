@@ -103,21 +103,21 @@
         </li>
 
         <li class="has-submenu" th:if="${podeAcessarVendas}">
-  <a href="javascript:void(0);" class="submenu-toggle">
-    <i class="fas fa-cash-register"></i> Vendas
-  </a>
-  <ul class="submenu">
-    <li><a href="/vendas/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-    <li><a href="/vendas"><i class="fas fa-list"></i> Lista de Vendas</a></li>
-    <li><a href="/vendas/pdv"><i class="fas fa-shopping-cart"></i> PDV</a></li>
-    <li><a href="/vendas/caixa"><i class="fas fa-cash-register"></i> Caixa</a></li>
-    <li><a href="/vendas/novo"><i class="fas fa-plus-circle"></i> Nova Venda</a></li>
-    <li><a href="/vendas/clientes"><i class="fas fa-users"></i> Clientes</a></li>
-    <li><a href="/vendas/produtos"><i class="fas fa-box"></i> Produtos</a></li>
-    <li><a href="/vendas/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
-    <li><a href="/vendas/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
-  </ul>
-</li>
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-cash-register"></i> Vendas
+          </a>
+          <ul class="submenu">
+            <li><a href="/vendas/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="/vendas"><i class="fas fa-list"></i> Lista de Vendas</a></li>
+            <li><a href="/vendas/pdv"><i class="fas fa-shopping-cart"></i> PDV</a></li>
+            <li><a href="/vendas/caixa"><i class="fas fa-cash-register"></i> Caixa</a></li>
+            <li><a href="/vendas/novo"><i class="fas fa-plus-circle"></i> Nova Venda</a></li>
+            <li><a href="/vendas/clientes"><i class="fas fa-users"></i> Clientes</a></li>
+            <li><a href="/vendas/produtos"><i class="fas fa-box"></i> Produtos</a></li>
+            <li><a href="/vendas/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+            <li><a href="/vendas/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
+          </ul>
+        </li>
 
         <li th:if="${podeAcessarVendas}"><a href="/contratos"><i class="fas fa-file-contract"></i> Contratos</a></li>
         <li th:if="${podeAcessarCompras}"><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
@@ -153,8 +153,9 @@
                 <li><a href="/rh/colaboradores/listar"><i class="fas fa-list"></i> Listar</a></li>
                 <li th:if="${podeGerenciarRH}"><a href="/rh/colaboradores/novo"><i class="fas fa-plus"></i> Novo</a>
                 </li>
-                <li th:if="${podeGerenciarRH}"><a href="/rh/colaboradores/adesao"><i class="fas fa-user-plus"></i> Adesão de Colaboradores</a></li>
-              <!--<li><a href="/rh/colaboradores/ficha"><i class="fas fa-id-card"></i> Ficha</a></li>-->
+                <li th:if="${podeGerenciarRH}"><a href="/rh/colaboradores/adesao"><i class="fas fa-user-plus"></i>
+                    Adesão de Colaboradores</a></li>
+                <!--<li><a href="/rh/colaboradores/ficha"><i class="fas fa-id-card"></i> Ficha</a></li>-->
                 <!-- <li><a href="/rh/colaboradores/documentos"><i class="fas fa-file-alt"></i> Documentos</a></li> -->
                 <!-- <li><a href="/rh/colaboradores/historico"><i class="fas fa-history"></i> Histórico</a></li> -->
               </ul>
@@ -193,7 +194,8 @@
                 <i class="fas fa-tasks"></i> Workflow
               </a>
               <ul class="submenu">
-                <li><a href="/rh/workflow/aprovacao"><i class="fas fa-clipboard-check"></i> Aprovação de Processos</a></li>
+                <li><a href="/rh/workflow/aprovacao"><i class="fas fa-clipboard-check"></i> Aprovação de Processos</a>
+                </li>
                 <li><a href="/rh/workflow/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
               </ul>
             </li>
@@ -294,12 +296,14 @@
             <i class="fas fa-dollar-sign"></i> Financeiro
           </a>
           <ul class="submenu">
-            <li><a href="/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
-            <li><a href="/contas-receber"><i class="fas fa-file-invoice-dollar"></i> Contas a Receber</a></li>
-            <li><a href="/financeiro"><i class="fas fa-wallet"></i> Fluxo de Caixa</a></li>
-            <li><a href="/transferencias"><i class="fas fa-exchange-alt"></i> Transferências</a></li>
+            <li><a href="/financeiro/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
+            <li><a href="/financeiro/contas-receber"><i class="fas fa-file-invoice-dollar"></i> Contas a Receber</a>
+            </li>
+            <li><a href="/financeiro/fluxo-caixa"><i class="fas fa-wallet"></i> Fluxo de Caixa</a></li>
+            <li><a href="/financeiro/transferencias"><i class="fas fa-exchange-alt"></i> Transferências</a></li>
           </ul>
         </li>
+
 
         <!-- Módulo Marketing -->
         <li class="has-submenu" th:if="${podeAcessarMarketing}">

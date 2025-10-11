@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.jaasielsilva.portalceo.model.indicadores.ViewMargemLucro;
+import com.jaasielsilva.portalceo.model.indicadores.ViewInadimplencia;
 import com.jaasielsilva.portalceo.repository.indicadores.ViewMargemLucroRepository;
+import com.jaasielsilva.portalceo.repository.indicadores.ViewInadimplenciaRepository;
 
 @Service
 public class IndicadorService {
@@ -17,19 +19,21 @@ public class IndicadorService {
     private final VendaService vendaService;
     private final FinanceiroService financeiroService;
     private final ViewMargemLucroRepository margemLucroRepository;
+    private final ViewInadimplenciaRepository inadimplenciaRepository;
 
     @Autowired
-    public IndicadorService(VendaService vendaService,
-                            FinanceiroService financeiroService,
-                            ViewMargemLucroRepository margemLucroRepository) {
+    public IndicadorService(
+            VendaService vendaService,
+            FinanceiroService financeiroService,
+            ViewMargemLucroRepository margemLucroRepository,
+            ViewInadimplenciaRepository inadimplenciaRepository) {
         this.vendaService = vendaService;
         this.financeiroService = financeiroService;
         this.margemLucroRepository = margemLucroRepository;
+        this.inadimplenciaRepository = inadimplenciaRepository;
     }
 
-    /**
-     * Retorna a margem de lucro a partir da view SQL (view_margem_lucro)
-     */
+    /** Margem de lucro (view SQL) */
     public BigDecimal getMargemLucro() {
         return margemLucroRepository.findById(1)
                 .map(ViewMargemLucro::getMargemLucro)
@@ -37,9 +41,15 @@ public class IndicadorService {
                 .setScale(1, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Calcula o ticket médio das vendas
-     */
+    /** Taxa de inadimplência (via view) */
+    public BigDecimal getInadimplenciaView() {
+        return inadimplenciaRepository.findById(1)
+                .map(ViewInadimplencia::getTaxaInadimplencia)
+                .orElse(BigDecimal.ZERO)
+                .setScale(1, RoundingMode.HALF_UP);
+    }
+
+    /** Ticket médio das vendas */
     public BigDecimal getTicketMedio() {
         BigDecimal totalVendas = vendaService.calcularTotalDeVendas();
         long quantidadeVendas = vendaService.contarTotalVendas();
@@ -51,9 +61,7 @@ public class IndicadorService {
         return totalVendas.divide(BigDecimal.valueOf(quantidadeVendas), 2, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Calcula o ROI mensal com base nos investimentos e retornos
-     */
+    /** ROI mensal */
     public BigDecimal getRoiMensal() {
         BigDecimal investimentos = financeiroService.calcularTotalInvestimentos();
         BigDecimal retornos = financeiroService.calcularTotalRetornos();
@@ -67,10 +75,24 @@ public class IndicadorService {
                 .divide(investimentos, 1, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Calcula a taxa de inadimplência
-     */
+    /** Inadimplência com fallback manual */
     public BigDecimal getInadimplencia() {
+        try {
+            BigDecimal valorView = inadimplenciaRepository.findAll()
+                    .stream()
+                    .findFirst()
+                    .map(ViewInadimplencia::getTaxaInadimplencia)
+
+                    .orElse(BigDecimal.ZERO);
+
+            if (valorView.compareTo(BigDecimal.ZERO) > 0) {
+                return valorView;
+            }
+
+        } catch (Exception e) {
+            System.err.println("⚠️ Falha ao buscar view_inadimplencia: " + e.getMessage());
+        }
+
         BigDecimal totalVencido = financeiroService.calcularTotalContasVencidas();
         BigDecimal totalReceber = financeiroService.calcularTotalContasReceber();
 
@@ -82,19 +104,17 @@ public class IndicadorService {
                 .divide(totalReceber, 1, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Formata um valor BigDecimal como percentual (ex: "40.0%")
-     */
+    /** Formata percentual */
     public String formatarPercentual(BigDecimal valor) {
         if (valor == null) {
-            return "0.0%";
+            return "0,0%";
         }
-        return valor.setScale(1, RoundingMode.HALF_UP) + "%";
+        return valor.setScale(1, RoundingMode.HALF_UP)
+                .toString()
+                .replace(".", ",") + "%";
     }
 
-    /**
-     * Formata um valor BigDecimal como moeda brasileira (ex: "R$ 32.299,15")
-     */
+    /** Formata moeda BR */
     public String formatarMoeda(BigDecimal valor) {
         if (valor == null) {
             return "R$ 0,00";

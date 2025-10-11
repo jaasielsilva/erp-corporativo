@@ -210,8 +210,8 @@ public class ContaReceber {
     }
 
     public boolean isVencida() {
-        return LocalDate.now().isAfter(dataVencimento) && 
-               (status == StatusContaReceber.PENDENTE || status == StatusContaReceber.PARCIAL);
+        return LocalDate.now().isAfter(dataVencimento) &&
+                (status == StatusContaReceber.PENDENTE || status == StatusContaReceber.PARCIAL);
     }
 
     public boolean isRecebida() {
@@ -245,7 +245,7 @@ public class ContaReceber {
             return BigDecimal.ZERO;
         }
         return valorRecebido.divide(getValorTotal(), 4, java.math.RoundingMode.HALF_UP)
-                           .multiply(BigDecimal.valueOf(100));
+                .multiply(BigDecimal.valueOf(100));
     }
 
     public String getDescricaoParcela() {
@@ -254,4 +254,33 @@ public class ContaReceber {
         }
         return "";
     }
+
+    public BigDecimal getValorOriginalSafe() {
+        return valorOriginal != null ? valorOriginal : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getValorRecebidoSafe() {
+        return valorRecebido != null ? valorRecebido : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getValorDescontoSafe() {
+        return valorDesconto != null ? valorDesconto : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getValorJurosSafe() {
+        return valorJuros != null ? valorJuros : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getValorMultaSafe() {
+        return valorMulta != null ? valorMulta : BigDecimal.ZERO;
+    }
+
+    public Integer getParcelaAtualSafe() {
+        return parcelaAtual != null ? parcelaAtual : 1;
+    }
+
+    public Integer getTotalParcelasSafe() {
+        return totalParcelas != null ? totalParcelas : 1;
+    }
+
 }

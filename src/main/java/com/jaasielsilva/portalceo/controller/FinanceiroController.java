@@ -94,6 +94,7 @@ public class FinanceiroController {
         } catch (Exception e) {
             System.err.println("Erro ao calcular total a receber: " + e.getMessage());
         }
+        totalReceber = totalReceber != null ? totalReceber : BigDecimal.ZERO;
 
         try {
             analiseIdade = contaReceberService.getAnaliseIdade();
@@ -262,7 +263,7 @@ public class FinanceiroController {
             @RequestParam Long usuarioId) {
 
         try {
-            Usuario usuario = usuarioService.findById(usuarioId)
+            Usuario usuario = usuarioService.buscarPorId(usuarioId)
                     .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
             ContaReceber recebida = contaReceberService.receberConta(id, valor, observacoes, usuario);
             return ResponseEntity.ok(recebida);
@@ -279,7 +280,7 @@ public class FinanceiroController {
             @RequestParam Long usuarioId) {
 
         try {
-            Usuario usuario = usuarioService.findById(usuarioId)
+            Usuario usuario = usuarioService.buscarPorId(usuarioId)
                     .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
             ContaReceber cancelada = contaReceberService.cancelarConta(id, motivo, usuario);
             return ResponseEntity.ok(cancelada);
@@ -308,12 +309,41 @@ public class FinanceiroController {
     @GetMapping("/api/contas-receber/total")
     @ResponseBody
     public ResponseEntity<BigDecimal> totalReceber() {
-        return ResponseEntity.ok(contaReceberService.calcularTotalReceber());
+        BigDecimal total = contaReceberService.calcularTotalReceber();
+        return ResponseEntity.ok(total != null ? total : BigDecimal.ZERO);
     }
 
     @GetMapping("/api/contas-receber/aging")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> analiseAging() {
         return ResponseEntity.ok(contaReceberService.getAnaliseIdade());
+    }
+
+    // -------------------- REGISTRAR PAGAMENTO --------------------
+    @PutMapping("/api/contas-receber/{id}/registrar-pagamento")
+    @ResponseBody
+    public ResponseEntity<?> registrarPagamento(
+            @PathVariable Long id,
+            @RequestParam BigDecimal valorPago,
+            @RequestParam(required = false) Long usuarioId
+    ) {
+        try {
+            if (usuarioId == null) usuarioId = 1L;
+            Usuario usuario = usuarioService.buscarPorId(usuarioId)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+
+            ContaReceber conta = contaReceberService.receberConta(id, valorPago, "Pagamento registrado via sistema", usuario);
+
+            return ResponseEntity.ok(Map.of(
+                    "mensagem", "Pagamento registrado com sucesso!",
+                    "contaId", conta.getId(),
+                    "valorRecebido", conta.getValorRecebido(),
+                    "status", conta.getStatus().name()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "mensagem", "Erro ao registrar pagamento: " + e.getMessage()
+            ));
+        }
     }
 }

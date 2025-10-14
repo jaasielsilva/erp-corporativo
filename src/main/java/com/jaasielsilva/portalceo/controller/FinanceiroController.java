@@ -8,12 +8,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
 
 @Controller
 @RequestMapping("/financeiro")
@@ -27,26 +30,89 @@ public class FinanceiroController {
     private final FornecedorService fornecedorService;
     private final UsuarioService usuarioService;
 
+    private static final int PAGE_SIZE = 10;
+
     // -------------------- DASHBOARD --------------------
     @GetMapping
-    public String index(Model model) {
+    public String index(Model model, @RequestParam(defaultValue = "0") int page) {
         model.addAttribute("pageTitle", "Financeiro - Dashboard");
         model.addAttribute("moduleCSS", "financeiro");
 
         try {
+            // Estatísticas principais
             Map<String, Object> dashboardStats = fluxoCaixaService.getDashboardStatistics();
-            model.addAttribute("dashboardStats", dashboardStats);
+            model.addAttribute("dashboardStats", dashboardStats != null ? dashboardStats : Map.of());
 
             LocalDate hoje = LocalDate.now();
-            LocalDate inicioMes = YearMonth.from(hoje).atDay(1);
-            List<FluxoCaixa> recentTransactions = fluxoCaixaService.findByPeriodo(inicioMes, hoje);
-            model.addAttribute("recentTransactions", recentTransactions.stream().limit(10).toList());
 
+            // Transações recentes dos últimos 30 dias
+            List<FluxoCaixa> recentTransactions = List.of();
+            try {
+                LocalDate trintaDiasAtras = hoje.minusDays(30);
+                List<FluxoCaixa> ultimas30Dias = fluxoCaixaService.findByPeriodo(trintaDiasAtras, hoje);
+                if (ultimas30Dias != null) {
+                    // Ordenar por data decrescente e limitar a 10
+                    recentTransactions = ultimas30Dias.stream()
+                            .sorted(Comparator.comparing(FluxoCaixa::getData).reversed())
+                            .limit(10)
+                            .toList();
+                }
+                model.addAttribute("recentTransactions", recentTransactions);
+                model.addAttribute("totalRecentTransactions", recentTransactions.size());
+            } catch (Exception e) {
+                System.err.println("Erro ao buscar transações recentes dos últimos 30 dias: " + e.getMessage());
+                model.addAttribute("recentTransactions", List.of());
+                model.addAttribute("totalRecentTransactions", 0);
+            }
+
+            // Contas a receber vencidas
             List<ContaReceber> contasReceberVencidas = contaReceberService.findVencidas();
-            model.addAttribute("contasReceberVencidas", contasReceberVencidas.stream().limit(5).toList());
+            if (contasReceberVencidas != null)
+                contasReceberVencidas = contasReceberVencidas.stream().limit(5).toList();
+            else
+                contasReceberVencidas = List.of();
+            model.addAttribute("contasReceberVencidas", contasReceberVencidas);
+
+            // Totais
+            BigDecimal totalReceber = contaReceberService.calcularTotalReceber();
+            model.addAttribute("totalReceber", totalReceber != null ? totalReceber : BigDecimal.ZERO);
+
+            BigDecimal saldoAtual = fluxoCaixaService.calcularSaldoAtual();
+            model.addAttribute("saldoAtual", saldoAtual != null ? saldoAtual : BigDecimal.ZERO);
+
+            Map<String, BigDecimal> projecao30dias = fluxoCaixaService.getProjecaoFinanceira(30);
+            model.addAttribute("projecao30dias", projecao30dias != null ? projecao30dias : Map.of());
+
+            // Paginação segura
+            Page<ContaReceber> contasPage = contaReceberService.findAllPaged(page, PAGE_SIZE);
+            int totalPages = (contasPage != null) ? contasPage.getTotalPages() : 0;
+
+            if (page >= totalPages && totalPages > 0) {
+                page = totalPages - 1;
+                contasPage = contaReceberService.findAllPaged(page, PAGE_SIZE);
+            } else if (page < 0) {
+                page = 0;
+                contasPage = contaReceberService.findAllPaged(page, PAGE_SIZE);
+            }
+
+            model.addAttribute("contasPage", contasPage);
+            model.addAttribute("contas", contasPage != null ? contasPage.getContent() : List.of());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
 
         } catch (Exception e) {
             System.err.println("Erro ao carregar dashboard financeiro: " + e.getMessage());
+            e.printStackTrace();
+
+            model.addAttribute("recentTransactions", List.of());
+            model.addAttribute("totalRecentTransactions", 0);
+            model.addAttribute("contasReceberVencidas", List.of());
+            model.addAttribute("totalReceber", BigDecimal.ZERO);
+            model.addAttribute("saldoAtual", BigDecimal.ZERO);
+            model.addAttribute("projecao30dias", Map.of());
+            model.addAttribute("contas", List.of());
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
         }
 
         return "financeiro/index";
@@ -55,130 +121,167 @@ public class FinanceiroController {
     // -------------------- CONTAS A PAGAR --------------------
     @GetMapping("/contas-pagar")
     public String contasPagar(Model model, @RequestParam(required = false) String status) {
-        model.addAttribute("pageTitle", "Contas a Pagar");
-        model.addAttribute("moduleCSS", "financeiro");
-        model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
-        model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
+        try {
+            model.addAttribute("pageTitle", "Contas a Pagar");
+            model.addAttribute("moduleCSS", "financeiro");
+            model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
+            model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar contas a pagar: " + e.getMessage());
+        }
         return "financeiro/contas-pagar";
     }
 
     // -------------------- CONTAS A RECEBER --------------------
     @GetMapping("/contas-receber")
     public String contasReceber(Model model, @RequestParam(required = false) String status) {
-        model.addAttribute("pageTitle", "Contas a Receber");
-        model.addAttribute("moduleCSS", "financeiro");
-
-        List<ContaReceber> contas = List.of();
-        Map<ContaReceber.StatusContaReceber, Long> estatisticas = Map.of();
-        BigDecimal totalReceber = BigDecimal.ZERO;
-        Map<String, Object> analiseIdade = Map.of();
-
         try {
-            if (status != null && !status.isEmpty()) {
-                contas = contaReceberService.findByStatus(ContaReceber.StatusContaReceber.valueOf(status));
-            } else {
-                contas = contaReceberService.findAll();
+            model.addAttribute("pageTitle", "Contas a Receber");
+            model.addAttribute("moduleCSS", "financeiro");
+
+            List<ContaReceber> contas = List.of();
+            Map<ContaReceber.StatusContaReceber, Long> estatisticas = Map.of();
+            BigDecimal totalReceber = BigDecimal.ZERO;
+            Map<String, Object> analiseIdade = Map.of();
+
+            try {
+                contas = (status != null && !status.isEmpty())
+                        ? contaReceberService.findByStatus(ContaReceber.StatusContaReceber.valueOf(status))
+                        : contaReceberService.findAll();
+                if (contas == null)
+                    contas = List.of();
+            } catch (Exception e) {
+                System.err.println("Erro ao carregar contas: " + e.getMessage());
             }
+
+            try {
+                estatisticas = contaReceberService.getEstatisticasPorStatus();
+            } catch (Exception e) {
+                System.err.println("Erro ao calcular estatísticas: " + e.getMessage());
+            }
+
+            try {
+                totalReceber = contaReceberService.calcularTotalReceber();
+            } catch (Exception e) {
+                System.err.println("Erro ao calcular total a receber: " + e.getMessage());
+            }
+            totalReceber = totalReceber != null ? totalReceber : BigDecimal.ZERO;
+
+            try {
+                analiseIdade = contaReceberService.getAnaliseIdade();
+            } catch (Exception e) {
+                System.err.println("Erro ao gerar análise de idade das contas: " + e.getMessage());
+            }
+
+            model.addAttribute("contas", contas);
+            model.addAttribute("statusOptions", ContaReceber.StatusContaReceber.values());
+            model.addAttribute("categoriaOptions", ContaReceber.CategoriaContaReceber.values());
+            model.addAttribute("estatisticas", estatisticas);
+            model.addAttribute("totalReceber", totalReceber);
+            model.addAttribute("analiseIdade", analiseIdade);
+
         } catch (Exception e) {
-            System.err.println("Erro ao carregar contas: " + e.getMessage());
+            System.err.println("Erro geral no módulo Contas a Receber: " + e.getMessage());
+            model.addAttribute("contas", List.of());
+            model.addAttribute("estatisticas", Map.of());
+            model.addAttribute("totalReceber", BigDecimal.ZERO);
+            model.addAttribute("analiseIdade", Map.of());
         }
-
-        try {
-            estatisticas = contaReceberService.getEstatisticasPorStatus();
-        } catch (Exception e) {
-            System.err.println("Erro ao calcular estatísticas: " + e.getMessage());
-        }
-
-        try {
-            totalReceber = contaReceberService.calcularTotalReceber();
-        } catch (Exception e) {
-            System.err.println("Erro ao calcular total a receber: " + e.getMessage());
-        }
-        totalReceber = totalReceber != null ? totalReceber : BigDecimal.ZERO;
-
-        try {
-            analiseIdade = contaReceberService.getAnaliseIdade();
-        } catch (Exception e) {
-            System.err.println("Erro ao gerar análise de idade das contas: " + e.getMessage());
-        }
-
-        model.addAttribute("contas", contas);
-        model.addAttribute("statusOptions", ContaReceber.StatusContaReceber.values());
-        model.addAttribute("categoriaOptions", ContaReceber.CategoriaContaReceber.values());
-        model.addAttribute("estatisticas", estatisticas);
-        model.addAttribute("totalReceber", totalReceber);
-        model.addAttribute("analiseIdade", analiseIdade);
-
         return "financeiro/contas-receber";
     }
 
     // -------------------- FLUXO DE CAIXA --------------------
     @GetMapping("/fluxo-caixa")
     public String fluxoCaixa(Model model,
-                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
-                             @RequestParam(required = false) String tipoMovimento,
-                             @RequestParam(required = false) String categoria,
-                             @RequestParam(required = false) String status) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(required = false) String tipoMovimento,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String status) {
 
-        model.addAttribute("pageTitle", "Fluxo de Caixa");
-        model.addAttribute("moduleCSS", "financeiro");
-
-        if (dataInicio == null) dataInicio = LocalDate.now().withDayOfMonth(1);
-        if (dataFim == null) dataFim = LocalDate.now();
-
-        List<FluxoCaixa> transacoes;
         try {
-            if (status != null && !status.isEmpty()) {
-                transacoes = fluxoCaixaService.findByStatus(FluxoCaixa.StatusFluxo.valueOf(status), dataInicio, dataFim);
-            } else if (tipoMovimento != null && !tipoMovimento.isEmpty()) {
-                transacoes = fluxoCaixaService.findByTipoMovimento(FluxoCaixa.TipoMovimento.valueOf(tipoMovimento), dataInicio, dataFim);
-            } else if (categoria != null && !categoria.isEmpty()) {
-                transacoes = fluxoCaixaService.findByCategoria(FluxoCaixa.CategoriaFluxo.valueOf(categoria), dataInicio, dataFim);
-            } else {
-                transacoes = fluxoCaixaService.findByPeriodo(dataInicio, dataFim);
+            model.addAttribute("pageTitle", "Fluxo de Caixa");
+            model.addAttribute("moduleCSS", "financeiro");
+
+            if (dataInicio == null)
+                dataInicio = LocalDate.now().withDayOfMonth(1);
+            if (dataFim == null)
+                dataFim = LocalDate.now();
+
+            List<FluxoCaixa> transacoes = List.of();
+            try {
+                if (status != null && !status.isEmpty()) {
+                    transacoes = fluxoCaixaService.findByStatus(FluxoCaixa.StatusFluxo.valueOf(status), dataInicio,
+                            dataFim);
+                } else if (tipoMovimento != null && !tipoMovimento.isEmpty()) {
+                    transacoes = fluxoCaixaService.findByTipoMovimento(FluxoCaixa.TipoMovimento.valueOf(tipoMovimento),
+                            dataInicio, dataFim);
+                } else if (categoria != null && !categoria.isEmpty()) {
+                    transacoes = fluxoCaixaService.findByCategoria(FluxoCaixa.CategoriaFluxo.valueOf(categoria),
+                            dataInicio, dataFim);
+                } else {
+                    transacoes = fluxoCaixaService.findByPeriodo(dataInicio, dataFim);
+                }
+            } catch (Exception e) {
+                System.err.println("Erro ao carregar fluxo de caixa: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.err.println("Erro ao carregar fluxo de caixa: " + e.getMessage());
-            transacoes = List.of();
-        }
 
-        model.addAttribute("transacoes", transacoes);
-        model.addAttribute("tipoMovimentoOptions", FluxoCaixa.TipoMovimento.values());
-        model.addAttribute("categoriaOptions", FluxoCaixa.CategoriaFluxo.values());
-        model.addAttribute("statusOptions", FluxoCaixa.StatusFluxo.values());
-        model.addAttribute("dataInicio", dataInicio);
-        model.addAttribute("dataFim", dataFim);
+            model.addAttribute("transacoes", transacoes);
+            model.addAttribute("tipoMovimentoOptions", FluxoCaixa.TipoMovimento.values());
+            model.addAttribute("categoriaOptions", FluxoCaixa.CategoriaFluxo.values());
+            model.addAttribute("statusOptions", FluxoCaixa.StatusFluxo.values());
+            model.addAttribute("dataInicio", dataInicio);
+            model.addAttribute("dataFim", dataFim);
 
-        try {
-            Map<String, BigDecimal> resumo = fluxoCaixaService.getResumoFinanceiroPeriodo(dataInicio, dataFim);
-            model.addAttribute("resumoFinanceiro", resumo);
-        } catch (Exception e) {
-            System.err.println("Erro ao gerar resumo financeiro: " + e.getMessage());
-        }
+            try {
+                Map<String, BigDecimal> resumo = fluxoCaixaService.getResumoFinanceiroPeriodo(dataInicio, dataFim);
+                model.addAttribute("resumoFinanceiro", resumo != null ? resumo : Map.of());
+            } catch (Exception e) {
+                System.err.println("Erro ao gerar resumo financeiro: " + e.getMessage());
+            }
 
-        try {
-            BigDecimal saldoAtual = fluxoCaixaService.calcularSaldoAtual();
-            model.addAttribute("saldoAtual", saldoAtual);
-        } catch (Exception e) {
-            System.err.println("Erro ao calcular saldo atual: " + e.getMessage());
-        }
+            try {
+                BigDecimal saldoAtual = fluxoCaixaService.calcularSaldoAtual();
+                model.addAttribute("saldoAtual", saldoAtual != null ? saldoAtual : BigDecimal.ZERO);
+            } catch (Exception e) {
+                System.err.println("Erro ao calcular saldo atual: " + e.getMessage());
+            }
 
-        try {
-            Map<String, BigDecimal> projecao = fluxoCaixaService.getProjecaoFinanceira(30);
-            model.addAttribute("projecao30dias", projecao);
+            try {
+                Map<String, BigDecimal> projecao = fluxoCaixaService.getProjecaoFinanceira(30);
+                model.addAttribute("projecao30dias", projecao != null ? projecao : Map.of());
+            } catch (Exception e) {
+                System.err.println("Erro ao gerar projeção financeira: " + e.getMessage());
+            }
+
         } catch (Exception e) {
-            System.err.println("Erro ao gerar projeção financeira: " + e.getMessage());
+            System.err.println("Erro geral no módulo Fluxo de Caixa: " + e.getMessage());
         }
 
         return "financeiro/fluxo-caixa";
     }
 
+    // -------------------- TRANSFERÊNCIAS --------------------
+    @GetMapping("/transferencias")
+    public String transferencias(Model model) {
+        try {
+            model.addAttribute("pageTitle", "Transferências");
+            model.addAttribute("moduleCSS", "financeiro");
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar transferências: " + e.getMessage());
+        }
+        return "financeiro/transferencias";
+    }
+
     // -------------------- RELATÓRIOS --------------------
     @GetMapping("/relatorios")
     public String relatorios(Model model) {
-        model.addAttribute("pageTitle", "Relatórios Financeiros");
-        model.addAttribute("moduleCSS", "financeiro");
+        try {
+            model.addAttribute("pageTitle", "Relatórios Financeiros");
+            model.addAttribute("moduleCSS", "financeiro");
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar relatórios: " + e.getMessage());
+        }
         return "financeiro/relatorios";
     }
 
@@ -187,7 +290,12 @@ public class FinanceiroController {
     public ResponseEntity<Map<FluxoCaixa.CategoriaFluxo, BigDecimal>> getEntradasPorCategoria(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
-        return ResponseEntity.ok(fluxoCaixaService.getEntradasPorCategoria(inicio, fim));
+        try {
+            return ResponseEntity.ok(fluxoCaixaService.getEntradasPorCategoria(inicio, fim));
+        } catch (Exception e) {
+            System.err.println("Erro ao gerar relatório de entradas: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of());
+        }
     }
 
     @GetMapping("/api/relatorios/saidas-categoria")
@@ -195,7 +303,12 @@ public class FinanceiroController {
     public ResponseEntity<Map<FluxoCaixa.CategoriaFluxo, BigDecimal>> getSaidasPorCategoria(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
-        return ResponseEntity.ok(fluxoCaixaService.getSaidasPorCategoria(inicio, fim));
+        try {
+            return ResponseEntity.ok(fluxoCaixaService.getSaidasPorCategoria(inicio, fim));
+        } catch (Exception e) {
+            System.err.println("Erro ao gerar relatório de saídas: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of());
+        }
     }
 
     // -------------------- SINCRONIZAÇÃO --------------------
@@ -207,40 +320,44 @@ public class FinanceiroController {
             fluxoCaixaService.sincronizarContasReceber();
             return ResponseEntity.ok("Fluxo de caixa sincronizado com sucesso!");
         } catch (Exception e) {
+            System.err.println("Erro na sincronização do fluxo de caixa: " + e.getMessage());
             return ResponseEntity.badRequest().body("Erro na sincronização: " + e.getMessage());
         }
     }
 
-    // -------------------- TRANSFERÊNCIAS --------------------
-    @GetMapping("/transferencias")
-    public String transferencias(Model model) {
-        model.addAttribute("pageTitle", "Transferências");
-        model.addAttribute("moduleCSS", "financeiro");
-        return "financeiro/transferencias";
-    }
-
-    // -------------------- API CONTAS A RECEBER --------------------
+    // -------------------- CONTAS A RECEBER API --------------------
     @GetMapping("/api/contas-receber")
     @ResponseBody
     public List<ContaReceber> contasReceberJson(@RequestParam(required = false) String status) {
-        if (status != null && !status.isEmpty()) {
-            try {
-                ContaReceber.StatusContaReceber statusEnum = ContaReceber.StatusContaReceber.valueOf(status.toUpperCase());
-                return contaReceberService.findByStatus(statusEnum);
-            } catch (IllegalArgumentException e) {
-                return List.of();
+        try {
+            if (status != null && !status.isEmpty()) {
+                try {
+                    ContaReceber.StatusContaReceber statusEnum = ContaReceber.StatusContaReceber
+                            .valueOf(status.toUpperCase());
+                    return contaReceberService.findByStatus(statusEnum);
+                } catch (IllegalArgumentException e) {
+                    return List.of();
+                }
+            } else {
+                return contaReceberService.findAll();
             }
-        } else {
-            return contaReceberService.findAll();
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar contas a receber via API: " + e.getMessage());
+            return List.of();
         }
     }
 
     @GetMapping("/api/contas-receber/{id}")
     @ResponseBody
     public ResponseEntity<ContaReceber> getContaReceberPorId(@PathVariable Long id) {
-        return contaReceberService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return contaReceberService.findById(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar conta a receber por ID: " + e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/api/contas-receber")
@@ -249,7 +366,8 @@ public class FinanceiroController {
         try {
             ContaReceber salva = contaReceberService.save(conta);
             return ResponseEntity.ok(salva);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
+            System.err.println("Erro ao criar conta a receber: " + e.getMessage());
             return ResponseEntity.badRequest().body(null);
         }
     }
@@ -261,13 +379,13 @@ public class FinanceiroController {
             @RequestParam BigDecimal valor,
             @RequestParam(required = false) String observacoes,
             @RequestParam Long usuarioId) {
-
         try {
             Usuario usuario = usuarioService.buscarPorId(usuarioId)
                     .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
             ContaReceber recebida = contaReceberService.receberConta(id, valor, observacoes, usuario);
             return ResponseEntity.ok(recebida);
         } catch (Exception e) {
+            System.err.println("Erro ao receber conta: " + e.getMessage());
             return ResponseEntity.badRequest().body(null);
         }
     }
@@ -278,13 +396,13 @@ public class FinanceiroController {
             @PathVariable Long id,
             @RequestParam String motivo,
             @RequestParam Long usuarioId) {
-
         try {
             Usuario usuario = usuarioService.buscarPorId(usuarioId)
                     .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
             ContaReceber cancelada = contaReceberService.cancelarConta(id, motivo, usuario);
             return ResponseEntity.ok(cancelada);
         } catch (Exception e) {
+            System.err.println("Erro ao cancelar conta: " + e.getMessage());
             return ResponseEntity.badRequest().body(null);
         }
     }
@@ -296,6 +414,7 @@ public class FinanceiroController {
             contaReceberService.deleteById(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
+            System.err.println("Erro ao deletar conta: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -303,47 +422,61 @@ public class FinanceiroController {
     @GetMapping("/api/contas-receber/estatisticas")
     @ResponseBody
     public ResponseEntity<Map<ContaReceber.StatusContaReceber, Long>> estatisticasPorStatus() {
-        return ResponseEntity.ok(contaReceberService.getEstatisticasPorStatus());
+        try {
+            return ResponseEntity.ok(contaReceberService.getEstatisticasPorStatus());
+        } catch (Exception e) {
+            System.err.println("Erro ao obter estatísticas de contas: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of());
+        }
     }
 
     @GetMapping("/api/contas-receber/total")
     @ResponseBody
     public ResponseEntity<BigDecimal> totalReceber() {
-        BigDecimal total = contaReceberService.calcularTotalReceber();
-        return ResponseEntity.ok(total != null ? total : BigDecimal.ZERO);
+        try {
+            BigDecimal total = contaReceberService.calcularTotalReceber();
+            return ResponseEntity.ok(total != null ? total : BigDecimal.ZERO);
+        } catch (Exception e) {
+            System.err.println("Erro ao calcular total a receber: " + e.getMessage());
+            return ResponseEntity.badRequest().body(BigDecimal.ZERO);
+        }
     }
 
     @GetMapping("/api/contas-receber/aging")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> analiseAging() {
-        return ResponseEntity.ok(contaReceberService.getAnaliseIdade());
+        try {
+            return ResponseEntity.ok(contaReceberService.getAnaliseIdade());
+        } catch (Exception e) {
+            System.err.println("Erro ao gerar análise aging: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of());
+        }
     }
 
-    // -------------------- REGISTRAR PAGAMENTO --------------------
     @PutMapping("/api/contas-receber/{id}/registrar-pagamento")
     @ResponseBody
     public ResponseEntity<?> registrarPagamento(
             @PathVariable Long id,
             @RequestParam BigDecimal valorPago,
-            @RequestParam(required = false) Long usuarioId
-    ) {
+            @RequestParam(required = false) Long usuarioId) {
         try {
-            if (usuarioId == null) usuarioId = 1L;
+            if (usuarioId == null)
+                usuarioId = 1L;
             Usuario usuario = usuarioService.buscarPorId(usuarioId)
                     .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
-            ContaReceber conta = contaReceberService.receberConta(id, valorPago, "Pagamento registrado via sistema", usuario);
+            ContaReceber conta = contaReceberService.receberConta(id, valorPago, "Pagamento registrado via sistema",
+                    usuario);
 
             return ResponseEntity.ok(Map.of(
                     "mensagem", "Pagamento registrado com sucesso!",
                     "contaId", conta.getId(),
                     "valorRecebido", conta.getValorRecebido(),
-                    "status", conta.getStatus().name()
-            ));
+                    "status", conta.getStatus().name()));
         } catch (Exception e) {
+            System.err.println("Erro ao registrar pagamento: " + e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
-                    "mensagem", "Erro ao registrar pagamento: " + e.getMessage()
-            ));
+                    "mensagem", "Erro ao registrar pagamento: " + e.getMessage()));
         }
     }
 }

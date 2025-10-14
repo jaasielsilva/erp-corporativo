@@ -8,6 +8,7 @@ import com.jaasielsilva.portalceo.repository.ContaReceberRepository;
 import com.jaasielsilva.portalceo.repository.FluxoCaixaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -298,5 +299,12 @@ public class ContaReceberService {
         fluxo.setDataCriacao(LocalDateTime.now());
         
         fluxoCaixaRepository.save(fluxo);
+    }
+
+    // -------------------- NOVO: PAGINAÇÃO --------------------
+    @Transactional(readOnly = true)
+    public Page<ContaReceber> findAllPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return contaReceberRepository.findAll(pageable);
     }
 }

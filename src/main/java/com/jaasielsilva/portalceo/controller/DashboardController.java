@@ -54,140 +54,144 @@ public class DashboardController {
     @Autowired
     private IndicadorService indicadorService;
 
-@GetMapping("/dashboard")
-public String dashboard(Model model, Principal principal) {
+    @GetMapping("/dashboard")
+    public String dashboard(Model model, Principal principal) {
 
-    // Buscar o usuário logado
-    Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+        // Buscar o usuário logado
+        Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
 
-    // Verificar se é ADMIN
-    boolean isAdmin = usuarioLogado != null && usuarioLogado.getPerfis().stream()
-            .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
+        // Verificar se é ADMIN
+        boolean isAdmin = usuarioLogado != null && usuarioLogado.getPerfis().stream()
+                .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
 
-    // ===== DADOS PRINCIPAIS =====
-    long totalClientes = clienteService.contarTotal();
-    long novosClientes30Dias = clienteService.contarNovosPorPeriodo(30);
-    long totalVendas = vendaService.contarTotalVendas();
-    String crescimentoVendas = vendaService.calcularCrescimentoVendas();
-    long produtosEstoque = produtoService.somarQuantidadeEstoque();
-    BigDecimal faturamentoMensal = vendaService.calcularFaturamentoUltimos12Meses();
-    String crescimentoFaturamento = vendaService.calcularCrescimentoVendas();
-    long produtosCriticos = produtoService.contarProdutosCriticos();
-    long totalFuncionarios = colaboradorService.contarAtivos();
-    long contratacoes12Meses = colaboradorService.contarContratacaosPorPeriodo(12);
-    long solicitacoesPendentes = solicitacaoAcessoService.contarSolicitacoesPendentes();
-    long solicitacoesAtrasadas = solicitacaoAcessoService.contarSolicitacoesAtrasadas();
+        // ===== DADOS PRINCIPAIS =====
+        long totalClientes = clienteService.contarTotal();
+        long novosClientes30Dias = clienteService.contarNovosPorPeriodo(30);
+        long totalVendas = vendaService.contarTotalVendas();
+        String crescimentoVendas = vendaService.calcularCrescimentoVendas();
+        long produtosEstoque = produtoService.somarQuantidadeEstoque();
+        BigDecimal faturamentoMensal = vendaService.calcularFaturamentoUltimos12Meses();
+        String crescimentoFaturamento = vendaService.calcularCrescimentoVendas();
+        long produtosCriticos = produtoService.contarProdutosCriticos();
+        long totalFuncionarios = colaboradorService.contarAtivos();
+        long contratacoes12Meses = colaboradorService.contarContratacaosPorPeriodo(12);
+        long solicitacoesPendentes = solicitacaoAcessoService.contarSolicitacoesPendentes();
+        long solicitacoesAtrasadas = solicitacaoAcessoService.contarSolicitacoesAtrasadas();
 
-    WorkflowAdesaoService.DashboardEstatisticas estatisticasAdesao = workflowAdesaoService.obterEstatisticas();
-    long processosAdesaoTotal = estatisticasAdesao.getProcessosPorStatus().values().stream()
-            .mapToLong(Long::longValue).sum();
-    long processosAguardandoAprovacao = estatisticasAdesao.getProcessosAguardandoAprovacao();
+        WorkflowAdesaoService.DashboardEstatisticas estatisticasAdesao = workflowAdesaoService.obterEstatisticas();
+        long processosAdesaoTotal = estatisticasAdesao.getProcessosPorStatus().values().stream()
+                .mapToLong(Long::longValue).sum();
+        long processosAguardandoAprovacao = estatisticasAdesao.getProcessosAguardandoAprovacao();
 
-    List<String> adesaoRHLabels = workflowAdesaoService.obterLabelsUltimos6Meses();
-    List<Integer> adesaoRHValores = workflowAdesaoService.obterDadosAdesaoUltimos6Meses();
+        List<String> adesaoRHLabels = workflowAdesaoService.obterLabelsUltimos6Meses();
+        List<Integer> adesaoRHValores = workflowAdesaoService.obterDadosAdesaoUltimos6Meses();
 
-    String percentualMeta = "87%";
+        String percentualMeta = "87%";
 
-    // GRÁFICOS DE VENDAS
-    Map<YearMonth, BigDecimal> vendasUltimos12Meses = vendaService.getVendasUltimosMeses(12);
-    List<String> ultimos12MesesLabels = new ArrayList<>();
-    List<BigDecimal> ultimos12MesesValores = new ArrayList<>();
-    vendasUltimos12Meses.forEach((ym, valor) -> {
-        String label = ym.getMonth().name().substring(0, 3) + "/" + String.valueOf(ym.getYear()).substring(2);
-        ultimos12MesesLabels.add(label);
-        ultimos12MesesValores.add(valor);
-    });
+        // GRÁFICOS DE VENDAS
+        Map<YearMonth, BigDecimal> vendasUltimos12Meses = vendaService.getVendasUltimosMeses(12);
+        List<String> ultimos12MesesLabels = new ArrayList<>();
+        List<BigDecimal> ultimos12MesesValores = new ArrayList<>();
+        vendasUltimos12Meses.forEach((ym, valor) -> {
+            String label = ym.getMonth().name().substring(0, 3) + "/" + String.valueOf(ym.getYear()).substring(2);
+            ultimos12MesesLabels.add(label);
+            ultimos12MesesValores.add(valor);
+        });
 
-    List<BigDecimal> metaVendasMensal = new ArrayList<>();
-    BigDecimal metaBase = faturamentoMensal.multiply(new BigDecimal("1.2"));
-    for (int i = 0; i < 12; i++) {
-        metaVendasMensal.add(metaBase);
+        List<BigDecimal> metaVendasMensal = new ArrayList<>();
+        BigDecimal metaBase = faturamentoMensal.multiply(new BigDecimal("1.2"));
+        for (int i = 0; i < 12; i++) {
+            metaVendasMensal.add(metaBase);
+        }
+
+        // Vendas por categoria
+        Map<String, BigDecimal> vendasPorCategoriaMap = vendaService.getVendasPorCategoria();
+        List<String> categoriasLabels = new ArrayList<>(vendasPorCategoriaMap.keySet());
+        List<BigDecimal> categoriasValores = new ArrayList<>(vendasPorCategoriaMap.values());
+
+        List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();
+        List<Integer> solicitacoesStatus = new ArrayList<>();
+        for (Long valor : solicitacoesStatusLong) {
+            solicitacoesStatus.add(valor.intValue());
+        }
+
+        List<Integer> performanceIndicadores = Arrays.asList(
+                vendaService.calcularPerformanceVendas(),
+                solicitacaoAcessoService.calcularPerformanceAtendimento(),
+                estoqueService.calcularPerformanceLogistica(),
+                clienteService.calcularPerformanceQualidade(),
+                usuarioService.calcularPerformanceFinanceiro());
+
+        // ===== MÉTRICAS FINANCEIRAS =====
+        String margemLucro = indicadorService.formatarPercentual(indicadorService.getMargemLucro());
+        String roiMensal = indicadorService.formatarPercentual(indicadorService.getRoiMensal());
+        String inadimplencia = indicadorService.formatarPercentual(indicadorService.getInadimplencia());
+
+        // ===== MÉTRICAS DE RH =====
+        String taxaRetencao = "94,2%";
+        String produtividadeMedia = "87,3%";
+        String horasExtras = "234h";
+        String satisfacaoInterna = "8,7/10";
+
+        // ===== MÉTRICAS OPERACIONAIS =====
+        String giroEstoque = "4,2x";
+        String tempoEntrega = "2,3 dias";
+        String taxaDevolucao = "1,8%";
+        String eficienciaLogistica = "91,5%";
+
+        // ===== TICKET MÉDIO FORMATADO =====
+        String ticketMedioFormatado = indicadorService.formatarMoeda(indicadorService.getTicketMedio());
+
+        // ===== ADICIONANDO ATRIBUTOS AO MODEL =====
+        model.addAttribute("usuarioLogado", usuarioLogado);
+        model.addAttribute("isAdmin", isAdmin);
+
+        model.addAttribute("faturamentoMensal", indicadorService.formatarMoeda(faturamentoMensal));
+        model.addAttribute("crescimentoFaturamento", crescimentoFaturamento);
+        model.addAttribute("totalVendas", String.format("%,d", totalVendas));
+        model.addAttribute("crescimentoVendas", crescimentoVendas);
+        model.addAttribute("totalClientes", String.format("%,d", totalClientes));
+        model.addAttribute("novosClientes30Dias", novosClientes30Dias);
+        model.addAttribute("totalProdutos", String.format("%,d", produtosEstoque));
+        model.addAttribute("totalFuncionarios", String.format("%,d", totalFuncionarios));
+        model.addAttribute("contratacoes12Meses", contratacoes12Meses);
+        model.addAttribute("solicitacoesPendentes", String.format("%,d", solicitacoesPendentes));
+        model.addAttribute("produtosCriticos", String.format("%,d", produtosCriticos));
+        model.addAttribute("solicitacoesAtrasadas", String.format("%,d", solicitacoesAtrasadas));
+        model.addAttribute("processosAdesaoTotal", processosAdesaoTotal);
+        model.addAttribute("processosAguardandoAprovacao", processosAguardandoAprovacao);
+        model.addAttribute("percentualMeta", percentualMeta);
+        model.addAttribute("ticketMedio", ticketMedioFormatado);
+
+        model.addAttribute("ultimos12MesesLabels", ultimos12MesesLabels);
+        model.addAttribute("ultimos12MesesValores", ultimos12MesesValores);
+        model.addAttribute("metaVendasMensal", metaVendasMensal);
+        model.addAttribute("categoriasLabels", categoriasLabels);
+        model.addAttribute("categoriasValores", categoriasValores);
+        model.addAttribute("solicitacoesStatus", solicitacoesStatus);
+        model.addAttribute("performanceIndicadores", performanceIndicadores);
+        model.addAttribute("adesaoRHLabels", adesaoRHLabels);
+        model.addAttribute("adesaoRHValores", adesaoRHValores);
+
+        model.addAttribute("margemLucro", margemLucro);
+        model.addAttribute("roiMensal", roiMensal);
+        model.addAttribute("inadimplencia", inadimplencia);
+        model.addAttribute("taxaRetencao", taxaRetencao);
+        model.addAttribute("produtividadeMedia", produtividadeMedia);
+        model.addAttribute("horasExtras", horasExtras);
+        model.addAttribute("satisfacaoInterna", satisfacaoInterna);
+        model.addAttribute("giroEstoque", giroEstoque);
+        model.addAttribute("tempoEntrega", tempoEntrega);
+        model.addAttribute("taxaDevolucao", taxaDevolucao);
+        model.addAttribute("eficienciaLogistica", eficienciaLogistica);
+
+        System.out.println("Margem Lucro: " + margemLucro);
+        System.out.println("ROI Mensal: " + roiMensal);
+        System.out.println("Inadimplência: " + inadimplencia);
+        System.out.println("Ticket Médio: " + ticketMedioFormatado);
+
+        return "dashboard/index";
     }
-
-    // Vendas por categoria
-    Map<String, BigDecimal> vendasPorCategoriaMap = vendaService.getVendasPorCategoria();
-    List<String> categoriasLabels = new ArrayList<>(vendasPorCategoriaMap.keySet());
-    List<BigDecimal> categoriasValores = new ArrayList<>(vendasPorCategoriaMap.values());
-
-    List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();
-    List<Integer> solicitacoesStatus = new ArrayList<>();
-    for (Long valor : solicitacoesStatusLong) {
-        solicitacoesStatus.add(valor.intValue());
-    }
-
-    List<Integer> performanceIndicadores = Arrays.asList(
-            vendaService.calcularPerformanceVendas(),
-            solicitacaoAcessoService.calcularPerformanceAtendimento(),
-            estoqueService.calcularPerformanceLogistica(),
-            clienteService.calcularPerformanceQualidade(),
-            usuarioService.calcularPerformanceFinanceiro());
-
-    // ===== MÉTRICAS FINANCEIRAS =====
-    String margemLucro = indicadorService.formatarPercentual(indicadorService.getMargemLucro());
-    String roiMensal = indicadorService.formatarPercentual(indicadorService.getRoiMensal());
-    String inadimplencia = indicadorService.formatarPercentual(indicadorService.getInadimplencia());
-
-    // ===== MÉTRICAS DE RH =====
-    String taxaRetencao = "94,2%";
-    String produtividadeMedia = "87,3%";
-    String horasExtras = "234h";
-    String satisfacaoInterna = "8,7/10";
-
-    // ===== MÉTRICAS OPERACIONAIS =====
-    String giroEstoque = "4,2x";
-    String tempoEntrega = "2,3 dias";
-    String taxaDevolucao = "1,8%";
-    String eficienciaLogistica = "91,5%";
-
-    // ===== TICKET MÉDIO FORMATADO =====
-    String ticketMedioFormatado = indicadorService.formatarMoeda(indicadorService.getTicketMedio());
-
-    // ===== ADICIONANDO ATRIBUTOS AO MODEL =====
-    model.addAttribute("usuarioLogado", usuarioLogado);
-    model.addAttribute("isAdmin", isAdmin);
-
-    model.addAttribute("faturamentoMensal", indicadorService.formatarMoeda(faturamentoMensal));
-    model.addAttribute("crescimentoFaturamento", crescimentoFaturamento);
-    model.addAttribute("totalVendas", String.format("%,d", totalVendas));
-    model.addAttribute("crescimentoVendas", crescimentoVendas);
-    model.addAttribute("totalClientes", String.format("%,d", totalClientes));
-    model.addAttribute("novosClientes30Dias", novosClientes30Dias);
-    model.addAttribute("totalProdutos", String.format("%,d", produtosEstoque));
-    model.addAttribute("totalFuncionarios", String.format("%,d", totalFuncionarios));
-    model.addAttribute("contratacoes12Meses", contratacoes12Meses);
-    model.addAttribute("solicitacoesPendentes", String.format("%,d", solicitacoesPendentes));
-    model.addAttribute("produtosCriticos", String.format("%,d", produtosCriticos));
-    model.addAttribute("solicitacoesAtrasadas", String.format("%,d", solicitacoesAtrasadas));
-    model.addAttribute("processosAdesaoTotal", processosAdesaoTotal);
-    model.addAttribute("processosAguardandoAprovacao", processosAguardandoAprovacao);
-    model.addAttribute("percentualMeta", percentualMeta);
-    model.addAttribute("ticketMedio", ticketMedioFormatado);
-
-    model.addAttribute("ultimos12MesesLabels", ultimos12MesesLabels);
-    model.addAttribute("ultimos12MesesValores", ultimos12MesesValores);
-    model.addAttribute("metaVendasMensal", metaVendasMensal);
-    model.addAttribute("categoriasLabels", categoriasLabels);
-    model.addAttribute("categoriasValores", categoriasValores);
-    model.addAttribute("solicitacoesStatus", solicitacoesStatus);
-    model.addAttribute("performanceIndicadores", performanceIndicadores);
-    model.addAttribute("adesaoRHLabels", adesaoRHLabels);
-    model.addAttribute("adesaoRHValores", adesaoRHValores);
-
-    model.addAttribute("margemLucro", margemLucro);
-    model.addAttribute("roiMensal", roiMensal);
-    model.addAttribute("inadimplencia", inadimplencia);
-    model.addAttribute("taxaRetencao", taxaRetencao);
-    model.addAttribute("produtividadeMedia", produtividadeMedia);
-    model.addAttribute("horasExtras", horasExtras);
-    model.addAttribute("satisfacaoInterna", satisfacaoInterna);
-    model.addAttribute("giroEstoque", giroEstoque);
-    model.addAttribute("tempoEntrega", tempoEntrega);
-    model.addAttribute("taxaDevolucao", taxaDevolucao);
-    model.addAttribute("eficienciaLogistica", eficienciaLogistica);
-
-    return "dashboard/index";
-}
-
 
     // Método utilitário para formatação monetária
     private String formatarMoeda(BigDecimal valor) {

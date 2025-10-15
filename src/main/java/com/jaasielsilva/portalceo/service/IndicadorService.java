@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 
 import com.jaasielsilva.portalceo.model.indicadores.ViewMargemLucro;
 import com.jaasielsilva.portalceo.model.indicadores.ViewInadimplencia;
+import com.jaasielsilva.portalceo.model.indicadores.ViewRoiMensal;
 import com.jaasielsilva.portalceo.repository.indicadores.ViewMargemLucroRepository;
 import com.jaasielsilva.portalceo.repository.indicadores.ViewInadimplenciaRepository;
+import com.jaasielsilva.portalceo.repository.indicadores.ViewRoiMensalRepository;
 
 @Service
 public class IndicadorService {
@@ -20,17 +22,20 @@ public class IndicadorService {
     private final FinanceiroService financeiroService;
     private final ViewMargemLucroRepository margemLucroRepository;
     private final ViewInadimplenciaRepository inadimplenciaRepository;
+    private final ViewRoiMensalRepository roiMensalRepository;
 
     @Autowired
     public IndicadorService(
             VendaService vendaService,
             FinanceiroService financeiroService,
             ViewMargemLucroRepository margemLucroRepository,
-            ViewInadimplenciaRepository inadimplenciaRepository) {
+            ViewInadimplenciaRepository inadimplenciaRepository,
+            ViewRoiMensalRepository roiMensalRepository) {
         this.vendaService = vendaService;
         this.financeiroService = financeiroService;
         this.margemLucroRepository = margemLucroRepository;
         this.inadimplenciaRepository = inadimplenciaRepository;
+        this.roiMensalRepository = roiMensalRepository;
     }
 
     /** Margem de lucro (view SQL) */
@@ -61,18 +66,17 @@ public class IndicadorService {
         return totalVendas.divide(BigDecimal.valueOf(quantidadeVendas), 2, RoundingMode.HALF_UP);
     }
 
-    /** ROI mensal */
+    /** ROI mensal (via view SQL) */
     public BigDecimal getRoiMensal() {
-        BigDecimal investimentos = financeiroService.calcularTotalInvestimentos();
-        BigDecimal retornos = financeiroService.calcularTotalRetornos();
-
-        if (investimentos.compareTo(BigDecimal.ZERO) == 0) {
+        try {
+            return roiMensalRepository.findById(1)
+                    .map(ViewRoiMensal::getRoiMensal)
+                    .orElse(BigDecimal.ZERO)
+                    .setScale(1, RoundingMode.HALF_UP);
+        } catch (Exception e) {
+            System.err.println("⚠️ Falha ao buscar view_roi_mensal: " + e.getMessage());
             return BigDecimal.ZERO;
         }
-
-        return retornos.subtract(investimentos)
-                .multiply(BigDecimal.valueOf(100))
-                .divide(investimentos, 1, RoundingMode.HALF_UP);
     }
 
     /** Inadimplência com fallback manual */
@@ -82,7 +86,6 @@ public class IndicadorService {
                     .stream()
                     .findFirst()
                     .map(ViewInadimplencia::getTaxaInadimplencia)
-
                     .orElse(BigDecimal.ZERO);
 
             if (valorView.compareTo(BigDecimal.ZERO) > 0) {

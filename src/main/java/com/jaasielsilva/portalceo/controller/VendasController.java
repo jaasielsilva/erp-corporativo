@@ -10,6 +10,7 @@ import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.model.Produto;
 import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.model.VendaItem;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.VendaService;
@@ -239,7 +240,7 @@ public class VendasController {
     // Endpoints para operações CRUD
 
     @PostMapping("/salvar")
-    public String salvarVenda(@ModelAttribute VendaFormDTO vendaForm) {
+    public String salvarVenda(@ModelAttribute VendaFormDTO vendaForm, @ModelAttribute("usuarioLogado") Usuario usuarioLogado) {
         try {
             Venda venda = new Venda();
             
@@ -320,6 +321,10 @@ public class VendasController {
                 venda.setTroco(troco.compareTo(BigDecimal.ZERO) > 0 ? troco : BigDecimal.ZERO);
             }
             
+            // Associar usuário logado à venda (se disponível)
+            if (usuarioLogado != null) {
+                venda.setUsuario(usuarioLogado);
+            }
             // Salvar venda
             vendaService.salvar(venda);
         } catch (Exception e) {

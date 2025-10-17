@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,6 +22,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
+import com.jaasielsilva.portalceo.model.ContaReceber;
+import com.jaasielsilva.portalceo.service.ContaReceberService;
 
 @Service
 public class VendaService {
@@ -33,6 +36,9 @@ public class VendaService {
 
     @Autowired
     private CaixaService caixaService;
+
+    @Autowired
+    private ContaReceberService contaReceberService;
 
     @Transactional
     public Venda salvar(Venda venda) {
@@ -67,6 +73,9 @@ public class VendaService {
             // Log do erro, mas não falha a venda
             System.err.println("Erro ao registrar venda no caixa: " + e.getMessage());
         }
+
+        // Gerar contas a receber conforme saldo/parcelas
+        gerarContasReceberParaVenda(vendaSalva);
 
         return vendaSalva;
     }
@@ -579,4 +588,64 @@ public class VendaService {
         return vendasPorCategoria;
     }
 
+
+private void gerarContasReceberParaVenda(Venda vendaSalva) {
+    BigDecimal total = vendaSalva.getTotal() != null ? vendaSalva.getTotal() : BigDecimal.ZERO;
+    BigDecimal pago = vendaSalva.getValorPago() != null ? vendaSalva.getValorPago() : BigDecimal.ZERO;
+    BigDecimal saldo = total.subtract(pago);
+
+    // Se não há saldo pendente, não cria conta a receber
+    if (saldo.compareTo(BigDecimal.ZERO) <= 0) {
+        return;
+    }
+
+    int parcelas = (vendaSalva.getParcelas() != null && vendaSalva.getParcelas() > 0) ? vendaSalva.getParcelas() : 1;
+    java.time.LocalDate emissao = vendaSalva.getDataVenda() != null ? vendaSalva.getDataVenda().toLocalDate() : java.time.LocalDate.now();
+    String numeroDocumento = vendaSalva.getNumeroVenda() != null ? vendaSalva.getNumeroVenda() : ("VND-" + vendaSalva.getId());
+
+    if (parcelas == 1) {
+        ContaReceber conta = new ContaReceber();
+        conta.setDescricao("Venda " + numeroDocumento);
+        conta.setCliente(vendaSalva.getCliente());
+        conta.setVenda(vendaSalva);
+        conta.setValorOriginal(saldo);
+        conta.setValorRecebido(BigDecimal.ZERO);
+        conta.setDataEmissao(emissao);
+        // vencimento padrão em 30 dias
+        conta.setDataVencimento(emissao.plusDays(30));
+        conta.setNumeroDocumento(numeroDocumento);
+        conta.setFormaRecebimento(vendaSalva.getFormaPagamento());
+        conta.setParcelaAtual(1);
+        conta.setTotalParcelas(1);
+        conta.setCategoria(ContaReceber.CategoriaContaReceber.PRODUTO);
+        conta.setTipo(ContaReceber.TipoContaReceber.VENDA);
+        conta.setStatus(ContaReceber.StatusContaReceber.PENDENTE);
+        contaReceberService.save(conta);
+    } else {
+        BigDecimal valorParcela = saldo.divide(BigDecimal.valueOf(parcelas), 2, RoundingMode.HALF_UP);
+        BigDecimal acumulado = BigDecimal.ZERO;
+        for (int i = 1; i <= parcelas; i++) {
+            BigDecimal valor = (i == parcelas) ? saldo.subtract(acumulado) : valorParcela;
+    
+            ContaReceber conta = new ContaReceber();
+            conta.setDescricao("Venda " + numeroDocumento + " - Parcela " + i + "/" + parcelas);
+            conta.setCliente(vendaSalva.getCliente());
+            conta.setVenda(vendaSalva);
+            conta.setValorOriginal(valor);
+            conta.setValorRecebido(BigDecimal.ZERO);
+            conta.setDataEmissao(emissao);
+            conta.setDataVencimento(emissao.plusMonths(i));
+            conta.setNumeroDocumento(numeroDocumento + "-" + i);
+            conta.setFormaRecebimento(vendaSalva.getFormaPagamento());
+            conta.setParcelaAtual(i);
+            conta.setTotalParcelas(parcelas);
+            conta.setCategoria(ContaReceber.CategoriaContaReceber.PRODUTO);
+            conta.setTipo(ContaReceber.TipoContaReceber.VENDA);
+            conta.setStatus(ContaReceber.StatusContaReceber.PENDENTE);
+            contaReceberService.save(conta);
+    
+            acumulado = acumulado.add(valor);
+        }
+        }
+    }
 }

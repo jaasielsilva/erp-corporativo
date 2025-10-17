@@ -30,23 +30,20 @@ public class ContaReceberService {
     private final ContaReceberRepository contaReceberRepository;
     private final FluxoCaixaRepository fluxoCaixaRepository;
 
-    // CRUD Operations
+    // ---------------- CRUD ----------------
     public ContaReceber save(ContaReceber contaReceber) {
         validarContaReceber(contaReceber);
-        
-        // Set creation info if new
+
         if (contaReceber.getId() == null) {
             contaReceber.setDataCriacao(LocalDateTime.now());
             if (contaReceber.getStatus() == null) {
                 contaReceber.setStatus(ContaReceber.StatusContaReceber.PENDENTE);
             }
         }
-        
+
         ContaReceber savedConta = contaReceberRepository.save(contaReceber);
-        
-        // Create or update cash flow entry if needed
         criarEntradaFluxoCaixa(savedConta);
-        
+
         return savedConta;
     }
 
@@ -69,11 +66,11 @@ public class ContaReceberService {
         });
     }
 
-    // Business Operations
+    // ---------------- Recebimento ----------------
     @Transactional
     public ContaReceber receberConta(Long id, BigDecimal valorRecebido, String observacoes, Usuario usuario) {
         ContaReceber conta = contaReceberRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Conta a receber não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Conta a receber não encontrada"));
 
         if (conta.getStatus() == ContaReceber.StatusContaReceber.CANCELADA) {
             throw new IllegalStateException("Não é possível receber uma conta cancelada");
@@ -97,17 +94,16 @@ public class ContaReceberService {
         }
 
         ContaReceber contaSalva = contaReceberRepository.save(conta);
-
-        // Create cash flow entry for received amount
         criarEntradaFluxoCaixaRecebimento(contaSalva, valorRecebido, usuario);
 
         return contaSalva;
     }
 
+    // ---------------- Cancelamento ----------------
     @Transactional
     public ContaReceber cancelarConta(Long id, String motivoCancelamento, Usuario usuario) {
         ContaReceber conta = contaReceberRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Conta a receber não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Conta a receber não encontrada"));
 
         if (conta.getStatus() == ContaReceber.StatusContaReceber.RECEBIDA) {
             throw new IllegalStateException("Não é possível cancelar uma conta já recebida");
@@ -119,29 +115,29 @@ public class ContaReceberService {
         return contaReceberRepository.save(conta);
     }
 
+    // ---------------- Juros e Multas ----------------
     @Transactional
     public void processarJurosMultas() {
         LocalDate hoje = LocalDate.now();
         List<ContaReceber> contasVencidas = contaReceberRepository.findByDataVencimentoBeforeAndStatusIn(
-            hoje, List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL)
+                hoje, List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL)
         );
 
         for (ContaReceber conta : contasVencidas) {
             calcularJurosMulta(conta, hoje);
-            
-            // Mark as overdue if more than 30 days late
+
             long diasAtraso = ChronoUnit.DAYS.between(conta.getDataVencimento(), hoje);
             if (diasAtraso > 30 && conta.getStatus() != ContaReceber.StatusContaReceber.INADIMPLENTE) {
                 conta.setStatus(ContaReceber.StatusContaReceber.INADIMPLENTE);
             } else if (conta.getStatus() == ContaReceber.StatusContaReceber.PENDENTE) {
                 conta.setStatus(ContaReceber.StatusContaReceber.VENCIDA);
             }
-            
+
             contaReceberRepository.save(conta);
         }
     }
 
-    // Query Operations
+    // ---------------- Consultas ----------------
     @Transactional(readOnly = true)
     public List<ContaReceber> findByStatus(ContaReceber.StatusContaReceber status) {
         return contaReceberRepository.findByStatusOrderByDataVencimento(status);
@@ -160,8 +156,8 @@ public class ContaReceberService {
     @Transactional(readOnly = true)
     public List<ContaReceber> findVencidas() {
         return contaReceberRepository.findVencidas(
-            LocalDate.now(), 
-            List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL)
+                LocalDate.now(),
+                List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL)
         );
     }
 
@@ -177,10 +173,17 @@ public class ContaReceberService {
         return contaReceberRepository.findVencendoEm(hoje, futuro);
     }
 
-    // Financial Reports
+    @Transactional(readOnly = true)
+    public Page<ContaReceber> findAllPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return contaReceberRepository.findAll(pageable);
+    }
+
+    // ---------------- Relatórios Financeiros ----------------
     @Transactional(readOnly = true)
     public BigDecimal calcularTotalReceber() {
-        return contaReceberRepository.sumSaldoReceber();
+        BigDecimal total = contaReceberRepository.sumSaldoReceber();
+        return total != null ? total : BigDecimal.ZERO;
     }
 
     @Transactional(readOnly = true)
@@ -192,21 +195,24 @@ public class ContaReceberService {
     @Transactional(readOnly = true)
     public Map<ContaReceber.StatusContaReceber, Long> getEstatisticasPorStatus() {
         return List.of(ContaReceber.StatusContaReceber.values())
-            .stream()
-            .collect(Collectors.toMap(
-                status -> status,
-                status -> contaReceberRepository.countByStatus(status)
-            ));
+                .stream()
+                .collect(Collectors.toMap(
+                        status -> status,
+                        status -> {
+                            Long count = contaReceberRepository.countByStatus(status);
+                            return count != null ? count : 0L;
+                        }
+                ));
     }
 
     @Transactional(readOnly = true)
     public Map<ContaReceber.CategoriaContaReceber, BigDecimal> getRecebimentosPorCategoria(LocalDate inicio, LocalDate fim) {
         List<Object[]> results = contaReceberRepository.sumValorRecebidoByCategoriaPeriodo(inicio, fim);
         return results.stream()
-            .collect(Collectors.toMap(
-                row -> (ContaReceber.CategoriaContaReceber) row[0],
-                row -> (BigDecimal) row[1]
-            ));
+                .collect(Collectors.toMap(
+                        row -> (ContaReceber.CategoriaContaReceber) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
     }
 
     @Transactional(readOnly = true)
@@ -219,58 +225,72 @@ public class ContaReceberService {
         return contaReceberRepository.sumValorRecebidoPorDia(inicio, fim);
     }
 
-    // Aging Analysis
+    // ---------------- Aging Analysis ----------------
     @Transactional(readOnly = true)
     public Map<String, Object> getAnaliseIdade() {
         LocalDate hoje = LocalDate.now();
-        
-        Map<String, Object> analise = Map.of(
-            "ate30dias", contaReceberRepository.getAgingData(hoje.minusDays(30), hoje),
-            "de31a60dias", contaReceberRepository.getAgingData(hoje.minusDays(60), hoje.minusDays(31)),
-            "de61a90dias", contaReceberRepository.getAgingData(hoje.minusDays(90), hoje.minusDays(61)),
-            "acima90dias", contaReceberRepository.getAgingData(LocalDate.of(1900, 1, 1), hoje.minusDays(91))
+        return Map.of(
+                "ate30dias", contaReceberRepository.getAgingData(hoje.minusDays(30), hoje),
+                "de31a60dias", contaReceberRepository.getAgingData(hoje.minusDays(60), hoje.minusDays(31)),
+                "de61a90dias", contaReceberRepository.getAgingData(hoje.minusDays(90), hoje.minusDays(61)),
+                "acima90dias", contaReceberRepository.getAgingData(LocalDate.of(1900, 1, 1), hoje.minusDays(91))
         );
-        
-        return analise;
     }
 
-    // Private helper methods
+    // ---------------- Novo: Resumo para o front ----------------
+    @Transactional(readOnly = true)
+    public Map<String, Long> getResumoContasParaFront() {
+        return Map.of(
+                "vencidas", contarVencidas(),
+                "pendentes", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.PENDENTE),
+                "parciais", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.PARCIAL),
+                "inadimplentes", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.INADIMPLENTE),
+                "recebidas", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.RECEBIDA)
+        ).entrySet().stream()
+         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() != null ? e.getValue() : 0L));
+    }
+
+    @Transactional(readOnly = true)
+    public long contarVencidas() {
+        Long count = contaReceberRepository.countVencidas(LocalDate.now());
+        return count != null ? count : 0L;
+    }
+
+    // ---------------- Helper Methods ----------------
     private void validarContaReceber(ContaReceber conta) {
         if (conta.getValorOriginal() == null || conta.getValorOriginal().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Valor original deve ser maior que zero");
         }
-        
+
         if (conta.getDataVencimento() == null) {
             throw new IllegalArgumentException("Data de vencimento é obrigatória");
         }
-        
+
         if (conta.getCliente() == null) {
             throw new IllegalArgumentException("Cliente é obrigatório");
         }
-        
-        if (conta.getNumeroDocumento() != null && 
-            contaReceberRepository.existsByNumeroDocumento(conta.getNumeroDocumento())) {
+
+        if (conta.getNumeroDocumento() != null &&
+                contaReceberRepository.existsByNumeroDocumento(conta.getNumeroDocumento())) {
             throw new IllegalArgumentException("Número do documento já existe");
         }
     }
 
     private void calcularJurosMulta(ContaReceber conta, LocalDate dataAtual) {
         long diasAtraso = ChronoUnit.DAYS.between(conta.getDataVencimento(), dataAtual);
-        
+
         if (diasAtraso > 0) {
-            // 2% de multa + 0.033% de juros ao dia (1% ao mês)
             BigDecimal multa = conta.getValorOriginal().multiply(BigDecimal.valueOf(0.02));
             BigDecimal juros = conta.getValorOriginal()
-                .multiply(BigDecimal.valueOf(0.0033))
-                .multiply(BigDecimal.valueOf(diasAtraso));
-            
+                    .multiply(BigDecimal.valueOf(0.0033))
+                    .multiply(BigDecimal.valueOf(diasAtraso));
+
             conta.setValorMulta(multa);
             conta.setValorJuros(juros);
         }
     }
 
     private void criarEntradaFluxoCaixa(ContaReceber conta) {
-        // Create predicted cash flow entry for due date
         FluxoCaixa fluxo = new FluxoCaixa();
         fluxo.setData(conta.getDataVencimento());
         fluxo.setTipoMovimento(FluxoCaixa.TipoMovimento.ENTRADA);
@@ -281,7 +301,7 @@ public class ContaReceberService {
         fluxo.setContaReceber(conta);
         fluxo.setNumeroDocumento(conta.getNumeroDocumento());
         fluxo.setDataCriacao(LocalDateTime.now());
-        
+
         fluxoCaixaRepository.save(fluxo);
     }
 
@@ -297,14 +317,7 @@ public class ContaReceberService {
         fluxo.setNumeroDocumento(conta.getNumeroDocumento());
         fluxo.setUsuarioCriacao(usuario);
         fluxo.setDataCriacao(LocalDateTime.now());
-        
-        fluxoCaixaRepository.save(fluxo);
-    }
 
-    // -------------------- NOVO: PAGINAÇÃO --------------------
-    @Transactional(readOnly = true)
-    public Page<ContaReceber> findAllPaged(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return contaReceberRepository.findAll(pageable);
+        fluxoCaixaRepository.save(fluxo);
     }
 }

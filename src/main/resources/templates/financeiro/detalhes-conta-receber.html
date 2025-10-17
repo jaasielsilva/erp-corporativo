@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detalhes da Conta a Receber</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container py-4">
+                <h2 class="mb-3"><i class="fas fa-eye"></i> Detalhes da Conta a Receber</h2>
+
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+                <div th:if="${conta != null}">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Cliente</th>
+                            <td th:text="${conta.cliente != null ? conta.cliente.nome : 'Cliente Não Identificado'}"></td>
+                        </tr>
+                        <tr>
+                            <th>Descrição</th>
+                            <td th:text="${conta.descricao}"></td>
+                        </tr>
+                        <tr>
+                            <th>Data de Emissão</th>
+                            <td th:text="${#temporals.format(conta.dataEmissao, 'dd/MM/yyyy')}"></td>
+                        </tr>
+                        <tr>
+                            <th>Data de Vencimento</th>
+                            <td th:text="${#temporals.format(conta.dataVencimento, 'dd/MM/yyyy')}"></td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                <span th:switch="${conta.status}">
+                                    <span th:case="'RECEBIDA'" class="badge bg-success" th:text="${conta.status}"></span>
+                                    <span th:case="'PENDENTE'" class="badge bg-warning text-dark" th:text="${conta.status}"></span>
+                                    <span th:case="'INADIMPLENTE'" class="badge bg-danger" th:text="${conta.status}"></span>
+                                    <span th:case="*" class="badge bg-secondary" th:text="${conta.status}"></span>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Valor Original</th>
+                            <td th:text="${#numbers.formatDecimal(conta.valorOriginal, 2, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr>
+                            <th>Valor Recebido</th>
+                            <td th:text="${#numbers.formatDecimal(conta.valorRecebido, 2, 'COMMA', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr>
+                            <th>Observações</th>
+                            <td th:text="${conta.observacoes != null ? conta.observacoes : '-'}"></td>
+                        </tr>
+                        <tr>
+                            <th>Forma de Recebimento</th>
+                            <td th:text="${conta.formaRecebimento != null ? conta.formaRecebimento : '-'}"></td>
+                        </tr>
+                    </table>
+
+                    <a href="/financeiro/contas-receber" class="btn btn-secondary mt-3">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

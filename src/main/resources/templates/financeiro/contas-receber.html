@@ -102,9 +102,10 @@
                         <div class="col-md-4 mb-3">
                             <div class="card text-center p-3 shadow-sm">
                                 <h5>Inadimplência</h5>
-                                <p class="h4" th:text="${analiseIdade['inadimplencia'] ?: 0}">0%</p>
+                                <p class="h4" th:text="${inadimplencia} + '%'">0%</p>
                             </div>
                         </div>
+
                     </div>
 
                 </div>

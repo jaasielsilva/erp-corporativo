@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.controller;
 
 import com.jaasielsilva.portalceo.model.*;
+import com.jaasielsilva.portalceo.repository.ContaPagarRepository;
 import com.jaasielsilva.portalceo.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,7 +17,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.Comparator;
+import java.util.HashMap;
 
 @Controller
 @RequestMapping("/financeiro")
@@ -29,6 +32,7 @@ public class FinanceiroController {
     private final ClienteService clienteService;
     private final FornecedorService fornecedorService;
     private final UsuarioService usuarioService;
+    private final ContaPagarRepository contaPagarRepository;
 
     private static final int PAGE_SIZE = 10;
 
@@ -122,13 +126,34 @@ public class FinanceiroController {
     @GetMapping("/contas-pagar")
     public String contasPagar(Model model, @RequestParam(required = false) String status) {
         try {
+            List<ContaPagar> contas;
+
+            if (status != null && !status.isEmpty()) {
+                try {
+                    ContaPagar.StatusContaPagar statusEnum = ContaPagar.StatusContaPagar.valueOf(status.toUpperCase());
+                    // Aqui usamos o método que já existe no seu repositório
+                    contas = contaPagarRepository.findByStatusOrderByDataVencimento(statusEnum);
+                } catch (IllegalArgumentException e) {
+                    contas = List.of(); // Status inválido
+                }
+            } else {
+                contas = contaPagarRepository.findAll();
+            }
+
+            model.addAttribute("contasPagar", contas);
             model.addAttribute("pageTitle", "Contas a Pagar");
             model.addAttribute("moduleCSS", "financeiro");
             model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
             model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
+
         } catch (Exception e) {
             System.err.println("Erro ao carregar contas a pagar: " + e.getMessage());
+            model.addAttribute("errorMessage", "Erro ao carregar as contas a pagar.");
+            model.addAttribute("contasPagar", List.of());
+            model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
+            model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
         }
+
         return "financeiro/contas-pagar";
     }
 
@@ -139,11 +164,8 @@ public class FinanceiroController {
             model.addAttribute("pageTitle", "Contas a Receber");
             model.addAttribute("moduleCSS", "financeiro");
 
-            List<ContaReceber> contas = List.of();
-            Map<ContaReceber.StatusContaReceber, Long> estatisticas = Map.of();
-            BigDecimal totalReceber = BigDecimal.ZERO;
-            Map<String, Object> analiseIdade = Map.of();
-
+            // Buscar contas
+            List<ContaReceber> contas;
             try {
                 contas = (status != null && !status.isEmpty())
                         ? contaReceberService.findByStatus(ContaReceber.StatusContaReceber.valueOf(status))
@@ -152,42 +174,89 @@ public class FinanceiroController {
                     contas = List.of();
             } catch (Exception e) {
                 System.err.println("Erro ao carregar contas: " + e.getMessage());
+                contas = List.of();
             }
 
-            try {
-                estatisticas = contaReceberService.getEstatisticasPorStatus();
-            } catch (Exception e) {
-                System.err.println("Erro ao calcular estatísticas: " + e.getMessage());
-            }
-
+            // Total a receber
+            BigDecimal totalReceber;
             try {
                 totalReceber = contaReceberService.calcularTotalReceber();
             } catch (Exception e) {
                 System.err.println("Erro ao calcular total a receber: " + e.getMessage());
+                totalReceber = BigDecimal.ZERO;
             }
-            totalReceber = totalReceber != null ? totalReceber : BigDecimal.ZERO;
 
+            // Estatísticas por status
+            // Estatísticas por status
+            Map<String, Long> estatisticasString;
             try {
-                analiseIdade = contaReceberService.getAnaliseIdade();
+                Map<ContaReceber.StatusContaReceber, Long> estatisticasEnum = contaReceberService
+                        .getEstatisticasPorStatus();
+                estatisticasString = estatisticasEnum.entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                e -> e.getKey().name(), // converte enum para string maiúscula
+                                Map.Entry::getValue));
+                if (estatisticasString == null)
+                    estatisticasString = new HashMap<>();
             } catch (Exception e) {
-                System.err.println("Erro ao gerar análise de idade das contas: " + e.getMessage());
+                System.err.println("Erro ao calcular estatísticas: " + e.getMessage());
+                estatisticasString = new HashMap<>();
             }
 
+            
+
+            // Contas vencidas
+            long totalVencidas = contas.stream()
+                    .filter(c -> c.getStatus() == ContaReceber.StatusContaReceber.VENCIDA)
+                    .count();
+
+            // Inadimplência (percentual de contas com status INADIMPLENTE)
+            long totalInadimplentes = contas.stream()
+                    .filter(c -> c.getStatus() == ContaReceber.StatusContaReceber.INADIMPLENTE)
+                    .count();
+            double percentualInadimplencia = contas.isEmpty() ? 0 : (totalInadimplentes * 100.0) / contas.size();
+            String inadimplenciaFormatada = String.format("%.1f", percentualInadimplencia);
+
+            // Passar atributos para a view
             model.addAttribute("contas", contas);
+            model.addAttribute("totalReceber", totalReceber);
+            model.addAttribute("estatisticas", estatisticasString);
+            model.addAttribute("totalVencidas", totalVencidas);
+            model.addAttribute("inadimplencia", inadimplenciaFormatada);
             model.addAttribute("statusOptions", ContaReceber.StatusContaReceber.values());
             model.addAttribute("categoriaOptions", ContaReceber.CategoriaContaReceber.values());
-            model.addAttribute("estatisticas", estatisticas);
-            model.addAttribute("totalReceber", totalReceber);
-            model.addAttribute("analiseIdade", analiseIdade);
 
         } catch (Exception e) {
             System.err.println("Erro geral no módulo Contas a Receber: " + e.getMessage());
             model.addAttribute("contas", List.of());
-            model.addAttribute("estatisticas", Map.of());
             model.addAttribute("totalReceber", BigDecimal.ZERO);
-            model.addAttribute("analiseIdade", Map.of());
+            model.addAttribute("estatisticas", Map.of());
+            model.addAttribute("totalVencidas", 0L);
+            model.addAttribute("inadimplencia", "0.0");
         }
+
         return "financeiro/contas-receber";
+    }
+
+    // -------------------- DETALHES DA CONTA A RECEBER --------------------
+    @GetMapping("/contas-receber/{id}")
+    public String detalhesContaReceber(@PathVariable Long id, Model model) {
+        try {
+            ContaReceber conta = contaReceberService.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+
+            model.addAttribute("conta", conta);
+            model.addAttribute("pageTitle", "Detalhes da Conta a Receber");
+            model.addAttribute("moduleCSS", "financeiro");
+
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar detalhes da conta: " + e.getMessage());
+            model.addAttribute("errorMessage", "Conta não encontrada ou erro ao carregar detalhes.");
+            return "financeiro/contas-receber";
+        }
+
+        return "financeiro/detalhes-conta-receber";
     }
 
     // -------------------- FLUXO DE CAIXA --------------------

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Index Financeiro - ERP Corporativo</title>
+    <title>Financeiro - ERP Corporativo</title>
 
     <!-- CSS padrão -->
     <link href="/css/style.css" rel="stylesheet">
@@ -26,96 +26,142 @@
             <!-- Topbar -->
             <header th:replace="~{components/topbar :: topbar}"></header>
 
-            <!-- Conteúdo da página Index Financeiro -->
+            <!-- Conteúdo da página Financeiro -->
             <section class="content-area">
                 <div class="container py-4">
 
                     <!-- Título -->
                     <div class="text-center mb-4">
-                        <h1 class="display-6 text-muted"><i class="fas fa-coins"></i> Index Financeiro</h1>
-                        <p class="text-muted">Bem-vindo ao módulo financeiro do ERP Corporativo.</p>
+                        <h1 class="display-6 text-muted"><i class="fas fa-coins"></i> Financeiro</h1>
+                        <p class="text-muted">Resumo das movimentações financeiras do ERP Corporativo.</p>
                     </div>
 
                     <!-- Resumo financeiro -->
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <div class="card text-center p-3 shadow-sm">
-                                <h5>Total a Receber</h5>
+                            <div class="card text-center p-3 shadow-sm border-success">
+                                <h5 class="text-success"><i class="fas fa-arrow-down"></i> Total a Receber</h5>
                                 <p class="h4 text-success"
-                                   th:text="${totalReceber != null ? #numbers.formatDecimal(totalReceber, 2, 'COMMA', 2, 'POINT') : '0,00'}">
+                                    th:text="${totalReceber != null ? #numbers.formatDecimal(totalReceber, 2, 'COMMA', 2, 'POINT') : '0,00'}">
                                     0,00
                                 </p>
                             </div>
                         </div>
 
                         <div class="col-md-4">
-                            <div class="card text-center p-3 shadow-sm">
-                                <h5>Saldo Atual</h5>
+                            <div class="card text-center p-3 shadow-sm border-primary">
+                                <h5 class="text-primary"><i class="fas fa-wallet"></i> Saldo Atual</h5>
                                 <p class="h4 text-primary"
-                                   th:text="${saldoAtual != null ? #numbers.formatDecimal(saldoAtual, 2, 'COMMA', 2, 'POINT') : '0,00'}">
+                                    th:text="${saldoAtual != null ? #numbers.formatDecimal(saldoAtual, 2, 'COMMA', 2, 'POINT') : '0,00'}">
                                     0,00
                                 </p>
                             </div>
                         </div>
 
                         <div class="col-md-4">
-                            <div class="card text-center p-3 shadow-sm">
-                                <h5>Transações Recentes</h5>
-                                <p class="h4 text-muted" th:text="${totalRecentTransactions != null ? totalRecentTransactions : 0}">0</p>
+                            <div class="card text-center p-3 shadow-sm border-info">
+                                <h5 class="text-info"><i class="fas fa-calendar"></i> Projeção 30 Dias</h5>
+                                <p class="h4 text-info"
+                                    th:text="${projecao30dias != null && projecao30dias['saldo'] != null ? #numbers.formatDecimal(projecao30dias['saldo'], 2, 'COMMA', 2, 'POINT') : '0,00'}">
+                                    0,00
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tabela de contas a receber -->
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered text-center">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Data Recebimento</th>
-                                    <th>Descrição</th>
-                                    <th>Tipo</th>
-                                    <th>Categoria</th>
-                                    <th>Status</th>
-                                    <th>Valor (R$)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="conta : ${contas}">
-                                    <td th:text="${#temporals.format(conta.dataRecebimento, 'dd/MM/yyyy')}"></td>
-                                    <td th:text="${conta.descricao}"></td>
-                                    <td th:text="${conta.tipo}"></td>
-                                    <td th:text="${conta.categoria}"></td>
-                                    <td th:text="${conta.status}"></td>
-                                    <td th:text="${conta.valorRecebido != null ? #numbers.formatDecimal(conta.valorRecebido, 2, 'COMMA', 2, 'POINT') : '0,00'}"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- Lançamentos Recentes -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-secondary"><i class="fas fa-list"></i> Lançamentos Recentes</h5>
+                            <div>
+                                <a href="/financeiro/contas-receber" class="btn btn-sm btn-success me-2">
+                                    <i class="fas fa-arrow-down"></i> Contas a Receber
+                                </a>
+                                <a href="/financeiro/contas-pagar" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-arrow-up"></i> Contas a Pagar
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered text-center mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Vencimento</th>
+                                        <th>Valor Original (R$)</th>
+                                        <th>Valor Recebido (R$)</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="conta : ${contas}">
+                                        <td
+                                            th:text="${conta.cliente != null ? conta.cliente.nome : 'Cliente Não Identificado'}">
+                                        </td>
+                                        <td th:text="${#temporals.format(conta.dataVencimento, 'dd/MM/yyyy')}"></td>
+                                        <td
+                                            th:text="${#numbers.formatDecimal(conta.valorOriginal, 2, 'COMMA', 2, 'POINT')}">
+                                        </td>
+                                        <td
+                                            th:text="${#numbers.formatDecimal(conta.valorRecebido != null ? conta.valorRecebido : 0, 2, 'COMMA', 2, 'POINT')}">
+                                        </td>
+                                        <td>
+                                            <span th:switch="${conta.status}">
+                                                <span th:case="'RECEBIDA'" class="badge bg-success"
+                                                    th:text="${conta.status}"></span>
+                                                <span th:case="'PENDENTE'" class="badge bg-warning text-dark"
+                                                    th:text="${conta.status}"></span>
+                                                <span th:case="'INADIMPLENTE'" class="badge bg-danger"
+                                                    th:text="${conta.status}"></span>
+                                                <span th:case="*" class="badge bg-secondary"
+                                                    th:text="${conta.status}"></span>
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <a th:href="@{'/financeiro/contas-receber/' + ${conta.id}}"
+                                                class="btn btn-sm btn-primary">
+                                                Detalhes
+                                            </a>
+                                        </td>
+                                    </tr>
+
+                                    <tr th:if="${#lists.isEmpty(contas)}">
+                                        <td colspan="6" class="text-center text-muted py-3">Nenhum lançamento
+                                            encontrado.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
                         <!-- Paginação -->
-                        <nav th:if="${contasPage != null && contasPage.totalPages > 1}">
-                            <ul class="pagination justify-content-center">
+                        <div class="card-footer" th:if="${contasPage != null && contasPage.totalPages > 1}">
+                            <nav>
+                                <ul class="pagination justify-content-center my-2">
+                                    <li class="page-item" th:classappend="${contasPage.first} ? 'disabled'">
+                                        <a class="page-link"
+                                            th:href="@{/financeiro(page=${contasPage.number - 1})}">Anterior</a>
+                                    </li>
 
-                                <!-- Anterior -->
-                                <li class="page-item" th:classappend="${contasPage.first} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/financeiro(page=${contasPage.number - 1})}">Anterior</a>
-                                </li>
-
-                                <!-- Páginas -->
-                                <li class="page-item" th:each="i : ${#numbers.sequence(
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(
                                         (contasPage.number > 2 ? contasPage.number - 2 : 0),
                                         (contasPage.number + 2 < contasPage.totalPages ? contasPage.number + 2 : contasPage.totalPages - 1)
                                     )}" th:classappend="${i == contasPage.number} ? 'active'">
-                                    <a class="page-link" th:href="@{/financeiro(page=${i})}" th:text="${i + 1}">1</a>
-                                </li>
+                                        <a class="page-link" th:href="@{/financeiro(page=${i})}"
+                                            th:text="${i + 1}">1</a>
+                                    </li>
 
-                                <!-- Próximo -->
-                                <li class="page-item" th:classappend="${contasPage.last} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/financeiro(page=${contasPage.number + 1})}">Próximo</a>
-                                </li>
-                            </ul>
-                        </nav>
-
+                                    <li class="page-item" th:classappend="${contasPage.last} ? 'disabled'">
+                                        <a class="page-link"
+                                            th:href="@{/financeiro(page=${contasPage.number + 1})}">Próximo</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
+
                 </div>
             </section>
 
@@ -129,6 +175,7 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+
 </body>
 
 </html>

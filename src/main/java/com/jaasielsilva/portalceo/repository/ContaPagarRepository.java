@@ -22,13 +22,15 @@ public interface ContaPagarRepository extends JpaRepository<ContaPagar, Long> {
 
     List<ContaPagar> findByDataVencimentoBeforeAndStatusIn(LocalDate data, List<ContaPagar.StatusContaPagar> statuses);
 
-    List<ContaPagar> findByCategoriaAndStatusOrderByDataVencimento(ContaPagar.CategoriaContaPagar categoria, ContaPagar.StatusContaPagar status);
+    List<ContaPagar> findByCategoriaAndStatusOrderByDataVencimento(ContaPagar.CategoriaContaPagar categoria,
+            ContaPagar.StatusContaPagar status);
 
     @Query("SELECT c FROM ContaPagar c WHERE c.dataVencimento BETWEEN :inicio AND :fim ORDER BY c.dataVencimento")
     List<ContaPagar> findByPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     @Query("SELECT c FROM ContaPagar c WHERE c.dataVencimento <= :data AND c.status IN :statuses ORDER BY c.dataVencimento")
-    List<ContaPagar> findVencidas(@Param("data") LocalDate data, @Param("statuses") List<ContaPagar.StatusContaPagar> statuses);
+    List<ContaPagar> findVencidas(@Param("data") LocalDate data,
+            @Param("statuses") List<ContaPagar.StatusContaPagar> statuses);
 
     @Query("SELECT SUM(c.valorOriginal) FROM ContaPagar c WHERE c.status = :status")
     BigDecimal sumValorOriginalByStatus(@Param("status") ContaPagar.StatusContaPagar status);
@@ -63,4 +65,12 @@ public interface ContaPagarRepository extends JpaRepository<ContaPagar, Long> {
 
     @Query("SELECT c FROM ContaPagar c WHERE c.usuarioCriacao.id = :usuarioId ORDER BY c.dataCriacao DESC")
     List<ContaPagar> findByUsuarioCriacao(@Param("usuarioId") Long usuarioId);
+
+    @Query("SELECT SUM(c.valorOriginal) FROM ContaPagar c WHERE c.status = :status")
+    BigDecimal sumByStatus(@Param("status") ContaPagar.StatusContaPagar status);
+
+    @Query("SELECT SUM(c.valorOriginal) FROM ContaPagar c WHERE c.status = :status AND c.dataVencimento < :data")
+    BigDecimal sumByStatusAndDataVencimentoBefore(@Param("status") ContaPagar.StatusContaPagar status,
+            @Param("data") LocalDate data);
+
 }

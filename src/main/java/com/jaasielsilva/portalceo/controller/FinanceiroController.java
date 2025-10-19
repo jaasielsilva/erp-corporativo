@@ -124,10 +124,15 @@ public class FinanceiroController {
     }
 
     // -------------------- CONTAS A PAGAR --------------------
-    @GetMapping("/contas-pagar")
-    public String contasPagar(Model model, @RequestParam(required = false) String status) {
+    // -------------------- CONTAS A PAGAR --------------------
+    @GetMapping("/contas-pagar") // <-- mudei para combinar com o HTML
+    public String contasPagar(
+            Model model,
+            @RequestParam(required = false) String status) {
         List<ContaPagar> contas;
+
         try {
+            // Filtro por status
             if (status != null && !status.isEmpty()) {
                 try {
                     ContaPagar.StatusContaPagar statusEnum = ContaPagar.StatusContaPagar.valueOf(status.toUpperCase());
@@ -138,17 +143,99 @@ public class FinanceiroController {
             } else {
                 contas = Optional.ofNullable(contaPagarRepository.findAll()).orElse(List.of());
             }
-            model.addAttribute("contasPagar", contas);
+
+            // ---- CALCULOS DOS TOTAIS ----
+            BigDecimal totalPendente = contaPagarRepository.sumByStatus(ContaPagar.StatusContaPagar.PENDENTE);
+            BigDecimal totalPago = contaPagarRepository.sumByStatus(ContaPagar.StatusContaPagar.PAGA);
+            BigDecimal totalVencido = contaPagarRepository.sumByStatusAndDataVencimentoBefore(
+                    ContaPagar.StatusContaPagar.PENDENTE, LocalDate.now());
+
+            // Evita null nos retornos
+            if (totalPendente == null)
+                totalPendente = BigDecimal.ZERO;
+            if (totalPago == null)
+                totalPago = BigDecimal.ZERO;
+            if (totalVencido == null)
+                totalVencido = BigDecimal.ZERO;
+
+            // ---- ATRIBUTOS PARA O THYMELEAF ----
+            model.addAttribute("contas", contas);
+            model.addAttribute("totalPendente", totalPendente);
+            model.addAttribute("totalPago", totalPago);
+            model.addAttribute("totalVencido", totalVencido);
+            model.addAttribute("categorias", ContaPagar.CategoriaContaPagar.values());
+            model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
             model.addAttribute("pageTitle", "Contas a Pagar");
             model.addAttribute("moduleCSS", "financeiro");
-            model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
-            model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
+
         } catch (Exception e) {
             System.err.println("Erro ao carregar contas a pagar: " + e.getMessage());
-            model.addAttribute("contasPagar", List.of());
+            model.addAttribute("contas", List.of());
+            model.addAttribute("totalPendente", BigDecimal.ZERO);
+            model.addAttribute("totalPago", BigDecimal.ZERO);
+            model.addAttribute("totalVencido", BigDecimal.ZERO);
         }
 
         return "financeiro/contas-pagar";
+    }
+
+    // --- Formulário Novo ---
+    @GetMapping("/contas-pagar/novo")
+    public String novoContaPagarForm(Model model) {
+        model.addAttribute("contaPagar", new ContaPagar());
+        model.addAttribute("categorias", ContaPagar.CategoriaContaPagar.values());
+        model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
+        model.addAttribute("fornecedores", fornecedorService.listarTodos());
+        model.addAttribute("pageTitle", "Nova Conta a Pagar");
+        return "financeiro/conta-pagar-form";
+    }
+
+    // --- Salvar Novo ou Editar ---
+    @PostMapping("/contas-pagar/salvar")
+    public String salvarContaPagar(@ModelAttribute ContaPagar contaPagar) {
+        System.out.println("=== SALVANDO CONTA ===");
+        System.out.println(contaPagar); // Vai imprimir todos os campos do objeto
+        try {
+            contaPagarRepository.save(contaPagar);
+            System.out.println("Conta salva com sucesso!");
+        } catch (Exception e) {
+            System.err.println("Erro ao salvar conta a pagar: " + e.getMessage());
+            e.printStackTrace(); // Mostra stack trace completo se der erro
+        }
+        return "redirect:/financeiro/contas-pagar";
+    }
+
+    // --- Formulário Editar ---
+    @GetMapping("/contas-pagar/editar/{id}")
+    public String editarContaPagarForm(@PathVariable Long id, Model model) {
+        ContaPagar conta = contaPagarRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+        model.addAttribute("contaPagar", conta);
+        model.addAttribute("categorias", ContaPagar.CategoriaContaPagar.values());
+        model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
+        model.addAttribute("pageTitle", "Editar Conta a Pagar");
+        return "financeiro/conta-pagar-form";
+    }
+
+    // --- Excluir ---
+    @GetMapping("/contas-pagar/excluir/{id}")
+    public String excluirContaPagar(@PathVariable Long id) {
+        try {
+            contaPagarRepository.deleteById(id);
+        } catch (Exception e) {
+            System.err.println("Erro ao excluir conta a pagar: " + e.getMessage());
+        }
+        return "redirect:/financeiro/contas/pagar";
+    }
+
+    // --- Detalhes individuais (opcional) ---
+    @GetMapping("/contas-pagar/{id}")
+    public String detalhesContaPagar(@PathVariable Long id, Model model) {
+        ContaPagar conta = contaPagarRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+        model.addAttribute("conta", conta);
+        model.addAttribute("pageTitle", "Detalhes da Conta a Pagar");
+        return "financeiro/detalhes-conta-pagar";
     }
 
     // -------------------- CONTAS A RECEBER --------------------
@@ -197,8 +284,6 @@ public class FinanceiroController {
                 System.err.println("Erro ao calcular estatísticas: " + e.getMessage());
                 estatisticasString = new HashMap<>();
             }
-
-            
 
             // Contas vencidas
             long totalVencidas = contas.stream()

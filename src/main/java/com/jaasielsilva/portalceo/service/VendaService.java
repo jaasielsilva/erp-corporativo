@@ -24,6 +24,10 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import com.jaasielsilva.portalceo.model.ContaReceber;
 import com.jaasielsilva.portalceo.service.ContaReceberService;
+import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.service.UsuarioService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 public class VendaService {
@@ -39,6 +43,9 @@ public class VendaService {
 
     @Autowired
     private ContaReceberService contaReceberService;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @Transactional
     public Venda salvar(Venda venda) {
@@ -364,6 +371,18 @@ public class VendaService {
         // Definir dados padrão do PDV
         venda.setDataVenda(LocalDateTime.now());
         venda.setStatus("FINALIZADA");
+
+        // Associar usuário logado à venda (PDV)
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()
+                    && !"anonymousUser".equals(authentication.getName())) {
+                usuarioService.buscarPorEmail(authentication.getName())
+                        .ifPresent(venda::setUsuario);
+            }
+        } catch (Exception e) {
+            System.err.println("Falha ao associar usuário à venda (PDV): " + e.getMessage());
+        }
 
         // Garantir que desconto e valorPago não sejam nulos
         if (venda.getDesconto() == null)

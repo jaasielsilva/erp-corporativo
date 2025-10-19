@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -125,33 +126,26 @@ public class FinanceiroController {
     // -------------------- CONTAS A PAGAR --------------------
     @GetMapping("/contas-pagar")
     public String contasPagar(Model model, @RequestParam(required = false) String status) {
+        List<ContaPagar> contas;
         try {
-            List<ContaPagar> contas;
-
             if (status != null && !status.isEmpty()) {
                 try {
                     ContaPagar.StatusContaPagar statusEnum = ContaPagar.StatusContaPagar.valueOf(status.toUpperCase());
-                    // Aqui usamos o método que já existe no seu repositório
                     contas = contaPagarRepository.findByStatusOrderByDataVencimento(statusEnum);
                 } catch (IllegalArgumentException e) {
-                    contas = List.of(); // Status inválido
+                    contas = List.of();
                 }
             } else {
-                contas = contaPagarRepository.findAll();
+                contas = Optional.ofNullable(contaPagarRepository.findAll()).orElse(List.of());
             }
-
             model.addAttribute("contasPagar", contas);
             model.addAttribute("pageTitle", "Contas a Pagar");
             model.addAttribute("moduleCSS", "financeiro");
             model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
             model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
-
         } catch (Exception e) {
             System.err.println("Erro ao carregar contas a pagar: " + e.getMessage());
-            model.addAttribute("errorMessage", "Erro ao carregar as contas a pagar.");
             model.addAttribute("contasPagar", List.of());
-            model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
-            model.addAttribute("categoriaOptions", ContaPagar.CategoriaContaPagar.values());
         }
 
         return "financeiro/contas-pagar";

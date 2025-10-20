@@ -129,10 +129,12 @@
                             <a th:href="@{/financeiro/contas-pagar/editar/{id}(id=${conta.id})}" class="btn btn-sm btn-outline-primary" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a th:href="@{/financeiro/contas-pagar/excluir/{id}(id=${conta.id})}" class="btn btn-sm btn-outline-danger" title="Excluir"
-                               onclick="return confirm('Deseja realmente excluir esta conta?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                            <form th:action="@{/financeiro/contas-pagar/excluir/{id}(id=${conta.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"
+                                        onclick="return confirm('Deseja realmente excluir esta conta?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(contas)}">

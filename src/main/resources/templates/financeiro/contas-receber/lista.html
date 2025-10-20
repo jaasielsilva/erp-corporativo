@@ -128,12 +128,15 @@
         function registrarPagamento(contaId) {
             let valorPago = prompt("Informe o valor pago:");
             if (valorPago) {
-                fetch(`/financeiro/api/contas-receber/${contaId}/registrar-pagamento?valorPago=${valorPago}&usuarioId=1`, {
+                fetch(`/financeiro/api/contas-receber/${contaId}/receber?valor=${valorPago}&usuarioId=1`, {
                     method: 'PUT'
                 })
-
-                    .then(res => res.json())
-                    .then(data => alert(data.mensagem))
+                    .then(res => {
+                        if (!res.ok) throw new Error('Erro ao registrar pagamento');
+                        return res.json();
+                    })
+                    .then(data => alert('Pagamento registrado com sucesso.'))
+                    .catch(err => alert(err.message))
                     .finally(() => location.reload());
             }
         }

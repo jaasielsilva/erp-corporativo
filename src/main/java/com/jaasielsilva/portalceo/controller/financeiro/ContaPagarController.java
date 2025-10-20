@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
@@ -38,7 +39,8 @@ public class ContaPagarController {
 
         if (texto != null && !texto.isEmpty()) {
             contas = contas.stream()
-                    .filter(c -> c.getDescricao() != null && c.getDescricao().toLowerCase().contains(texto.toLowerCase()))
+                    .filter(c -> c.getDescricao() != null
+                            && c.getDescricao().toLowerCase().contains(texto.toLowerCase()))
                     .toList();
         }
 
@@ -48,7 +50,8 @@ public class ContaPagarController {
                 contas = contas.stream()
                         .filter(c -> c.getStatus() == statusEnum)
                         .toList();
-            } catch (IllegalArgumentException ignored) {}
+            } catch (IllegalArgumentException ignored) {
+            }
         }
 
         if (categoria != null && !categoria.isEmpty()) {
@@ -56,6 +59,10 @@ public class ContaPagarController {
                     .filter(c -> c.getCategoria() != null && c.getCategoria().name().equalsIgnoreCase(categoria))
                     .toList();
         }
+
+        model.addAttribute("contas", contas);
+        model.addAttribute("statusEnum", ContaPagar.StatusContaPagar.values());
+        model.addAttribute("categorias", ContaPagar.CategoriaContaPagar.values());
 
         BigDecimal totalPendente = contas.stream()
                 .filter(c -> c.getStatus() == ContaPagar.StatusContaPagar.PENDENTE)
@@ -72,9 +79,6 @@ public class ContaPagarController {
                 .map(ContaPagar::getValorOriginal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        model.addAttribute("contas", contas);
-        model.addAttribute("statusEnum", ContaPagar.StatusContaPagar.values());
-        model.addAttribute("categorias", ContaPagar.CategoriaContaPagar.values());
         model.addAttribute("totalPendente", totalPendente);
         model.addAttribute("totalPago", totalPago);
         model.addAttribute("totalVencido", totalVencido);
@@ -133,7 +137,20 @@ public class ContaPagarController {
         model.addAttribute("fornecedores", fornecedorService.listarAtivos());
         model.addAttribute("categorias", ContaPagar.CategoriaContaPagar.values());
         model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
+        model.addAttribute("pageTitle", "Editar Conta a Pagar");
         return "financeiro/contas-pagar/conta-pagar-form";
+    }
+
+    // ================= DETALHES =================
+    @GetMapping("/detalhes/{id}")
+    public String detalhes(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        Optional<ContaPagar> contaOpt = contaPagarService.buscarPorId(id);
+        if (contaOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erro", "Conta não encontrada");
+            return "redirect:/financeiro/contas-pagar";
+        }
+        model.addAttribute("conta", contaOpt.get());
+        return "financeiro/contas-pagar/detalhes";
     }
 
     // ================= EXCLUIR =================
@@ -151,8 +168,8 @@ public class ContaPagarController {
     // ================= APROVAR =================
     @PostMapping("/aprovar/{id}")
     public String aprovar(@PathVariable Long id,
-                          @ModelAttribute("usuarioLogado") Usuario usuario,
-                          RedirectAttributes redirectAttributes) {
+            @ModelAttribute("usuarioLogado") Usuario usuario,
+            RedirectAttributes redirectAttributes) {
         try {
             contaPagarService.aprovar(id, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Conta aprovada com sucesso!");
@@ -165,15 +182,15 @@ public class ContaPagarController {
     // ================= PAGAR =================
     @PostMapping("/pagar/{id}")
     public String pagar(@PathVariable Long id,
-                        @RequestParam("valorPago") BigDecimal valorPago,
-                        @RequestParam("formaPagamento") String formaPagamento,
-                        @ModelAttribute("usuarioLogado") Usuario usuario,
-                        RedirectAttributes redirectAttributes) {
+            @RequestParam("valorPago") BigDecimal valorPago,
+            @RequestParam(value = "formaPagamento", required = false) String formaPagamento,
+            @ModelAttribute("usuarioLogado") Usuario usuario,
+            RedirectAttributes redirectAttributes) {
         try {
-            contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario);
-            redirectAttributes.addFlashAttribute("sucesso", "Pagamento efetuado com sucesso!");
+            contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null);
+            redirectAttributes.addFlashAttribute("sucesso", "Conta paga com sucesso!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao efetuar pagamento: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("erro", "Erro ao pagar: " + e.getMessage());
         }
         return "redirect:/financeiro/contas-pagar";
     }
@@ -181,8 +198,8 @@ public class ContaPagarController {
     // ================= CANCELAR =================
     @PostMapping("/cancelar/{id}")
     public String cancelar(@PathVariable Long id,
-                           @RequestParam("motivo") String motivo,
-                           RedirectAttributes redirectAttributes) {
+            @RequestParam("motivo") String motivo,
+            RedirectAttributes redirectAttributes) {
         try {
             contaPagarService.cancelar(id, motivo);
             redirectAttributes.addFlashAttribute("sucesso", "Conta cancelada com sucesso!");
@@ -192,15 +209,17 @@ public class ContaPagarController {
         return "redirect:/financeiro/contas-pagar";
     }
 
-    // ================= DETALHES =================
-    @GetMapping("/detalhes/{id}")
-    public String detalhes(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+    // ================= HISTÓRICO =================
+    @GetMapping("/historico/{id}")
+    public String historico(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<ContaPagar> contaOpt = contaPagarService.buscarPorId(id);
         if (contaOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("erro", "Conta não encontrada");
             return "redirect:/financeiro/contas-pagar";
         }
+
         model.addAttribute("conta", contaOpt.get());
-        return "financeiro/contas-pagar/detalhes";
+        model.addAttribute("historico", contaPagarService.listarHistorico(id));
+        return "financeiro/contas-pagar/historico";
     }
 }

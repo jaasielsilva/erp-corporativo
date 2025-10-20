@@ -295,16 +295,52 @@
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-dollar-sign"></i> Financeiro
           </a>
+
           <ul class="submenu">
-            <li><a href="/financeiro"><i class="fas fa-coins"></i> Dashboard</a></li>
-            <li><a href="/financeiro/contas-pagar"><i class="fas fa-money-check-alt"></i> Contas a Pagar</a></li>
-            <li><a href="/financeiro/contas-receber"><i class="fas fa-file-invoice-dollar"></i> Contas a Receber</a>
+            <!-- Dashboard -->
+            <li>
+              <a th:href="@{/financeiro}">
+                <i class="fas fa-coins"></i> Dashboard
+              </a>
             </li>
-            <li><a href="/financeiro/fluxo-caixa"><i class="fas fa-wallet"></i> Fluxo de Caixa</a></li>
-            <li><a href="/financeiro/transferencias"><i class="fas fa-exchange-alt"></i> Transferências</a></li>
-            <li><a href="/financeiro/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+
+            <!-- Contas a Pagar -->
+            <li>
+              <a th:href="@{/financeiro/contas-pagar}">
+                <i class="fas fa-money-check-alt"></i> Contas a Pagar
+              </a>
+            </li>
+
+            <!-- Contas a Receber -->
+            <li>
+              <a th:href="@{/financeiro/contas-receber}">
+                <i class="fas fa-file-invoice-dollar"></i> Contas a Receber
+              </a>
+            </li>
+
+            <!-- Fluxo de Caixa -->
+            <li>
+              <a th:href="@{/financeiro/fluxo-caixa}">
+                <i class="fas fa-wallet"></i> Fluxo de Caixa
+              </a>
+            </li>
+
+            <!-- Transferências -->
+            <li>
+              <a th:href="@{/financeiro/transferencias}">
+                <i class="fas fa-exchange-alt"></i> Transferências
+              </a>
+            </li>
+
+            <!-- Relatórios -->
+            <li>
+              <a th:href="@{/financeiro/relatorios}">
+                <i class="fas fa-chart-bar"></i> Relatórios
+              </a>
+            </li>
           </ul>
         </li>
+
 
 
 

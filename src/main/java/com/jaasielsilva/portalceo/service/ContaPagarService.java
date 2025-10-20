@@ -2,22 +2,25 @@ package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.ContaPagar;
 import com.jaasielsilva.portalceo.model.FluxoCaixa;
+import com.jaasielsilva.portalceo.model.HistoricoContaPagar;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.ContaPagarRepository;
 import com.jaasielsilva.portalceo.repository.FluxoCaixaRepository;
+import com.jaasielsilva.portalceo.repository.HistoricoContaPagarRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class ContaPagarService {
@@ -30,83 +33,67 @@ public class ContaPagarService {
     @Autowired
     private FluxoCaixaRepository fluxoCaixaRepository;
 
-    /**
-     * Lista todas as contas a pagar
-     */
+    @Autowired
+    private HistoricoContaPagarRepository historicoRepository;
+
+    private final String pastaComprovantes = "uploads/comprovantes/";
+
+    // ================= LISTAR =================
     public List<ContaPagar> listarTodas() {
         return contaPagarRepository.findAll();
     }
 
-    /**
-     * Busca conta por ID
-     */
     public Optional<ContaPagar> buscarPorId(Long id) {
         return contaPagarRepository.findById(id);
     }
 
-    /**
-     * Lista contas por status
-     */
     public List<ContaPagar> listarPorStatus(ContaPagar.StatusContaPagar status) {
         return contaPagarRepository.findByStatusOrderByDataVencimento(status);
     }
 
-    /**
-     * Lista contas pendentes
-     */
     public List<ContaPagar> listarPendentes() {
         return listarPorStatus(ContaPagar.StatusContaPagar.PENDENTE);
     }
 
-    /**
-     * Lista contas aprovadas
-     */
     public List<ContaPagar> listarAprovadas() {
         return listarPorStatus(ContaPagar.StatusContaPagar.APROVADA);
     }
 
-    /**
-     * Lista contas vencidas
-     */
     public List<ContaPagar> listarVencidas() {
         List<ContaPagar.StatusContaPagar> statuses = Arrays.asList(
-            ContaPagar.StatusContaPagar.PENDENTE, 
-            ContaPagar.StatusContaPagar.APROVADA
-        );
+                ContaPagar.StatusContaPagar.PENDENTE,
+                ContaPagar.StatusContaPagar.APROVADA);
         return contaPagarRepository.findVencidas(LocalDate.now(), statuses);
     }
 
-    /**
-     * Lista contas que vencem nos próximos dias
-     */
     public List<ContaPagar> listarVencendoEm(int dias) {
         LocalDate hoje = LocalDate.now();
         LocalDate futuro = hoje.plusDays(dias);
         return contaPagarRepository.findVencendoEm(hoje, futuro);
     }
 
-    /**
-     * Lista contas por período
-     */
     public List<ContaPagar> listarPorPeriodo(LocalDate inicio, LocalDate fim) {
         return contaPagarRepository.findByPeriodo(inicio, fim);
     }
 
-    /**
-     * Salva ou atualiza uma conta a pagar
-     */
+    public List<HistoricoContaPagar> listarHistorico(Long contaId) {
+        ContaPagar conta = buscarPorId(contaId)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+        return historicoRepository.findByContaOrderByDataDesc(conta);
+    }
+
+    // ================= SALVAR =================
     @Transactional
     public ContaPagar salvar(ContaPagar contaPagar) {
-        logger.info("Salvando conta a pagar: {} - Valor: {}", 
-                   contaPagar.getDescricao(), contaPagar.getValorOriginal());
+        logger.info("Salvando conta a pagar: {} - Valor: {}",
+                contaPagar.getDescricao(), contaPagar.getValorOriginal());
 
-        // Validar se o número do documento já existe
         if (contaPagar.getNumeroDocumento() != null) {
             boolean existe = contaPagarRepository.existsByNumeroDocumento(contaPagar.getNumeroDocumento());
-            if (existe && (contaPagar.getId() == null || 
-                !contaPagarRepository.findById(contaPagar.getId())
-                    .map(c -> c.getNumeroDocumento().equals(contaPagar.getNumeroDocumento()))
-                    .orElse(false))) {
+            if (existe && (contaPagar.getId() == null ||
+                    !contaPagarRepository.findById(contaPagar.getId())
+                            .map(c -> c.getNumeroDocumento().equals(contaPagar.getNumeroDocumento()))
+                            .orElse(false))) {
                 throw new IllegalArgumentException("Já existe uma conta com este número de documento");
             }
         }
@@ -114,9 +101,7 @@ public class ContaPagarService {
         return contaPagarRepository.save(contaPagar);
     }
 
-    /**
-     * Aprova uma conta a pagar
-     */
+    // ================= APROVAR =================
     @Transactional
     public ContaPagar aprovar(Long id, Usuario usuarioAprovacao) {
         ContaPagar conta = contaPagarRepository.findById(id)
@@ -130,16 +115,17 @@ public class ContaPagarService {
         conta.setUsuarioAprovacao(usuarioAprovacao);
         conta.setDataAprovacao(LocalDate.now().atStartOfDay());
 
+        registrarHistorico(conta, usuarioAprovacao, "Conta aprovada");
+
         logger.info("Conta a pagar aprovada: {} por {}", conta.getDescricao(), usuarioAprovacao.getEmail());
 
         return contaPagarRepository.save(conta);
     }
 
-    /**
-     * Efetua pagamento de uma conta
-     */
+    // ================= PAGAR =================
     @Transactional
-    public ContaPagar efetuarPagamento(Long id, BigDecimal valorPago, String formaPagamento, Usuario usuario) {
+    public ContaPagar efetuarPagamento(Long id, BigDecimal valorPago, String formaPagamento, Usuario usuario,
+            MultipartFile comprovante) throws IOException {
         ContaPagar conta = contaPagarRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
 
@@ -151,13 +137,26 @@ public class ContaPagarService {
             throw new IllegalArgumentException("Valor do pagamento deve ser maior que zero");
         }
 
-        // Atualizar conta
         conta.setValorPago(valorPago);
         conta.setFormaPagamento(formaPagamento);
         conta.setDataPagamento(LocalDate.now());
         conta.setStatus(ContaPagar.StatusContaPagar.PAGA);
 
-        // Criar registro no fluxo de caixa
+        // Salvar comprovante, se fornecido
+        if (comprovante != null && !comprovante.isEmpty()) {
+            String nomeArquivo = System.currentTimeMillis() + "_" + comprovante.getOriginalFilename();
+            File pasta = new File(pastaComprovantes);
+            if (!pasta.exists())
+                pasta.mkdirs();
+
+            File destino = Paths.get(pastaComprovantes, nomeArquivo).toFile();
+            comprovante.transferTo(destino);
+
+            conta.setObservacoes((conta.getObservacoes() != null ? conta.getObservacoes() + " | " : "") +
+                    "Comprovante salvo: " + destino.getAbsolutePath());
+        }
+
+        // Registrar no fluxo de caixa
         FluxoCaixa fluxo = new FluxoCaixa();
         fluxo.setDescricao("Pagamento: " + conta.getDescricao());
         fluxo.setValor(valorPago);
@@ -168,17 +167,23 @@ public class ContaPagarService {
         fluxo.setNumeroDocumento(conta.getNumeroDocumento());
         fluxo.setContaPagar(conta);
         fluxo.setUsuarioCriacao(usuario);
-
         fluxoCaixaRepository.save(fluxo);
+
+        registrarHistorico(conta, usuario, "Pagamento efetuado: " + valorPago +
+                (formaPagamento != null ? " via " + formaPagamento : ""));
 
         logger.info("Pagamento efetuado: {} - Valor: {}", conta.getDescricao(), valorPago);
 
         return contaPagarRepository.save(conta);
     }
 
-    /**
-     * Cancela uma conta a pagar
-     */
+    // ================= SOBRECARGA PARA API =================
+    @Transactional
+    public ContaPagar efetuarPagamento(Long id, BigDecimal valorPago, String formaPagamento) throws IOException {
+        return efetuarPagamento(id, valorPago, formaPagamento, null, null);
+    }
+
+    // ================= CANCELAR =================
     @Transactional
     public ContaPagar cancelar(Long id, String motivo) {
         ContaPagar conta = contaPagarRepository.findById(id)
@@ -189,17 +194,17 @@ public class ContaPagarService {
         }
 
         conta.setStatus(ContaPagar.StatusContaPagar.CANCELADA);
-        conta.setObservacoes((conta.getObservacoes() != null ? conta.getObservacoes() + " | " : "") + 
-                           "CANCELADA: " + motivo);
+        conta.setObservacoes((conta.getObservacoes() != null ? conta.getObservacoes() + " | " : "") +
+                "CANCELADA: " + motivo);
+
+        registrarHistorico(conta, null, "Conta cancelada: " + motivo);
 
         logger.info("Conta a pagar cancelada: {} - Motivo: {}", conta.getDescricao(), motivo);
 
         return contaPagarRepository.save(conta);
     }
 
-    /**
-     * Exclui uma conta a pagar
-     */
+    // ================= EXCLUIR =================
     @Transactional
     public void excluir(Long id) {
         ContaPagar conta = contaPagarRepository.findById(id)
@@ -213,13 +218,20 @@ public class ContaPagarService {
         contaPagarRepository.delete(conta);
     }
 
-    /**
-     * Calcula estatísticas das contas a pagar
-     */
+    // ================= HISTÓRICO =================
+    @Transactional
+    public void registrarHistorico(ContaPagar conta, Usuario usuario, String acao) {
+        HistoricoContaPagar historico = new HistoricoContaPagar();
+        historico.setConta(conta);
+        historico.setUsuario(usuario);
+        historico.setAcao(acao);
+        historico.setData(LocalDateTime.now());
+        historicoRepository.save(historico);
+    }
+
+    // ================= ESTATÍSTICAS =================
     public Map<String, Object> calcularEstatisticas() {
         Map<String, Object> stats = new HashMap<>();
-
-        // Totais por status
         BigDecimal totalPendente = contaPagarRepository.sumValorTotalByStatus(ContaPagar.StatusContaPagar.PENDENTE);
         BigDecimal totalAprovada = contaPagarRepository.sumValorTotalByStatus(ContaPagar.StatusContaPagar.APROVADA);
         BigDecimal totalPaga = contaPagarRepository.sumValorTotalByStatus(ContaPagar.StatusContaPagar.PAGA);
@@ -228,7 +240,6 @@ public class ContaPagarService {
         stats.put("totalAprovada", totalAprovada != null ? totalAprovada : BigDecimal.ZERO);
         stats.put("totalPaga", totalPaga != null ? totalPaga : BigDecimal.ZERO);
 
-        // Contadores
         Long countPendente = contaPagarRepository.countByStatus(ContaPagar.StatusContaPagar.PENDENTE);
         Long countAprovada = contaPagarRepository.countByStatus(ContaPagar.StatusContaPagar.APROVADA);
         Long countVencida = contaPagarRepository.countVencidas(LocalDate.now());
@@ -237,7 +248,6 @@ public class ContaPagarService {
         stats.put("countAprovada", countAprovada != null ? countAprovada : 0L);
         stats.put("countVencida", countVencida != null ? countVencida : 0L);
 
-        // Valores pagos no período
         LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
         LocalDate fimMes = inicioMes.plusMonths(1).minusDays(1);
         BigDecimal pagoMes = contaPagarRepository.sumValorPagoByPeriodo(inicioMes, fimMes);
@@ -246,16 +256,10 @@ public class ContaPagarService {
         return stats;
     }
 
-    /**
-     * Busca contas por texto
-     */
     public List<ContaPagar> buscarPorTexto(String texto) {
         return contaPagarRepository.findByDescricaoContainingIgnoreCase(texto);
     }
 
-    /**
-     * Mapeia categoria da conta para categoria do fluxo de caixa
-     */
     private FluxoCaixa.CategoriaFluxo mapearCategoriaFluxo(ContaPagar.CategoriaContaPagar categoria) {
         return switch (categoria) {
             case FORNECEDORES -> FluxoCaixa.CategoriaFluxo.FORNECEDORES;
@@ -271,15 +275,11 @@ public class ContaPagarService {
         };
     }
 
-    /**
-     * Calcula valor total a pagar (com juros, multas e descontos)
-     */
     public BigDecimal calcularValorTotalAPagar() {
         List<ContaPagar.StatusContaPagar> statuses = Arrays.asList(
-            ContaPagar.StatusContaPagar.PENDENTE,
-            ContaPagar.StatusContaPagar.APROVADA,
-            ContaPagar.StatusContaPagar.VENCIDA
-        );
+                ContaPagar.StatusContaPagar.PENDENTE,
+                ContaPagar.StatusContaPagar.APROVADA,
+                ContaPagar.StatusContaPagar.VENCIDA);
 
         return contaPagarRepository.findAll().stream()
                 .filter(c -> statuses.contains(c.getStatus()))

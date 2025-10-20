@@ -15,148 +15,215 @@
 </head>
 
 <body>
-<div class="app-container d-flex">
+    <div class="app-container d-flex">
 
-    <!-- Sidebar -->
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <!-- Main Content -->
-    <main class="main-content flex-grow-1">
+        <!-- Main Content -->
+        <main class="main-content flex-grow-1">
 
-        <!-- Topbar -->
-        <header th:replace="~{components/topbar :: topbar}"></header>
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-        <!-- Conteúdo principal -->
-        <section class="content-area container-fluid py-4">
+            <!-- Conteúdo principal -->
+            <section class="content-area container-fluid py-4">
 
-            <!-- Título -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-semibold mb-0">
-                        <i class="fas fa-file-invoice-dollar me-2 text-primary"></i> Contas a Pagar
-                    </h2>
-                    <p class="text-muted mb-0">Gerencie, filtre e acompanhe todas as contas a pagar.</p>
+                <!-- Título -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-semibold mb-0">
+                            <i class="fas fa-file-invoice-dollar me-2 text-primary"></i> Contas a Pagar
+                        </h2>
+                        <p class="text-muted mb-0">Gerencie, filtre e acompanhe todas as contas a pagar.</p>
+                    </div>
+                    <a th:href="@{/financeiro/contas-pagar/novo}" class="btn btn-primary" title="Nova Conta">
+                        <i class="fas fa-plus"></i> Nova Conta
+                    </a>
                 </div>
-                <a th:href="@{/financeiro/contas-pagar/novo}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nova Conta
-                </a>
-            </div>
 
-            <!-- Cards Resumo -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center border-start border-3 border-warning">
-                        <div class="card-body py-3">
-                            <h6 class="text-muted">Total Pendente</h6>
-                            <h4 class="text-warning fw-bold" th:text="'R$ ' + ${totalPendente}">R$ 0,00</h4>
+                <!-- Cards Resumo -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card shadow-sm text-center border-start border-3 border-warning">
+                            <div class="card-body py-3">
+                                <h6 class="text-muted">Total Pendente</h6>
+                                <h4 class="text-warning fw-bold" th:text="'R$ ' + ${totalPendente}">R$ 0,00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm text-center border-start border-3 border-success">
+                            <div class="card-body py-3">
+                                <h6 class="text-muted">Total Pago</h6>
+                                <h4 class="text-success fw-bold" th:text="'R$ ' + ${totalPago}">R$ 0,00</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm text-center border-start border-3 border-danger">
+                            <div class="card-body py-3">
+                                <h6 class="text-muted">Total Vencido</h6>
+                                <h4 class="text-danger fw-bold" th:text="'R$ ' + ${totalVencido}">R$ 0,00</h4>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center border-start border-3 border-success">
-                        <div class="card-body py-3">
-                            <h6 class="text-muted">Total Pago</h6>
-                            <h4 class="text-success fw-bold" th:text="'R$ ' + ${totalPago}">R$ 0,00</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm text-center border-start border-3 border-danger">
-                        <div class="card-body py-3">
-                            <h6 class="text-muted">Total Vencido</h6>
-                            <h4 class="text-danger fw-bold" th:text="'R$ ' + ${totalVencido}">R$ 0,00</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Filtros -->
-            <form th:action="@{/financeiro/contas-pagar}" method="get" class="row g-2 mb-4 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label text-muted small">Descrição</label>
-                    <input type="text" name="descricao" class="form-control" placeholder="Buscar descrição..."
-                           th:value="${descricao}">
-                </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label text-muted small">Status</label>
-                    <select id="status" name="status" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="PENDENTE" th:selected="${status == 'PENDENTE'}">Pendente</option>
-                        <option value="PAGA" th:selected="${status == 'PAGA'}">Paga</option>
-                        <option value="VENCIDA" th:selected="${status == 'VENCIDA'}">Vencida</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="categoria" class="form-label text-muted small">Categoria</label>
-                    <select id="categoria" name="categoria" class="form-select">
-                        <option value="">Todas</option>
-                        <option th:each="cat : ${categorias}" th:value="${cat.name()}" th:text="${cat.descricao}"
+                <!-- Filtros -->
+                <form th:action="@{/financeiro/contas-pagar}" method="get" class="row g-2 mb-4 align-items-end">
+                    <div class="col-md-3">
+                        <label for="descricao" class="form-label text-muted small">Descrição</label>
+                        <input id="descricao" type="text" name="descricao" class="form-control"
+                            placeholder="Buscar descrição..." th:value="${descricao}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label text-muted small">Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="PENDENTE" th:selected="${status == 'PENDENTE'}">Pendente</option>
+                            <option value="PAGA" th:selected="${status == 'PAGA'}">Paga</option>
+                            <option value="VENCIDA" th:selected="${status == 'VENCIDA'}">Vencida</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="categoria" class="form-label text-muted small">Categoria</label>
+                        <select id="categoria" name="categoria" class="form-select">
+                            <option value="">Todas</option>
+                            <option th:each="cat : ${categorias}" th:value="${cat.name()}" th:text="${cat.descricao}"
                                 th:selected="${categoria != null ? cat.name() == categoria : false}">
-                        </option>
-                    </select>
-                </div>
+                            </option>
+                        </select>
+                    </div>
                     <div class="col-md-3 text-end">
-                    <button type="submit" class="btn btn-outline-primary"><i class="fas fa-filter"></i> Filtrar</button>
+                        <button type="submit" class="btn btn-outline-primary" title="Filtrar contas">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Tabela -->
+                <div class="table-responsive shadow-sm rounded">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Fornecedor</th>
+                                <th>Categoria</th>
+                                <th>Vencimento</th>
+                                <th>Valor (R$)</th>
+                                <th>Status</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="conta : ${contas}">
+                                <td th:text="${conta.descricao != null ? conta.descricao : '-'}">Aluguel</td>
+                                <td th:text="${conta.fornecedor != null ? conta.fornecedor.nomeFantasia : '-'}">
+                                    Fornecedor ABC</td>
+                                <td th:text="${conta.categoria != null ? conta.categoria.descricao : '-'}">ALUGUEL</td>
+                                <td
+                                    th:text="${conta.dataVencimento != null ? #temporals.format(conta.dataVencimento, 'dd/MM/yyyy') : '-'}">
+                                    30/10/2025</td>
+                                <td
+                                    th:text="${conta.valorOriginal != null ? #numbers.formatDecimal(conta.valorOriginal, 2, 'COMMA', 2, 'POINT') : '0,00'}">
+                                    4.500,00</td>
+                                <td>
+                                    <span th:class="${conta.status != null ? 
+                                (conta.status.name() == 'PAGA' ? 'badge bg-success' : 
+                                (conta.status.name() == 'VENCIDA' ? 'badge bg-danger' : 'badge bg-warning text-dark')) 
+                                : 'badge bg-secondary'}"
+                                        th:text="${conta.status != null ? conta.status.descricao : 'N/A'}">PENDENTE</span>
+                                </td>
+                                <td class="text-end">
+                                    <!-- Editar -->
+                                    <a th:href="@{/financeiro/contas-pagar/editar/{id}(id=${conta.id})}"
+                                        class="btn btn-sm btn-outline-primary" title="Editar Conta">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <!-- Excluir -->
+                                    <form th:action="@{/financeiro/contas-pagar/excluir/{id}(id=${conta.id})}"
+                                        method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            title="Excluir Conta"
+                                            onclick="return confirm('Deseja realmente excluir esta conta?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+
+                                    <!-- Aprovar -->
+                                    <form th:action="@{/financeiro/contas-pagar/aprovar/{id}(id=${conta.id})}"
+                                        method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                            aria-label="Aprovar Conta" title="Aprovar Conta">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+
+
+                                    <!-- Pagar -->
+                                    <form th:action="@{/financeiro/contas-pagar/pagar/{id}(id=${conta.id})}"
+                                        method="post" class="d-inline">
+                                        <input type="hidden" name="valorPago" th:value="${conta.valorOriginal}" />
+                                        <input type="hidden" name="formaPagamento" value="DINHEIRO" />
+                                        <button type="submit" class="btn btn-sm btn-outline-warning"
+                                            aria-label="Pagar Conta" title="Pagar Conta">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(contas)}">
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    Nenhuma conta encontrada.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-            </form>
 
-            <!-- Tabela -->
-            <div class="table-responsive shadow-sm rounded">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>Descrição</th>
-                        <th>Fornecedor</th>
-                        <th>Categoria</th>
-                        <th>Vencimento</th>
-                        <th>Valor (R$)</th>
-                        <th>Status</th>
-                        <th class="text-end">Ações</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="conta : ${contas}">
-                        <td th:text="${conta.descricao != null ? conta.descricao : '-'}">Aluguel</td>
-                        <td th:text="${conta.fornecedor != null ? conta.fornecedor.nomeFantasia : '-'}">Fornecedor ABC</td>
-                        <td th:text="${conta.categoria != null ? conta.categoria.descricao : '-'}">ALUGUEL</td>
-                        <td th:text="${conta.dataVencimento != null ? #temporals.format(conta.dataVencimento, 'dd/MM/yyyy') : '-'}">30/10/2025</td>
-                        <td th:text="${conta.valorOriginal != null ? #numbers.formatDecimal(conta.valorOriginal, 2, 'COMMA', 2, 'POINT') : '0,00'}">4.500,00</td>
-                        <td>
-                            <span th:class="${conta.status != null ? (conta.status.name() == 'PAGA' ? 'badge bg-success' : (conta.status.name() == 'VENCIDA' ? 'badge bg-danger' : 'badge bg-warning text-dark')) : 'badge bg-secondary'}"
-                                  th:text="${conta.status != null ? conta.status.descricao : 'N/A'}">PENDENTE</span>
-                        </td>
-                        <td class="text-end">
-                            <a th:href="@{/financeiro/contas-pagar/editar/{id}(id=${conta.id})}" class="btn btn-sm btn-outline-primary" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form th:action="@{/financeiro/contas-pagar/excluir/{id}(id=${conta.id})}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"
-                                        onclick="return confirm('Deseja realmente excluir esta conta?')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(contas)}">
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                            Nenhuma conta encontrada.
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+            </section>
 
-        <!-- Footer -->
-        <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-</div>
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="/js/sidebar.js" defer></script>
-<script th:src="@{/js/notifications.js}" defer></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}" defer></script>
+    <script>
+        function aprovarConta(contaId) {
+            if (!confirm('Deseja realmente aprovar esta conta?')) {
+                return;
+            }
+
+            fetch(`/financeiro/contas-pagar/aprovar/${contaId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content // se usar CSRF
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Conta aprovada com sucesso!');
+                        location.reload(); // recarrega a página para atualizar status
+                    } else {
+                        alert('Erro ao aprovar a conta.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao aprovar a conta.');
+                });
+        }
+    </script>
+
 </body>
+
 </html>

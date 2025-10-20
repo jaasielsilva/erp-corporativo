@@ -90,6 +90,19 @@ public class ContaPagar {
     @Column
     private LocalDateTime dataAprovacao;
 
+    // ===== NOVO CAMPO =====
+    @Column(name = "comprovante_path", length = 255)
+    private String comprovantePath;
+
+    
+    public String getComprovantePath() {
+        return comprovantePath;
+    }
+
+    public void setComprovantePath(String comprovantePath) {
+        this.comprovantePath = comprovantePath;
+    }
+
     private LocalDateTime dataCriacao;
     private LocalDateTime dataUltimaEdicao;
 
@@ -195,8 +208,8 @@ public class ContaPagar {
     }
 
     public boolean isVencida() {
-        return LocalDate.now().isAfter(dataVencimento) && 
-               (status == StatusContaPagar.PENDENTE || status == StatusContaPagar.APROVADA);
+        return LocalDate.now().isAfter(dataVencimento) &&
+                (status == StatusContaPagar.PENDENTE || status == StatusContaPagar.APROVADA);
     }
 
     public boolean isPaga() {

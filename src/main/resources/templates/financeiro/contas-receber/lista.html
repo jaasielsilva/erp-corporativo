@@ -60,12 +60,12 @@
                                     <tbody>
                                         <tr th:each="conta : ${contas}">
                                             <td th:text="${conta.cliente.nome ?: 'Cliente não informado'}">Cliente</td>
-                                            <td th:text="${conta.dataVencimento ?: 'N/A'}">01/01/2025</td>
+                                            <td th:text="${conta.dataVencimento != null ? #temporals.format(conta.dataVencimento, 'dd/MM/yyyy') : 'N/A'}">01/01/2025</td>
                                             <td
-                                                th:text="${#numbers.formatDecimal(conta.valorOriginal, 1, 'COMMA', 2, 'POINT') ?: '0,00'}">
+                                                th:text="${#numbers.formatDecimal(conta.valorOriginal, 2, 'COMMA', 2, 'POINT') ?: '0,00'}">
                                                 0,00</td>
                                             <td
-                                                th:text="'R$ ' + ${#numbers.formatDecimal(conta.valorRecebido ?: 0, 1, 'COMMA', 2, 'POINT')}">
+                                                th:text="'R$ ' + ${#numbers.formatDecimal(conta.valorRecebido ?: 0, 2, 'COMMA', 2, 'POINT')}">
                                                 0,00</td>
                                             <td th:text="${conta.status ?: 'PENDENTE'}">PENDENTE</td>
                                             <td>
@@ -126,27 +126,16 @@
     <!-- Função registrar pagamento -->
     <script>
         function registrarPagamento(contaId) {
-            const valorPago = prompt("Informe o valor pago:");
-            if (!valorPago) return;
-
-            // Buscar usuário atual para obter o ID
-            fetch('/api/user/current')
-                .then(res => {
-                    if (!res.ok) throw new Error('Falha ao obter usuário atual');
-                    return res.json();
+            let valorPago = prompt("Informe o valor pago:");
+            if (valorPago) {
+                fetch(`/financeiro/api/contas-receber/${contaId}/registrar-pagamento?valorPago=${valorPago}&usuarioId=1`, {
+                    method: 'PUT'
                 })
-                .then(user => {
-                    const usuarioId = user?.id;
-                    if (!usuarioId) throw new Error('Usuário atual sem ID');
 
-                    return fetch(`/financeiro/api/contas-receber/${contaId}/registrar-pagamento?valorPago=${valorPago}&usuarioId=${usuarioId}`, {
-                        method: 'PUT'
-                    });
-                })
-                .then(res => res.json())
-                .then(data => alert(data.mensagem || 'Pagamento registrado com sucesso!'))
-                .catch(err => alert(err.message || 'Erro ao registrar pagamento'))
-                .finally(() => location.reload());
+                    .then(res => res.json())
+                    .then(data => alert(data.mensagem))
+                    .finally(() => location.reload());
+            }
         }
     </script>
 

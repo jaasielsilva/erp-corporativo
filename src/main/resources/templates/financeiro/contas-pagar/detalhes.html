@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detalhes - Conta a Pagar</title>
+
+    <!-- CSS padrão -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Topbar -->
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <!-- Conteúdo da página -->
+        <section class="content-area">
+            <div class="container py-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h4 text-muted mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Detalhes da Conta a Pagar</h1>
+                    <a href="/financeiro/contas-pagar" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Voltar
+                    </a>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Informações</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Fornecedor</small>
+                                        <div class="fw-semibold" th:text="${conta.fornecedor != null ? conta.fornecedor.nome : 'N/D'}">N/D</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Categoria</small>
+                                        <div class="fw-semibold" th:text="${conta.categoria}">N/D</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-12">
+                                        <small class="text-muted">Descrição</small>
+                                        <div class="fw-semibold" th:text="${conta.descricao}">N/D</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Vencimento</small>
+                                        <div class="fw-semibold" th:text="${#temporals.format(conta.dataVencimento, 'dd/MM/yyyy')}">--/--/----</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Status</small>
+                                        <span class="badge" th:text="${conta.status}"
+                                              th:classappend="${conta.status.name() == 'PENDENTE'} ? 'bg-warning text-dark' : (${conta.status.name() == 'PAGA'} ? 'bg-success' : 'bg-danger')"></span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Valor Original (R$)</small>
+                                        <div class="fw-semibold" th:text="${#numbers.formatDecimal(conta.valorOriginal, 2, 'COMMA', 2, 'POINT')}">0,00</div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Valor Pago (R$)</small>
+                                        <div class="fw-semibold" th:text="${conta.valorPago != null ? #numbers.formatDecimal(conta.valorPago, 2, 'COMMA', 2, 'POINT') : '0,00'}">0,00</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Data Pagamento</small>
+                                        <div class="fw-semibold" th:text="${conta.dataPagamento != null ? #temporals.format(conta.dataPagamento, 'dd/MM/yyyy') : '—'}">—</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Forma de Pagamento</small>
+                                        <div class="fw-semibold" th:text="${conta.formaPagamento != null ? conta.formaPagamento : '—'}">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Ações</h6>
+                            </div>
+                            <div class="card-body">
+                                <form th:action="@{'/financeiro/contas-pagar/aprovar/' + ${conta.id}}" method="post" class="mb-2">
+                                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="fas fa-check me-1"></i> Aprovar</button>
+                                </form>
+                                <form th:action="@{'/financeiro/contas-pagar/pagar/' + ${conta.id}}" method="post" class="mb-2">
+                                    <div class="input-group input-group-sm mb-2">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" step="0.01" name="valorPago" class="form-control" placeholder="Valor">
+                                    </div>
+                                    <label for="formaPagamentoSelect" class="visually-hidden">Forma de pagamento</label>
+                                    <select id="formaPagamentoSelect" name="formaPagamento" class="form-select form-select-sm mb-2" aria-label="Forma de pagamento">
+                                        <option value="PIX">PIX</option>
+                                        <option value="BOLETO">Boleto</option>
+                                        <option value="TED">TED</option>
+                                        <option value="DINHEIRO">Dinheiro</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-success w-100"><i class="fas fa-wallet me-1"></i> Efetuar Pagamento</button>
+                                </form>
+                                <form th:action="@{'/financeiro/contas-pagar/cancelar/' + ${conta.id}}" method="post">
+                                    <input type="hidden" name="motivo" value="Cancelado via detalhes">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100"><i class="fas fa-times me-1"></i> Cancelar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer th:replace="~{components/footer :: footer}"></footer>
+
+    </main>
+</div>
+
+<!-- Scripts -->
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

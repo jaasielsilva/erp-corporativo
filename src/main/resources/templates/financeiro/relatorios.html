@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Relatórios Financeiros - ERP Corporativo</title>
+
+    <!-- CSS padrão -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Topbar -->
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <!-- Conteúdo da página Relatórios -->
+        <section class="content-area">
+            <div class="container py-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h4 text-muted mb-1"><i class="fas fa-chart-bar me-2"></i>Relatórios Financeiros</h1>
+                        <p class="text-muted mb-0">Análises e demonstrativos financeiros (DRE, Balanço, Aging, etc.).</p>
+                    </div>
+                    <a href="/financeiro" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Voltar
+                    </a>
+                </div>
+
+                <!-- Filtros de relatório -->
+                <form class="row g-3 mb-4" method="get" th:action="@{/financeiro/relatorios}">
+                    <div class="col-md-3">
+                        <label class="form-label">Período</label>
+                        <input type="month" name="periodo" class="form-control" th:value="${periodo}" placeholder="AAAA-MM" title="Período (YYYY-MM)">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo de Relatório</label>
+                        <select name="tipo" class="form-select" aria-label="Tipo de relatório">
+                            <option value="DRE" th:selected="${param.tipo == 'DRE'}">DRE</option>
+                            <option value="BALANCO" th:selected="${param.tipo == 'BALANCO'}">Balanço</option>
+                            <option value="AGING" th:selected="${param.tipo == 'AGING'}">Aging (Recebíveis)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Formato</label>
+                        <select name="formato" class="form-select" aria-label="Formato do relatório">
+                            <option value="HTML" th:selected="${param.formato == 'HTML'}">HTML</option>
+                            <option value="CSV" th:selected="${param.formato == 'CSV'}">CSV</option>
+                            <option value="PDF" th:selected="${param.formato == 'PDF'}">PDF</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i> Gerar
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Área de resultados -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-file-alt me-1"></i> Resultado</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Placeholder de conteúdo do relatório -->
+                        <div th:if="${relatorio != null}">
+                            <div th:utext="${relatorio}"></div>
+                        </div>
+                        <div th:if="${relatorio == null}" class="text-muted">
+                            Nenhum relatório gerado ainda. Selecione filtros e clique em Gerar.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer th:replace="~{components/footer :: footer}"></footer>
+
+    </main>
+</div>
+
+<!-- Scripts -->
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

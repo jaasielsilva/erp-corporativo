@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/marketing/relatorios")
 @RequiredArgsConstructor
+@PreAuthorize("@globalControllerAdvice.podeAcessarMarketing()")
 public class RelatorioMarketingController {
 
     private final CampanhaMarketingService campanhaService;

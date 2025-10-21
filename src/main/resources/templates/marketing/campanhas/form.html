@@ -19,7 +19,16 @@
 </head>
 
 <body>
-    <div class="app-container">
+    <!-- Verificação de permissão para acessar o módulo marketing -->
+    <div th:if="${!podeAcessarMarketing}" class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="fas fa-exclamation-triangle"></i> Acesso Negado</h4>
+            <p>Você não tem permissão para acessar o módulo de marketing.</p>
+            <a href="/" class="btn btn-primary">Voltar ao Dashboard</a>
+        </div>
+    </div>
+
+    <div th:if="${podeAcessarMarketing}" class="app-container">
 
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -115,6 +124,7 @@
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
+    <!-- Fim da verificação de permissão -->
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

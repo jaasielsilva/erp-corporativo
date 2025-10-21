@@ -3,26 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Segurança - TI - ERP Corporativo</title>
+    <title>Segurança da Informação - TI</title>
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
     <main class="main-content">
         <header th:replace="~{components/topbar :: topbar}"></header>
-        <section class="content-area text-center py-5">
-            <h1 class="display-6 text-muted"><i class="fas fa-shield-alt"></i> Segurança</h1>
-            <p class="text-muted">Gerencie logs de acesso, políticas de segurança e auditoria.</p>
+
+        <section class="content-area container-fluid py-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h1 class="h4 mb-1"><i class="fas fa-shield-alt me-2"></i>Segurança da Informação</h1>
+                    <p class="text-muted mb-0">Alertas, logs de acesso e políticas</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-warning btn-sm" onclick="atualizarAlertas()">
+                        <i class="fas fa-sync-alt"></i> Atualizar Alertas
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Alertas -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header"><i class="fas fa-exclamation-triangle me-2"></i>Alertas de Segurança</div>
+                        <div class="card-body">
+                            <ul class="list-group" id="lista-alertas">
+                                <li class="list-group-item" th:each="a : ${alertasSeguranca}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong th:text="${a.tipo}">Tipo</strong>
+                                            <span class="badge ms-2" th:class="${a.severidade} == 'ALTA' ? 'bg-danger' : (${a.severidade} == 'MEDIA' ? 'bg-warning' : 'bg-info')" th:text="${a.severidade}">INFO</span>
+                                            <div class="text-muted"><small>IP: <span th:text="${a.ip}">-</span></small></div>
+                                        </div>
+                                        <small class="text-muted" th:text="${#temporals.format(a.data, 'dd/MM/yyyy HH:mm')}">-</small>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs de acesso -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header"><i class="fas fa-list me-2"></i>Logs de Acesso</div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead><tr><th>Usuário</th><th>Ação</th><th>IP</th><th>Data</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="l : ${logsAcesso}">
+                                            <td th:text="${l.usuario}">user</td>
+                                            <td th:text="${l.acao}">Login</td>
+                                            <td th:text="${l.ip}">-</td>
+                                            <td><small class="text-muted" th:text="${#temporals.format(l.data, 'dd/MM/yyyy HH:mm')}">-</small></td>
+                                            <td><span class="badge bg-success" th:text="${l.status}">SUCESSO</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Políticas de segurança -->
+            <div class="card">
+                <div class="card-header"><i class="fas fa-file-alt me-2"></i>Políticas de Segurança</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead><tr><th>Nome</th><th>Status</th><th>Última atualização</th></tr></thead>
+                            <tbody>
+                                <tr th:each="p : ${politicas}">
+                                    <td th:text="${p.nome}">Política</td>
+                                    <td><span class="badge bg-success" th:text="${p.status}">ATIVA</span></td>
+                                    <td><small class="text-muted" th:text="${#temporals.format(p.ultimaAtualizacao, 'dd/MM/yyyy')}">-</small></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </section>
+
         <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
 </div>
+
 <script src="/js/sidebar.js" defer></script>
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/notifications.js}"></script>
+<script>
+function atualizarAlertas(){
+    fetch('/ti/api/seguranca/alertas')
+        .then(r=>r.json())
+        .then(alertas=>{
+            const ul = document.getElementById('lista-alertas');
+            ul.innerHTML = '';
+            (alertas || []).forEach(a => {
+                const li = document.createElement('li');
+                li.className='list-group-item';
+                const badgeClass = a.severidade === 'ALTA' ? 'bg-danger' : (a.severidade === 'MEDIA' ? 'bg-warning' : 'bg-info');
+                li.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${a.tipo}</strong>
+                            <span class="badge ms-2 ${badgeClass}">${a.severidade}</span>
+                            <div class="text-muted"><small>IP: ${a.ip}</small></div>
+                        </div>
+                        <small class="text-muted">${new Date(a.data).toLocaleString('pt-BR')}</small>
+                    </div>`;
+                ul.appendChild(li);
+            });
+        }).catch(err=>console.error('Erro ao atualizar alertas:', err));
+}
+</script>
 </body>
 </html>

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/marketing")
 @RequiredArgsConstructor
+@PreAuthorize("@globalControllerAdvice.podeAcessarMarketing()")
 public class MarketingDashboardController {
 
     private final CampanhaMarketingService campanhaService;

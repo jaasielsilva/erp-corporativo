@@ -58,6 +58,7 @@
 
 
                                 <form th:action="@{'/financeiro/contas-pagar/pagar/' + ${conta.id}}" method="post">
+                                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                     <div class="mb-3">
                                         <label for="valorPago" class="form-label">Valor a pagar (R$)</label>
                                         <input type="number" step="0.01" min="0" name="valorPago" id="valorPago"

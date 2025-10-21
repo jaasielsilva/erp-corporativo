@@ -140,7 +140,8 @@
                                 <td>
                                     <span th:class="${conta.status != null ? 
                                 (conta.status.name() == 'PAGA' ? 'badge bg-success' : 
-                                (conta.status.name() == 'VENCIDA' ? 'badge bg-danger' : 'badge bg-warning text-dark')) 
+                                (conta.status.name() == 'VENCIDA' ? 'badge bg-danger' : 
+                                (conta.status.name() == 'CANCELADA' ? 'badge bg-secondary' : 'badge bg-warning text-dark'))) 
                                 : 'badge bg-secondary'}"
                                         th:text="${conta.status != null ? conta.status.descricao : 'N/A'}">PENDENTE</span>
                                 </td>
@@ -154,42 +155,40 @@
                                     <!-- Editar -->
                                     <a th:href="@{/financeiro/contas-pagar/editar/{id}(id=${conta.id})}"
                                         class="btn btn-sm btn-outline-primary" title="Editar Conta"
-                                        th:if="${conta.status.name() != 'PAGA'}">
+                                        th:if="${conta.status == null || conta.status.name() != 'PAGA'}">
                                         <i class="fas fa-edit"></i>
                                     </a>
 
                                     <!-- Aprovar (apenas para contas PENDENTES) -->
-                                    <button type="button" class="btn btn-sm btn-outline-success"
-                                        title="Aprovar Conta"
-                                        th:if="${conta.status.name() == 'PENDENTE'}"
-                                        onclick="aprovarConta([[${conta.id}]], '[[${conta.descricao}]]')">
+                                    <button type="button" class="btn btn-sm btn-outline-success" title="Aprovar Conta"
+                                        th:if="${conta.status != null && conta.status.name() == 'PENDENTE'}"
+                                        th:attr="onclick=|aprovarConta(${conta.id}, '${#strings.escapeJavaScript(conta.descricao)}')|">
                                         <i class="fas fa-check"></i>
                                     </button>
 
                                     <!-- Pagar (apenas para contas APROVADAS) -->
                                     <button type="button" class="btn btn-sm btn-outline-warning"
-                                        title="Efetuar Pagamento"
-                                        th:if="${conta.status.name() == 'APROVADA'}"
-                                        onclick="pagarConta([[${conta.id}]], '[[${conta.descricao}]]', [[${conta.valorOriginal}]])">
+                                        title="Efetuar Pagamento" th:if="${conta.status != null && conta.status.name() == 'APROVADA'}"
+                                        th:attr="onclick=|pagarConta(${conta.id}, '${#strings.escapeJavaScript(conta.descricao)}', ${conta.valorOriginal})|">
                                         <i class="fas fa-money-bill-wave"></i>
                                     </button>
 
                                     <!-- Cancelar (apenas para contas não pagas) -->
-                                    <button type="button" class="btn btn-sm btn-outline-secondary"
-                                        title="Cancelar Conta"
-                                        th:if="${conta.status.name() != 'PAGA' && conta.status.name() != 'CANCELADA'}"
-                                        onclick="cancelarConta([[${conta.id}]], '[[${conta.descricao}]]')">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" title="Cancelar Conta"
+                                        th:if="${conta.status == null || (conta.status.name() != 'PAGA' && conta.status.name() != 'CANCELADA')}"
+                                        th:attr="onclick=|cancelarConta(${conta.id}, '${#strings.escapeJavaScript(conta.descricao)}')|">
                                         <i class="fas fa-times"></i>
                                     </button>
 
                                     <!-- Excluir (apenas para contas não pagas) -->
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                        title="Excluir Conta"
-                                        th:if="${conta.status.name() != 'PAGA'}"
-                                        onclick="excluirConta([[${conta.id}]], '[[${conta.descricao}]]')">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir Conta"
+                                        th:if="${conta.status == null || conta.status.name() != 'PAGA'}"
+                                        th:attr="onclick=|excluirConta(${conta.id}, '${#strings.escapeJavaScript(conta.descricao)}')|">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
+
+
                             </tr>
                             <tr th:if="${#lists.isEmpty(contas)}">
                                 <td colspan="7" class="text-center text-muted py-4">
@@ -225,6 +224,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <form id="formAprovar" method="post" class="d-inline">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <button type="submit" class="btn btn-success">
                             <i class="fas fa-check me-1"></i>Aprovar
                         </button>
@@ -245,14 +245,16 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formPagar" method="post">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <div class="modal-body">
                         <p>Conta: <span class="fw-bold text-primary" id="contaPagarNome"></span></p>
-                        
+
                         <div class="mb-3">
                             <label for="valorPago" class="form-label">Valor a Pagar (R$)</label>
-                            <input type="number" step="0.01" class="form-control" id="valorPago" name="valorPago" required>
+                            <input type="number" step="0.01" class="form-control" id="valorPago" name="valorPago"
+                                required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="formaPagamento" class="form-label">Forma de Pagamento</label>
                             <select class="form-select" id="formaPagamento" name="formaPagamento" required>
@@ -270,7 +272,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-warning">
                             <i class="fas fa-money-bill-wave me-1"></i>Efetuar Pagamento
-                        </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -288,12 +290,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formCancelar" method="post">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <div class="modal-body">
                         <p>Conta: <span class="fw-bold text-primary" id="contaCancelarNome"></span></p>
-                        
+
                         <div class="mb-3">
                             <label for="motivoCancelamento" class="form-label">Motivo do Cancelamento</label>
-                            <textarea class="form-control" id="motivoCancelamento" name="motivo" rows="3" 
+                            <textarea class="form-control" id="motivoCancelamento" name="motivo" rows="3"
                                 placeholder="Informe o motivo do cancelamento..." required></textarea>
                         </div>
                     </div>
@@ -329,6 +332,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <form id="formExcluir" method="post" class="d-inline">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash me-1"></i>Excluir
                         </button>

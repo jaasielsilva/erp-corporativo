@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle}">TI - Dashboard</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -13,29 +14,61 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- CSS customizado -->
     <link th:href="@{/css/style.css}" rel="stylesheet">
-    
+
     <style>
-        .status-online { color: #28a745; }
-        .status-offline { color: #dc3545; }
-        .status-warning { color: #ffc107; }
-        .metric-card { transition: transform 0.2s; }
-        .metric-card:hover { transform: translateY(-2px); }
-        .event-item { border-left: 4px solid #007bff; padding-left: 15px; margin-bottom: 15px; }
-        .event-info { border-left-color: #17a2b8; }
-        .event-warning { border-left-color: #ffc107; }
-        .event-error { border-left-color: #dc3545; }
-        .system-status { font-size: 0.9em; }
+        .status-online {
+            color: #28a745;
+        }
+
+        .status-offline {
+            color: #dc3545;
+        }
+
+        .status-warning {
+            color: #ffc107;
+        }
+
+        .metric-card {
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .event-item {
+            border-left: 4px solid #007bff;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .event-info {
+            border-left-color: #17a2b8;
+        }
+
+        .event-warning {
+            border-left-color: #ffc107;
+        }
+
+        .event-error {
+            border-left-color: #dc3545;
+        }
+
+        .system-status {
+            font-size: 0.9em;
+        }
     </style>
 </head>
+
 <body>
     <!-- Sidebar -->
-    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
-    
+    <div th:replace="~{components/sidebar :: sidebar}"></div>
+
     <!-- Main Content -->
     <div class="main-content">
         <!-- Topbar -->
-        <div th:replace="~{fragments/topbar :: topbar}"></div>
-        
+        <div th:replace="~{components/topbar :: topbar}"></div>
+
         <!-- Page Content -->
         <div class="container-fluid">
             <!-- Header -->
@@ -66,7 +99,8 @@
                                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                         Sistemas Ativos
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${sistemasAtivos}">3</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${sistemasAtivos}">3
+                                    </div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-server fa-2x text-gray-300"></i>
@@ -84,7 +118,8 @@
                                     <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                         Chamados Abertos
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${chamadosAbertos}">8</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${chamadosAbertos}">8
+                                    </div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
@@ -102,7 +137,8 @@
                                     <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                         Backups Recentes
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${#lists.size(backupsRecentes)}">2</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                        th:text="${#lists.size(backupsRecentes)}">2</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-database fa-2x text-gray-300"></i>
@@ -120,7 +156,8 @@
                                     <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                         Alertas Segurança
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${#lists.size(alertasSeguranca)}">1</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                        th:text="${#lists.size(alertasSeguranca)}">1</div>
                                 </div>
                                 <div class="col-auto">
                                     <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
@@ -185,9 +222,11 @@
                             <h6 class="m-0 font-weight-bold text-primary">
                                 <i class="fas fa-server me-2"></i>Status dos Sistemas
                             </h6>
-                            <button class="btn btn-sm btn-outline-primary" onclick="atualizarStatusSistemas()">
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                onclick="atualizarStatusSistemas()" aria-label="Atualizar status">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
+
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -207,14 +246,16 @@
                                                 <span th:text="${sistema.nome}">Sistema</span>
                                             </td>
                                             <td>
-                                                <span th:class="${sistema.status == 'ONLINE'} ? 'badge bg-success' : 'badge bg-danger'"
-                                                      th:text="${sistema.status}">ONLINE</span>
+                                                <span
+                                                    th:class="${sistema.status == 'ONLINE'} ? 'badge bg-success' : 'badge bg-danger'"
+                                                    th:text="${sistema.status}">ONLINE</span>
                                             </td>
                                             <td>
                                                 <span class="system-status" th:text="${sistema.uptime}">99.9%</span>
                                             </td>
                                             <td>
-                                                <small class="text-muted" th:text="${#temporals.format(sistema.ultimaVerificacao, 'HH:mm:ss')}">
+                                                <small class="text-muted"
+                                                    th:text="${#temporals.format(sistema.ultimaVerificacao, 'HH:mm:ss')}">
                                                     há 1 min
                                                 </small>
                                             </td>
@@ -235,21 +276,23 @@
                             </h6>
                         </div>
                         <div class="card-body">
-                            <div th:each="evento : ${ultimosEventos}" 
-                                 th:class="'event-item event-' + ${evento.severidade.toLowerCase()}">
+                            <div th:each="evento : ${ultimosEventos}"
+                                th:class="'event-item event-' + ${evento.severidade.toLowerCase()}">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1" th:text="${evento.tipo}">Tipo</h6>
                                         <p class="mb-1 small" th:text="${evento.descricao}">Descrição do evento</p>
-                                        <small class="text-muted" th:text="${#temporals.format(evento.data, 'dd/MM HH:mm')}">
+                                        <small class="text-muted"
+                                            th:text="${#temporals.format(evento.data, 'dd/MM HH:mm')}">
                                             Data
                                         </small>
                                     </div>
-                                    <span th:class="'badge bg-' + ${evento.severidade == 'INFO' ? 'info' : (evento.severidade == 'WARNING' ? 'warning' : 'danger')}"
-                                          th:text="${evento.severidade}">INFO</span>
+                                    <span
+                                        th:class="'badge bg-' + ${evento.severidade == 'INFO' ? 'info' : (evento.severidade == 'WARNING' ? 'warning' : 'danger')}"
+                                        th:text="${evento.severidade}">INFO</span>
                                 </div>
                             </div>
-                            
+
                             <div class="text-center mt-3">
                                 <a href="/ti/sistemas" class="btn btn-sm btn-outline-primary">
                                     Ver Todos os Eventos
@@ -268,8 +311,8 @@
                             <i class="fas fa-exclamation-triangle me-2"></i>Alertas de Segurança
                         </h6>
                         <div th:each="alerta : ${alertasSeguranca}">
-                            <strong th:text="${alerta.tipo}">Tipo do Alerta</strong>: 
-                            <span th:text="${alerta.ip}">IP</span> - 
+                            <strong th:text="${alerta.tipo}">Tipo do Alerta</strong>:
+                            <span th:text="${alerta.ip}">IP</span> -
                             <small th:text="${#temporals.format(alerta.data, 'dd/MM/yyyy HH:mm')}">Data</small>
                         </div>
                         <hr>
@@ -278,21 +321,22 @@
                                 Ver Detalhes de Segurança
                             </a>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Footer -->
-    <div th:replace="~{fragments/footer :: footer}"></div>
-    
+    <div th:replace="~{components/footer :: footer}"></div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- JS customizado -->
     <script th:src="@{/js/app.js}"></script>
-    
+
     <script>
         function atualizarDashboard() {
             // Simular atualização
@@ -300,14 +344,14 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
             btn.disabled = true;
-            
+
             setTimeout(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 location.reload();
             }, 2000);
         }
-        
+
         function atualizarStatusSistemas() {
             fetch('/ti/api/sistemas/status')
                 .then(response => response.json())
@@ -319,9 +363,10 @@
                     console.error('Erro ao atualizar status:', error);
                 });
         }
-        
+
         // Auto-refresh a cada 30 segundos
         setInterval(atualizarStatusSistemas, 30000);
     </script>
 </body>
+
 </html>

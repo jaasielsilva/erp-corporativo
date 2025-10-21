@@ -8,8 +8,9 @@ import java.util.List;
 
 public interface HistoricoContaPagarRepository extends JpaRepository<HistoricoContaPagar, Long> {
 
-    List<HistoricoContaPagar> findByContaOrderByDataDesc(ContaPagar conta);
+    // Ajustado para o nome correto da propriedade da entidade
+    List<HistoricoContaPagar> findByContaOrderByDataHoraDesc(ContaPagar conta);
 
-    // Se quiser por id da conta
-    List<HistoricoContaPagar> findByContaIdOrderByDataDesc(Long contaId);
+    // Também ajustado para buscar por id da conta
+    List<HistoricoContaPagar> findByContaIdOrderByDataHoraDesc(Long contaId);
 }

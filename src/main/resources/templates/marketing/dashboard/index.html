@@ -5,14 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Marketing - Dashboard - ERP Corporativo</title>
-    
+
     <!-- CSS padrão -->
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <style>
         .stats-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -21,64 +21,64 @@
             color: white;
             transition: transform 0.3s ease;
         }
-        
+
         .stats-card:hover {
             transform: translateY(-5px);
         }
-        
+
         .stats-card.success {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
         }
-        
+
         .stats-card.warning {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
-        
+
         .stats-card.info {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
-        
+
         .campaign-card {
             border: none;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
-        
+
         .campaign-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
         }
-        
+
         .status-badge {
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: 600;
         }
-        
+
         .status-ativa {
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .status-pausada {
             background-color: #fff3cd;
             color: #856404;
         }
-        
+
         .status-finalizada {
             background-color: #d1ecf1;
             color: #0c5460;
         }
-        
+
         .quick-action-btn {
             border-radius: 10px;
             padding: 0.8rem 1.5rem;
             font-weight: 600;
             transition: all 0.3s ease;
         }
-        
+
         .quick-action-btn:hover {
             transform: translateY(-2px);
         }
@@ -87,7 +87,7 @@
 
 <body>
     <div class="app-container">
-
+        
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
@@ -100,7 +100,7 @@
             <!-- Conteúdo da página -->
             <section class="content-area">
                 <div class="container-fluid">
-                    
+
                     <!-- Header -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
@@ -108,7 +108,7 @@
                             <p class="text-muted mb-0">Gerencie suas campanhas e analise performance</p>
                         </div>
                         <div>
-                            <a th:href="@{/marketing/campanhas/nova}" class="btn btn-primary quick-action-btn">
+                            <a th:href="@{/marketing/campanhas/novo}" class="btn btn-primary quick-action-btn">
                                 <i class="fas fa-plus"></i> Nova Campanha
                             </a>
                         </div>
@@ -127,7 +127,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-3">
                             <div class="stats-card success">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -139,24 +139,27 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-3">
                             <div class="stats-card warning">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h3 th:text="${campanhasExpiradas != null ? campanhasExpiradas.size() : 0}">0</h3>
+                                        <h3 th:text="${campanhasExpiradas != null ? campanhasExpiradas.size() : 0}">0
+                                        </h3>
                                         <p class="mb-0">Campanhas Expiradas</p>
                                     </div>
                                     <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-3">
                             <div class="stats-card info">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h3 th:text="${roiTotal != null ? #numbers.formatDecimal(roiTotal, 1, 2) + '%' : '0%'}">0%</h3>
+                                        <h3
+                                            th:text="${roiTotal != null ? #numbers.formatDecimal(roiTotal, 1, 2) + '%' : '0%'}">
+                                            0%</h3>
                                         <p class="mb-0">ROI Total</p>
                                     </div>
                                     <i class="fas fa-chart-bar fa-2x opacity-75"></i>
@@ -175,25 +178,29 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-3 mb-3">
-                                            <a th:href="@{/marketing/campanhas}" class="btn btn-outline-primary w-100 quick-action-btn">
+                                            <a th:href="@{/marketing/campanhas}"
+                                                class="btn btn-outline-primary w-100 quick-action-btn">
                                                 <i class="fas fa-list"></i><br>
                                                 <small>Ver Todas Campanhas</small>
                                             </a>
                                         </div>
                                         <div class="col-md-3 mb-3">
-                                            <a th:href="@{/marketing/leads}" class="btn btn-outline-success w-100 quick-action-btn">
+                                            <a th:href="@{/marketing/leads}"
+                                                class="btn btn-outline-success w-100 quick-action-btn">
                                                 <i class="fas fa-users"></i><br>
                                                 <small>Gerenciar Leads</small>
                                             </a>
                                         </div>
                                         <div class="col-md-3 mb-3">
-                                            <a th:href="@{/marketing/relatorios}" class="btn btn-outline-info w-100 quick-action-btn">
+                                            <a th:href="@{/marketing/relatorios}"
+                                                class="btn btn-outline-info w-100 quick-action-btn">
                                                 <i class="fas fa-chart-pie"></i><br>
                                                 <small>Relatórios</small>
                                             </a>
                                         </div>
                                         <div class="col-md-3 mb-3">
-                                            <a th:href="@{/marketing/materiais}" class="btn btn-outline-warning w-100 quick-action-btn">
+                                            <a th:href="@{/marketing/materiais}"
+                                                class="btn btn-outline-warning w-100 quick-action-btn">
                                                 <i class="fas fa-file-alt"></i><br>
                                                 <small>Materiais</small>
                                             </a>
@@ -210,27 +217,35 @@
                             <div class="card">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5><i class="fas fa-play-circle"></i> Campanhas Ativas</h5>
-                                    <a th:href="@{/marketing/campanhas}" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+                                    <a th:href="@{/marketing/campanhas}" class="btn btn-sm btn-outline-primary">Ver
+                                        Todas</a>
                                 </div>
                                 <div class="card-body">
                                     <div th:if="${campanhasAtivas != null and !campanhasAtivas.isEmpty()}">
-                                        <div th:each="campanha : ${campanhasAtivas}" class="campaign-card card mb-3">
+                                        <div th:each="campanha, stat : ${campanhasAtivas}" th:if="${stat.index < 2}"
+                                            class="campaign-card card mb-3">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>
-                                                        <h6 class="card-title" th:text="${campanha.nome}">Nome da Campanha</h6>
-                                                        <p class="card-text text-muted" th:text="${campanha.descricao}">Descrição da campanha</p>
+                                                        <h6 class="card-title" th:text="${campanha.nome}">Nome da
+                                                            Campanha</h6>
+                                                        <p class="card-text text-muted" th:text="${campanha.descricao}">
+                                                            Descrição da campanha</p>
                                                         <small class="text-muted">
-                                                            <i class="fas fa-calendar"></i> 
-                                                            <span th:text="${#temporals.format(campanha.dataInicio, 'dd/MM/yyyy')}"></span>
-                                                            até 
-                                                            <span th:text="${#temporals.format(campanha.dataFim, 'dd/MM/yyyy')}"></span>
+                                                            <i class="fas fa-calendar"></i>
+                                                            <span
+                                                                th:text="${#temporals.format(campanha.dataInicio, 'dd/MM/yyyy')}"></span>
+                                                            até
+                                                            <span
+                                                                th:text="${#temporals.format(campanha.dataFim, 'dd/MM/yyyy')}"></span>
                                                         </small>
                                                     </div>
                                                     <div class="text-end">
-                                                        <span class="status-badge status-ativa" th:text="${campanha.status}">ATIVA</span>
+                                                        <span class="status-badge status-ativa"
+                                                            th:text="${campanha.status}">ATIVA</span>
                                                         <br><br>
-                                                        <a th:href="@{/marketing/campanhas/{id}(id=${campanha.id})}" class="btn btn-sm btn-primary">
+                                                        <a th:href="@{/marketing/campanhas/{id}(id=${campanha.id})}"
+                                                            class="btn btn-sm btn-primary">
                                                             <i class="fas fa-eye"></i> Ver
                                                         </a>
                                                     </div>
@@ -238,18 +253,30 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div th:if="${campanhasAtivas == null or campanhasAtivas.isEmpty()}" class="text-center py-4">
+
+                                    <div th:if="${campanhasAtivas == null or campanhasAtivas.isEmpty()}"
+                                        class="text-center py-4">
                                         <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
                                         <h6 class="text-muted">Nenhuma campanha ativa</h6>
                                         <p class="text-muted">Crie sua primeira campanha para começar</p>
-                                        <a th:href="@{/marketing/campanhas/nova}" class="btn btn-primary">
+                                        <a th:href="@{/marketing/campanhas/novo}" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i> Criar Campanha
+                                        </a>
+                                    </div>
+
+                                    <div th:if="${campanhasAtivas == null or campanhasAtivas.isEmpty()}"
+                                        class="text-center py-4">
+                                        <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">Nenhuma campanha ativa</h6>
+                                        <p class="text-muted">Crie sua primeira campanha para começar</p>
+                                        <a th:href="@{/marketing/campanhas/novo}" class="btn btn-primary">
                                             <i class="fas fa-plus"></i> Criar Campanha
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Alertas e Notificações -->
                         <div class="col-md-4">
                             <div class="card">
@@ -260,19 +287,25 @@
                                     <div th:if="${campanhasExpiradas != null and !campanhasExpiradas.isEmpty()}">
                                         <div class="alert alert-warning">
                                             <h6><i class="fas fa-exclamation-triangle"></i> Campanhas Expiradas</h6>
-                                            <p class="mb-2">Você tem <span th:text="${campanhasExpiradas.size()}">0</span> campanhas que expiraram e precisam de atenção.</p>
-                                            <a th:href="@{/marketing/campanhas?status=EXPIRADA}" class="btn btn-sm btn-warning">Ver Campanhas</a>
+                                            <p class="mb-2">Você tem <span
+                                                    th:text="${campanhasExpiradas.size()}">0</span> campanhas que
+                                                expiraram e precisam de atenção.</p>
+                                            <a th:href="@{/marketing/campanhas?status=EXPIRADA}"
+                                                class="btn btn-sm btn-warning">Ver Campanhas</a>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="alert alert-info">
                                         <h6><i class="fas fa-lightbulb"></i> Dica</h6>
-                                        <p class="mb-0">Monitore regularmente o ROI de suas campanhas para otimizar resultados.</p>
+                                        <p class="mb-0">Monitore regularmente o ROI de suas campanhas para otimizar
+                                            resultados.</p>
                                     </div>
-                                    
+
                                     <div class="alert alert-success">
                                         <h6><i class="fas fa-chart-line"></i> Performance</h6>
-                                        <p class="mb-0">Suas campanhas estão gerando um ROI médio de <strong th:text="${roiTotal != null ? #numbers.formatDecimal(roiTotal, 1, 2) + '%' : '0%'}">0%</strong></p>
+                                        <p class="mb-0">Suas campanhas estão gerando um ROI médio de <strong
+                                                th:text="${roiTotal != null ? #numbers.formatDecimal(roiTotal, 1, 2) + '%' : '0%'}">0%</strong>
+                                        </p>
                                     </div>
                                 </div>
                             </div>

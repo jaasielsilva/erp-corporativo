@@ -36,8 +36,8 @@ public class HistoricoContaPagar {
     @Column(length = 500)
     private String observacao;
 
-    @Column(nullable = false)
-    private LocalDateTime data;
+    @Column(name = "data_hora", nullable = false)
+    private LocalDateTime dataHora;  // ← apenas este atributo
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")

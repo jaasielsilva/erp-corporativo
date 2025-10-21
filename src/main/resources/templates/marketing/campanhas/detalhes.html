@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${campanha?.nome ?: 'Detalhes da Campanha'}">Detalhes da Campanha</title>
+    <title th:text="${campanha.nome != null ? campanha.nome : 'Detalhes da Campanha'}">Detalhes da Campanha</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,110 +17,130 @@
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
 </head>
+
 <body>
-<div class="app-container">
+    <!-- Verificação de permissão para acessar o módulo marketing -->
+    <div th:if="${!podeAcessarMarketing}" class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="fas fa-exclamation-triangle"></i> Acesso Negado</h4>
+            <p>Você não tem permissão para acessar o módulo de marketing.</p>
+            <a href="/" class="btn btn-primary">Voltar ao Dashboard</a>
+        </div>
+    </div>
 
-    <!-- Sidebar -->
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <div th:if="${podeAcessarMarketing}" class="app-container">
 
-    <!-- Main Content -->
-    <main class="main-content">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-        <!-- Topbar -->
-        <header th:replace="~{components/topbar :: topbar}"></header>
+        <!-- Main Content -->
+        <main class="main-content">
 
-        <!-- Conteúdo -->
-        <section class="content-area container-fluid py-4">
-            <div class="container">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4"><i class="fas fa-bullhorn"></i> Detalhes da Campanha</h2>
-                    <a th:href="@{/marketing/campanhas}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Voltar
-                    </a>
-                </div>
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title" th:text="${campanha?.nome ?: '-'}">Nome da Campanha</h5>
+            <!-- Conteúdo -->
+            <section class="content-area container-fluid py-4">
+                <div class="container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4"><i class="fas fa-bullhorn"></i> Detalhes da Campanha</h2>
+                        <a th:href="@{/marketing/campanhas}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
 
-                        <p class="card-text">
-                            <strong>Descrição:</strong> 
-                            <span th:text="${campanha?.descricao ?: '-'}"></span>
-                        </p>
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${campanha.nome != null ? campanha.nome : '-'}">Nome da
+                                Campanha</h5>
 
-                        <p class="card-text">
-                            <strong>Tipo:</strong> 
-                            <span th:text="${campanha?.tipo?.descricao ?: '-'}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Descrição:</strong>
+                                <span th:text="${campanha.descricao != null ? campanha.descricao : '-'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Objetivo:</strong> 
-                            <span th:text="${campanha?.objetivo?.descricao ?: '-'}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Tipo:</strong>
+                                <span th:text="${campanha.tipo != null ? campanha.tipo.descricao : '-'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Status:</strong> 
-                            <span th:text="${campanha?.status ?: '-'}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Objetivo:</strong>
+                                <span th:text="${campanha.objetivo != null ? campanha.objetivo.descricao : '-'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Responsável:</strong> 
-                            <span th:text="${campanha?.usuarioResponsavel?.nome ?: '-'}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Status:</strong>
+                                <span th:text="${campanha.status != null ? campanha.status : '-'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Data Início:</strong> 
-                            <span th:text="${campanha?.dataInicio != null ? #dates.format(campanha.dataInicio, 'dd/MM/yyyy') : '-'}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Responsável:</strong>
+                                <span
+                                    th:text="${campanha.usuarioResponsavel != null ? campanha.usuarioResponsavel.nome : '-'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Data Fim:</strong> 
-                            <span th:text="${campanha?.dataFim != null ? #dates.format(campanha.dataFim, 'dd/MM/yyyy') : '-'}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Data Início:</strong>
+                                <span
+                                    th:text="${campanha.dataInicio != null ? #temporals.format(campanha.dataInicio, 'dd/MM/yyyy') : '-'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Orçamento Planejado:</strong> 
-                            R$ <span th:text="${campanha?.orcamentoPlanejado ?: 0}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Data Fim:</strong>
+                                <span
+                                    th:text="${campanha.dataFim != null ? #temporals.format(campanha.dataFim, 'dd/MM/yyyy') : '-'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Orçamento Gasto:</strong> 
-                            R$ <span th:text="${campanha?.orcamentoGasto ?: 0}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Orçamento Planejado:</strong>
+                                <span th:text="${campanha.orcamentoPlanejado != null 
+        ? #numbers.formatCurrency(campanha.orcamentoPlanejado) 
+        : 'R$ 0,00'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Alcance Efetivo:</strong> 
-                            <span th:text="${campanha?.alcanceEfetivo ?: 0}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Orçamento Gasto:</strong>
+                                <span th:text="${campanha.orcamentoGasto != null 
+        ? #numbers.formatCurrency(campanha.orcamentoGasto) 
+        : 'R$ 0,00'}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Cliques:</strong> 
-                            <span th:text="${campanha?.cliques ?: 0}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Alcance Efetivo:</strong>
+                                <span th:text="${campanha.alcanceEfetivo != null ? campanha.alcanceEfetivo : 0}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Conversões:</strong> 
-                            <span th:text="${campanha?.conversoes ?: 0}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Cliques:</strong>
+                                <span th:text="${campanha.cliques != null ? campanha.cliques : 0}"></span>
+                            </p>
 
-                        <p class="card-text">
-                            <strong>Vendas:</strong> 
-                            <span th:text="${campanha?.vendas ?: 0}"></span>
-                        </p>
+                            <p class="card-text">
+                                <strong>Conversões:</strong>
+                                <span th:text="${campanha.conversoes != null ? campanha.conversoes : 0}"></span>
+                            </p>
+
+                            <p class="card-text">
+                                <strong>Vendas:</strong>
+                                <span th:text="${campanha.vendas != null ? campanha.vendas : 0}"></span>
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Footer -->
-        <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-</div>
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+    <!-- Fim da verificação de permissão -->
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="/js/sidebar.js" defer></script>
-<script th:src="@{/js/notifications.js}"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
+
 </html>

@@ -19,7 +19,16 @@
 </head>
 
 <body>
-    <div class="app-container">
+    <!-- Verificação de permissão para acessar o módulo marketing -->
+    <div th:if="${!podeAcessarMarketing}" class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="fas fa-exclamation-triangle"></i> Acesso Negado</h4>
+            <p>Você não tem permissão para acessar o módulo de marketing.</p>
+            <a href="/" class="btn btn-primary">Voltar ao Dashboard</a>
+        </div>
+    </div>
+
+    <div th:if="${podeAcessarMarketing}" class="app-container">
 
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -71,8 +80,8 @@
                                 <td th:text="${campanha.nome}"></td>
                                 <td th:text="${campanha.tipo}"></td>
                                 <td th:text="${campanha.objetivo}"></td>
-                                <td id="status-${campanha.id}" th:text="${campanha.status}"></td>
-                                <td id="responsavel-${campanha.id}"
+                                <td th:id="'status-' + ${campanha.id}" th:text="${campanha.status}"></td>
+                                <td th:id="'responsavel-' + ${campanha.id}"
                                     th:text="${campanha.usuarioResponsavel != null ? campanha.usuarioResponsavel.nome : '-'}">
                                 </td>
 
@@ -85,7 +94,7 @@
                                         class="btn btn-sm btn-warning me-1" th:if="${campanha.podeSerEditada()}">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" id="btn-iniciar-${campanha.id}" class="btn btn-sm btn-success"
+                                    <button type="button" th:id="'btn-iniciar-' + ${campanha.id}" class="btn btn-sm btn-success"
                                         th:onclick="'iniciarCampanha(' + ${campanha.id} + ')'"
                                         aria-label="Iniciar Campanha">
                                         <i class="fas fa-play"></i>
@@ -199,6 +208,7 @@
     </script>
 
 
+<!-- Fim da verificação de permissão -->
 </body>
 
 </html>

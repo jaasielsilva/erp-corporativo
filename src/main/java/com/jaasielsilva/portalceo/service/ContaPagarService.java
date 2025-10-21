@@ -79,7 +79,7 @@ public class ContaPagarService {
     public List<HistoricoContaPagar> listarHistorico(Long contaId) {
         ContaPagar conta = buscarPorId(contaId)
                 .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
-        return historicoRepository.findByContaOrderByDataDesc(conta);
+        return historicoRepository.findByContaOrderByDataHoraDesc(conta);
     }
 
     // ================= SALVAR =================
@@ -225,7 +225,7 @@ public class ContaPagarService {
         historico.setConta(conta);
         historico.setUsuario(usuario);
         historico.setAcao(acao);
-        historico.setData(LocalDateTime.now());
+        historico.setDataHora(LocalDateTime.now());
         historicoRepository.save(historico);
     }
 

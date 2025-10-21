@@ -3,26 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sistemas - TI - ERP Corporativo</title>
+    <title>Monitoramento de Sistemas - TI</title>
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
     <main class="main-content">
         <header th:replace="~{components/topbar :: topbar}"></header>
-        <section class="content-area text-center py-5">
-            <h1 class="display-6 text-muted"><i class="fas fa-server"></i> Sistemas</h1>
-            <p class="text-muted">Monitoramento de sistemas e status de serviços.</p>
+
+        <section class="content-area container-fluid py-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h1 class="h4 mb-1"><i class="fas fa-server me-2"></i>Monitoramento de Sistemas</h1>
+                    <p class="text-muted mb-0">Status, disponibilidade e performance dos principais sistemas</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="atualizarStatusSistemas()">
+                        <i class="fas fa-sync-alt"></i> Atualizar Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Métricas de performance -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <span>CPU</span>
+                                <strong th:text="${metricas.cpuUsage + '%'}">45%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <span>Memória</span>
+                                <strong th:text="${metricas.memoryUsage + '%'}">68%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <span>Disco</span>
+                                <strong th:text="${metricas.diskUsage + '%'}">34%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <span>Latência</span>
+                                <strong th:text="${metricas.networkLatency + ' ms'}">12.5 ms</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de sistemas -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list me-2"></i>Sistemas Monitorados</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="atualizarStatusSistemas()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Status</th>
+                                    <th>Uptime</th>
+                                    <th>Última Verificação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-sistemas">
+                                <tr th:each="sistema : ${sistemas}">
+                                    <td><i class="fas fa-server me-2"></i><span th:text="${sistema.nome}">Sistema</span></td>
+                                    <td>
+                                        <span th:class="${sistema.status} == 'ONLINE' ? 'badge bg-success' : 'badge bg-danger'" th:text="${sistema.status}">ONLINE</span>
+                                    </td>
+                                    <td><span th:text="${sistema.uptime}">99.9%</span></td>
+                                    <td><small class="text-muted" th:text="${#temporals.format(sistema.ultimaVerificacao, 'dd/MM/yyyy HH:mm')}">Agora</small></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </section>
+
         <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
 </div>
+
 <script src="/js/sidebar.js" defer></script>
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/notifications.js}"></script>
+<script>
+    function atualizarStatusSistemas() {
+        fetch('/ti/api/sistemas/status')
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.getElementById('tabela-sistemas');
+                tbody.innerHTML = '';
+                (data.sistemas || []).forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><i class="fas fa-server me-2"></i>${s.nome}</td>
+                        <td><span class="badge ${s.status === 'ONLINE' ? 'bg-success' : 'bg-danger'}">${s.status}</span></td>
+                        <td>${s.uptime}</td>
+                        <td><small class="text-muted">${new Date(s.ultimaVerificacao).toLocaleString('pt-BR')}</small></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => console.error('Erro ao atualizar status:', err));
+    }
+</script>
 </body>
 </html>

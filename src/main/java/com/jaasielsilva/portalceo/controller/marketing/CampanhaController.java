@@ -18,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/marketing/campanhas")
 @RequiredArgsConstructor
+@PreAuthorize("@globalControllerAdvice.podeAcessarMarketing()")
 public class CampanhaController {
 
     private final CampanhaMarketingService campanhaService;

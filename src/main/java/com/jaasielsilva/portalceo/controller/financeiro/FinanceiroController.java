@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 @Controller
 @RequestMapping("/financeiro")
 @RequiredArgsConstructor
+@PreAuthorize("@globalControllerAdvice.podeAcessarFinanceiro()")
 public class FinanceiroController {
 
     private final ContaReceberService contaReceberService;

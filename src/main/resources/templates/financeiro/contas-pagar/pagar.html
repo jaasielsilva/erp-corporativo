@@ -15,7 +15,16 @@
 </head>
 
 <body>
-    <div class="app-container d-flex">
+    <!-- Verificação de permissão para acessar o módulo financeiro -->
+    <div th:if="${!podeAcessarFinanceiro}" class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="fas fa-exclamation-triangle"></i> Acesso Negado</h4>
+            <p>Você não tem permissão para acessar o módulo financeiro.</p>
+            <a href="/" class="btn btn-primary">Voltar ao Dashboard</a>
+        </div>
+    </div>
+
+    <div th:if="${podeAcessarFinanceiro}" class="app-container d-flex">
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
         <main class="main-content flex-grow-1">
             <header th:replace="~{components/topbar :: topbar}"></header>
@@ -111,6 +120,7 @@
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
+    <!-- Fim da verificação de permissão -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/sidebar.js" defer></script>
     <script th:src="@{/js/notifications.js}" defer></script>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campanhas de Marketing - ERP Corporativo</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- CSS custom -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Conteúdo -->
+            <section class="content-area container-fluid py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4"><i class="fas fa-bullhorn"></i> Campanhas de Marketing</h2>
+                    <a href="/marketing/campanhas/novo" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nova Campanha
+                    </a>
+                </div>
+
+                <!-- Filtros -->
+                <form class="row g-3 mb-3" method="get" th:action="@{/marketing/campanhas}">
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">Todos os Status</option>
+                            <option th:each="status : ${statusOptions}" th:value="${status}" th:text="${status}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-secondary">Filtrar</button>
+                    </div>
+                </form>
+
+                <!-- Tabela de Campanhas -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>Objetivo</th>
+                                <th>Status</th>
+                                <th>Responsável</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="campanha : ${campanhas}">
+                                <td th:text="${campanha.nome}"></td>
+                                <td th:text="${campanha.tipo}"></td>
+                                <td th:text="${campanha.objetivo}"></td>
+                                <td id="status-${campanha.id}" th:text="${campanha.status}"></td>
+                                <td id="responsavel-${campanha.id}"
+                                    th:text="${campanha.usuarioResponsavel != null ? campanha.usuarioResponsavel.nome : '-'}">
+                                </td>
+
+                                <td>
+                                    <a th:href="@{/marketing/campanhas/{id}(id=${campanha.id})}"
+                                        class="btn btn-sm btn-info me-1">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a th:href="@{/marketing/campanhas/editar/{id}(id=${campanha.id})}"
+                                        class="btn btn-sm btn-warning me-1" th:if="${campanha.podeSerEditada()}">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" id="btn-iniciar-${campanha.id}" class="btn btn-sm btn-success"
+                                        th:onclick="'iniciarCampanha(' + ${campanha.id} + ')'"
+                                        aria-label="Iniciar Campanha">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(campanhas)}">
+                                <td colspan="6" class="text-center">Nenhuma campanha encontrada</td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                    
+                    <!-- Paginação -->
+                    <nav th:if="${totalPaginas > 1}">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${paginaAtual == 0} ? 'disabled'">
+                                <a class="page-link"
+                                    th:href="@{/marketing/campanhas(page=${paginaAtual - 1}, status=${param.status})}">Anterior</a>
+                            </li>
+
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}"
+                                th:classappend="${i == paginaAtual} ? 'active'">
+                                <a class="page-link"
+                                    th:href="@{/marketing/campanhas(page=${i}, status=${param.status})}"
+                                    th:text="${i + 1}">1</a>
+                            </li>
+
+                            <li class="page-item" th:classappend="${paginaAtual == totalPaginas - 1} ? 'disabled'">
+                                <a class="page-link"
+                                    th:href="@{/marketing/campanhas(page=${paginaAtual + 1}, status=${param.status})}">Próxima</a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
+
+    <script>
+        function showToast(mensagem, tipo = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-bg-${tipo} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${mensagem}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+            container.appendChild(toast);
+            const bootstrapToast = new bootstrap.Toast(toast, { delay: 2000 }); // 2 segundos
+            bootstrapToast.show();
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+
+        function iniciarCampanha(id) {
+            fetch(`/marketing/campanhas/${id}/iniciar`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('toastContainer');
+                    const toast = document.createElement('div');
+                    toast.className = `toast align-items-center text-bg-success border-0`;
+                    toast.setAttribute('role', 'alert');
+                    toast.setAttribute('aria-live', 'assertive');
+                    toast.setAttribute('aria-atomic', 'true');
+                    toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">${data.mensagem || data}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                `;
+                    container.appendChild(toast);
+
+                    const bootstrapToast = new bootstrap.Toast(toast, { delay: 2000 }); // 2 segundos
+
+                    // Atualiza status e botão imediatamente
+                    const statusTd = document.querySelector(`#status-${id}`);
+                    if (statusTd) statusTd.textContent = 'EM ANDAMENTO';
+
+                    const btnIniciar = document.querySelector(`#btn-iniciar-${id}`);
+                    if (btnIniciar) btnIniciar.disabled = true;
+
+                    // Mostra o toast
+                    bootstrapToast.show();
+
+                    // Ao fechar o toast (após 3s), recarrega a página
+                    toast.addEventListener('hidden.bs.toast', () => location.reload());
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Erro na requisição.', 'danger');
+                });
+        }
+    </script>
+
+
+</body>
+
+</html>

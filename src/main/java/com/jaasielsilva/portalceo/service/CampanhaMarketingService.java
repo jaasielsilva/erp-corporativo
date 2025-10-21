@@ -1,12 +1,16 @@
 package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.*;
+import com.jaasielsilva.portalceo.model.CampanhaMarketing.StatusCampanha;
 import com.jaasielsilva.portalceo.repository.CampanhaMarketingRepository;
 import com.jaasielsilva.portalceo.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,12 +31,12 @@ public class CampanhaMarketingService {
     // CRUD Operations
     public CampanhaMarketing save(CampanhaMarketing campanha) {
         validarCampanha(campanha);
-        
+
         if (campanha.getId() == null) {
             campanha.setDataCriacao(LocalDateTime.now());
             campanha.setStatus(CampanhaMarketing.StatusCampanha.RASCUNHO);
         }
-        
+
         return campanhaRepository.save(campanha);
     }
 
@@ -59,7 +63,7 @@ public class CampanhaMarketingService {
     @Transactional
     public CampanhaMarketing agendarCampanha(Long id, LocalDate dataInicio, LocalDate dataFim) {
         CampanhaMarketing campanha = campanhaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         if (!campanha.podeSerEnviada()) {
             throw new IllegalStateException("Campanha não pode ser agendada no status atual: " + campanha.getStatus());
@@ -75,7 +79,7 @@ public class CampanhaMarketingService {
     @Transactional
     public CampanhaMarketing iniciarCampanha(Long id, Usuario usuarioResponsavel) {
         CampanhaMarketing campanha = campanhaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         if (!campanha.podeSerEnviada()) {
             throw new IllegalStateException("Campanha não pode ser iniciada no status atual: " + campanha.getStatus());
@@ -94,7 +98,7 @@ public class CampanhaMarketingService {
     @Transactional
     public CampanhaMarketing pausarCampanha(Long id, String motivo) {
         CampanhaMarketing campanha = campanhaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         if (!campanha.podeSerPausada()) {
             throw new IllegalStateException("Campanha não pode ser pausada no status atual: " + campanha.getStatus());
@@ -109,7 +113,7 @@ public class CampanhaMarketingService {
     @Transactional
     public CampanhaMarketing retomarCampanha(Long id) {
         CampanhaMarketing campanha = campanhaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         if (!campanha.podeSerRetomada()) {
             throw new IllegalStateException("Campanha não pode ser retomada no status atual: " + campanha.getStatus());
@@ -123,7 +127,7 @@ public class CampanhaMarketingService {
     @Transactional
     public CampanhaMarketing finalizarCampanha(Long id, String observacoes) {
         CampanhaMarketing campanha = campanhaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         if (campanha.isFinalizada() || campanha.isCancelada()) {
             throw new IllegalStateException("Campanha já está finalizada ou cancelada");
@@ -143,7 +147,7 @@ public class CampanhaMarketingService {
     @Transactional
     public CampanhaMarketing cancelarCampanha(Long id, String motivo, Usuario usuario) {
         CampanhaMarketing campanha = campanhaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         if (!campanha.podeSerCancelada()) {
             throw new IllegalStateException("Campanha não pode ser cancelada no status atual: " + campanha.getStatus());
@@ -159,20 +163,20 @@ public class CampanhaMarketingService {
     @Transactional
     public CampanhaMarketing adicionarClientesPublicoAlvo(Long campanhaId, List<Long> clienteIds) {
         CampanhaMarketing campanha = campanhaRepository.findById(campanhaId)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         if (!campanha.podeSerEditada()) {
             throw new IllegalStateException("Não é possível modificar o público-alvo de uma campanha em andamento");
         }
 
         List<Cliente> clientes = clienteRepository.findAllById(clienteIds);
-        
+
         for (Cliente cliente : clientes) {
             CampanhaCliente campanhaCliente = new CampanhaCliente();
             campanhaCliente.setCampanha(campanha);
             campanhaCliente.setCliente(cliente);
             campanhaCliente.setStatusEnvio(CampanhaCliente.StatusEnvio.PENDENTE);
-            
+
             if (campanha.getClientes() == null) {
                 campanha.setClientes(new java.util.ArrayList<>());
             }
@@ -180,14 +184,14 @@ public class CampanhaMarketingService {
         }
 
         campanha.setPublicoAlvo(campanha.getClientes().size());
-        
+
         return campanhaRepository.save(campanha);
     }
 
     @Transactional
     public CampanhaMarketing definirPublicoAlvoPorSegmento(Long campanhaId, String segmento) {
         CampanhaMarketing campanha = campanhaRepository.findById(campanhaId)
-            .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada"));
 
         List<Cliente> clientes;
         switch (segmento.toUpperCase()) {
@@ -235,33 +239,31 @@ public class CampanhaMarketingService {
     @Transactional(readOnly = true)
     public Map<CampanhaMarketing.StatusCampanha, Long> getEstatisticasPorStatus() {
         return List.of(CampanhaMarketing.StatusCampanha.values())
-            .stream()
-            .collect(Collectors.toMap(
-                status -> status,
-                status -> campanhaRepository.countByStatus(status)
-            ));
+                .stream()
+                .collect(Collectors.toMap(
+                        status -> status,
+                        status -> campanhaRepository.countByStatus(status)));
     }
 
     @Transactional(readOnly = true)
     public Map<CampanhaMarketing.TipoCampanha, Long> getEstatisticasPorTipo() {
         List<Object[]> results = campanhaRepository.countByTipo();
         return results.stream()
-            .collect(Collectors.toMap(
-                row -> (CampanhaMarketing.TipoCampanha) row[0],
-                row -> (Long) row[1]
-            ));
+                .collect(Collectors.toMap(
+                        row -> (CampanhaMarketing.TipoCampanha) row[0],
+                        row -> (Long) row[1]));
     }
 
     @Transactional(readOnly = true)
     public BigDecimal calcularROITotal() {
         BigDecimal custoTotal = campanhaRepository.sumOrcamentoGasto();
         BigDecimal receitaTotal = campanhaRepository.sumReceitaGeradaByPeriodo(
-            LocalDate.now().minusYears(1), LocalDate.now());
-        
+                LocalDate.now().minusYears(1), LocalDate.now());
+
         if (custoTotal == null || custoTotal.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        
+
         return receitaTotal.subtract(custoTotal)
                 .divide(custoTotal, 4, BigDecimal.ROUND_HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
@@ -277,7 +279,7 @@ public class CampanhaMarketingService {
     public void processarCampanhasAgendadas() {
         LocalDate hoje = LocalDate.now();
         List<CampanhaMarketing> campanhasParaIniciar = campanhaRepository.findCampanhasParaIniciarAmanha(hoje);
-        
+
         for (CampanhaMarketing campanha : campanhasParaIniciar) {
             try {
                 iniciarCampanha(campanha.getId(), campanha.getUsuarioResponsavel());
@@ -291,7 +293,7 @@ public class CampanhaMarketingService {
     @Transactional
     public void finalizarCampanhasExpiradas() {
         List<CampanhaMarketing> campanhasExpiradas = findCampanhasExpiradas();
-        
+
         for (CampanhaMarketing campanha : campanhasExpiradas) {
             try {
                 finalizarCampanha(campanha.getId(), "Finalizada automaticamente por expiração");
@@ -302,20 +304,31 @@ public class CampanhaMarketingService {
         }
     }
 
+    // paginação
+    @Transactional(readOnly = true)
+    public Page<CampanhaMarketing> findAll(Pageable pageable) {
+        return campanhaRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CampanhaMarketing> findByStatus(StatusCampanha status, Pageable pageable) {
+        return campanhaRepository.findByStatus(status, pageable);
+    }
+
     // Private helper methods
     private void validarCampanha(CampanhaMarketing campanha) {
         if (campanha.getNome() == null || campanha.getNome().trim().isEmpty()) {
             throw new IllegalArgumentException("Nome da campanha é obrigatório");
         }
-        
+
         if (campanha.getDataInicio() == null) {
             throw new IllegalArgumentException("Data de início é obrigatória");
         }
-        
+
         if (campanha.getDataFim() != null && campanha.getDataFim().isBefore(campanha.getDataInicio())) {
             throw new IllegalArgumentException("Data de fim não pode ser anterior à data de início");
         }
-        
+
         if (campanha.getId() == null && campanhaRepository.existsByNome(campanha.getNome())) {
             throw new IllegalArgumentException("Já existe uma campanha com este nome");
         }
@@ -350,18 +363,18 @@ public class CampanhaMarketingService {
                 enviarWhatsApp(campanha, campanhaCliente.getCliente());
                 break;
             default:
-                throw new UnsupportedOperationException("Tipo de campanha não suportado para envio automático: " + campanha.getTipo());
+                throw new UnsupportedOperationException(
+                        "Tipo de campanha não suportado para envio automático: " + campanha.getTipo());
         }
     }
 
     private void enviarEmail(CampanhaMarketing campanha, Cliente cliente) {
         try {
             emailService.enviarEmailMarketing(
-                cliente.getEmail(),
-                campanha.getAssunto(),
-                campanha.getConteudo(),
-                campanha.getId()
-            );
+                    cliente.getEmail(),
+                    campanha.getAssunto(),
+                    campanha.getConteudo(),
+                    campanha.getId());
         } catch (Exception e) {
             throw new RuntimeException("Erro ao enviar email: " + e.getMessage(), e);
         }

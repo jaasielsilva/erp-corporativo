@@ -15,7 +15,16 @@
 </head>
 
 <body>
-    <div class="app-container d-flex">
+    <!-- Verificação de permissão para acessar o módulo financeiro -->
+    <div th:if="${!podeAcessarFinanceiro}" class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="fas fa-exclamation-triangle"></i> Acesso Negado</h4>
+            <p>Você não tem permissão para acessar o módulo financeiro.</p>
+            <a href="/" class="btn btn-primary">Voltar ao Dashboard</a>
+        </div>
+    </div>
+
+    <div th:if="${podeAcessarFinanceiro}" class="app-container d-flex">
 
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -136,42 +145,50 @@
                                         th:text="${conta.status != null ? conta.status.descricao : 'N/A'}">PENDENTE</span>
                                 </td>
                                 <td class="text-end">
+                                    <!-- Detalhes -->
+                                    <a th:href="@{/financeiro/contas-pagar/detalhes/{id}(id=${conta.id})}"
+                                        class="btn btn-sm btn-outline-info" title="Ver Detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
                                     <!-- Editar -->
                                     <a th:href="@{/financeiro/contas-pagar/editar/{id}(id=${conta.id})}"
-                                        class="btn btn-sm btn-outline-primary" title="Editar Conta">
+                                        class="btn btn-sm btn-outline-primary" title="Editar Conta"
+                                        th:if="${conta.status.name() != 'PAGA'}">
                                         <i class="fas fa-edit"></i>
                                     </a>
 
-                                    <!-- Excluir -->
-                                    <form th:action="@{/financeiro/contas-pagar/excluir/{id}(id=${conta.id})}"
-                                        method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            title="Excluir Conta"
-                                            onclick="return confirm('Deseja realmente excluir esta conta?')">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <!-- Aprovar (apenas para contas PENDENTES) -->
+                                    <button type="button" class="btn btn-sm btn-outline-success"
+                                        title="Aprovar Conta"
+                                        th:if="${conta.status.name() == 'PENDENTE'}"
+                                        onclick="aprovarConta([[${conta.id}]], '[[${conta.descricao}]]')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
 
-                                    <!-- Aprovar -->
-                                    <form th:action="@{/financeiro/contas-pagar/aprovar/{id}(id=${conta.id})}"
-                                        method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-success"
-                                            aria-label="Aprovar Conta" title="Aprovar Conta">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    </form>
+                                    <!-- Pagar (apenas para contas APROVADAS) -->
+                                    <button type="button" class="btn btn-sm btn-outline-warning"
+                                        title="Efetuar Pagamento"
+                                        th:if="${conta.status.name() == 'APROVADA'}"
+                                        onclick="pagarConta([[${conta.id}]], '[[${conta.descricao}]]', [[${conta.valorOriginal}]])">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </button>
 
+                                    <!-- Cancelar (apenas para contas não pagas) -->
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        title="Cancelar Conta"
+                                        th:if="${conta.status.name() != 'PAGA' && conta.status.name() != 'CANCELADA'}"
+                                        onclick="cancelarConta([[${conta.id}]], '[[${conta.descricao}]]')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
 
-                                    <!-- Pagar -->
-                                    <form th:action="@{/financeiro/contas-pagar/pagar/{id}(id=${conta.id})}"
-                                        method="post" class="d-inline">
-                                        <input type="hidden" name="valorPago" th:value="${conta.valorOriginal}" />
-                                        <input type="hidden" name="formaPagamento" value="DINHEIRO" />
-                                        <button type="submit" class="btn btn-sm btn-outline-warning"
-                                            aria-label="Pagar Conta" title="Pagar Conta">
-                                            <i class="fas fa-money-bill-wave"></i>
-                                        </button>
-                                    </form>
+                                    <!-- Excluir (apenas para contas não pagas) -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        title="Excluir Conta"
+                                        th:if="${conta.status.name() != 'PAGA'}"
+                                        onclick="excluirConta([[${conta.id}]], '[[${conta.descricao}]]')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(contas)}">
@@ -191,38 +208,176 @@
         </main>
     </div>
 
+    <!-- Modal Aprovar Conta -->
+    <div class="modal fade" id="modalAprovar" tabindex="-1" aria-labelledby="modalAprovarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAprovarLabel">
+                        <i class="fas fa-check text-success me-2"></i>Aprovar Conta
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Deseja realmente aprovar a conta:</p>
+                    <p class="fw-bold text-primary" id="contaAprovarNome"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="formAprovar" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Aprovar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pagar Conta -->
+    <div class="modal fade" id="modalPagar" tabindex="-1" aria-labelledby="modalPagarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalPagarLabel">
+                        <i class="fas fa-money-bill-wave text-warning me-2"></i>Efetuar Pagamento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formPagar" method="post">
+                    <div class="modal-body">
+                        <p>Conta: <span class="fw-bold text-primary" id="contaPagarNome"></span></p>
+                        
+                        <div class="mb-3">
+                            <label for="valorPago" class="form-label">Valor a Pagar (R$)</label>
+                            <input type="number" step="0.01" class="form-control" id="valorPago" name="valorPago" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="formaPagamento" class="form-label">Forma de Pagamento</label>
+                            <select class="form-select" id="formaPagamento" name="formaPagamento" required>
+                                <option value="">Selecione...</option>
+                                <option value="PIX">PIX</option>
+                                <option value="BOLETO">Boleto</option>
+                                <option value="TED">TED</option>
+                                <option value="DINHEIRO">Dinheiro</option>
+                                <option value="CARTAO">Cartão</option>
+                                <option value="CHEQUE">Cheque</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-money-bill-wave me-1"></i>Efetuar Pagamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cancelar Conta -->
+    <div class="modal fade" id="modalCancelar" tabindex="-1" aria-labelledby="modalCancelarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCancelarLabel">
+                        <i class="fas fa-times text-secondary me-2"></i>Cancelar Conta
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formCancelar" method="post">
+                    <div class="modal-body">
+                        <p>Conta: <span class="fw-bold text-primary" id="contaCancelarNome"></span></p>
+                        
+                        <div class="mb-3">
+                            <label for="motivoCancelamento" class="form-label">Motivo do Cancelamento</label>
+                            <textarea class="form-control" id="motivoCancelamento" name="motivo" rows="3" 
+                                placeholder="Informe o motivo do cancelamento..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancelar Conta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Excluir Conta -->
+    <div class="modal fade" id="modalExcluir" tabindex="-1" aria-labelledby="modalExcluirLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalExcluirLabel">
+                        <i class="fas fa-trash text-danger me-2"></i>Excluir Conta
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                    </div>
+                    <p>Deseja realmente excluir a conta:</p>
+                    <p class="fw-bold text-danger" id="contaExcluirNome"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="formExcluir" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="/js/sidebar.js" defer></script>
     <script th:src="@{/js/notifications.js}" defer></script>
     <script>
-        function aprovarConta(contaId) {
-            if (!confirm('Deseja realmente aprovar esta conta?')) {
-                return;
-            }
-
-            fetch(`/financeiro/contas-pagar/aprovar/${contaId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content // se usar CSRF
-                }
-            })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Conta aprovada com sucesso!');
-                        location.reload(); // recarrega a página para atualizar status
-                    } else {
-                        alert('Erro ao aprovar a conta.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('Erro ao aprovar a conta.');
-                });
+        // Função para aprovar conta
+        function aprovarConta(contaId, contaNome) {
+            document.getElementById('contaAprovarNome').textContent = contaNome;
+            document.getElementById('formAprovar').action = '/financeiro/contas-pagar/aprovar/' + contaId;
+            new bootstrap.Modal(document.getElementById('modalAprovar')).show();
         }
+
+        // Função para pagar conta
+        function pagarConta(contaId, contaNome, valorOriginal) {
+            document.getElementById('contaPagarNome').textContent = contaNome;
+            document.getElementById('valorPago').value = valorOriginal;
+            document.getElementById('formaPagamento').value = '';
+            document.getElementById('formPagar').action = '/financeiro/contas-pagar/pagar/' + contaId;
+            new bootstrap.Modal(document.getElementById('modalPagar')).show();
+        }
+
+        // Função para cancelar conta
+        function cancelarConta(contaId, contaNome) {
+            document.getElementById('contaCancelarNome').textContent = contaNome;
+            document.getElementById('motivoCancelamento').value = '';
+            document.getElementById('formCancelar').action = '/financeiro/contas-pagar/cancelar/' + contaId;
+            new bootstrap.Modal(document.getElementById('modalCancelar')).show();
+        }
+
+        // Função para excluir conta
+        function excluirConta(contaId, contaNome) {
+            document.getElementById('contaExcluirNome').textContent = contaNome;
+            document.getElementById('formExcluir').action = '/financeiro/contas-pagar/excluir/' + contaId;
+            new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+        }
+
+
     </script>
+    <!-- Fim da verificação de permissão -->
 
 </body>
 

@@ -6,6 +6,7 @@ import com.jaasielsilva.portalceo.service.ContaPagarService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,6 +20,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/financeiro/contas-pagar")
+@PreAuthorize("@globalControllerAdvice.podeAcessarFinanceiro()")
 public class ContaPagarController {
 
     @Autowired

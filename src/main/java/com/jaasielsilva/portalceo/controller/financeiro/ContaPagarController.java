@@ -110,7 +110,8 @@ public class ContaPagarController {
             @Valid @ModelAttribute("contaPagar") ContaPagar contaPagar,
             BindingResult result,
             RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            @ModelAttribute("usuarioLogado") Usuario usuario) {
 
         if (result.hasErrors()) {
             model.addAttribute("fornecedores", fornecedorService.listarAtivos());
@@ -120,7 +121,7 @@ public class ContaPagarController {
         }
 
         try {
-            contaPagarService.salvar(contaPagar);
+            contaPagarService.salvar(contaPagar, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Conta salva com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao salvar: " + e.getMessage());

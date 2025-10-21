@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.controller.api;
 import com.jaasielsilva.portalceo.dto.ContaPagarDto;
 import com.jaasielsilva.portalceo.mapper.ContaPagarMapper;
 import com.jaasielsilva.portalceo.model.ContaPagar;
+import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ContaPagarService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -49,7 +51,8 @@ public class ContaPagarApiController {
     }
 
     @PostMapping
-    public ResponseEntity<ContaPagarDto> criar(@RequestBody ContaPagarDto dto) {
+    public ResponseEntity<ContaPagarDto> criar(@RequestBody ContaPagarDto dto,
+                                               @AuthenticationPrincipal Usuario usuario) {
         ContaPagar c = new ContaPagar();
         ContaPagarMapper.updateEntityFromDto(dto, c);
         if (dto.fornecedorId != null) {
@@ -57,13 +60,13 @@ public class ContaPagarApiController {
             if (f != null)
                 c.setFornecedor(f);
         }
-        // category/status mapping omitted: service may set defaults
-        ContaPagar saved = contaPagarService.salvar(c);
+        ContaPagar saved = contaPagarService.salvar(c, usuario);
         return ResponseEntity.ok(ContaPagarMapper.toDto(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ContaPagarDto> atualizar(@PathVariable Long id, @RequestBody ContaPagarDto dto) {
+    public ResponseEntity<ContaPagarDto> atualizar(@PathVariable Long id, @RequestBody ContaPagarDto dto,
+                                                   @AuthenticationPrincipal Usuario usuario) {
         return contaPagarService.buscarPorId(id).map(existing -> {
             ContaPagarMapper.updateEntityFromDto(dto, existing);
             if (dto.fornecedorId != null) {
@@ -71,30 +74,30 @@ public class ContaPagarApiController {
                 if (f != null)
                     existing.setFornecedor(f);
             }
-            ContaPagar saved = contaPagarService.salvar(existing);
+            ContaPagar saved = contaPagarService.salvar(existing, usuario);
             return ResponseEntity.ok(ContaPagarMapper.toDto(saved));
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        contaPagarService.excluir(id);
+    public ResponseEntity<Void> excluir(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        contaPagarService.excluir(id, usuario);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/aprovar")
-    public ResponseEntity<ContaPagarDto> aprovar(@PathVariable Long id, @RequestBody(required = false) Object usuario) {
-        // Para API simples, usuário contextual pode ser passado; aqui usamos null
-        ContaPagar aprovado = contaPagarService.aprovar(id, null);
+    public ResponseEntity<ContaPagarDto> aprovar(@PathVariable Long id,
+                                                 @AuthenticationPrincipal Usuario usuario) {
+        ContaPagar aprovado = contaPagarService.aprovar(id, usuario);
         return ResponseEntity.ok(ContaPagarMapper.toDto(aprovado));
     }
 
     @PostMapping("/{id}/pagar")
     public ResponseEntity<ContaPagarDto> pagar(@PathVariable Long id,
             @RequestParam("valorPago") java.math.BigDecimal valorPago,
-            @RequestParam(value = "formaPagamento", required = false) String formaPagamento)
-            throws IOException {
-        ContaPagar pago = contaPagarService.efetuarPagamento(id, valorPago, formaPagamento);
+            @RequestParam(value = "formaPagamento", required = false) String formaPagamento,
+            @AuthenticationPrincipal Usuario usuario) throws IOException {
+        ContaPagar pago = contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null);
         return ResponseEntity.ok(ContaPagarMapper.toDto(pago));
     }
 

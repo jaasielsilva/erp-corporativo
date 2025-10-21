@@ -101,6 +101,36 @@ public class ContaPagarService {
         return contaPagarRepository.save(contaPagar);
     }
 
+    // NOVO: Salvar com usuário logado para auditoria de criação
+    @Transactional
+    public ContaPagar salvar(ContaPagar contaPagar, Usuario usuario) {
+        logger.info("Salvando conta a pagar: {} - Valor: {}",
+                contaPagar.getDescricao(), contaPagar.getValorOriginal());
+
+        if (contaPagar.getNumeroDocumento() != null) {
+            boolean existe = contaPagarRepository.existsByNumeroDocumento(contaPagar.getNumeroDocumento());
+            if (existe && (contaPagar.getId() == null ||
+                    !contaPagarRepository.findById(contaPagar.getId())
+                            .map(c -> c.getNumeroDocumento().equals(contaPagar.getNumeroDocumento()))
+                            .orElse(false))) {
+                throw new IllegalArgumentException("Já existe uma conta com este número de documento");
+            }
+        }
+
+        boolean novo = contaPagar.getId() == null;
+        if (novo && usuario != null) {
+            contaPagar.setUsuarioCriacao(usuario);
+        }
+
+        ContaPagar saved = contaPagarRepository.save(contaPagar);
+
+        if (novo) {
+            criarEntradaFluxoCaixaPrevisto(saved, usuario);
+        }
+
+        return saved;
+    }
+
     // ================= APROVAR =================
     @Transactional
     public ContaPagar aprovar(Long id, Usuario usuarioAprovacao) {
@@ -218,6 +248,32 @@ public class ContaPagarService {
         contaPagarRepository.delete(conta);
     }
 
+    // NOVO: Excluir com auditoria (cancela fluxos previstos e registra usuário)
+    @Transactional
+    public void excluir(Long id, Usuario usuario) {
+        ContaPagar conta = contaPagarRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+
+        if (conta.getStatus() == ContaPagar.StatusContaPagar.PAGA) {
+            throw new IllegalStateException("Não é possível excluir conta já paga");
+        }
+
+        // Cancelar fluxos previstos associados à conta
+        List<FluxoCaixa> fluxos = fluxoCaixaRepository.findByContaPagar(conta.getId());
+        for (FluxoCaixa f : fluxos) {
+            if (f.getStatus() == FluxoCaixa.StatusFluxo.PREVISTO) {
+                f.setStatus(FluxoCaixa.StatusFluxo.CANCELADO);
+                f.setUsuarioCriacao(usuario);
+                f.setObservacoes("Exclusão da conta a pagar");
+                fluxoCaixaRepository.save(f);
+            }
+        }
+
+        registrarHistorico(conta, usuario, "Conta excluída");
+        logger.info("Excluindo conta a pagar: {} por {}", conta.getDescricao(), usuario != null ? usuario.getEmail() : "sistema");
+        contaPagarRepository.delete(conta);
+    }
+
     // ================= HISTÓRICO =================
     @Transactional
     public void registrarHistorico(ContaPagar conta, Usuario usuario, String acao) {
@@ -285,5 +341,19 @@ public class ContaPagarService {
                 .filter(c -> statuses.contains(c.getStatus()))
                 .map(ContaPagar::getValorTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private void criarEntradaFluxoCaixaPrevisto(ContaPagar conta, Usuario usuario) {
+        FluxoCaixa fluxo = new FluxoCaixa();
+        fluxo.setDescricao("Previsão - " + conta.getDescricao());
+        fluxo.setValor(conta.getValorOriginal());
+        fluxo.setData(conta.getDataVencimento());
+        fluxo.setTipoMovimento(FluxoCaixa.TipoMovimento.SAIDA);
+        fluxo.setCategoria(mapearCategoriaFluxo(conta.getCategoria()));
+        fluxo.setStatus(FluxoCaixa.StatusFluxo.PREVISTO);
+        fluxo.setNumeroDocumento(conta.getNumeroDocumento());
+        fluxo.setContaPagar(conta);
+        fluxo.setUsuarioCriacao(usuario);
+        fluxoCaixaRepository.save(fluxo);
     }
 }

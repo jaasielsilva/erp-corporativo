@@ -4,8 +4,10 @@ import com.jaasielsilva.portalceo.model.ContaReceber;
 import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.model.FluxoCaixa;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.HistoricoContaReceber;
 import com.jaasielsilva.portalceo.repository.ContaReceberRepository;
 import com.jaasielsilva.portalceo.repository.FluxoCaixaRepository;
+import com.jaasielsilva.portalceo.repository.HistoricoContaReceberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +31,7 @@ public class ContaReceberService {
 
     private final ContaReceberRepository contaReceberRepository;
     private final FluxoCaixaRepository fluxoCaixaRepository;
+    private final HistoricoContaReceberRepository historicoReceberRepository;
 
     // ---------------- CRUD ----------------
     public ContaReceber save(ContaReceber contaReceber) {
@@ -47,6 +50,29 @@ public class ContaReceberService {
         return savedConta;
     }
 
+    // NOVO: Salvar com usuário logado para auditoria
+    public ContaReceber save(ContaReceber contaReceber, Usuario usuario) {
+        validarContaReceber(contaReceber);
+
+        boolean criando = contaReceber.getId() == null;
+        if (criando) {
+            contaReceber.setDataCriacao(LocalDateTime.now());
+            if (usuario != null) {
+                contaReceber.setUsuarioCriacao(usuario);
+            }
+            if (contaReceber.getStatus() == null) {
+                contaReceber.setStatus(ContaReceber.StatusContaReceber.PENDENTE);
+            }
+        }
+
+        ContaReceber savedConta = contaReceberRepository.save(contaReceber);
+        criarEntradaFluxoCaixa(savedConta, usuario);
+        if (criando) {
+            registrarHistorico(savedConta, usuario, "CONTA_CRIADA", null);
+        }
+        return savedConta;
+    }
+
     @Transactional(readOnly = true)
     public Optional<ContaReceber> findById(Long id) {
         return contaReceberRepository.findById(id);
@@ -62,6 +88,28 @@ public class ContaReceberService {
             if (conta.getStatus() == ContaReceber.StatusContaReceber.RECEBIDA) {
                 throw new IllegalStateException("Não é possível excluir uma conta já recebida");
             }
+            contaReceberRepository.deleteById(id);
+        });
+    }
+
+    // Excluir com auditoria: cancela fluxos previstos e registra usuário
+    public void deleteById(Long id, Usuario usuario) {
+        contaReceberRepository.findById(id).ifPresent(conta -> {
+            if (conta.getStatus() == ContaReceber.StatusContaReceber.RECEBIDA) {
+                throw new IllegalStateException("Não é possível excluir uma conta já recebida");
+            }
+
+            List<FluxoCaixa> fluxos = fluxoCaixaRepository.findByContaReceber(conta.getId());
+            for (FluxoCaixa f : fluxos) {
+                if (f.getStatus() == FluxoCaixa.StatusFluxo.PREVISTO) {
+                    f.setStatus(FluxoCaixa.StatusFluxo.CANCELADO);
+                    f.setUsuarioCriacao(usuario);
+                    f.setObservacoes("Exclusão da conta a receber");
+                    fluxoCaixaRepository.save(f);
+                }
+            }
+
+            registrarHistorico(conta, usuario, "CONTA_EXCLUIDA", "Exclusão da conta a receber");
             contaReceberRepository.deleteById(id);
         });
     }
@@ -111,6 +159,17 @@ public class ContaReceberService {
 
         conta.setStatus(ContaReceber.StatusContaReceber.CANCELADA);
         conta.setObservacoes(motivoCancelamento);
+
+        // Cancelar entradas previstas do fluxo de caixa vinculadas a esta conta
+        List<FluxoCaixa> fluxos = fluxoCaixaRepository.findByContaReceber(conta.getId());
+        for (FluxoCaixa f : fluxos) {
+            if (f.getStatus() == FluxoCaixa.StatusFluxo.PREVISTO) {
+                f.setStatus(FluxoCaixa.StatusFluxo.CANCELADO);
+                f.setUsuarioCriacao(usuario);
+                f.setObservacoes("Cancelamento: " + motivoCancelamento);
+                fluxoCaixaRepository.save(f);
+            }
+        }
 
         return contaReceberRepository.save(conta);
     }
@@ -305,6 +364,22 @@ public class ContaReceberService {
         fluxoCaixaRepository.save(fluxo);
     }
 
+    private void criarEntradaFluxoCaixa(ContaReceber conta, Usuario usuario) {
+        FluxoCaixa fluxo = new FluxoCaixa();
+        fluxo.setData(conta.getDataVencimento());
+        fluxo.setTipoMovimento(FluxoCaixa.TipoMovimento.ENTRADA);
+        fluxo.setCategoria(FluxoCaixa.CategoriaFluxo.VENDAS);
+        fluxo.setDescricao("Previsão - " + conta.getDescricao());
+        fluxo.setValor(conta.getValorTotal());
+        fluxo.setStatus(FluxoCaixa.StatusFluxo.PREVISTO);
+        fluxo.setContaReceber(conta);
+        fluxo.setNumeroDocumento(conta.getNumeroDocumento());
+        fluxo.setUsuarioCriacao(usuario);
+        fluxo.setDataCriacao(LocalDateTime.now());
+
+        fluxoCaixaRepository.save(fluxo);
+    }
+
     private void criarEntradaFluxoCaixaRecebimento(ContaReceber conta, BigDecimal valorRecebido, Usuario usuario) {
         FluxoCaixa fluxo = new FluxoCaixa();
         fluxo.setData(LocalDate.now());
@@ -319,5 +394,18 @@ public class ContaReceberService {
         fluxo.setDataCriacao(LocalDateTime.now());
 
         fluxoCaixaRepository.save(fluxo);
+    }
+
+    // ================= HISTÓRICO =================
+    @Transactional
+    public void registrarHistorico(ContaReceber conta, Usuario usuario, String acao, String observacao) {
+        HistoricoContaReceber historico = new HistoricoContaReceber();
+        historico.setConta(conta);
+        historico.setUsuario(usuario);
+        historico.setAcao(acao);
+        historico.setObservacao(observacao);
+        historico.setNumeroDocumento(conta.getNumeroDocumento());
+        historico.setDataHora(LocalDateTime.now());
+        historicoReceberRepository.save(historico);
     }
 }

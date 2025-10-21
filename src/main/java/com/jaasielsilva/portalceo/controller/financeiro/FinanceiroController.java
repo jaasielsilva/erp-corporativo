@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -118,7 +119,8 @@ public class FinanceiroController {
 
             Map<String, Long> estatisticasString;
             try {
-                Map<ContaReceber.StatusContaReceber, Long> estatisticasEnum = contaReceberService.getEstatisticasPorStatus();
+                Map<ContaReceber.StatusContaReceber, Long> estatisticasEnum = contaReceberService
+                        .getEstatisticasPorStatus();
                 estatisticasString = estatisticasEnum.entrySet()
                         .stream()
                         .collect(Collectors.toMap(e -> e.getKey().name(), Map.Entry::getValue));
@@ -178,11 +180,11 @@ public class FinanceiroController {
     // -------------------- FLUXO DE CAIXA --------------------
     @GetMapping("/fluxo-caixa")
     public String fluxoCaixa(Model model,
-                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
-                             @RequestParam(required = false) String tipoMovimento,
-                             @RequestParam(required = false) String categoria,
-                             @RequestParam(required = false) String status) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(required = false) String tipoMovimento,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String status) {
 
         try {
             model.addAttribute("pageTitle", "Fluxo de Caixa");
@@ -252,7 +254,8 @@ public class FinanceiroController {
     public List<ContaReceber> contasReceberJson(@RequestParam(required = false) String status) {
         if (status != null && !status.isEmpty()) {
             try {
-                ContaReceber.StatusContaReceber statusEnum = ContaReceber.StatusContaReceber.valueOf(status.toUpperCase());
+                ContaReceber.StatusContaReceber statusEnum = ContaReceber.StatusContaReceber
+                        .valueOf(status.toUpperCase());
                 return contaReceberService.findByStatus(statusEnum);
             } catch (IllegalArgumentException e) {
                 return List.of();
@@ -271,9 +274,10 @@ public class FinanceiroController {
 
     @PostMapping("/api/contas-receber")
     @ResponseBody
-    public ResponseEntity<ContaReceber> criarContaReceber(@RequestBody ContaReceber conta) {
+    public ResponseEntity<ContaReceber> criarContaReceber(@RequestBody ContaReceber conta,
+            @ModelAttribute("usuarioLogado") Usuario usuario) {
         try {
-            return ResponseEntity.ok(contaReceberService.save(conta));
+            return ResponseEntity.ok(contaReceberService.save(conta, usuario));
         } catch (Exception e) {
             System.err.println("Erro ao criar conta a receber: " + e.getMessage());
             return ResponseEntity.badRequest().body(null);
@@ -282,17 +286,24 @@ public class FinanceiroController {
 
     @PutMapping("/api/contas-receber/{id}/receber")
     @ResponseBody
-    public ResponseEntity<ContaReceber> receberConta(@PathVariable Long id,
-                                                     @RequestParam BigDecimal valor,
-                                                     @RequestParam(required = false) String observacoes,
-                                                     @RequestParam Long usuarioId) {
+    public ResponseEntity<Map<String, Object>> receberConta(@PathVariable Long id,
+            @RequestParam BigDecimal valor,
+            @RequestParam(required = false) String observacoes,
+            @AuthenticationPrincipal Usuario usuario) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            Usuario usuario = usuarioService.buscarPorId(usuarioId)
-                    .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-            return ResponseEntity.ok(contaReceberService.receberConta(id, valor, observacoes, usuario));
+            ContaReceber conta = contaReceberService.receberConta(id, valor, observacoes, usuario);
+
+            response.put("status", "success");
+            response.put("mensagem", "Pagamento registrado com sucesso");
+            response.put("conta", conta);
+
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            System.err.println("Erro ao receber conta: " + e.getMessage());
-            return ResponseEntity.badRequest().body(null);
+            response.put("status", "error");
+            response.put("mensagem", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
@@ -300,10 +311,8 @@ public class FinanceiroController {
     @ResponseBody
     public ResponseEntity<ContaReceber> cancelarConta(@PathVariable Long id,
                                                       @RequestParam String motivo,
-                                                      @RequestParam Long usuarioId) {
+                                                      @AuthenticationPrincipal Usuario usuario) {
         try {
-            Usuario usuario = usuarioService.buscarPorId(usuarioId)
-                    .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
             return ResponseEntity.ok(contaReceberService.cancelarConta(id, motivo, usuario));
         } catch (Exception e) {
             System.err.println("Erro ao cancelar conta: " + e.getMessage());
@@ -313,9 +322,10 @@ public class FinanceiroController {
 
     @DeleteMapping("/api/contas-receber/{id}")
     @ResponseBody
-    public ResponseEntity<Void> deletarConta(@PathVariable Long id) {
+    public ResponseEntity<Void> deletarConta(@PathVariable Long id,
+                                             @AuthenticationPrincipal Usuario usuario) {
         try {
-            contaReceberService.deleteById(id);
+            contaReceberService.deleteById(id, usuario);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             System.err.println("Erro ao deletar conta: " + e.getMessage());

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .box { fill: #f0f8ff; stroke: #4682b4; stroke-width: 2; }
+    .arrow { stroke: #4682b4; stroke-width: 2; marker-end: url(#arrowhead); }
+    .title { font-family: Arial; font-size: 14px; font-weight: bold; text-anchor: middle; }
+    .subtitle { font-family: Arial; font-size: 12px; text-anchor: middle; }
+    .heading { font-family: Arial; font-size: 18px; font-weight: bold; text-anchor: middle; }
+  </style>
+  
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4682b4" />
+    </marker>
+  </defs>
+  
+  <rect width="100%" height="100%" fill="white" />
+  
+  <!-- Título do Fluxograma -->
+  <text x="400" y="30" class="heading">Fluxo do Módulo de Projetos</text>
+  
+  <!-- Equipes -->
+  <rect x="100" y="80" width="160" height="80" rx="10" class="box" />
+  <text x="180" y="110" class="title">1. Cadastro de Equipes</text>
+  <text x="180" y="130" class="subtitle">Criar equipes de projeto</text>
+  
+  <!-- Membros -->
+  <rect x="100" y="200" width="160" height="80" rx="10" class="box" />
+  <text x="180" y="230" class="title">2. Membros da Equipe</text>
+  <text x="180" y="250" class="subtitle">Adicionar colaboradores</text>
+  
+  <!-- Projetos -->
+  <rect x="320" y="140" width="160" height="80" rx="10" class="box" />
+  <text x="400" y="170" class="title">3. Cadastro de Projetos</text>
+  <text x="400" y="190" class="subtitle">Criar projetos e vincular equipes</text>
+  
+  <!-- Tarefas -->
+  <rect x="540" y="140" width="160" height="80" rx="10" class="box" />
+  <text x="620" y="170" class="title">4. Cadastro de Tarefas</text>
+  <text x="620" y="190" class="subtitle">Criar e atribuir tarefas</text>
+  
+  <!-- Cronograma -->
+  <rect x="320" y="260" width="160" height="80" rx="10" class="box" />
+  <text x="400" y="290" class="title">5. Cronograma</text>
+  <text x="400" y="310" class="subtitle">Visualizar linha do tempo</text>
+  
+  <!-- Relatórios -->
+  <rect x="320" y="380" width="160" height="80" rx="10" class="box" />
+  <text x="400" y="410" class="title">6. Relatórios</text>
+  <text x="400" y="430" class="subtitle">Acompanhar desempenho</text>
+  
+  <!-- Setas de Fluxo -->
+  <!-- Equipes para Membros -->
+  <line x1="180" y1="160" x2="180" y2="200" class="arrow" />
+  
+  <!-- Membros para Projetos -->
+  <path d="M 260 240 C 290 240 290 180 320 180" class="arrow" />
+  
+  <!-- Equipes para Projetos -->
+  <path d="M 260 120 C 290 120 290 160 320 160" class="arrow" />
+  
+  <!-- Projetos para Tarefas -->
+  <line x1="480" y1="180" x2="540" y2="180" class="arrow" />
+  
+  <!-- Projetos para Cronograma -->
+  <line x1="400" y1="220" x2="400" y2="260" class="arrow" />
+  
+  <!-- Cronograma para Relatórios -->
+  <line x1="400" y1="340" x2="400" y2="380" class="arrow" />
+  
+  <!-- Tarefas para Cronograma -->
+  <path d="M 620 220 C 620 240 480 240 400 260" class="arrow" />
+</svg>

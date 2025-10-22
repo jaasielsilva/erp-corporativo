@@ -1,11 +1,326 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} ?: 'Cronograma de Projetos - ERP Corporativo'">Cronograma de Projetos - ERP Corporativo</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .timeline {
+            position: relative;
+            margin: 20px 0;
+            padding: 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 120px;
+            width: 4px;
+            background: #e9ecef;
+            z-index: 0;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            z-index: 1;
+        }
+        .timeline-date {
+            width: 100px;
+            text-align: right;
+            padding-right: 20px;
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .timeline-content {
+            margin-left: 40px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: #fff;
+        }
+        .timeline-badge {
+            position: absolute;
+            left: 120px;
+            margin-left: -12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            background-color: #007bff;
+            color: #fff;
+            z-index: 2;
+        }
+        .timeline-badge i {
+            font-size: 12px;
+            line-height: 24px;
+        }
+        .status-pendente { background-color: #ffc107; }
+        .status-em-andamento { background-color: #17a2b8; }
+        .status-concluida { background-color: #28a745; }
+        .status-atrasada { background-color: #dc3545; }
+        .gantt-chart {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        .gantt-row {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .gantt-label {
+            width: 200px;
+            padding-right: 15px;
+            font-weight: 500;
+        }
+        .gantt-bar-container {
+            flex-grow: 1;
+            height: 30px;
+            background-color: #f8f9fa;
+            position: relative;
+            border-radius: 4px;
+        }
+        .gantt-bar {
+            height: 100%;
+            position: absolute;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .project-info-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 20px;
+        }
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .team-member {
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .team-member img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
-  <H1>AQUI VAI SER A PAGINA DE VISUALIZAR CRONOGRAMA DO MODULO DE PROJETOS</H1>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Conteúdo da página -->
+            <section class="content-area">
+                <div class="container-fluid py-4">
+                    
+                    <!-- Mensagem quando não há projeto selecionado -->
+                    <div class="row" th:if="${projeto == null}">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Selecione um Projeto</h4>
+                                <p>Para visualizar o cronograma, selecione um projeto na <a th:href="@{/projetos/geral/listar}" class="alert-link">lista de projetos</a>.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Conteúdo quando há projeto selecionado -->
+                    <div th:if="${projeto != null}" th:with="stP=${T(com.jaasielsilva.portalceo.model.projetos.enums.StatusProjeto)}, stT=${T(com.jaasielsilva.portalceo.model.projetos.enums.StatusTarefa)}, prio=${T(com.jaasielsilva.portalceo.model.projetos.enums.Prioridade)}">
+                        <!-- Cabeçalho do Projeto -->
+                        <div class="project-header">
+                            <div>
+                                <h1 class="h3 mb-2" th:text="${projeto.nome}">Nome do Projeto</h1>
+                                <p class="text-muted" th:text="${projeto.descricao}">Descrição do projeto</p>
+                            </div>
+                            <div>
+                                <a th:href="@{/projetos/geral/editar/{id}(id=${projeto.id})}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i>Editar Projeto
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Cards de Informações do Projeto -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card project-info-card">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Status</h6>
+                                        <h5 class="card-title">
+                                            <span th:if="${projeto.status == stP.EM_ANDAMENTO}" class="badge bg-info">Em Andamento</span>
+                                            <span th:if="${projeto.status == stP.CONCLUIDO}" class="badge bg-success">Concluído</span>
+                                            <span th:if="${projeto.status == stP.PENDENTE}" class="badge bg-warning">Pendente</span>
+                                            <span th:if="${projeto.status == stP.CANCELADO}" class="badge bg-danger">Cancelado</span>
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card project-info-card">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Prazo</h6>
+                                        <h5 class="card-title" th:text="${projeto.prazo != null} ? #temporals.format(projeto.prazo, 'dd/MM/yyyy') : 'Sem prazo'">31/12/2023</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card project-info-card">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Progresso</h6>
+                                        <div class="progress mt-2" style="height: 10px;">
+                                            <div class="progress-bar" role="progressbar" th:style="${'width: ' + ((projeto.progresso != null) ? projeto.progresso : 0) + '%'}" th:aria-valuenow="${(projeto.progresso != null) ? projeto.progresso : 0}" aria-valuemin="0" aria-valuemax="100" th:text="${((projeto.progresso != null) ? projeto.progresso : 0) + '%'}">45%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card project-info-card">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Equipe</h6>
+                                        <div class="team-members">
+                                            <div th:if="${equipe != null && equipe.membros != null}" class="d-flex align-items-center">
+                                                <div th:each="membro, stat : ${equipe.membros}" th:if="${stat.index < 5}" class="team-member">
+                                                    <img th:src="${membro.colaborador.avatarUrl ?: '/img/avatar-placeholder.png'}" 
+                                                         th:alt="${membro.colaborador.nome}" title="${membro.colaborador.nome}">
+                                                </div>
+                                                <span th:if="${equipe.membros.size() > 5}" class="ms-2 text-muted">
+                                                    +<span th:text="${equipe.membros.size() - 5}">3</span> mais
+                                                </span>
+                                            </div>
+                                            <div th:if="${equipe == null || equipe.membros == null || equipe.membros.isEmpty()}">
+                                                <span class="text-muted">Nenhum membro atribuído</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tabs de Visualização -->
+                        <ul class="nav nav-tabs mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#timeline" data-bs-toggle="tab">
+                                    <i class="fas fa-stream me-2"></i>Linha do Tempo
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#gantt" data-bs-toggle="tab">
+                                    <i class="fas fa-chart-bar me-2"></i>Gráfico Gantt
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <!-- Conteúdo das Tabs -->
+                        <div class="tab-content">
+                            <!-- Timeline View -->
+                            <div class="tab-pane fade show active" id="timeline">
+                                <div class="timeline">
+                                    <div th:if="${tarefas == null || tarefas.isEmpty()}" class="text-center py-5">
+                                        <p class="text-muted">Nenhuma tarefa cadastrada para este projeto.</p>
+                                        <a th:href="@{/projetos/tarefas/novo(projeto=${projeto.id})}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus me-1"></i>Adicionar Tarefa
+                                        </a>
+                                    </div>
+                                    
+                                    <div th:each="tarefa : ${tarefas}" class="timeline-item d-flex">
+                                        <div class="timeline-date" th:text="${tarefa.prazo != null} ? #temporals.format(tarefa.prazo, 'dd/MM/yyyy') : 'Sem prazo'">15/10/2023</div>
+                                        <div th:class="${'timeline-badge ' + ((tarefa.status == stT.PENDENTE) ? 'status-pendente' : (tarefa.status == stT.EM_ANDAMENTO) ? 'status-em-andamento' : (tarefa.status == stT.CONCLUIDA) ? 'status-concluida' : 'status-atrasada')}">
+                                            <i class="fas fa-tasks"></i>
+                                        </div>
+                                        <div class="timeline-content">
+                                            <div class="d-flex justify-content-between">
+                                                <h5 class="mb-1" th:text="${tarefa.nome}">Nome da Tarefa</h5>
+                                                <span th:class="${'badge ' + ((tarefa.status == stT.PENDENTE) ? 'bg-warning' : (tarefa.status == stT.EM_ANDAMENTO) ? 'bg-info' : (tarefa.status == stT.CONCLUIDA) ? 'bg-success' : 'bg-danger')}" th:text="${(tarefa.status == stT.PENDENTE) ? 'Pendente' : (tarefa.status == stT.EM_ANDAMENTO) ? 'Em Andamento' : (tarefa.status == stT.CONCLUIDA) ? 'Concluída' : 'Atrasada'}">Status</span>
+                                            </div>
+                                            <p class="mb-1" th:text="${tarefa.descricao}">Descrição da tarefa</p>
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    <span th:if="${tarefa.atribuidaA != null}" th:text="${tarefa.atribuidaA.nome}">Responsável</span>
+                                                    <span th:unless="${tarefa.atribuidaA != null}">Não atribuída</span>
+                                                </small>
+                                                <div>
+                                                    <span th:class="${'badge ' + ((tarefa.prioridade == prio.CRITICA) ? 'bg-danger' : (tarefa.prioridade == prio.ALTA) ? 'bg-warning' : (tarefa.prioridade == prio.MEDIA) ? 'bg-info' : 'bg-secondary')}" th:text="${(tarefa.prioridade == prio.CRITICA) ? 'Crítica' : (tarefa.prioridade == prio.ALTA) ? 'Alta' : (tarefa.prioridade == prio.MEDIA) ? 'Média' : 'Baixa'}">Prioridade</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Gantt Chart View -->
+                            <div class="tab-pane fade" id="gantt">
+                                <div class="gantt-chart">
+                                    <div th:if="${tarefas == null || tarefas.isEmpty()}" class="text-center py-5">
+                                        <p class="text-muted">Nenhuma tarefa cadastrada para este projeto.</p>
+                                        <a th:href="@{/projetos/tarefas/novo(projeto=${projeto.id})}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus me-1"></i>Adicionar Tarefa
+                                        </a>
+                                    </div>
+                                    
+                                    <div th:if="${tarefas != null && !tarefas.isEmpty()}">
+                                        <!-- Cabeçalho do Gantt -->
+                                        <div class="gantt-row">
+                                            <div class="gantt-label">Tarefa</div>
+                                            <div class="gantt-bar-container">
+                                                <!-- Aqui seria ideal ter uma lógica para calcular a escala de tempo baseada nas datas das tarefas -->
+                                                <!-- Simplificado para demonstração -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Linhas do Gantt para cada tarefa -->
+                                        <div th:each="tarefa : ${tarefas}" class="gantt-row">
+                                            <div class="gantt-label" th:text="${tarefa.nome}">Nome da Tarefa</div>
+                                            <div class="gantt-bar-container">
+                                                <!-- Aqui seria ideal ter uma lógica para posicionar a barra baseada nas datas -->
+                                                <!-- Simplificado para demonstração -->
+                                                <div th:class="${'gantt-bar ' + ((tarefa.status == stT.PENDENTE) ? 'bg-warning' : (tarefa.status == stT.EM_ANDAMENTO) ? 'bg-info' : (tarefa.status == stT.CONCLUIDA) ? 'bg-success' : 'bg-danger')}" style="left: 10%; width: 30%;" th:text="${tarefa.prazo != null} ? #temporals.format(tarefa.prazo, 'dd/MM') : 'Sem prazo'">15/10</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    
+    <script>
+        // Ativar as tabs do Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            var triggerTabList = [].slice.call(document.querySelectorAll('a[data-bs-toggle="tab"]'))
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl)
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault()
+                    tabTrigger.show()
+                })
+            })
+        });
+    </script>
 </body>
 </html>

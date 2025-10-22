@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarefas - ERP Corporativo</title>
+    <title th:text="${pageTitle} ?: 'Tarefas - ERP Corporativo'">Tarefas - ERP Corporativo</title>
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -63,7 +63,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <p class="text-muted small mb-1">Total de Tarefas</p>
-                                <h3 class="fw-bold mb-0">48</h3>
+                                <h3 class="fw-bold mb-0" th:text="${tarefas != null ? #lists.size(tarefas) : 0}">48</h3>
                             </div>
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <p class="text-muted small mb-1">Em Andamento</p>
-                                <h3 class="fw-bold mb-0 text-primary">18</h3>
+                                <h3 class="fw-bold mb-0 text-primary" th:text="${totalEmAndamento}">18</h3>
                             </div>
                         </div>
                     </div>
@@ -79,7 +79,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <p class="text-muted small mb-1">Concluídas</p>
-                                <h3 class="fw-bold mb-0 text-success">24</h3>
+                                <h3 class="fw-bold mb-0 text-success" th:text="${totalConcluidas}">24</h3>
                             </div>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <p class="text-muted small mb-1">Pendentes</p>
-                                <h3 class="fw-bold mb-0 text-secondary">6</h3>
+                                <h3 class="fw-bold mb-0 text-secondary" th:text="${totalPendentes}">6</h3>
                             </div>
                         </div>
                     </div>
@@ -124,76 +124,28 @@
                 <div class="card">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <!-- Task 1 -->
-                            <div class="task-row d-flex align-items-center p-3 border-bottom">
-                                <input type="checkbox" class="form-check-input me-3">
-                                <i class="fas fa-check-circle text-success fs-5 me-3"></i>
-                                <div class="flex-grow-1">
-                                    <p class="fw-semibold mb-1">Configurar ambiente de desenvolvimento</p>
-                                    <p class="text-muted small mb-0">Implementação ERP</p>
-                                </div>
-                                <span class="priority-badge priority-alta me-3">Alta</span>
-                                <div class="d-flex align-items-center me-3">
-                                    <img src="https://ui-avatars.com/api/?name=João+Silva&background=3b82f6&color=fff" 
-                                         class="rounded-circle me-2" width="32" height="32" alt="Avatar">
-                                    <span class="small d-none d-md-inline">João Silva</span>
-                                </div>
-                                <span class="text-muted small me-3">15/01/2025</span>
-                                <span class="badge bg-success">Concluída</span>
-                            </div>
+                            <div class="p-4 text-center text-muted" th:if="${#lists.isEmpty(tarefas)}">Nenhuma tarefa encontrada</div>
 
-                            <!-- Task 2 -->
-                            <div class="task-row d-flex align-items-center p-3 border-bottom">
+                            <div th:each="t : ${tarefas}" class="task-row d-flex align-items-center p-3 border-bottom">
                                 <input type="checkbox" class="form-check-input me-3">
-                                <i class="fas fa-clock text-primary fs-5 me-3"></i>
+                                <i class="fs-5 me-3"
+                                   th:classappend="${#strings.equalsIgnoreCase('' + t.status, 'CONCLUIDA') ? 'fas fa-check-circle text-success' : (#strings.equalsIgnoreCase('' + t.status, 'EM_ANDAMENTO') ? 'fas fa-clock text-primary' : 'fas fa-hourglass-half text-warning')}"></i>
                                 <div class="flex-grow-1">
-                                    <p class="fw-semibold mb-1">Criar mockups das telas principais</p>
-                                    <p class="text-muted small mb-0">Site Institucional</p>
+                                    <p class="fw-semibold mb-1" th:text="${t.nome}">Título da Tarefa</p>
+                                    <p class="text-muted small mb-0" th:text="${t.projeto != null ? t.projeto.nome : 'Projeto'}">Projeto</p>
                                 </div>
-                                <span class="priority-badge priority-media me-3">Média</span>
+                                <span class="priority-badge me-3"
+                                      th:text="${#strings.capitalize(#strings.toLowerCase('' + t.prioridade))}"
+                                      th:classappend="' priority-' + #strings.toLowerCase('' + t.prioridade)">Prioridade</span>
                                 <div class="d-flex align-items-center me-3">
-                                    <img src="https://ui-avatars.com/api/?name=Maria+Santos&background=3b82f6&color=fff" 
+                                    <img th:src="'https://ui-avatars.com/api/?name=' + (${t.atribuidaA != null ? t.atribuidaA.nome : 'Sem+responsável'}) + '&background=3b82f6&color=fff'"
                                          class="rounded-circle me-2" width="32" height="32" alt="Avatar">
-                                    <span class="small d-none d-md-inline">Maria Santos</span>
+                                    <span class="small d-none d-md-inline" th:text="${t.atribuidaA != null ? t.atribuidaA.nome : 'Sem responsável'}">Responsável</span>
                                 </div>
-                                <span class="text-muted small me-3">20/01/2025</span>
-                                <span class="badge bg-primary">Em Andamento</span>
-                            </div>
-
-                            <!-- Task 3 -->
-                            <div class="task-row d-flex align-items-center p-3 border-bottom">
-                                <input type="checkbox" class="form-check-input me-3">
-                                <i class="far fa-circle text-secondary fs-5 me-3"></i>
-                                <div class="flex-grow-1">
-                                    <p class="fw-semibold mb-1">Documentar requisitos técnicos</p>
-                                    <p class="text-muted small mb-0">Migração Cloud</p>
-                                </div>
-                                <span class="priority-badge priority-alta me-3">Alta</span>
-                                <div class="d-flex align-items-center me-3">
-                                    <img src="https://ui-avatars.com/api/?name=Pedro+Oliveira&background=3b82f6&color=fff" 
-                                         class="rounded-circle me-2" width="32" height="32" alt="Avatar">
-                                    <span class="small d-none d-md-inline">Pedro Oliveira</span>
-                                </div>
-                                <span class="text-muted small me-3">18/01/2025</span>
-                                <span class="badge bg-secondary">Pendente</span>
-                            </div>
-
-                            <!-- Task 4 -->
-                            <div class="task-row d-flex align-items-center p-3">
-                                <input type="checkbox" class="form-check-input me-3">
-                                <i class="fas fa-clock text-primary fs-5 me-3"></i>
-                                <div class="flex-grow-1">
-                                    <p class="fw-semibold mb-1">Implementar autenticação</p>
-                                    <p class="text-muted small mb-0">App Mobile</p>
-                                </div>
-                                <span class="priority-badge priority-critica me-3">Crítica</span>
-                                <div class="d-flex align-items-center me-3">
-                                    <img src="https://ui-avatars.com/api/?name=Ana+Costa&background=3b82f6&color=fff" 
-                                         class="rounded-circle me-2" width="32" height="32" alt="Avatar">
-                                    <span class="small d-none d-md-inline">Ana Costa</span>
-                                </div>
-                                <span class="text-muted small me-3">22/01/2025</span>
-                                <span class="badge bg-primary">Em Andamento</span>
+                                <span class="text-muted small me-3" th:text="${t.prazo != null ? #temporals.format(t.prazo, 'dd/MM/yyyy') : 'Sem prazo'}">Data</span>
+                                <span class="badge"
+                                      th:text="${#strings.equalsIgnoreCase('' + t.status, 'CONCLUIDA') ? 'Concluída' : (#strings.equalsIgnoreCase('' + t.status, 'EM_ANDAMENTO') ? 'Em Andamento' : 'Pendente')}"
+                                      th:classappend="${#strings.equalsIgnoreCase('' + t.status, 'CONCLUIDA') ? ' bg-success' : (#strings.equalsIgnoreCase('' + t.status, 'EM_ANDAMENTO') ? ' bg-primary' : ' bg-warning')}">Status</span>
                             </div>
                         </div>
                     </div>

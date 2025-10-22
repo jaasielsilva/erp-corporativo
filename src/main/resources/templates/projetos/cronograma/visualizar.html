@@ -1,112 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title th:text="'Visualizar Projeto - ' + ${projeto.nome}">Visualizar Projeto</title>
-
-  <!-- Toastr CSS e JS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
-  <!-- FontAwesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-
-  <!-- CSS Padrão -->
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
 </head>
-
 <body>
-  <div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
-
-    <main class="main-content">
-      <header th:replace="~{components/topbar :: topbar}"></header>
-
-      <section class="content-area">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2><i class="fas fa-folder-open"></i> Detalhes do Projeto</h2>
-          <div>
-            <a th:href="@{/projetos/geral/listar}" class="btn btn-secondary me-2">
-              <i class="fas fa-arrow-left"></i> Voltar
-            </a>
-            <a th:href="@{'/projetos/geral/' + ${projeto.id} + '/editar'}" class="btn btn-primary">
-              <i class="fas fa-edit"></i> Editar
-            </a>
-          </div>
-        </div>
-
-        <!-- Card de Detalhes -->
-        <div class="card p-4 shadow-sm mb-4">
-          <h4 class="fw-bold mb-3" th:text="${projeto.nome}">Nome do Projeto</h4>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <p><strong>Descrição:</strong></p>
-              <p th:text="${projeto.descricao}">Descrição do projeto aqui...</p>
-            </div>
-            <div class="col-md-3">
-              <p><strong>Status:</strong></p>
-              <span class="badge"
-                th:classappend="${projeto.status == 'Concluído'} ? ' badge-ativo' :
-                                (projeto.status == 'Em Andamento' ? ' badge-pendente' : ' badge-inativo')"
-                th:text="${projeto.status}">Em Andamento</span>
-            </div>
-            <div class="col-md-3">
-              <p><strong>Prazo:</strong></p>
-              <p th:text="${#dates.format(projeto.prazo, 'dd/MM/yyyy')}">15/03/2025</p>
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <p><strong>Responsável:</strong></p>
-              <p th:text="${projeto.responsavel != null ? projeto.responsavel.nome : 'Não definido'}">João Silva</p>
-            </div>
-            <div class="col-md-4">
-              <p><strong>Equipe:</strong></p>
-              <p th:text="${projeto.equipe != null ? projeto.equipe.nome : 'Sem equipe atribuída'}">Equipe Alpha</p>
-            </div>
-            <div class="col-md-4">
-              <p><strong>Progresso:</strong></p>
-              <div class="progress" style="height: 8px;">
-                <div class="progress-bar bg-primary" role="progressbar"
-                  th:style="'width:' + ${projeto.progresso} + '%'"
-                  th:text="${projeto.progresso + '%'}">65%</div>
-              </div>
-            </div>
-          </div>
-
-          <hr>
-
-          <div>
-            <h5><i class="fas fa-tasks"></i> Tarefas Relacionadas</h5>
-            <ul>
-              <li th:each="tarefa : ${projeto.tarefas}" th:text="${tarefa.nome}">Tarefa exemplo</li>
-              <li th:if="${#lists.isEmpty(projeto.tarefas)}">Nenhuma tarefa vinculada.</li>
-            </ul>
-          </div>
-        </div>
-
-      </section>
-
-      <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-  </div>
-
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-  <!-- JS Bootstrap -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Sidebar e Notificações -->
-  <script th:src="@{/js/sidebar.js}"></script>
-  <script th:src="@{/js/notifications.js}"></script>
+  <H1>AQUI VAI SER A PAGINA DE VISUALIZAR CRONOGRAMA DO MODULO DE PROJETOS</H1>
 </body>
-
 </html>

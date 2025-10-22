@@ -289,7 +289,7 @@ public class FinanceiroController {
     public ResponseEntity<Map<String, Object>> receberConta(@PathVariable Long id,
             @RequestParam BigDecimal valor,
             @RequestParam(required = false) String observacoes,
-            @AuthenticationPrincipal Usuario usuario) {
+            @ModelAttribute("usuarioLogado") Usuario usuario) {
         Map<String, Object> response = new HashMap<>();
         try {
             ContaReceber conta = contaReceberService.receberConta(id, valor, observacoes, usuario);
@@ -311,7 +311,7 @@ public class FinanceiroController {
     @ResponseBody
     public ResponseEntity<ContaReceber> cancelarConta(@PathVariable Long id,
                                                       @RequestParam String motivo,
-                                                      @AuthenticationPrincipal Usuario usuario) {
+                                                      @ModelAttribute("usuarioLogado") Usuario usuario) {
         try {
             return ResponseEntity.ok(contaReceberService.cancelarConta(id, motivo, usuario));
         } catch (Exception e) {
@@ -323,7 +323,7 @@ public class FinanceiroController {
     @DeleteMapping("/api/contas-receber/{id}")
     @ResponseBody
     public ResponseEntity<Void> deletarConta(@PathVariable Long id,
-                                             @AuthenticationPrincipal Usuario usuario) {
+                                             @ModelAttribute("usuarioLogado") Usuario usuario) {
         try {
             contaReceberService.deleteById(id, usuario);
             return ResponseEntity.ok().build();

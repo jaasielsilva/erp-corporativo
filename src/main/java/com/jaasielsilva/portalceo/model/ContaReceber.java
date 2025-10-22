@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,7 +17,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "conta_receber")
-public class ContaReceber {
+@EqualsAndHashCode(callSuper = true)
+public class ContaReceber extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -89,12 +91,7 @@ public class ContaReceber {
     @Column
     private Integer totalParcelas;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_criacao_id")
-    private Usuario usuarioCriacao;
 
-    private LocalDateTime dataCriacao;
-    private LocalDateTime dataUltimaEdicao;
 
     public enum StatusContaReceber {
         PENDENTE("Pendente"),
@@ -152,7 +149,6 @@ public class ContaReceber {
 
     @PrePersist
     public void onPrePersist() {
-        dataCriacao = LocalDateTime.now();
         if (status == null) {
             status = StatusContaReceber.PENDENTE;
         }
@@ -170,7 +166,6 @@ public class ContaReceber {
 
     @PreUpdate
     public void onPreUpdate() {
-        dataUltimaEdicao = LocalDateTime.now();
         validarStatus();
     }
 

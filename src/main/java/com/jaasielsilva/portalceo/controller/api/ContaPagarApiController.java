@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,7 +53,7 @@ public class ContaPagarApiController {
 
     @PostMapping
     public ResponseEntity<ContaPagarDto> criar(@RequestBody ContaPagarDto dto,
-                                               @AuthenticationPrincipal Usuario usuario) {
+                                               @ModelAttribute("usuarioLogado") Usuario usuario) {
         ContaPagar c = new ContaPagar();
         ContaPagarMapper.updateEntityFromDto(dto, c);
         if (dto.fornecedorId != null) {
@@ -66,7 +67,7 @@ public class ContaPagarApiController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ContaPagarDto> atualizar(@PathVariable Long id, @RequestBody ContaPagarDto dto,
-                                                   @AuthenticationPrincipal Usuario usuario) {
+                                                   @ModelAttribute("usuarioLogado") Usuario usuario) {
         return contaPagarService.buscarPorId(id).map(existing -> {
             ContaPagarMapper.updateEntityFromDto(dto, existing);
             if (dto.fornecedorId != null) {
@@ -80,14 +81,14 @@ public class ContaPagarApiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+    public ResponseEntity<Void> excluir(@PathVariable Long id, @ModelAttribute("usuarioLogado") Usuario usuario) {
         contaPagarService.excluir(id, usuario);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/aprovar")
     public ResponseEntity<ContaPagarDto> aprovar(@PathVariable Long id,
-                                                 @AuthenticationPrincipal Usuario usuario) {
+                                                 @ModelAttribute("usuarioLogado") Usuario usuario) {
         ContaPagar aprovado = contaPagarService.aprovar(id, usuario);
         return ResponseEntity.ok(ContaPagarMapper.toDto(aprovado));
     }
@@ -96,7 +97,7 @@ public class ContaPagarApiController {
     public ResponseEntity<ContaPagarDto> pagar(@PathVariable Long id,
             @RequestParam("valorPago") java.math.BigDecimal valorPago,
             @RequestParam(value = "formaPagamento", required = false) String formaPagamento,
-            @AuthenticationPrincipal Usuario usuario) throws IOException {
+            @ModelAttribute("usuarioLogado") Usuario usuario) throws IOException {
         ContaPagar pago = contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null);
         return ResponseEntity.ok(ContaPagarMapper.toDto(pago));
     }

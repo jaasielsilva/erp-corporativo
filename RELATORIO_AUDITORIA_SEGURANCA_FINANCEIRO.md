@@ -232,9 +232,128 @@ public class AuditConfig {
 3. **Implementar validação obrigatória** - Não permitir operações sem usuário
 
 ### Fase 2 - Importante (Próximas 2 semanas)
-1. **Implementar auditoria automática** com JPA Auditing
-2. **Criar interceptor global** para validação de usuário
-3. **Configurar @ControllerAdvice** para injeção automática
+
+#### Escopo e Entregáveis
+- Auditoria automática via JPA Auditing (`@CreatedBy`, `@LastModifiedBy`, datas de criação/modificação)
+- Validação centralizada de usuário para operações de escrita (POST/PUT/DELETE)
+- Injeção consistente de `usuarioLogado` em controllers
+- Matriz de permissões por operação e política de logs/retenção
+- Testes de segurança (unitários e integração) e checklist de validação
+
+#### Passos Detalhados
+
+1) **JPA Auditing habilitada e operando**
+```java
+@Configuration
+@EnableJpaAuditing
+public class AuditConfig {
+    @Bean
+    public AuditorAware<Usuario> auditorProvider() {
+        return () -> {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof UserDetails) {
+                // Converter principal -> Usuario do domínio (resolver via serviço/ID)
+                return Optional.of(recuperarUsuarioDominio(auth));
+            }
+            return Optional.empty();
+        };
+    }
+}
+```
+- Atualizar entidades financeiras para usar `@CreatedBy`, `@LastModifiedBy`, `@CreatedDate`, `@LastModifiedDate`.
+- Se preferir, criar `BaseEntity` e fazer entidades financeiras herdarem dela.
+- Garantir que o `Usuario` do domínio seja resolvido a partir do principal.
+
+2) **Interceptor Global exigindo usuário para escrita**
+```java
+@Component
+public class UsuarioLogadoInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        String method = request.getMethod();
+        boolean writeOp = method.equals("POST") || method.equals("PUT") || method.equals("DELETE");
+        if (writeOp) {
+            Usuario usuario = (Usuario) request.getSession().getAttribute("usuarioLogado");
+            if (usuario == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                throw new UnauthorizedException("Usuário não autenticado");
+            }
+        }
+        return true;
+    }
+}
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    private final UsuarioLogadoInterceptor interceptor;
+    public WebConfig(UsuarioLogadoInterceptor interceptor) { this.interceptor = interceptor; }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(interceptor).addPathPatterns("/**");
+    }
+}
+```
+- Registrar no `WebMvcConfigurer`.
+- Excluir paths públicos (login, saúde) se necessário.
+
+3) **@ControllerAdvice para injeção automática**
+```java
+@ControllerAdvice
+public class UsuarioLogadoControllerAdvice {
+    @ModelAttribute("usuarioLogado")
+    public Usuario getUsuarioLogado(HttpServletRequest request) {
+        return (Usuario) request.getSession().getAttribute("usuarioLogado");
+    }
+}
+```
+- Confirmar que controllers recebem `@ModelAttribute("usuarioLogado") Usuario usuario` quando aplicável.
+
+#### Matriz de Permissões por Operação
+- Criar Conta a Receber: `FINANCEIRO_OPERADOR` ou superior; requer `usuarioLogado`.
+- Aprovar Conta a Pagar: `FINANCEIRO_APROVADOR`; registra `usuarioModificacao`.
+- Pagar/Cancelar/Excluir: `FINANCEIRO_APROVADOR` ou `ADMIN`; sempre com auditoria.
+- Sincronizações (Fluxo de Caixa): restritas a `ADMIN` ou serviço técnico.
+
+#### Política de Logs e Retenção
+- Logar contexto mínimo: `usuarioId`, `perfil`, `ip`, `endpoint`, `entidadeId`, `acao`.
+- Formato: JSON estruturado (facilita consulta); logger separado `finance.audit`.
+- Retenção mínima: 180 dias; rotação diária; armazenamento imutável (WORM) para eventos críticos.
+- Evidências: IDs correlacionados entre logs e registros JPA (`dataCriacao`, `usuarioCriacao`).
+
+#### Testes e Validação
+- Unitários: validar `AuditorAware` retorna `Usuario` correto; entidades persistem `@CreatedBy/@LastModifiedBy`.
+- Integração: simular requests POST/PUT/DELETE sem sessão → 401; com sessão → sucesso e auditoria preenchida.
+- Controllers vulneráveis mapeados neste relatório passam a exigir `usuarioLogado`.
+- Consultas por `findByUsuarioCriacao` retornam registros conforme esperado.
+
+##### Referência de Endpoints e Métodos Alvo
+- `FinanceiroController`: validar `criarContaReceber`, `deletarConta` passam a exigir `usuarioLogado`; manter auditoria em `receberConta`, `cancelarConta`.
+- `ContaPagarController`: validar `salvar`, `excluir`, `cancelar`, `aprovar`, `pagar` com `usuarioLogado` e auditoria preenchida.
+- `ContaPagarService`: `salvar`, `cancelar`, `excluir` exigem `Usuario`; verificar `usuarioCriacao`/`usuarioModificacao`.
+- `ContaReceberService`: `save` com `Usuario`; auditoria em criação.
+- `FluxoCaixaService`: `save`, `sincronizarContasPagar`, `sincronizarContasReceber` com `Usuario` e registros no fluxo de caixa.
+- `VendaService`: `salvar(Venda, Usuario)` cria venda e contas correlatas com auditoria.
+
+#### Riscos e Mitigação
+- Risco: `UserDetails` não mapeado ao `Usuario` do domínio. Mitigação: serviço de resolução confiável por ID.
+- Risco: endpoints públicos bloqueados pelo interceptor. Mitigação: whitelists explícitas.
+- Risco: inconsistência em entidades não migradas. Mitigação: lista de entidades alvo e migração faseada.
+
+#### Modelo de Ameaças e Controles
+- Repúdio: negar autoria de ações → controlado por JPA Auditing (`@CreatedBy/@LastModifiedBy`) e logs com `usuarioId`.
+- Escalada de privilégio: uso de perfis indevidos → controlado por matriz de permissões e validação de perfil em services/controllers.
+- Modificação não autorizada: alterações sem usuário → bloqueado pelo interceptor e exigência de `usuarioLogado`.
+- Divulgação de informação: acesso a dados de outros usuários → consultas filtradas por `usuarioCriacao` e checagens de acesso.
+- Disponibilidade (DoS): excesso de operações críticas → rate limiting nos endpoints sensíveis (futuro em Fase 3/Security).
+- Integridade: inconsistência de auditoria → testes de integração garantindo preenchimento de campos e logs correlacionados.
+
+#### Definition of Done (Checklist)
+- `@EnableJpaAuditing` ativo e `AuditorAware<Usuario>` funcional.
+- Entidades financeiras com campos de auditoria preenchidos em criação/modificação.
+- Interceptor global ativo apenas para operações de escrita (com whitelists definidas).
+- Controllers críticos aceitam `@ModelAttribute("usuarioLogado")` e validam presença.
+- Logs estruturados com contexto de segurança, retenção definida, e evidências auditáveis.
+- Suite de testes passando (unitários e integração) cobrindo cenários com/sem usuário.
 
 ### Fase 3 - Melhorias (Próximo mês)
 1. **Implementar Spring Security** completo

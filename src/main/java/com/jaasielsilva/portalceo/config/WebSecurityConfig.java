@@ -15,6 +15,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     @Autowired
     private SecurityInterceptor securityInterceptor;
     
+    @Autowired
+    private UsuarioLogadoInterceptor usuarioLogadoInterceptor;
+    
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // Registrar interceptor de segurança para todas as URLs
@@ -29,6 +32,27 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                     "/error",
                     "/actuator/**",
                     "/api/categorias/**"
+                );
+        
+        // Registrar interceptor de validação de usuário logado para endpoints críticos
+        registry.addInterceptor(usuarioLogadoInterceptor)
+                .addPathPatterns(
+                    "/financeiro/**",
+                    "/conta-pagar/**",
+                    "/conta-receber/**",
+                    "/fluxo-caixa/**",
+                    "/vendas/**",
+                    "/api/financeiro/**",
+                    "/api/conta-pagar/**",
+                    "/api/conta-receber/**"
+                )
+                .excludePathPatterns(
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/fonts/**",
+                    "/favicon.ico",
+                    "/error"
                 );
     }
 }

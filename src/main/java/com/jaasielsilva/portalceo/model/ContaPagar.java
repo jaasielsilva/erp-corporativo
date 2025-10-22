@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,7 +17,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "conta_pagar")
-public class ContaPagar {
+@EqualsAndHashCode(callSuper = true)
+public class ContaPagar extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -80,10 +82,6 @@ public class ContaPagar {
     private String observacoes;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_criacao_id")
-    private Usuario usuarioCriacao;
-
-    @ManyToOne
     @JoinColumn(name = "usuario_aprovacao_id")
     private Usuario usuarioAprovacao;
 
@@ -93,7 +91,6 @@ public class ContaPagar {
     // ===== NOVO CAMPO =====
     @Column(name = "comprovante_path", length = 255)
     private String comprovantePath;
-
     
     public String getComprovantePath() {
         return comprovantePath;
@@ -102,9 +99,6 @@ public class ContaPagar {
     public void setComprovantePath(String comprovantePath) {
         this.comprovantePath = comprovantePath;
     }
-
-    private LocalDateTime dataCriacao;
-    private LocalDateTime dataUltimaEdicao;
 
     public enum StatusContaPagar {
         PENDENTE("Pendente"),
@@ -167,7 +161,6 @@ public class ContaPagar {
 
     @PrePersist
     public void onPrePersist() {
-        dataCriacao = LocalDateTime.now();
         if (status == null) {
             status = StatusContaPagar.PENDENTE;
         }
@@ -185,7 +178,6 @@ public class ContaPagar {
 
     @PreUpdate
     public void onPreUpdate() {
-        dataUltimaEdicao = LocalDateTime.now();
         validarStatus();
     }
 

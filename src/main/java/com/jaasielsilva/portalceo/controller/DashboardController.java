@@ -162,7 +162,7 @@ public class DashboardController {
         model.addAttribute("processosAguardandoAprovacao", processosAguardandoAprovacao);
         model.addAttribute("percentualMeta", percentualMeta);
         model.addAttribute("ticketMedio", ticketMedioFormatado);
-
+        
         model.addAttribute("ultimos12MesesLabels", ultimos12MesesLabels);
         model.addAttribute("ultimos12MesesValores", ultimos12MesesValores);
         model.addAttribute("metaVendasMensal", metaVendasMensal);

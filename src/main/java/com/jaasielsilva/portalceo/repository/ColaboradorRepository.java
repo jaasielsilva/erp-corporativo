@@ -3,6 +3,8 @@ package com.jaasielsilva.portalceo.repository;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.Usuario;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +22,9 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     boolean existsByEmail(String email);
 
     List<Colaborador> findByAtivoTrue();
+
+    // Paginação de colaboradores ativos
+    Page<Colaborador> findByAtivoTrue(Pageable pageable);
 
     Optional<Colaborador> findByCpf(String cpf);
 

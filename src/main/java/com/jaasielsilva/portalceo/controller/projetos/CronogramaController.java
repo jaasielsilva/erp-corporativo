@@ -26,7 +26,7 @@ public class CronogramaController {
 
     @GetMapping("/visualizar/{id}")
     public String visualizarProjeto(@PathVariable Long id, Model model) {
-        Projeto projeto = projetoService.buscarPorId(id).orElse(null);
+        Projeto projeto = projetoService.buscarPorIdComEquipeMembros(id).orElse(null);
         model.addAttribute("pageTitle", "Cronograma de Projetos");
         model.addAttribute("projeto", projeto);
         if (projeto != null) {

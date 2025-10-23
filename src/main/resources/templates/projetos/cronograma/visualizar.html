@@ -143,7 +143,7 @@
                     </div>
                     
                     <!-- Conteúdo quando há projeto selecionado -->
-                    <div th:if="${projeto != null}" th:with="stP=${T(com.jaasielsilva.portalceo.model.projetos.enums.StatusProjeto)}, stT=${T(com.jaasielsilva.portalceo.model.projetos.enums.StatusTarefa)}, prio=${T(com.jaasielsilva.portalceo.model.projetos.enums.Prioridade)}">
+                    <div th:if="${projeto != null}" th:with="stP=${T(com.jaasielsilva.portalceo.model.projetos.Projeto$StatusProjeto)}, stT=${T(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto$StatusTarefa)}, prio=${T(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto$Prioridade)}">
                         <!-- Cabeçalho do Projeto -->
                         <div class="project-header">
                             <div>
@@ -176,7 +176,7 @@
                                 <div class="card project-info-card">
                                     <div class="card-body">
                                         <h6 class="card-subtitle mb-2 text-muted">Prazo</h6>
-                                        <h5 class="card-title" th:text="${projeto.prazo != null} ? #temporals.format(projeto.prazo, 'dd/MM/yyyy') : 'Sem prazo'">31/12/2023</h5>
+                                        <h5 class="card-title" th:text="${projeto.prazo != null ? #temporals.format(projeto.prazo, 'dd/MM/yyyy') : 'Sem prazo'}">31/12/2023</h5>
                                     </div>
                                 </div>
                             </div>
@@ -240,7 +240,7 @@
                                     </div>
                                     
                                     <div th:each="tarefa : ${tarefas}" class="timeline-item d-flex">
-                                        <div class="timeline-date" th:text="${tarefa.prazo != null} ? #temporals.format(tarefa.prazo, 'dd/MM/yyyy') : 'Sem prazo'">15/10/2023</div>
+                                        <div class="timeline-date" th:text="${tarefa.prazo != null ? #temporals.format(tarefa.prazo, 'dd/MM/yyyy') : 'Sem prazo'}">15/10/2023</div>
                                         <div th:class="${'timeline-badge ' + ((tarefa.status == stT.PENDENTE) ? 'status-pendente' : (tarefa.status == stT.EM_ANDAMENTO) ? 'status-em-andamento' : (tarefa.status == stT.CONCLUIDA) ? 'status-concluida' : 'status-atrasada')}">
                                             <i class="fas fa-tasks"></i>
                                         </div>
@@ -249,7 +249,7 @@
                                                 <h5 class="mb-1" th:text="${tarefa.nome}">Nome da Tarefa</h5>
                                                 <span th:class="${'badge ' + ((tarefa.status == stT.PENDENTE) ? 'bg-warning' : (tarefa.status == stT.EM_ANDAMENTO) ? 'bg-info' : (tarefa.status == stT.CONCLUIDA) ? 'bg-success' : 'bg-danger')}" th:text="${(tarefa.status == stT.PENDENTE) ? 'Pendente' : (tarefa.status == stT.EM_ANDAMENTO) ? 'Em Andamento' : (tarefa.status == stT.CONCLUIDA) ? 'Concluída' : 'Atrasada'}">Status</span>
                                             </div>
-                                            <p class="mb-1" th:text="${tarefa.descricao}">Descrição da tarefa</p>
+                                            
                                             <div class="d-flex justify-content-between align-items-center mt-2">
                                                 <small class="text-muted">
                                                     <i class="fas fa-user me-1"></i>
@@ -291,7 +291,7 @@
                                             <div class="gantt-bar-container">
                                                 <!-- Aqui seria ideal ter uma lógica para posicionar a barra baseada nas datas -->
                                                 <!-- Simplificado para demonstração -->
-                                                <div th:class="${'gantt-bar ' + ((tarefa.status == stT.PENDENTE) ? 'bg-warning' : (tarefa.status == stT.EM_ANDAMENTO) ? 'bg-info' : (tarefa.status == stT.CONCLUIDA) ? 'bg-success' : 'bg-danger')}" style="left: 10%; width: 30%;" th:text="${tarefa.prazo != null} ? #temporals.format(tarefa.prazo, 'dd/MM') : 'Sem prazo'">15/10</div>
+                                                <div th:class="${'gantt-bar ' + ((tarefa.status == stT.PENDENTE) ? 'bg-warning' : (tarefa.status == stT.EM_ANDAMENTO) ? 'bg-info' : (tarefa.status == stT.CONCLUIDA) ? 'bg-success' : 'bg-danger')}" style="left: 10%; width: 30%;" th:text="${tarefa.prazo != null ? #temporals.format(tarefa.prazo, 'dd/MM') : 'Sem prazo'}">15/10</div>
                                             </div>
                                         </div>
                                     </div>

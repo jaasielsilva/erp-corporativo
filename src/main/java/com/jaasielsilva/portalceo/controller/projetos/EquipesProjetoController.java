@@ -7,6 +7,10 @@ import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.projetos.EquipeProjetoRepository;
 import com.jaasielsilva.portalceo.repository.projetos.TarefaProjetoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,46 +67,55 @@ public class EquipesProjetoController {
     }
 
     @GetMapping("/membros")
-    public String membros(Model model) {
-        List<Colaborador> colaboradores = colaboradorRepository.findByAtivoTrue();
-        
-        // Calcular estatísticas de tarefas para cada colaborador
+    public String membros(Model model,
+                          @RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "9") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("nome").ascending());
+
+        Page<Colaborador> colaboradoresPage = colaboradorRepository.findByAtivoTrue(pageable);
+        List<Colaborador> colaboradores = colaboradoresPage.getContent();
+
+        // Calcular estatísticas de tarefas para colaboradores da página atual
         Map<Long, Map<String, Long>> estatisticasTarefas = new HashMap<>();
         for (Colaborador colaborador : colaboradores) {
             Map<String, Long> stats = new HashMap<>();
-            
-            // Contar tarefas por status
-            long tarefasAtivas = tarefaRepository.findByAtribuidaAId(colaborador.getId())
-                    .stream()
-                    .filter(t -> t.getStatus() == TarefaProjeto.StatusTarefa.EM_ANDAMENTO || 
-                               t.getStatus() == TarefaProjeto.StatusTarefa.PENDENTE)
-                    .count();
-            
-            long tarefasConcluidas = tarefaRepository.findByAtribuidaAId(colaborador.getId())
-                    .stream()
-                    .filter(t -> t.getStatus() == TarefaProjeto.StatusTarefa.CONCLUIDA)
-                    .count();
-            
+
+            long tarefasAtivas = tarefaRepository.countByAtribuidaAIdAndStatus(colaborador.getId(), TarefaProjeto.StatusTarefa.EM_ANDAMENTO)
+                    + tarefaRepository.countByAtribuidaAIdAndStatus(colaborador.getId(), TarefaProjeto.StatusTarefa.PENDENTE);
+
+            long tarefasConcluidas = tarefaRepository.countByAtribuidaAIdAndStatus(colaborador.getId(), TarefaProjeto.StatusTarefa.CONCLUIDA);
+
             stats.put("ativas", tarefasAtivas);
             stats.put("concluidas", tarefasConcluidas);
-            stats.put("total", tarefasAtivas + tarefasConcluidas);
-            
+            stats.put("total", tarefaRepository.countByAtribuidaAId(colaborador.getId()));
+
             estatisticasTarefas.put(colaborador.getId(), stats);
         }
-        
-        // Calcular totais gerais
-        long totalMembros = colaboradores.size();
-        long membrosDisponiveis = colaboradores.stream()
-                .filter(c -> estatisticasTarefas.get(c.getId()).get("ativas") < 5) // Considerando disponível se tem menos de 5 tarefas ativas
-                .count();
-        
+
+        // Totais gerais
+        long totalMembros = colaboradoresPage.getTotalElements();
+
+        // Disponíveis considerando todos ativos (menos de 5 tarefas ativas)
+        List<Colaborador> todosAtivos = colaboradorRepository.findByAtivoTrue();
+        long membrosDisponiveis = todosAtivos.stream().filter(c ->
+                tarefaRepository.countByAtribuidaAIdAndStatus(c.getId(), TarefaProjeto.StatusTarefa.EM_ANDAMENTO)
+                        + tarefaRepository.countByAtribuidaAIdAndStatus(c.getId(), TarefaProjeto.StatusTarefa.PENDENTE)
+                        < 5
+        ).count();
+
         model.addAttribute("pageTitle", "Membros da Equipe");
         model.addAttribute("equipes", equipeRepository.findAll());
-        model.addAttribute("colaboradores", colaboradores);
+
+        // Cards paginados
+        model.addAttribute("colaboradoresPage", colaboradoresPage);
         model.addAttribute("estatisticasTarefas", estatisticasTarefas);
+
+        // Lista completa para o modal de seleção
+        model.addAttribute("colaboradoresAll", todosAtivos);
+
         model.addAttribute("totalMembros", totalMembros);
         model.addAttribute("membrosDisponiveis", membrosDisponiveis);
-        
+
         return "projetos/equipes/membros";
     }
 

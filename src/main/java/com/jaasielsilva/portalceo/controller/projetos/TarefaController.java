@@ -8,6 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.StatusTarefa;
+import com.jaasielsilva.portalceo.model.projetos.TarefaProjeto;
+
+
 
 @Controller
 @RequestMapping("/projetos/tarefas")

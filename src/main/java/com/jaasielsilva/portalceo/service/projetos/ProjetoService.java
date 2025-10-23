@@ -38,6 +38,11 @@ public class ProjetoService {
         return projetoRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<Projeto> buscarPorIdComEquipeMembros(Long id) {
+        return projetoRepository.findByIdWithEquipeAndMembros(id);
+    }
+
     @Transactional
     public Projeto atualizar(Projeto projeto) {
         return projetoRepository.save(projeto);

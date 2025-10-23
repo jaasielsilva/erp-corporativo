@@ -2,8 +2,10 @@ package com.jaasielsilva.portalceo.controller.projetos;
 
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.projetos.EquipeProjeto;
+import com.jaasielsilva.portalceo.model.projetos.TarefaProjeto;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.projetos.EquipeProjetoRepository;
+import com.jaasielsilva.portalceo.repository.projetos.TarefaProjetoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -27,6 +31,9 @@ public class EquipesProjetoController {
 
     @Autowired
     private ColaboradorRepository colaboradorRepository;
+
+    @Autowired
+    private TarefaProjetoRepository tarefaRepository;
 
     // Listagem de equipes
     @GetMapping("/listar")
@@ -57,9 +64,45 @@ public class EquipesProjetoController {
 
     @GetMapping("/membros")
     public String membros(Model model) {
+        List<Colaborador> colaboradores = colaboradorRepository.findByAtivoTrue();
+        
+        // Calcular estatísticas de tarefas para cada colaborador
+        Map<Long, Map<String, Long>> estatisticasTarefas = new HashMap<>();
+        for (Colaborador colaborador : colaboradores) {
+            Map<String, Long> stats = new HashMap<>();
+            
+            // Contar tarefas por status
+            long tarefasAtivas = tarefaRepository.findByAtribuidaAId(colaborador.getId())
+                    .stream()
+                    .filter(t -> t.getStatus() == TarefaProjeto.StatusTarefa.EM_ANDAMENTO || 
+                               t.getStatus() == TarefaProjeto.StatusTarefa.PENDENTE)
+                    .count();
+            
+            long tarefasConcluidas = tarefaRepository.findByAtribuidaAId(colaborador.getId())
+                    .stream()
+                    .filter(t -> t.getStatus() == TarefaProjeto.StatusTarefa.CONCLUIDA)
+                    .count();
+            
+            stats.put("ativas", tarefasAtivas);
+            stats.put("concluidas", tarefasConcluidas);
+            stats.put("total", tarefasAtivas + tarefasConcluidas);
+            
+            estatisticasTarefas.put(colaborador.getId(), stats);
+        }
+        
+        // Calcular totais gerais
+        long totalMembros = colaboradores.size();
+        long membrosDisponiveis = colaboradores.stream()
+                .filter(c -> estatisticasTarefas.get(c.getId()).get("ativas") < 5) // Considerando disponível se tem menos de 5 tarefas ativas
+                .count();
+        
         model.addAttribute("pageTitle", "Membros da Equipe");
         model.addAttribute("equipes", equipeRepository.findAll());
-        model.addAttribute("colaboradores", colaboradorRepository.findByAtivoTrue());
+        model.addAttribute("colaboradores", colaboradores);
+        model.addAttribute("estatisticasTarefas", estatisticasTarefas);
+        model.addAttribute("totalMembros", totalMembros);
+        model.addAttribute("membrosDisponiveis", membrosDisponiveis);
+        
         return "projetos/equipes/membros";
     }
 

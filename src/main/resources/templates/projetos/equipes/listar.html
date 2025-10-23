@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipes de Projetos - ERP Corporativo</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 fw-bold mb-1">Equipes de Projetos</h1>
+                    <p class="text-muted">Visualize e gerencie equipes</p>
+                </div>
+                <a href="/projetos/equipes/cadastro" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nova Equipe
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Status</th>
+                                <th>Membros</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="e : ${equipes}">
+                                <td th:text="${e.nome}">Nome da Equipe</td>
+                                <td>
+                                    <span class="badge" th:classappend="${e.ativa} ? ' bg-success' : ' bg-secondary'"
+                                          th:text="${e.ativa} ? 'Ativa' : 'Inativa'">Status</span>
+                                </td>
+                                <td th:text="${e.membros != null ? #lists.size(e.membros) : 0}">0</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(equipes)}">
+                                <td colspan="3" class="text-center text-muted">Nenhuma equipe cadastrada</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/sidebar.js"></script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 package com.jaasielsilva.portalceo.controller.projetos;
 
+import com.jaasielsilva.portalceo.model.projetos.TarefaProjeto;
+import com.jaasielsilva.portalceo.service.projetos.ProjetoService;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.service.projetos.TarefaProjetoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,9 @@ public class TarefaController {
 
     @Autowired
     private ColaboradorRepository colaboradorRepository;
+
+    @Autowired
+    private ProjetoService projetoService;
 
     @GetMapping("/listar")
     public String listar(Model model) {
@@ -40,4 +45,22 @@ public class TarefaController {
         tarefaService.atribuir(id, colaboradorId);
         return "redirect:/projetos/tarefas/atribuicoes";
     }
+
+    // Exibe formulário de cadastro de tarefa
+    @GetMapping("/cadastro")
+    public String cadastro(Model model) {
+        model.addAttribute("pageTitle", "Cadastro de Tarefa");
+        model.addAttribute("tarefa", new TarefaProjeto());
+        model.addAttribute("projetos", projetoService.listarAtivos());
+        model.addAttribute("colaboradores", colaboradorRepository.findByAtivoTrue());
+        return "projetos/tarefas/cadastro";
+    }
+
+    // Salva nova tarefa
+    @PostMapping("/salvar")
+    public String salvar(@ModelAttribute TarefaProjeto tarefa) {
+        tarefaService.salvar(tarefa);
+        return "redirect:/projetos/tarefas/listar";
+    }
+
 }

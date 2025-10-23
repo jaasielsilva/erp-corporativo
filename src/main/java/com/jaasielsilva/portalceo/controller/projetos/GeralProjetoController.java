@@ -54,7 +54,7 @@ public class GeralProjetoController {
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("pageTitle", "Editar Projeto");
         projetoService.buscarPorId(id).ifPresent(p -> model.addAttribute("projeto", p));
-        return "projetos/geral/novo"; // reutiliza o formulário para edição
+        return "projetos/geral/novo";
     }
 
     @PostMapping("/{id}/atualizar")

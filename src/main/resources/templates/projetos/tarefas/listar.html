@@ -52,9 +52,14 @@
                         <h1 class="h2 fw-bold mb-1">Tarefas</h1>
                         <p class="text-muted">Gerencie as tarefas de todos os projetos</p>
                     </div>
-                    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#novaTarefaModal">
-                        <i class="fas fa-plus me-2"></i>Nova Tarefa
-                    </button>
+                    <div class="btn-group">
+                        <a th:href="@{/projetos/tarefas/cadastro}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Nova Tarefa
+                        </a>
+                        <a th:href="@{/projetos/tarefas/atribuicoes}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-user-check me-2"></i>Atribuições
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Stats Cards -->
@@ -124,7 +129,7 @@
                 <div class="card">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <div class="p-4 text-center text-muted" th:if="${#lists.isEmpty(tarefas)}">Nenhuma tarefa encontrada</div>
+                            <div class="p-4 text-center text-muted" th:if="${tarefas == null or #lists.isEmpty(tarefas)}">Nenhuma tarefa encontrada</div>
 
                             <div th:each="t : ${tarefas}" class="task-row d-flex align-items-center p-3 border-bottom">
                                 <input type="checkbox" class="form-check-input me-3">
@@ -136,9 +141,9 @@
                                 </div>
                                 <span class="priority-badge me-3"
                                       th:text="${#strings.capitalize(#strings.toLowerCase('' + t.prioridade))}"
-                                      th:classappend="' priority-' + #strings.toLowerCase('' + t.prioridade)">Prioridade</span>
+                                      th:classappend="|priority-${#strings.toLowerCase('' + t.prioridade)}|">Prioridade</span>
                                 <div class="d-flex align-items-center me-3">
-                                    <img th:src="'https://ui-avatars.com/api/?name=' + (${t.atribuidaA != null ? t.atribuidaA.nome : 'Sem+responsável'}) + '&background=3b82f6&color=fff'"
+                                    <img th:src="|https://ui-avatars.com/api/?name=${t.atribuidaA != null ? t.atribuidaA.nome : 'Sem+responsável'}&background=3b82f6&color=fff|"
                                          class="rounded-circle me-2" width="32" height="32" alt="Avatar">
                                     <span class="small d-none d-md-inline" th:text="${t.atribuidaA != null ? t.atribuidaA.nome : 'Sem responsável'}">Responsável</span>
                                 </div>
@@ -146,6 +151,17 @@
                                 <span class="badge"
                                       th:text="${#strings.equalsIgnoreCase('' + t.status, 'CONCLUIDA') ? 'Concluída' : (#strings.equalsIgnoreCase('' + t.status, 'EM_ANDAMENTO') ? 'Em Andamento' : 'Pendente')}"
                                       th:classappend="${#strings.equalsIgnoreCase('' + t.status, 'CONCLUIDA') ? ' bg-success' : (#strings.equalsIgnoreCase('' + t.status, 'EM_ANDAMENTO') ? ' bg-primary' : ' bg-warning')}">Status</span>
+                                <div class="ms-auto d-flex align-items-center gap-2">
+                                    <a th:href="@{/projetos/cronograma/visualizar/{id}(id=${t.projeto != null ? t.projeto.id : 0})}" class="btn btn-sm btn-outline-secondary" th:classappend="${t.projeto == null} ? ' disabled'">
+                                        <i class="fas fa-diagram-project"></i>
+                                    </a>
+                                    <a th:href="@{/projetos/tarefas/atribuicoes}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-user-check"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-outline-success" th:if="${#strings.equalsIgnoreCase('' + t.status, 'EM_ANDAMENTO')}">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

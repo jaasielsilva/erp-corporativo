@@ -23,12 +23,16 @@ public class TarefaController {
     private ProjetoService projetoService;
 
     @GetMapping("/listar")
-    public String listar(Model model) {
+    public String listar(@RequestParam(name = "q", required = false) String q,
+                         @RequestParam(name = "status", required = false) TarefaProjeto.StatusTarefa status,
+                         Model model) {
         model.addAttribute("pageTitle", "Projetos - Tarefas");
-        model.addAttribute("tarefas", tarefaService.listarTodas());
+        model.addAttribute("tarefas", tarefaService.buscarPorFiltro(q, status));
         model.addAttribute("totalPendentes", tarefaService.countPendentes());
         model.addAttribute("totalEmAndamento", tarefaService.countEmAndamento());
         model.addAttribute("totalConcluidas", tarefaService.countConcluidas());
+        model.addAttribute("q", q);
+        model.addAttribute("statusFilter", status != null ? status.name() : "");
         return "projetos/tarefas/listar";
     }
 

@@ -101,27 +101,27 @@
                 <!-- Filters -->
                 <div class="card mb-4">
                     <div class="card-body">
-                        <div class="row g-3">
+                        <form class="row g-3" th:action="@{/projetos/tarefas/listar}" method="get">
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                    <input type="text" class="form-control" placeholder="Buscar tarefas...">
+                                    <input type="text" class="form-control" name="q" placeholder="Buscar tarefas..." th:value="${q}">
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <select class="form-select">
+                                <select class="form-select" name="status" th:value="${statusFilter}">
                                     <option value="">Todas</option>
-                                    <option value="pendente">Pendentes</option>
-                                    <option value="em_andamento">Em Andamento</option>
-                                    <option value="concluida">Concluídas</option>
+                                    <option value="PENDENTE" th:selected="${statusFilter} == 'PENDENTE'">Pendentes</option>
+                                    <option value="EM_ANDAMENTO" th:selected="${statusFilter} == 'EM_ANDAMENTO'">Em Andamento</option>
+                                    <option value="CONCLUIDA" th:selected="${statusFilter} == 'CONCLUIDA'">Concluídas</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <button class="btn btn-outline-secondary w-100">
-                                    <i class="fas fa-filter me-2"></i>Mais Filtros
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-2"></i>Buscar
                                 </button>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
 

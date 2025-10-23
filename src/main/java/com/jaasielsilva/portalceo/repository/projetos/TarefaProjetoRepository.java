@@ -12,4 +12,7 @@ public interface TarefaProjetoRepository extends JpaRepository<TarefaProjeto, Lo
     long countByStatus(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.StatusTarefa status);
     long countByProjetoIdAndStatus(Long projetoId, com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.StatusTarefa status);
     java.util.List<com.jaasielsilva.portalceo.model.projetos.TarefaProjeto> findByAtribuidaAId(Long colaboradorId);
+    java.util.List<TarefaProjeto> findByNomeContainingIgnoreCase(String termo);
+    java.util.List<TarefaProjeto> findByStatus(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.StatusTarefa status);
+    java.util.List<TarefaProjeto> findByStatusAndNomeContainingIgnoreCase(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.StatusTarefa status, String termo);
 }

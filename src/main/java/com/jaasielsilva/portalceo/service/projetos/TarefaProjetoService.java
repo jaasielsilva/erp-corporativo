@@ -27,6 +27,21 @@ public class TarefaProjetoService {
     }
 
     @Transactional(readOnly = true)
+    public List<TarefaProjeto> buscarPorFiltro(String q, TarefaProjeto.StatusTarefa status) {
+        String termo = (q != null && !q.isBlank()) ? q : null;
+        if (termo != null && status != null) {
+            return tarefaRepository.findByStatusAndNomeContainingIgnoreCase(status, termo);
+        }
+        if (termo != null) {
+            return tarefaRepository.findByNomeContainingIgnoreCase(termo);
+        }
+        if (status != null) {
+            return tarefaRepository.findByStatus(status);
+        }
+        return tarefaRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public long countPendentes() {
         return tarefaRepository.countByStatus(TarefaProjeto.StatusTarefa.PENDENTE);
     }

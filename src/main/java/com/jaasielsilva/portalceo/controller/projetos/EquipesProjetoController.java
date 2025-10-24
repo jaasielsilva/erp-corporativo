@@ -119,16 +119,26 @@ public class EquipesProjetoController {
         return "projetos/equipes/membros";
     }
 
-    // Retorna os IDs dos membros da equipe para seleção no modal
+    // DTO para retornar dados dos membros
+    static class MemberDTO {
+        public Long id;
+        public String nome;
+        public MemberDTO(Long id, String nome) { 
+            this.id = id; 
+            this.nome = nome; 
+        }
+    }
+
+    // Retorna os membros da equipe com id e nome para seleção no modal
     @GetMapping("/{equipeId}/membros")
     @ResponseBody
-    public List<Long> listarMembrosPorEquipe(@PathVariable Long equipeId) {
+    public List<MemberDTO> listarMembrosPorEquipe(@PathVariable Long equipeId) {
         Optional<EquipeProjeto> equipeOpt = equipeRepository.findById(equipeId);
         return equipeOpt
                 .map(EquipeProjeto::getMembros)
                 .orElseGet(List::of)
                 .stream()
-                .map(Colaborador::getId)
+                .map(colaborador -> new MemberDTO(colaborador.getId(), colaborador.getNome()))
                 .collect(Collectors.toList());
     }
 

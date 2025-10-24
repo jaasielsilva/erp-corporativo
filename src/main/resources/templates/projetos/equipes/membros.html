@@ -1,35 +1,36 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Membros da Equipe - ERP Corporativo</title>
-     <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
-    <!-- DataTables CSS (jsDelivr) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
-
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
     <style>
         .member-card {
             transition: all 0.3s ease;
             border-radius: 12px;
         }
+
         .member-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-        
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
-            
+
             <section class="content-area p-4">
                 <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -37,7 +38,8 @@
                         <h1 class="h2 fw-bold mb-1">Membros da Equipe</h1>
                         <p class="text-muted">Visualize e gerencie todos os membros da equipe</p>
                     </div>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#adicionarMembrosModal">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#adicionarMembrosModal">
                         <i class="fas fa-plus me-2"></i>Adicionar Membros
                     </button>
                 </div>
@@ -80,17 +82,18 @@
 
                 <!-- Members Grid -->
                 <div class="row g-4">
-                    <!-- Dynamic Member Cards -->
-                    <div class="col-md-6 col-lg-4" th:each="colaborador : ${colaboradoresPage.content}">
+                    <div class="col-md-6 col-lg-4" th:each="colaborador : ${colaboradoresPage.content}"
+                        th:attr="data-colaborador-id=${colaborador.id}">
                         <div class="card member-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div class="d-flex align-items-center gap-3">
-                                        <img th:src="'https://ui-avatars.com/api/?name=' + ${colaborador.nome} + '&background=3b82f6&color=fff&size=48'" 
-                                             class="rounded-circle" width="48" height="48" alt="Avatar">
+                                        <img th:src="'https://ui-avatars.com/api/?name=' + ${colaborador.nome} + '&background=3b82f6&color=fff&size=48'"
+                                            class="rounded-circle" width="48" height="48" alt="Avatar">
                                         <div>
                                             <h6 class="fw-bold mb-0" th:text="${colaborador.nome}">Nome do Colaborador</h6>
-                                            <p class="text-muted small mb-0" th:text="${colaborador.cargo?.nome ?: 'Cargo não definido'}">Cargo</p>
+                                            <p class="text-muted small mb-0"
+                                                th:text="${colaborador.cargo?.nome ?: 'Cargo não definido'}">Cargo</p>
                                         </div>
                                     </div>
                                     <div class="dropdown">
@@ -98,39 +101,45 @@
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" th:href="@{'/rh/colaboradores/ficha/' + ${colaborador.id}}">Ver Perfil</a></li>
-                                            <li><a class="dropdown-item" href="#">Atribuir Tarefa</a></li>
+                                            <li><a class="dropdown-item"
+                                                    th:href="@{'/rh/colaboradores/ficha/' + ${colaborador.id}}">Ver Perfil</a></li>
+                                            <li><a class="dropdown-item atribuir-tarefa" href="#">Atribuir Tarefa</a></li>
                                             <li><a class="dropdown-item" href="#">Enviar Mensagem</a></li>
                                         </ul>
                                     </div>
                                 </div>
 
-                                <span th:class="'badge mb-3 ' + (${estatisticasTarefas[colaborador.id]['ativas']} < 5 ? 'bg-success' : 'bg-warning text-dark')" 
-                                      th:text="${estatisticasTarefas[colaborador.id]['ativas']} < 5 ? 'Disponível' : 'Ocupado'">Status</span>
+                                <span th:class="'badge mb-3 ' + (${estatisticasTarefas[colaborador.id]['ativas']} < 5 ? 'bg-success' : 'bg-warning text-dark')"
+                                    th:text="${estatisticasTarefas[colaborador.id]['ativas']} < 5 ? 'Disponível' : 'Ocupado'">Status</span>
 
                                 <div class="mb-3">
                                     <div class="d-flex align-items-center gap-2 mb-2">
                                         <i class="fas fa-envelope text-muted"></i>
-                                        <span class="small text-muted" th:text="${colaborador.email ?: 'Email não informado'}">email@empresa.com</span>
+                                        <span class="small text-muted"
+                                            th:text="${colaborador.email ?: 'Email não informado'}">email@empresa.com</span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="fas fa-phone text-muted"></i>
-                                        <span class="small text-muted" th:text="${colaborador.telefone ?: 'Telefone não informado'}">Telefone</span>
+                                        <span class="small text-muted"
+                                            th:text="${colaborador.telefone ?: 'Telefone não informado'}">Telefone</span>
                                     </div>
                                 </div>
 
                                 <div class="row g-3 pt-3 border-top">
                                     <div class="col-4">
                                         <p class="small text-muted mb-0">Total</p>
-                                        <p class="fs-5 fw-bold mb-0" th:text="${estatisticasTarefas[colaborador.id]['total']}">0</p>
+                                        <p class="fs-5 fw-bold mb-0"
+                                            th:text="${estatisticasTarefas[colaborador.id]['total']}">0</p>
                                     </div>
                                     <div class="col-4">
                                         <p class="small text-muted mb-0">Ativas</p>
-                                        <p class="fs-5 fw-bold text-primary mb-0" th:text="${estatisticasTarefas[colaborador.id]['ativas']}">0</p>
+                                        <p class="fs-5 fw-bold text-primary mb-0"
+                                            th:text="${estatisticasTarefas[colaborador.id]['ativas']}">0</p>
                                     </div>
                                     <div class="col-4">
                                         <p class="small text-muted mb-0">Concluídas</p>
-                                        <p class="fs-5 fw-bold text-success mb-0" th:text="${estatisticasTarefas[colaborador.id]['concluidas']}">0</p>
+                                        <p class="fs-5 fw-bold text-success mb-0"
+                                            th:text="${estatisticasTarefas[colaborador.id]['concluidas']}">0</p>
                                     </div>
                                 </div>
                             </div>
@@ -138,140 +147,103 @@
                     </div>
                 </div>
 
-                <!-- Pagination -->
-                <nav aria-label="Navegação de página" class="mt-3">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item" th:classappend="${colaboradoresPage.first} ? 'disabled'">
-                            <a class="page-link" th:href="@{/projetos/equipes/membros(page=${colaboradoresPage.number - 1},size=${colaboradoresPage.size})}">Anterior</a>
-                        </li>
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, colaboradoresPage.totalPages - 1)}"
-                            th:classappend="${i} == ${colaboradoresPage.number} ? 'active'">
-                            <a class="page-link" th:text="${i + 1}"
-                               th:href="@{/projetos/equipes/membros(page=${i},size=${colaboradoresPage.size})}">1</a>
-                        </li>
-                        <li class="page-item" th:classappend="${colaboradoresPage.last} ? 'disabled'">
-                            <a class="page-link" th:href="@{/projetos/equipes/membros(page=${colaboradoresPage.number + 1},size=${colaboradoresPage.size})}">Próxima</a>
-                        </li>
-                    </ul>
-                </nav>
+                <!-- Modal Atribuir Tarefa -->
+                <div class="modal fade" id="atribuirTarefaModal" tabindex="-1"
+                    aria-labelledby="atribuirTarefaModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Atribuir Tarefa</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="formAtribuirTarefa" method="post"
+                                    th:action="@{/projetos/tarefas/{id}/atribuir(id=0)}">
+                                    <input type="hidden" id="colaboradorId" name="colaboradorId" value="">
+                                    <div class="mb-3">
+                                        <label for="tarefaSelect" class="form-label">Selecione a Tarefa</label>
+                                        <select class="form-select" id="tarefaSelect" required>
+                                            <option value="">Selecione uma tarefa...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Colaborador</label>
+                                        <input type="text" class="form-control" id="colaboradorNome" readonly>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" id="btnAtribuirTarefa">Atribuir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
 
-     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/sidebar.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
-    <!-- DataTables JS (jsDelivr) -->
     <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
-    
-    <!-- Modal Adicionar Membros -->
-    <div class="modal fade" id="adicionarMembrosModal" tabindex="-1" aria-labelledby="adicionarMembrosModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="adicionarMembrosModalLabel">Adicionar Membros à Equipe</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formAdicionarMembros" th:action="@{/projetos/equipes/membros/salvar}" method="post">
-                        <div class="mb-3">
-                            <label for="equipeSelect" class="form-label">Selecione a Equipe</label>
-                            <select class="form-select" id="equipeSelect" name="equipeId" required>
-                                <option value="">Selecione uma equipe...</option>
-                                <option th:each="equipe : ${equipes}" th:value="${equipe.id}" th:text="${equipe.nome}"></option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Selecione os Colaboradores</label>
-                            <div class="table-responsive">
-                                <table class="table table-striped" id="tabelaColaboradores">
-                                    <thead>
-                                        <tr>
-                                            <th width="5%">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="selecionarTodos">
-                                                    <label class="form-check-label" for="selecionarTodos"></label>
-                                                </div>
-                                            </th>
-                                            <th>Nome</th>
-                                            <th>Cargo</th>
-                                            <th>Departamento</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="colaborador : ${colaboradoresAll}">
-                                            <td>
-                                                <div class="form-check">
-                                                    <input class="form-check-input colaborador-check" type="checkbox" 
-                                                           th:id="${'colaborador_' + colaborador.id}" 
-                                                           name="colaboradoresIds" th:value="${colaborador.id}">
-                                                    <label class="form-check-label" th:for="${'colaborador_' + colaborador.id}"></label>
-                                                </div>
-                                            </td>
-                                            <td th:text="${colaborador.nome}">Nome do Colaborador</td>
-                                            <td th:text="${colaborador.cargo != null ? colaborador.cargo.nome : ''}">Cargo</td>
-                                            <td th:text="${colaborador.departamento != null ? colaborador.departamento.nome : ''}">Departamento</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnSalvarMembros">Salvar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+
     <script>
-        $(document).ready(function() {
-            // Inicializar DataTable com fallback seguro
+        $(document).ready(function () {
+            // DataTables
             if ($.fn && $.fn.DataTable) {
                 $('#tabelaColaboradores').DataTable({
-                    language: {
-                        url: 'https://cdn.jsdelivr.net/npm/datatables.net-plugins@1.13.8/i18n/pt-BR.json'
-                    },
+                    language: { url: 'https://cdn.jsdelivr.net/npm/datatables.net-plugins@1.13.8/i18n/pt-BR.json' },
                     pageLength: 5,
                     lengthMenu: [5, 10, 25, 50]
                 });
-            } else {
-                console.warn('DataTables não carregado; a tabela funcionará sem paginação/ordenção.');
             }
-            
-            // Selecionar/Deselecionar todos
-            $('#selecionarTodos').change(function() {
-                $('.colaborador-check').prop('checked', $(this).prop('checked'));
-            });
-            
-            // Carregar membros atuais quando selecionar uma equipe
-            $('#equipeSelect').change(function() {
-                const equipeId = $(this).val();
-                if (equipeId) {
-                    $.get('/projetos/equipes/' + equipeId + '/membros', function(data) {
-                        // Limpar todas as seleções
-                        $('.colaborador-check').prop('checked', false);
-                        
-                        // Marcar os membros atuais
-                        data.forEach(function(membroId) {
-                            $('#colaborador_' + membroId).prop('checked', true);
-                        });
-                    });
+
+            // Modal Atribuir Tarefa
+            $('.atribuir-tarefa').click(function () {
+                const card = $(this).closest('[data-colaborador-id]');
+                const colaboradorId = card.data('colaborador-id');
+                const colaboradorNome = card.find('h6').text();
+
+                if (!colaboradorId) {
+                    alert("Não foi possível identificar o colaborador.");
+                    return;
                 }
+
+                $('#colaboradorNome').val(colaboradorNome);
+                $('#colaboradorId').val(colaboradorId);
+                $('#tarefaSelect').empty().append('<option value="">Selecione uma tarefa...</option>');
+
+                const projetoId = $('#projeto').val();
+                if (!projetoId) {
+                    alert("Selecione um projeto primeiro!");
+                    return;
+                }
+
+                $.get(`/projetos/tarefas/projetos/${projetoId}/tarefas/disponiveis`, function (data) {
+                    data.forEach(t => $('#tarefaSelect').append(`<option value="${t.id}">${t.nome}</option>`));
+                });
+
+                new bootstrap.Modal(document.getElementById('atribuirTarefaModal')).show();
             });
-            
-            // Submeter formulário
-            $('#btnSalvarMembros').click(function() {
-                $('#formAdicionarMembros').submit();
+
+            $('#btnAtribuirTarefa').click(function () {
+                const tarefaId = $('#tarefaSelect').val();
+                const colaboradorId = $('#colaboradorId').val();
+                if (!tarefaId || !colaboradorId) { alert("Selecione uma tarefa!"); return; }
+
+                $.post(`/projetos/tarefas/${tarefaId}/atribuir`, { colaboradorId })
+                    .done(() => { alert("Tarefa atribuída com sucesso!"); location.reload(); })
+                    .fail(() => { alert("Erro ao atribuir a tarefa!"); });
             });
         });
     </script>
 </body>
+
 </html>

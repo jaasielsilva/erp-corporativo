@@ -38,47 +38,57 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label for="nome" class="form-label">Nome da Tarefa <span class="text-danger">*</span></label>
+                                    <label for="nome" class="form-label">Nome da Tarefa <span
+                                            class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="nome" th:field="*{nome}" required>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}"
+                                        th:errors="*{nome}"></div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="projeto" class="form-label">Projeto <span class="text-danger">*</span></label>
+                                    <label for="projeto" class="form-label">Projeto <span
+                                            class="text-danger">*</span></label>
                                     <select class="form-select" id="projeto" th:field="*{projeto.id}" required>
                                         <option value="">Selecione...</option>
-                                        <option th:each="p : ${projetos}" th:value="${p.id}" th:text="${p.nome}"></option>
+                                        <option th:each="p : ${projetos}" th:value="${p.id}" th:text="${p.nome}">
+                                        </option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('projeto')}" th:errors="*{projeto}"></div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('projeto')}"
+                                        th:errors="*{projeto}"></div>
                                 </div>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col-md-4">
-                                    <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <label for="status" class="form-label">Status <span
+                                            class="text-danger">*</span></label>
                                     <select class="form-select" id="status" th:field="*{status}" required>
                                         <option value="">Selecione...</option>
-                                        <option th:each="s : ${T(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.StatusTarefa).values()}" 
-                                                th:value="${s}" 
-                                                th:text="${#strings.capitalize(s.name().toLowerCase())}">
+                                        <option
+                                            th:each="s : ${T(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.StatusTarefa).values()}"
+                                            th:value="${s}" th:text="${#strings.capitalize(s.name().toLowerCase())}">
                                         </option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}"
+                                        th:errors="*{status}"></div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="prioridade" class="form-label">Prioridade <span class="text-danger">*</span></label>
+                                    <label for="prioridade" class="form-label">Prioridade <span
+                                            class="text-danger">*</span></label>
                                     <select class="form-select" id="prioridade" th:field="*{prioridade}" required>
                                         <option value="">Selecione...</option>
-                                        <option th:each="p : ${T(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.Prioridade).values()}" 
-                                                th:value="${p}" 
-                                                th:text="${#strings.capitalize(p.name().toLowerCase())}">
+                                        <option
+                                            th:each="p : ${T(com.jaasielsilva.portalceo.model.projetos.TarefaProjeto.Prioridade).values()}"
+                                            th:value="${p}" th:text="${#strings.capitalize(p.name().toLowerCase())}">
                                         </option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('prioridade')}" th:errors="*{prioridade}"></div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('prioridade')}"
+                                        th:errors="*{prioridade}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="prazo" class="form-label">Prazo</label>
                                     <input type="date" class="form-control" id="prazo" th:field="*{prazo}">
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('prazo')}" th:errors="*{prazo}"></div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('prazo')}"
+                                        th:errors="*{prazo}"></div>
                                 </div>
                             </div>
 
@@ -86,9 +96,13 @@
                                 <label for="atribuidaA" class="form-label">Atribuir para</label>
                                 <select class="form-select" id="atribuidaA" th:field="*{atribuidaA.id}">
                                     <option value="">Selecione...</option>
-                                    <option th:each="colaborador : ${colaboradoresAll}" th:value="${colaborador.id}" th:text="${colaborador.nome}"></option>
+                                    <option th:each="colaborador : ${colaboradoresAll}" th:value="${colaborador.id}"
+                                        th:text="${colaborador.nome}">
+                                    </option>
                                 </select>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('atribuidaA')}" th:errors="*{atribuidaA}"></div>
+
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('atribuidaA')}"
+                                    th:errors="*{atribuidaA}"></div>
                             </div>
 
                             <div class="form-check mb-4">

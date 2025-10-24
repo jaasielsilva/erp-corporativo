@@ -23,22 +23,54 @@
 
             <!-- Page content -->
             <section class="content-area p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h1 class="h2 fw-bold mb-1">Atribuições de Tarefas</h1>
-                        <p class="text-muted">Gerencie as atribuições de tarefas para os projetos</p>
-                    </div>
-                    <!-- Botão de exemplo (pode remover ou alterar) -->
-                    <button class="btn btn-primary btn-lg">
-                        <i class="fas fa-plus me-2"></i>Nova Atribuição
-                    </button>
-                </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-1">Atribuições de Tarefas</h1>
+            <p class="text-muted">Gerencie as atribuições de tarefas para os projetos</p>
+        </div>
+    </div>
 
-                <!-- Placeholder / conteúdo real vai aqui -->
-                <div class="content-placeholder">
-                    Aqui será a página de atribuições de tarefas do módulo de PROJETOS
-                </div>
-            </section>
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tarefa</th>
+                            <th>Projeto</th>
+                            <th>Responsável Atual</th>
+                            <th>Atribuir Para</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="t : ${tarefas}">
+                            <td th:text="${t.nome}">Nome da Tarefa</td>
+                            <td th:text="${t.projeto != null ? t.projeto.nome : 'Sem Projeto'}">Projeto</td>
+                            <td th:text="${t.atribuidaA != null ? t.atribuidaA.nome : 'Sem responsável'}">Responsável</td>
+                            <td>
+                                <form th:action="@{/projetos/tarefas/{id}/atribuir(id=${t.id})}" method="post">
+                                    <select name="colaboradorId" class="form-select">
+                                        <option th:each="c : ${colaboradores}" th:value="${c.id}" th:text="${c.nome}" 
+                                            th:selected="${t.atribuidaA != null and t.atribuidaA.id == c.id}"></option>
+                                    </select>
+                            </td>
+                            <td th:text="${t.status}">Status</td>
+                            <td>
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-user-check me-1"></i>Atribuir
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
 
             <!-- Footer -->
             <footer th:replace="~{components/footer :: footer}"></footer>

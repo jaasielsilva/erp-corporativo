@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.controller.projetos;
 
 import com.jaasielsilva.portalceo.model.projetos.Projeto;
+import com.jaasielsilva.portalceo.repository.projetos.EquipeProjetoRepository;
 import com.jaasielsilva.portalceo.service.projetos.ProjetoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,6 +14,9 @@ public class GeralProjetoController {
 
     @Autowired
     private ProjetoService projetoService;
+
+    @Autowired
+    private EquipeProjetoRepository equipeRepository;
 
     @GetMapping("/listar")
     public String listar(Model model) {
@@ -27,16 +31,17 @@ public class GeralProjetoController {
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("pageTitle", "Novo Projeto");
+        model.addAttribute("equipes", equipeRepository.findAll());
         return "projetos/geral/novo";
     }
 
     @PostMapping("/salvar")
     public String salvar(@RequestParam String nome,
-                         @RequestParam(required = false) String descricao,
-                         @RequestParam(required = false) java.time.LocalDate prazo,
-                         @RequestParam(required = false) String prioridade,
-                         @RequestParam(required = false) Long gerente,
-                         @RequestParam(required = false) java.math.BigDecimal orcamento) {
+            @RequestParam(required = false) String descricao,
+            @RequestParam(required = false) java.time.LocalDate prazo,
+            @RequestParam(required = false) String prioridade,
+            @RequestParam(required = false) Long gerente,
+            @RequestParam(required = false) java.math.BigDecimal orcamento) {
         Projeto projeto = new Projeto();
         projeto.setNome(nome);
         projeto.setDescricao(descricao);
@@ -46,7 +51,7 @@ public class GeralProjetoController {
         projeto.setOrcamento(orcamento);
         projeto.setProgresso(0);
 
-        Projeto salvo = projetoService.salvar(projeto);
+        Projeto salvo = projetoService.salvarComEquipe(projeto);
         return "redirect:/projetos/cronograma/visualizar/" + salvo.getId();
     }
 
@@ -59,10 +64,10 @@ public class GeralProjetoController {
 
     @PostMapping("/{id}/atualizar")
     public String atualizar(@PathVariable Long id,
-                            @RequestParam String nome,
-                            @RequestParam(required = false) String descricao,
-                            @RequestParam(required = false) java.time.LocalDate prazo,
-                            @RequestParam(required = false) java.math.BigDecimal orcamento) {
+            @RequestParam String nome,
+            @RequestParam(required = false) String descricao,
+            @RequestParam(required = false) java.time.LocalDate prazo,
+            @RequestParam(required = false) java.math.BigDecimal orcamento) {
         Projeto projeto = projetoService.buscarPorId(id).orElseThrow();
         projeto.setNome(nome);
         projeto.setDescricao(descricao);

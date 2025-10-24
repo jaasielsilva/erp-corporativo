@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,13 +10,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="app-container">
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-        
+
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
-            
+
             <section class="content-area p-4">
                 <!-- Header -->
                 <div class="d-flex align-items-center gap-3 mb-4">
@@ -41,15 +43,25 @@
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label for="nome" class="form-label">Nome do Projeto *</label>
-                                        <input type="text" class="form-control" id="nome" name="nome" 
-                                               placeholder="Ex: Implementação ERP" required>
+                                        <input type="text" class="form-control" id="nome" name="nome"
+                                            placeholder="Ex: Implementação ERP" required>
                                     </div>
 
                                     <div class="mb-3">
                                         <label for="descricao" class="form-label">Descrição</label>
                                         <textarea class="form-control" id="descricao" name="descricao" rows="4"
-                                                  placeholder="Descreva os objetivos e escopo do projeto..."></textarea>
+                                            placeholder="Descreva os objetivos e escopo do projeto..."></textarea>
                                     </div>
+
+                                    <div class="mb-3">
+                                        <label for="equipe" class="form-label">Equipe</label>
+                                        <select class="form-select" id="equipe" name="equipeId">
+                                            <option value="">Selecione uma equipe</option>
+                                            <option th:each="e : ${equipes}" th:value="${e.id}" th:text="${e.nome}">
+                                            </option>
+                                        </select>
+                                    </div>
+
 
                                     <div class="row g-3">
                                         <div class="col-md-6">
@@ -90,8 +102,8 @@
 
                                     <div class="mb-3">
                                         <label for="orcamento" class="form-label">Orçamento (R$)</label>
-                                        <input type="number" class="form-control" id="orcamento" name="orcamento" 
-                                               placeholder="0.00" step="0.01">
+                                        <input type="number" class="form-control" id="orcamento" name="orcamento"
+                                            placeholder="0.00" step="0.01">
                                     </div>
                                 </div>
                             </div>
@@ -107,15 +119,18 @@
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <p class="fw-semibold mb-1">Nome claro</p>
-                                        <p class="text-muted small mb-0">Use um nome descritivo que identifique facilmente o projeto.</p>
+                                        <p class="text-muted small mb-0">Use um nome descritivo que identifique
+                                            facilmente o projeto.</p>
                                     </div>
                                     <div class="mb-3">
                                         <p class="fw-semibold mb-1">Descrição detalhada</p>
-                                        <p class="text-muted small mb-0">Inclua objetivos, entregas esperadas e benefícios.</p>
+                                        <p class="text-muted small mb-0">Inclua objetivos, entregas esperadas e
+                                            benefícios.</p>
                                     </div>
                                     <div>
                                         <p class="fw-semibold mb-1">Prazo realista</p>
-                                        <p class="text-muted small mb-0">Defina um prazo alcançável considerando os recursos.</p>
+                                        <p class="text-muted small mb-0">Defina um prazo alcançável considerando os
+                                            recursos.</p>
                                     </div>
                                 </div>
                             </div>
@@ -144,4 +159,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/sidebar.js"></script>
 </body>
+
 </html>

@@ -42,7 +42,7 @@ public class TarefaProjeto extends BaseEntity {
     @JoinColumn(name = "projeto_id", nullable = false)
     private Projeto projeto;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "atribuida_a_id")
     private Colaborador atribuidaA;
 

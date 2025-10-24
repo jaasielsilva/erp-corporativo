@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class TestController {
 
-    @GetMapping("/test-notifications")
+    @GetMapping("/test")
     public String testNotifications() {
-        return "test-notifications";
+        return "test";
     }
 }

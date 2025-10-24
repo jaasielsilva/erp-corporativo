@@ -45,7 +45,7 @@ public class TarefaController {
         model.addAttribute("totalConcluidas", tarefaService.countConcluidas());
         model.addAttribute("q", q);
         model.addAttribute("statusFilter", status != null ? status.name() : "");
-        model.addAttribute("projetos", projetoService.listarAtivos());
+        model.addAttribute("projetos", projetoService.buscarTodosAtivos());
 
         if (projetoId != null) {
             model.addAttribute("projeto", projetoService.buscarPorId(projetoId));
@@ -64,8 +64,8 @@ public class TarefaController {
     }
 
     @PostMapping("/{id}/atribuir")
-    public String atribuir(@PathVariable Long id, @RequestParam Long colaboradorId) {
-        tarefaService.atribuir(id, colaboradorId);
+    public String atribuir(@PathVariable Long id, @RequestParam Long colaboradorId, @RequestParam Long projetoId) {
+        tarefaService.atribuir(id, colaboradorId, projetoId);
         return "redirect:/projetos/tarefas/atribuicoes";
     }
 
@@ -74,7 +74,7 @@ public class TarefaController {
     public String cadastro(Model model) {
         model.addAttribute("pageTitle", "Cadastro de Tarefa");
         model.addAttribute("tarefa", new TarefaProjeto());
-        model.addAttribute("projetos", projetoService.listarAtivos());
+        model.addAttribute("projetos", projetoService.buscarTodosAtivos());
 
         // Padronizar o nome como "colaboradoresAll" (para o Thymeleaf)
         model.addAttribute("colaboradoresAll", colaboradorRepository.findByAtivoTrue());

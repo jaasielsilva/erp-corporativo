@@ -26,13 +26,20 @@ public class CronogramaController {
 
     @GetMapping("/visualizar/{id}")
     public String visualizarProjeto(@PathVariable Long id, Model model) {
-        Projeto projeto = projetoService.buscarPorIdComEquipeMembros(id).orElse(null);
-        model.addAttribute("pageTitle", "Cronograma de Projetos");
-        model.addAttribute("projeto", projeto);
-        if (projeto != null) {
-            model.addAttribute("tarefas", tarefaService.listarPorProjeto(projeto.getId()));
-            model.addAttribute("equipe", projeto.getEquipe());
+        try {
+            Projeto projeto = projetoService.buscarPorIdComEquipeMembros(id).orElse(null);
+            model.addAttribute("pageTitle", "Cronograma de Projetos");
+            model.addAttribute("projeto", projeto);
+            if (projeto != null) {
+                model.addAttribute("tarefas", tarefaService.listarPorProjeto(projeto.getId()));
+                model.addAttribute("equipe", projeto.getEquipe());
+            }
+            return "projetos/cronograma/visualizar";
+        } catch (Exception e) {
+            System.err.println("Erro ao visualizar projeto no cronograma: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("errorMessage", "Ocorreu um erro ao carregar o cronograma do projeto.");
+            return "error/500";
         }
-        return "projetos/cronograma/visualizar";
     }
 }

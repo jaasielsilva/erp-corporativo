@@ -1,52 +1,81 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layouts/main}">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <title>Cadastro de Equipes</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Equipes - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
 <body>
-    <div layout:fragment="content">
-        <div class="container-fluid">
-            <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                <h1 class="h3 mb-0 text-gray-800">Cadastro de Equipes</h1>
-                <a href="/projetos/equipes/listar" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                    <i class="fas fa-list fa-sm text-white-50"></i> Listar Equipes
-                </a>
-            </div>   
+    <div class="app-container">
 
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Nova Equipe</h6>
-                </div>
-                <div class="card-body">
-                    <form th:action="@{/projetos/equipes/salvar}" method="post" th:object="${equipe}">
-                        <input type="hidden" th:field="*{id}" />
-                        
-                        <div class="form-group">
-                            <label for="nome">Nome da Equipe</label>
-                            <input type="text" class="form-control" id="nome" th:field="*{nome}" required>
-                            <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="ativa" th:field="*{ativa}" checked>
-                                <label class="custom-control-label" for="ativa">Equipe Ativa</label>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Salvar
-                        </button>
-                        <a href="/projetos/equipes/listar" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancelar
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Conteúdo da página Cadastro de Equipes -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Cadastro de Equipes</h1>
+                        <a href="/projetos/equipes/listar" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                            <i class="fas fa-list fa-sm text-white-50"></i> Listar Equipes
                         </a>
-                    </form>
+                    </div>   
+
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Nova Equipe</h6>
+                        </div>
+                        <div class="card-body">
+                            <form th:action="@{/projetos/equipes/salvar}" method="post" th:object="${equipe}">
+                                <input type="hidden" th:field="*{id}" />
+                                
+                                <div class="form-group">
+                                    <label for="nome">Nome da Equipe</label>
+                                    <input type="text" class="form-control" id="nome" th:field="*{nome}" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="ativa" th:field="*{ativa}" checked>
+                                        <label class="custom-control-label" for="ativa">Equipe Ativa</label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Salvar
+                                </button>
+                                <a href="/projetos/equipes/listar" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+
+        </main>
     </div>
+
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
 </body>
+
 </html>

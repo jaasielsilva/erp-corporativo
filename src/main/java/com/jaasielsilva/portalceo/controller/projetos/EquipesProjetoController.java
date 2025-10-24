@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -136,7 +137,7 @@ public class EquipesProjetoController {
         Optional<EquipeProjeto> equipeOpt = equipeRepository.findById(equipeId);
         return equipeOpt
                 .map(EquipeProjeto::getMembros)
-                .orElseGet(List::of)
+                .orElseGet(HashSet::new)
                 .stream()
                 .map(colaborador -> new MemberDTO(colaborador.getId(), colaborador.getNome()))
                 .collect(Collectors.toList());
@@ -156,7 +157,7 @@ public class EquipesProjetoController {
                 ? List.of()
                 : colaboradorRepository.findAllById(colaboradoresIds);
 
-        equipe.setMembros(membrosSelecionados);
+        equipe.setMembros(new HashSet<>(membrosSelecionados));
         equipeRepository.save(equipe);
 
         model.addAttribute("mensagem", "Membros atualizados com sucesso!");

@@ -10,6 +10,8 @@ import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Getter
 @Setter
@@ -38,6 +40,7 @@ public class TarefaProjeto extends BaseEntity {
 
     private LocalDate prazo;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "projeto_id", nullable = false)
     private Projeto projeto;

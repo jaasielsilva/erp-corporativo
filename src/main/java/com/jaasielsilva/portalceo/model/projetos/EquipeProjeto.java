@@ -8,8 +8,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.EqualsAndHashCode;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -35,7 +35,7 @@ public class EquipeProjeto extends BaseEntity {
         joinColumns = @JoinColumn(name = "equipe_id"),
         inverseJoinColumns = @JoinColumn(name = "colaborador_id")
     )
-    private List<Colaborador> membros = new ArrayList<>();
+    private Set<Colaborador> membros = new HashSet<>();
 
     @Column(nullable = false)
     private Boolean ativa = true;

@@ -161,6 +161,12 @@
                                     th:action="@{/projetos/tarefas/{id}/atribuir(id=0)}">
                                     <input type="hidden" id="colaboradorId" name="colaboradorId" value="">
                                     <div class="mb-3">
+                                        <label for="projetoSelect" class="form-label">Selecione o Projeto</label>
+                                        <select class="form-select" id="projetoSelect" required>
+                                            <option value="">Selecione um projeto...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="tarefaSelect" class="form-label">Selecione a Tarefa</label>
                                         <select class="form-select" id="tarefaSelect" required>
                                             <option value="">Selecione uma tarefa...</option>
@@ -176,6 +182,41 @@
                                 <button type="button" class="btn btn-secondary"
                                     data-bs-dismiss="modal">Cancelar</button>
                                 <button type="button" class="btn btn-primary" id="btnAtribuirTarefa">Atribuir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Adicionar Membros -->
+                <div class="modal fade" id="adicionarMembrosModal" tabindex="-1"
+                    aria-labelledby="adicionarMembrosModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="adicionarMembrosModalLabel">Adicionar Membros à Equipe</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="formAdicionarMembros" method="post">
+                                    <div class="mb-3">
+                                        <label for="equipeSelect" class="form-label">Selecione a Equipe</label>
+                                        <select class="form-select" id="equipeSelect" name="equipeId" required>
+                                            <option value="">Selecione uma equipe...</option>
+                                            <!-- Options will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="colaboradorSelect" class="form-label">Selecione o Colaborador</label>
+                                        <select class="form-select" id="colaboradorSelect" name="colaboradorId" required>
+                                            <option value="">Selecione um colaborador...</option>
+                                            <!-- Options will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" id="btnSalvarMembro">Adicionar</button>
                             </div>
                         </div>
                     </div>
@@ -219,15 +260,22 @@
                 $('#colaboradorNome').val(colaboradorNome);
                 $('#colaboradorId').val(colaboradorId);
                 $('#tarefaSelect').empty().append('<option value="">Selecione uma tarefa...</option>');
+                $('#projetoSelect').empty().append('<option value="">Selecione um projeto...</option>');
 
-                const projetoId = $('#projeto').val();
-                if (!projetoId) {
-                    alert("Selecione um projeto primeiro!");
-                    return;
-                }
+                // Carregar projetos disponíveis
+                $.get("/projetos/geral/listar-ativos", function (data) {
+                    data.forEach(p => $('#projetoSelect').append(`<option value="${p.id}">${p.nome}</option>`));
+                });
 
-                $.get(`/projetos/tarefas/projetos/${projetoId}/tarefas/disponiveis`, function (data) {
-                    data.forEach(t => $('#tarefaSelect').append(`<option value="${t.id}">${t.nome}</option>`));
+                // Evento de mudança para o seletor de projetos
+                $('#projetoSelect').change(function() {
+                    const projetoId = $(this).val();
+                    $('#tarefaSelect').empty().append('<option value="">Selecione uma tarefa...</option>');
+                    if (projetoId) {
+                        $.get(`/projetos/tarefas/projetos/${projetoId}/tarefas/disponiveis`, function (data) {
+                            data.forEach(t => $('#tarefaSelect').append(`<option value="${t.id}">${t.nome}</option>`));
+                        });
+                    }
                 });
 
                 new bootstrap.Modal(document.getElementById('atribuirTarefaModal')).show();
@@ -236,11 +284,43 @@
             $('#btnAtribuirTarefa').click(function () {
                 const tarefaId = $('#tarefaSelect').val();
                 const colaboradorId = $('#colaboradorId').val();
-                if (!tarefaId || !colaboradorId) { alert("Selecione uma tarefa!"); return; }
+                const projetoId = $('#projetoSelect').val();
+                if (!tarefaId || !colaboradorId || !projetoId) { alert("Selecione um projeto e uma tarefa!"); return; }
 
-                $.post(`/projetos/tarefas/${tarefaId}/atribuir`, { colaboradorId })
+                $.post(`/projetos/tarefas/${tarefaId}/atribuir`, { colaboradorId, projetoId })
                     .done(() => { alert("Tarefa atribuída com sucesso!"); location.reload(); })
                     .fail(() => { alert("Erro ao atribuir a tarefa!"); });
+            });
+
+            // Lógica para o Modal Adicionar Membros
+            $('#adicionarMembrosModal').on('show.bs.modal', function () {
+                // Limpar dropdowns
+                $('#equipeSelect').empty().append('<option value="">Selecione uma equipe...</option>');
+                $('#colaboradorSelect').empty().append('<option value="">Selecione um colaborador...</option>');
+
+                // Carregar equipes ativas
+                $.get("/projetos/geral/listar-ativos", function (data) {
+                    data.forEach(equipe => $('#equipeSelect').append(`<option value="${equipe.id}">${equipe.nome}</option>`));
+                });
+
+                // Carregar colaboradores disponíveis
+                $.get("/api/chamados/colaboradores-disponiveis", function (data) {
+                    data.forEach(colaborador => $('#colaboradorSelect').append(`<option value="${colaborador.id}">${colaborador.nome}</option>`));
+                });
+            });
+
+            $('#btnSalvarMembro').click(function () {
+                const equipeId = $('#equipeSelect').val();
+                const colaboradorId = $('#colaboradorSelect').val();
+
+                if (!equipeId || !colaboradorId) {
+                    alert("Selecione uma equipe e um colaborador!");
+                    return;
+                }
+
+                $.post("/projetos/equipes/adicionar-membro", { equipeId, colaboradorId })
+                    .done(() => { alert("Membro adicionado com sucesso!"); location.reload(); })
+                    .fail(() => { alert("Erro ao adicionar membro!"); });
             });
         });
     </script>

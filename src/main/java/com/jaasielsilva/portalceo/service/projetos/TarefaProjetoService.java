@@ -75,8 +75,11 @@ public class TarefaProjetoService {
     }
 
     @Transactional
-    public void atribuir(Long tarefaId, Long colaboradorId) {
+    public void atribuir(Long tarefaId, Long colaboradorId, Long projetoId) {
         tarefaRepository.findById(tarefaId).ifPresent(t -> {
+            if (!t.getProjeto().getId().equals(projetoId)) {
+                throw new IllegalArgumentException("A tarefa não pertence ao projeto especificado.");
+            }
             com.jaasielsilva.portalceo.model.Colaborador col = new com.jaasielsilva.portalceo.model.Colaborador();
             col.setId(colaboradorId);
             t.setAtribuidaA(col);

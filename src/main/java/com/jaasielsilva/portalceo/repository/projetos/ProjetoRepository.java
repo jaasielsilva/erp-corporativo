@@ -12,7 +12,8 @@ import java.util.Optional;
 @Repository
 public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
 
-    List<Projeto> findByAtivoTrueOrderByDataCriacaoDesc();
+    @Query("SELECT p FROM Projeto p LEFT JOIN FETCH p.equipe e LEFT JOIN FETCH e.membros LEFT JOIN FETCH p.tarefas WHERE p.ativo = true ORDER BY p.dataCriacao DESC")
+List<Projeto> findAllActiveWithEquipeAndMembros();
 
     @Query("SELECT COUNT(p) FROM Projeto p WHERE p.status = com.jaasielsilva.portalceo.model.projetos.Projeto.StatusProjeto.EM_ANDAMENTO")
     long countEmAndamento();

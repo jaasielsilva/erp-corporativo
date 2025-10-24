@@ -51,6 +51,7 @@
                             <td th:text="${t.atribuidaA != null ? t.atribuidaA.nome : 'Sem responsável'}">Responsável</td>
                             <td>
                                 <form th:action="@{/projetos/tarefas/{id}/atribuir(id=${t.id})}" method="post">
+                                    <input type="hidden" name="projetoId" th:value="${t.projeto != null ? t.projeto.id : ''}" />
                                     <select name="colaboradorId" class="form-select">
                                         <option th:each="c : ${colaboradores}" th:value="${c.id}" th:text="${c.nome}" 
                                             th:selected="${t.atribuidaA != null and t.atribuidaA.id == c.id}"></option>

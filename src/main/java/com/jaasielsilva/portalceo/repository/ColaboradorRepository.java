@@ -73,4 +73,6 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     @Query("SELECT c FROM Colaborador c JOIN Usuario u ON u.colaborador = c WHERE u.matricula = :matricula")
     Optional<Colaborador> findByUsuarioMatricula(@Param("matricula") String matricula);
 
+    List<Colaborador> findByCargoNomeIgnoreCase(String nomeCargo);
+
 }

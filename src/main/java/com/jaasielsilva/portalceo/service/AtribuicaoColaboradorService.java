@@ -242,9 +242,12 @@ public class AtribuicaoColaboradorService {
      */
     public List<Colaborador> listarColaboradoresDisponiveis() {
         List<Colaborador> colaboradores = buscarColaboradoresSuporteAtivos();
-        return colaboradores.stream()
+        logger.info("Colaboradores de suporte ativos encontrados: {}", colaboradores.size());
+        List<Colaborador> disponiveis = colaboradores.stream()
             .filter(this::podeAssumirChamado)
             .toList();
+        logger.info("Colaboradores disponíveis após filtro: {}", disponiveis.size());
+        return disponiveis;
     }
 
     /**

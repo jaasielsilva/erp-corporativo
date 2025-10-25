@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.repository;
 
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.Departamento;
 import com.jaasielsilva.portalceo.model.Perfil;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -68,4 +69,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
    // Buscar usuários com permissão para gerenciar RH
    @Query("SELECT u FROM Usuario u WHERE u.nivelAcesso IN ('MASTER', 'ADMIN') OR u.nivelAcesso IN ('GERENTE', 'COORDENADOR', 'SUPERVISOR')")
    List<Usuario> findUsuariosComPermissaoGerenciarRH();
+
+   List<Usuario> findByDepartamento(Departamento departamento);
 }

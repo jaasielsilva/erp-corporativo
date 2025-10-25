@@ -51,6 +51,10 @@ public class Usuario {
     private boolean online;
 
     private LocalDateTime ultimoAcesso;
+
+    private boolean notificacoesSonorasAtivadas = true; // Padrão ativado
+
+    private String somNotificacao = "default.mp3"; // Som padrão
     
     @Column(length = 10)
     private String ramal;

@@ -141,6 +141,18 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    /**
+     * Atualiza as configurações de notificação sonora de um usuário.
+     */
+    public void atualizarConfiguracoesNotificacao(Long userId, boolean notificacoesSonorasAtivadas, String somNotificacao) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        usuario.setNotificacoesSonorasAtivadas(notificacoesSonorasAtivadas);
+        usuario.setSomNotificacao(somNotificacao);
+        usuarioRepository.save(usuario);
+    }
+
     // ===============================
     // MÉTODOS DE BUSCA E LISTAGEM
     // ===============================

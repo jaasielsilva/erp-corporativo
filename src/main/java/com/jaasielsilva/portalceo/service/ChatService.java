@@ -1,6 +1,8 @@
 package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.dto.ConversaDTO;
+import com.jaasielsilva.portalceo.dto.DigitacaoNotificationDTO;
+import com.jaasielsilva.portalceo.dto.ReacaoNotificationDTO;
 import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Service responsável por toda a lógica de negócio do sistema de chat interno
@@ -37,7 +44,26 @@ public class ChatService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private DepartamentoRepository departamentoRepository;
+
+    @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    private final String UPLOAD_DIR = "uploads/chat/";
+
+    /**
+     * Salva um arquivo no sistema de arquivos e retorna o caminho relativo.
+     */
+    public String salvarArquivo(MultipartFile file) throws IOException {
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), filePath);
+        return UPLOAD_DIR + fileName;
+    }
 
     // ==================== CONVERSAS ====================
 
@@ -69,6 +95,10 @@ public class ChatService {
         return conversa;
     }
 
+    public Optional<Conversa> buscarConversasPorDepartamento(Long departamentoId) {
+        return conversaRepository.findByDepartamentoId(departamentoId);
+    }
+
     /**
      * Cria uma nova conversa em grupo
      */
@@ -95,6 +125,38 @@ public class ChatService {
 
         // Enviar mensagem de sistema informando criação do grupo
         enviarMensagemSistema(conversa.getId(), "Grupo '" + titulo + "' foi criado por " + criador.getNome());
+
+        return conversa;
+    }
+
+    /**
+     * Cria uma nova conversa de departamento
+     */
+    public Conversa criarConversaDepartamento(Long departamentoId, Long criadoPorId) {
+        Departamento departamento = departamentoRepository.findById(departamentoId)
+                .orElseThrow(() -> new RuntimeException("Departamento não encontrado: " + departamentoId));
+
+        Usuario criador = usuarioRepository.findById(criadoPorId)
+                .orElseThrow(() -> new RuntimeException("Usuário criador não encontrado: " + criadoPorId));
+
+        // Verificar se já existe conversa para este departamento
+        Optional<Conversa> conversaExistente = conversaRepository.findByDepartamentoId(departamentoId);
+        if (conversaExistente.isPresent()) {
+            return conversaExistente.get();
+        }
+
+        // Criar nova conversa de departamento usando método estático
+        Conversa conversa = Conversa.criarConversaDepartamento(departamento.getNome(), criador.getId(), departamento);
+        conversa = conversaRepository.save(conversa);
+
+        // Adicionar todos os usuários do departamento como participantes
+        List<Usuario> usuariosDoDepartamento = usuarioRepository.findByDepartamento(departamento);
+        for (Usuario usuario : usuariosDoDepartamento) {
+            adicionarParticipante(conversa.getId(), usuario.getId(), ParticipanteConversa.TipoParticipante.MEMBRO);
+        }
+
+        // Enviar mensagem de sistema
+        enviarMensagemSistema(conversa.getId(), "Conversa do departamento '" + departamento.getNome() + "' foi criada.");
 
         return conversa;
     }
@@ -155,14 +217,14 @@ public class ChatService {
     /**
      * Envia uma nova mensagem
      */
-    public Mensagem enviarMensagem(Long conversaId, Long remetenteId, String conteudo) {
-        return enviarMensagem(conversaId, remetenteId, conteudo, Mensagem.TipoMensagem.TEXTO);
+    public Mensagem enviarMensagem(Long conversaId, Long remetenteId, String conteudo) throws IOException {
+        return enviarMensagem(conversaId, remetenteId, conteudo, Mensagem.TipoMensagem.TEXTO, null);
     }
 
     /**
      * Envia uma nova mensagem com tipo específico
      */
-    public Mensagem enviarMensagem(Long conversaId, Long remetenteId, String conteudo, Mensagem.TipoMensagem tipo) {
+    public Mensagem enviarMensagem(Long conversaId, Long remetenteId, String conteudo, Mensagem.TipoMensagem tipo, MultipartFile file) throws IOException {
         Conversa conversa = conversaRepository.findById(conversaId)
                 .orElseThrow(() -> new RuntimeException("Conversa não encontrada: " + conversaId));
 
@@ -189,17 +251,8 @@ public class ChatService {
                     break;
                 }
             }
-        } else {
-            // Para conversas em grupo, usar o criador da conversa como destinatário padrão
-            if (conversa.getCriadoPor() != null) {
-                destinatario = usuarioRepository.findById(conversa.getCriadoPor())
-                        .orElse(remetente); // fallback para o próprio remetente
-            } else {
-                destinatario = remetente; // fallback para o próprio remetente
-            }
         }
 
-        // Criar e salvar mensagem
         Mensagem mensagem = new Mensagem();
         mensagem.setConteudo(conteudo);
         mensagem.setRemetente(remetente);
@@ -209,13 +262,17 @@ public class ChatService {
         mensagem.setDataEnvio(LocalDateTime.now());
         mensagem.setLida(false);
 
+        if (file != null && !file.isEmpty()) {
+            String arquivoUrl = salvarArquivo(file);
+            mensagem.setArquivoUrl(arquivoUrl);
+            mensagem.setArquivoNome(file.getOriginalFilename());
+            mensagem.setArquivoTamanho(file.getSize());
+            // O tipo da mensagem já deve vir correto do controller (IMAGEM ou ARQUIVO)
+        }
+
         mensagem = mensagemRepository.save(mensagem);
 
-        // Atualizar última atividade da conversa
-        conversa.setUltimaAtividade(LocalDateTime.now());
-        conversaRepository.save(conversa);
-
-        // Enviar notificação em tempo real para todos os participantes
+        // Notificar participantes
         notificarParticipantes(conversa, mensagem);
 
         return mensagem;
@@ -470,5 +527,35 @@ public class ChatService {
             public final String nome = usuario.getNome();
             public final String tipo = tipoStatus;
         });
+    }
+
+    /**
+     * Notifica os participantes de uma conversa sobre o status de digitação de um usuário.
+     *
+     * @param conversaId O ID da conversa.
+     * @param usuarioId O ID do usuário que está digitando ou parou de digitar.
+     * @param digitando True se o usuário está digitando, false caso contrário.
+     */
+    public void notificarDigitacao(Long conversaId, Long usuarioId, boolean digitando) {
+        // Envia a notificação de digitação para o tópico da conversa
+        messagingTemplate.convertAndSend("/topic/chat.conversa." + conversaId + ".digitando", new DigitacaoNotificationDTO(usuarioId, digitando));
+    }
+
+    /**
+     * Notifica os participantes de uma conversa sobre uma reação a uma mensagem.
+     *
+     * @param mensagemId O ID da mensagem que recebeu a reação.
+     * @param conversaId O ID da conversa.
+     * @param reacao A reação que foi adicionada ou removida.
+     */
+    public void notificarReacao(Long mensagemId, Long conversaId, ReacaoMensagem reacao) {
+        messagingTemplate.convertAndSend("/topic/chat.conversa." + conversaId + ".reacoes",
+                new ReacaoNotificationDTO(
+                        mensagemId,
+                        reacao != null ? reacao.getId() : null,
+                        reacao != null ? reacao.getUsuario().getId() : null,
+                        reacao != null ? reacao.getEmoji() : null,
+                        reacao != null ? "ADICIONADA" : "REMOVIDA"
+                ));
     }
 }

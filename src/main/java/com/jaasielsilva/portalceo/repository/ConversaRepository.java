@@ -154,4 +154,6 @@ public interface ConversaRepository extends JpaRepository<Conversa, Long> {
                      "ORDER BY c.ultimaAtividade DESC")
        List<Conversa> findConversasPorTipo(@Param("usuarioId") Long usuarioId,
                      @Param("tipo") String tipo);
+
+       Optional<Conversa> findByDepartamentoId(Long departamentoId);
 }

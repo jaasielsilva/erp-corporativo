@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -66,6 +67,9 @@ public class Mensagem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resposta_a_id")
     private Mensagem respostaA;
+
+    @OneToMany(mappedBy = "mensagem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReacaoMensagem> reacoes;
 
     // Enum para tipos de mensagem
     public enum TipoMensagem {

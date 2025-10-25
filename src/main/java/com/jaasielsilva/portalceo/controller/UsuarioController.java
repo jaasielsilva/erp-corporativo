@@ -236,6 +236,22 @@ public class UsuarioController {
     }
 
     /**
+     * Atualiza as configurações de notificação sonora de um usuário.
+     */
+    @PostMapping("/{id}/configuracoes-notificacao")
+    public ResponseEntity<?> atualizarConfiguracoesNotificacao(
+            @PathVariable Long id,
+            @RequestParam boolean notificacoesSonorasAtivadas,
+            @RequestParam String somNotificacao) {
+        try {
+            usuarioService.atualizarConfiguracoesNotificacao(id, notificacoesSonorasAtivadas, somNotificacao);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    /**
      * Busca usuário por CPF e redireciona para página de edição.
      */
     @PostMapping("/editar")

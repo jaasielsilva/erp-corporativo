@@ -39,6 +39,10 @@ public class Conversa {
     @Column(name = "usuario2_id")
     private Long usuario2Id;
 
+    @ManyToOne
+    @JoinColumn(name = "departamento_id")
+    private Departamento departamento;
+
     @Column(name = "criado_por", nullable = false)
     private Long criadoPor;
 
@@ -192,7 +196,7 @@ public class Conversa {
         return conversa;
     }
 
-    public static Conversa criarConversaDepartamento(String titulo, Long criadoPor) {
+    public static Conversa criarConversaDepartamento(String titulo, Long criadoPor, Departamento departamento) {
         Conversa conversa = new Conversa();
         LocalDateTime agora = LocalDateTime.now();
         conversa.setTipo(TipoConversa.DEPARTAMENTO);
@@ -202,6 +206,7 @@ public class Conversa {
         conversa.setCriadaEm(agora);
         conversa.setUltimaAtividade(agora);
         conversa.setAtiva(true);
+        conversa.setDepartamento(departamento);
         return conversa;
     }
 

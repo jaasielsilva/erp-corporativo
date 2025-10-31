@@ -1,11 +1,29 @@
-# Documentação - Módulo de Suporte
+# Documentação do Sistema ERP
 
-Esta pasta contém toda a documentação técnica e guias de uso do módulo de suporte do sistema ERP.
+Esta pasta contém a documentação técnica e guias de uso para os diversos módulos do sistema ERP.
 
 ## 📋 Índice da Documentação
 
-### 📖 Documentação Técnica
-- **[modulo-suporte.md](./modulo-suporte.md)** - Documentação técnica completa
+### 📖 Módulos do Sistema
+
+- **[MODULO_CONFIG.md](./MODULO_CONFIG.md)** - Documentação do módulo de Configuração.
+- **[MODULO_CONTROLLER.md](./MODULO_CONTROLLER.md)** - Documentação do módulo de Controladores.
+- **[MODULO_DTO.md](./MODULO_DTO.md)** - Documentação do módulo de Objetos de Transferência de Dados (DTOs).
+- **[MODULO_ESTOQUE.md](./MODULO_ESTOQUE.md)** - Documentação do módulo de Estoque.
+- **[MODULO_EXCEPTION.md](./MODULO_EXCEPTION.md)** - Documentação do módulo de Exceções.
+- **[MODULO_FORMATTER.md](./MODULO_FORMATTER.md)** - Documentação do módulo de Formatadores.
+- **[MODULO_INDICADORES.md](./MODULO_INDICADORES.md)** - Documentação do módulo de Indicadores.
+- **[MODULO_MAPPER.md](./MODULO_MAPPER.md)** - Documentação do módulo de Mapeadores.
+- **[MODULO_MARKETING.md](./MODULO_MARKETING.md)** - Documentação do módulo de Marketing.
+- **[MODULO_MODEL.md](./MODULO_MODEL.md)** - Documentação do módulo de Modelos de Dados.
+- **[MODULO_REPOSITORY.md](./MODULO_REPOSITORY.md)** - Documentação do módulo de Repositórios.
+- **[MODULO_SECURITY.md](./MODULO_SECURITY.md)** - Documentação do módulo de Segurança.
+- **[MODULO_SERVICE.md](./MODULO_SERVICE.md)** - Documentação do módulo de Serviços.
+- **[MODULO_TI.md](./MODULO_TI.md)** - Documentação do módulo de TI.
+- **[MODULO_VALIDATION.md](./MODULO_VALIDATION.md)** - Documentação do módulo de Validação.
+
+### 📖 Módulo de Suporte (Exemplo Detalhado)
+- **[modulo-suporte.md](./modulo-suporte.md)** - Documentação técnica completa do módulo de suporte.
   - Visão geral e funcionalidades
   - Estrutura técnica (entidades, serviços, controllers)
   - Casos de uso detalhados
@@ -14,7 +32,7 @@ Esta pasta contém toda a documentação técnica e guias de uso do módulo de s
   - Troubleshooting e comandos úteis
 
 ### 🚀 Guias de Uso
-- **[guia-rapido-chamados.md](./guia-rapido-chamados.md)** - Guia prático para usuários
+- **[guia-rapido-chamados.md](./guia-rapido-chamados.md)** - Guia prático para usuários do módulo de suporte.
   - Como abrir um chamado (web e API)
   - Prioridades e SLA
   - Status dos chamados

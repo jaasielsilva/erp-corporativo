@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{/components/base :: layout(~{::title}, ~{::link}, ~{::#content}, ~{::script})}">
+<head>
+    <title>Dashboard Jurídico</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/notifications.css}">
+</head>
+<body>
+    <div id="content">
+        <!-- Sidebar -->
+        <div th:replace="~{/components/sidebar :: sidebar}"></div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <!-- Topbar -->
+            <div th:replace="~{/components/topbar :: topbar}"></div>
+
+            <div class="container-fluid">
+                <h1 class="mt-4">Dashboard Jurídico</h1>
+                <p>Bem-vindo ao módulo jurídico.</p>
+                <!-- Conteúdo específico do dashboard aqui -->
+            </div>
+
+            <!-- Footer -->
+            <div th:replace="~{/components/footer :: footer}"></div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/jquery-3.7.0.min.js}"></script>
+    <script th:src="@{/js/sidebar.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

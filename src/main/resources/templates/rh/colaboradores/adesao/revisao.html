@@ -458,9 +458,9 @@
                 
                 <!-- Botões de Ação -->
                 <div class="text-center">
-                    <button type="button" class="btn btn-back me-3" onclick="voltarEtapa()">
+                    <a th:href="@{/rh/colaboradores/adesao/beneficios(sessionId=${param.sessionId})}" class="btn btn-back me-3">
                         <i class="fas fa-arrow-left me-2"></i>Etapa Anterior
-                    </button>
+                    </a>
                     
                     <button type="button" class="btn btn-cancel me-3" onclick="cancelarAdesao()">
                         <i class="fas fa-times me-2"></i>Cancelar Adesão
@@ -542,6 +542,8 @@
             
             // Configurar eventos
             configurarEventos();
+            
+            // O botão de voltar agora usa um link direto com Thymeleaf
         });
         
         function configurarEventos() {
@@ -580,36 +582,90 @@
         }
         
         function carregarResumoBeneficios() {
-            $.ajax({
-                url: '/api/rh/colaboradores/adesao/beneficios/resumo',
-                method: 'GET',
-                data: { sessionId: sessionId },
-                success: function(response) {
-                    if (response.success && response.temBeneficios) {
-                        preencherResumoBeneficios(response.resumo);
-                    } else {
-                        $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Erro ao carregar resumo de benefícios:', {
-                        status: xhr.status,
-                        statusText: xhr.statusText,
-                        responseText: xhr.responseText,
-                        error: error
-                    });
-                    
-                    let mensagemErro = 'Erro ao carregar benefícios';
-                    if (xhr.status === 500) {
-                        mensagemErro = 'Erro interno do servidor ao carregar benefícios';
-                    } else if (xhr.status === 404) {
-                        mensagemErro = 'Sessão não encontrada';
-                    }
-                    
-                    $('#beneficiosSelecionados').html(`<p class="text-muted">${mensagemErro}</p>`);
-                }
+    console.log('Iniciando carregamento do resumo de benefícios para sessionId:', sessionId);
+    
+    // Verificar se já temos dados de benefícios no objeto dadosRevisao
+    if (dadosRevisao && dadosRevisao.beneficios_calculo) {
+        console.log('Usando dados de benefícios do objeto dadosRevisao:', JSON.stringify(dadosRevisao.beneficios_calculo, null, 2));
+        
+        // Criar objeto de resumo no formato esperado
+        const resumo = {
+            beneficios: [],
+            totalMensal: dadosRevisao.beneficios_calculo.custoTotal || 0
+        };
+        
+        // Converter os itens para o formato esperado
+        if (dadosRevisao.beneficios_calculo.itens && dadosRevisao.beneficios_calculo.itens.length > 0) {
+            resumo.beneficios = dadosRevisao.beneficios_calculo.itens.map(item => {
+                // Usar diretamente os campos de custo que vimos nos logs
+                const custoTitular = item.custoTitular || 0;
+                const custoDependentes = item.custoDependentes || 0;
+                const custoTotal = item.custoTotal || 0;
+                
+                console.log(`Item ${item.tipo || item.nome}: custoTitular=${custoTitular}, custoDependentes=${custoDependentes}, custoTotal=${custoTotal}`);
+                
+                return {
+                    tipo: item.tipo,
+                    nome: item.nome,
+                    valor: custoTitular,
+                    valorTotal: custoTotal,
+                    valorTitular: custoTitular,
+                    valorMensal: custoTotal,
+                    custo: custoTotal,
+                    dependentes: item.quantidadeDependentes || 0,
+                    valorDependentes: custoDependentes || 0
+                };
             });
         }
+        
+        console.log('Resumo criado a partir dos dados existentes:', JSON.stringify(resumo, null, 2));
+        preencherResumoBeneficios(resumo);
+        return;
+    }
+    
+    // Se não temos dados locais, fazer a chamada à API
+    $.ajax({
+        url: `/api/rh/colaboradores/adesao/beneficios/resumo`,
+        method: 'GET',
+        data: { sessionId: sessionId },
+        success: function(response) {
+            console.log('Resposta da API de resumo:', JSON.stringify(response, null, 2));
+            if (response.success) {
+                // Verificar se existe resumo e se tem itens
+                if (response.resumo && response.resumo.beneficios && response.resumo.beneficios.length > 0) {
+                    console.log('Benefícios encontrados:', response.resumo.beneficios.length);
+                    preencherResumoBeneficios(response.resumo);
+                } else {
+                    console.log('Nenhum benefício encontrado na resposta');
+                    $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
+                    $('#totalMensalFinal').text('R$ 0,00');
+                }
+            } else {
+                console.error('Erro ao carregar resumo de benefícios:', response);
+                $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
+                $('#totalMensalFinal').text('R$ 0,00');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Erro ao carregar resumo de benefícios:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                responseText: xhr.responseText,
+                error: error
+            });
+            
+            let mensagemErro = 'Erro ao carregar benefícios';
+            if (xhr.status === 500) {
+                mensagemErro = 'Erro interno do servidor ao carregar benefícios';
+            } else if (xhr.status === 404) {
+                mensagemErro = 'Sessão não encontrada';
+            }
+            
+            $('#beneficiosSelecionados').html(`<p class="text-muted">${mensagemErro}</p>`);
+            $('#totalMensalFinal').text('R$ 0,00');
+        }
+    });
+}
         
         function preencherDadosRevisao() {
             // Dados Pessoais
@@ -775,9 +831,7 @@
             window.location.href = `/rh/colaboradores/adesao/beneficios?sessionId=${sessionId}`;
         }
         
-        function voltarEtapa() {
-            window.location.href = `/rh/colaboradores/adesao/beneficios?sessionId=${sessionId}`;
-        }
+        // Função removida - agora usando link direto com Thymeleaf
         
         function irParaDashboard() {
             window.location.href = '/dashboard';
@@ -823,9 +877,10 @@
         }
         
         function preencherResumoBeneficios(resumo) {
-            console.log('Preenchendo resumo de benefícios:', resumo);
+            console.log('Preenchendo resumo de benefícios:', JSON.stringify(resumo, null, 2));
             
-            if (!resumo || !resumo.itens || resumo.itens.length === 0) {
+            // Verificar se temos benefícios para exibir
+            if (!resumo || !resumo.beneficios || resumo.beneficios.length === 0) {
                 $('#beneficiosSelecionados').html('<p class="text-muted">Nenhum benefício selecionado</p>');
                 $('#totalMensalFinal').text('R$ 0,00');
                 return;
@@ -833,28 +888,66 @@
             
             let html = '';
             
-            resumo.itens.forEach(item => {
+            // Iterar sobre os benefícios
+            resumo.beneficios.forEach(item => {
+                console.log('Processando item de benefício:', JSON.stringify(item, null, 2));
+                
                 html += `
                     <div class="benefit-summary-item">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <h6 class="mb-1">${item.nome}</h6>
-                                <small class="text-muted">${item.plano}</small>
+                                <h6 class="mb-1">${item.tipo || item.nome}</h6>
+                                <small class="text-muted">${item.nome || ''}</small>
                             </div>
                             <div class="text-end">
-                                <strong>R$ ${item.custoTitular.toFixed(2)}</strong>
+                `;
+                
+                // Verificar qual tipo de valor exibir - ordem de prioridade ajustada
+                let valorExibir = 0;
+                
+                // Verificar todos os possíveis campos de valor e usar o primeiro não-nulo e não-zero
+                if (item.valor && parseFloat(item.valor) > 0) {
+                    valorExibir = parseFloat(item.valor);
+                    console.log(`Usando item.valor: ${valorExibir}`);
+                } else if (item.valorTotal && parseFloat(item.valorTotal) > 0) {
+                    valorExibir = parseFloat(item.valorTotal);
+                    console.log(`Usando item.valorTotal: ${valorExibir}`);
+                } else if (item.valorTitular && parseFloat(item.valorTitular) > 0) {
+                    valorExibir = parseFloat(item.valorTitular);
+                    console.log(`Usando item.valorTitular: ${valorExibir}`);
+                } else if (item.valorMensal && parseFloat(item.valorMensal) > 0) {
+                    valorExibir = parseFloat(item.valorMensal);
+                    console.log(`Usando item.valorMensal: ${valorExibir}`);
+                } else if (item.custo && parseFloat(item.custo) > 0) {
+                    valorExibir = parseFloat(item.custo);
+                    console.log(`Usando item.custo: ${valorExibir}`);
+                } else {
+                    // Se nenhum valor for encontrado, tentar extrair do nome do benefício
+                    // Alguns benefícios podem ter o valor no nome, como "Vale Refeição - R$ 500,00"
+                    const match = (item.nome || '').match(/R\$\s*([\d.,]+)/);
+                    if (match && match[1]) {
+                        valorExibir = parseFloat(match[1].replace('.', '').replace(',', '.'));
+                        console.log(`Extraído valor do nome: ${valorExibir}`);
+                    }
+                }
+                
+                console.log(`Valor final a exibir para ${item.tipo || item.nome}: ${valorExibir}`);
+                html += `<strong>R$ ${formatarMoeda(valorExibir)}</strong>`;
+                
+                html += `
                             </div>
                         </div>
                 `;
                 
-                if (item.quantidadeDependentes > 0) {
+                // Verificar se tem dependentes
+                if (item.dependentes && item.dependentes > 0) {
                     html += `
                         <div class="d-flex justify-content-between align-items-center mb-2 ms-3">
                             <small class="text-muted">
                                 <i class="fas fa-user-plus me-1"></i>
-                                ${item.quantidadeDependentes} dependente(s)
+                                ${item.dependentes} dependente(s)
                             </small>
-                            <small><strong>R$ ${item.custoDependentes.toFixed(2)}</strong></small>
+                            <small><strong>R$ ${formatarMoeda(item.valorDependentes || 0)}</strong></small>
                         </div>
                     `;
                 }
@@ -866,7 +959,12 @@
             html = html.replace(/<hr class="my-3">$/, '');
             
             $('#beneficiosSelecionados').html(html);
-            $('#totalMensalFinal').text(`R$ ${resumo.totalMensal.toFixed(2)}`);
+            
+            // Atualizar o valor total
+            if (resumo.totalMensal !== undefined) {
+                console.log('Valor total mensal:', resumo.totalMensal);
+                $('#totalMensalFinal').text(`R$ ${formatarMoeda(resumo.totalMensal)}`);
+            }
             
             console.log('Resumo de benefícios preenchido com sucesso');
         }

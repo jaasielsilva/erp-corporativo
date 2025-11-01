@@ -32,48 +32,47 @@ import java.util.Set;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    private final UsuarioRepository usuarioRepository;
-    private final PerfilRepository perfilRepository;
-    private final PermissaoRepository permissaoRepository;
-    private final CargoRepository cargoRepository;
-    private final DepartamentoRepository departamentoRepository;
-    private final ColaboradorRepository colaboradorRepository;
-    private final CargoHierarquiaRepository cargoHierarquiaRepository;
-    private final CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository;
-    private final ProdutoService produtoService;
-    private final CategoriaService categoriaService;
-    private final FornecedorService fornecedorService;
-    private final PlanoSaudeRepository planoSaudeRepository;
-    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+        private final UsuarioRepository usuarioRepository;
+        private final PerfilRepository perfilRepository;
+        private final PermissaoRepository permissaoRepository;
+        private final CargoRepository cargoRepository;
+        private final DepartamentoRepository departamentoRepository;
+        private final ColaboradorRepository colaboradorRepository;
+        private final CargoHierarquiaRepository cargoHierarquiaRepository;
+        private final CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository;
+        private final ProdutoService produtoService;
+        private final CategoriaService categoriaService;
+        private final FornecedorService fornecedorService;
+        private final PlanoSaudeRepository planoSaudeRepository;
+        private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
-    public SecurityConfig(UsuarioRepository usuarioRepository,
-                          PerfilRepository perfilRepository,
-                          PermissaoRepository permissaoRepository,
-                          CargoRepository cargoRepository,
-                          DepartamentoRepository departamentoRepository,
-                          ColaboradorRepository colaboradorRepository,
-                          CargoHierarquiaRepository cargoHierarquiaRepository,
-                          CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository,
-                          ProdutoService produtoService,
-                          CategoriaService categoriaService,
-                          FornecedorService fornecedorService,
-                          PlanoSaudeRepository planoSaudeRepository,
-                          CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) { // ← adicionado
-        this.usuarioRepository = usuarioRepository;
-        this.perfilRepository = perfilRepository;
-        this.permissaoRepository = permissaoRepository;
-        this.cargoRepository = cargoRepository;
-        this.departamentoRepository = departamentoRepository;
-        this.colaboradorRepository = colaboradorRepository;
-        this.cargoHierarquiaRepository = cargoHierarquiaRepository;
-        this.cargoDepartamentoAssociacaoRepository = cargoDepartamentoAssociacaoRepository;
-        this.produtoService = produtoService;
-        this.categoriaService = categoriaService;
-        this.fornecedorService = fornecedorService;
-        this.planoSaudeRepository = planoSaudeRepository;
-        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler; // ← adicionado
-    }
-
+        public SecurityConfig(UsuarioRepository usuarioRepository,
+                        PerfilRepository perfilRepository,
+                        PermissaoRepository permissaoRepository,
+                        CargoRepository cargoRepository,
+                        DepartamentoRepository departamentoRepository,
+                        ColaboradorRepository colaboradorRepository,
+                        CargoHierarquiaRepository cargoHierarquiaRepository,
+                        CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository,
+                        ProdutoService produtoService,
+                        CategoriaService categoriaService,
+                        FornecedorService fornecedorService,
+                        PlanoSaudeRepository planoSaudeRepository,
+                        CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) { // ← adicionado
+                this.usuarioRepository = usuarioRepository;
+                this.perfilRepository = perfilRepository;
+                this.permissaoRepository = permissaoRepository;
+                this.cargoRepository = cargoRepository;
+                this.departamentoRepository = departamentoRepository;
+                this.colaboradorRepository = colaboradorRepository;
+                this.cargoHierarquiaRepository = cargoHierarquiaRepository;
+                this.cargoDepartamentoAssociacaoRepository = cargoDepartamentoAssociacaoRepository;
+                this.produtoService = produtoService;
+                this.categoriaService = categoriaService;
+                this.fornecedorService = fornecedorService;
+                this.planoSaudeRepository = planoSaudeRepository;
+                this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler; // ← adicionado
+        }
 
         @Bean
         public BCryptPasswordEncoder passwordEncoder() {
@@ -96,32 +95,37 @@ public class SecurityConfig {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
-                                "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
-                                .permitAll()
-                                // Endpoints públicos específicos (apenas os necessários)
-                                .requestMatchers("/api/processar", "/suporte/api/public/**", "/api/categorias/**").permitAll()
-                                // Endpoints de exportação de chamados (temporário para teste)
-                                .requestMatchers("/api/chamados/export/**", "/suporte/api/chamados/export/**").permitAll()
-                                // Endpoints temporários para teste (REMOVER EM PRODUÇÃO)
-                                .requestMatchers("/api/colaboradores/tecnicos/**").permitAll()
-                                // Endpoints de produtos que devem ser autenticados
-                                .requestMatchers("/api/produto/**", "/api/produtos/**").authenticated()
-                                // Endpoints de adesão específicos (apenas formulário público)
-                                .requestMatchers("/rh/colaboradores/adesao/formulario-publico").permitAll()
-                                // WebSocket endpoints (manter público para funcionalidade)
-                                .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
-                                // Endpoints que DEVEM ser autenticados
-                                .requestMatchers("/api/rh/**").authenticated()
-                                .requestMatchers("/api/chamados/**").authenticated()
-                                .requestMatchers("/api/beneficios/**").authenticated()
-                                .requestMatchers("/api/suporte/**").authenticated()
-                                .requestMatchers("/api/chat/**").authenticated()
-                                .requestMatchers("/api/notifications/**").authenticated()
-                                .requestMatchers("/rh/colaboradores/adesao/**").authenticated()
-                                // Páginas de erro
-                                .requestMatchers("/error", "/error/**").permitAll()
-                                .anyRequest().authenticated())
+                                                .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
+                                                                "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
+                                                .permitAll()
+                                                // Endpoints públicos específicos (apenas os necessários)
+                                                .requestMatchers("/api/processar", "/suporte/api/public/**",
+                                                                "/api/categorias/**")
+                                                .permitAll()
+                                                // Endpoints de exportação de chamados (temporário para teste)
+                                                .requestMatchers("/api/chamados/export/**",
+                                                                "/suporte/api/chamados/export/**")
+                                                .permitAll()
+                                                // Endpoints temporários para teste (REMOVER EM PRODUÇÃO)
+                                                .requestMatchers("/api/colaboradores/tecnicos/**").permitAll()
+                                                // Endpoints de produtos que devem ser autenticados
+                                                .requestMatchers("/api/produto/**", "/api/produtos/**").authenticated()
+                                                // Endpoints de adesão específicos (apenas formulário público)
+                                                .requestMatchers("/rh/colaboradores/adesao/formulario-publico")
+                                                .permitAll()
+                                                // WebSocket endpoints (manter público para funcionalidade)
+                                                .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
+                                                // Endpoints que DEVEM ser autenticados
+                                                .requestMatchers("/api/rh/**").authenticated()
+                                                .requestMatchers("/api/chamados/**").authenticated()
+                                                .requestMatchers("/api/beneficios/**").authenticated()
+                                                .requestMatchers("/api/suporte/**").authenticated()
+                                                .requestMatchers("/api/chat/**").authenticated()
+                                                .requestMatchers("/api/notifications/**").authenticated()
+                                                .requestMatchers("/rh/colaboradores/adesao/**").authenticated()
+                                                // Páginas de erro
+                                                .requestMatchers("/error", "/error/**").permitAll()
+                                                .anyRequest().authenticated())
 
                                 .formLogin(form -> form
                                                 .loginPage("/login")
@@ -222,21 +226,21 @@ public class SecurityConfig {
                 // Usar códigos predefinidos baseados no tipo ao invés de aleatórios
                 String codigo;
                 switch (tipo) {
-                    case BASICO:
-                        codigo = "basico";
-                        break;
-                    case INTERMEDIARIO:
-                        codigo = "intermediario";
-                        break;
-                    case PREMIUM:
-                        codigo = "premium";
-                        break;
-                    case EXECUTIVO:
-                        codigo = "executivo";
-                        break;
-                    default:
-                        codigo = operadora.substring(0, Math.min(4, operadora.length())).toUpperCase()
-                                + String.format("%03d", new Random().nextInt(1000));
+                        case BASICO:
+                                codigo = "basico";
+                                break;
+                        case INTERMEDIARIO:
+                                codigo = "intermediario";
+                                break;
+                        case PREMIUM:
+                                codigo = "premium";
+                                break;
+                        case EXECUTIVO:
+                                codigo = "executivo";
+                                break;
+                        default:
+                                codigo = operadora.substring(0, Math.min(4, operadora.length())).toUpperCase()
+                                                + String.format("%03d", new Random().nextInt(1000));
                 }
                 plano.setCodigo(codigo);
 
@@ -491,6 +495,9 @@ public class SecurityConfig {
                                 master.setCep("01000-001");
                                 master.setRamal("1000");
                                 master.setPerfis(Set.of(adminPerfil));
+
+                                // **Aqui você associa o perfil com todas as permissões de chamado**
+                                master.setPerfis(Set.of(administradorPerfil));
 
                                 try {
                                         ClassPathResource image = new ClassPathResource("static/img/gerente.png");

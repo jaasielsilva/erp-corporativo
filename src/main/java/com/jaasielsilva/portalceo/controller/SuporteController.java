@@ -412,7 +412,7 @@ public class SuporteController {
         try {
             Map<String, Object> metricasSLA;
             String periodo;
-            
+
             if (dias == 0) {
                 // Para período "Geral", calcular métricas de todos os chamados
                 metricasSLA = chamadoService.calcularMetricasSLA();
@@ -517,14 +517,14 @@ public class SuporteController {
 
             // Buscar todos os chamados para exibir na página
             List<Chamado> todosChamados = chamadoService.listarTodos();
-            
+
             // Verificar se há chamados
             if (todosChamados == null) {
                 todosChamados = new ArrayList<>();
             }
-            
+
             logger.info("Carregados {} chamados para a página de status", todosChamados.size());
-            
+
             // Log dos chamados para debug
             for (Chamado chamado : todosChamados) {
                 logger.info("Chamado: {} - {} - {}", chamado.getId(), chamado.getNumero(), chamado.getAssunto());
@@ -749,18 +749,18 @@ public class SuporteController {
 
     // Criar novo chamado
     @PostMapping("/chamados/novo")
-    public String criarChamado(@ModelAttribute Chamado chamado, 
-                              @RequestParam(value = "anexos", required = false) MultipartFile[] anexos) {
+    public String criarChamado(@ModelAttribute Chamado chamado,
+            @RequestParam(value = "anexos", required = false) MultipartFile[] anexos) {
         try {
             // Definir data de início automaticamente
             if (chamado.getDataInicio() == null) {
                 chamado.setDataInicio(java.time.LocalDateTime.now());
             }
-            
+
             // Criar o chamado
             Chamado chamadoCriado = chamadoService.criarChamado(chamado);
             logger.info("Novo chamado criado: {}", chamadoCriado.getNumero());
-            
+
             // Processar anexos se existirem
             if (anexos != null && anexos.length > 0) {
                 Usuario usuarioLogado = obterUsuarioLogado();
@@ -768,15 +768,16 @@ public class SuporteController {
                     if (!arquivo.isEmpty()) {
                         try {
                             chamadoAnexoService.salvarAnexo(arquivo, chamadoCriado, usuarioLogado);
-                            logger.info("Anexo salvo para o chamado {}: {}", chamadoCriado.getNumero(), arquivo.getOriginalFilename());
+                            logger.info("Anexo salvo para o chamado {}: {}", chamadoCriado.getNumero(),
+                                    arquivo.getOriginalFilename());
                         } catch (Exception e) {
-                            logger.error("Erro ao salvar anexo {} para o chamado {}: {}", 
-                                       arquivo.getOriginalFilename(), chamadoCriado.getNumero(), e.getMessage());
+                            logger.error("Erro ao salvar anexo {} para o chamado {}: {}",
+                                    arquivo.getOriginalFilename(), chamadoCriado.getNumero(), e.getMessage());
                         }
                     }
                 }
             }
-            
+
             return "redirect:/suporte/chamados/" + chamadoCriado.getId();
         } catch (Exception e) {
             logger.error("Erro ao criar chamado: {}", e.getMessage());
@@ -792,17 +793,18 @@ public class SuporteController {
             @PathVariable Long id,
             @RequestParam String acao,
             @RequestParam(required = false) String tecnico) {
-        
-        logger.warn("Uso de endpoint depreciado: /suporte/chamados/{}/status. Use /api/suporte/chamados/{}/status", id, id);
-        
+
+        logger.warn("Uso de endpoint depreciado: /suporte/chamados/{}/status. Use /api/suporte/chamados/{}/status", id,
+                id);
+
         // Redireciona para o novo endpoint
         AtualizarStatusRequest request = new AtualizarStatusRequest(acao, tecnico);
         ResponseEntity<ChamadoStatusResponse> response = atualizarStatusPadronizado(id, request);
-        
+
         // Converte resposta para formato legacy
         Map<String, Object> legacyResponse = new HashMap<>();
         ChamadoStatusResponse statusResponse = response.getBody();
-        
+
         if (statusResponse != null) {
             legacyResponse.put("sucesso", statusResponse.isSucesso());
             if (statusResponse.isSucesso()) {
@@ -812,7 +814,7 @@ public class SuporteController {
                 legacyResponse.put("erro", statusResponse.getMensagem());
             }
         }
-        
+
         return ResponseEntity.status(response.getStatusCode()).body(legacyResponse);
     }
 
@@ -822,15 +824,16 @@ public class SuporteController {
     public ResponseEntity<Map<String, Object>> atualizarStatusViaPut(
             @PathVariable Long id,
             @RequestBody Map<String, Object> requestBody) {
-        
+
         try {
             String status = (String) requestBody.get("status");
             String tecnicoResponsavel = (String) requestBody.get("tecnicoResponsavel");
             String observacoes = (String) requestBody.get("observacoes");
-            
+
             // Log para debug
-            logger.info("Recebendo requisição PUT para chamado {}: status={}, tecnico={}", id, status, tecnicoResponsavel);
-            
+            logger.info("Recebendo requisição PUT para chamado {}: status={}, tecnico={}", id, status,
+                    tecnicoResponsavel);
+
             // Mapear status para ação
             String acao;
             switch (status) {
@@ -849,18 +852,18 @@ public class SuporteController {
                     errorResponse.put("erro", "Status inválido: " + status);
                     return ResponseEntity.badRequest().body(errorResponse);
             }
-            
+
             // Criar request padronizado
             AtualizarStatusRequest request = new AtualizarStatusRequest(acao, tecnicoResponsavel);
             if (observacoes != null) {
                 request.setObservacoes(observacoes);
             }
             ResponseEntity<ChamadoStatusResponse> response = atualizarStatusPadronizado(id, request);
-            
+
             // Converter resposta para formato esperado pelo JavaScript
             Map<String, Object> jsResponse = new HashMap<>();
             ChamadoStatusResponse statusResponse = response.getBody();
-            
+
             if (statusResponse != null) {
                 jsResponse.put("sucesso", statusResponse.isSucesso());
                 if (statusResponse.isSucesso()) {
@@ -870,9 +873,9 @@ public class SuporteController {
                     jsResponse.put("erro", statusResponse.getMensagem());
                 }
             }
-            
+
             return ResponseEntity.status(response.getStatusCode()).body(jsResponse);
-            
+
         } catch (Exception e) {
             logger.error("Erro ao atualizar status via PUT para chamado {}: {}", id, e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
@@ -893,22 +896,25 @@ public class SuporteController {
             // Verificar permissão para atualizar status
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
-            
-            // Assumindo perfil TECNICO por padrão - em um sistema real, isso viria do banco de dados
+
+            // Assumindo perfil TECNICO por padrão - em um sistema real, isso viria do banco
+            // de dados
             PerfilUsuario perfil = PerfilUsuario.TECNICO;
-            
+
             if (!permissaoService.podeAtualizarStatus(perfil, request.getAcao())) {
-                auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, username, 
-                    "Usuário não possui permissão para executar a ação: " + request.getAcao());
+                auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, username,
+                        "Usuário não possui permissão para executar a ação: " + request.getAcao());
                 return ResponseEntity.status(403)
-                    .body(ChamadoStatusResponse.erro("Acesso negado: você não possui permissão para executar esta ação"));
+                        .body(ChamadoStatusResponse
+                                .erro("Acesso negado: você não possui permissão para executar esta ação"));
             }
             // Buscar chamado
             Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(id);
             if (chamadoOpt.isEmpty()) {
-                auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, null, "Chamado não encontrado");
+                auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, null,
+                        "Chamado não encontrado");
                 return ResponseEntity.badRequest()
-                    .body(ChamadoStatusResponse.erro("Chamado não encontrado"));
+                        .body(ChamadoStatusResponse.erro("Chamado não encontrado"));
             }
 
             Chamado chamado = chamadoOpt.get();
@@ -917,50 +923,55 @@ public class SuporteController {
 
             // Validar transição de status
             if (!stateMachine.isTransicaoValida(statusAtual, novoStatus)) {
-                String erro = String.format("Transição inválida de %s para %s", 
-                    statusAtual.getDescricao(), novoStatus.getDescricao());
+                String erro = String.format("Transição inválida de %s para %s",
+                        statusAtual.getDescricao(), novoStatus.getDescricao());
                 auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, null, erro);
                 return ResponseEntity.badRequest()
-                    .body(ChamadoStatusResponse.erro(erro));
+                        .body(ChamadoStatusResponse.erro(erro));
             }
 
             // Executar ação baseada no tipo
             Chamado chamadoAtualizado;
             String acao = request.getAcao().toLowerCase();
-            
+
             switch (acao) {
                 case "iniciar":
                     if (request.getTecnicoResponsavel() == null || request.getTecnicoResponsavel().trim().isEmpty()) {
                         return ResponseEntity.badRequest()
-                            .body(ChamadoStatusResponse.erro("Técnico responsável é obrigatório para iniciar atendimento"));
+                                .body(ChamadoStatusResponse
+                                        .erro("Técnico responsável é obrigatório para iniciar atendimento"));
                     }
                     chamadoAtualizado = chamadoService.iniciarAtendimento(id, request.getTecnicoResponsavel());
-                    auditoriaService.registrarMudancaStatus(chamadoAtualizado, statusAtual, novoStatus, request.getTecnicoResponsavel(), request.getObservacoes());
+                    auditoriaService.registrarMudancaStatus(chamadoAtualizado, statusAtual, novoStatus,
+                            request.getTecnicoResponsavel(), request.getObservacoes());
                     break;
-                    
+
                 case "resolver":
                     chamadoAtualizado = chamadoService.resolverChamado(id);
-                    auditoriaService.registrarMudancaStatus(chamadoAtualizado, statusAtual, novoStatus, chamado.getTecnicoResponsavel(), request.getObservacoes());
+                    auditoriaService.registrarMudancaStatus(chamadoAtualizado, statusAtual, novoStatus,
+                            chamado.getTecnicoResponsavel(), request.getObservacoes());
                     break;
-                    
+
                 case "fechar":
                     chamadoAtualizado = chamadoService.fecharChamado(id);
-                    auditoriaService.registrarMudancaStatus(chamadoAtualizado, statusAtual, novoStatus, chamado.getTecnicoResponsavel(), request.getObservacoes());
+                    auditoriaService.registrarMudancaStatus(chamadoAtualizado, statusAtual, novoStatus,
+                            chamado.getTecnicoResponsavel(), request.getObservacoes());
                     break;
-                    
+
                 case "reabrir":
                     if (request.getMotivoReabertura() == null || request.getMotivoReabertura().trim().isEmpty()) {
                         return ResponseEntity.badRequest()
-                            .body(ChamadoStatusResponse.erro("Motivo da reabertura é obrigatório"));
+                                .body(ChamadoStatusResponse.erro("Motivo da reabertura é obrigatório"));
                     }
                     chamadoAtualizado = chamadoService.reabrirChamado(id);
                     auditoriaService.registrarReaberturaChamado(chamadoAtualizado, null, request.getMotivoReabertura());
                     break;
-                    
+
                 default:
-                    auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, null, "Ação inválida: " + acao);
+                    auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, null,
+                            "Ação inválida: " + acao);
                     return ResponseEntity.badRequest()
-                        .body(ChamadoStatusResponse.erro("Ação inválida: " + acao));
+                            .body(ChamadoStatusResponse.erro("Ação inválida: " + acao));
             }
 
             return ResponseEntity.ok(ChamadoStatusResponse.sucesso(chamadoAtualizado, "Status atualizado com sucesso"));
@@ -969,7 +980,7 @@ public class SuporteController {
             logger.error("Erro ao atualizar status do chamado {}: {}", id, e.getMessage(), e);
             auditoriaService.registrarErroOperacao("ATUALIZAR_STATUS", id, null, e.getMessage());
             return ResponseEntity.internalServerError()
-                .body(ChamadoStatusResponse.erro("Erro interno: " + e.getMessage()));
+                    .body(ChamadoStatusResponse.erro("Erro interno: " + e.getMessage()));
         }
     }
 
@@ -1378,15 +1389,15 @@ public class SuporteController {
                     !authentication.getName().equals("anonymousUser")) {
 
                 String username = authentication.getName(); // Pode ser email ou matrícula
-                
+
                 // Tentar buscar por email primeiro
                 Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
-                
+
                 // Se não encontrar por email, tentar por matrícula
                 if (usuarioOpt.isEmpty()) {
                     usuarioOpt = usuarioRepository.findByMatricula(username);
                 }
-                
+
                 return usuarioOpt.orElse(null);
             }
         } catch (Exception e) {
@@ -1396,7 +1407,7 @@ public class SuporteController {
     }
 
     // ENDPOINTS DE EXPORTAÇÃO
-    
+
     /**
      * Exporta lista de chamados em formato Excel
      */
@@ -1406,51 +1417,53 @@ public class SuporteController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String prioridade,
             @RequestParam(required = false) String tecnico) {
-        
+
         try {
-            logger.info("Exportando chamados para Excel - Status: {}, Prioridade: {}, Técnico: {}", 
-                       status, prioridade, tecnico);
-            
+            logger.info("Exportando chamados para Excel - Status: {}, Prioridade: {}, Técnico: {}",
+                    status, prioridade, tecnico);
+
             List<Chamado> chamados = chamadoService.listarTodos();
-            
+
             // Aplicar filtros se fornecidos
             if (status != null && !status.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getStatus().name().equals(status))
-                    .toList();
+                        .filter(c -> c.getStatus().name().equals(status))
+                        .toList();
             }
-            
+
             if (prioridade != null && !prioridade.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getPrioridade().name().equals(prioridade))
-                    .toList();
+                        .filter(c -> c.getPrioridade().name().equals(prioridade))
+                        .toList();
             }
-            
+
             if (tecnico != null && !tecnico.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getTecnicoResponsavel() != null && 
-                               c.getTecnicoResponsavel().toLowerCase().contains(tecnico.toLowerCase()))
-                    .toList();
+                        .filter(c -> c.getTecnicoResponsavel() != null &&
+                                c.getTecnicoResponsavel().toLowerCase().contains(tecnico.toLowerCase()))
+                        .toList();
             }
-            
+
             String csvContent = gerarCSVChamados(chamados);
-            
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType("application/vnd.ms-excel"));
-            headers.setContentDispositionFormData("attachment", 
-                "chamados_" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")) + ".csv");
-            
+            headers.setContentDispositionFormData("attachment",
+                    "chamados_"
+                            + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+                            + ".csv");
+
             return ResponseEntity.ok()
-                .headers(headers)
-                .body(csvContent);
-                
+                    .headers(headers)
+                    .body(csvContent);
+
         } catch (Exception e) {
             logger.error("Erro ao exportar chamados para Excel", e);
             return ResponseEntity.internalServerError()
-                .body("Erro ao gerar relatório Excel");
+                    .body("Erro ao gerar relatório Excel");
         }
     }
-    
+
     /**
      * Exporta lista de chamados em formato PDF
      */
@@ -1466,145 +1479,159 @@ public class SuporteController {
             @RequestParam(required = false) String solicitante,
             @RequestParam(required = false, defaultValue = "false") boolean incluirDetalhes,
             @RequestParam(required = false, defaultValue = "false") boolean incluirEstatisticas) {
-        
+
         try {
-            logger.info("Exportando chamados para PDF - Período: {} a {}, Status: {}, Prioridade: {}, Técnico: {}, Categoria: {}, Solicitante: {}", 
-                       dataInicio, dataFim, status, prioridade, tecnico, categoria, solicitante);
-            
+            logger.info(
+                    "Exportando chamados para PDF - Período: {} a {}, Status: {}, Prioridade: {}, Técnico: {}, Categoria: {}, Solicitante: {}",
+                    dataInicio, dataFim, status, prioridade, tecnico, categoria, solicitante);
+
             List<Chamado> chamados = chamadoService.listarTodos();
-            
+
             // Aplicar filtros se fornecidos
             if (dataInicio != null) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getDataAbertura().toLocalDate().isAfter(dataInicio.minusDays(1)))
-                    .toList();
+                        .filter(c -> c.getDataAbertura().toLocalDate().isAfter(dataInicio.minusDays(1)))
+                        .toList();
             }
-            
+
             if (dataFim != null) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getDataAbertura().toLocalDate().isBefore(dataFim.plusDays(1)))
-                    .toList();
+                        .filter(c -> c.getDataAbertura().toLocalDate().isBefore(dataFim.plusDays(1)))
+                        .toList();
             }
-            
+
             if (status != null && !status.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getStatus().name().equals(status))
-                    .toList();
+                        .filter(c -> c.getStatus().name().equals(status))
+                        .toList();
             }
-            
+
             if (prioridade != null && !prioridade.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getPrioridade().name().equals(prioridade))
-                    .toList();
+                        .filter(c -> c.getPrioridade().name().equals(prioridade))
+                        .toList();
             }
-            
+
             if (tecnico != null && !tecnico.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getTecnicoResponsavel() != null && 
-                               c.getTecnicoResponsavel().toLowerCase().contains(tecnico.toLowerCase()))
-                    .toList();
+                        .filter(c -> c.getTecnicoResponsavel() != null &&
+                                c.getTecnicoResponsavel().toLowerCase().contains(tecnico.toLowerCase()))
+                        .toList();
             }
-            
+
             if (categoria != null && !categoria.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getCategoria() != null && 
-                               c.getCategoria().toLowerCase().contains(categoria.toLowerCase()))
-                    .toList();
+                        .filter(c -> c.getCategoria() != null &&
+                                c.getCategoria().toLowerCase().contains(categoria.toLowerCase()))
+                        .toList();
             }
-            
+
             if (solicitante != null && !solicitante.isEmpty()) {
                 chamados = chamados.stream()
-                    .filter(c -> c.getSolicitanteNome() != null && 
-                               c.getSolicitanteNome().toLowerCase().contains(solicitante.toLowerCase()))
-                    .toList();
+                        .filter(c -> c.getSolicitanteNome() != null &&
+                                c.getSolicitanteNome().toLowerCase().contains(solicitante.toLowerCase()))
+                        .toList();
             }
-            
+
             byte[] pdfContent = gerarPDFChamados(chamados, incluirDetalhes, incluirEstatisticas);
-            
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", 
-                "relatorio_chamados_" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf");
-            
+            headers.setContentDispositionFormData("attachment",
+                    "relatorio_chamados_"
+                            + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+                            + ".pdf");
+
             return ResponseEntity.ok()
-                .headers(headers)
-                .body(pdfContent);
-                
+                    .headers(headers)
+                    .body(pdfContent);
+
         } catch (Exception e) {
             logger.error("Erro ao exportar chamados para PDF", e);
             return ResponseEntity.internalServerError()
-                .body("Erro ao gerar relatório PDF".getBytes());
+                    .body("Erro ao gerar relatório PDF".getBytes());
         }
     }
-    
+
     /**
      * Gera conteúdo CSV dos chamados
      */
     private String gerarCSVChamados(List<Chamado> chamados) {
         StringBuilder csv = new StringBuilder();
-        
+
         // Cabeçalho
-        csv.append("Número,Assunto,Status,Prioridade,Categoria,Solicitante,Email,Técnico,Data Abertura,Data Resolução,SLA Restante\n");
-        
+        csv.append(
+                "Número,Assunto,Status,Prioridade,Categoria,Solicitante,Email,Técnico,Data Abertura,Data Resolução,SLA Restante\n");
+
         // Dados
         for (Chamado chamado : chamados) {
             csv.append(String.format("%s,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
-                chamado.getNumero(),
-                chamado.getAssunto().replace("\"", "\"\""), // Escape aspas duplas
-                chamado.getStatus().getDescricao(),
-                chamado.getPrioridade().getDescricao(),
-                chamado.getCategoria() != null ? chamado.getCategoria() : "N/A",
-                chamado.getSolicitanteNome() != null ? chamado.getSolicitanteNome() : "N/A",
-                chamado.getSolicitanteEmail() != null ? chamado.getSolicitanteEmail() : "N/A",
-                chamado.getTecnicoResponsavel() != null ? chamado.getTecnicoResponsavel() : "Não atribuído",
-                chamado.getDataAbertura() != null ? chamado.getDataAbertura().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A",
-                chamado.getDataResolucao() != null ? chamado.getDataResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A",
-                chamado.getSlaRestante() != null ? chamado.getSlaRestante() + "h" : "N/A"
-            ));
+                    chamado.getNumero(),
+                    chamado.getAssunto().replace("\"", "\"\""), // Escape aspas duplas
+                    chamado.getStatus().getDescricao(),
+                    chamado.getPrioridade().getDescricao(),
+                    chamado.getCategoria() != null ? chamado.getCategoria() : "N/A",
+                    chamado.getSolicitanteNome() != null ? chamado.getSolicitanteNome() : "N/A",
+                    chamado.getSolicitanteEmail() != null ? chamado.getSolicitanteEmail() : "N/A",
+                    chamado.getTecnicoResponsavel() != null ? chamado.getTecnicoResponsavel() : "Não atribuído",
+                    chamado.getDataAbertura() != null
+                            ? chamado.getDataAbertura()
+                                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                            : "N/A",
+                    chamado.getDataResolucao() != null
+                            ? chamado.getDataResolucao()
+                                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                            : "N/A",
+                    chamado.getSlaRestante() != null ? chamado.getSlaRestante() + "h" : "N/A"));
         }
-        
+
         return csv.toString();
     }
-    
+
     /**
      * Gera conteúdo PDF dos chamados usando iText
      */
-    private byte[] gerarPDFChamados(List<Chamado> chamados, boolean incluirDetalhes, boolean incluirEstatisticas) throws Exception {
+    private byte[] gerarPDFChamados(List<Chamado> chamados, boolean incluirDetalhes, boolean incluirEstatisticas)
+            throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4);
         PdfWriter.getInstance(document, baos);
-        
+
         document.open();
-        
+
         // Título do relatório
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.BLACK);
         Paragraph title = new Paragraph("RELATÓRIO DE CHAMADOS DE SUPORTE", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         title.setSpacingAfter(20);
         document.add(title);
-        
+
         // Informações do cabeçalho
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
         Paragraph header = new Paragraph();
-        header.add(new Chunk("Data de Geração: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + "\n", headerFont));
+        header.add(
+                new Chunk(
+                        "Data de Geração: " + java.time.LocalDateTime.now()
+                                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + "\n",
+                        headerFont));
         header.add(new Chunk("Total de Chamados: " + chamados.size() + "\n\n", headerFont));
         document.add(header);
-        
+
         // Tabela de chamados
         PdfPTable table = new PdfPTable(7); // 7 colunas
         table.setWidthPercentage(100);
         table.setSpacingBefore(10f);
         table.setSpacingAfter(10f);
-        
+
         // Definir larguras das colunas
-        float[] columnWidths = {1f, 2f, 1.5f, 1f, 1.5f, 2f, 1.5f};
+        float[] columnWidths = { 1f, 2f, 1.5f, 1f, 1.5f, 2f, 1.5f };
         table.setWidths(columnWidths);
-        
+
         // Cabeçalhos da tabela
         Font headerCellFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.WHITE);
         BaseColor headerColor = new BaseColor(52, 73, 94);
-        
-        String[] headers = {"Número", "Assunto", "Status", "Prioridade", "Categoria", "Solicitante", "Técnico"};
+
+        String[] headers = { "Número", "Assunto", "Status", "Prioridade", "Categoria", "Solicitante", "Técnico" };
         for (String headerText : headers) {
             PdfPCell cell = new PdfPCell(new Phrase(headerText, headerCellFont));
             cell.setBackgroundColor(headerColor);
@@ -1612,15 +1639,16 @@ public class SuporteController {
             cell.setHorizontalAlignment(Element.ALIGN_CENTER);
             table.addCell(cell);
         }
-        
+
         // Dados dos chamados
         Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
         for (Chamado chamado : chamados) {
             // Número
-            PdfPCell cell1 = new PdfPCell(new Phrase(chamado.getNumero() != null ? chamado.getNumero().toString() : "N/A", cellFont));
+            PdfPCell cell1 = new PdfPCell(
+                    new Phrase(chamado.getNumero() != null ? chamado.getNumero().toString() : "N/A", cellFont));
             cell1.setPadding(5);
             table.addCell(cell1);
-            
+
             // Assunto
             String assunto = chamado.getAssunto() != null ? chamado.getAssunto() : "N/A";
             if (assunto.length() > 30) {
@@ -1629,22 +1657,25 @@ public class SuporteController {
             PdfPCell cell2 = new PdfPCell(new Phrase(assunto, cellFont));
             cell2.setPadding(5);
             table.addCell(cell2);
-            
+
             // Status
-            PdfPCell cell3 = new PdfPCell(new Phrase(chamado.getStatus() != null ? chamado.getStatus().getDescricao() : "N/A", cellFont));
+            PdfPCell cell3 = new PdfPCell(
+                    new Phrase(chamado.getStatus() != null ? chamado.getStatus().getDescricao() : "N/A", cellFont));
             cell3.setPadding(5);
             table.addCell(cell3);
-            
+
             // Prioridade
-            PdfPCell cell4 = new PdfPCell(new Phrase(chamado.getPrioridade() != null ? chamado.getPrioridade().getDescricao() : "N/A", cellFont));
+            PdfPCell cell4 = new PdfPCell(new Phrase(
+                    chamado.getPrioridade() != null ? chamado.getPrioridade().getDescricao() : "N/A", cellFont));
             cell4.setPadding(5);
             table.addCell(cell4);
-            
+
             // Categoria
-            PdfPCell cell5 = new PdfPCell(new Phrase(chamado.getCategoria() != null ? chamado.getCategoria() : "N/A", cellFont));
+            PdfPCell cell5 = new PdfPCell(
+                    new Phrase(chamado.getCategoria() != null ? chamado.getCategoria() : "N/A", cellFont));
             cell5.setPadding(5);
             table.addCell(cell5);
-            
+
             // Solicitante
             String solicitante = chamado.getSolicitanteNome() != null ? chamado.getSolicitanteNome() : "N/A";
             if (solicitante.length() > 25) {
@@ -1653,9 +1684,10 @@ public class SuporteController {
             PdfPCell cell6 = new PdfPCell(new Phrase(solicitante, cellFont));
             cell6.setPadding(5);
             table.addCell(cell6);
-            
+
             // Técnico
-            String tecnico = chamado.getTecnicoResponsavel() != null ? chamado.getTecnicoResponsavel() : "Não atribuído";
+            String tecnico = chamado.getTecnicoResponsavel() != null ? chamado.getTecnicoResponsavel()
+                    : "Não atribuído";
             if (tecnico.length() > 20) {
                 tecnico = tecnico.substring(0, 17) + "...";
             }
@@ -1663,139 +1695,140 @@ public class SuporteController {
             cell7.setPadding(5);
             table.addCell(cell7);
         }
-        
+
         document.add(table);
-        
+
         // Seção de Estatísticas (se solicitada)
         if (incluirEstatisticas) {
             document.newPage();
-            
+
             Font statsTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
             Paragraph statsHeader = new Paragraph("ESTATÍSTICAS DO RELATÓRIO", statsTitle);
             statsHeader.setAlignment(Element.ALIGN_CENTER);
             statsHeader.setSpacingAfter(20);
             document.add(statsHeader);
-            
+
             // Calcular estatísticas
             Map<String, Long> statusCount = new HashMap<>();
             Map<String, Long> prioridadeCount = new HashMap<>();
             Map<String, Long> categoriaCount = new HashMap<>();
-            
+
             for (Chamado chamado : chamados) {
                 // Contagem por status
                 String status = chamado.getStatus() != null ? chamado.getStatus().getDescricao() : "Não definido";
                 statusCount.put(status, statusCount.getOrDefault(status, 0L) + 1);
-                
+
                 // Contagem por prioridade
-                String prioridade = chamado.getPrioridade() != null ? chamado.getPrioridade().getDescricao() : "Não definida";
+                String prioridade = chamado.getPrioridade() != null ? chamado.getPrioridade().getDescricao()
+                        : "Não definida";
                 prioridadeCount.put(prioridade, prioridadeCount.getOrDefault(prioridade, 0L) + 1);
-                
+
                 // Contagem por categoria
                 String categoria = chamado.getCategoria() != null ? chamado.getCategoria() : "Não definida";
                 categoriaCount.put(categoria, categoriaCount.getOrDefault(categoria, 0L) + 1);
             }
-            
+
             Font statsFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
             Font statsBoldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.BLACK);
-            
+
             // Estatísticas por Status
             Paragraph statusStats = new Paragraph();
             statusStats.add(new Chunk("Distribuição por Status:\n", statsBoldFont));
             for (Map.Entry<String, Long> entry : statusCount.entrySet()) {
                 double percentage = (entry.getValue() * 100.0) / chamados.size();
-                statusStats.add(new Chunk(String.format("• %s: %d chamados (%.1f%%)\n", 
-                    entry.getKey(), entry.getValue(), percentage), statsFont));
+                statusStats.add(new Chunk(String.format("• %s: %d chamados (%.1f%%)\n",
+                        entry.getKey(), entry.getValue(), percentage), statsFont));
             }
             statusStats.setSpacingAfter(15);
             document.add(statusStats);
-            
+
             // Estatísticas por Prioridade
             Paragraph prioridadeStats = new Paragraph();
             prioridadeStats.add(new Chunk("Distribuição por Prioridade:\n", statsBoldFont));
             for (Map.Entry<String, Long> entry : prioridadeCount.entrySet()) {
                 double percentage = (entry.getValue() * 100.0) / chamados.size();
-                prioridadeStats.add(new Chunk(String.format("• %s: %d chamados (%.1f%%)\n", 
-                    entry.getKey(), entry.getValue(), percentage), statsFont));
+                prioridadeStats.add(new Chunk(String.format("• %s: %d chamados (%.1f%%)\n",
+                        entry.getKey(), entry.getValue(), percentage), statsFont));
             }
             prioridadeStats.setSpacingAfter(15);
             document.add(prioridadeStats);
-            
+
             // Estatísticas por Categoria
             Paragraph categoriaStats = new Paragraph();
             categoriaStats.add(new Chunk("Distribuição por Categoria:\n", statsBoldFont));
             for (Map.Entry<String, Long> entry : categoriaCount.entrySet()) {
                 double percentage = (entry.getValue() * 100.0) / chamados.size();
-                categoriaStats.add(new Chunk(String.format("• %s: %d chamados (%.1f%%)\n", 
-                    entry.getKey(), entry.getValue(), percentage), statsFont));
+                categoriaStats.add(new Chunk(String.format("• %s: %d chamados (%.1f%%)\n",
+                        entry.getKey(), entry.getValue(), percentage), statsFont));
             }
             document.add(categoriaStats);
         }
-        
+
         // Seção de Detalhes (se solicitada)
         if (incluirDetalhes) {
             document.newPage();
-            
+
             Font detailsTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
             Paragraph detailsHeader = new Paragraph("DETALHES DOS CHAMADOS", detailsTitle);
             detailsHeader.setAlignment(Element.ALIGN_CENTER);
             detailsHeader.setSpacingAfter(20);
             document.add(detailsHeader);
-            
+
             Font detailFont = FontFactory.getFont(FontFactory.HELVETICA, 10, BaseColor.BLACK);
             Font detailBoldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.BLACK);
-            
+
             for (Chamado chamado : chamados) {
                 // Criar uma tabela para cada chamado
                 PdfPTable detailTable = new PdfPTable(2);
                 detailTable.setWidthPercentage(100);
                 detailTable.setSpacingBefore(10f);
                 detailTable.setSpacingAfter(10f);
-                
-                float[] detailWidths = {1f, 3f};
+
+                float[] detailWidths = { 1f, 3f };
                 detailTable.setWidths(detailWidths);
-                
+
                 // Cabeçalho do chamado
-                PdfPCell headerCell = new PdfPCell(new Phrase("Chamado #" + 
-                    (chamado.getNumero() != null ? chamado.getNumero() : "N/A"), detailBoldFont));
+                PdfPCell headerCell = new PdfPCell(new Phrase("Chamado #" +
+                        (chamado.getNumero() != null ? chamado.getNumero() : "N/A"), detailBoldFont));
                 headerCell.setColspan(2);
                 headerCell.setBackgroundColor(new BaseColor(230, 230, 230));
                 headerCell.setPadding(8);
                 headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 detailTable.addCell(headerCell);
-                
+
                 // Detalhes do chamado
                 addDetailRow(detailTable, "Assunto:", chamado.getAssunto(), detailBoldFont, detailFont);
                 addDetailRow(detailTable, "Descrição:", chamado.getDescricao(), detailBoldFont, detailFont);
-                addDetailRow(detailTable, "Status:", 
-                    chamado.getStatus() != null ? chamado.getStatus().getDescricao() : "N/A", 
-                    detailBoldFont, detailFont);
-                addDetailRow(detailTable, "Prioridade:", 
-                    chamado.getPrioridade() != null ? chamado.getPrioridade().getDescricao() : "N/A", 
-                    detailBoldFont, detailFont);
+                addDetailRow(detailTable, "Status:",
+                        chamado.getStatus() != null ? chamado.getStatus().getDescricao() : "N/A",
+                        detailBoldFont, detailFont);
+                addDetailRow(detailTable, "Prioridade:",
+                        chamado.getPrioridade() != null ? chamado.getPrioridade().getDescricao() : "N/A",
+                        detailBoldFont, detailFont);
                 addDetailRow(detailTable, "Categoria:", chamado.getCategoria(), detailBoldFont, detailFont);
                 addDetailRow(detailTable, "Solicitante:", chamado.getSolicitanteNome(), detailBoldFont, detailFont);
                 addDetailRow(detailTable, "Técnico:", chamado.getTecnicoResponsavel(), detailBoldFont, detailFont);
-                addDetailRow(detailTable, "Data Abertura:", 
-                    chamado.getDataAbertura() != null ? 
-                        chamado.getDataAbertura().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A", 
-                    detailBoldFont, detailFont);
-                
+                addDetailRow(detailTable, "Data Abertura:",
+                        chamado.getDataAbertura() != null ? chamado.getDataAbertura()
+                                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A",
+                        detailBoldFont, detailFont);
+
                 document.add(detailTable);
             }
         }
-        
+
         // Rodapé
         Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 8, BaseColor.GRAY);
         Paragraph footer = new Paragraph("\nRelatório gerado automaticamente pelo Sistema de Suporte", footerFont);
         footer.setAlignment(Element.ALIGN_CENTER);
         footer.setSpacingBefore(20);
         document.add(footer);
-        
+
         document.close();
-        
+
         return baos.toByteArray();
     }
-    
+
     /**
      * Método auxiliar para adicionar linhas de detalhes na tabela do PDF
      */
@@ -1804,7 +1837,7 @@ public class SuporteController {
         labelCell.setPadding(5);
         labelCell.setBackgroundColor(new BaseColor(245, 245, 245));
         table.addCell(labelCell);
-        
+
         String displayValue = (value != null && !value.trim().isEmpty()) ? value : "N/A";
         PdfPCell valueCell = new PdfPCell(new Phrase(displayValue, valueFont));
         valueCell.setPadding(5);
@@ -1817,33 +1850,41 @@ public class SuporteController {
     public ResponseEntity<Map<String, Object>> obterUsuarioAtual() {
         try {
             Usuario usuarioLogado = obterUsuarioLogado();
-            
+
             if (usuarioLogado == null) {
                 return ResponseEntity.status(401)
-                    .body(Map.of("erro", "Usuário não autenticado"));
+                        .body(Map.of("erro", "Usuário não autenticado"));
             }
+
+            // --- LOG TEMPORÁRIO: VER PERFIS E PERMISSÕES ---
+            usuarioLogado.getPerfis().forEach(perfil -> {
+                System.out.println("Perfil: " + perfil.getNome());
+                if (perfil.getPermissoes() != null) {
+                    perfil.getPermissoes().forEach(p -> System.out.println(" - Permissão: " + p.getNome()));
+                }
+            });
 
             // Verificar se usuário pode atender chamados
             boolean podeAtenderChamados = permissaoService.podeGerenciarChamados(usuarioLogado);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("id", usuarioLogado.getId());
             response.put("nome", usuarioLogado.getNome());
             response.put("email", usuarioLogado.getEmail());
             response.put("podeAtenderChamados", podeAtenderChamados);
-            
+
             if (usuarioLogado.getColaborador() != null) {
                 response.put("colaboradorId", usuarioLogado.getColaborador().getId());
                 response.put("cargo", usuarioLogado.getColaborador().getCargo());
                 response.put("departamento", usuarioLogado.getColaborador().getDepartamento());
             }
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             logger.error("Erro ao obter usuário atual: {}", e.getMessage());
             return ResponseEntity.status(500)
-                .body(Map.of("erro", "Erro interno do servidor"));
+                    .body(Map.of("erro", "Erro interno do servidor"));
         }
     }
 

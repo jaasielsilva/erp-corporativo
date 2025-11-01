@@ -16,16 +16,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const connectionStatus = document.getElementById('connectionStatus');
 
     let stompClient = null;
-    let currentDepartamentoId = 1; // TODO: Obter dinamicamente do backend (e.g., do modelo Thymeleaf)
-    let currentUsuarioId = 1;     // TODO: Obter dinamicamente do backend (e.g., do modelo Thymeleaf)
+    const CHAT_CONTEXT = window.CHAT_CONTEXT || {};
+    const currentUsuarioId = CHAT_CONTEXT.usuarioId;
+    const currentUsuarioNome = CHAT_CONTEXT.usuarioNome;
     let currentConversationId = null;
+    let conversationSubscription = null;
+    let typingSubscription = null;
     let typingTimer = null;
     const TYPING_DELAY = 1000; // 1 segundo
 
     // Função para conectar ao WebSocket
     function connect() {
         connectionStatus.textContent = 'Conectando...';
-        connectionStatus.style.backgroundColor = '#F59E0B'; // Amarelo para conectando
+        connectionStatus.style.backgroundColor = '#F59E0B';
 
         const socket = new SockJS('/ws');
         stompClient = StompJs.Stomp.over(socket);
@@ -34,15 +37,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function onConnected() {
         connectionStatus.textContent = 'Online';
-        connectionStatus.style.backgroundColor = '#10B981'; // Verde para online
+        connectionStatus.style.backgroundColor = '#10B981';
 
-        // Inscrever-se em tópicos gerais
-        stompClient.subscribe(`/topic/departamento/${currentDepartamentoId}/mensagens`, onMessageReceived);
-        stompClient.subscribe(`/topic/departamento/${currentDepartamentoId}/digitacao`, onTypingNotification);
-        stompClient.subscribe(`/topic/departamento/${currentDepartamentoId}/reacao`, onReactionNotification);
-
-        // Inscrever-se em tópicos específicos do usuário (se houver)
-        // stompClient.subscribe(`/user/${currentUsuarioId}/queue/mensagens`, onMessageReceived);
+        // Tópico privado de mensagens para o usuário
+        stompClient.subscribe('/user/queue/mensagens', onPrivateMessage);
+        // Tópico de erros para o usuário
+        stompClient.subscribe('/user/queue/errors', onUserError);
+        // Status de usuários (online/offline)
+        stompClient.subscribe('/topic/usuarios.status', onUserStatus);
 
         // Carregar conversas iniciais
         loadConversations();
@@ -50,51 +52,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function onError(error) {
         connectionStatus.textContent = 'Offline';
-        connectionStatus.style.backgroundColor = '#EF4444'; // Vermelho para offline
+        connectionStatus.style.backgroundColor = '#EF4444';
         console.error('Erro ao conectar ao WebSocket:', error);
-        // Tentar reconectar após um tempo
         setTimeout(connect, 5000);
     }
 
-    // Função para carregar conversas existentes
-     function loadConversations() {
-         fetch(`/chat-web/conversas/departamento/${currentDepartamentoId}`)
-             .then(response => response.json())
-             .then(conversas => {
+    // Carregar conversas existentes via REST oficial
+    function loadConversations() {
+        fetch('/api/chat/conversas')
+            .then(response => response.json())
+            .then(conversas => {
                 conversationsList.innerHTML = '';
-                if (conversas.length === 0) {
+                if (!conversas || conversas.length === 0) {
                     conversationsList.innerHTML = '<p class="text-center text-muted mt-3">Nenhuma conversa encontrada.</p>';
                 } else {
-                    conversas.forEach(conversa => {
-                        addConversationToList(conversa);
-                    });
-                    // Selecionar a primeira conversa por padrão, se houver
-                    if (conversas.length > 0) {
-                        selectConversation(conversas[0].id);
-                    }
+                    conversas.forEach(addConversationToList);
+                    // Selecionar a primeira conversa por padrão
+                    selectConversation(conversas[0].id);
                 }
             })
             .catch(error => console.error('Erro ao carregar conversas:', error));
     }
 
-    // Adicionar uma conversa à lista na sidebar
+    // Renderizar item de conversa (usa ConversaDTO)
     function addConversationToList(conversa) {
         const conversationItem = document.createElement('div');
         conversationItem.classList.add('conversation-item');
         conversationItem.dataset.conversationId = conversa.id;
+
+        const avatarInitial = (conversa.outroUsuarioNome || 'U').charAt(0);
         conversationItem.innerHTML = `
-            <div class="conversation-avatar department-avatar">
-                ${conversa.nomeDepartamento ? conversa.nomeDepartamento.charAt(0) : 'D'}
-            </div>
+            <div class="conversation-avatar department-avatar">${avatarInitial}</div>
             <div class="conversation-info">
                 <div class="conversation-header">
-                    <h5 class="conversation-name">${conversa.nomeDepartamento || 'Conversa do Departamento'}</h5>
-                    <span class="conversation-time">${formatTime(conversa.ultimaMensagemData)}</span>
+                    <h5 class="conversation-name">${conversa.outroUsuarioNome || 'Conversa'}</h5>
+                    <span class="conversation-time">${conversa.ultimaAtividadeFormatada || ''}</span>
                 </div>
-                <p class="conversation-preview">${conversa.ultimaMensagemConteudo || 'Nenhuma mensagem'}</p>
+                <p class="conversation-preview">${conversa.ultimaMensagem || 'Nenhuma mensagem'}</p>
                 <div class="conversation-meta">
-                    <span class="participants-count">${conversa.participantes ? conversa.participantes.length : 0} participantes</span>
-                    <!-- <span class="unread-badge">3</span> -->
+                    ${conversa.mensagensNaoLidas > 0 ? `<span class="unread-badge">${conversa.mensagensNaoLidas}</span>` : ''}
                 </div>
             </div>
         `;
@@ -106,62 +102,65 @@ document.addEventListener('DOMContentLoaded', function() {
     function selectConversation(conversationId) {
         if (currentConversationId === conversationId) return;
 
-        // Remover seleção da conversa anterior
+        // Remover seleção anterior
         const prevSelected = document.querySelector('.conversation-item.active');
-        if (prevSelected) {
-            prevSelected.classList.remove('active');
-        }
+        if (prevSelected) prevSelected.classList.remove('active');
 
-        // Adicionar seleção à nova conversa
+        // Marcar nova seleção
         const newSelected = document.querySelector(`.conversation-item[data-conversation-id="${conversationId}"]`);
-        if (newSelected) {
-            newSelected.classList.add('active');
-        }
+        if (newSelected) newSelected.classList.add('active');
+
+        // Cancelar subscrições anteriores
+        if (conversationSubscription) conversationSubscription.unsubscribe();
+        if (typingSubscription) typingSubscription.unsubscribe();
 
         currentConversationId = conversationId;
         emptyState.style.display = 'none';
         activeChat.style.display = 'flex';
-        chatMessages.innerHTML = ''; // Limpar mensagens anteriores
+        chatMessages.innerHTML = '';
 
-        // TODO: Atualizar nome do contato e status no cabeçalho do chat
-        // chatContactName.textContent = newSelected.querySelector('.conversation-name').textContent;
-        // chatContactStatusText.textContent = 'Online'; // Ou buscar status real
+        // Atualizar cabeçalho (nome)
+        if (newSelected) {
+            const nome = newSelected.querySelector('.conversation-name').textContent;
+            chatContactName.textContent = nome;
+        }
 
+        // Subscrições de eventos da conversa
+        conversationSubscription = stompClient.subscribe(`/topic/conversa.${conversationId}`, onConversaEvent);
+        typingSubscription = stompClient.subscribe(`/topic/chat.conversa.${conversationId}.digitando`, onTypingTopic);
+
+        // Carregar mensagens
         loadMessages(conversationId);
     }
 
-    // Carregar mensagens de uma conversa
+    // Carregar mensagens da conversa
     function loadMessages(conversationId) {
-        fetch(`/chat/mensagens/conversa/${conversationId}`)
+        fetch(`/api/chat/conversas/${conversationId}/mensagens`)
             .then(response => response.json())
             .then(mensagens => {
                 chatMessages.innerHTML = '';
-                mensagens.forEach(mensagem => {
-                    displayMessage(mensagem);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll para o final
+                mensagens.forEach(displayMessage);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             })
             .catch(error => console.error('Erro ao carregar mensagens:', error));
     }
 
-    // Exibir uma mensagem no chat
+    // Renderizar uma mensagem
     function displayMessage(message) {
         const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-        messageElement.classList.add(message.remetenteId === currentUsuarioId ? 'sent' : 'received');
+        const isMine = message.remetente && message.remetente.id === currentUsuarioId;
+        messageElement.classList.add('message', isMine ? 'sent' : 'received');
 
-        // TODO: Adicionar avatar e nome do remetente
+        const senderName = message.remetente ? message.remetente.nome : (message.remetenteNome || 'Desconhecido');
+        const timeText = formatTime(message.dataEnvio || message.timestamp);
+
         messageElement.innerHTML = `
             <div class="message-content">
                 <div class="message-header">
-                    <span class="sender-name">${message.remetenteNome || 'Desconhecido'}</span>
-                    <!-- <span class="sender-role">Admin</span> -->
+                    <span class="sender-name">${senderName}</span>
                 </div>
                 <div class="message-bubble">${message.conteudo}</div>
-                <div class="message-time">
-                    ${formatTime(message.dataEnvio)}
-                    <!-- <span class="message-status">✓✓</span> -->
-                </div>
+                <div class="message-time">${timeText}</div>
             </div>
         `;
         chatMessages.appendChild(messageElement);
@@ -170,10 +169,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Enviar mensagem
     if (sendButton) {
-    sendButton.addEventListener('click', sendMessage);
-} else {
-    console.error('Elemento com ID "sendButton" não encontrado no DOM');
-}
+        sendButton.addEventListener('click', sendMessage);
+    } else {
+        console.error('Elemento com ID "sendButton" não encontrado no DOM');
+    }
     messageInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -184,65 +183,104 @@ document.addEventListener('DOMContentLoaded', function() {
     function sendMessage() {
         const messageContent = messageInput.value.trim();
         if (messageContent && stompClient && currentConversationId) {
-            const chatMessage = {
-                conteudo: messageContent,
-                remetenteId: currentUsuarioId,
+            const payload = {
                 conversaId: currentConversationId,
-                dataEnvio: new Date().toISOString()
+                conteudo: messageContent
             };
-            stompClient.send(`/app/chat.sendMessage/${currentConversationId}`, {}, JSON.stringify(chatMessage));
+            stompClient.send('/app/chat.enviarMensagem', {}, JSON.stringify(payload));
             messageInput.value = '';
-            // Otimista: Adicionar a própria mensagem imediatamente
-            displayMessage(chatMessage);
         }
     }
 
-    // Receber mensagem via WebSocket
-    function onMessageReceived(payload) {
-        const message = JSON.parse(payload.body);
-        if (message.conversaId === currentConversationId) {
-            displayMessage(message);
+    // Mensagens privadas recebidas (para outros participantes)
+    function onPrivateMessage(frame) {
+        try {
+            const message = JSON.parse(frame.body);
+            if (message.conversaId === currentConversationId) {
+                displayMessage(message);
+            } else {
+                // Atualizar preview/unread em lista (opcional)
+            }
+        } catch (e) {
+            console.warn('Payload privado não parseável', e);
         }
-        // TODO: Atualizar preview da conversa na sidebar
     }
 
-    // Notificação de digitação
+    // Eventos genéricos da conversa (lida, digitando via controller, etc.)
+    function onConversaEvent(frame) {
+        try {
+            const event = JSON.parse(frame.body);
+            if (event.tipo === 'USUARIO_DIGITANDO') {
+                if (event.usuarioId !== currentUsuarioId) {
+                    typingUserName.textContent = event.usuario || 'Alguém';
+                    typingIndicator.style.display = 'flex';
+                }
+            } else if (event.tipo === 'USUARIO_PAROU_DIGITAR') {
+                if (event.usuarioId !== currentUsuarioId) {
+                    typingIndicator.style.display = 'none';
+                }
+            } else if (event.tipo === 'MENSAGEM_LIDA') {
+                // Pode marcar UI de mensagem como lida
+            } else {
+                // Se vierem mensagens diretamente aqui
+                if (event.conteudo) displayMessage(event);
+            }
+        } catch (e) {
+            console.warn('Evento de conversa não parseável', e);
+        }
+    }
+
+    // Evento de digitação via tópico dedicado
+    function onTypingTopic(frame) {
+        try {
+            const notification = JSON.parse(frame.body);
+            if (notification.usuarioId !== currentUsuarioId) {
+                if (notification.digitando) {
+                    typingUserName.textContent = 'Digitando...';
+                    typingIndicator.style.display = 'flex';
+                } else {
+                    typingIndicator.style.display = 'none';
+                }
+            }
+        } catch (e) {
+            console.warn('Notificação de digitação não parseável', e);
+        }
+    }
+
+    // Enviar indicações de digitação via controller
     messageInput.addEventListener('input', function() {
         if (stompClient && currentConversationId) {
-            stompClient.send(`/app/chat.typing/${currentConversationId}`, {}, JSON.stringify({
-                remetenteId: currentUsuarioId,
-                digitando: true
-            }));
+            stompClient.send('/app/chat.digitando', {}, JSON.stringify({ conversaId: currentConversationId }));
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => {
-                stompClient.send(`/app/chat.typing/${currentConversationId}`, {}, JSON.stringify({
-                    remetenteId: currentUsuarioId,
-                    digitando: false
-                }));
+                stompClient.send('/app/chat.pararDigitar', {}, JSON.stringify({ conversaId: currentConversationId }));
             }, TYPING_DELAY);
         }
     });
 
-    function onTypingNotification(payload) {
-        const notification = JSON.parse(payload.body);
-        if (notification.conversaId === currentConversationId && notification.remetenteId !== currentUsuarioId) {
-            if (notification.digitando) {
-                typingUserName.textContent = notification.remetenteNome || 'Alguém'; // TODO: Obter nome real
-                typingIndicator.style.display = 'flex';
-            } else {
-                typingIndicator.style.display = 'none';
-            }
+    // Erros direcionados ao usuário
+    function onUserError(frame) {
+        try {
+            const err = JSON.parse(frame.body);
+            console.error('Erro do servidor:', err.error || err);
+        } catch (e) {
+            console.error('Erro do servidor (texto):', frame.body);
         }
     }
 
-    // Notificação de reação (TODO: Implementar UI para reações)
-    function onReactionNotification(payload) {
-        const reaction = JSON.parse(payload.body);
-        console.log('Reação recebida:', reaction);
-        // TODO: Atualizar UI para mostrar a reação na mensagem correspondente
+    // Status de usuários (online/offline)
+    function onUserStatus(frame) {
+        try {
+            const status = JSON.parse(frame.body);
+            if (status.tipo === 'USUARIO_ONLINE' || status.tipo === 'USUARIO_OFFLINE') {
+                // Atualize UI de presença conforme necessário
+            }
+        } catch (e) {
+            console.warn('Status de usuário não parseável', e);
+        }
     }
 
-    // Nova Conversa Modal
+    // Modal Nova Conversa
     newConversationBtn.addEventListener('click', function() {
         newConversationModal.show();
         loadUsersForNewConversation();
@@ -253,7 +291,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function loadUsersForNewConversation(searchTerm = '') {
-        fetch(`/usuarios/search?term=${searchTerm}`) // TODO: Criar endpoint de busca de usuários
+        const q = encodeURIComponent(searchTerm || '');
+        fetch(`/api/usuarios/busca?q=${q}`)
             .then(response => response.json())
             .then(users => {
                 usersList.innerHTML = '';
@@ -284,13 +323,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function startNewConversation(targetUserId) {
-        // TODO: Implementar lógica para criar uma nova conversa no backend
-        // Por enquanto, vamos simular a criação e selecionar a conversa
-        console.log('Iniciando nova conversa com usuário:', targetUserId);
-        newConversationModal.hide();
-        // Após criar a conversa no backend, recarregar a lista de conversas e selecionar a nova
-        // loadConversations();
-        // selectConversation(novaConversaId);
+        if (!targetUserId) return;
+        fetch(`/api/chat/conversas/individual?destinatarioId=${encodeURIComponent(targetUserId)}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Falha ao criar conversa');
+            return response.json();
+        })
+        .then(conversa => {
+            newConversationModal.hide();
+            // Recarrega lista e seleciona a nova conversa
+            loadConversations();
+            if (conversa && conversa.id) selectConversation(conversa.id);
+        })
+        .catch(err => {
+            console.error('Erro ao criar conversa:', err);
+        });
     }
 
 

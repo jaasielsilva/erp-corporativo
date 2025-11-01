@@ -21,16 +21,16 @@ public class PermissaoBusinessService {
      */
     public boolean temPermissao(PerfilUsuario perfil, Permissao permissao) {
         if (perfil == null || permissao == null) {
-            logger.warn("Tentativa de verificação de permissão com parâmetros nulos: perfil={}, permissao={}", 
-                       perfil, permissao);
+            logger.warn("Tentativa de verificação de permissão com parâmetros nulos: perfil={}, permissao={}",
+                    perfil, permissao);
             return false;
         }
 
         boolean temPermissao = perfil.temPermissao(permissao);
-        
-        logger.debug("Verificação de permissão: perfil={}, permissao={}, resultado={}", 
-                    perfil.getCodigo(), permissao.getCodigo(), temPermissao);
-        
+
+        logger.debug("Verificação de permissão: perfil={}, permissao={}, resultado={}",
+                perfil.getCodigo(), permissao.getCodigo(), temPermissao);
+
         return temPermissao;
     }
 
@@ -47,7 +47,7 @@ public class PermissaoBusinessService {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -64,7 +64,7 @@ public class PermissaoBusinessService {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -75,7 +75,7 @@ public class PermissaoBusinessService {
         if (perfil == null) {
             return Set.of();
         }
-        
+
         return perfil.getPermissoes();
     }
 
@@ -91,16 +91,16 @@ public class PermissaoBusinessService {
         switch (acao.toLowerCase()) {
             case "iniciar":
                 return temPermissao(perfil, Permissao.CHAMADO_INICIAR);
-            
+
             case "resolver":
                 return temPermissao(perfil, Permissao.CHAMADO_RESOLVER);
-            
+
             case "fechar":
                 return temPermissao(perfil, Permissao.CHAMADO_FECHAR);
-            
+
             case "reabrir":
                 return temPermissao(perfil, Permissao.CHAMADO_REABRIR);
-            
+
             default:
                 logger.warn("Ação desconhecida para verificação de permissão: {}", acao);
                 return false;
@@ -118,18 +118,18 @@ public class PermissaoBusinessService {
      * Verifica se um usuário pode visualizar todos os chamados
      */
     public boolean podeVisualizarTodosChamados(PerfilUsuario perfil) {
-        return temAlgumaPermissao(perfil, 
-                                 Permissao.CHAMADO_VISUALIZAR, 
-                                 Permissao.TECNICO_ATENDER_CHAMADOS);
+        return temAlgumaPermissao(perfil,
+                Permissao.CHAMADO_VISUALIZAR,
+                Permissao.TECNICO_ATENDER_CHAMADOS);
     }
 
     /**
      * Verifica se um usuário pode criar chamados
      */
     public boolean podeCriarChamados(PerfilUsuario perfil) {
-        return temAlgumaPermissao(perfil, 
-                                 Permissao.CHAMADO_CRIAR, 
-                                 Permissao.USUARIO_CRIAR_CHAMADOS);
+        return temAlgumaPermissao(perfil,
+                Permissao.CHAMADO_CRIAR,
+                Permissao.USUARIO_CRIAR_CHAMADOS);
     }
 
     /**
@@ -139,15 +139,21 @@ public class PermissaoBusinessService {
         if (usuario == null || usuario.getPerfis() == null) {
             return false;
         }
-        
-        // Verifica se algum dos perfis do usuário tem as permissões necessárias
+
+        // Se o usuário tiver perfil MASTER ou ADMIN, sempre pode gerenciar
+        boolean isMasterOuAdmin = usuario.getPerfis().stream()
+                .anyMatch(perfil -> "ROLE_MASTER".equals(perfil.getNome()) ||
+                        "ROLE_ADMIN".equals(perfil.getNome()));
+        if (isMasterOuAdmin) {
+            return true;
+        }
+
+        // Verifica permissões normais de chamados
         return usuario.getPerfis().stream()
-            .flatMap(perfil -> perfil.getPermissoes().stream())
-            .anyMatch(permissao -> 
-                "TECNICO_ATENDER_CHAMADOS".equals(permissao.getNome()) ||
-                "CHAMADO_INICIAR".equals(permissao.getNome()) ||
-                "CHAMADO_ATRIBUIR".equals(permissao.getNome())
-            );
+                .flatMap(perfil -> perfil.getPermissoes().stream())
+                .anyMatch(permissao -> "TECNICO_ATENDER_CHAMADOS".equals(permissao.getNome()) ||
+                        "CHAMADO_INICIAR".equals(permissao.getNome()) ||
+                        "CHAMADO_ATRIBUIR".equals(permissao.getNome()));
     }
 
     /**
@@ -155,10 +161,10 @@ public class PermissaoBusinessService {
      */
     public void verificarPermissaoObrigatoria(PerfilUsuario perfil, Permissao permissao) {
         if (!temPermissao(perfil, permissao)) {
-            String mensagem = String.format("Usuário com perfil '%s' não tem permissão '%s'", 
-                                           perfil != null ? perfil.getDescricao() : "NULO", 
-                                           permissao != null ? permissao.getDescricao() : "NULA");
-            
+            String mensagem = String.format("Usuário com perfil '%s' não tem permissão '%s'",
+                    perfil != null ? perfil.getDescricao() : "NULO",
+                    permissao != null ? permissao.getDescricao() : "NULA");
+
             logger.warn("Acesso negado: {}", mensagem);
             throw new SecurityException("Acesso negado: " + mensagem);
         }
@@ -169,10 +175,10 @@ public class PermissaoBusinessService {
      */
     public void verificarPermissaoAtualizarStatus(PerfilUsuario perfil, String acao) {
         if (!podeAtualizarStatus(perfil, acao)) {
-            String mensagem = String.format("Usuário com perfil '%s' não pode executar a ação '%s'", 
-                                           perfil != null ? perfil.getDescricao() : "NULO", 
-                                           acao);
-            
+            String mensagem = String.format("Usuário com perfil '%s' não pode executar a ação '%s'",
+                    perfil != null ? perfil.getDescricao() : "NULO",
+                    acao);
+
             logger.warn("Acesso negado: {}", mensagem);
             throw new SecurityException("Acesso negado: " + mensagem);
         }

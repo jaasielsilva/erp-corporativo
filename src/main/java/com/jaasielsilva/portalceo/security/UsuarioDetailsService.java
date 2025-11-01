@@ -19,44 +19,63 @@ public class UsuarioDetailsService implements UserDetailsService {
     private UsuarioRepository usuarioRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Tentar buscar por email primeiro
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
-        
-        // Se não encontrar por email, tentar por matrícula
-        if (usuarioOpt.isEmpty()) {
-            usuarioOpt = usuarioRepository.findByMatricula(username);
-        }
+public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    // Tentar buscar por email primeiro
+    Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
 
-        if (usuarioOpt.isEmpty()) {
-            throw new UsernameNotFoundException("Usuário não encontrado com email ou matrícula: " + username);
-        }
+    // Se não encontrar por email, tentar por matrícula
+    if (usuarioOpt.isEmpty()) {
+        usuarioOpt = usuarioRepository.findByMatricula(username);
+    }
 
-        Usuario usuario = usuarioOpt.get();
+    if (usuarioOpt.isEmpty()) {
+        throw new UsernameNotFoundException("Usuário não encontrado com email ou matrícula: " + username);
+    }
 
-        // Validação do status do usuário com mensagens específicas
-        if (usuario.getStatus() == Usuario.Status.DEMITIDO) {
-            throw new DisabledException("Usuário demitido não pode acessar o sistema.");
-        }
+    Usuario usuario = usuarioOpt.get();
 
-        if (usuario.getStatus() == Usuario.Status.INATIVO) {
-            throw new LockedException("Usuário inativo não pode fazer login.");
-        }
+    // Validação do status do usuário com mensagens específicas
+    switch (usuario.getStatus()) {
+        case DEMITIDO -> throw new DisabledException("Usuário demitido não pode acessar o sistema.");
+        case INATIVO -> throw new LockedException("Usuário inativo não pode fazer login.");
+        case BLOQUEADO -> throw new LockedException("Usuário bloqueado não pode fazer login.");
+    }
 
-        if (usuario.getStatus() == Usuario.Status.BLOQUEADO) {
-            throw new LockedException("Usuário bloqueado não pode fazer login.");
-        }
-
-        return new org.springframework.security.core.userdetails.User(
-                usuario.getEmail(), 
-                usuario.getSenha(),
-                true, 
-                true, 
-                true, 
-                true, 
-                usuario.getPerfis().stream()
-                        .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
-                        .collect(Collectors.toList())
+    // 🔹 Se o usuário for MASTER, dar todas as permissões
+    var authorities = new java.util.HashSet<SimpleGrantedAuthority>();
+    if (usuario.getNivelAcesso() != null && usuario.getNivelAcesso().name().equalsIgnoreCase("MASTER")) {
+        authorities.add(new SimpleGrantedAuthority("ROLE_MASTER"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_CRIAR"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_VISUALIZAR"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_ATRIBUIR"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_INICIAR"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_RESOLVER"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_FECHAR"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_REABRIR"));
+        authorities.add(new SimpleGrantedAuthority("CHAMADO_AVALIAR"));
+        authorities.add(new SimpleGrantedAuthority("TECNICO_ATENDER_CHAMADOS"));
+        authorities.add(new SimpleGrantedAuthority("TECNICO_GERENCIAR_PROPRIOS_CHAMADOS"));
+        authorities.add(new SimpleGrantedAuthority("ADMIN_GERENCIAR_USUARIOS"));
+    } else {
+        // 🔹 Caso não seja MASTER, pegar as permissões normais dos perfis
+        authorities.addAll(
+            usuario.getPerfis().stream()
+                    .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
+                    .collect(Collectors.toSet())
         );
     }
+
+    return new org.springframework.security.core.userdetails.User(
+            usuario.getEmail(),
+            usuario.getSenha(),
+            true,
+            true,
+            true,
+            true,
+            authorities
+    );
+}
+
 }

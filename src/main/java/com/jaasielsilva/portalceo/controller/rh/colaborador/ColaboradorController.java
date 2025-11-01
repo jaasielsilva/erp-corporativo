@@ -99,8 +99,8 @@ public class ColaboradorController {
         // Salva os benefícios do colaborador
         beneficioService.salvarBeneficiosDoColaborador(colaborador);
 
-        // 🔹 Criar e vincular automaticamente o usuário
-        usuarioService.criarUsuarioParaColaborador(colaborador);
+        // 🔹 Removido: criação automática de usuário vinculada ao colaborador
+        // Caso necessário, a criação de usuário deverá ser feita manualmente em outro fluxo
 
         redirectAttributes.addFlashAttribute("mensagem", "Colaborador e benefícios salvos com sucesso!");
         return "redirect:/rh/colaboradores/listar";
@@ -138,8 +138,8 @@ public class ColaboradorController {
                 beneficioService.salvarBeneficiosDoColaborador(colaboradorSalvo);
             }
             
-            // Criar e vincular automaticamente o usuário
-            usuarioService.criarUsuarioParaColaborador(colaboradorSalvo);
+            // Removido: criação e vínculo automático de usuário ao colaborador
+            // A criação de usuário deve ocorrer por fluxo específico separado
             
             // Recarregar o colaborador com o usuário vinculado
             colaboradorSalvo = colaboradorService.findById(colaboradorSalvo.getId());

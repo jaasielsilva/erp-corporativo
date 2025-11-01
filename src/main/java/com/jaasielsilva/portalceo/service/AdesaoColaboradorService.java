@@ -349,8 +349,8 @@ public class AdesaoColaboradorService {
             Colaborador colaborador = criarColaboradorFromDTO(dadosAdesao);
             colaborador = colaboradorRepository.save(colaborador);
 
-            // Criar e vincular automaticamente o usuário
-            usuarioService.criarUsuarioParaColaborador(colaborador);
+            // Removido: criação e vínculo automático de usuário ao finalizar adesão
+            // Usuário deve ser criado posteriormente por fluxo específico
             
             // Recarregar o colaborador com o usuário vinculado
             colaborador = colaboradorRepository.findById(colaborador.getId())

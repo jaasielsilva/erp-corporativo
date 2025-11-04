@@ -251,6 +251,14 @@ public class ChatService {
                     break;
                 }
             }
+            // Fallback defensivo: se não encontrar (conversa inconsistente), usar remetente
+            if (destinatario == null) {
+                destinatario = remetente;
+            }
+        } else {
+            // Em conversas de GRUPO ou DEPARTAMENTO não há único destinatário
+            // Para satisfazer a restrição NOT NULL, definimos o próprio remetente
+            destinatario = remetente;
         }
 
         Mensagem mensagem = new Mensagem();
@@ -276,6 +284,14 @@ public class ChatService {
         notificarParticipantes(conversa, mensagem);
 
         return mensagem;
+    }
+
+    /**
+     * Envia uma mensagem com arquivo anexado
+     */
+    public Mensagem enviarMensagemComArquivo(Long conversaId, Long remetenteId, String conteudo, 
+                                           MultipartFile arquivo, Mensagem.TipoMensagem tipo) throws IOException {
+        return enviarMensagem(conversaId, remetenteId, conteudo, tipo, arquivo);
     }
 
     /**

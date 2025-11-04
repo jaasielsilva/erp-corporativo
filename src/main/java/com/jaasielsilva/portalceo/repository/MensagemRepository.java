@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
 
     // Buscar mensagens de uma conversa específica, ordenadas por data
-    @Query("SELECT m FROM Mensagem m WHERE m.conversa.id = :conversaId ORDER BY m.dataEnvio ASC")
+    @Query("SELECT m FROM Mensagem m JOIN FETCH m.remetente JOIN FETCH m.destinatario WHERE m.conversa.id = :conversaId ORDER BY m.dataEnvio ASC")
     List<Mensagem> findByConversaIdOrderByDataEnvioAsc(@Param("conversaId") Long conversaId);
 
     // Buscar mensagens de uma conversa com paginação
@@ -122,6 +122,11 @@ public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
     // Contar mensagens de uma conversa
     @Query("SELECT COUNT(m) FROM Mensagem m WHERE m.conversa.id = :conversaId")
     long countMensagensPorConversa(@Param("conversaId") Long conversaId);
+
+    // Contar mensagens não lidas de uma conversa para um usuário específico
+    @Query("SELECT COUNT(m) FROM Mensagem m WHERE m.conversa.id = :conversaId AND m.lida = false AND m.remetente.id != :usuarioId")
+    long countMensagensNaoLidasPorConversaEUsuario(@Param("conversaId") Long conversaId,
+                                                   @Param("usuarioId") Long usuarioId);
     
     // Buscar mensagens entre dois usuários com paginação (baseado na conversa)
     @Query("SELECT m FROM Mensagem m " +

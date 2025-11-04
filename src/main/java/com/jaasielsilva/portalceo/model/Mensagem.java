@@ -1,5 +1,8 @@
 package com.jaasielsilva.portalceo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -7,9 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entidade que representa uma mensagem no sistema de chat interno
- */
 @Entity
 @Table(name = "mensagens")
 @Data
@@ -23,10 +23,12 @@ public class Mensagem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "remetente_id", nullable = false)
+    @JsonIgnoreProperties({"conversas", "senha"}) // evita dados sensíveis e loops
     private Usuario remetente;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversa_id", nullable = false)
+    @JsonBackReference // evita loop com Conversa
     private Conversa conversa;
 
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -36,11 +38,11 @@ public class Mensagem {
     private LocalDateTime dataEnvio = LocalDateTime.now();
 
     @Column(name = "lida", nullable = false)
-
     private Boolean lida = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "destinatario_id", nullable = false)
+    @JsonIgnoreProperties({"conversas", "senha"})
     private Usuario destinatario;
 
     @Column(name = "lida_em")
@@ -48,7 +50,6 @@ public class Mensagem {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo", nullable = false)
-
     private TipoMensagem tipo = TipoMensagem.TEXTO;
 
     @Column(name = "editada_em")
@@ -63,15 +64,15 @@ public class Mensagem {
     @Column(name = "arquivo_tamanho")
     private Long arquivoTamanho;
 
-    // Resposta a outra mensagem
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resposta_a_id")
+    @JsonIgnore // evita loop de resposta
     private Mensagem respostaA;
 
     @OneToMany(mappedBy = "mensagem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore // não enviar reações direto no JSON
     private List<ReacaoMensagem> reacoes;
 
-    // Enum para tipos de mensagem
     public enum TipoMensagem {
         TEXTO("Texto"),
         ARQUIVO("Arquivo"),
@@ -80,75 +81,38 @@ public class Mensagem {
         NOTIFICACAO("Notificação");
 
         private final String descricao;
-
-        TipoMensagem(String descricao) {
-            this.descricao = descricao;
-        }
-
-        public String getDescricao() {
-            return descricao;
-        }
+        TipoMensagem(String descricao) { this.descricao = descricao; }
+        public String getDescricao() { return descricao; }
     }
 
-    // Métodos de conveniência
-    public boolean isLida() {
-        return Boolean.TRUE.equals(lida);
-    }
-
-    public void marcarComoLida() {
-        this.lida = true;
-        this.lidaEm = LocalDateTime.now();
-    }
-
-    public boolean temArquivo() {
-        return arquivoUrl != null && !arquivoUrl.trim().isEmpty();
-    }
-
-    public boolean isEditada() {
-        return editadaEm != null;
-    }
-
-    public boolean isResposta() {
-        return respostaA != null;
-    }
-
-    public boolean isSistema() {
-        return TipoMensagem.SISTEMA.equals(this.tipo);
-    }
+    public boolean isLida() { return Boolean.TRUE.equals(lida); }
+    public void marcarComoLida() { this.lida = true; this.lidaEm = LocalDateTime.now(); }
+    public boolean temArquivo() { return arquivoUrl != null && !arquivoUrl.trim().isEmpty(); }
+    public boolean isEditada() { return editadaEm != null; }
+    public boolean isResposta() { return respostaA != null; }
+    public boolean isSistema() { return TipoMensagem.SISTEMA.equals(this.tipo); }
 
     public String getConteudoResumo(int maxLength) {
-        if (conteudo == null)
-            return "";
-        if (conteudo.length() <= maxLength)
-            return conteudo;
+        if (conteudo == null) return "";
+        if (conteudo.length() <= maxLength) return conteudo;
         return conteudo.substring(0, maxLength) + "...";
     }
 
     @PrePersist
     protected void onCreate() {
-        if (dataEnvio == null) {
-            dataEnvio = LocalDateTime.now();
-        }
-        if (lida == null) {
-            lida = false;
-        }
-        if (tipo == null) {
-            tipo = TipoMensagem.TEXTO;
-        }
+        if (dataEnvio == null) dataEnvio = LocalDateTime.now();
+        if (lida == null) lida = false;
+        if (tipo == null) tipo = TipoMensagem.TEXTO;
     }
 
-    // Método para verificar se a mensagem é do usuário
     public boolean isDoUsuario(Usuario usuario) {
         return this.remetente.getId().equals(usuario.getId());
     }
 
-    // Método para obter outro participante em conversas individuais
     public Usuario getOutroParticipante(Usuario usuarioAtual) {
         return this.conversa.getParticipantes().stream()
                 .map(ParticipanteConversa::getUsuario)
                 .filter(u -> !u.getId().equals(usuarioAtual.getId()))
-                .findFirst()
-                .orElse(null);
+                .findFirst().orElse(null);
     }
-
 }

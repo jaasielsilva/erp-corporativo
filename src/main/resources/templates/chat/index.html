@@ -61,6 +61,11 @@
                                 <button class="btn btn-primary w-100" id="newConversationBtn">
                                     <i class="fas fa-plus me-2"></i>Nova Conversa
                                 </button>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-primary w-100" id="newGroupConversationBtn">
+                                        <i class="fas fa-users me-2"></i>Novo Grupo
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Lista de Conversas -->
@@ -131,6 +136,7 @@
                                         <button class="btn btn-outline-secondary emoji-btn" id="emojiBtn">
                                             <i class="fas fa-smile"></i>
                                         </button>
+                                        <input type="file" id="attachmentInput" style="display:none" />
                                         <div class="message-input-wrapper">
                                             <textarea class="form-control message-input" id="messageInput"
                                                 placeholder="Digite sua mensagem..." rows="1"></textarea>
@@ -177,7 +183,38 @@
             </div>
         </div>
     </div>
-   
+
+    <!-- Modal para Nova Conversa em Grupo -->
+    <div class="modal fade" id="newGroupConversationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-users me-2"></i>Novo Grupo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="groupTitleInput" class="form-label">Título do grupo:</label>
+                        <input type="text" class="form-control" id="groupTitleInput" placeholder="Ex.: Projeto X" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="groupUserSearch" class="form-label">Adicionar participantes:</label>
+                        <input type="text" class="form-control" id="groupUserSearch" placeholder="Buscar usuários..." />
+                    </div>
+                    <div class="users-list" id="groupUsersList">
+                        <!-- Usuários para seleção do grupo -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="createGroupConversationBtn">
+                        <i class="fas fa-check me-2"></i>Criar Grupo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Scripts padrão -->
     <script src="/js/sidebar.js" defer></script>
@@ -201,7 +238,8 @@
             usuarioNome: '[[${usuarioNome}]]'
         };
     </script>
-    <script src="/js/chat.js"></script>
+    <!-- Cache busting para garantir carregamento da versão atual de chat.js -->
+    <script src="/js/chat.js?v=2"></script>
 </body>
 
 </html>

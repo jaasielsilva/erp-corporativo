@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - Portal CEO'">Aceites de Usuários - Portal CEO</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/notifications.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .content-area {
+            margin-left: 250px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: none;
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .stats-icon.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stats-icon.success { background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); }
+        .stats-icon.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stats-icon.info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .aceites-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .badge-status {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-aceito {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-pendente {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-rejeitado {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .progress-custom {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+        }
+        
+        .progress-bar-custom {
+            border-radius: 10px;
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div th:replace="components/sidebar :: sidebar"></div>
+    
+    <!-- Main Content -->
+    <div class="content-area">
+        <!-- Top Bar -->
+        <div th:replace="components/topbar :: topbar"></div>
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-2">
+                        <i th:class="${moduleIcon}" class="me-3"></i>
+                        <span th:text="${pageTitle}">Aceites de Usuários</span>
+                    </h1>
+                    <p class="mb-0 opacity-75" th:text="${pageSubtitle}">Controle de aceites dos termos pelos usuários</p>
+                </div>
+                <div>
+                    <a href="/termos" class="action-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        Voltar
+                    </a>
+                    <a href="#" class="action-btn" onclick="exportarRelatorio()">
+                        <i class="fas fa-download"></i>
+                        Exportar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4" th:if="${estatisticas}">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="mb-1" th:text="${estatisticas.totalUsuarios}">0</h3>
+                    <p class="text-muted mb-0">Total de Usuários</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="mb-1" th:text="${estatisticas.usuariosComTodosAceites}">0</h3>
+                    <p class="text-muted mb-0">Com Todos Aceites</p>
+                    <div class="progress-custom mt-2">
+                        <div class="progress-bar-custom" 
+                             th:style="'width: ' + ${estatisticas.percentualAdesao} + '%'"></div>
+                    </div>
+                    <small class="text-muted" th:text="${#numbers.formatDecimal(estatisticas.percentualAdesao, 1, 1)} + '%'">0%</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3 class="mb-1" th:text="${estatisticas.usuariosComAceitesPendentes}">0</h3>
+                    <p class="text-muted mb-0">Aceites Pendentes</p>
+                    <div class="progress-custom mt-2">
+                        <div class="progress-bar-custom bg-warning" 
+                             th:style="'width: ' + ${estatisticas.percentualPendentes} + '%'"></div>
+                    </div>
+                    <small class="text-muted" th:text="${#numbers.formatDecimal(estatisticas.percentualPendentes, 1, 1)} + '%'">0%</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon info">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <h3 class="mb-1" th:text="${estatisticas.totalAceites}">0</h3>
+                    <p class="text-muted mb-0">Total de Aceites</p>
+                    <small class="text-success">
+                        <i class="fas fa-arrow-up"></i>
+                        <span th:text="${estatisticas.aceitesMes}">0</span> este mês
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Aceites Section -->
+        <div class="aceites-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4><i class="fas fa-list me-2"></i>Relatório de Aceites</h4>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="atualizarDados()">
+                        <i class="fas fa-sync-alt"></i>
+                        Atualizar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filter-section">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Termo:</label>
+                        <select class="form-select" id="filtroTermo">
+                            <option value="">Todos os termos</option>
+                            <option value="termos_uso">Termos de Uso</option>
+                            <option value="politica_privacidade">Política de Privacidade</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status:</label>
+                        <select class="form-select" id="filtroStatus">
+                            <option value="">Todos os status</option>
+                            <option value="aceito">Aceito</option>
+                            <option value="pendente">Pendente</option>
+                            <option value="rejeitado">Rejeitado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Data Inicial:</label>
+                        <input type="date" class="form-control" id="dataInicial">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Data Final:</label>
+                        <input type="date" class="form-control" id="dataFinal">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Buscar Usuário:</label>
+                        <input type="text" class="form-control" id="buscaUsuario" placeholder="Nome ou email do usuário">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button class="btn btn-primary me-2" onclick="aplicarFiltros()">
+                            <i class="fas fa-search"></i>
+                            Filtrar
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="limparFiltros()">
+                            <i class="fas fa-times"></i>
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aceites Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Email</th>
+                            <th>Termo</th>
+                            <th>Versão</th>
+                            <th>Data do Aceite</th>
+                            <th>Status</th>
+                            <th>IP</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaAceites">
+                        <!-- Dados serão carregados via JavaScript -->
+                        <tr>
+                            <td>João Silva</td>
+                            <td>joao.silva@empresa.com</td>
+                            <td>Termos de Uso</td>
+                            <td>v2.1</td>
+                            <td>15/12/2024 14:30</td>
+                            <td><span class="badge-status badge-aceito">Aceito</span></td>
+                            <td>192.168.1.100</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="verDetalhes(1)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Maria Santos</td>
+                            <td>maria.santos@empresa.com</td>
+                            <td>Política de Privacidade</td>
+                            <td>v1.3</td>
+                            <td>14/12/2024 09:15</td>
+                            <td><span class="badge-status badge-aceito">Aceito</span></td>
+                            <td>192.168.1.101</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="verDetalhes(2)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Pedro Costa</td>
+                            <td>pedro.costa@empresa.com</td>
+                            <td>Termos de Uso</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span class="badge-status badge-pendente">Pendente</span></td>
+                            <td>-</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-warning" onclick="enviarLembrete(3)">
+                                    <i class="fas fa-bell"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center mt-4">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Próximo</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="components/footer :: footer"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/main.js"></script>
+    
+    <script>
+        function aplicarFiltros() {
+            // Implementar lógica de filtros
+            console.log('Aplicando filtros...');
+        }
+        
+        function limparFiltros() {
+            document.getElementById('filtroTermo').value = '';
+            document.getElementById('filtroStatus').value = '';
+            document.getElementById('dataInicial').value = '';
+            document.getElementById('dataFinal').value = '';
+            document.getElementById('buscaUsuario').value = '';
+        }
+        
+        function atualizarDados() {
+            // Implementar atualização dos dados
+            console.log('Atualizando dados...');
+        }
+        
+        function exportarRelatorio() {
+            // Implementar exportação
+            console.log('Exportando relatório...');
+        }
+        
+        function verDetalhes(id) {
+            // Implementar visualização de detalhes
+            console.log('Ver detalhes do aceite:', id);
+        }
+        
+        function enviarLembrete(id) {
+            // Implementar envio de lembrete
+            console.log('Enviando lembrete para usuário:', id);
+        }
+    </script>
+</body>
+</html>

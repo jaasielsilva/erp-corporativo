@@ -19,12 +19,8 @@ public class ChatWebController {
         return "chat/index";
     }
 
-    @GetMapping("/conversas/departamento/{departamentoId}")
-    @ResponseBody
-    public List<Map<String, Object>> getConversationsByDepartamento(@PathVariable Long departamentoId) {
-        // TODO: Implementar a lógica para buscar conversas reais do banco de dados
-        // Por enquanto, retorna uma lista vazia para evitar o erro 404
-        System.out.println("Requisição para /chat-web/conversas/departamento/" + departamentoId);
-        return Collections.emptyList();
+    @GetMapping("/departamentos")
+    public String departamentosPage() {
+        return "chat/departamentos";
     }
 }

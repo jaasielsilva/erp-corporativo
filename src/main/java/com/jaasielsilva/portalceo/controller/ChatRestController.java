@@ -4,13 +4,19 @@ import com.jaasielsilva.portalceo.dto.ConversaDTO;
 import com.jaasielsilva.portalceo.model.Conversa;
 import com.jaasielsilva.portalceo.model.Mensagem;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.Departamento;
+import com.jaasielsilva.portalceo.repository.ConversaRepository;
+import com.jaasielsilva.portalceo.repository.MensagemRepository;
+import com.jaasielsilva.portalceo.repository.ParticipanteConversaRepository;
 import com.jaasielsilva.portalceo.service.ChatService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
+import com.jaasielsilva.portalceo.service.DepartamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +39,18 @@ public class ChatRestController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private DepartamentoService departamentoService;
+
+    @Autowired
+    private ConversaRepository conversaRepository;
+
+    @Autowired
+    private MensagemRepository mensagemRepository;
+
+    @Autowired
+    private ParticipanteConversaRepository participanteConversaRepository;
 
     // ==================== CONVERSAS ====================
 
@@ -172,7 +190,7 @@ public class ChatRestController {
     /**
      * Lista mensagens de uma conversa
      */
-    @GetMapping("/conversas/{conversaId}/mensagens")
+    @GetMapping(value = "/conversas/{conversaId}/mensagens", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Mensagem>> listarMensagens(
             @PathVariable Long conversaId,
             Authentication auth) {
@@ -210,6 +228,63 @@ public class ChatRestController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    /**
+     * Envia uma mensagem com arquivo anexado
+     */
+    @PostMapping("/conversas/{conversaId}/mensagens/upload")
+    public ResponseEntity<Mensagem> enviarMensagemComArquivo(
+            @PathVariable Long conversaId,
+            @RequestParam("arquivo") MultipartFile arquivo,
+            @RequestParam(value = "conteudo", required = false, defaultValue = "") String conteudo,
+            Authentication auth) {
+        try {
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
+            if (usuario == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Verificar se usuário é participante
+            if (!chatService.isParticipante(conversaId, usuario.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Determinar tipo da mensagem baseado no arquivo
+            Mensagem.TipoMensagem tipo = determinarTipoArquivo(arquivo);
+            
+            // Se conteúdo está vazio, usar nome do arquivo como conteúdo
+            if (conteudo == null || conteudo.trim().isEmpty()) {
+                conteudo = "📎 " + arquivo.getOriginalFilename();
+            }
+
+            Mensagem mensagem = chatService.enviarMensagemComArquivo(
+                conversaId, usuario.getId(), conteudo, arquivo, tipo);
+            
+            return ResponseEntity.ok(mensagem);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Determina o tipo da mensagem baseado na extensão do arquivo
+     */
+    private Mensagem.TipoMensagem determinarTipoArquivo(MultipartFile arquivo) {
+        String nomeArquivo = arquivo.getOriginalFilename();
+        if (nomeArquivo == null) {
+            return Mensagem.TipoMensagem.ARQUIVO;
+        }
+        
+        String extensao = nomeArquivo.toLowerCase();
+        if (extensao.endsWith(".jpg") || extensao.endsWith(".jpeg") || 
+            extensao.endsWith(".png") || extensao.endsWith(".gif") || 
+            extensao.endsWith(".webp") || extensao.endsWith(".svg")) {
+            return Mensagem.TipoMensagem.IMAGEM;
+        }
+        
+        return Mensagem.TipoMensagem.ARQUIVO;
     }
 
     /**
@@ -438,5 +513,71 @@ public class ChatRestController {
                 "status", "UP",
                 "service", "Chat Service",
                 "timestamp", System.currentTimeMillis()));
+    }
+
+    // ==================== DEPARTAMENTOS ====================
+
+    /**
+     * Lista departamentos com estatísticas de chat (participantes, mensagens e não lidas)
+     */
+    @GetMapping("/departamentos")
+    public ResponseEntity<List<Map<String, Object>>> listarDepartamentos(Authentication auth) {
+        try {
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
+            if (usuario == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            List<Departamento> departamentos = departamentoService.listarTodos();
+
+            List<Map<String, Object>> resultado = departamentos.stream().map(dept -> {
+                Map<String, Object> dto = new HashMap<>();
+                dto.put("id", dept.getId());
+                dto.put("nome", dept.getNome());
+
+                long participantes = 0L;
+                long mensagens = 0L;
+                long naoLidas = 0L;
+
+                // Se já existe conversa para o departamento, calcular estatísticas
+                var conversaOpt = conversaRepository.findByDepartamentoId(dept.getId());
+                if (conversaOpt.isPresent()) {
+                    Long conversaId = conversaOpt.get().getId();
+                    Long participantesCount = participanteConversaRepository.countParticipantesAtivosByConversaId(conversaId);
+                    participantes = participantesCount != null ? participantesCount : 0L;
+                    mensagens = mensagemRepository.countMensagensPorConversa(conversaId);
+                    naoLidas = mensagemRepository.countMensagensNaoLidasPorConversaEUsuario(conversaId, usuario.getId());
+                }
+
+                dto.put("participantes", participantes);
+                dto.put("mensagens", mensagens);
+                dto.put("mensagensNaoLidas", naoLidas);
+                return dto;
+            }).toList();
+
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Cria ou retorna a conversa de um departamento específico
+     */
+    @PostMapping("/departamentos/{departamentoId}/conversa")
+    public ResponseEntity<Conversa> criarOuBuscarConversaDepartamento(
+            @PathVariable Long departamentoId,
+            Authentication auth) {
+        try {
+            Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElse(null);
+            if (usuario == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Conversa conversa = chatService.criarConversaDepartamento(departamentoId, usuario.getId());
+            return ResponseEntity.ok(conversa);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

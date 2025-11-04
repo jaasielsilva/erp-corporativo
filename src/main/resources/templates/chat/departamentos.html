@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversas por Departamento - ERP Corporativo</title>
+
+    <!-- CSS padrão -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+    <link rel="stylesheet" th:href="@{/css/departamentos-chat.css}">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Conteúdo da página -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- Header local da página -->
+                        <div class="col-12">
+                            <div class="chat-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <a href="/chat-web" class="btn btn-outline-secondary me-3">
+                                            <i class="fas fa-arrow-left"></i> Voltar ao Chat
+                                        </a>
+                                        <h4 class="mb-0">
+                                            <i class="fas fa-building me-2"></i>
+                                            Conversas por Departamento
+                                        </h4>
+                                    </div>
+                                    <div class="header-actions">
+                                        <span class="connection-status" id="connectionStatus">Conectando...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Sidebar de Departamentos -->
+                        <div class="col-md-4 col-lg-3">
+                            <div class="departments-sidebar">
+                                <!-- Filtro de busca -->
+                                <div class="search-container mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                        <input type="text" class="form-control" placeholder="Buscar departamentos..." id="searchDepartments">
+                                    </div>
+                                </div>
+
+                                <!-- Lista de Departamentos -->
+                                <div class="departments-list" id="departmentsList">
+                                    <div class="loading-departments text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visualmente-hidden">Carregando...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">Carregando departamentos...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Área Principal - Conversas do Departamento -->
+                        <div class="col-md-8 col-lg-9">
+                            <div class="department-conversations-area">
+                                <!-- Estado inicial -->
+                                <div class="no-department-selected" id="noDepartmentSelected">
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-building fa-4x text-muted mb-3"></i>
+                                        <h5 class="text-muted">Selecione um departamento</h5>
+                                        <p class="text-muted">Escolha um departamento na lista ao lado para ver suas conversas</p>
+                                    </div>
+                                </div>
+
+                                <!-- Área de conversas do departamento selecionado -->
+                                <div class="department-chat-area d-none" id="departmentChatArea">
+                                    <!-- Header do departamento -->
+                                    <div class="department-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="department-info">
+                                                <h5 class="mb-1" id="departmentName">Nome do Departamento</h5>
+                                                <small class="text-muted" id="departmentStats">0 participantes • 0 mensagens</small>
+                                            </div>
+                                            <div class="department-actions">
+                                                <button class="btn btn-outline-primary btn-sm" id="departmentSettingsBtn">
+                                                    <i class="fas fa-cog"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Área de mensagens -->
+                                    <div class="messages-container" id="messagesContainer">
+                                        <div class="messages-list" id="messagesList">
+                                            <!-- Mensagens serão carregadas aqui -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Área de entrada de mensagem -->
+                                    <div class="message-input-area">
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-secondary" type="button" id="attachmentBtn">
+                                                <i class="fas fa-paperclip"></i>
+                                            </button>
+                                            <input type="text" class="form-control" placeholder="Digite sua mensagem..." 
+                                                   id="messageInput" maxlength="1000">
+                                            <button class="btn btn-outline-secondary" type="button" id="emojiBtn">
+                                                <i class="fas fa-smile"></i>
+                                            </button>
+                                            <button class="btn btn-primary" type="button" id="sendBtn">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                        <input type="file" id="fileInput" style="display: none;" multiple 
+                                               accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- Scripts padrão -->
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SockJS e STOMP -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <!-- JavaScript personalizado -->
+    <script th:src="@{/js/departamentos-chat.js}"></script>
+</body>
+
+</html>

@@ -7,6 +7,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const newConversationModal = new bootstrap.Modal(document.getElementById('newConversationModal'));
     const userSearchInput = document.getElementById('userSearch');
     const usersList = document.getElementById('usersList');
+    const searchInput = document.getElementById('searchInput');
+    const newGroupConversationBtn = document.getElementById('newGroupConversationBtn');
+    const newGroupConversationModalEl = document.getElementById('newGroupConversationModal');
+    const newGroupConversationModal = newGroupConversationModalEl ? new bootstrap.Modal(newGroupConversationModalEl) : null;
+    const groupTitleInput = document.getElementById('groupTitleInput');
+    const groupUserSearch = document.getElementById('groupUserSearch');
+    const groupUsersList = document.getElementById('groupUsersList');
+    const createGroupConversationBtn = document.getElementById('createGroupConversationBtn');
+    const attachmentBtn = document.getElementById('attachmentBtn');
+    const emojiBtn = document.getElementById('emojiBtn');
+    const attachmentInput = document.getElementById('attachmentInput');
     const emptyState = document.getElementById('emptyState');
     const activeChat = document.getElementById('activeChat');
     const chatContactName = document.getElementById('chatContactName');
@@ -25,14 +36,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let typingTimer = null;
     const TYPING_DELAY = 1000; // 1 segundo
 
-    // Função para conectar ao WebSocket
+    // Função para conectar ao WebSocket (com auto-reconexão)
     function connect() {
         connectionStatus.textContent = 'Conectando...';
         connectionStatus.style.backgroundColor = '#F59E0B';
 
-        const socket = new SockJS('/ws');
-        stompClient = StompJs.Stomp.over(socket);
-        stompClient.connect({}, onConnected, onError);
+        stompClient = new StompJs.Client({
+            webSocketFactory: () => new SockJS('/ws'),
+            reconnectDelay: 5000, // tenta reconectar após 5s
+            heartbeatIncoming: 10000,
+            heartbeatOutgoing: 10000,
+            debug: (str) => console.log(str),
+            onConnect: onConnected,
+            onStompError: onStompError
+        });
+        stompClient.activate();
     }
 
     function onConnected() {
@@ -50,11 +68,11 @@ document.addEventListener('DOMContentLoaded', function() {
         loadConversations();
     }
 
-    function onError(error) {
+    function onStompError(frame) {
         connectionStatus.textContent = 'Offline';
         connectionStatus.style.backgroundColor = '#EF4444';
-        console.error('Erro ao conectar ao WebSocket:', error);
-        setTimeout(connect, 5000);
+        console.error('Erro STOMP:', frame);
+        // auto-reconexão já está habilitada via reconnectDelay
     }
 
     // Carregar conversas existentes via REST oficial
@@ -69,6 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     conversas.forEach(addConversationToList);
                     // Selecionar a primeira conversa por padrão
                     selectConversation(conversas[0].id);
+                    // Aplicar filtro atual, se houver
+                    if (searchInput && searchInput.value) filterConversations(searchInput.value);
                 }
             })
             .catch(error => console.error('Erro ao carregar conversas:', error));
@@ -96,6 +116,22 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         conversationItem.addEventListener('click', () => selectConversation(conversa.id));
         conversationsList.appendChild(conversationItem);
+    }
+
+    // Filtro de conversas da sidebar
+    function filterConversations(term) {
+        const normalized = (term || '').toLowerCase();
+        const items = conversationsList.querySelectorAll('.conversation-item');
+        items.forEach(item => {
+            const name = item.querySelector('.conversation-name')?.textContent?.toLowerCase() || '';
+            const preview = item.querySelector('.conversation-preview')?.textContent?.toLowerCase() || '';
+            const match = !normalized || name.includes(normalized) || preview.includes(normalized);
+            item.style.display = match ? '' : 'none';
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => filterConversations(searchInput.value));
     }
 
     // Selecionar uma conversa
@@ -136,11 +172,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carregar mensagens da conversa
     function loadMessages(conversationId) {
         fetch(`/api/chat/conversas/${conversationId}/mensagens`)
-            .then(response => response.json())
-            .then(mensagens => {
-                chatMessages.innerHTML = '';
-                mensagens.forEach(displayMessage);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+            .then(async response => {
+                const contentType = response.headers.get('content-type') || '';
+                if (!response.ok) {
+                    const sample = await response.text();
+                    console.error('Erro ao carregar mensagens:', response.status, sample ? sample.substring(0, 1000) : '');
+                    return;
+                }
+                if (contentType.includes('application/json')) {
+                    const mensagens = await response.json();
+                    chatMessages.innerHTML = '';
+                    (mensagens || []).forEach(displayMessage);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } else {
+                    const sample = await response.text();
+                    console.error('Erro ao carregar mensagens: resposta não é JSON válido', {
+                        amostra: sample ? sample.substring(0, 1000) : ''
+                    });
+                }
             })
             .catch(error => console.error('Erro ao carregar mensagens:', error));
     }
@@ -153,18 +202,67 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const senderName = message.remetente ? message.remetente.nome : (message.remetenteNome || 'Desconhecido');
         const timeText = formatTime(message.dataEnvio || message.timestamp);
+        const mensagemId = message.id || message.mensagemId;
+
+        // Renderizar conteúdo baseado no tipo da mensagem
+        let messageContent = '';
+        if (message.tipo === 'IMAGEM' && message.arquivoUrl) {
+            messageContent = `
+                <div class="message-image">
+                    <img src="/${message.arquivoUrl}" alt="${message.arquivoNome || 'Imagem'}" 
+                         onclick="openImageModal(this.src)" style="max-width: 300px; max-height: 200px; border-radius: 8px; cursor: pointer;">
+                    ${message.conteudo ? `<p>${message.conteudo}</p>` : ''}
+                </div>
+            `;
+        } else if (message.tipo === 'ARQUIVO' && message.arquivoUrl) {
+            const fileSize = message.arquivoTamanho ? formatFileSize(message.arquivoTamanho) : '';
+            messageContent = `
+                <div class="message-file">
+                    <div class="file-info">
+                        <span class="file-icon">📎</span>
+                        <div class="file-details">
+                            <a href="/${message.arquivoUrl}" target="_blank" class="file-name">${message.arquivoNome || 'Arquivo'}</a>
+                            ${fileSize ? `<span class="file-size">${fileSize}</span>` : ''}
+                        </div>
+                    </div>
+                    ${message.conteudo && !message.conteudo.startsWith('📎') ? `<p>${message.conteudo}</p>` : ''}
+                </div>
+            `;
+        } else {
+            messageContent = `<div class="message-bubble">${message.conteudo}</div>`;
+        }
 
         messageElement.innerHTML = `
             <div class="message-content">
                 <div class="message-header">
                     <span class="sender-name">${senderName}</span>
                 </div>
-                <div class="message-bubble">${message.conteudo}</div>
+                ${messageContent}
                 <div class="message-time">${timeText}</div>
+                <div class="message-reactions" data-mensagem-id="${mensagemId || ''}">
+                    <button class="reaction-btn" data-emoji="👍" title="Reagir com 👍">👍</button>
+                    <button class="reaction-btn" data-emoji="❤️" title="Reagir com ❤️">❤️</button>
+                    <button class="reaction-btn" data-emoji="🎉" title="Reagir com 🎉">🎉</button>
+                    <button class="reaction-btn" data-emoji="🔥" title="Reagir com 🔥">🔥</button>
+                    <span class="reaction-status text-muted"></span>
+                </div>
             </div>
         `;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Eventos de reação
+        const reactionContainer = messageElement.querySelector('.message-reactions');
+        if (reactionContainer && mensagemId) {
+            reactionContainer.querySelectorAll('.reaction-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const emoji = this.dataset.emoji;
+                    toggleReaction(mensagemId, emoji, reactionContainer);
+                });
+            });
+            // Carregar reações atuais (opcional)
+            loadReactions(mensagemId, reactionContainer);
+        }
     }
 
     // Enviar mensagem
@@ -187,9 +285,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 conversaId: currentConversationId,
                 conteudo: messageContent
             };
-            stompClient.send('/app/chat.enviarMensagem', {}, JSON.stringify(payload));
+            stompClient.publish({ destination: '/app/chat.enviarMensagem', body: JSON.stringify(payload) });
             messageInput.value = '';
         }
+    }
+
+    // Reações de mensagens
+    function toggleReaction(mensagemId, emoji, container) {
+        fetch(`/api/chat/reacoes/${mensagemId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emoji })
+        })
+        .then(async response => {
+            const text = await response.text();
+            const statusEl = container.querySelector('.reaction-status');
+            if (response.ok) {
+                statusEl.textContent = 'Reação atualizada';
+                setTimeout(() => statusEl.textContent = '', 1500);
+                loadReactions(mensagemId, container);
+            } else {
+                statusEl.textContent = text || 'Erro ao reagir';
+                setTimeout(() => statusEl.textContent = '', 2500);
+            }
+        })
+        .catch(err => {
+            const statusEl = container.querySelector('.reaction-status');
+            statusEl.textContent = 'Falha na requisição';
+            setTimeout(() => statusEl.textContent = '', 2500);
+            console.error('Erro ao enviar reação:', err);
+        });
+    }
+
+    function loadReactions(mensagemId, container) {
+        fetch(`/api/chat/reacoes/${mensagemId}`)
+            .then(response => response.json())
+            .then(reacoes => {
+                // Renderizar contagem simples por emoji
+                const counts = {};
+                (reacoes || []).forEach(r => {
+                    counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+                });
+                // Atualizar labels nos botões
+                container.querySelectorAll('.reaction-btn').forEach(btn => {
+                    const emoji = btn.dataset.emoji;
+                    const count = counts[emoji] || 0;
+                    btn.textContent = count > 0 ? `${emoji} ${count}` : emoji;
+                });
+            })
+            .catch(err => console.error('Erro ao buscar reações:', err));
     }
 
     // Mensagens privadas recebidas (para outros participantes)
@@ -250,10 +394,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Enviar indicações de digitação via controller
     messageInput.addEventListener('input', function() {
         if (stompClient && currentConversationId) {
-            stompClient.send('/app/chat.digitando', {}, JSON.stringify({ conversaId: currentConversationId }));
+            stompClient.publish({ destination: '/app/chat.digitando', body: JSON.stringify({ conversaId: currentConversationId }) });
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => {
-                stompClient.send('/app/chat.pararDigitar', {}, JSON.stringify({ conversaId: currentConversationId }));
+                stompClient.publish({ destination: '/app/chat.pararDigitar', body: JSON.stringify({ conversaId: currentConversationId }) });
             }, TYPING_DELAY);
         }
     });
@@ -322,6 +466,120 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Erro ao buscar usuários:', error));
     }
 
+    // ===== Grupo: carregar e criar =====
+    let selectedGroupParticipants = new Set();
+
+    function loadUsersForNewGroup(searchTerm = '') {
+        const q = encodeURIComponent(searchTerm || '');
+        fetch(`/api/usuarios/busca?q=${q}`)
+            .then(response => response.json())
+            .then(users => {
+                groupUsersList.innerHTML = '';
+                if (!users || users.length === 0) {
+                    groupUsersList.innerHTML = '<p class="text-center text-muted mt-3">Nenhum usuário encontrado.</p>';
+                    return;
+                }
+                users.forEach(user => {
+                    const row = document.createElement('div');
+                    row.classList.add('list-group-item', 'd-flex', 'align-items-center', 'justify-content-between', 'user-item');
+                    row.innerHTML = `
+                        <div class="d-flex align-items-center" style="gap: 10px;">
+                            <input type="checkbox" class="form-check-input" data-user-id="${user.id}" ${selectedGroupParticipants.has(user.id) ? 'checked' : ''} />
+                            <div>
+                                <h6 class="mb-0">${user.nome}</h6>
+                                <small class="text-muted">${user.departamento || 'Sem Departamento'}</small>
+                            </div>
+                        </div>
+                    `;
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    checkbox.addEventListener('change', function() {
+                        const uid = parseInt(this.dataset.userId);
+                        if (this.checked) {
+                            selectedGroupParticipants.add(uid);
+                        } else {
+                            selectedGroupParticipants.delete(uid);
+                        }
+                    });
+                    groupUsersList.appendChild(row);
+                });
+            })
+            .catch(err => console.error('Erro ao buscar usuários (grupo):', err));
+    }
+
+    function startNewGroupConversation() {
+        const titulo = (groupTitleInput?.value || '').trim();
+        if (!titulo) {
+            alert('Informe um título para o grupo.');
+            return;
+        }
+        const participantes = Array.from(selectedGroupParticipants);
+        if (participantes.length === 0) {
+            alert('Selecione pelo menos um participante.');
+            return;
+        }
+        fetch('/api/chat/conversas/grupo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo, participantes })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Falha ao criar grupo');
+            return response.json();
+        })
+        .then(conversa => {
+            if (newGroupConversationModal) newGroupConversationModal.hide();
+            selectedGroupParticipants.clear();
+            groupTitleInput.value = '';
+            groupUsersList.innerHTML = '';
+            loadConversations();
+            if (conversa && conversa.id) selectConversation(conversa.id);
+        })
+        .catch(err => console.error('Erro ao criar grupo:', err));
+    }
+
+    if (newGroupConversationBtn && newGroupConversationModal) {
+        newGroupConversationBtn.addEventListener('click', function() {
+            selectedGroupParticipants.clear();
+            if (groupTitleInput) groupTitleInput.value = '';
+            newGroupConversationModal.show();
+            loadUsersForNewGroup();
+        });
+    }
+
+    if (groupUserSearch) {
+        groupUserSearch.addEventListener('input', function() {
+            loadUsersForNewGroup(groupUserSearch.value);
+        });
+    }
+
+    if (createGroupConversationBtn) {
+        createGroupConversationBtn.addEventListener('click', startNewGroupConversation);
+    }
+
+    // ===== Anexos e Emojis (UI) =====
+    if (attachmentBtn && attachmentInput) {
+        attachmentBtn.addEventListener('click', () => attachmentInput.click());
+        attachmentInput.addEventListener('change', function() {
+            const file = this.files && this.files[0];
+            if (!file || !currentConversationId) return;
+            
+            // Upload real do arquivo
+            uploadFile(file, currentConversationId);
+            this.value = '';
+        });
+    }
+
+    if (emojiBtn && messageInput) {
+        emojiBtn.addEventListener('click', function() {
+            const emojis = ['🙂','😊','👍','🔥','🚀','🎉','❤️'];
+            const chosen = emojis[Math.floor(Math.random() * emojis.length)];
+            const start = messageInput.selectionStart || messageInput.value.length;
+            const end = messageInput.selectionEnd || messageInput.value.length;
+            messageInput.value = messageInput.value.substring(0, start) + chosen + messageInput.value.substring(end);
+            messageInput.focus();
+        });
+    }
+
     function startNewConversation(targetUserId) {
         if (!targetUserId) return;
         fetch(`/api/chat/conversas/individual?destinatarioId=${encodeURIComponent(targetUserId)}`, {
@@ -348,6 +606,111 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isoString) return '';
         const date = new Date(isoString);
         return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // ===== Funções auxiliares para arquivos =====
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function openImageModal(imageSrc) {
+        // Criar modal simples para visualizar imagem
+        const modal = document.createElement('div');
+        modal.className = 'image-modal';
+        modal.innerHTML = `
+            <div class="image-modal-content">
+                <span class="image-modal-close">&times;</span>
+                <img src="${imageSrc}" alt="Imagem ampliada">
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Fechar modal
+        const closeBtn = modal.querySelector('.image-modal-close');
+        const closeModal = () => {
+            document.body.removeChild(modal);
+        };
+        
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+        
+        // Fechar com ESC
+        const handleKeydown = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', handleKeydown);
+            }
+        };
+        document.addEventListener('keydown', handleKeydown);
+    }
+
+    // ===== Upload de Arquivos =====
+    function uploadFile(file, conversaId) {
+        const formData = new FormData();
+        formData.append('arquivo', file);
+        formData.append('conteudo', ''); // Conteúdo opcional, será gerado automaticamente se vazio
+
+        // Mostrar indicador de upload
+        const uploadIndicator = document.createElement('div');
+        uploadIndicator.className = 'upload-indicator';
+        uploadIndicator.innerHTML = `
+            <div class="upload-progress">
+                <span>📤 Enviando ${file.name}...</span>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        `;
+        messagesContainer.appendChild(uploadIndicator);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        fetch(`/api/chat/conversas/${conversaId}/mensagens/upload`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erro no upload: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(mensagem => {
+            // Remover indicador de upload
+            uploadIndicator.remove();
+            
+            // Adicionar mensagem à interface
+            displayMessage(mensagem);
+            
+            // Notificar outros participantes via WebSocket
+            if (stompClient && stompClient.connected) {
+                const notification = {
+                    conversaId: conversaId,
+                    mensagemId: mensagem.id,
+                    remetenteId: mensagem.remetente.id,
+                    tipo: 'NOVA_MENSAGEM'
+                };
+                stompClient.publish({ destination: '/app/chat.notificarMensagem', body: JSON.stringify(notification) });
+            }
+        })
+        .catch(error => {
+            console.error('Erro no upload:', error);
+            uploadIndicator.innerHTML = `
+                <div class="upload-error">
+                    ❌ Erro ao enviar ${file.name}
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+        });
     }
 
     // Iniciar conexão WebSocket

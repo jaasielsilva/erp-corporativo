@@ -504,6 +504,33 @@ body {
 }
 
 /* Indicador de digitação */
+.message-reactions {
+    margin-top: var(--spacing-xs);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.reaction-btn {
+    font-size: 0.85rem;
+    line-height: 1;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-white);
+    cursor: pointer;
+}
+
+.reaction-btn:hover {
+    background: var(--bg-hover);
+}
+
+.reaction-status {
+    font-size: 0.6875rem;
+    margin-left: 4px;
+}
+
+.typing-indicator {
 .typing-indicator {
     padding: var(--spacing-sm) var(--spacing-lg);
     background: var(--bg-light);
@@ -846,4 +873,209 @@ body {
 
 .mb-3 {
     margin-bottom: 1rem !important;
+}
+
+/* ===== Upload Indicators ===== */
+.upload-indicator {
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm) 0;
+    border-radius: var(--border-radius);
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+}
+
+.upload-progress {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.upload-progress span {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-blue);
+    border-radius: 2px;
+    animation: progress-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-pulse {
+    0%, 100% { width: 20%; }
+    50% { width: 80%; }
+}
+
+.upload-error {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--danger-color);
+    font-size: 0.875rem;
+}
+
+.upload-error button {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-error button:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+}
+
+/* ===== Mensagens com Arquivos ===== */
+.message-image {
+    margin: var(--spacing-xs) 0;
+}
+
+.message-image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.message-image img:hover {
+    transform: scale(1.02);
+}
+
+.message-image p {
+    margin: var(--spacing-xs) 0 0 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.message-file {
+    margin: var(--spacing-xs) 0;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s ease;
+}
+
+.file-info:hover {
+    background: var(--bg-hover);
+}
+
+.file-icon {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.file-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.file-name {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.file-name:hover {
+    text-decoration: underline;
+}
+
+.file-size {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.message-file p {
+    margin: var(--spacing-xs) 0 0 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* ===== Modal de Imagem ===== */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+.image-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.image-modal-content img {
+    display: block;
+    max-width: 100%;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.image-modal-close:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 }

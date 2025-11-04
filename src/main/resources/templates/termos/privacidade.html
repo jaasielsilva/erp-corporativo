@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade - ERP Corporativo</title>
+    
+    <!-- CSS padrão -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .content-area {
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: calc(100vh - 120px);
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .privacy-document {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        
+        .privacy-nav {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .privacy-nav .nav-link {
+            color: #28a745;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .privacy-nav .nav-link:hover,
+        .privacy-nav .nav-link.active {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .section-title {
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            margin-top: 40px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        .highlight-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .version-info {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 30px;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .data-table {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .rights-list {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    
+                    <!-- Page Header -->
+                    <div class="page-header text-center">
+                        <div class="container">
+                            <h1><i class="fas fa-shield-alt me-3"></i>Política de Privacidade</h1>
+                            <p class="mb-0">Como coletamos, usamos e protegemos suas informações pessoais</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Navigation Sidebar -->
+                        <div class="col-lg-3">
+                            <div class="privacy-nav">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Navegação</h6>
+                                <nav class="nav flex-column">
+                                    <a class="nav-link active" href="#introducao">1. Introdução</a>
+                                    <a class="nav-link" href="#dados-coletados">2. Dados Coletados</a>
+                                    <a class="nav-link" href="#finalidade">3. Finalidade do Uso</a>
+                                    <a class="nav-link" href="#compartilhamento">4. Compartilhamento</a>
+                                    <a class="nav-link" href="#seguranca">5. Segurança</a>
+                                    <a class="nav-link" href="#direitos">6. Seus Direitos</a>
+                                    <a class="nav-link" href="#cookies">7. Cookies</a>
+                                    <a class="nav-link" href="#retencao">8. Retenção de Dados</a>
+                                    <a class="nav-link" href="#alteracoes">9. Alterações</a>
+                                    <a class="nav-link" href="#contato">10. Contato</a>
+                                </nav>
+                            </div>
+                        </div>
+
+                        <!-- Main Document -->
+                        <div class="col-lg-9">
+                            <div class="privacy-document">
+                                
+                                <!-- Version Info -->
+                                <div class="version-info">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-1"><strong>Versão 1.3</strong></h6>
+                                            <small class="text-muted">Última atualização: 15 de Janeiro de 2024</small>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <span class="badge bg-success">Vigente</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Important Notice -->
+                                <div class="highlight-section">
+                                    <h5><i class="fas fa-info-circle text-primary me-2"></i>Compromisso com sua Privacidade</h5>
+                                    <p class="mb-0">Respeitamos sua privacidade e estamos comprometidos em proteger suas informações pessoais. Esta política explica como coletamos, usamos e protegemos seus dados no Sistema ERP Corporativo.</p>
+                                </div>
+
+                                <!-- Privacy Content -->
+                                <h2 id="introducao" class="section-title">1. Introdução</h2>
+                                <p>Esta Política de Privacidade descreve como nossa empresa ("nós", "nosso" ou "empresa") coleta, usa, armazena e protege as informações pessoais dos usuários ("você" ou "usuário") do Sistema ERP Corporativo ("Sistema").</p>
+                                <p>Esta política está em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018) e outras regulamentações aplicáveis de proteção de dados.</p>
+                                <p>Ao usar nosso Sistema, você concorda com as práticas descritas nesta Política de Privacidade.</p>
+
+                                <h2 id="dados-coletados" class="section-title">2. Dados Coletados</h2>
+                                <p>Coletamos diferentes tipos de informações para fornecer e melhorar nossos serviços:</p>
+
+                                <div class="data-table">
+                                    <h5>2.1 Dados Pessoais Básicos</h5>
+                                    <ul>
+                                        <li>Nome completo</li>
+                                        <li>Endereço de e-mail</li>
+                                        <li>Número de telefone</li>
+                                        <li>CPF/CNPJ</li>
+                                        <li>Cargo e departamento</li>
+                                        <li>Foto de perfil (opcional)</li>
+                                    </ul>
+
+                                    <h5>2.2 Dados de Acesso</h5>
+                                    <ul>
+                                        <li>Endereço IP</li>
+                                        <li>Data e hora de acesso</li>
+                                        <li>Páginas visitadas</li>
+                                        <li>Ações realizadas no sistema</li>
+                                        <li>Dispositivo e navegador utilizados</li>
+                                    </ul>
+
+                                    <h5>2.3 Dados Empresariais</h5>
+                                    <ul>
+                                        <li>Informações da empresa</li>
+                                        <li>Dados financeiros</li>
+                                        <li>Informações de projetos</li>
+                                        <li>Dados de colaboradores</li>
+                                        <li>Documentos e arquivos</li>
+                                    </ul>
+                                </div>
+
+                                <h2 id="finalidade" class="section-title">3. Finalidade do Uso dos Dados</h2>
+                                <p>Utilizamos suas informações pessoais para as seguintes finalidades:</p>
+
+                                <h5>3.1 Prestação de Serviços</h5>
+                                <ul>
+                                    <li>Fornecer acesso ao Sistema ERP</li>
+                                    <li>Processar e armazenar dados empresariais</li>
+                                    <li>Gerar relatórios e análises</li>
+                                    <li>Facilitar a comunicação entre usuários</li>
+                                </ul>
+
+                                <h5>3.2 Melhoria dos Serviços</h5>
+                                <ul>
+                                    <li>Analisar o uso do Sistema</li>
+                                    <li>Desenvolver novas funcionalidades</li>
+                                    <li>Otimizar a performance</li>
+                                    <li>Personalizar a experiência do usuário</li>
+                                </ul>
+
+                                <h5>3.3 Segurança e Conformidade</h5>
+                                <ul>
+                                    <li>Detectar e prevenir fraudes</li>
+                                    <li>Monitorar atividades suspeitas</li>
+                                    <li>Cumprir obrigações legais</li>
+                                    <li>Manter logs de auditoria</li>
+                                </ul>
+
+                                <h2 id="compartilhamento" class="section-title">4. Compartilhamento de Dados</h2>
+                                <p>Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros, exceto nas seguintes situações:</p>
+
+                                <h5>4.1 Compartilhamento Autorizado</h5>
+                                <ul>
+                                    <li>Com seu consentimento explícito</li>
+                                    <li>Entre usuários da mesma organização</li>
+                                    <li>Para prestadores de serviços autorizados</li>
+                                </ul>
+
+                                <h5>4.2 Exigências Legais</h5>
+                                <ul>
+                                    <li>Quando exigido por lei</li>
+                                    <li>Para cumprir ordens judiciais</li>
+                                    <li>Para proteger nossos direitos legais</li>
+                                </ul>
+
+                                <h2 id="seguranca" class="section-title">5. Segurança dos Dados</h2>
+                                <p>Implementamos medidas de segurança técnicas e organizacionais para proteger suas informações:</p>
+
+                                <h5>5.1 Medidas Técnicas</h5>
+                                <ul>
+                                    <li>Criptografia de dados em trânsito e em repouso</li>
+                                    <li>Autenticação multifator</li>
+                                    <li>Firewalls e sistemas de detecção de intrusão</li>
+                                    <li>Backups regulares e seguros</li>
+                                    <li>Monitoramento contínuo de segurança</li>
+                                </ul>
+
+                                <h5>5.2 Medidas Organizacionais</h5>
+                                <ul>
+                                    <li>Controle de acesso baseado em funções</li>
+                                    <li>Treinamento regular de segurança</li>
+                                    <li>Políticas de segurança da informação</li>
+                                    <li>Auditorias de segurança periódicas</li>
+                                </ul>
+
+                                <h2 id="direitos" class="section-title">6. Seus Direitos</h2>
+                                <div class="rights-list">
+                                    <p>De acordo com a LGPD, você tem os seguintes direitos sobre seus dados pessoais:</p>
+                                    <ul>
+                                        <li><strong>Acesso:</strong> Solicitar informações sobre o tratamento de seus dados</li>
+                                        <li><strong>Correção:</strong> Solicitar a correção de dados incompletos ou inexatos</li>
+                                        <li><strong>Exclusão:</strong> Solicitar a eliminação de dados desnecessários</li>
+                                        <li><strong>Portabilidade:</strong> Solicitar a transferência de dados para outro fornecedor</li>
+                                        <li><strong>Oposição:</strong> Opor-se ao tratamento de dados em certas situações</li>
+                                        <li><strong>Revogação:</strong> Revogar o consentimento a qualquer momento</li>
+                                    </ul>
+                                    <p class="mb-0"><strong>Para exercer seus direitos, entre em contato através dos canais disponíveis na seção de contato.</strong></p>
+                                </div>
+
+                                <h2 id="cookies" class="section-title">7. Cookies e Tecnologias Similares</h2>
+                                <p>Utilizamos cookies e tecnologias similares para melhorar sua experiência:</p>
+
+                                <h5>7.1 Tipos de Cookies</h5>
+                                <ul>
+                                    <li><strong>Essenciais:</strong> Necessários para o funcionamento do Sistema</li>
+                                    <li><strong>Funcionais:</strong> Melhoram a funcionalidade e personalização</li>
+                                    <li><strong>Analíticos:</strong> Ajudam a entender como o Sistema é usado</li>
+                                    <li><strong>Preferências:</strong> Lembram suas configurações e escolhas</li>
+                                </ul>
+
+                                <p>Você pode gerenciar suas preferências de cookies através das configurações do seu navegador.</p>
+
+                                <h2 id="retencao" class="section-title">8. Retenção de Dados</h2>
+                                <p>Mantemos seus dados pessoais apenas pelo tempo necessário para cumprir as finalidades descritas nesta política:</p>
+                                <ul>
+                                    <li><strong>Dados de conta:</strong> Enquanto sua conta estiver ativa</li>
+                                    <li><strong>Dados de auditoria:</strong> Por até 5 anos após o encerramento da conta</li>
+                                    <li><strong>Dados financeiros:</strong> Conforme exigido pela legislação fiscal</li>
+                                    <li><strong>Logs de acesso:</strong> Por até 12 meses</li>
+                                </ul>
+
+                                <h2 id="alteracoes" class="section-title">9. Alterações na Política</h2>
+                                <p>Podemos atualizar esta Política de Privacidade periodicamente. Quando fizermos alterações significativas:</p>
+                                <ul>
+                                    <li>Notificaremos você por e-mail</li>
+                                    <li>Publicaremos um aviso no Sistema</li>
+                                    <li>Atualizaremos a data de "última atualização"</li>
+                                    <li>Solicitaremos novo consentimento quando necessário</li>
+                                </ul>
+
+                                <h2 id="contato" class="section-title">10. Informações de Contato</h2>
+                                <p>Para questões relacionadas à privacidade e proteção de dados, entre em contato:</p>
+
+                                <div class="data-table">
+                                    <h5>Encarregado de Proteção de Dados (DPO)</h5>
+                                    <ul class="mb-0">
+                                        <li><strong>Email:</strong> dpo@empresa.com.br</li>
+                                        <li><strong>Telefone:</strong> (11) 1234-5678 ramal 100</li>
+                                        <li><strong>Endereço:</strong> Rua Exemplo, 123 - São Paulo, SP - CEP 01234-567</li>
+                                        <li><strong>Horário de atendimento:</strong> Segunda a sexta, das 9h às 18h</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="text-center mt-5">
+                                    <a href="/termos" class="action-btn">
+                                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                                    </a>
+                                    <button class="action-btn" onclick="downloadPolicy()">
+                                        <i class="fas fa-download me-2"></i>Baixar PDF
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('.privacy-nav .nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    // Update active link
+                    document.querySelectorAll('.privacy-nav .nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+        
+        // Download policy function
+        function downloadPolicy() {
+            // Here you would typically generate and download a PDF
+            alert('Funcionalidade de download será implementada em breve!');
+        }
+    </script>
+</body>
+
+</html>

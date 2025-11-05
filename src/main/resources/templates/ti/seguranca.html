@@ -23,7 +23,7 @@
                     <p class="text-muted mb-0">Alertas, logs de acesso e políticas</p>
                 </div>
                 <div>
-                    <button class="btn btn-outline-warning btn-sm" onclick="atualizarAlertas()">
+                    <button class="btn btn-outline-warning btn-sm" onclick="atualizarAlertas()" data-bs-toggle="tooltip" title="Recarregar lista de alertas de segurança">
                         <i class="fas fa-sync-alt"></i> Atualizar Alertas
                     </button>
                 </div>
@@ -40,7 +40,7 @@
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <strong th:text="${a.tipo}">Tipo</strong>
-                                            <span class="badge ms-2" th:class="${a.severidade} == 'ALTA' ? 'bg-danger' : (${a.severidade} == 'MEDIA' ? 'bg-warning' : 'bg-info')" th:text="${a.severidade}">INFO</span>
+                                            <span class="badge ms-2" th:class="${a.severidade} == 'ALTA' ? 'bg-danger' : (${a.severidade} == 'MEDIA' ? 'bg-warning' : 'bg-info')" th:text="${a.severidade}" data-bs-toggle="tooltip" title="Severidade do alerta">INFO</span>
                                             <div class="text-muted"><small>IP: <span th:text="${a.ip}">-</span></small></div>
                                         </div>
                                         <small class="text-muted" th:text="${#temporals.format(a.data, 'dd/MM/yyyy HH:mm')}">-</small>
@@ -103,6 +103,7 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/notifications.js}"></script>
+<script th:src="@{/js/app.js}"></script>
 <script>
 function atualizarAlertas(){
     fetch('/ti/api/seguranca/alertas')
@@ -118,15 +119,208 @@ function atualizarAlertas(){
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <strong>${a.tipo}</strong>
-                            <span class="badge ms-2 ${badgeClass}">${a.severidade}</span>
+                            <span class="badge ms-2 ${badgeClass}" data-bs-toggle="tooltip" title="Severidade: ${a.severidade}">${a.severidade}</span>
                             <div class="text-muted"><small>IP: ${a.ip}</small></div>
                         </div>
                         <small class="text-muted">${new Date(a.data).toLocaleString('pt-BR')}</small>
                     </div>`;
                 ul.appendChild(li);
+                try {
+                  if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                    const tEls = li.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    Array.prototype.forEach.call(tEls, function(el){ try { new bootstrap.Tooltip(el); } catch(e){} });
+                  }
+                } catch(e) {}
             });
         }).catch(err=>console.error('Erro ao atualizar alertas:', err));
 }
+</script>
+<script>
+// Enhancements: filtros, resumo, exportação CSV, auto-refresh e atualização de logs
+let alertasCache = [];
+let autoAlertasTimer = null;
+
+function criarControlesAlertas(){
+  const cardBody = document.querySelector('#lista-alertas')?.closest('.card-body');
+  if (!cardBody) return;
+  // Toolbar
+  const toolbar = document.createElement('div');
+  toolbar.className = 'd-flex flex-wrap gap-2 align-items-center mb-2';
+  toolbar.innerHTML = `
+    <select class="form-select form-select-sm" id="filtro-severidade" style="width:auto">
+      <option value="TODOS" selected>Todos</option>
+      <option value="ALTA">Alta</option>
+      <option value="MEDIA">Média</option>
+      <option value="INFO">Info</option>
+    </select>
+    <input type="text" id="filtro-busca" class="form-control form-control-sm" placeholder="Buscar por tipo/origem" style="width: 180px;" />
+    <div class="form-check form-switch mb-0">
+      <input class="form-check-input" type="checkbox" id="autoRefreshAlertas">
+      <label class="form-check-label" for="autoRefreshAlertas">Auto</label>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm" id="btnExportarAlertas" data-bs-toggle="tooltip" title="Exportar alertas (CSV)">
+      <i class="fas fa-file-export"></i>
+    </button>`;
+  cardBody.insertBefore(toolbar, cardBody.firstChild);
+  // Resumo
+  const resumo = document.createElement('div');
+  resumo.className = 'd-flex gap-2 mb-2';
+  resumo.innerHTML = `
+    <span class="badge bg-secondary" id="resumo-total">Total: 0</span>
+    <span class="badge bg-danger" id="resumo-alta">Alta: 0</span>
+    <span class="badge bg-warning text-dark" id="resumo-media">Média: 0</span>
+    <span class="badge bg-info text-dark" id="resumo-info">Info: 0</span>`;
+  cardBody.insertBefore(resumo, document.getElementById('lista-alertas'));
+}
+
+function atualizarResumo(alertas){
+  const total = alertas.length;
+  const alta = alertas.filter(a=>a.severidade==='ALTA').length;
+  const media = alertas.filter(a=>a.severidade==='MEDIA').length;
+  const info = alertas.filter(a=>a.severidade==='INFO').length;
+  const elT = document.getElementById('resumo-total'); if (elT) elT.textContent = `Total: ${total}`;
+  const elA = document.getElementById('resumo-alta'); if (elA) elA.textContent = `Alta: ${alta}`;
+  const elM = document.getElementById('resumo-media'); if (elM) elM.textContent = `Média: ${media}`;
+  const elI = document.getElementById('resumo-info'); if (elI) elI.textContent = `Info: ${info}`;
+}
+
+function aplicarFiltros(alertas){
+  const sevEl = document.getElementById('filtro-severidade');
+  const qEl = document.getElementById('filtro-busca');
+  const sev = sevEl ? sevEl.value : 'TODOS';
+  const q = qEl ? (qEl.value || '').toLowerCase() : '';
+  return (alertas || [])
+    .filter(a => sev==='TODOS' ? true : a.severidade === sev)
+    .filter(a => !q ? true : ((a.tipo||'').toLowerCase().includes(q) || (a.ip||'').toLowerCase().includes(q)));
+}
+
+function renderAlertas(alertas){
+  const ul = document.getElementById('lista-alertas');
+  if (!ul) return;
+  ul.innerHTML = '';
+  (alertas || []).forEach(a => {
+    const li = document.createElement('li');
+    li.className='list-group-item';
+    const badgeClass = a.severidade === 'ALTA' ? 'bg-danger' : (a.severidade === 'MEDIA' ? 'bg-warning' : 'bg-info');
+    li.innerHTML = `
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong>${a.tipo}</strong>
+          <span class="badge ms-2 ${badgeClass}" data-bs-toggle="tooltip" title="Severidade: ${a.severidade}">${a.severidade}</span>
+          <div class="text-muted"><small>Origem: ${a.ip}</small></div>
+        </div>
+        <small class="text-muted">${new Date(a.data).toLocaleString('pt-BR')}</small>
+      </div>`;
+    ul.appendChild(li);
+    try { if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+      const tEls = li.querySelectorAll('[data-bs-toggle="tooltip"]');
+      Array.prototype.forEach.call(tEls, function(el){ try { new bootstrap.Tooltip(el); } catch(e){} });
+    } } catch(e){}
+  });
+}
+
+// Sobrescreve a função original com versão filtrada e com resumo
+function atualizarAlertas(){
+  fetch('/ti/api/seguranca/alertas')
+    .then(r=>r.json())
+    .then(alertas=>{
+      alertasCache = alertas || [];
+      const filtrados = aplicarFiltros(alertasCache);
+      atualizarResumo(alertasCache);
+      renderAlertas(filtrados);
+    }).catch(err=>console.error('Erro ao atualizar alertas:', err));
+}
+
+function exportarAlertasCSV(){
+  const filtrados = aplicarFiltros(alertasCache);
+  const linhas = ["tipo,severidade,origem,data"];
+  filtrados.forEach(a=>{
+    const linha = [
+      (a.tipo||'').replace(/[,\n]/g,' '),
+      a.severidade||'',
+      (a.ip||'').replace(/[,\n]/g,' '),
+      new Date(a.data).toISOString()
+    ].join(',');
+    linhas.push(linha);
+  });
+  const blob = new Blob([linhas.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'alertas_seguranca.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function criarControlesLogs(){
+  const cardBody = document.querySelector('div.card:has(.fa-list) .card-body');
+  const tableResp = cardBody ? cardBody.querySelector('.table-responsive') : null;
+  if (!cardBody || !tableResp) return;
+  const controls = document.createElement('div');
+  controls.className = 'd-flex gap-2 align-items-center mb-2';
+  controls.innerHTML = `
+    <input type="text" id="filtro-log-busca" class="form-control form-control-sm" placeholder="Buscar por usuário/ação/origem" style="width: 220px;" />
+    <button class="btn btn-outline-warning btn-sm" id="btnAtualizarLogs" data-bs-toggle="tooltip" title="Recarregar logs">
+      <i class="fas fa-sync-alt"></i>
+    </button>`;
+  cardBody.insertBefore(controls, tableResp);
+  // Ajustar cabeçalho IP -> Origem
+  try { const ths = cardBody.querySelectorAll('thead th');
+    Array.prototype.forEach.call(ths, function(th){ if (th.textContent.trim().toUpperCase()==='IP'){ th.textContent='Origem'; }});
+  } catch(e){}
+}
+
+function atualizarLogs(){
+  fetch('/ti/api/seguranca/logs')
+    .then(r=>r.json())
+    .then(logs=>{
+      const qEl = document.getElementById('filtro-log-busca');
+      const q = qEl ? (qEl.value||'').toLowerCase() : '';
+      const filtrados = (logs||[]).filter(l => !q ? true : (
+        (l.usuario||'').toLowerCase().includes(q) ||
+        (l.acao||'').toLowerCase().includes(q) ||
+        (l.ip||'').toLowerCase().includes(q)
+      ));
+      const tbody = document.getElementById('tbody-logs') || document.querySelector('tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      filtrados.forEach(l=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${l.usuario||''}</td>
+          <td>${l.acao||''}</td>
+          <td>${l.ip||''}</td>
+          <td><small class="text-muted">${new Date(l.data).toLocaleString('pt-BR')}</small></td>
+          <td><span class="badge bg-success">${l.status||'SUCESSO'}</span></td>`;
+        tbody.appendChild(tr);
+      });
+    }).catch(err=>console.error('Erro ao atualizar logs:', err));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  criarControlesAlertas();
+  criarControlesLogs();
+  try { if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) { Array.prototype.forEach.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'), function(el){ try { new bootstrap.Tooltip(el); } catch(e){} }); } } catch(e) {}
+  atualizarAlertas();
+  atualizarLogs();
+  const sevEl = document.getElementById('filtro-severidade'); if (sevEl) sevEl.addEventListener('change', ()=> renderAlertas(aplicarFiltros(alertasCache)));
+  const qEl = document.getElementById('filtro-busca'); if (qEl) qEl.addEventListener('input', ()=> renderAlertas(aplicarFiltros(alertasCache)));
+  const logBusca = document.getElementById('filtro-log-busca'); if (logBusca) logBusca.addEventListener('input', atualizarLogs);
+  const autoChk = document.getElementById('autoRefreshAlertas');
+  if (autoChk) {
+    autoChk.addEventListener('change', (e)=>{
+      if (e.target.checked){
+        atualizarAlertas();
+        autoAlertasTimer = setInterval(atualizarAlertas, 15000);
+      } else if (autoAlertasTimer){
+        clearInterval(autoAlertasTimer);
+        autoAlertasTimer = null;
+      }
+    });
+  }
+  const btnExp = document.getElementById('btnExportarAlertas'); if (btnExp) btnExp.addEventListener('click', exportarAlertasCSV);
+  const btnLogs = document.getElementById('btnAtualizarLogs'); if (btnLogs) btnLogs.addEventListener('click', atualizarLogs);
+});
 </script>
 </body>
 </html>

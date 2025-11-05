@@ -9,6 +9,7 @@
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="app-container">
@@ -22,54 +23,106 @@
                     <h1 class="h4 mb-1"><i class="fas fa-server me-2"></i>Monitoramento de Sistemas</h1>
                     <p class="text-muted mb-0">Status, disponibilidade e performance dos principais sistemas</p>
                 </div>
-                <div>
+                <div class="d-flex gap-2">
                     <button class="btn btn-outline-primary btn-sm" onclick="atualizarStatusSistemas()">
                         <i class="fas fa-sync-alt"></i> Atualizar Status
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="atualizarMetricas()">
+                        <i class="fas fa-chart-line"></i> Atualizar Métricas
                     </button>
                 </div>
             </div>
 
-            <!-- Métricas de performance -->
+            <!-- Métricas de performance (padronizadas com dashboard) -->
             <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-primary shadow h-100 py-2" data-bs-toggle="tooltip" title="Uso de CPU em tempo real">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <span>CPU</span>
-                                <strong th:text="${metricas.cpuUsage + '%'}">45%</strong>
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-microchip fa-2x text-primary"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="text-xs fw-semibold text-primary text-uppercase mb-1">CPU</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800" id="metric-cpu" th:text="${metricas.cpuUsage + '%'}">45%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-success shadow h-100 py-2" data-bs-toggle="tooltip" title="Uso de memória RAM">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <span>Memória</span>
-                                <strong th:text="${metricas.memoryUsage + '%'}">68%</strong>
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-memory fa-2x text-success"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="text-xs fw-semibold text-success text-uppercase mb-1">Memória</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800" id="metric-mem" th:text="${metricas.memoryUsage + '%'}">68%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-warning shadow h-100 py-2" data-bs-toggle="tooltip" title="Uso de disco">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <span>Disco</span>
-                                <strong th:text="${metricas.diskUsage + '%'}">34%</strong>
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-hdd fa-2x text-warning"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="text-xs fw-semibold text-warning text-uppercase mb-1">Disco</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800" id="metric-disk" th:text="${metricas.diskUsage + '%'}">34%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-secondary shadow h-100 py-2" data-bs-toggle="tooltip" title="Latência de rede">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <span>Latência</span>
-                                <strong th:text="${metricas.networkLatency + ' ms'}">12.5 ms</strong>
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="fas fa-network-wired fa-2x text-secondary"></i>
+                                </div>
+                                <div class="col">
+                                    <div class="text-xs fw-semibold text-secondary text-uppercase mb-1">Latência</div>
+                                    <div class="h6 mb-0 fw-bold text-gray-800" id="metric-lat" th:text="${metricas.networkLatency + ' ms'}">12.5 ms</div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Gráfico histórico de métricas -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <span><i class="fas fa-chart-line me-2"></i>Histórico de Métricas</span>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Filtros de período">
+                            <button type="button" class="btn btn-outline-secondary" data-period="2h" data-bs-toggle="tooltip" title="Últimas 2 horas">2h</button>
+                            <button type="button" class="btn btn-outline-secondary" data-period="24h" data-bs-toggle="tooltip" title="Últimas 24 horas">24h</button>
+                            <button type="button" class="btn btn-outline-secondary" data-period="7d" data-bs-toggle="tooltip" title="Últimos 7 dias">7d</button>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="refresh-interval-select" class="mb-0 small text-muted" data-bs-toggle="tooltip" title="Intervalo de auto-refresh das métricas">Auto-refresh</label>
+                        <select id="refresh-interval-select" class="form-select form-select-sm" style="width: auto;">
+                            <option value="15000">15s</option>
+                            <option value="30000">30s</option>
+                            <option value="60000" selected>60s</option>
+                            <option value="120000">120s</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-success" onclick="atualizarMetricas()" data-bs-toggle="tooltip" title="Atualizar métricas agora">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body" style="height: 320px;">
+                    <canvas id="chart-metricas"></canvas>
                 </div>
             </div>
 
@@ -116,7 +169,19 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/notifications.js}"></script>
-<script>
+<script th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">
+    // Identificador do usuário atual para preferências por usuário
+    const CURRENT_USER_ID = /*[[${usuarioLogado != null ? usuarioLogado.id : 'anon'}]]*/ 'anon';
+    const KEY_REFRESH = 'ti_sistemas_refresh_' + CURRENT_USER_ID;
+    const KEY_PERIOD = 'ti_sistemas_periodo_' + CURRENT_USER_ID;
+
+    let chartMetricas;
+    let historicoFull = [];
+    let periodoSelecionado = localStorage.getItem(KEY_PERIOD) || '24h';
+    let metricasIntervalId = null;
+    let statusIntervalId = null;
+
     function atualizarStatusSistemas() {
         fetch('/ti/api/sistemas/status')
             .then(r => r.json())
@@ -136,6 +201,148 @@
             })
             .catch(err => console.error('Erro ao atualizar status:', err));
     }
+
+    function atualizarMetricas() {
+        fetch('/ti/api/sistemas/metricas')
+            .then(r => r.json())
+            .then(data => {
+                const m = data.atual || {};
+                const cpuEl = document.getElementById('metric-cpu');
+                const memEl = document.getElementById('metric-mem');
+                const diskEl = document.getElementById('metric-disk');
+                const latEl = document.getElementById('metric-lat');
+                if (cpuEl) cpuEl.textContent = (m.cpuUsage != null ? m.cpuUsage : '-') + '%';
+                if (memEl) memEl.textContent = (m.memoryUsage != null ? m.memoryUsage : '-') + '%';
+                if (diskEl) diskEl.textContent = (m.diskUsage != null ? m.diskUsage : '-') + '%';
+                if (latEl) latEl.textContent = (m.networkLatency != null ? m.networkLatency : '-') + ' ms';
+                historicoFull = Array.isArray(data.historico) ? data.historico.slice() : [];
+                aplicarFiltroHistorico();
+            })
+            .catch(err => console.error('Erro ao atualizar métricas:', err));
+    }
+
+    function aplicarFiltroHistorico() {
+        const ctx = document.getElementById('chart-metricas');
+        if (!ctx) return;
+
+        // Determina janela de tempo
+        const now = new Date();
+        let threshold = new Date(0);
+        if (periodoSelecionado === '2h') {
+            threshold = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+        } else if (periodoSelecionado === '24h') {
+            threshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        } else if (periodoSelecionado === '7d') {
+            threshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        }
+
+        const serieFiltrada = historicoFull
+            .filter(h => {
+                if (!h.createdAt) return false;
+                const d = new Date(h.createdAt);
+                return d >= threshold && d <= now;
+            })
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+        const labels = serieFiltrada.map(h => new Date(h.createdAt).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }));
+        const cpuData = serieFiltrada.map(h => h.cpuUsage ?? null);
+        const memData = serieFiltrada.map(h => h.memoryUsage ?? null);
+        const diskData = serieFiltrada.map(h => h.diskUsage ?? null);
+        const latData = serieFiltrada.map(h => h.networkLatency ?? null);
+
+        if (!chartMetricas) {
+            chartMetricas = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'CPU %', data: cpuData, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.1)', tension: 0.2 },
+                        { label: 'Memória %', data: memData, borderColor: '#198754', backgroundColor: 'rgba(25,135,84,0.1)', tension: 0.2 },
+                        { label: 'Disco %', data: diskData, borderColor: '#ffc107', backgroundColor: 'rgba(255,193,7,0.15)', tension: 0.2 },
+                        { label: 'Latência ms', data: latData, borderColor: '#6c757d', backgroundColor: 'rgba(108,117,125,0.1)', tension: 0.2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    const unit = label.includes('Latência') ? ' ms' : ' %';
+                                    return label + ': ' + value + unit;
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        } else {
+            chartMetricas.data.labels = labels;
+            chartMetricas.data.datasets[0].data = cpuData;
+            chartMetricas.data.datasets[1].data = memData;
+            chartMetricas.data.datasets[2].data = diskData;
+            chartMetricas.data.datasets[3].data = latData;
+            chartMetricas.update();
+        }
+    }
+
+    function initTooltips() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(el => { try { new bootstrap.Tooltip(el); } catch (e) {} });
+    }
+
+    function setMetricasAutoRefresh(ms) {
+        if (metricasIntervalId) {
+            clearInterval(metricasIntervalId);
+        }
+        metricasIntervalId = setInterval(atualizarMetricas, ms);
+        localStorage.setItem(KEY_REFRESH, String(ms));
+    }
+
+    function initRefreshPreference() {
+        const select = document.getElementById('refresh-interval-select');
+        const saved = parseInt(localStorage.getItem(KEY_REFRESH) || '60000', 10);
+        if (select) {
+            select.value = String(saved);
+            select.addEventListener('change', () => {
+                const ms = parseInt(select.value, 10);
+                setMetricasAutoRefresh(ms);
+            });
+        }
+        setMetricasAutoRefresh(saved);
+    }
+
+    function initPeriodFilters() {
+        const buttons = document.querySelectorAll('[data-period]');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                periodoSelecionado = btn.getAttribute('data-period');
+                localStorage.setItem(KEY_PERIOD, periodoSelecionado);
+                // Atualiza estado visual dos botões
+                buttons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                aplicarFiltroHistorico();
+            });
+        });
+        // Seleciona botão salvo
+        const savedBtn = document.querySelector(`[data-period="${periodoSelecionado}"]`);
+        if (savedBtn) savedBtn.classList.add('active');
+    }
+
+    // Auto-refresh e inicializações
+    statusIntervalId = setInterval(atualizarStatusSistemas, 30000);
+    document.addEventListener('DOMContentLoaded', () => {
+        initTooltips();
+        initRefreshPreference();
+        initPeriodFilters();
+        atualizarStatusSistemas();
+        atualizarMetricas();
+    });
 </script>
 </body>
 </html>

@@ -168,6 +168,62 @@
                 </div>
             </div>
 
+            <!-- Métricas de Performance -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">CPU</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="metricCpuIndex" th:text="${metricas.cpuUsage + '%'}">-</div>
+                                </div>
+                                <i class="fas fa-microchip fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Memória</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="metricMemIndex" th:text="${metricas.memoryUsage + '%'}">-</div>
+                                </div>
+                                <i class="fas fa-memory fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Disco</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="metricDiskIndex" th:text="${metricas.diskUsage + '%'}">-</div>
+                                </div>
+                                <i class="fas fa-hdd fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card metric-card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Latência</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="metricLatencyIndex" th:text="${metricas.networkLatency + ' ms'}">-</div>
+                                </div>
+                                <i class="fas fa-tachometer-alt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Ações Rápidas -->
             <div class="row mb-4">
                 <div class="col-12">
@@ -364,8 +420,31 @@
                 });
         }
 
+        function atualizarMetricasIndex() {
+            fetch('/ti/api/sistemas/metricas')
+                .then(response => response.json())
+                .then(data => {
+                    const cur = data.atual || {};
+                    const cpu = document.getElementById('metricCpuIndex');
+                    const mem = document.getElementById('metricMemIndex');
+                    const disk = document.getElementById('metricDiskIndex');
+                    const latency = document.getElementById('metricLatencyIndex');
+                    if (cpu) cpu.textContent = (cur.cpuUsage != null ? cur.cpuUsage : '-') + '%';
+                    if (mem) mem.textContent = (cur.memoryUsage != null ? cur.memoryUsage : '-') + '%';
+                    if (disk) disk.textContent = (cur.diskUsage != null ? cur.diskUsage : '-') + '%';
+                    if (latency) latency.textContent = (cur.networkLatency != null ? cur.networkLatency : '-') + ' ms';
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar métricas:', error);
+                });
+        }
+
         // Auto-refresh a cada 30 segundos
         setInterval(atualizarStatusSistemas, 30000);
+        // Auto-refresh métricas a cada 60 segundos
+        setInterval(atualizarMetricasIndex, 60000);
+        // Atualiza métricas imediatamente ao carregar
+        atualizarMetricasIndex();
     </script>
 </body>
 

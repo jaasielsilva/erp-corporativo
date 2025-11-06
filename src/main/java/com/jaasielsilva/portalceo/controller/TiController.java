@@ -15,6 +15,7 @@ import com.jaasielsilva.portalceo.service.ti.MetricasService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -99,18 +100,8 @@ public class TiController {
     
     @GetMapping("/suporte")
     public String suporte(Model model) {
-        model.addAttribute("pageTitle", "Suporte Técnico");
-        model.addAttribute("moduleCSS", "ti");
-        
-        // Chamados por status
-        model.addAttribute("chamadosAbertos", (int) chamadoService.contarPorStatus(StatusChamado.ABERTO));
-        model.addAttribute("chamadosAndamento", (int) chamadoService.contarPorStatus(StatusChamado.EM_ANDAMENTO));
-        model.addAttribute("chamadosResolvidos", (int) chamadoService.contarPorStatus(StatusChamado.RESOLVIDO));
-        
-        // SLA e métricas
-        model.addAttribute("slaMetrics", getSLAMetrics());
-        
-        return "ti/suporte";
+        // Descontinuado no módulo de TI: redireciona para módulo de Suporte
+        return "redirect:/suporte";
     }
     
     @PostMapping("/suporte/chamado")
@@ -119,29 +110,10 @@ public class TiController {
                                          @RequestParam String descricao,
                                          @RequestParam String prioridade,
                                          @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            Chamado chamado = new Chamado();
-            chamado.setAssunto(titulo);
-            chamado.setDescricao(descricao);
-            chamado.setPrioridade(Prioridade.valueOf(prioridade));
-            chamado.setSolicitanteNome(userDetails != null ? userDetails.getUsername() : "Usuário");
-            chamado.setCategoria("TI");
-            Chamado salvo = chamadoService.criarChamado(chamado);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", salvo.getId());
-            response.put("numero", salvo.getNumero());
-            response.put("titulo", salvo.getAssunto());
-            response.put("status", salvo.getStatus().name());
-            response.put("prioridade", salvo.getPrioridade().name());
-            response.put("dataAbertura", salvo.getDataAbertura());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("erro", "Falha ao criar chamado");
-            error.put("detalhe", e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
-        }
+        // Descontinuado no módulo de TI: responde com redirect para módulo de Suporte
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", "/suporte")
+                .build();
     }
 
     // =============== BACKUP ===============

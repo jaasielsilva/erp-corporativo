@@ -27,7 +27,7 @@ public class SistemaMetricasColetorService {
         this.prevTicks = processor.getSystemCpuLoadTicks(); // inicializa ticks iniciais
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 60000) // ele escuta o banco de dados a cada 60 segundos
     public void coletarMetricas() {
         try {
             // CPU

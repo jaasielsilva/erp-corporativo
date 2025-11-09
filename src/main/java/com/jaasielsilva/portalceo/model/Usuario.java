@@ -55,6 +55,13 @@ public class Usuario {
     private boolean notificacoesSonorasAtivadas = true; // Padrão ativado
 
     private String somNotificacao = "default.mp3"; // Som padrão
+
+    // Preferências de alertas de segurança
+    private Boolean mutarToasts = false; // Mutar toasts visuais
+    private Boolean preferirBannerSeguranca = false; // Preferir banner para MEDIA
+    private Integer volumeNotificacao = 80; // 0-100
+    private Boolean naoPerturbeAtivo = false; // Não perturbe ativo
+    private LocalDateTime naoPerturbeAte; // Data/hora fim do DND
     
     @Column(length = 10)
     private String ramal;

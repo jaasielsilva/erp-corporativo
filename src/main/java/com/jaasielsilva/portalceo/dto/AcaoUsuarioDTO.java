@@ -7,12 +7,14 @@ public class AcaoUsuarioDTO {
     private String acao;
     private String usuario;
     private String responsavel;
+    private String ip;
 
-    public AcaoUsuarioDTO(LocalDateTime data, String acao, String usuario, String responsavel) {
+    public AcaoUsuarioDTO(LocalDateTime data, String acao, String usuario, String responsavel, String ip) {
         this.data = data;
         this.acao = acao;
         this.usuario = usuario;
         this.responsavel = responsavel;
+        this.ip = ip;
     }
 
     public LocalDateTime getData() {
@@ -29,5 +31,9 @@ public class AcaoUsuarioDTO {
 
     public String getResponsavel() {
         return responsavel;
+    }
+
+    public String getIp() {
+        return ip;
     }
 }

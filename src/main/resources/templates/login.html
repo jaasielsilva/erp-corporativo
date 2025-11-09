@@ -274,6 +274,28 @@
     });
   </script>
 
+  <!-- Container para toasts de notificações (sem topbar) -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+    <div id="notification-container"></div>
+  </div>
+
+  <!-- WebSocket Notifications para páginas sem topbar -->
+  <script th:src="@{/js/websocket-notifications.js}" defer></script>
+  <script>
+    // Fallback de jQuery para o cliente de notificação, se necessário
+    (function ensurejQuery() {
+      if (typeof window.jQuery === 'undefined') {
+        var script = document.createElement('script');
+        script.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+        script.integrity = 'sha256-/xUj+3OJ+Y3cZb2j3aQvCqSb0Z4qfH0jvZc9q+8nbTg=';
+        script.crossOrigin = 'anonymous';
+        document.head.appendChild(script);
+      }
+    })();
+    // Não definimos data-user-email aqui porque é uma página não autenticada.
+    // O cliente RealtimeNotifications deve subscrever apenas ao tópico global quando não houver usuário.
+  </script>
+
 </body>
 
 </html>

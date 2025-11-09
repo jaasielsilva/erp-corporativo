@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface AcaoUsuarioRepository extends JpaRepository<AcaoUsuario, Long> {
 
-    @Query("SELECT new com.jaasielsilva.portalceo.dto.AcaoUsuarioDTO(a.data, a.acao, u.nome, r.nome) " +
+    @Query("SELECT new com.jaasielsilva.portalceo.dto.AcaoUsuarioDTO(a.data, a.acao, u.nome, COALESCE(r.nome, ''), a.ip) " +
            "FROM AcaoUsuario a " +
            "JOIN a.usuario u " +
-           "JOIN a.responsavel r " +
+           "LEFT JOIN a.responsavel r " +
            "ORDER BY a.data DESC")
     Page<AcaoUsuarioDTO> buscarUltimasAcoes(Pageable pageable);
 }

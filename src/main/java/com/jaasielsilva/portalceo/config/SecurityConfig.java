@@ -98,6 +98,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
                                                                 "/a81368914c.js", "/esqueci-senha", "/resetar-senha")
                                                 .permitAll()
+                                                // Actuator e métricas expostas publicamente para Prometheus
+                                                .requestMatchers("/actuator/**").permitAll()
                                                 // Endpoints públicos específicos (apenas os necessários)
                                                 .requestMatchers("/api/processar", "/suporte/api/public/**",
                                                                 "/api/categorias/**")

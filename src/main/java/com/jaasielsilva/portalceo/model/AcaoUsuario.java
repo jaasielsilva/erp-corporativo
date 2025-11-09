@@ -27,6 +27,9 @@ public class AcaoUsuario {
     @JoinColumn(name = "responsavel_id")
     private Usuario responsavel;
 
+    // IP/Origem da ação (ex.: IP do cliente no login)
+    private String ip;
+
     public AcaoUsuario(LocalDateTime data, String acao, Usuario usuario, Usuario responsavel) {
         this.data = data;
         this.acao = acao;

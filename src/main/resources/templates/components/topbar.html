@@ -4,7 +4,7 @@
     <meta charset="UTF-8"> <!-- define UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- responsivo -->
     <title>Topbar - ERP Corporativo</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+    <link rel="stylesheet" href="/css/fontawesome.min.css"/>
 </head>
 <body>
     <header class="topbar" th:fragment="topbar">
@@ -19,10 +19,32 @@
             </a>
 
             <!-- Usuário -->
-            <a th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}" class="user-initial" title="Meu Perfil"
-               th:text="${usuarioLogado != null ? usuarioLogado.nome.substring(0,1).toUpperCase() : 'U'}">U</a>
+            <a th:if="${usuarioLogado != null}"
+               th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}"
+               class="user-initial" title="Meu Perfil"
+               th:text="${usuarioLogado.nome.substring(0,1).toUpperCase()}">U</a>
+            <a th:if="${usuarioLogado == null}"
+               href="/usuarios"
+               class="user-initial" title="Usuário">
+               U
+            </a>
             <span class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Usuário</span>
         </div>
+
+        <!-- Email do usuário para WebSocket global -->
+        <div data-user-email="[[${#authentication != null ? #authentication.name : ''}]]" style="display:none;"></div>
+
+        <!-- jQuery fallback (para toasts) -->
+        <script>
+            if (typeof window.jQuery === 'undefined') {
+                var jq = document.createElement('script');
+                jq.src = 'https://code.jquery.com/jquery-3.7.0.min.js';
+                document.head.appendChild(jq);
+            }
+        </script>
+
+        <!-- Cliente WebSocket global para toasts -->
+        <script src="/js/websocket-notifications.js"></script>
     </header>
 </body>
 </html>

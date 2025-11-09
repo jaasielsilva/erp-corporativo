@@ -153,6 +153,24 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    /**
+     * Atualiza preferências de alertas de segurança do usuário.
+     */
+    public void atualizarPreferenciasSeguranca(Long userId, Boolean mutarToasts, Boolean preferirBannerSeguranca,
+                                               Integer volumeNotificacao, Boolean naoPerturbeAtivo,
+                                               LocalDateTime naoPerturbeAte) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (mutarToasts != null) usuario.setMutarToasts(mutarToasts);
+        if (preferirBannerSeguranca != null) usuario.setPreferirBannerSeguranca(preferirBannerSeguranca);
+        if (volumeNotificacao != null) usuario.setVolumeNotificacao(Math.max(0, Math.min(100, volumeNotificacao)));
+        if (naoPerturbeAtivo != null) usuario.setNaoPerturbeAtivo(naoPerturbeAtivo);
+        usuario.setNaoPerturbeAte(naoPerturbeAte);
+
+        usuarioRepository.save(usuario);
+    }
+
     // ===============================
     // MÉTODOS DE BUSCA E LISTAGEM
     // ===============================

@@ -6,6 +6,7 @@ import com.jaasielsilva.portalceo.model.Chamado.StatusChamado;
 import com.jaasielsilva.portalceo.model.ti.AlertaSeguranca;
 import com.jaasielsilva.portalceo.model.ti.SistemaStatus;
 import com.jaasielsilva.portalceo.repository.ti.AlertaSegurancaRepository;
+import com.jaasielsilva.portalceo.repository.ti.AlertaSegurancaAckRepository;
 import com.jaasielsilva.portalceo.repository.ti.SistemaStatusRepository;
 import com.jaasielsilva.portalceo.repository.AcaoUsuarioRepository;
 import com.jaasielsilva.portalceo.dto.AcaoUsuarioDTO;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -43,17 +45,23 @@ public class TiController {
     private AlertaSegurancaRepository alertaSegurancaRepository;
 
     @Autowired
+    private AlertaSegurancaAckRepository alertaSegurancaAckRepository;
+
+    @Autowired
     private AcaoUsuarioRepository acaoUsuarioRepository;
 
     @Autowired
     private MetricasService metricasService;
+
+    @Autowired
+    private com.jaasielsilva.portalceo.service.UsuarioService usuarioService;
 
     // Página principal do TI
     @GetMapping
     public String index(Model model) {
         model.addAttribute("pageTitle", "Tecnologia da Informação - Dashboard");
         model.addAttribute("moduleCSS", "ti");
-        
+
         // Estatísticas do dashboard
         model.addAttribute("sistemasAtivos", getStatusSistemas().size());
         model.addAttribute("chamadosAbertos", (int) chamadoService.contarPorStatus(StatusChamado.ABERTO));
@@ -61,32 +69,32 @@ public class TiController {
         model.addAttribute("alertasSeguranca", getAlertasSeguranca());
         // Métricas de performance (dinâmicas)
         model.addAttribute("metricas", getMetricasPerformance());
-        
+
         // Status dos sistemas principais
         model.addAttribute("statusSistemas", getStatusSistemas());
-        
+
         // Últimos eventos
         model.addAttribute("ultimosEventos", getUltimosEventos());
-        
+
         return "ti/index";
     }
 
     // =============== SISTEMAS ===============
-    
+
     @GetMapping("/sistemas")
     public String sistemas(Model model) {
         model.addAttribute("pageTitle", "Monitoramento de Sistemas");
         model.addAttribute("moduleCSS", "ti");
-        
+
         // Lista de sistemas monitorados
         model.addAttribute("sistemas", getListaSistemas());
-        
+
         // Métricas de performance vindas do banco
         model.addAttribute("metricas", getMetricasPerformance());
-        
+
         return "ti/sistemas";
     }
-    
+
     @GetMapping("/api/sistemas/status")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getStatusSistemasApi() {
@@ -97,19 +105,19 @@ public class TiController {
     }
 
     // =============== SUPORTE TÉCNICO ===============
-    
+
     @GetMapping("/suporte")
     public String suporte(Model model) {
         // Descontinuado no módulo de TI: redireciona para módulo de Suporte
         return "redirect:/suporte";
     }
-    
+
     @PostMapping("/suporte/chamado")
     @ResponseBody
     public ResponseEntity<?> criarChamado(@RequestParam String titulo,
-                                         @RequestParam String descricao,
-                                         @RequestParam String prioridade,
-                                         @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestParam String descricao,
+            @RequestParam String prioridade,
+            @AuthenticationPrincipal UserDetails userDetails) {
         // Descontinuado no módulo de TI: responde com redirect para módulo de Suporte
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "/suporte")
@@ -117,51 +125,92 @@ public class TiController {
     }
 
     // =============== BACKUP ===============
-    
+
     @GetMapping("/backup")
     public String backup(Model model) {
         model.addAttribute("pageTitle", "Gestão de Backup");
         model.addAttribute("moduleCSS", "ti");
-        
+
         // Status dos backups
         model.addAttribute("backupsRecentes", backupService.listarBackupsRecentes());
         model.addAttribute("agendamentos", backupService.listarAgendamentos());
         model.addAttribute("espacoUtilizado", backupService.obterEspacoUtilizado());
-        
+
         return "ti/backup";
     }
-    
+
     @PostMapping("/backup/executar")
     @ResponseBody
     public ResponseEntity<?> executarBackup(@RequestParam String tipo,
-                                           @RequestParam(required = false) String descricao) {
+            @RequestParam(required = false) String descricao) {
         Map<String, Object> result = backupService.iniciarBackup(tipo, descricao);
         return ResponseEntity.ok(result);
     }
 
     // =============== SEGURANÇA ===============
-    
     @GetMapping("/seguranca")
-    public String seguranca(Model model) {
+    public String seguranca(Model model,
+            @RequestParam(value = "novoAlerta", required = false) String novoAlerta) {
+
         model.addAttribute("pageTitle", "Segurança da Informação");
         model.addAttribute("moduleCSS", "ti");
-        
+
         // Alertas de segurança
         model.addAttribute("alertasSeguranca", getAlertasSeguranca());
-        
+
         // Logs de acesso
         model.addAttribute("logsAcesso", getLogsAcesso());
-        
+
         // Políticas de segurança
         model.addAttribute("politicas", getPoliticasSeguranca());
-        
+
+        // Caso tenha um novo alerta vindo de algum evento (login, acesso negado, etc)
+        if (novoAlerta != null) {
+            model.addAttribute("novoAlerta", novoAlerta);
+        }
+
         return "ti/seguranca";
     }
-    
+
     @GetMapping("/api/seguranca/alertas")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> getAlertasSegurancaApi() {
-        return ResponseEntity.ok(getAlertasSeguranca());
+    public ResponseEntity<List<Map<String, Object>>> getAlertasSegurancaApi(Authentication authentication) {
+        List<Map<String, Object>> base = getAlertasSeguranca();
+        try {
+            var usuarioOpt = usuarioService.buscarPorEmail(authentication.getName());
+            Long userId = usuarioOpt.map(u -> u.getId()).orElse(null);
+            if (userId != null) {
+                for (Map<String, Object> a : base) {
+                    Object idObj = a.get("id");
+                    if (idObj instanceof Long) {
+                        Long alertaId = (Long) idObj;
+                        boolean ack = alertaSegurancaAckRepository.findByAlertaAndUsuario(alertaId, userId).isPresent();
+                        a.put("estado", ack ? "ACK" : "NOVO");
+                    } else {
+                        a.put("estado", "NOVO");
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(base);
+    }
+
+    @PostMapping("/api/seguranca/alertas/{id}/ack")
+    @ResponseBody
+    public ResponseEntity<?> reconhecerAlerta(@PathVariable("id") Long alertaId, Authentication authentication) {
+        try {
+            var usuarioOpt = usuarioService.buscarPorEmail(authentication.getName());
+            if (usuarioOpt.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            Long userId = usuarioOpt.get().getId();
+            var existente = alertaSegurancaAckRepository.findByAlertaAndUsuario(alertaId, userId);
+            if (existente.isPresent()) {
+                return ResponseEntity.ok(Map.of("ack", true, "already", true));
+            }
+            alertaSegurancaAckRepository.save(new com.jaasielsilva.portalceo.model.ti.AlertaSegurancaAck(alertaId, userId, java.time.LocalDateTime.now()));
+            return ResponseEntity.ok(Map.of("ack", true));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("erro", e.getMessage()));
+        }
     }
 
     @GetMapping("/api/seguranca/logs")
@@ -177,15 +226,14 @@ public class TiController {
     }
 
     // =============== MÉTODOS AUXILIARES ===============
-    
+
     private List<Map<String, Object>> getStatusSistemas() {
         List<SistemaStatus> lista = sistemaStatusRepository.findAll();
         if (lista.isEmpty()) {
             sistemaStatusRepository.saveAll(Arrays.asList(
-                new SistemaStatus(null, "ERP Corporativo", "ONLINE", "99.9%", LocalDateTime.now().minusMinutes(1)),
-                new SistemaStatus(null, "Banco de Dados", "ONLINE", "99.8%", LocalDateTime.now().minusMinutes(2)),
-                new SistemaStatus(null, "Servidor Email", "ONLINE", "99.5%", LocalDateTime.now().minusMinutes(3))
-            ));
+                    new SistemaStatus(null, "ERP Corporativo", "ONLINE", "99.9%", LocalDateTime.now().minusMinutes(1)),
+                    new SistemaStatus(null, "Banco de Dados", "ONLINE", "99.8%", LocalDateTime.now().minusMinutes(2)),
+                    new SistemaStatus(null, "Servidor Email", "ONLINE", "99.5%", LocalDateTime.now().minusMinutes(3))));
             lista = sistemaStatusRepository.findAll();
         }
         List<Map<String, Object>> sistemas = new ArrayList<>();
@@ -199,15 +247,15 @@ public class TiController {
         }
         return sistemas;
     }
-    
+
     private List<Map<String, Object>> getListaSistemas() {
         return getStatusSistemas(); // Reutilizar para simplicidade
     }
-    
+
     private Map<String, Object> getMetricasPerformance() {
         return metricasService.obterMetricasAtuais();
     }
-    
+
     private Map<String, Object> getSLAMetrics() {
         Map<String, Object> sla = new HashMap<>();
         Double tempoMedioHoras = chamadoService.calcularTempoMedioResolucaoGeral();
@@ -223,45 +271,45 @@ public class TiController {
         sla.put("slaAtendido", String.format("%.1f%%", percentualSLA));
         return sla;
     }
-    
+
     private List<Map<String, Object>> getBackupsRecentes() {
         List<Map<String, Object>> backups = new ArrayList<>();
-        
+
         Map<String, Object> backup1 = new HashMap<>();
         backup1.put("tipo", "Completo");
         backup1.put("status", "SUCESSO");
         backup1.put("data", LocalDateTime.now().minusHours(2));
         backup1.put("tamanho", "2.3 GB");
         backups.add(backup1);
-        
+
         Map<String, Object> backup2 = new HashMap<>();
         backup2.put("tipo", "Incremental");
         backup2.put("status", "SUCESSO");
         backup2.put("data", LocalDateTime.now().minusHours(8));
         backup2.put("tamanho", "456 MB");
         backups.add(backup2);
-        
+
         return backups;
     }
-    
+
     private List<Map<String, Object>> getAgendamentosBackup() {
         List<Map<String, Object>> agendamentos = new ArrayList<>();
-        
+
         Map<String, Object> ag1 = new HashMap<>();
         ag1.put("tipo", "Completo");
         ag1.put("frequencia", "Semanal");
         ag1.put("proximaExecucao", LocalDateTime.now().plusDays(3));
         agendamentos.add(ag1);
-        
+
         Map<String, Object> ag2 = new HashMap<>();
         ag2.put("tipo", "Incremental");
         ag2.put("frequencia", "Diário");
         ag2.put("proximaExecucao", LocalDateTime.now().plusHours(6));
         agendamentos.add(ag2);
-        
+
         return agendamentos;
     }
-    
+
     private Map<String, Object> getEspacoBackup() {
         Map<String, Object> espaco = new HashMap<>();
         espaco.put("utilizado", "45.2 GB");
@@ -269,52 +317,54 @@ public class TiController {
         espaco.put("percentualUso", 22.6);
         return espaco;
     }
-    
+
+    // metodo que retorna alertas no banco de dados
     private List<Map<String, Object>> getAlertasSeguranca() {
         List<AlertaSeguranca> lista = alertaSegurancaRepository.findAll();
+
+        // Se não houver alertas, retorna lista vazia (sem criar registros de exemplo)
         if (lista.isEmpty()) {
-            alertaSegurancaRepository.saveAll(Arrays.asList(
-                new AlertaSeguranca(null, "Tentativa de login suspeita", "MEDIA", LocalDateTime.now().minusMinutes(15), "Web", "Falhas repetidas de senha"),
-                new AlertaSeguranca(null, "Falha de autenticação API", "ALTA", LocalDateTime.now().minusHours(2), "API Interna", "Token inválido detectado"),
-                new AlertaSeguranca(null, "Acesso não autorizado", "CRITICA", LocalDateTime.now().minusDays(1), "Admin Console", "IP não permitido")
-            ));
-            lista = alertaSegurancaRepository.findAll();
+            return Collections.emptyList();
         }
+
         List<Map<String, Object>> alertas = new ArrayList<>();
         for (AlertaSeguranca a : lista) {
             Map<String, Object> m = new HashMap<>();
-            // Adaptar para chaves esperadas pelos templates (tipo, ip, severidade normalizada)
+            m.put("id", a.getId());
             m.put("tipo", a.getTitulo());
             m.put("severidade", normalizarSeveridade(a.getSeveridade()));
             m.put("data", a.getData());
             m.put("ip", a.getOrigem());
             alertas.add(m);
         }
+
         return alertas;
     }
 
     private String normalizarSeveridade(String severidade) {
-        if (severidade == null) return "INFO";
+        if (severidade == null)
+            return "INFO";
         String s = severidade.trim().toUpperCase(Locale.ROOT);
         // Mapear valores fora do conjunto esperado para estilos conhecidos
-        if ("CRITICA".equals(s) || "CRÍTICA".equals(s)) return "ALTA";
-        if ("ALTA".equals(s) || "MEDIA".equals(s) || "BAIXA".equals(s) || "INFO".equals(s) || "WARNING".equals(s)) return s;
+        if ("CRITICA".equals(s) || "CRÍTICA".equals(s))
+            return "ALTA";
+        if ("ALTA".equals(s) || "MEDIA".equals(s) || "BAIXA".equals(s) || "INFO".equals(s) || "WARNING".equals(s))
+            return s;
         return "INFO";
     }
-    
+
     private List<Map<String, Object>> getLogsAcesso() {
         List<Map<String, Object>> logs = new ArrayList<>();
         // Buscar últimas 10 ações de usuários para compor logs de acesso/auditoria
         try {
             List<AcaoUsuarioDTO> acoes = acaoUsuarioRepository
-                    .buscarUltimasAcoes(org.springframework.data.domain.PageRequest.of(0, 10))
+                    .buscarUltimasAcoes(org.springframework.data.domain.PageRequest.of(0, 50))
                     .getContent();
             for (AcaoUsuarioDTO a : acoes) {
                 Map<String, Object> m = new HashMap<>();
                 m.put("usuario", a.getUsuario());
                 m.put("acao", a.getAcao());
-                // IP pode não existir nas ações, manter informativo
-                m.put("ip", "N/A");
+                m.put("ip", a.getIp() != null ? a.getIp() : "N/A");
                 m.put("data", a.getData());
                 // Status genérico: SUCESSO (uma ação registrada pressupõe sucesso)
                 m.put("status", "SUCESSO");
@@ -340,7 +390,7 @@ public class TiController {
         }
         return logs;
     }
-    
+
     private List<Map<String, Object>> getPoliticasSeguranca() {
         List<Map<String, Object>> politicas = new ArrayList<>();
         Map<String, Object> p1 = new HashMap<>();
@@ -362,7 +412,7 @@ public class TiController {
         politicas.add(p3);
         return politicas;
     }
-    
+
     private List<Map<String, Object>> getUltimosEventos() {
         // Exibir somente os 3 alertas de exemplo solicitados
         List<Map<String, Object>> eventos = new ArrayList<>();
@@ -417,7 +467,8 @@ public class TiController {
         return ResponseEntity.ok(response);
     }
 
-    // ===== NOVOS ENDPOINTS: /api/ti/metricas/atual e /api/ti/metricas/historico =====
+    // ===== NOVOS ENDPOINTS: /api/ti/metricas/atual e /api/ti/metricas/historico
+    // =====
     @GetMapping("/api/ti/metricas/atual")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getMetricasAtualTi() {

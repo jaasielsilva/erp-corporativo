@@ -17,11 +17,6 @@ class RealtimeNotifications {
 
     connect() {
         const userEmail = this.getCurrentUserEmail();
-        if (!userEmail) {
-            console.warn('Email do usuário não encontrado, tentando novamente...');
-            setTimeout(() => this.connect(), 2000);
-            return;
-        }
 
         this.socket = new SockJS('/ws');
         this.stompClient = Stomp.over(this.socket);
@@ -32,9 +27,16 @@ class RealtimeNotifications {
             this.isConnected = true;
             this.reconnectAttempts = 0;
 
-            this.subscribeToUserNotifications(userEmail);
+            // Sempre inscreve no tópico global
             this.subscribeToGlobalNotifications();
-            this.subscribeToUnreadCount(userEmail);
+
+            // Só inscreve em filas específicas se houver usuário
+            if (userEmail) {
+                this.subscribeToUserNotifications(userEmail);
+                this.subscribeToUnreadCount(userEmail);
+            } else {
+                console.info('Sem usuário autenticado, assinando apenas notificações globais.');
+            }
         }, (error) => {
             console.error('Erro na conexão WebSocket:', error);
             this.isConnected = false;
@@ -208,13 +210,28 @@ document.addEventListener('DOMContentLoaded', () => {
         window.realtimeNotifications = new RealtimeNotifications();
     } else {
         const sockjsScript = document.createElement('script');
-        sockjsScript.src = 'https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js';
-        sockjsScript.onload = () => {
+        sockjsScript.src = 'https://cdn.jsdelivr.net/npm/sockjs-client@1.5.2/dist/sockjs.min.js';
+        sockjsScript.onerror = () => {
+            // Fallback alternativo
+            const altSock = document.createElement('script');
+            altSock.src = 'https://unpkg.com/sockjs-client@1.5.2/dist/sockjs.min.js';
+            altSock.onload = loadStomp;
+            document.head.appendChild(altSock);
+        };
+        sockjsScript.onload = loadStomp;
+        document.head.appendChild(sockjsScript);
+
+        function loadStomp() {
             const stompScript = document.createElement('script');
             stompScript.src = 'https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js';
+            stompScript.onerror = () => {
+                const altStomp = document.createElement('script');
+                altStomp.src = 'https://unpkg.com/stompjs@2.3.3/lib/stomp.min.js';
+                altStomp.onload = () => { window.realtimeNotifications = new RealtimeNotifications(); };
+                document.head.appendChild(altStomp);
+            };
             stompScript.onload = () => { window.realtimeNotifications = new RealtimeNotifications(); };
             document.head.appendChild(stompScript);
-        };
-        document.head.appendChild(sockjsScript);
+        }
     }
 });

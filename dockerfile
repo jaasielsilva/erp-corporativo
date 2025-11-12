@@ -21,8 +21,11 @@ WORKDIR /app
 # Copia o .jar gerado da etapa anterior
 COPY --from=build /app/target/*.jar app.jar
 
-# Expõe a porta da aplicação
-EXPOSE 8080
+# Define a porta padrão local (8080)
+ENV PORT=8080
 
-# Comando para rodar o app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Expõe a porta do container (Render ignora o número exato, usa $PORT)
+EXPOSE ${PORT}
+
+# Inicia a aplicação usando a variável de ambiente PORT
+CMD ["sh", "-c", "java -jar app.jar --server.port=${PORT}"]

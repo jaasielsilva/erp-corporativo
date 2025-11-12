@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ERP Corporativo — One-Pager de Módulos</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --accent: #22d3ee;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --chip: #1f2937;
+    }
+    html, body {
+      background: radial-gradient(1200px 600px at 80% -10%, #0ea5e915, transparent 60%), var(--bg);
+      margin: 0;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    .toolbar {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .search {
+      background: var(--card);
+      border: 1px solid #1f2937;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      min-width: 240px;
+      outline: none;
+    }
+    .btn {
+      background: linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%);
+      color: #0b1020;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .08s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .card {
+      background: linear-gradient(180deg, #0b1220 0%, var(--card) 100%);
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 40px rgba(12, 22, 38, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card h3 { margin: 0; font-size: 18px; }
+    .desc { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .section { margin-top: 6px; font-weight: 600; font-size: 12px; color: var(--accent); }
+    .list { margin: 6px 0 0; padding-left: 16px; }
+    .list li { margin: 2px 0; font-size: 13px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip { background: var(--chip); border: 1px solid #263244; color: var(--text); font-size: 12px; padding: 6px 8px; border-radius: 999px; }
+    footer { margin-top: 18px; color: var(--muted); font-size: 12px; text-align: center; }
+    .topline {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .badge { color: var(--accent); font-weight: 700; font-size: 12px; }
+    @media print {
+      body { background: #fff; color: #000; }
+      .btn { display: none; }
+      .card { break-inside: avoid; border-color: #ddd; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="title">ERP Corporativo — One-Pager de Módulos</div>
+        <div class="subtitle">12 módulos de negócio com KPIs, fluxos e telas principais</div>
+      </div>
+      <div class="toolbar">
+        <input id="search" class="search" type="search" placeholder="Filtrar por módulo, funcionalidade, KPI..." />
+        <button class="btn" onclick="window.print()">Imprimir / PDF</button>
+      </div>
+    </header>
+
+    <section class="grid" id="cards">
+      <!-- RH -->
+      <article class="card" data-tags="rh colaboradores beneficios ponto folha workflow adesao">
+        <div class="topline">
+          <h3>RH</h3>
+          <span class="badge">Pessoas</span>
+        </div>
+        <p class="desc">Gestão de colaboradores, benefícios, ponto e folha.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Adesão (documentos), workflow e validações</li>
+          <li>Benefícios: plano de saúde, vale-refeição, vale-transporte</li>
+          <li>Correções de ponto, escalas e folha/pagamentos</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Taxa de retenção, contratações 12 meses</li>
+          <li>Produtividade média, satisfação interna</li>
+          <li>Workflow de Adesão, Folha</li>
+        </ul>
+        <div class="chips"><span class="chip">Workflow</span><span class="chip">Benefícios</span><span class="chip">Folha</span></div>
+      </article>
+
+      <!-- Financeiro -->
+      <article class="card" data-tags="financeiro fluxo caixa contas pagar receber indicadores">
+        <div class="topline"><h3>Financeiro</h3><span class="badge">Capital</span></div>
+        <p class="desc">Controle financeiro, fluxo de caixa e contas.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Dashboard financeiro consolidado</li>
+          <li>Contas a pagar/receber e conciliações</li>
+          <li>Relatórios e metas financeiras</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Margem de lucro, ROI mensal</li>
+          <li>Inadimplência, faturamento</li>
+          <li>Fluxo de Caixa, Lista de Pagamentos</li>
+        </ul>
+        <div class="chips"><span class="chip">Fluxo</span><span class="chip">Contas</span><span class="chip">KPIs</span></div>
+      </article>
+
+      <!-- Vendas -->
+      <article class="card" data-tags="vendas comercial metas pedidos servicos faturamento categorias">
+        <div class="topline"><h3>Vendas (Comercial)</h3><span class="badge">Receita</span></div>
+        <p class="desc">Performance comercial e metas.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Dashboard de vendas e metas</li>
+          <li>Pedidos/serviços e acompanhamento</li>
+          <li>Faturamento e categorias</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Crescimento de vendas, ticket médio</li>
+          <li>Vendas por categoria (12 meses)</li>
+          <li>Dashboard e relatórios</li>
+        </ul>
+        <div class="chips"><span class="chip">Metas</span><span class="chip">Faturamento</span><span class="chip">Categorias</span></div>
+      </article>
+
+      <!-- Estoque & Logística -->
+      <article class="card" data-tags="estoque inventario movimentacao transferencia auditoria alertas logistica">
+        <div class="topline"><h3>Estoque & Logística</h3><span class="badge">Operações</span></div>
+        <p class="desc">Operações de estoque e movimentação.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Inventário, movimentações e transferências</li>
+          <li>Auditorias e relatórios</li>
+          <li>Alertas e performance logística</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Produtos críticos, giro de estoque</li>
+          <li>Eficiência logística</li>
+          <li>Relatórios de estoque</li>
+        </ul>
+        <div class="chips"><span class="chip">Inventário</span><span class="chip">Movimentações</span><span class="chip">Relatórios</span></div>
+      </article>
+
+      <!-- Suporte & Chamados -->
+      <article class="card" data-tags="suporte chamados sla backlog auditoria notificacoes">
+        <div class="topline"><h3>Suporte & Chamados</h3><span class="badge">Atendimento</span></div>
+        <p class="desc">Atendimento, SLA e backlog.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Dashboard de chamados, estado/fluxo</li>
+          <li>Auditorias e notificações</li>
+          <li>Métricas de SLA e backlog</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>SLA médio, taxa de resolução</li>
+          <li>Backlog consolidado</li>
+          <li>Prioridade/Status</li>
+        </ul>
+        <div class="chips"><span class="chip">SLA</span><span class="chip">Backlog</span><span class="chip">Notificações</span></div>
+      </article>
+
+      <!-- TI & Monitoramento -->
+      <article class="card" data-tags="ti sistemas metricas backups seguranca alertas">
+        <div class="topline"><h3>TI & Monitoramento</h3><span class="badge">Infra</span></div>
+        <p class="desc">Saúde dos sistemas e segurança operacional.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Métricas de sistemas e coleta</li>
+          <li>Backups e restauração</li>
+          <li>Alertas de segurança</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Sistemas ativos, eventos</li>
+          <li>Métricas de performance</li>
+          <li>Backups recentes</li>
+        </ul>
+        <div class="chips"><span class="chip">Métricas</span><span class="chip">Backups</span><span class="chip">Segurança</span></div>
+      </article>
+
+      <!-- Marketing -->
+      <article class="card" data-tags="marketing campanhas roi publico relatorios">
+        <div class="topline"><h3>Marketing</h3><span class="badge">Crescimento</span></div>
+        <p class="desc">Campanhas e ROI.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Gestão de campanhas</li>
+          <li>Público-alvo e segmentação</li>
+          <li>Relatórios e ROI</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>ROI total</li>
+          <li>Campanhas ativas/expiradas</li>
+          <li>Estatísticas por status/tipo</li>
+        </ul>
+        <div class="chips"><span class="chip">Campanhas</span><span class="chip">Público</span><span class="chip">ROI</span></div>
+      </article>
+
+      <!-- Jurídico & Contratos -->
+      <article class="card" data-tags="juridico contratos termos auditoria legal">
+        <div class="topline"><h3>Jurídico & Contratos</h3><span class="badge">Governança</span></div>
+        <p class="desc">Documentos legais e contratos.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Gestão de contratos</li>
+          <li>Termos e auditoria de aceite</li>
+          <li>Relatórios legais</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Contratos vigentes</li>
+          <li>Prazos e conformidade</li>
+          <li>Relatórios legais</li>
+        </ul>
+        <div class="chips"><span class="chip">Contratos</span><span class="chip">Termos</span><span class="chip">Auditoria</span></div>
+      </article>
+
+      <!-- Projetos -->
+      <article class="card" data-tags="projetos cronograma tarefas equipes relatorios">
+        <div class="topline"><h3>Projetos</h3><span class="badge">Execução</span></div>
+        <p class="desc">Planejamento e execução de projetos.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Cronogramas e marcos</li>
+          <li>Tarefas e equipes</li>
+          <li>Relatórios de projeto</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Progresso por projeto</li>
+          <li>Tarefas em atraso</li>
+          <li>Visão geral de equipes</li>
+        </ul>
+        <div class="chips"><span class="chip">Cronograma</span><span class="chip">Tarefas</span><span class="chip">Equipes</span></div>
+      </article>
+
+      <!-- CRM -->
+      <article class="card" data-tags="crm clientes fornecedores contratos avaliacao">
+        <div class="topline"><h3>CRM (Clientes & Fornecedores)</h3><span class="badge">Relacionamento</span></div>
+        <p class="desc">Cadastros e relacionamento.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Gestão de clientes</li>
+          <li>Avaliação de fornecedores</li>
+          <li>Contratos e integrações</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Novos clientes 30 dias</li>
+          <li>Qualidade/avaliações</li>
+          <li>Contratos por fornecedor</li>
+        </ul>
+        <div class="chips"><span class="chip">Clientes</span><span class="chip">Fornecedores</span><span class="chip">Contratos</span></div>
+      </article>
+
+      <!-- Usuários & Segurança -->
+      <article class="card" data-tags="usuarios seguranca perfis permissoes login auditoria">
+        <div class="topline"><h3>Usuários & Segurança</h3><span class="badge">Acesso</span></div>
+        <p class="desc">Identidade, perfis e permissões.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Usuários, perfis e permissões</li>
+          <li>Login/senha e políticas</li>
+          <li>Auditorias de acesso</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Usuários ativos</li>
+          <li>Perfis por usuário</li>
+          <li>Tentativas de login</li>
+        </ul>
+        <div class="chips"><span class="chip">Perfis</span><span class="chip">Permissões</span><span class="chip">Auditoria</span></div>
+      </article>
+
+      <!-- Configurações & Termos -->
+      <article class="card" data-tags="configuracoes termos auditoria preferencias">
+        <div class="topline"><h3>Configurações & Termos</h3><span class="badge">Admin</span></div>
+        <p class="desc">Preferências e governança.</p>
+        <div class="section">Funcionalidades</div>
+        <ul class="list">
+          <li>Configurações de módulos e preferências</li>
+          <li>Gestão de termos e auditoria</li>
+          <li>Controle de acesso</li>
+        </ul>
+        <div class="section">KPIs/Telas</div>
+        <ul class="list">
+          <li>Aceites de termos</li>
+          <li>Alterações de configuração</li>
+          <li>Preferências por módulo</li>
+        </ul>
+        <div class="chips"><span class="chip">Preferências</span><span class="chip">Termos</span><span class="chip">Governança</span></div>
+      </article>
+    </section>
+
+    <footer>
+      Versão de apresentação — One-Pager | Pressione “Imprimir” para gerar PDF.
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      const input = document.getElementById('search');
+      const cards = Array.from(document.querySelectorAll('#cards .card'));
+      const normalize = (s) => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const index = cards.map(card => ({
+        el: card,
+        text: normalize(card.innerText + ' ' + (card.dataset.tags||''))
+      }));
+      input.addEventListener('input', () => {
+        const q = normalize(input.value);
+        index.forEach(({el, text}) => {
+          el.style.display = (!q || text.includes(q)) ? '' : 'none';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

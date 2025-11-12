@@ -162,9 +162,13 @@
                         <i class="fas fa-arrow-left"></i>
                         Voltar
                     </a>
-                    <a href="#" class="action-btn" onclick="exportarRelatorio()">
-                        <i class="fas fa-download"></i>
-                        Exportar
+                    <a href="#" class="action-btn" onclick="exportarRelatorio('csv')">
+                        <i class="fas fa-file-csv"></i>
+                        Exportar CSV
+                    </a>
+                    <a href="#" class="action-btn" onclick="exportarRelatorio('pdf')">
+                        <i class="fas fa-file-pdf"></i>
+                        Exportar PDF
                     </a>
                 </div>
             </div>
@@ -372,8 +376,20 @@
     
     <script>
         function aplicarFiltros() {
-            // Implementar lógica de filtros
-            console.log('Aplicando filtros...');
+            const statusMap = { 'aceito': 'ACEITO', 'pendente': 'PENDENTE', 'rejeitado': 'REJEITADO' };
+            const statusSel = document.getElementById('filtroStatus')?.value || '';
+            const status = statusMap[statusSel] || '';
+            const inicio = document.getElementById('dataInicial')?.value || '';
+            const fim = document.getElementById('dataFinal')?.value || '';
+            const usuario = document.getElementById('buscaUsuario')?.value || '';
+
+            const params = new URLSearchParams();
+            if (status) params.set('status', status);
+            if (inicio) params.set('inicio', inicio);
+            if (fim) params.set('fim', fim);
+            if (usuario) params.set('usuario', usuario);
+
+            window.location.href = `/termos/aceites?${params.toString()}`;
         }
         
         function limparFiltros() {
@@ -389,9 +405,28 @@
             console.log('Atualizando dados...');
         }
         
-        function exportarRelatorio() {
-            // Implementar exportação
-            console.log('Exportando relatório...');
+        function exportarRelatorio(formato) {
+            const statusMap = { 'aceito': 'ACEITO', 'pendente': 'PENDENTE', 'rejeitado': 'REJEITADO' };
+            const termoSelect = document.getElementById('filtroTermo');
+            const termoVal = termoSelect ? termoSelect.value : '';
+            // Caso o select não traga IDs numéricos, omitimos termoId
+            const termoId = /^\d+$/.test(termoVal) ? termoVal : '';
+
+            const statusSel = document.getElementById('filtroStatus')?.value || '';
+            const status = statusMap[statusSel] || '';
+            const inicio = document.getElementById('dataInicial')?.value || '';
+            const fim = document.getElementById('dataFinal')?.value || '';
+            const usuario = document.getElementById('buscaUsuario')?.value || '';
+
+            const params = new URLSearchParams();
+            params.set('format', (formato || 'csv'));
+            if (status) params.set('status', status);
+            if (termoId) params.set('termoId', termoId);
+            if (inicio) params.set('inicio', inicio);
+            if (fim) params.set('fim', fim);
+            if (usuario) params.set('usuario', usuario);
+
+            window.location.href = `/termos/aceites/export?${params.toString()}`;
         }
         
         function verDetalhes(id) {

@@ -91,7 +91,13 @@
 
         <!-- Políticas de segurança -->
         <div class="card">
-          <div class="card-header"><i class="fas fa-file-alt me-2"></i>Políticas de Segurança</div>
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <div><i class="fas fa-file-alt me-2"></i>Políticas de Segurança</div>
+            <div class="d-flex gap-2">
+              <a href="/termos/gerenciar" class="btn btn-primary btn-sm">Gerenciar Políticas</a>
+              <a href="/ti/api/seguranca/logs" class="btn btn-outline-secondary btn-sm" target="_blank">Ver Logs</a>
+            </div>
+          </div>
           <div class="card-body">
             <div class="table-responsive">
               <table class="table table-sm">
@@ -105,9 +111,17 @@
                 <tbody>
                   <tr th:each="p : ${politicas}">
                     <td th:text="${p.nome}">Política</td>
-                    <td><span class="badge bg-success" th:text="${p.status}">ATIVA</span></td>
-                    <td><small class="text-muted"
-                        th:text="${p.ultimaAtualizacao != null ? #temporals.format(p.ultimaAtualizacao, 'dd/MM/yyyy') : '-'}">-</small></td>
+                    <td>
+                      <span class="badge"
+                            th:text="${p.status}"
+                            th:classappend="${p.status == 'ATIVA' ? ' bg-success' : (p.status == 'EM REVISÃO' ? ' bg-warning text-dark' : ' bg-secondary')}">
+                        ATIVA
+                      </span>
+                    </td>
+                    <td>
+                      <small class="text-muted"
+                             th:text="${p.ultimaAtualizacao != null ? #temporals.format(p.ultimaAtualizacao, 'dd/MM/yyyy') : '-'}">-</small>
+                    </td>
                   </tr>
                 </tbody>
               </table>

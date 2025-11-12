@@ -11,8 +11,14 @@ import com.jaasielsilva.portalceo.repository.TermoAceiteRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
+import java.time.LocalDate;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -44,7 +50,19 @@ public class TermoService {
     }
 
     @Transactional
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
     public Termo criarTermo(TermoDTO termoDTO, Usuario criadoPor) {
+        // Validações de negócio
+        if (termoDTO.getDataVigenciaInicio() != null && termoDTO.getDataVigenciaFim() != null) {
+            if (termoDTO.getDataVigenciaInicio().isAfter(termoDTO.getDataVigenciaFim())) {
+                throw new IllegalArgumentException("Data de vigência inicial não pode ser após a final");
+            }
+        }
+        // Versão única por tipo (recomendado)
+        if (termoRepository.existsByTipoAndVersao(termoDTO.getTipo(), termoDTO.getVersao())) {
+            throw new IllegalArgumentException("Já existe termo desse tipo com a mesma versão");
+        }
+
         Termo termo = new Termo();
         termo.setTitulo(termoDTO.getTitulo());
         termo.setConteudo(termoDTO.getConteudo());
@@ -62,9 +80,17 @@ public class TermoService {
     }
 
     @Transactional
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
     public Termo atualizarTermo(Long id, TermoDTO termoDTO) {
         Termo termo = buscarPorId(id)
             .orElseThrow(() -> new RuntimeException("Termo não encontrado"));
+
+        // Validações de negócio
+        if (termoDTO.getDataVigenciaInicio() != null && termoDTO.getDataVigenciaFim() != null) {
+            if (termoDTO.getDataVigenciaInicio().isAfter(termoDTO.getDataVigenciaFim())) {
+                throw new IllegalArgumentException("Data de vigência inicial não pode ser após a final");
+            }
+        }
 
         termo.setTitulo(termoDTO.getTitulo());
         termo.setConteudo(termoDTO.getConteudo());
@@ -80,9 +106,14 @@ public class TermoService {
     }
 
     @Transactional
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
     public void aprovarTermo(Long id, Usuario aprovadoPor) {
         Termo termo = buscarPorId(id)
             .orElseThrow(() -> new RuntimeException("Termo não encontrado"));
+
+        if (termo.getStatus() != Termo.StatusTermo.PENDENTE_APROVACAO) {
+            throw new IllegalStateException("Apenas termos pendentes de aprovação podem ser aprovados");
+        }
 
         termo.setStatus(Termo.StatusTermo.APROVADO);
         termo.setAprovadoPor(aprovadoPor);
@@ -92,6 +123,21 @@ public class TermoService {
     }
 
     @Transactional
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
+    public void enviarParaAprovacao(Long id) {
+        Termo termo = buscarPorId(id)
+            .orElseThrow(() -> new RuntimeException("Termo não encontrado"));
+
+        if (termo.getStatus() != Termo.StatusTermo.RASCUNHO) {
+            throw new RuntimeException("Apenas rascunhos podem ser enviados para aprovação");
+        }
+
+        termo.setStatus(Termo.StatusTermo.PENDENTE_APROVACAO);
+        salvarTermo(termo);
+    }
+
+    @Transactional
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
     public void publicarTermo(Long id) {
         Termo termo = buscarPorId(id)
             .orElseThrow(() -> new RuntimeException("Termo não encontrado"));
@@ -110,10 +156,32 @@ public class TermoService {
     }
 
     @Transactional
-    public void arquivarTermo(Long id) {
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
+    public void cancelarTermo(Long id) {
         Termo termo = buscarPorId(id)
             .orElseThrow(() -> new RuntimeException("Termo não encontrado"));
 
+        if (termo.getStatus() == Termo.StatusTermo.ARQUIVADO) {
+            throw new RuntimeException("Não é possível cancelar um termo arquivado");
+        }
+
+        if (termo.getStatus() == Termo.StatusTermo.CANCELADO) {
+            throw new RuntimeException("Termo já está cancelado");
+        }
+
+        termo.setStatus(Termo.StatusTermo.CANCELADO);
+        salvarTermo(termo);
+    }
+
+    @Transactional
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
+    public void arquivarTermo(Long id) {
+        Termo termo = buscarPorId(id)
+            .orElseThrow(() -> new RuntimeException("Termo não encontrado"));
+        // Permite arquivar de qualquer estado, exceto já arquivado/cancelado
+        if (termo.getStatus() == Termo.StatusTermo.ARQUIVADO) {
+            throw new IllegalStateException("Termo já está arquivado");
+        }
         termo.setStatus(Termo.StatusTermo.ARQUIVADO);
         salvarTermo(termo);
     }
@@ -142,6 +210,65 @@ public class TermoService {
         return termoRepository.findTermosAtivos(LocalDateTime.now());
     }
 
+    public Page<Termo> buscarTermosAtivosPage(Termo.TipoTermo tipo, Pageable pageable) {
+        return termoRepository.findTermosAtivosPage(LocalDateTime.now(), tipo, pageable);
+    }
+
+    // Aceites filtrados em DTO para exportação
+    public List<TermoAceiteDTO> buscarAceitesFiltradosDTO(
+            TermoAceite.StatusAceite status,
+            Long termoId,
+            java.time.LocalDate inicio,
+            java.time.LocalDate fim,
+            String usuarioLike
+    ) {
+        List<TermoAceite> base = termoAceiteRepository.findUltimosAceites();
+        java.util.stream.Stream<TermoAceite> stream = base.stream();
+
+        if (status != null) {
+            stream = stream.filter(ta -> ta.getStatus() == status);
+        }
+        if (termoId != null) {
+            stream = stream.filter(ta -> ta.getTermo() != null && termoId.equals(ta.getTermo().getId()));
+        }
+        if (inicio != null) {
+            LocalDateTime ini = inicio.atStartOfDay();
+            stream = stream.filter(ta -> ta.getDataAceite() != null && !ta.getDataAceite().isBefore(ini));
+        }
+        if (fim != null) {
+            LocalDateTime end = fim.plusDays(1).atStartOfDay().minusSeconds(1);
+            stream = stream.filter(ta -> ta.getDataAceite() != null && !ta.getDataAceite().isAfter(end));
+        }
+        if (usuarioLike != null && !usuarioLike.isBlank()) {
+            String q = usuarioLike.toLowerCase();
+            stream = stream.filter(ta -> {
+                String nome = ta.getUsuario() != null ? ta.getUsuario().getNome() : null;
+                String email = ta.getUsuario() != null ? ta.getUsuario().getEmail() : null;
+                return (nome != null && nome.toLowerCase().contains(q)) || (email != null && email.toLowerCase().contains(q));
+            });
+        }
+
+        return stream.map(ta -> {
+                    TermoAceiteDTO dto = new TermoAceiteDTO();
+                    if (ta.getUsuario() != null) {
+                        dto.setUsuarioNome(ta.getUsuario().getNome());
+                        dto.setUsuarioEmail(ta.getUsuario().getEmail());
+                        dto.setUsuarioMatricula(ta.getUsuario().getMatricula());
+                    }
+                    if (ta.getTermo() != null) {
+                        dto.setTermoTitulo(ta.getTermo().getTitulo());
+                        dto.setTermoVersao(ta.getVersaoTermo() != null ? ta.getVersaoTermo() : ta.getTermo().getVersao());
+                    } else {
+                        dto.setTermoVersao(ta.getVersaoTermo());
+                    }
+                    dto.setDataAceite(ta.getDataAceite());
+                    dto.setStatus(ta.getStatus());
+                    dto.setStatusDescricao(ta.getStatus() != null ? ta.getStatus().getDescricao() : "");
+                    return dto;
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public Optional<Termo> buscarTermoMaisRecentePorTipo(Termo.TipoTermo tipo) {
         return termoRepository.findFirstByTipoAndStatusOrderByDataCriacaoDesc(tipo, Termo.StatusTermo.PUBLICADO);
     }
@@ -155,6 +282,7 @@ public class TermoService {
     // ===============================
 
     @Transactional
+    @CacheEvict(value = "estatisticasTermos", allEntries = true)
     public TermoAceite aceitarTermo(Long termoId, Usuario usuario, String ipAceite, String userAgent) {
         Termo termo = buscarPorId(termoId)
             .orElseThrow(() -> new RuntimeException("Termo não encontrado"));
@@ -177,6 +305,14 @@ public class TermoService {
         aceite.setUserAgent(userAgent);
         aceite.setStatus(TermoAceite.StatusAceite.ACEITO);
         aceite.setVersaoTermo(termo.getVersao());
+
+        // Assinatura digital (hash SHA-256 dos dados essenciais)
+        String payload = (termo.getId() + "|" +
+                safe(termo.getVersao()) + "|" + safe(termo.getConteudo()) + "|" +
+                (usuario != null ? safe(usuario.getEmail()) : "") + "|" +
+                (aceite.getDataAceite() != null ? aceite.getDataAceite().toString() : "") + "|" +
+                safe(ipAceite) + "|" + safe(userAgent));
+        aceite.setAssinaturaDigital(hashSha256(payload));
 
         TermoAceite aceiteSalvo = termoAceiteRepository.save(aceite);
 
@@ -214,6 +350,7 @@ public class TermoService {
     // MÉTODOS DE ESTATÍSTICAS
     // ===============================
 
+    @Cacheable(value = "estatisticasTermos")
     public EstatisticasTermosDTO buscarEstatisticas() {
         EstatisticasTermosDTO stats = new EstatisticasTermosDTO();
 
@@ -249,8 +386,8 @@ public class TermoService {
             stats.setTermoMaisRecenteData(termoRecente.getDataCriacao());
         }
 
-        // Termo com mais aceites
-        Optional<Termo> termoMaisAceito = termoRepository.findTermoComMaisAceites();
+        // Termo com mais aceites (desempate por data de criação)
+        Optional<Termo> termoMaisAceito = termoRepository.findTopByOrderByTotalAceitesDescDataCriacaoDesc();
         if (termoMaisAceito.isPresent()) {
             stats.setTermoMaisAceitoTitulo(termoMaisAceito.get().getTitulo());
             stats.setTermoMaisAceitoQuantidade(termoMaisAceito.get().getTotalAceites());
@@ -261,6 +398,55 @@ public class TermoService {
 
         return stats;
     }
+
+    // Últimos aceites (limitados) em DTO para exibição
+    public List<TermoAceiteDTO> buscarUltimosAceitesDTO(int limit) {
+        List<TermoAceite> aceites = termoAceiteRepository.findUltimosAceites();
+        return aceites.stream()
+                .limit(limit)
+                .map(ta -> {
+                    TermoAceiteDTO dto = new TermoAceiteDTO();
+                    dto.setId(ta.getId());
+                    if (ta.getUsuario() != null) {
+                        dto.setUsuarioNome(ta.getUsuario().getNome());
+                        dto.setUsuarioEmail(ta.getUsuario().getEmail());
+                    }
+                    if (ta.getTermo() != null) {
+                        dto.setTermoTitulo(ta.getTermo().getTitulo());
+                        // Preferir versao registrada no aceite, fallback para versao do termo
+                        dto.setTermoVersao(ta.getVersaoTermo() != null ? ta.getVersaoTermo() : ta.getTermo().getVersao());
+                    } else {
+                        dto.setTermoVersao(ta.getVersaoTermo());
+                    }
+                    dto.setDataAceite(ta.getDataAceite());
+                    dto.setStatus(ta.getStatus());
+                    dto.setStatusDescricao(ta.getStatus() != null ? ta.getStatus().getDescricao() : "");
+                    return dto;
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    // Termo mais recente em DTO para exibição
+    public java.util.Optional<TermoDTO> buscarTermoMaisRecenteDTO() {
+        List<Termo> termosRecentes = termoRepository.findUltimosTermos();
+        if (termosRecentes.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        Termo maisRecente = termosRecentes.get(0);
+        return java.util.Optional.of(converterParaDTO(maisRecente));
+    }
+
+    // Próxima revisão: termo ativo mais próximo do fim da vigência
+    public java.util.Optional<TermoDTO> buscarProximoTermoExpiracaoDTO() {
+        List<Termo> ativos = termoRepository.findTermosAtivos(java.time.LocalDateTime.now());
+        return ativos.stream()
+                .filter(t -> t.getDataVigenciaFim() != null)
+                .sorted(java.util.Comparator.comparing(Termo::getDataVigenciaFim))
+                .findFirst()
+                .map(this::converterParaDTO);
+    }
+
+    
 
     // ===============================
     // MÉTODOS AUXILIARES
@@ -276,6 +462,20 @@ public class TermoService {
         termo.setTotalPendentes(Math.max(0, totalPendentes));
 
         termoRepository.save(termo);
+    }
+
+
+    private String safe(String s) { return s != null ? s : ""; }
+    private String hashSha256(String payload) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : digest) hex.append(String.format("%02x", b));
+            return "SHA-256:" + hex.toString();
+        } catch (Exception e) {
+            return "SHA-256:ERROR";
+        }
     }
 
     public List<TermoDTO> converterParaDTO(List<Termo> termos) {

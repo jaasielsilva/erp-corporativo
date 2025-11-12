@@ -56,6 +56,9 @@ public class TiController {
     @Autowired
     private com.jaasielsilva.portalceo.service.UsuarioService usuarioService;
 
+    @Autowired
+    private com.jaasielsilva.portalceo.service.TermoService termoService;
+
     // Página principal do TI
     @GetMapping
     public String index(Model model) {
@@ -393,23 +396,55 @@ public class TiController {
 
     private List<Map<String, Object>> getPoliticasSeguranca() {
         List<Map<String, Object>> politicas = new ArrayList<>();
-        Map<String, Object> p1 = new HashMap<>();
-        p1.put("nome", "Política de Senhas");
-        p1.put("status", "ATIVA");
-        p1.put("ultimaAtualizacao", LocalDateTime.now().minusDays(10));
-        politicas.add(p1);
+        try {
+            var termos = termoService.buscarPorTipo(com.jaasielsilva.portalceo.model.Termo.TipoTermo.POLITICA_SEGURANCA);
+            for (var t : termos) {
+                Map<String, Object> p = new HashMap<>();
+                p.put("nome", t.getTitulo());
 
-        Map<String, Object> p2 = new HashMap<>();
-        p2.put("nome", "Controle de Acesso e Perfis");
-        p2.put("status", "ATIVA");
-        p2.put("ultimaAtualizacao", LocalDateTime.now().minusDays(30));
-        politicas.add(p2);
+                // Mapear status profissional
+                String statusLabel;
+                boolean vigente = t.isVigente();
+                var st = t.getStatus();
+                if (st == com.jaasielsilva.portalceo.model.Termo.StatusTermo.PUBLICADO && vigente) {
+                    statusLabel = "ATIVA";
+                } else if (st == com.jaasielsilva.portalceo.model.Termo.StatusTermo.ARQUIVADO
+                        || st == com.jaasielsilva.portalceo.model.Termo.StatusTermo.CANCELADO
+                        || (st == com.jaasielsilva.portalceo.model.Termo.StatusTermo.PUBLICADO && !vigente)) {
+                    statusLabel = "OBSOLETA";
+                } else {
+                    statusLabel = "EM REVISÃO";
+                }
+                p.put("status", statusLabel);
 
-        Map<String, Object> p3 = new HashMap<>();
-        p3.put("nome", "Proteção de Dados e LGPD");
-        p3.put("status", "EM REVISÃO");
-        p3.put("ultimaAtualizacao", LocalDateTime.now().minusDays(3));
-        politicas.add(p3);
+                // Última atualização: prioriza publicação, depois aprovação, depois criação
+                java.time.LocalDateTime ultima = t.getDataPublicacao();
+                if (ultima == null) ultima = t.getDataAprovacao();
+                if (ultima == null) ultima = t.getDataCriacao();
+                p.put("ultimaAtualizacao", ultima);
+
+                politicas.add(p);
+            }
+        } catch (Exception e) {
+            // Fallback ao comportamento antigo se houver problemas
+            Map<String, Object> p1 = new HashMap<>();
+            p1.put("nome", "Política de Senhas");
+            p1.put("status", "ATIVA");
+            p1.put("ultimaAtualizacao", LocalDateTime.now().minusDays(10));
+            politicas.add(p1);
+
+            Map<String, Object> p2 = new HashMap<>();
+            p2.put("nome", "Controle de Acesso e Perfis");
+            p2.put("status", "ATIVA");
+            p2.put("ultimaAtualizacao", LocalDateTime.now().minusDays(30));
+            politicas.add(p2);
+
+            Map<String, Object> p3 = new HashMap<>();
+            p3.put("nome", "Proteção de Dados e LGPD");
+            p3.put("status", "EM REVISÃO");
+            p3.put("ultimaAtualizacao", LocalDateTime.now().minusDays(3));
+            politicas.add(p3);
+        }
         return politicas;
     }
 

@@ -4,6 +4,8 @@ import com.jaasielsilva.portalceo.model.Termo;
 import com.jaasielsilva.portalceo.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
@@ -28,6 +30,15 @@ public interface TermoRepository extends JpaRepository<Termo, Long> {
            "ORDER BY t.dataCriacao DESC")
     List<Termo> findTermosAtivos(@Param("agora") LocalDateTime agora);
 
+    // Buscar termos ativos com paginação e ordenação, opcionalmente filtrando por tipo
+    @Query("SELECT t FROM Termo t WHERE t.status = 'PUBLICADO' AND " +
+           "(t.dataVigenciaFim IS NULL OR t.dataVigenciaFim > :agora) AND " +
+           "(t.dataVigenciaInicio IS NULL OR t.dataVigenciaInicio <= :agora) AND " +
+           "(:tipo IS NULL OR t.tipo = :tipo)")
+    Page<Termo> findTermosAtivosPage(@Param("agora") LocalDateTime agora,
+                                     @Param("tipo") Termo.TipoTermo tipo,
+                                     Pageable pageable);
+
     // Buscar termo mais recente por tipo
     Optional<Termo> findFirstByTipoAndStatusOrderByDataCriacaoDesc(Termo.TipoTermo tipo, Termo.StatusTermo status);
 
@@ -46,6 +57,9 @@ public interface TermoRepository extends JpaRepository<Termo, Long> {
 
     // Contar por tipo
     long countByTipo(Termo.TipoTermo tipo);
+
+    // Versão única por tipo
+    boolean existsByTipoAndVersao(Termo.TipoTermo tipo, String versao);
 
     // Buscar termos que precisam de aceite obrigatório
     List<Termo> findByObrigatorioAceiteAndStatusOrderByDataCriacaoDesc(boolean obrigatorioAceite, Termo.StatusTermo status);
@@ -69,9 +83,8 @@ public interface TermoRepository extends JpaRepository<Termo, Long> {
            "ORDER BY t.dataVigenciaFim ASC")
     List<Termo> findTermosExpirandoEm(@Param("agora") LocalDateTime agora, @Param("limite") LocalDateTime limite);
 
-    // Estatísticas - termo com mais aceites
-    @Query("SELECT t FROM Termo t WHERE t.totalAceites = (SELECT MAX(t2.totalAceites) FROM Termo t2)")
-    Optional<Termo> findTermoComMaisAceites();
+    // Estatísticas - termo com mais aceites (desempata por data de criação)
+    Optional<Termo> findTopByOrderByTotalAceitesDescDataCriacaoDesc();
 
     // Buscar últimos termos criados
     @Query("SELECT t FROM Termo t ORDER BY t.dataCriacao DESC")

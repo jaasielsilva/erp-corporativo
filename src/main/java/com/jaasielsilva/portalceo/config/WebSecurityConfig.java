@@ -31,7 +31,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                     "/favicon.ico",
                     "/error",
                     "/actuator/**",
-                    "/api/categorias/**"
+                    "/api/categorias/**",
+                    "/ws/**"
                 );
         
         // Registrar interceptor de validação de usuário logado para endpoints críticos

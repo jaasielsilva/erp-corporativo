@@ -116,7 +116,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/rh/colaboradores/adesao/formulario-publico")
                                                 .permitAll()
                                                 // WebSocket endpoints (manter público para funcionalidade)
-                                                .requestMatchers("/ws-chat/**", "/ws-notifications/**").permitAll()
+                                                .requestMatchers("/ws/**", "/ws-chat/**", "/ws-notifications/**").permitAll()
                                                 // Endpoints que DEVEM ser autenticados
                                                 .requestMatchers("/api/rh/**").authenticated()
                                                 .requestMatchers("/api/chamados/**").authenticated()

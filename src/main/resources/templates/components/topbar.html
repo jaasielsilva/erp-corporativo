@@ -31,8 +31,8 @@
             <span class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Usuário</span>
         </div>
 
-        <!-- Email do usuário para WebSocket global -->
-        <div data-user-email="[[${#authentication != null ? #authentication.name : ''}]]" style="display:none;"></div>
+        <!-- Email do usuário para WebSocket global (sem thymeleaf-extras-springsecurity) -->
+        <div data-user-email="[[${#httpServletRequest.remoteUser != null ? #httpServletRequest.remoteUser : ''}]]" style="display:none;"></div>
 
         <!-- jQuery fallback (para toasts) -->
         <script>

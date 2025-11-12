@@ -170,8 +170,8 @@
 </head>
 
 <body>
-    <!-- Dados do usuário para WebSocket -->
-    <div data-user-email="[[${#authentication.name}]]" style="display: none;"></div>
+    <!-- Dados do usuário para WebSocket (sem thymeleaf-extras-springsecurity) -->
+    <div data-user-email="[[${#httpServletRequest.remoteUser != null ? #httpServletRequest.remoteUser : ''}]]" style="display: none;"></div>
 
     <div class="app-container">
         <!-- Sidebar -->

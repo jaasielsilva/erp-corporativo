@@ -7,6 +7,8 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -18,8 +20,11 @@ public class UsuarioDetailsService implements UserDetailsService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(UsuarioDetailsService.class);
+
     @Override
 public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    long t0 = System.nanoTime();
     // Tentar buscar por email primeiro
     Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
 
@@ -27,6 +32,7 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
     if (usuarioOpt.isEmpty()) {
         usuarioOpt = usuarioRepository.findByMatricula(username);
     }
+    long tLookup = System.nanoTime();
 
     if (usuarioOpt.isEmpty()) {
         throw new UsernameNotFoundException("Usuário não encontrado com email ou matrícula: " + username);
@@ -65,6 +71,13 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
                     .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
                     .collect(Collectors.toSet())
         );
+    }
+
+    long tAuthorities = System.nanoTime();
+    if (log.isDebugEnabled()) {
+        long lookupMs = (tLookup - t0) / 1_000_000;
+        long authBuildMs = (tAuthorities - tLookup) / 1_000_000;
+        log.debug("Login timing: lookup={}ms, authorities={}ms for username={}", lookupMs, authBuildMs, username);
     }
 
     return new org.springframework.security.core.userdetails.User(

@@ -85,6 +85,7 @@ public class Usuario {
     }
 
     @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "foto_perfil", columnDefinition = "LONGBLOB")
     private byte[] fotoPerfil;
 

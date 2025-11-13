@@ -100,8 +100,6 @@
                         <div class="card-body">
                             <form th:action="@{/agenda/editar/{id}(id=${evento.id})}" method="post" th:object="${evento}" id="formEditarEvento">
                                 <input type="hidden" th:field="*{id}">
-                                <input type="hidden" th:field="*{dataCriacao}">
-                                <input type="hidden" th:field="*{criadoPor}">
                                 
                                 <div class="row">
                                     <!-- Título -->
@@ -119,7 +117,7 @@
                                         <label for="status" class="form-label">
                                             <i class="fas fa-toggle-on me-1"></i>Status
                                         </label>
-                                        <select class="form-select" id="status" th:field="*{status}">
+                                        <select class="form-select" id="status" name="status">
                                             <option value="ATIVO">Ativo</option>
                                             <option value="CANCELADO">Cancelado</option>
                                             <option value="ADIADO">Adiado</option>
@@ -134,7 +132,7 @@
                                         <label for="prioridade" class="form-label">
                                             <i class="fas fa-flag me-1"></i>Prioridade
                                         </label>
-                                        <select class="form-select" id="prioridade" th:field="*{prioridade}">
+                                        <select class="form-select" id="prioridade" name="prioridade">
                                             <option value="BAIXA">Baixa</option>
                                             <option value="MEDIA">Média</option>
                                             <option value="ALTA">Alta</option>
@@ -147,7 +145,7 @@
                                         <label for="categoria" class="form-label">
                                             <i class="fas fa-tags me-1"></i>Categoria
                                         </label>
-                                        <select class="form-select" id="categoria" th:field="*{categoria}">
+                                        <select class="form-select" id="categoria" name="categoria">
                                             <option value="">Selecione uma categoria</option>
                                             <option value="REUNIAO">Reunião</option>
                                             <option value="COMPROMISSO">Compromisso</option>
@@ -166,13 +164,13 @@
                                             <i class="fas fa-calendar me-1"></i>Data e Hora de Início *
                                         </label>
                                         <div class="input-group" id="datetimepicker1" data-td-target-input="nearest" data-td-target-toggle="nearest">
-                                            <input type="datetime-local" class="form-control" id="dataInicio" th:field="*{dataInicio}" 
+                                            <input type="datetime-local" class="form-control" id="dataInicio" th:field="*{dataHoraInicio}" 
                                                    data-td-target="#datetimepicker1" required>
                                             <span class="input-group-text" data-td-target="#datetimepicker1" data-td-toggle="datetimepicker">
                                                 <i class="fas fa-calendar"></i>
                                             </span>
                                         </div>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}"></div>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataHoraInicio')}" th:errors="*{dataHoraInicio}"></div>
                                     </div>
                                     
                                     <!-- Data de Fim -->
@@ -181,13 +179,13 @@
                                             <i class="fas fa-calendar-check me-1"></i>Data e Hora de Fim
                                         </label>
                                         <div class="input-group" id="datetimepicker2" data-td-target-input="nearest" data-td-target-toggle="nearest">
-                                            <input type="datetime-local" class="form-control" id="dataFim" th:field="*{dataFim}" 
+                                            <input type="datetime-local" class="form-control" id="dataFim" th:field="*{dataHoraFim}" 
                                                    data-td-target="#datetimepicker2">
                                             <span class="input-group-text" data-td-target="#datetimepicker2" data-td-toggle="datetimepicker">
                                                 <i class="fas fa-calendar"></i>
                                             </span>
                                         </div>
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataFim')}" th:errors="*{dataFim}"></div>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataHoraFim')}" th:errors="*{dataHoraFim}"></div>
                                     </div>
                                 </div>
                                 
@@ -219,7 +217,7 @@
                                             <i class="fas fa-palette me-1"></i>Cor do Evento
                                         </label>
                                         <div class="input-group">
-                                            <input type="color" class="form-control form-control-color" id="cor" th:field="*{cor}" 
+                                            <input type="color" class="form-control form-control-color" id="cor" name="cor" 
                                                    title="Escolha uma cor para o evento">
                                             <span class="input-group-text">Cor no calendário</span>
                                         </div>
@@ -238,7 +236,7 @@
                                             <!-- Evento Dia Inteiro -->
                                             <div class="col-md-4 mb-3">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="diaInteiro" th:field="*{diaInteiro}">
+                                                    <input class="form-check-input" type="checkbox" id="diaInteiro" name="diaInteiro">
                                                     <label class="form-check-label" for="diaInteiro">
                                                         <i class="fas fa-sun me-1"></i>Evento de dia inteiro
                                                     </label>
@@ -248,7 +246,7 @@
                                             <!-- Evento Recorrente -->
                                             <div class="col-md-4 mb-3">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="recorrente" th:field="*{recorrente}">
+                                                    <input class="form-check-input" type="checkbox" id="recorrente" name="recorrente">
                                                     <label class="form-check-label" for="recorrente">
                                                         <i class="fas fa-redo me-1"></i>Evento recorrente
                                                     </label>
@@ -258,7 +256,7 @@
                                             <!-- Privado -->
                                             <div class="col-md-4 mb-3">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="privado" th:field="*{privado}">
+                                                    <input class="form-check-input" type="checkbox" id="privado" name="privado">
                                                     <label class="form-check-label" for="privado">
                                                         <i class="fas fa-lock me-1"></i>Evento privado
                                                     </label>
@@ -272,7 +270,7 @@
                                                 <label for="tipoRecorrencia" class="form-label">
                                                     <i class="fas fa-repeat me-1"></i>Tipo de Recorrência
                                                 </label>
-                                                <select class="form-select" id="tipoRecorrencia" th:field="*{tipoRecorrencia}">
+                                                <select class="form-select" id="tipoRecorrencia" name="tipoRecorrencia">
                                                     <option value="DIARIA">Diária</option>
                                                     <option value="SEMANAL">Semanal</option>
                                                     <option value="MENSAL">Mensal</option>
@@ -284,7 +282,7 @@
                                                 <label for="dataFimRecorrencia" class="form-label">
                                                     <i class="fas fa-calendar-times me-1"></i>Fim da Recorrência
                                                 </label>
-                                                <input type="date" class="form-control" id="dataFimRecorrencia" th:field="*{dataFimRecorrencia}">
+                                                <input type="date" class="form-control" id="dataFimRecorrencia" name="dataFimRecorrencia">
                                             </div>
                                         </div>
                                     </div>

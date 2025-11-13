@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Aprovação - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 py-4">
+                        <h1 class="h4 text-muted"><i class="fas fa-check-circle"></i> Painel de Aprovação</h1>
+                    </div>
+                    <div class="col-12">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Solicitação</th>
+                                <th>Solicitante</th>
+                                <th>Serviço</th>
+                                <th>Custo Estimado</th>
+                                <th>Ações</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>#1</td>
+                                <td>Maria Silva</td>
+                                <td>Serviço A</td>
+                                <td>R$ 120,00</td>
+                                <td class="d-flex gap-2">
+                                    <a class="btn btn-success btn-sm" th:href="@{/servicos/aprovacoes/1/aprovar}">Aprovar</a>
+                                    <a class="btn btn-danger btn-sm" th:href="@{/servicos/aprovacoes/1/rejeitar}">Rejeitar</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+
+</html>

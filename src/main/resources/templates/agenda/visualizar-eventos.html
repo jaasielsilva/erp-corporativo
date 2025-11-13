@@ -200,10 +200,10 @@
                                     <td>
                                         <div>
                                             <i class="fas fa-clock me-1"></i>
-                                            <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                                            <span th:text="${#temporals.format(evento.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
                                         </div>
-                                        <div th:if="${evento.dataFim}" class="text-muted small">
-                                            até <span th:text="${#temporals.format(evento.dataFim, 'dd/MM/yyyy HH:mm')}">01/01/2024 11:00</span>
+                                        <div th:if="${evento.dataHoraFim}" class="text-muted small">
+                                            até <span th:text="${#temporals.format(evento.dataHoraFim, 'dd/MM/yyyy HH:mm')}">01/01/2024 11:00</span>
                                         </div>
                                     </td>
                                     <td>
@@ -262,17 +262,14 @@
                     <div class="card h-100 shadow-sm">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="mb-0" th:text="${evento.titulo}">Título do Evento</h6>
-                            <span class="badge" th:classappend="${evento.prioridade == 'URGENTE' ? 'bg-danger' : 
-                                                                  evento.prioridade == 'ALTA' ? 'bg-warning' : 
-                                                                  evento.prioridade == 'MEDIA' ? 'bg-info' : 'bg-secondary'}" 
-                                  th:text="${evento.prioridade}">Prioridade</span>
+                            <span class="badge bg-secondary">Evento</span>
                         </div>
                         <div class="card-body">
                             <p class="card-text" th:text="${#strings.abbreviate(evento.descricao, 100)}">Descrição do evento...</p>
                             
                             <div class="mb-2">
                                 <i class="fas fa-clock text-primary me-1"></i>
-                                <small th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+                                <small th:text="${#temporals.format(evento.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
                             </div>
                             
                             <div class="mb-2" th:if="${evento.local}">
@@ -281,12 +278,7 @@
                             </div>
                             
                             <div class="mb-2">
-                                <span class="badge" th:classappend="${evento.categoria == 'REUNIAO' ? 'bg-primary' : 
-                                                                      evento.categoria == 'COMPROMISSO' ? 'bg-info' : 
-                                                                      evento.categoria == 'EVENTO' ? 'bg-success' : 
-                                                                      evento.categoria == 'TAREFA' ? 'bg-warning' : 
-                                                                      evento.categoria == 'LEMBRETE' ? 'bg-secondary' : 'bg-dark'}" 
-                                      th:text="${evento.categoria}">Categoria</span>
+                                <span class="badge bg-primary">Agenda</span>
                             </div>
                         </div>
                         <div class="card-footer">
@@ -546,8 +538,8 @@
         
         function excluirEvento(eventoId) {
             $.ajax({
-                url: '/agenda/excluir/' + eventoId,
-                type: 'DELETE',
+                url: '/agenda/deletar/' + eventoId,
+                type: 'GET',
                 success: function() {
                     $('#modalConfirmarExclusao').modal('hide');
                     location.reload(); // Recarregar página

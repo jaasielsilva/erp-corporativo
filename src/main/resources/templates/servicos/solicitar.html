@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Serviço - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 py-4">
+                        <h1 class="h4 text-muted"><i class="fas fa-plus-circle"></i> Solicitar Serviço</h1>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <form th:action="@{/servicos/{id}/solicitar(id=${servico?.id} ?: 1)}" method="post" enctype="multipart/form-data" class="row g-3">
+                                    <div class="col-12">
+                                        <label for="titulo" class="form-label">Título</label>
+                                        <input id="titulo" name="titulo" type="text" class="form-control" placeholder="Resumo da solicitação" required />
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="descricao" class="form-label">Descrição</label>
+                                        <textarea id="descricao" name="descricao" rows="6" class="form-control" placeholder="Detalhe sua necessidade" required></textarea>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label for="prioridade" class="form-label">Prioridade</label>
+                                        <select id="prioridade" name="prioridade" class="form-select" required>
+                                            <option value="BAIXA">Baixa</option>
+                                            <option value="MEDIA">Média</option>
+                                            <option value="ALTA">Alta</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="anexos" class="form-label">Anexos</label>
+                                        <input id="anexos" name="anexos" type="file" class="form-control" multiple />
+                                        <small class="text-muted">Tipos permitidos: PDF, imagens. Tamanho máx.: 10MB</small>
+                                    </div>
+                                    <div class="col-12 d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Enviar Solicitação</button>
+                                        <a class="btn btn-outline-secondary" th:href="@{/servicos/catalogo}">Cancelar</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+
+</html>

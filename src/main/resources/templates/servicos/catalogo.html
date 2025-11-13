@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Serviços - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 py-4">
+                        <h1 class="h4 text-muted"><i class="fas fa-list"></i> Catálogo de Serviços</h1>
+                    </div>
+                    <div class="col-12 mb-3" th:insert="~{servicos/fragments/_filtros :: filtros}"></div>
+
+                    <!-- Cards de serviços (exemplo estático) -->
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Serviço A</h5>
+                                        <p class="card-text">Descrição breve do serviço A.</p>
+                                        <p class="text-muted"><small>SLA: resposta 4h • solução 24h</small></p>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-primary btn-sm" th:href="@{/servicos/1}">Detalhes</a>
+                                            <a class="btn btn-outline-primary btn-sm" th:href="@{/servicos/1/solicitar}">Solicitar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Serviço B</h5>
+                                        <p class="card-text">Descrição breve do serviço B.</p>
+                                        <p class="text-muted"><small>SLA: resposta 8h • solução 48h</small></p>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-primary btn-sm" th:href="@{/servicos/2}">Detalhes</a>
+                                            <a class="btn btn-outline-primary btn-sm" th:href="@{/servicos/2/solicitar}">Solicitar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+
+</html>

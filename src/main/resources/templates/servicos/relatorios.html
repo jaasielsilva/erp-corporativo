@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 py-4">
+                        <h1 class="h4 text-muted"><i class="fas fa-chart-line"></i> Relatórios</h1>
+                    </div>
+                    <!-- Cards de KPIs -->
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h3 class="h6">Tempo médio de resposta</h3>
+                                        <p class="text-muted">Últimos 30 dias.</p>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-outline-primary btn-sm" href="#">Exportar CSV</a>
+                                            <a class="btn btn-outline-secondary btn-sm" href="#">Exportar PDF</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h3 class="h6">Tempo médio de solução</h3>
+                                        <p class="text-muted">Últimos 30 dias.</p>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-outline-primary btn-sm" href="#">Exportar CSV</a>
+                                            <a class="btn btn-outline-secondary btn-sm" href="#">Exportar PDF</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h3 class="h6">Custos por serviço</h3>
+                                        <p class="text-muted">Período selecionado.</p>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-outline-primary btn-sm" href="#">Exportar CSV</a>
+                                            <a class="btn btn-outline-secondary btn-sm" href="#">Exportar PDF</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h3 class="h6">Satisfação (NPS)</h3>
+                                        <p class="text-muted">Média de notas.</p>
+                                        <div class="d-flex gap-2">
+                                            <a class="btn btn-outline-primary btn-sm" href="#">Exportar CSV</a>
+                                            <a class="btn btn-outline-secondary btn-sm" href="#">Exportar PDF</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+
+</html>

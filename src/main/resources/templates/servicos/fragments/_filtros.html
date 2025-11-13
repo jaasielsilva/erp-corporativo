@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<body>
+<div th:fragment="filtros">
+    <input type="search" placeholder="Buscar serviços" aria-label="Buscar" />
+    <select aria-label="Categoria">
+        <option>Categoria</option>
+        <option>Infra</option>
+        <option>TI</option>
+        <option>RH</option>
+    </select>
+    <select aria-label="SLA">
+        <option>SLA</option>
+        <option>Resposta até 4h</option>
+        <option>Resposta até 8h</option>
+    </select>
+    <select aria-label="Custo">
+        <option>Custo</option>
+        <option>Até R$ 100</option>
+        <option>Até R$ 500</option>
+        <option>Até R$ 1000</option>
+    </select>
+    <button type="button">Aplicar</button>
+    <button type="button">Limpar</button>
+    
+    <style>
+        div[th\:fragment] { display: flex; gap: 10px; flex-wrap: wrap; }
+    </style>
+</div>
+</body>
+</html>

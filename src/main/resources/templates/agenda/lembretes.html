@@ -236,7 +236,7 @@
                                             <div>
                                                 <strong th:text="${lembrete.evento.titulo}">Título do Evento</strong>
                                                 <br>
-                                                <small class="text-muted" th:text="${#temporals.format(lembrete.evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+            <small class="text-muted" th:text="${#temporals.format(lembrete.evento.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
                                             </div>
                                         </div>
                                     </td>

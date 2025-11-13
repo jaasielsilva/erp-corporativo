@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhe da Solicitação - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 py-4">
+                        <h1 class="h4 text-muted"><i class="fas fa-file-alt"></i> Detalhe da Solicitação</h1>
+                    </div>
+                    <div class="col-12 col-xl-7">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h2 class="h5" th:text="${solicitacao?.titulo} ?: 'Solicitação'">Solicitação</h2>
+                                <p><strong>Status:</strong> <span th:text="${solicitacao?.status} ?: 'CRIADA'"></span></p>
+                                <p><strong>Prioridade:</strong> <span th:text="${solicitacao?.prioridade} ?: 'MÉDIA'"></span></p>
+                                <p><strong>Serviço:</strong> <span th:text="${solicitacao?.servicoNome} ?: 'Serviço A'"></span></p>
+                                <div class="d-flex gap-2">
+                                    <a class="btn btn-outline-primary" th:href="@{/servicos/solicitacoes/{id}/informacao(id=${solicitacao?.id} ?: 1)}">Enviar Informação</a>
+                                    <a class="btn btn-outline-danger" th:href="@{/servicos/solicitacoes/{id}/cancelar(id=${solicitacao?.id} ?: 1)}">Cancelar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-5" th:insert="~{servicos/fragments/_timeline :: timeline}"></div>
+                </div>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+
+</html>

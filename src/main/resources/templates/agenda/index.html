@@ -173,12 +173,12 @@
                                     <div th:each="evento : ${proximosEventos}" class="list-group-item list-group-item-action border-0 px-0">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h6 class="mb-1" th:text="${evento.titulo}">Título do Evento</h6>
-                                            <small class="text-muted" th:text="${#temporals.format(evento.dataInicio, 'dd/MM')}">Data</small>
+                                        <small class="text-muted" th:text="${#temporals.format(evento.dataHoraInicio, 'dd/MM')}">Data</small>
                                         </div>
                                         <p class="mb-1 text-muted small" th:text="${evento.descricao}">Descrição do evento</p>
                                         <small class="text-muted">
                                             <i class="fas fa-clock me-1"></i>
-                                            <span th:text="${#temporals.format(evento.dataInicio, 'HH:mm')}">Horário</span>
+                                        <span th:text="${#temporals.format(evento.dataHoraInicio, 'HH:mm')}">Horário</span>
                                             <span th:if="${evento.local}" class="ms-2">
                                                 <i class="fas fa-map-marker-alt me-1"></i>
                                                 <span th:text="${evento.local}">Local</span>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle}">Relatórios de Acesso</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <div class="container-fluid py-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h1 class="h4 text-muted"><i class="fas fa-chart-pie"></i> <span th:text="${pageTitle}">Relatórios</span></h1>
+                    <a class="btn btn-outline-secondary" th:href="@{/meus-pedidos}"><i class="fas fa-arrow-left"></i> Voltar</a>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Pendentes</h5>
+                                <p class="display-6" th:text="${pendentes}">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Em Análise</h5>
+                                <p class="display-6" th:text="${emAnalise}">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Aprovados</h5>
+                                <p class="display-6" th:text="${aprovados}">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Rejeitados</h5>
+                                <p class="display-6" th:text="${rejeitados}">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Usuário Criado</h5>
+                                <p class="display-6" th:text="${usuarioCriado}">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Cancelados</h5>
+                                <p class="display-6" th:text="${cancelados}">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

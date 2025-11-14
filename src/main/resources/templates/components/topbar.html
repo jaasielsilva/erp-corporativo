@@ -18,6 +18,8 @@
                 <span class="notification-badge" style="display: none;">0</span>
             </a>
 
+            <!-- Controles de troca de visão movidos para o topo do sidebar -->
+
             <!-- Usuário -->
             <a th:if="${usuarioLogado != null}"
                th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}"

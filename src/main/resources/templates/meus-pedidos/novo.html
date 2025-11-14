@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle}">Nova Solicitação de Acesso</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <div class="container-fluid py-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h1 class="h4 text-muted"><i class="fas fa-plus-circle"></i> <span th:text="${pageTitle}">Nova Solicitação</span></h1>
+                    <a class="btn btn-outline-secondary" th:href="@{/meus-pedidos}"><i class="fas fa-arrow-left"></i> Voltar</a>
+                </div>
+
+                <!-- Formulário mínimo (apenas UI; integração de POST futura) -->
+                <div class="alert alert-info">Formulário básico de demonstração. A integração de envio será adicionada posteriormente.</div>
+
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Justificativa</label>
+                        <textarea class="form-control" rows="5" placeholder="Descreva a necessidade de acesso"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Módulos desejados</label>
+                            <select class="form-select" multiple>
+                                <option>RH</option>
+                                <option>Financeiro</option>
+                                <option>Vendas</option>
+                                <option>Compras</option>
+                                <option>Estoque</option>
+                                <option>TI</option>
+                                <option>Jurídico</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nível de acesso</label>
+                            <select class="form-select">
+                                <option>Consulta</option>
+                                <option>Operacional</option>
+                                <option>Supervisão</option>
+                                <option>Coordenação</option>
+                                <option>Gerencial</option>
+                                <option>Administrativo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="button"><i class="fas fa-paper-plane"></i> Enviar solicitação</button>
+                </form>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

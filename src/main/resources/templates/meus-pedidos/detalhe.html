@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle}">Detalhe da Solicitação</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .detail-card { background: #fff; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+        .label { font-size: .85rem; color: #6c757d; }
+        .value { font-weight: 600; }
+    </style>
+    </head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <div class="container-fluid py-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h1 class="h4 text-muted"><i class="fas fa-file-alt"></i> <span th:text="${pageTitle}">Detalhe</span></h1>
+                    <a class="btn btn-outline-secondary" th:href="@{/meus-pedidos}"><i class="fas fa-arrow-left"></i> Voltar</a>
+                </div>
+
+                <div th:if="${solicitacao == null}" class="alert alert-warning">Solicitação não encontrada.</div>
+
+                <div th:if="${solicitacao != null}" class="detail-grid">
+                    <div class="detail-card">
+                        <div class="label">Protocolo</div>
+                        <div class="value" th:text="${solicitacao.protocolo}">SOL000000</div>
+                        <div class="label mt-3">Status</div>
+                        <div class="value"><span class="badge bg-secondary" th:text="${solicitacao.status.descricao}">Pendente</span></div>
+                        <div class="label mt-3">Prioridade</div>
+                        <div class="value"><span class="badge bg-info" th:text="${solicitacao.prioridade.descricao}">Média</span></div>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="label">Solicitante</div>
+                        <div class="value" th:text="${solicitacao.solicitanteNome}">Nome</div>
+                        <div class="label mt-2">Departamento</div>
+                        <div class="value" th:text="${solicitacao.solicitanteDepartamento}">Departamento</div>
+                        <div class="label mt-2">Email</div>
+                        <div class="value" th:text="${solicitacao.solicitanteEmail}">email@corp.com</div>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="label">Colaborador</div>
+                        <div class="value" th:text="${solicitacao.colaborador != null ? solicitacao.colaborador.nome : 'N/A'}">Colaborador</div>
+                        <div class="label mt-2">Tipo de Usuário</div>
+                        <div class="value" th:text="${solicitacao.tipoUsuario != null ? solicitacao.tipoUsuario.descricao : 'N/A'}">Tipo</div>
+                        <div class="label mt-2">Nível Solicitado</div>
+                        <div class="value" th:text="${solicitacao.nivelSolicitado != null ? solicitacao.nivelSolicitado.descricao : 'N/A'}">Nível</div>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="label">Justificativa</div>
+                        <div class="value" th:text="${solicitacao.justificativa}">Texto da justificativa...</div>
+                        <div class="label mt-2">Módulos</div>
+                        <div>
+                            <span class="badge bg-light text-dark me-1" th:each="m : ${solicitacao.modulos}" th:text="${m.descricao}">RH</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

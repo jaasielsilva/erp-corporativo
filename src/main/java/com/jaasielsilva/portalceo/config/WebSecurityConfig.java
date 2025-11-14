@@ -18,6 +18,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     @Autowired
     private UsuarioLogadoInterceptor usuarioLogadoInterceptor;
     
+    @Autowired
+    private ImpersonacaoInterceptor impersonacaoInterceptor;
+    
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // Registrar interceptor de segurança para todas as URLs
@@ -32,6 +35,19 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                     "/error",
                     "/actuator/**",
                     "/api/categorias/**"
+                );
+        
+        // Registrar interceptor de impersonação (modo leitura) globalmente
+        registry.addInterceptor(impersonacaoInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns(
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/fonts/**",
+                    "/favicon.ico",
+                    "/error",
+                    "/actuator/**"
                 );
         
         // Registrar interceptor de validação de usuário logado para endpoints críticos

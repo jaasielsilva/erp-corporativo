@@ -11,6 +11,27 @@
 
     </div>
 
+    <!-- Troca de visão (impersonação) no topo do sidebar -->
+    <div class="impersonacao-sidebar" style="margin: 12px 0; padding: 10px; background:#f7f7f7; border:1px solid #e5e5e5; border-radius:8px;">
+      <div th:if="${modoLeitura}" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <span class="badge" style="background:#f0ad4e; color:#fff; padding:4px 8px; border-radius:12px;">
+          Visão de <span th:text="${usuarioVisao != null ? usuarioVisao.nome : 'Usuário'}">Usuário</span> — leitura
+        </span>
+        <form th:action="@{/impersonacao/encerrar}" method="post" style="margin:0;">
+          <button type="submit" class="btn btn-sm" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:6px;">
+            Encerrar
+          </button>
+        </form>
+      </div>
+
+      <form th:if="${!modoLeitura and podeTrocarVisao}" th:action="@{/impersonacao/iniciar}" method="post" style="display:flex; gap:6px; align-items:center; margin:0;">
+        <input type="text" name="query" placeholder="Nome ou e-mail" style="flex:1; height:30px; padding:6px 10px; border:1px solid #ddd; border-radius:6px;"/>
+        <button type="submit" class="btn btn-sm" style="background:#0d6efd; color:#fff; border:none; padding:6px 10px; border-radius:6px;">
+          Trocar visão
+        </button>
+      </form>
+    </div>
+
     <!-- Campo de busca -->
     <div class="sidebar-search">
       <input type="text" id="sidebar-search" placeholder="Buscar no menu..." autocomplete="off">

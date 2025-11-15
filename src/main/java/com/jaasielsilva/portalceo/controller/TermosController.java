@@ -162,6 +162,13 @@ public class TermosController {
         aceites.put("icon", "fas fa-users-check");
         pageActions.add(aceites);
 
+        java.util.Map<String, String> meusAceites = new java.util.HashMap<>();
+        meusAceites.put("type", "link");
+        meusAceites.put("url", "/termos/meus-aceites");
+        meusAceites.put("label", "Meus Aceites");
+        meusAceites.put("icon", "fas fa-file-signature");
+        pageActions.add(meusAceites);
+
         model.addAttribute("pageActions", pageActions);
 
         return "termos/index";
@@ -244,6 +251,29 @@ public class TermosController {
         model.addAttribute("estatisticas", estatisticas);
 
         return "termos/aceites";
+    }
+
+    @GetMapping("/meus-aceites")
+    public String meusAceites(Model model, Authentication authentication) {
+        model.addAttribute("pageTitle", "Meus Documentos e Aceites");
+        model.addAttribute("pageSubtitle", "Termos que você já aceitou");
+        model.addAttribute("moduleIcon", "fas fa-file-signature");
+        model.addAttribute("moduleCSS", "termos");
+
+        if (authentication == null) {
+            return "redirect:/login";
+        }
+
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorEmail(authentication.getName());
+        if (!usuarioOpt.isPresent()) {
+            model.addAttribute("erro", "Usuário não encontrado");
+            return "termos/meusAceites";
+        }
+
+        List<TermoAceite> aceites = termoService.buscarAceitesDoUsuario(usuarioOpt.get());
+        model.addAttribute("aceites", aceites);
+
+        return "termos/meusAceites";
     }
 
     @GetMapping("/aceites/export")
@@ -351,6 +381,10 @@ public class TermosController {
             Authentication authentication,
             HttpServletRequest request) {
         try {
+            if (authentication == null) {
+                return ResponseEntity.status(401).body("Não autenticado");
+            }
+
             Optional<Usuario> usuario = usuarioService.buscarPorEmail(authentication.getName());
             if (!usuario.isPresent()) {
                 return ResponseEntity.badRequest().body("Usuário não encontrado");

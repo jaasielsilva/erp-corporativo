@@ -9,7 +9,9 @@
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -18,9 +20,217 @@
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
             <section class="content-area">
-                <div class="container-fluid text-center py-5">
-                    <h1 class="display-6 text-muted"><i class="fas fa-file-contract"></i> Contratos Jurídicos</h1>
-                    <p class="text-muted">Bem-vindo à seção de contratos jurídicos. Aqui você encontrará informações sobre os contratos disponíveis.</p>
+                <div class="container-fluid py-4">
+                    <div class="mb-4">
+                        <h1 class="display-6 text-muted"><i class="fas fa-file-contract"></i> Contratos Jurídicos</h1>
+                        <p class="text-muted">Listagem com dados reais, filtros e métricas.</p>
+                    </div>
+
+                    <!-- Filtros -->
+                    <form class="card p-3 mb-4 shadow-sm" method="get" th:action="@{/juridico/contratos}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="">Todos</option>
+                                    <option th:each="s : ${statusContrato}" th:value="${s}" th:text="${s}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Tipo</label>
+                                <select class="form-select" name="tipo">
+                                    <option value="">Todos</option>
+                                    <option th:each="t : ${tiposContrato}" th:value="${t}" th:text="${t}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Número do Contrato</label>
+                                <input class="form-control" type="text" name="numero" placeholder="Ex.: CT-2025-001" />
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" type="submit"><i class="fas fa-search me-2"></i>Filtrar</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Novo Contrato -->
+                    <div class="card p-3 mb-4 shadow-sm">
+                        <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Novo Contrato</h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Título</label>
+                                <input id="titulo" class="form-control" type="text" placeholder="Descrição breve" required />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Tipo</label>
+                                <select id="tipo" class="form-select">
+                                    <option th:each="t : ${tiposContrato}" th:value="${t}" th:text="${t}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Início</label>
+                                <input id="dataInicio" class="form-control" type="text" placeholder="DD/MM/AAAA" required />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Duração (meses)</label>
+                                <input id="duracaoMeses" class="form-control" type="number" min="1" value="12" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Valor Mensal</label>
+                                <input id="valorMensal" class="form-control" type="text" placeholder="Ex.: 1500,00" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Valor Total</label>
+                                <input id="valorContrato" class="form-control" type="text" placeholder="Ex.: 18000,00" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Prazo Notificação (dias)</label>
+                                <input id="prazoNotificacao" class="form-control" type="number" min="1" value="30" />
+                            </div>
+                            <div class="col-md-3 d-flex align-items-center">
+                                <div class="form-check mt-4">
+                                    <input id="renovacaoAutomatica" class="form-check-input" type="checkbox" />
+                                    <label class="form-check-label">Renovação automática</label>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Descrição</label>
+                                <textarea id="descricao" class="form-control" rows="2" placeholder="Cláusulas e observações"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button id="btnCriarContrato" class="btn btn-success"><i class="fas fa-save"></i> Criar Contrato</button>
+                        </div>
+                    </div>
+
+                    <!-- Métricas -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card p-3 shadow-sm">
+                                <div class="text-muted">Total de contratos</div>
+                                <div class="h4" th:text="${totalElements}">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card p-3 shadow-sm">
+                                <div class="text-muted">Valor total ativos</div>
+                                <div class="h4" th:text="${valorTotalAtivos}">R$ 0,00</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card p-3 shadow-sm">
+                                <div class="text-muted">Receita mensal recorrente</div>
+                                <div class="h4" th:text="${receitaMensal}">R$ 0,00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de contratos -->
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Título</th>
+                                            <th>Tipo</th>
+                                            <th>Status</th>
+                                            <th>Início</th>
+                                            <th>Vencimento</th>
+                                            <th>Valor Mensal</th>
+                                            <th>Responsável</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="c, iStat : ${listaContratos}">
+                                            <td th:text="${c.numeroContrato}">CT-000</td>
+                                            <td th:text="${c.titulo}">Título</td>
+                                            <td th:text="${c.tipo}">TIPO</td>
+                                            <td>
+                                                <span class="badge bg-secondary" th:text="${c.status}">STATUS</span>
+                                            </td>
+                                            <td th:text="${c.dataInicio}">2025-01-01</td>
+                                            <td th:text="${c.dataVencimento}">2025-12-31</td>
+                                            <td th:text="${c.valorMensal}">0.00</td>
+                                            <td>
+                                                <span th:text="${c.usuarioResponsavel != null ? c.usuarioResponsavel.nome : '—'}">—</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button class="btn btn-outline-primary btn-acao" title="Enviar para análise"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).RASCUNHO}"
+                                                            th:attr="data-id=${c.id}" data-action="enviar-analise">
+                                                        <i class="fas fa-paper-plane"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-success btn-acao" title="Aprovar"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).EM_ANALISE}"
+                                                            th:attr="data-id=${c.id}" data-action="aprovar">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-dark btn-acao" title="Assinar"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).APROVADO}"
+                                                            th:attr="data-id=${c.id}" data-action="assinar">
+                                                        <i class="fas fa-pen-nib"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-success btn-acao" title="Ativar"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).ASSINADO}"
+                                                            th:attr="data-id=${c.id}" data-action="ativar">
+                                                        <i class="fas fa-toggle-on"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-warning btn-acao" title="Suspender"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).ATIVO}"
+                                                            th:attr="data-id=${c.id}" data-action="suspender">
+                                                        <i class="fas fa-pause"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-secondary btn-acao" title="Reativar"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).SUSPENSO}"
+                                                            th:attr="data-id=${c.id}" data-action="reativar">
+                                                        <i class="fas fa-play"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-danger btn-acao" title="Rescindir"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).ATIVO or c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).SUSPENSO}"
+                                                            th:attr="data-id=${c.id}" data-action="rescindir">
+                                                        <i class="fas fa-ban"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-info btn-acao" title="Renovar"
+                                                            th:if="${c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).ATIVO or c.status == T(com.jaasielsilva.portalceo.model.ContratoLegal.StatusContrato).VENCIDO}"
+                                                            th:attr="data-id=${c.id}" data-action="renovar">
+                                                        <i class="fas fa-sync"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${listaContratos == null or #lists.isEmpty(listaContratos)}">
+                                            <td colspan="9" class="text-center text-muted">Nenhum contrato encontrado para os critérios selecionados.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <!-- Paginação visual -->
+                                <nav aria-label="Paginação de contratos" th:if="${totalElements > 0}">
+                                    <ul class="pagination justify-content-end">
+                                        <li class="page-item" th:classappend="${page == 0} ? ' disabled' : ''">
+                                            <a class="page-link" th:href="@{/juridico/contratos(page=${page - 1}, size=${size}, status=${param.status}, tipo=${param.tipo}, numero=${param.numero})}">Anterior</a>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <span class="page-link" th:text="|${page + 1} / ${totalPages}|">1 / 1</span>
+                                        </li>
+                                        <li class="page-item" th:classappend="${page + 1 >= totalPages} ? ' disabled' : ''">
+                                            <a class="page-link" th:href="@{/juridico/contratos(page=${page + 1}, size=${size}, status=${param.status}, tipo=${param.tipo}, numero=${param.numero})}">Próxima</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>
@@ -29,5 +239,206 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function() {
+            function notify(type, title, message, priority = 'medium', options = {}) {
+                if (typeof showToast === 'function') {
+                    showToast({ type, title, message, priority, ...options });
+                } else {
+                    // Fallback simples
+                    const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+                    alert(`${icon} ${title}: ${message}`);
+                }
+            }
+
+            function setInvalid($el, invalid) {
+                $el.toggleClass('is-invalid', invalid);
+            }
+
+            // Máscara de moeda BRL simples em tempo real
+            function formatBRL(input) {
+                let digits = (input.value || '').replace(/\D/g, '');
+                if (!digits) { input.value = ''; return; }
+                // mínimo 0,00
+                while (digits.length < 3) digits = '0' + digits;
+                const intPart = digits.slice(0, -2);
+                const decPart = digits.slice(-2);
+                const intWithSeparators = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                input.value = `${intWithSeparators},${decPart}`;
+            }
+
+            const currencyInputs = ['#valorMensal', '#valorContrato'];
+            currencyInputs.forEach(sel => {
+                const el = document.querySelector(sel);
+                if (el) {
+                    el.addEventListener('input', () => formatBRL(el));
+                    el.addEventListener('blur', () => formatBRL(el));
+                }
+            });
+
+            // ======================== Máscara e conversão de data BR ========================
+            function maskDateBR(el) {
+                let v = (el.value || '').replace(/\D/g, '');
+                if (!v) { el.value = ''; return; }
+                if (v.length > 8) v = v.slice(0,8);
+                const parts = [];
+                if (v.length >= 2) parts.push(v.slice(0,2)); else parts.push(v);
+                if (v.length >= 4) parts.push(v.slice(2,4)); else if (v.length > 2) parts.push(v.slice(2));
+                if (v.length > 4) parts.push(v.slice(4));
+                el.value = parts.join('/');
+            }
+
+            function isValidBRDate(str) {
+                if (!/^\d{2}\/\d{2}\/\d{4}$/.test(str)) return false;
+                const [d,m,y] = str.split('/').map(Number);
+                const dt = new Date(y, m-1, d);
+                return dt.getFullYear() === y && dt.getMonth() === m-1 && dt.getDate() === d;
+            }
+
+            function parseBRDateToISO(str) {
+                if (!isValidBRDate(str)) return '';
+                const [d,m,y] = str.split('/');
+                return `${y}-${m}-${d}`; // YYYY-MM-DD
+            }
+
+            const dataInicioEl = document.getElementById('dataInicio');
+            if (dataInicioEl) {
+                dataInicioEl.addEventListener('input', () => maskDateBR(dataInicioEl));
+                dataInicioEl.addEventListener('blur', () => maskDateBR(dataInicioEl));
+            }
+
+            $('#btnCriarContrato').on('click', function() {
+                const $btn = $(this);
+                const payload = {
+                    titulo: $('#titulo').val()?.trim(),
+                    tipo: $('#tipo').val(),
+                    dataInicio: parseBRDateToISO($('#dataInicio').val()),
+                    duracaoMeses: $('#duracaoMeses').val(),
+                    valorMensal: $('#valorMensal').val(),
+                    valorContrato: $('#valorContrato').val(),
+                    prazoNotificacao: $('#prazoNotificacao').val(),
+                    renovacaoAutomatica: $('#renovacaoAutomatica').is(':checked'),
+                    descricao: $('#descricao').val()?.trim()
+                };
+
+                // Validações mínimas
+                setInvalid($('#titulo'), !payload.titulo);
+                const brDataStr = $('#dataInicio').val();
+                const dataValida = isValidBRDate(brDataStr);
+                setInvalid($('#dataInicio'), !dataValida);
+                if (!payload.titulo || !dataValida) {
+                    notify('error', 'Campos obrigatórios', 'Preencha Título e Data de Início (DD/MM/AAAA).');
+                    return;
+                }
+
+                // Desabilita botão durante envio
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+
+                $.ajax({
+                    url: '/juridico/contratos',
+                    method: 'POST',
+                    data: payload,
+                    success: function(res) {
+                        notify('success', 'Contrato criado', `Número: ${res.numeroContrato || res.id}`, 'low', { durationMs: 6000 });
+                        // Recarrega mantendo filtros atuais com leve atraso para ver o toast
+                        setTimeout(() => window.location.reload(), 1200);
+                    },
+                    error: function(xhr) {
+                        const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao criar contrato';
+                        notify('error', 'Falha na criação', msg, 'high', { sticky: true });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            });
+
+            // ======================== Ações de Contrato (PUT) ========================
+            function executarAcaoContrato(id, action, body) {
+                const url = `/juridico/contratos/${id}/${action}`;
+                const ajaxOptions = {
+                    url,
+                    method: 'PUT',
+                };
+                if (body) {
+                    ajaxOptions.contentType = 'application/json; charset=utf-8';
+                    ajaxOptions.data = JSON.stringify(body);
+                }
+                $.ajax(ajaxOptions).done(res => {
+                    notify('success', 'Ação executada', res.mensagem || 'Operação concluída');
+                    setTimeout(() => window.location.reload(), 1000);
+                }).fail(xhr => {
+                    const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha na operação';
+                    notify('error', 'Erro', msg, 'high', { sticky: true });
+                });
+            }
+
+            $('.table').on('click', '.btn-acao', function() {
+                const id = $(this).attr('data-id');
+                const action = $(this).attr('data-action');
+                if (!id || !action) return;
+
+                switch(action) {
+                    case 'enviar-analise':
+                        executarAcaoContrato(id, 'enviar-analise');
+                        break;
+                    case 'aprovar': {
+                        const observacoes = prompt('Observações da aprovação (opcional):', '') || '';
+                        executarAcaoContrato(id, 'aprovar', { observacoes });
+                        break;
+                    }
+                    case 'assinar': {
+                        let dt = prompt('Data de assinatura (DD/MM/AAAA):', '');
+                        if (!dt || !isValidBRDate(dt)) {
+                            notify('error', 'Data inválida', 'Informe a data no formato DD/MM/AAAA.');
+                            return;
+                        }
+                        const dataAssinatura = parseBRDateToISO(dt);
+                        executarAcaoContrato(id, 'assinar', { dataAssinatura });
+                        break;
+                    }
+                    case 'ativar':
+                        executarAcaoContrato(id, 'ativar');
+                        break;
+                    case 'suspender': {
+                        const motivo = prompt('Motivo da suspensão:', '');
+                        if (!motivo) { notify('error', 'Campo obrigatório', 'Informe o motivo.'); return; }
+                        executarAcaoContrato(id, 'suspender', { motivo });
+                        break;
+                    }
+                    case 'reativar':
+                        executarAcaoContrato(id, 'reativar');
+                        break;
+                    case 'rescindir': {
+                        const motivo = prompt('Motivo da rescisão:', '') || '';
+                        let dt = prompt('Data da rescisão (DD/MM/AAAA):', '');
+                        if (!dt || !isValidBRDate(dt)) {
+                            notify('error', 'Data inválida', 'Informe a data no formato DD/MM/AAAA.');
+                            return;
+                        }
+                        const dataRescisao = parseBRDateToISO(dt);
+                        executarAcaoContrato(id, 'rescindir', { motivo, dataRescisao });
+                        break;
+                    }
+                    case 'renovar': {
+                        const mesesStr = prompt('Nova duração (meses):', '12');
+                        const novasDuracaoMeses = mesesStr ? parseInt(mesesStr, 10) : null;
+                        if (!novasDuracaoMeses || novasDuracaoMeses <= 0) {
+                            notify('error', 'Valor inválido', 'Informe a duração em meses.');
+                            return;
+                        }
+                        let valorStr = prompt('Novo valor (R$):', '');
+                        if (!valorStr) valorStr = '0';
+                        executarAcaoContrato(id, 'renovar', { novasDuracaoMeses, novoValor: valorStr });
+                        break;
+                    }
+                    default:
+                        notify('error', 'Ação desconhecida', 'Não foi possível executar a ação.');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

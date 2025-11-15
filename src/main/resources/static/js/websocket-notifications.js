@@ -176,12 +176,20 @@ function showToast(notification) {
         });
     });
 
-    // Auto fechar após 5s
-    setTimeout(() => {
-        $toast.removeClass("show").fadeOut(300, function () {
-            $(this).remove();
-        });
-    }, 5000);
+    // Auto fechar após duração configurável
+    const baseDurations = { low: 4000, medium: 5000, high: 7000 };
+    const prio = (notification.priority || 'medium').toLowerCase();
+    const defaultDuration = baseDurations[prio] || 5000;
+    const durationMs = typeof notification.durationMs === 'number' ? notification.durationMs : defaultDuration;
+    const sticky = !!notification.sticky;
+
+    if (!sticky && durationMs > 0) {
+        setTimeout(() => {
+            $toast.removeClass("show").fadeOut(300, function () {
+                $(this).remove();
+            });
+        }, durationMs);
+    }
 }
 
 // Função de som nativo

@@ -22,7 +22,7 @@
         <java.version>17</java.version>
     </properties>
 
-    <dependencies>
+  <dependencies>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -133,6 +133,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Spring Security test support for @WithMockUser and MockMvc integration -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
@@ -158,7 +165,7 @@
 
     
 
-    </dependencies>
+  </dependencies>
 
     <build>
         <plugins>

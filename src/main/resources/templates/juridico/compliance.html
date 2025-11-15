@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Compliance - ERP Corporativo</title>
-    
+    <title th:text="${pageTitle} + ' - ERP Corporativo'">Compliance - ERP Corporativo</title>
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -18,16 +20,299 @@
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
             <section class="content-area">
-                <div class="container-fluid text-center py-5">
-                    <h1 class="display-6 text-muted"><i class="fas fa-shield-alt"></i> Compliance</h1>
-                    <p class="text-muted">Bem-vindo à página de Compliance.</p>
+                <div class="container-fluid py-4">
+                    <div class="mb-4">
+                        <h1 class="display-6 text-muted"><i class="fas fa-shield-alt"></i> Compliance</h1>
+                        <p class="text-muted">Status geral, normas, não conformidades e auditorias.</p>
+                    </div>
+
+                    <!-- Status de Compliance -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card p-3 shadow-sm">
+                                <div class="text-muted">Conformidade Geral</div>
+                                <div class="h4"><span th:text="${statusCompliance.conformidade}">0</span>%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card p-3 shadow-sm">
+                                <div class="text-muted">Não Conformidades</div>
+                                <div class="h4" th:text="${statusCompliance.naoConformidades}">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card p-3 shadow-sm">
+                                <div class="text-muted">Auditorias Pendentes</div>
+                                <div class="h4" th:text="${statusCompliance.auditoriasPendentes}">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card p-3 shadow-sm">
+                                <div class="text-muted">Última Auditoria</div>
+                                <div class="h6" th:text="${statusCompliance.ultimaAuditoria}">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Normas Vigentes -->
+                        <div class="col-md-6">
+                            <div class="card p-3 shadow-sm">
+                                <h5 class="mb-3"><i class="fas fa-book"></i> Normas Vigentes</h5>
+                                <div id="normasList" class="list-group list-group-flush">
+                                    <div class="list-group-item text-muted">Carregando normas...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Não Conformidades -->
+                        <div class="col-md-6">
+                            <div class="card p-3 shadow-sm">
+                                <h5 class="mb-3"><i class="fas fa-exclamation-circle text-warning"></i> Não Conformidades</h5>
+                                <div id="ncList" class="list-group list-group-flush">
+                                    <div class="list-group-item text-muted">Carregando não conformidades...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <!-- Auditorias -->
+                        <div class="col-md-8">
+                            <div class="card p-3 shadow-sm">
+                                <h5 class="mb-3"><i class="fas fa-search"></i> Auditorias</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Escopo</th>
+                                                <th>Início</th>
+                                                <th>Auditor</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="auditoriasTbody">
+                                            <tr>
+                                                <td colspan="5" class="text-muted">Carregando auditorias...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nova Auditoria -->
+                        <div class="col-md-4">
+                            <div class="card p-3 shadow-sm">
+                                <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Nova Auditoria</h5>
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Tipo</label>
+                                        <input id="audTipo" class="form-control" type="text" placeholder="Ex.: Compliance LGPD" required />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Escopo</label>
+                                        <input id="audEscopo" class="form-control" type="text" placeholder="Ex.: Dados pessoais, contratos" required />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Data Início</label>
+                                        <input id="audDataInicio" class="form-control" type="date" required />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Auditor</label>
+                                        <input id="audAuditor" class="form-control" type="text" placeholder="Nome do responsável" required />
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <button id="btnCriarAuditoria" class="btn btn-primary w-100"><i class="fas fa-save"></i> Criar Auditoria</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
+
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function() {
+            function notify(type, title, message, priority = 'medium', options = {}) {
+                if (typeof showToast === 'function') {
+                    showToast({ type, title, message, priority, ...options });
+                } else {
+                    const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+                    alert(`${icon} ${title}: ${message}`);
+                }
+            }
+
+            // Carregar Normas (detalhes via modal)
+            function carregarNormas() {
+                $('#normasList').html('<div class="list-group-item"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>');
+                $.get('/juridico/api/compliance/normas')
+                    .done(items => {
+                        const $list = $('#normasList');
+                        $list.empty();
+                        if (!items || items.length === 0) {
+                            $list.append('<div class="list-group-item text-muted">Nenhuma norma cadastrada.</div>');
+                            return;
+                        }
+                        items.forEach(n => {
+                            const html = `
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">${n.nome || 'Norma'}</div>
+                                        <small class="text-muted">Código: ${n.codigo || '—'}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-success">${n.status || 'VIGENTE'}</span>
+                                        <div class="small text-muted">${n.ultimaRevisao || '—'}</div>
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" data-id="${n.id}" data-action="ver-norma"><i class="fas fa-eye"></i> Detalhes</button>
+                                    </div>
+                                </div>`;
+                            $list.append(html);
+                        });
+                    })
+                    .fail(() => {
+                        $('#normasList').html('<div class="list-group-item text-muted">Erro ao carregar normas.</div>');
+                    });
+            }
+
+            $(document).on('click', 'button[data-action="ver-norma"]', function() {
+                const id = $(this).data('id');
+                $.get(`/juridico/api/compliance/normas/${id}`)
+                    .done(n => {
+                        const detalhes = `Código: ${n.codigo || '—'}\nStatus: ${n.status || '—'}\nÚltima revisão: ${n.ultimaRevisao || '—'}\n\n${n.descricao || ''}`;
+                        notify('info', n.nome || 'Norma', detalhes, 'low', { durationMs: 8000 });
+                    })
+                    .fail(() => notify('error', 'Falha', 'Não foi possível carregar detalhes da norma.', 'high'));
+            });
+
+            // Não Conformidades com ações de status
+            function renderNc(items) {
+                const $list = $('#ncList');
+                $list.empty();
+                if (!items || items.length === 0) {
+                    $list.append('<div class="list-group-item text-muted">Nenhuma não conformidade.</div>');
+                    return;
+                }
+                items.forEach(nc => {
+                    const btnLabel = nc.resolvida ? 'Reabrir' : 'Marcar Resolvida';
+                    const btnClass = nc.resolvida ? 'btn-outline-secondary' : 'btn-outline-success';
+                    $list.append(`
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">${nc.titulo || nc.descricao || 'Não conformidade'}</div>
+                                    <small class="text-muted">Código: ${nc.codigo || '—'} • Severidade: ${nc.severidade || '—'}</small>
+                                </div>
+                                <div>
+                                    <span class="badge ${nc.resolvida ? 'bg-success' : 'bg-warning text-dark'}">${nc.resolvida ? 'Resolvida' : 'Aberta'}</span>
+                                    <button class="btn btn-sm ${btnClass} ms-2" data-id="${nc.id}" data-action="toggle-nc">${btnLabel}</button>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            function carregarNc() {
+                $('#ncList').html('<div class="list-group-item"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>');
+                $.get('/juridico/api/compliance/nao-conformidades')
+                    .done(items => renderNc(items))
+                    .fail(() => $('#ncList').html('<div class="list-group-item text-muted">Erro ao carregar não conformidades.</div>'));
+            }
+
+            $(document).on('click', 'button[data-action="toggle-nc"]', function() {
+                const id = $(this).data('id');
+                $.ajax({ url: `/juridico/api/compliance/nao-conformidades/${id}/status`, method: 'PUT' })
+                    .done(res => { notify('success', 'Atualizado', `Status alterado: ${res.resolvida ? 'Resolvida' : 'Aberta'}`); carregarNc(); })
+                    .fail(() => notify('error', 'Falha', 'Não foi possível atualizar status.', 'high'));
+            });
+
+            carregarNormas();
+            carregarNc();
+
+            // Auditorias: listar e detalhes
+            function carregarAuditorias() {
+                const $tbody = $('#auditoriasTbody');
+                $tbody.html('<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>');
+                $.get('/juridico/api/compliance/auditorias')
+                    .done(items => {
+                        $tbody.empty();
+                        if (!items || items.length === 0) {
+                            $tbody.append('<tr><td colspan="5" class="text-muted">Nenhuma auditoria registrada.</td></tr>');
+                            return;
+                        }
+                        items.forEach(a => {
+                            const tr = `
+                                <tr>
+                                    <td>${a.tipo || '—'}</td>
+                                    <td>${a.escopo || '—'}</td>
+                                    <td>${a.dataInicio || '—'}</td>
+                                    <td>${a.auditor || '—'}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary" data-action="ver-auditoria" data-id="${a.id}"><i class="fas fa-eye"></i> Detalhes</button>
+                                    </td>
+                                </tr>`;
+                            $tbody.append(tr);
+                        });
+                    })
+                    .fail(() => $tbody.html('<tr><td colspan="5" class="text-muted">Erro ao carregar auditorias.</td></tr>'));
+            }
+
+            $(document).on('click', 'button[data-action="ver-auditoria"]', function() {
+                const id = $(this).data('id');
+                $.get(`/juridico/api/compliance/auditorias/${id}`)
+                    .done(a => {
+                        const detalhes = `Tipo: ${a.tipo || '—'}\nEscopo: ${a.escopo || '—'}\nInício: ${a.dataInicio || '—'}\nAuditor: ${a.auditor || '—'}\nStatus: ${a.status || '—'}\nResultado: ${a.resultado || '—'}\n\n${a.achados || ''}`;
+                        notify('info', 'Auditoria', detalhes, 'low', { durationMs: 9000 });
+                    })
+                    .fail(() => notify('error', 'Falha', 'Não foi possível carregar detalhes da auditoria.', 'high'));
+            });
+
+            carregarAuditorias();
+
+            $('#btnCriarAuditoria').on('click', function() {
+                const $btn = $(this);
+                const payload = {
+                    tipo: $('#audTipo').val()?.trim(),
+                    escopo: $('#audEscopo').val()?.trim(),
+                    dataInicio: $('#audDataInicio').val(),
+                    auditor: $('#audAuditor').val()?.trim()
+                };
+
+                if (!payload.tipo || !payload.escopo || !payload.dataInicio || !payload.auditor) {
+                    notify('error', 'Campos obrigatórios', 'Preencha todos os campos da auditoria.');
+                    return;
+                }
+
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+
+                $.ajax({
+                    url: '/juridico/compliance/auditoria',
+                    method: 'POST',
+                    data: payload,
+                    success: function(res) {
+                        notify('success', 'Auditoria criada', `${res.tipo} planejada`, 'low', { durationMs: 6000 });
+                        setTimeout(() => window.location.reload(), 1200);
+                    },
+                    error: function(xhr) {
+                        const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao criar auditoria';
+                        notify('error', 'Falha na criação', msg, 'high', { sticky: true });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

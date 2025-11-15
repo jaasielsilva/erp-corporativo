@@ -2,7 +2,6 @@ package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.Caixa;
 import com.jaasielsilva.portalceo.model.Usuario;
-import com.jaasielsilva.portalceo.model.Venda;
 import com.jaasielsilva.portalceo.repository.CaixaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -73,18 +72,7 @@ public class CaixaService {
         return caixaRepository.existsByStatus("ABERTO");
     }
 
-    // Registrar venda no caixa
-    public void registrarVenda(Venda venda) {
-        Optional<Caixa> caixaOpt = buscarCaixaAberto();
-        if (caixaOpt.isPresent()) {
-            Caixa caixa = caixaOpt.get();
-            caixa.adicionarVenda(venda.getTotal(), venda.getFormaPagamento());
-            caixaRepository.save(caixa);
-            
-            // Associar venda ao caixa
-            venda.setCaixa(caixa);
-        }
-    }
+    
 
     // Buscar por ID
     public Optional<Caixa> buscarPorId(Long id) {

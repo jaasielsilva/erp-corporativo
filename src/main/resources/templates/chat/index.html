@@ -1,245 +1,60 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Interno - ERP Corporativo</title>
-
-    <!-- CSS padrão -->
+    <title th:text="${pageTitle} + ' - ERP Corporativo'">Chat Interno - ERP Corporativo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Custom CSS -->
-    <link href="/css/chat.css" rel="stylesheet">
 </head>
-
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Topbar -->
-            <header th:replace="~{components/topbar :: topbar}"></header>
-
-            <!-- Conteúdo da página Chat -->
-            <section class="content-area">
-                <div class="chat-container">
-
-
-                    <!-- Layout Principal -->
-                    <div class="chat-layout">
-
-                        <!-- Sidebar de Conversas (30%) -->
-                        <div class="conversations-sidebar">
-                            <!-- Barra de busca -->
-                            <div class="search-container">
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card p-3">
+                            <div class="d-flex mb-2">
+                                <input id="roomSearch" type="text" class="form-control" placeholder="Buscar salas">
+                                <button id="newDirect" class="btn btn-primary ms-2"><i class="fas fa-user-plus"></i></button>
+                                <button id="newGroup" class="btn btn-outline-primary ms-2"><i class="fas fa-users"></i></button>
+                            </div>
+                            <div id="roomsList" class="list-group"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card p-3" style="min-height:500px; display:flex; flex-direction:column;">
+                            <div id="roomHeader" class="mb-2 fw-semibold">Selecione uma sala</div>
+                            <div id="messagesArea" style="flex:1; overflow:auto; border:1px solid #eee; border-radius:8px; padding:10px;"></div>
+                            <div class="mt-2">
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-search"></i>
-                                    </span>
-                                    <input type="text" class="form-control" placeholder="Buscar conversas..."
-                                        id="searchInput">
-                                    <div class="header-actions">
-                                        <span class="connection-status" id="connectionStatus">Conectando...</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Botão Nova Conversa -->
-                            <div class="new-conversation-container">
-                                <button class="btn btn-primary w-100" id="newConversationBtn">
-                                    <i class="fas fa-plus me-2"></i>Nova Conversa
-                                </button>
-                                <div class="mt-2">
-                                    <button class="btn btn-outline-primary w-100" id="newGroupConversationBtn">
-                                        <i class="fas fa-users me-2"></i>Novo Grupo
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Lista de Conversas -->
-                            <div class="conversations-list" id="conversationsList">
-                                <!-- Conversas serão carregadas via JS -->
-                            </div>
-
-                        </div>
-
-                        <!-- Área de Chat (70%) -->
-                        <div class="chat-area">
-                            <!-- Estado Inicial - Nenhuma conversa selecionada -->
-                            <div class="empty-state" id="emptyState">
-                                <div class="empty-state-content">
-                                    <i class="fas fa-comments empty-icon"></i>
-                                    <h3>Selecione uma conversa</h3>
-                                    <p>Escolha uma conversa existente ou inicie uma nova para começar a conversar.</p>
-                                </div>
-                            </div>
-
-                            <!-- Área de Conversa Ativa -->
-                            <div class="active-chat" id="activeChat" style="display: none;">
-                                <!-- Cabeçalho da Conversa -->
-                                <div class="chat-header-area">
-                                    <div class="d-flex align-items-center">
-                                        <div class="chat-contact-avatar">
-                                            
-
-                                            <span class="status-indicator status-online" id="chatContactStatus"></span>
-                                        </div>
-                                        <div class="chat-contact-info">
-                                            <h5 class="chat-contact-name" id="chatContactName">Maria Silva</h5>
-                                            <span class="chat-contact-status" id="chatContactStatusText">2 online</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Área de Mensagens -->
-                                <div class="messages-area" id="messagesArea">
-                                    <!-- Mensagens serão carregadas via JS -->
-                                </div>
-
-
-                                <!-- Indicador de Digitação -->
-                                <div class="typing-indicator" id="typingIndicator" style="display: none;">
-                                    <div class="typing-content">
-                                        <div class="typing-avatar">
-                                            
-                                        </div>
-                                        <div class="typing-text">
-                                            <span id="typingUserName"></span> está digitando
-                                            <div class="typing-dots">
-                                                <span></span>
-                                                <span></span>
-                                                <span></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                               
-                                <!-- Área de Entrada de Mensagem -->
-                                <div class="message-input-area">
-                                    <div class="input-container">
-                                        <button class="btn btn-outline-secondary attachment-btn" id="attachmentBtn">
-                                            <i class="fas fa-paperclip"></i>
-                                        </button>
-                                        <button class="btn btn-outline-secondary emoji-btn" id="emojiBtn">
-                                            <i class="fas fa-smile"></i>
-                                        </button>
-                                        <input type="file" id="attachmentInput" style="display:none" />
-                                        <div class="message-input-wrapper">
-                                            <textarea class="form-control message-input" id="messageInput"
-                                                placeholder="Digite sua mensagem..." rows="1"></textarea>
-                                            <div class="input-hint">
-                                                Enter para enviar, Shift+Enter para quebrar linha
-                                            </div>
-                                        </div>
-                                        <button class="btn btn-primary send-btn" id="sendButton">
-                                            <i class="fas fa-paper-plane"></i>
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-outline-secondary" id="attachBtn"><i class="fas fa-paperclip"></i></button>
+                                    <input type="file" id="attachInput" style="display:none">
+                                    <input id="messageInput" type="text" class="form-control" placeholder="Digite sua mensagem">
+                                    <button id="sendBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-    </div>
-    </section>
-
-    <!-- Footer -->
-    <footer th:replace="~{components/footer :: footer}"></footer>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
-    </div>
-
-    <!-- Modal para Nova Conversa -->
-    <div class="modal fade" id="newConversationModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Nova Conversa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="userSearch" class="form-label">Buscar usuário:</label>
-                        <input type="text" class="form-control" id="userSearch"
-                            placeholder="Digite o nome do usuário...">
-                    </div>
-                    <div class="users-list" id="usersList">
-                        <!-- Lista de usuários será carregada aqui -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Nova Conversa em Grupo -->
-    <div class="modal fade" id="newGroupConversationModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-users me-2"></i>Novo Grupo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="groupTitleInput" class="form-label">Título do grupo:</label>
-                        <input type="text" class="form-control" id="groupTitleInput" placeholder="Ex.: Projeto X" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="groupUserSearch" class="form-label">Adicionar participantes:</label>
-                        <input type="text" class="form-control" id="groupUserSearch" placeholder="Buscar usuários..." />
-                    </div>
-                    <div class="users-list" id="groupUsersList">
-                        <!-- Usuários para seleção do grupo -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="createGroupConversationBtn">
-                        <i class="fas fa-check me-2"></i>Criar Grupo
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Scripts padrão -->
-    <script src="/js/sidebar.js" defer></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- SockJS -->
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-
-    <!-- STOMP -->
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
-
-    <!-- Chat JavaScript -->
-    <!-- Contexto do usuário para o chat -->
-    <script th:inline="javascript">
-        window.CHAT_CONTEXT = {
-            usuarioId: [[${usuarioId}]],
-            usuarioNome: '[[${usuarioNome}]]'
-        };
-    </script>
-    <!-- Cache busting para garantir carregamento da versão atual de chat.js -->
-    <script src="/js/chat.js?v=2"></script>
+</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+<script th:inline="javascript">window.CHAT_CONTEXT={usuarioId:[[${usuarioId}]],usuarioNome:'[[${usuarioNome}]]'};</script>
+<script src="/js/chat-new.js"></script>
 </body>
-
 </html>

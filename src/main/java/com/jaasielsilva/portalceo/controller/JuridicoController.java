@@ -4,14 +4,17 @@ import com.jaasielsilva.portalceo.model.ContratoLegal;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ContratoLegalService;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
+import com.jaasielsilva.portalceo.repository.juridico.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +31,16 @@ public class JuridicoController {
 
     private final ContratoLegalService contratoLegalService;
     private final UsuarioRepository usuarioRepository;
+    private final com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService;
+    // Repositórios jurídicos (Processos, Compliance, Documentos)
+    private final ProcessoJuridicoRepository processoJuridicoRepository;
+    private final AudienciaRepository audienciaRepository;
+    private final PrazoJuridicoRepository prazoJuridicoRepository;
+    private final AndamentoProcessoRepository andamentoProcessoRepository;
+    private final NormaRepository normaRepository;
+    private final NaoConformidadeRepository naoConformidadeRepository;
+    private final AuditoriaComplianceRepository auditoriaComplianceRepository;
+    private final DocumentoJuridicoRepository documentoJuridicoRepository;
 
     // Página principal do Jurídico
     @GetMapping
@@ -40,8 +53,7 @@ public class JuridicoController {
         long ativos = estatisticasStatus.getOrDefault(ContratoLegal.StatusContrato.ATIVO, 0L);
         model.addAttribute("contratosAtivos", ativos);
 
-        // Ainda não modelado: processos e compliance reais
-        model.addAttribute("processosAndamento", getProcessosAndamento());
+        model.addAttribute("processosAndamento", processoJuridicoService.contarProcessosEmAndamento());
         
         // Prazos/vencimentos a partir de contratos com vencimento próximo (próximos 30 dias)
         List<ContratoLegal> proximosVencimentos = contratoLegalService.buscarContratosVencendoEm(30);
@@ -67,10 +79,10 @@ public class JuridicoController {
         model.addAttribute("contratosVencimento", contratosVencimentoVm);
         
         // Processos com prazos urgentes
-        model.addAttribute("processosUrgentes", getProcessosUrgentes());
+        model.addAttribute("processosUrgentes", processoJuridicoService.obterProcessosUrgentes(7));
         
         // Últimas atividades
-        model.addAttribute("ultimasAtividades", getUltimasAtividades());
+        model.addAttribute("ultimasAtividades", processoJuridicoService.obterUltimasAtividades(10));
         
         return "juridico/index";
     }
@@ -84,12 +96,24 @@ public class JuridicoController {
             @RequestParam(value = "numero", required = false) String numero,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "dataInicio") String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
             Model model) {
         model.addAttribute("pageTitle", "Gestão de Contratos");
         model.addAttribute("moduleCSS", "juridico");
 
         try {
-            Pageable pageable = PageRequest.of(page, size);
+            Set<String> camposPermitidos = Set.of("dataInicio", "dataFim", "dataVencimento", "valorMensal", "valorContrato");
+            if (!camposPermitidos.contains(sortBy)) {
+                sortBy = "dataInicio";
+            }
+            Sort.Direction direction;
+            try {
+                direction = Sort.Direction.fromString(sortDir);
+            } catch (IllegalArgumentException e) {
+                direction = Sort.Direction.ASC;
+            }
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
             Page<ContratoLegal> contratosPage = contratoLegalService.buscarContratosComFiltros(numero, status, tipo, pageable);
 
             model.addAttribute("listaContratos", contratosPage.getContent());
@@ -97,6 +121,8 @@ public class JuridicoController {
             model.addAttribute("size", size);
             model.addAttribute("totalElements", contratosPage.getTotalElements());
             model.addAttribute("totalPages", contratosPage.getTotalPages());
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortDir", direction.isAscending() ? "asc" : "desc");
 
             model.addAttribute("statusContrato", ContratoLegal.StatusContrato.values());
             model.addAttribute("tiposContrato", ContratoLegal.TipoContrato.values());
@@ -121,6 +147,14 @@ public class JuridicoController {
         }
 
         return "juridico/contratos";
+    }
+
+    @GetMapping("/contratos/{id}")
+    public String contratoDetalhe(@PathVariable Long id, Model model) {
+        model.addAttribute("pageTitle", "Detalhes do Contrato");
+        model.addAttribute("moduleCSS", "juridico");
+        model.addAttribute("contratoId", id);
+        return "juridico/contrato-detalhe";
     }
     
     @PostMapping("/contratos")
@@ -199,16 +233,15 @@ public class JuridicoController {
         model.addAttribute("pageTitle", "Processos Jurídicos");
         model.addAttribute("moduleCSS", "juridico");
         
-        // Processos por status
-        model.addAttribute("processosAtivos", getListaProcessos("ATIVO"));
-        model.addAttribute("processosArquivados", getListaProcessos("ARQUIVADO"));
-        model.addAttribute("processosAndamento", getListaProcessos("EM_ANDAMENTO"));
+        model.addAttribute("processosAndamento", processoJuridicoService.listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO));
+        model.addAttribute("processosSuspensos", processoJuridicoService.listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.SUSPENSO));
+        model.addAttribute("processosEncerrados", processoJuridicoService.listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO));
         
         // Próximas audiências
-        model.addAttribute("proximasAudiencias", getProximasAudiencias());
+        model.addAttribute("proximasAudiencias", processoJuridicoService.obterProximasAudiencias(30));
         
         // Prazos críticos
-        model.addAttribute("prazosCriticos", getPrazosCriticos());
+        model.addAttribute("prazosCriticos", processoJuridicoService.obterPrazosCriticos(7));
         
         return "juridico/processos";
     }
@@ -328,7 +361,7 @@ public class JuridicoController {
         Map<ContratoLegal.StatusContrato, Long> estatisticasStatus = contratoLegalService.getEstatisticasPorStatus();
         long ativos = estatisticasStatus.getOrDefault(ContratoLegal.StatusContrato.ATIVO, 0L);
         estatisticas.put("contratosAtivos", ativos);
-        estatisticas.put("processosAndamento", getProcessosAndamento());
+        estatisticas.put("processosAndamento", processoJuridicoService.contarProcessosEmAndamento());
         List<ContratoLegal> proximos = contratoLegalService.buscarContratosVencendoEm(30);
         estatisticas.put("prazosVencendo", proximos != null ? proximos.size() : 0);
         estatisticas.put("alertasCompliance", getAlertasCompliance());
@@ -344,18 +377,589 @@ public class JuridicoController {
             @RequestParam(value = "tipo", required = false) ContratoLegal.TipoContrato tipo,
             @RequestParam(value = "numero", required = false) String numero,
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortBy", defaultValue = "dataInicio") String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir) {
+        // Campos permitidos para ordenação
+        Set<String> camposPermitidos = Set.of("dataInicio", "dataFim", "dataVencimento", "valorMensal", "valorContrato");
+        if (!camposPermitidos.contains(sortBy)) {
+            sortBy = "dataInicio";
+        }
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDir);
+        } catch (IllegalArgumentException e) {
+            direction = Sort.Direction.ASC;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         Page<ContratoLegal> contratosPage = contratoLegalService.buscarContratosComFiltros(numero, status, tipo, pageable);
+        List<com.jaasielsilva.portalceo.dto.ContratoLegalDTO> content = com.jaasielsilva.portalceo.mapper.ContratoLegalMapper.toDtoList(contratosPage.getContent());
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("content", contratosPage.getContent());
+        payload.put("content", content);
         payload.put("totalElements", contratosPage.getTotalElements());
         payload.put("page", contratosPage.getNumber());
         payload.put("size", contratosPage.getSize());
         payload.put("totalPages", contratosPage.getTotalPages());
+        payload.put("sortBy", sortBy);
+        payload.put("sortDir", direction.isAscending() ? "asc" : "desc");
 
         return ResponseEntity.ok(payload);
+    }
+
+    @GetMapping("/api/contratos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> obterContratoPorId(@PathVariable Long id) {
+        try {
+            ContratoLegal contrato = contratoLegalService.buscarPorId(id);
+            return ResponseEntity.ok(
+                    com.jaasielsilva.portalceo.mapper.ContratoLegalMapper.toDto(contrato)
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("erro", "Contrato não encontrado"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao obter contrato", "detalhes", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/contratos")
+    @ResponseBody
+    public ResponseEntity<?> criarContratoApi(@RequestBody Map<String, Object> body,
+                                              @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
+                    .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
+                    .orElse(null);
+
+            ContratoLegal contrato = new ContratoLegal();
+            contrato.setTitulo(String.valueOf(body.getOrDefault("titulo", "")));
+            Object tipoObj = body.get("tipo");
+            if (tipoObj != null) {
+                contrato.setTipo(ContratoLegal.TipoContrato.valueOf(String.valueOf(tipoObj)));
+            }
+            contrato.setDescricao(String.valueOf(body.getOrDefault("descricao", "")));
+            Object dataInicioObj = body.get("dataInicio");
+            if (dataInicioObj != null) {
+                contrato.setDataInicio(LocalDate.parse(String.valueOf(dataInicioObj)));
+            }
+            Object duracaoObj = body.get("duracaoMeses");
+            if (duracaoObj != null) {
+                contrato.setDuracaoMeses(Integer.valueOf(String.valueOf(duracaoObj)));
+            }
+            Object renovacaoObj = body.get("renovacaoAutomatica");
+            if (renovacaoObj != null) {
+                contrato.setRenovacaoAutomatica(Boolean.parseBoolean(String.valueOf(renovacaoObj)));
+            }
+            Object prazoNotifObj = body.get("prazoNotificacao");
+            if (prazoNotifObj != null) {
+                contrato.setPrazoNotificacao(Integer.valueOf(String.valueOf(prazoNotifObj)));
+            }
+            Object numeroContratoObj = body.get("numeroContrato");
+            if (numeroContratoObj != null) {
+                String num = String.valueOf(numeroContratoObj);
+                if (!num.isBlank()) contrato.setNumeroContrato(num.trim());
+            }
+            Object valorMensalObj = body.get("valorMensal");
+            if (valorMensalObj != null) {
+                String vm = String.valueOf(valorMensalObj).replace(".", "").replace(",", ".");
+                contrato.setValorMensal(new BigDecimal(vm));
+            }
+            Object valorContratoObj = body.get("valorContrato");
+            if (valorContratoObj != null) {
+                String vc = String.valueOf(valorContratoObj).replace(".", "").replace(",", ".");
+                contrato.setValorContrato(new BigDecimal(vc));
+            }
+
+            contrato.setUsuarioCriacao(usuario);
+            contrato.setUsuarioResponsavel(usuario);
+
+            ContratoLegal salvo = contratoLegalService.salvarContrato(contrato);
+            return ResponseEntity.ok(Map.of(
+                    "id", salvo.getId(),
+                    "numeroContrato", salvo.getNumeroContrato(),
+                    "status", salvo.getStatus(),
+                    "titulo", salvo.getTitulo(),
+                    "tipo", salvo.getTipo()
+            ));
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Data inválida: use o formato YYYY-MM-DD"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao criar contrato", "detalhes", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/api/contratos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> atualizarContratoApi(@PathVariable Long id,
+                                                  @RequestBody Map<String, Object> body) {
+        try {
+            ContratoLegal contrato;
+            try {
+                contrato = contratoLegalService.buscarPorId(id);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(404).body(Map.of("erro", "Contrato não encontrado"));
+            }
+
+            if (body.containsKey("titulo")) contrato.setTitulo(String.valueOf(body.get("titulo")));
+            if (body.containsKey("descricao")) contrato.setDescricao(String.valueOf(body.get("descricao")));
+            if (body.containsKey("tipo") && body.get("tipo") != null)
+                contrato.setTipo(ContratoLegal.TipoContrato.valueOf(String.valueOf(body.get("tipo"))));
+            if (body.containsKey("dataInicio") && body.get("dataInicio") != null)
+                contrato.setDataInicio(LocalDate.parse(String.valueOf(body.get("dataInicio"))));
+            if (body.containsKey("duracaoMeses") && body.get("duracaoMeses") != null)
+                contrato.setDuracaoMeses(Integer.valueOf(String.valueOf(body.get("duracaoMeses"))));
+            if (body.containsKey("renovacaoAutomatica"))
+                contrato.setRenovacaoAutomatica(Boolean.parseBoolean(String.valueOf(body.get("renovacaoAutomatica"))));
+            if (body.containsKey("prazoNotificacao") && body.get("prazoNotificacao") != null)
+                contrato.setPrazoNotificacao(Integer.valueOf(String.valueOf(body.get("prazoNotificacao"))));
+            if (body.containsKey("numeroContrato") && body.get("numeroContrato") != null) {
+                String num = String.valueOf(body.get("numeroContrato"));
+                contrato.setNumeroContrato(num != null ? num.trim() : null);
+            }
+            if (body.containsKey("valorMensal") && body.get("valorMensal") != null) {
+                String vm = String.valueOf(body.get("valorMensal")).replace(".", "").replace(",", ".");
+                contrato.setValorMensal(new BigDecimal(vm));
+            }
+            if (body.containsKey("valorContrato") && body.get("valorContrato") != null) {
+                String vc = String.valueOf(body.get("valorContrato")).replace(".", "").replace(",", ".");
+                contrato.setValorContrato(new BigDecimal(vc));
+            }
+
+            ContratoLegal atualizado = contratoLegalService.salvarContrato(contrato);
+            return ResponseEntity.ok(Map.of(
+                    "id", atualizado.getId(),
+                    "numeroContrato", atualizado.getNumeroContrato(),
+                    "status", atualizado.getStatus()
+            ));
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Data inválida: use o formato YYYY-MM-DD"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao atualizar contrato", "detalhes", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/api/contratos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> excluirContratoApi(@PathVariable Long id) {
+        try {
+            contratoLegalService.deleteById(id);
+            return ResponseEntity.ok(Map.of("mensagem", "Contrato excluído com sucesso"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao excluir contrato", "detalhes", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/api/contratos/estatisticas")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> estatisticasContratosApi() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("porStatus", contratoLegalService.getEstatisticasPorStatus());
+        payload.put("porTipo", contratoLegalService.getEstatisticasPorTipo());
+        payload.put("valorTotalAtivos", contratoLegalService.calcularValorTotalAtivos());
+        payload.put("receitaMensalRecorrente", contratoLegalService.calcularReceitaMensalRecorrente());
+        List<ContratoLegal> proximos = contratoLegalService.buscarContratosVencendoEm(30);
+        payload.put("proximosVencimentos", proximos);
+        payload.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.ok(payload);
+    }
+
+    // =============== APIs de Processos ===============
+    @GetMapping("/api/processos")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarProcessosApi(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico> processos = processoJuridicoRepository.findAll(pageable);
+        List<Map<String, Object>> content = new ArrayList<>();
+        for (var p : processos.getContent()) {
+            if (status != null && !status.isBlank() && p.getStatus() != null && !p.getStatus().name().equalsIgnoreCase(status)) {
+                continue;
+            }
+            if (search != null && !search.isBlank()) {
+                String texto = ((p.getNumero() == null ? "" : p.getNumero()) + " " +
+                        (p.getParte() == null ? "" : p.getParte()) + " " +
+                        (p.getAssunto() == null ? "" : p.getAssunto())).toLowerCase();
+                if (!texto.contains(search.toLowerCase())) continue;
+            }
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("numero", p.getNumero());
+            item.put("tipo", p.getTipo());
+            item.put("tribunal", p.getTribunal());
+            item.put("parte", p.getParte());
+            item.put("assunto", p.getAssunto());
+            item.put("status", p.getStatus());
+            item.put("dataAbertura", p.getDataAbertura());
+            content.add(item);
+        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("content", content);
+        payload.put("totalElements", processos.getTotalElements());
+        payload.put("page", processos.getNumber());
+        payload.put("size", processos.getSize());
+        payload.put("totalPages", processos.getTotalPages());
+        return ResponseEntity.ok(payload);
+    }
+
+    @GetMapping("/api/processos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> obterProcessoPorId(@PathVariable Long id) {
+        return processoJuridicoRepository.findById(id)
+                .map(p -> ResponseEntity.ok(Map.of(
+                        "id", p.getId(),
+                        "numero", p.getNumero(),
+                        "tipo", p.getTipo(),
+                        "tribunal", p.getTribunal(),
+                        "parte", p.getParte(),
+                        "assunto", p.getAssunto(),
+                        "status", p.getStatus(),
+                        "dataAbertura", p.getDataAbertura()
+                )))
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado")));
+    }
+
+    @PostMapping("/api/processos")
+    @ResponseBody
+    public ResponseEntity<?> criarProcessoApi(@RequestBody Map<String, Object> body,
+                                              @AuthenticationPrincipal UserDetails userDetails) {
+        com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico p = new com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico();
+        p.setNumero(String.valueOf(body.getOrDefault("numero", "")));
+        p.setTipo(String.valueOf(body.getOrDefault("tipo", "JUDICIAL")));
+        p.setTribunal(String.valueOf(body.getOrDefault("tribunal", "")));
+        p.setParte(String.valueOf(body.getOrDefault("parte", "")));
+        p.setAssunto(String.valueOf(body.getOrDefault("assunto", "")));
+        Object statusObj = body.get("status");
+        p.setStatus(statusObj != null ? com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.valueOf(String.valueOf(statusObj)) : com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
+        p.setDataAbertura(java.time.LocalDate.now());
+        processoJuridicoRepository.save(p);
+        return ResponseEntity.ok(Map.of("id", p.getId()));
+    }
+
+    @PostMapping("/api/processos/{id}/audiencias")
+    @ResponseBody
+    public ResponseEntity<?> criarAudienciaApi(@PathVariable Long id,
+                                               @RequestBody Map<String, Object> body) {
+        com.jaasielsilva.portalceo.model.juridico.Audiencia a = new com.jaasielsilva.portalceo.model.juridico.Audiencia();
+        a.setProcessoId(id);
+        Object dh = body.get("dataHora");
+        if (dh != null && !String.valueOf(dh).isBlank()) {
+            a.setDataHora(java.time.LocalDateTime.parse(String.valueOf(dh)));
+        } else {
+            a.setDataHora(java.time.LocalDateTime.now().plusDays(7));
+        }
+        a.setTipo(String.valueOf(body.getOrDefault("tipo", "INSTRUCAO")));
+        a.setObservacoes(String.valueOf(body.getOrDefault("observacoes", "")));
+        audienciaRepository.save(a);
+        return ResponseEntity.ok(Map.of("id", a.getId()));
+    }
+
+    @GetMapping("/api/processos/{id}/audiencias")
+    @ResponseBody
+    public ResponseEntity<List<com.jaasielsilva.portalceo.model.juridico.Audiencia>> listarAudiencias(@PathVariable Long id) {
+        return ResponseEntity.ok(processoJuridicoService.listarAudienciasDoProcesso(id));
+    }
+
+    @PostMapping("/api/processos/{id}/prazos")
+    @ResponseBody
+    public ResponseEntity<?> criarPrazoApi(@PathVariable Long id,
+                                           @RequestBody Map<String, Object> body) {
+        com.jaasielsilva.portalceo.model.juridico.PrazoJuridico pz = new com.jaasielsilva.portalceo.model.juridico.PrazoJuridico();
+        pz.setProcessoId(id);
+        Object dl = body.get("dataLimite");
+        if (dl != null && !String.valueOf(dl).isBlank()) {
+            pz.setDataLimite(java.time.LocalDate.parse(String.valueOf(dl)));
+        } else {
+            pz.setDataLimite(java.time.LocalDate.now().plusDays(15));
+        }
+        pz.setDescricao(String.valueOf(body.getOrDefault("descricao", "Apresentar contestação")));
+        pz.setResponsabilidade(String.valueOf(body.getOrDefault("responsavel", "juridico")));
+        pz.setCumprido(false);
+        prazoJuridicoRepository.save(pz);
+        return ResponseEntity.ok(Map.of("id", pz.getId()));
+    }
+
+    @GetMapping("/api/processos/{id}/prazos")
+    @ResponseBody
+    public ResponseEntity<List<com.jaasielsilva.portalceo.model.juridico.PrazoJuridico>> listarPrazos(@PathVariable Long id) {
+        return ResponseEntity.ok(processoJuridicoService.listarPrazosDoProcesso(id));
+    }
+
+    @PutMapping("/api/prazos/{id}/concluir")
+    @ResponseBody
+    public ResponseEntity<?> concluirPrazo(@PathVariable Long id) {
+        try {
+            com.jaasielsilva.portalceo.model.juridico.PrazoJuridico p = processoJuridicoService.concluirPrazo(id);
+            return ResponseEntity.ok(Map.of("id", p.getId(), "cumprido", p.isCumprido()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/api/processos/{id}/status")
+    @ResponseBody
+    public ResponseEntity<?> atualizarStatusProcesso(@PathVariable Long id,
+                                                     @RequestParam("status") String status) {
+        try {
+            com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso st = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.valueOf(status);
+            com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico p = processoJuridicoService.atualizarStatus(id, st);
+            return ResponseEntity.ok(Map.of("id", p.getId(), "status", p.getStatus()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Status inválido"));
+        }
+    }
+
+    // =============== APIs de Compliance ===============
+    @GetMapping("/api/compliance/status")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> statusComplianceApi() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("conformidade", 100);
+        status.put("naoConformidades", naoConformidadeRepository.count());
+        status.put("auditoriasPendentes", auditoriaComplianceRepository.count());
+        status.put("ultimaAuditoria", java.time.LocalDate.now());
+        return ResponseEntity.ok(status);
+    }
+
+    // Removido endpoint duplicado de normas; ver versão consolidada abaixo
+
+    @GetMapping("/api/compliance/nao-conformidades")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> naoConformidadesApi() {
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (var nc : naoConformidadeRepository.findAll()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", nc.getId());
+            m.put("codigo", nc.getCodigo());
+            m.put("titulo", nc.getTitulo());
+            m.put("descricao", nc.getDescricao());
+            m.put("severidade", nc.getSeveridade());
+            m.put("dataDeteccao", nc.getDataDeteccao());
+            m.put("resolvida", nc.isResolvida());
+            items.add(m);
+        }
+        return ResponseEntity.ok(items);
+    }
+
+    @PutMapping("/api/compliance/nao-conformidades/{id}/status")
+    @ResponseBody
+    public ResponseEntity<?> atualizarStatusNaoConformidade(@PathVariable Long id,
+                                                            @RequestParam(value = "resolvida", required = false) Boolean resolvida) {
+        return naoConformidadeRepository.findById(id)
+                .map(nc -> {
+                    if (resolvida == null) {
+                        nc.setResolvida(!nc.isResolvida());
+                    } else {
+                        nc.setResolvida(resolvida);
+                    }
+                    naoConformidadeRepository.save(nc);
+                    return ResponseEntity.ok(Map.of("id", nc.getId(), "resolvida", nc.isResolvida()));
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Não conformidade não encontrada")));
+    }
+
+    @GetMapping("/api/compliance/normas")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> normasApi() {
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (var n : normaRepository.findAll()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", n.getId());
+            m.put("codigo", n.getCodigo());
+            m.put("nome", n.getTitulo());
+            // Deriva status com base em 'vigente'
+            m.put("status", n.isVigente() ? "VIGENTE" : "OBSOLETA");
+            // Campo não existente em Norma; manter nulo para compatibilidade de template
+            m.put("ultimaRevisao", null);
+            items.add(m);
+        }
+        return ResponseEntity.ok(items);
+    }
+
+    @GetMapping("/api/compliance/normas/{id}")
+    @ResponseBody
+    public ResponseEntity<?> obterNormaPorId(@PathVariable Long id) {
+        return normaRepository.findById(id)
+                .map(n -> ResponseEntity.ok(Map.of(
+                        "id", n.getId(),
+                        "codigo", n.getCodigo(),
+                        "nome", n.getTitulo(),
+                        "descricao", n.getDescricao(),
+                        // Deriva status com base em 'vigente'
+                        "status", n.isVigente() ? "VIGENTE" : "OBSOLETA",
+                        // Campo não existente em Norma; manter nulo para compatibilidade de template
+                        "ultimaRevisao", null
+                )))
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Norma não encontrada")));
+    }
+
+    @GetMapping("/api/compliance/auditorias")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> auditoriasApi() {
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (var a : auditoriaComplianceRepository.findAll()) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", a.getId());
+            m.put("tipo", a.getTipo());
+            m.put("escopo", a.getEscopo());
+            m.put("dataInicio", a.getDataInicio());
+            m.put("auditor", a.getAuditor());
+            m.put("resultado", a.getResultado());
+            items.add(m);
+        }
+        return ResponseEntity.ok(items);
+    }
+
+    @GetMapping("/api/compliance/auditorias/{id}")
+    @ResponseBody
+    public ResponseEntity<?> obterAuditoriaPorId(@PathVariable Long id) {
+        return auditoriaComplianceRepository.findById(id)
+                .map(a -> ResponseEntity.ok(Map.of(
+                        "id", a.getId(),
+                        "tipo", a.getTipo(),
+                        "escopo", a.getEscopo(),
+                        "dataInicio", a.getDataInicio(),
+                        "auditor", a.getAuditor(),
+                        "resultado", a.getResultado()
+                )))
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Auditoria não encontrada")));
+    }
+
+    @PostMapping("/api/compliance/auditorias")
+    @ResponseBody
+    public ResponseEntity<?> criarAuditoriaApi(@RequestBody Map<String, Object> body,
+                                               @AuthenticationPrincipal UserDetails userDetails) {
+        com.jaasielsilva.portalceo.model.juridico.AuditoriaCompliance ac = new com.jaasielsilva.portalceo.model.juridico.AuditoriaCompliance();
+        ac.setTipo(String.valueOf(body.getOrDefault("tipo", "INTERNA")));
+        ac.setEscopo(String.valueOf(body.getOrDefault("escopo", "LGPD")));
+        Object di = body.get("dataInicio");
+        if (di != null && !String.valueOf(di).isBlank()) {
+            ac.setDataInicio(java.time.LocalDate.parse(String.valueOf(di)));
+        } else {
+            ac.setDataInicio(java.time.LocalDate.now());
+        }
+        ac.setAuditor(String.valueOf(body.getOrDefault("auditor", userDetails != null ? userDetails.getUsername() : "sistema")));
+        auditoriaComplianceRepository.save(ac);
+        return ResponseEntity.ok(Map.of("id", ac.getId()));
+    }
+
+    // =============== APIs de Documentos ===============
+    @GetMapping("/api/documentos")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarDocumentosApi(
+            @RequestParam(value = "categoria", required = false) String categoria,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico> docs = documentoJuridicoRepository.findAll(pageable);
+        List<Map<String, Object>> content = new ArrayList<>();
+        for (var d : docs.getContent()) {
+            if (categoria != null && !categoria.isBlank()) {
+                String cat = categoria.toLowerCase();
+                if (d.getCategoria() == null || !d.getCategoria().toLowerCase().contains(cat)) continue;
+            }
+            if (search != null && !search.isBlank()) {
+                String termo = search.toLowerCase();
+                String texto = ((d.getTitulo() == null ? "" : d.getTitulo()) + " " + (d.getDescricao() == null ? "" : d.getDescricao())).toLowerCase();
+                if (!texto.contains(termo)) continue;
+            }
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", d.getId());
+            m.put("titulo", d.getTitulo());
+            m.put("categoria", d.getCategoria());
+            m.put("descricao", d.getDescricao());
+            m.put("caminhoArquivo", d.getCaminhoArquivo());
+            m.put("criadoEm", d.getCriadoEm());
+            content.add(m);
+        }
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("content", content);
+        payload.put("totalElements", docs.getTotalElements());
+        payload.put("page", docs.getNumber());
+        payload.put("size", docs.getSize());
+        payload.put("totalPages", docs.getTotalPages());
+        return ResponseEntity.ok(payload);
+    }
+
+    @PostMapping("/api/documentos/upload")
+    @ResponseBody
+    public ResponseEntity<?> uploadDocumentoApi(@RequestBody Map<String, Object> body,
+                                                @AuthenticationPrincipal UserDetails userDetails) {
+        com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
+        d.setTitulo(String.valueOf(body.getOrDefault("titulo", "Documento")));
+        d.setCategoria(String.valueOf(body.getOrDefault("categoria", "Contrato")));
+        d.setDescricao(String.valueOf(body.getOrDefault("descricao", "")));
+        d.setCaminhoArquivo(String.valueOf(body.getOrDefault("caminhoArquivo", "")));
+        d.setCriadoEm(java.time.LocalDateTime.now());
+        documentoJuridicoRepository.save(d);
+        return ResponseEntity.ok(Map.of("id", d.getId()));
+    }
+
+    @PostMapping("/api/documentos/upload-multipart")
+    @ResponseBody
+    public ResponseEntity<?> uploadDocumentoMultipart(@RequestParam("file") MultipartFile file,
+                                                      @RequestParam String titulo,
+                                                      @RequestParam String categoria,
+                                                      @RequestParam(value = "descricao", required = false) String descricao,
+                                                      @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "documentos";
+            java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
+            java.nio.file.Files.createDirectories(dir);
+            String sanitized = java.util.UUID.randomUUID() + "_" + (
+                    file.getOriginalFilename() == null
+                            ? "arquivo"
+                            : file.getOriginalFilename().replaceAll("[^a-zA-Z0-9_\\.\\-]", "_")
+            );
+            java.nio.file.Path target = dir.resolve(sanitized);
+            file.transferTo(target.toFile());
+
+            com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
+            d.setTitulo(titulo);
+            d.setCategoria(categoria);
+            d.setDescricao(descricao != null ? descricao : "");
+            d.setCaminhoArquivo(target.toString());
+            d.setCriadoEm(java.time.LocalDateTime.now());
+            documentoJuridicoRepository.save(d);
+            return ResponseEntity.ok(Map.of("id", d.getId(), "caminhoArquivo", d.getCaminhoArquivo()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Falha no upload do arquivo", "detalhes", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/api/documentos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> obterDocumentoPorId(@PathVariable Long id) {
+        return documentoJuridicoRepository.findById(id)
+                .map(d -> ResponseEntity.ok(Map.of(
+                        "id", d.getId(),
+                        "titulo", d.getTitulo(),
+                        "categoria", d.getCategoria(),
+                        "descricao", d.getDescricao(),
+                        "caminhoArquivo", d.getCaminhoArquivo(),
+                        "criadoEm", d.getCriadoEm()
+                )))
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado")));
+    }
+
+    @DeleteMapping("/api/documentos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> excluirDocumentoApi(@PathVariable Long id) {
+        if (!documentoJuridicoRepository.existsById(id)) {
+            return ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado"));
+        }
+        documentoJuridicoRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("id", id, "excluido", true));
     }
 
     // =============== Endpoints de Ações de Contrato ===============
@@ -565,7 +1169,11 @@ public class JuridicoController {
     }
     
     private int getProcessosAndamento() {
-        return 12;
+        try {
+            return (int) processoJuridicoRepository.count();
+        } catch (Exception e) {
+            return 0;
+        }
     }
     
     private int getPrazosVencendo() {
@@ -573,7 +1181,11 @@ public class JuridicoController {
     }
     
     private int getAlertasCompliance() {
-        return 3;
+        try {
+            return (int) naoConformidadeRepository.count();
+        } catch (Exception e) {
+            return 0;
+        }
     }
     
     private List<Map<String, Object>> getContratosProximosVencimento() {

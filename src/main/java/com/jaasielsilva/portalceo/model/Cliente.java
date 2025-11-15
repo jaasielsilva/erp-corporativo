@@ -66,8 +66,7 @@ public class Cliente {
     // Campo para identificar clientes VIP
     private Boolean vip = false;
 
-    @OneToMany(mappedBy = "cliente")
-    private List<Venda> vendas;
+    
 
     // Relacionamento com contratos vinculados a este cliente
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)

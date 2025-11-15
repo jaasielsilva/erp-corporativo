@@ -21,7 +21,6 @@ import com.jaasielsilva.portalceo.service.IndicadorService;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.SolicitacaoAcessoService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
-import com.jaasielsilva.portalceo.service.VendaService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 
 @Controller
@@ -33,8 +32,7 @@ public class DashboardController {
     @Autowired
     private ClienteService clienteService;
 
-    @Autowired
-    private VendaService vendaService;
+    
 
     @Autowired
     private ProdutoService produtoService;
@@ -67,11 +65,11 @@ public class DashboardController {
         // ===== DADOS PRINCIPAIS =====
         long totalClientes = clienteService.contarTotal();
         long novosClientes30Dias = clienteService.contarNovosPorPeriodo(30);
-        long totalVendas = vendaService.contarTotalVendas();
-        String crescimentoVendas = vendaService.calcularCrescimentoVendas();
+        long totalVendas = 0;
+        String crescimentoVendas = "0%";
         long produtosEstoque = produtoService.somarQuantidadeEstoque();
-        BigDecimal faturamentoMensal = vendaService.calcularFaturamentoUltimos12Meses();
-        String crescimentoFaturamento = vendaService.calcularCrescimentoVendas();
+        BigDecimal faturamentoMensal = indicadorService.getRoiMensal();
+        String crescimentoFaturamento = "0%";
         long produtosCriticos = produtoService.contarProdutosCriticos();
         long totalFuncionarios = colaboradorService.contarAtivos();
         long contratacoes12Meses = colaboradorService.contarContratacaosPorPeriodo(12);
@@ -89,7 +87,7 @@ public class DashboardController {
         String percentualMeta = "87%";
 
         // GRÁFICOS DE VENDAS
-        Map<YearMonth, BigDecimal> vendasUltimos12Meses = vendaService.getVendasUltimosMeses(12);
+        Map<YearMonth, BigDecimal> vendasUltimos12Meses = java.util.Collections.emptyMap();
         List<String> ultimos12MesesLabels = new ArrayList<>();
         List<BigDecimal> ultimos12MesesValores = new ArrayList<>();
         vendasUltimos12Meses.forEach((ym, valor) -> {
@@ -105,9 +103,8 @@ public class DashboardController {
         }
 
         // Vendas por categoria
-        Map<String, BigDecimal> vendasPorCategoriaMap = vendaService.getVendasPorCategoria();
-        List<String> categoriasLabels = new ArrayList<>(vendasPorCategoriaMap.keySet());
-        List<BigDecimal> categoriasValores = new ArrayList<>(vendasPorCategoriaMap.values());
+        List<String> categoriasLabels = new ArrayList<>();
+        List<BigDecimal> categoriasValores = new ArrayList<>();
 
         List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();
         List<Integer> solicitacoesStatus = new ArrayList<>();
@@ -116,7 +113,7 @@ public class DashboardController {
         }
 
         List<Integer> performanceIndicadores = Arrays.asList(
-                vendaService.calcularPerformanceVendas(),
+                75,
                 solicitacaoAcessoService.calcularPerformanceAtendimento(),
                 estoqueService.calcularPerformanceLogistica(),
                 clienteService.calcularPerformanceQualidade(),

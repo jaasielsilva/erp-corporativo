@@ -7,14 +7,11 @@ import com.jaasielsilva.portalceo.model.Beneficio;
 import com.jaasielsilva.portalceo.model.PlanoSaude;
 import com.jaasielsilva.portalceo.model.Categoria;
 import com.jaasielsilva.portalceo.model.Produto;
-import com.jaasielsilva.portalceo.model.Venda;
-import com.jaasielsilva.portalceo.model.VendaItem;
 import com.jaasielsilva.portalceo.model.Chamado;
 import com.jaasielsilva.portalceo.repository.BeneficioRepository;
 import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
 import com.jaasielsilva.portalceo.repository.CategoriaRepository;
 import com.jaasielsilva.portalceo.repository.ProdutoRepository;
-import com.jaasielsilva.portalceo.repository.VendaRepository;
 import com.jaasielsilva.portalceo.repository.ChamadoRepository;
 import com.jaasielsilva.portalceo.service.FormaPagamentoService;
 
@@ -42,8 +39,7 @@ public class DatabaseInitializer implements CommandLineRunner {
     @Autowired
     private ProdutoRepository produtoRepository;
     
-    @Autowired
-    private VendaRepository vendaRepository;
+    
     
     @Autowired
     private ChamadoRepository chamadoRepository;

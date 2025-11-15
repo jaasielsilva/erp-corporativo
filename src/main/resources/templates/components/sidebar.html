@@ -102,24 +102,7 @@
           </ul>
         </li>
 
-        <li class="has-submenu" th:if="${podeAcessarVendas}">
-          <a href="javascript:void(0);" class="submenu-toggle">
-            <i class="fas fa-cash-register"></i> Vendas
-          </a>
-          <ul class="submenu">
-            <li><a href="/vendas/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="/vendas"><i class="fas fa-list"></i> Lista de Vendas</a></li>
-            <li><a href="/vendas/pdv"><i class="fas fa-shopping-cart"></i> PDV</a></li>
-            <li><a href="/vendas/caixa"><i class="fas fa-cash-register"></i> Caixa</a></li>
-            <li><a href="/vendas/novo"><i class="fas fa-plus-circle"></i> Nova Venda</a></li>
-            <li><a href="/vendas/clientes"><i class="fas fa-users"></i> Clientes</a></li>
-            <li><a href="/vendas/produtos"><i class="fas fa-box"></i> Produtos</a></li>
-            <li><a href="/vendas/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
-            <li><a href="/vendas/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
-          </ul>
-        </li>
-
-        <li th:if="${podeAcessarVendas}"><a href="/contratos"><i class="fas fa-file-contract"></i> Contratos</a></li>
+        
         <li th:if="${podeAcessarCompras}"><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
 
         <!-- Seção Operacional -->

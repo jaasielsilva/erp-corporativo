@@ -68,8 +68,7 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
             "AND c.status IN ('PENDENTE','PARCIAL','VENCIDA','INADIMPLENTE')")
     List<Object[]> getAgingData(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("SELECT c FROM ContaReceber c WHERE c.venda.id = :vendaId")
-    List<ContaReceber> findByVendaId(@Param("vendaId") Long vendaId);
+    
 
     @Query("SELECT c FROM ContaReceber c WHERE c.usuarioCriacao.id = :usuarioId ORDER BY c.dataCriacao DESC")
     List<ContaReceber> findByUsuarioCriacao(@Param("usuarioId") Long usuarioId);

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${pageTitle} + ' - ERP Corporativo'">Contrato - ERP Corporativo</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <div class="container-fluid py-4">
+                <div class="mb-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h1 class="display-6 text-muted"><i class="fas fa-file-contract"></i> Detalhes do Contrato</h1>
+                        <p class="text-muted">Informações, histórico e anexos.</p>
+                    </div>
+                    <a class="btn btn-outline-secondary" href="/juridico/contratos"><i class="fas fa-arrow-left"></i> Voltar</a>
+                </div>
+
+                <!-- Resumo do contrato -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="text-muted">Número</div>
+                                <div class="h6" id="cNumero">—</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted">Título</div>
+                                <div class="h6" id="cTitulo">—</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted">Tipo</div>
+                                <div class="h6" id="cTipo">—</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted">Status</div>
+                                <span class="badge bg-secondary" id="cStatus">—</span>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-3">
+                                <div class="text-muted">Início</div>
+                                <div id="cInicio">—</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted">Vencimento</div>
+                                <div id="cVencimento">—</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted">Valor Mensal</div>
+                                <div id="cValorMensal">—</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-muted">Valor Total</div>
+                                <div id="cValorContrato">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Histórico -->
+                    <div class="col-md-6">
+                        <div class="card p-3 shadow-sm">
+                            <h5 class="mb-3"><i class="fas fa-stream"></i> Histórico</h5>
+                            <div id="histList" class="list-group list-group-flush">
+                                <div class="list-group-item text-muted">Sem histórico disponível.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Anexos -->
+                    <div class="col-md-6">
+                        <div class="card p-3 shadow-sm">
+                            <h5 class="mb-3"><i class="fas fa-paperclip"></i> Anexos</h5>
+                            <div class="mb-2 d-flex gap-2">
+                                <input id="anexoFile" type="file" class="form-control" />
+                                <input id="anexoTitulo" type="text" class="form-control" placeholder="Título do anexo (opcional)" />
+                                <button id="btnUploadAnexo" class="btn btn-primary"><i class="fas fa-upload"></i> Enviar</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Categoria</th>
+                                        <th>Data</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="anexosTbody">
+                                    <tr><td colspan="4" class="text-muted">Carregando anexos...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="/js/notifications.js"></script>
+<script>
+    $(function() {
+        const contratoId = /*[[${contratoId}]]*/ 0;
+
+        function notify(type, title, message, priority = 'medium', options = {}) {
+            if (typeof showToast === 'function') {
+                showToast({ type, title, message, priority, ...options });
+            } else {
+                const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+                alert(`${icon} ${title}: ${message}`);
+            }
+        }
+
+        function carregarContrato() {
+            $.get(`/juridico/api/contratos/${contratoId}`)
+                .done(c => {
+                    $('#cNumero').text(c.numeroContrato || c.id || '—');
+                    $('#cTitulo').text(c.titulo || '—');
+                    $('#cTipo').text(c.tipo || '—');
+                    $('#cStatus').text(c.status || '—');
+                    $('#cInicio').text(c.dataInicio || '—');
+                    $('#cVencimento').text(c.dataVencimento || '—');
+                    $('#cValorMensal').text(c.valorMensal || '—');
+                    $('#cValorContrato').text(c.valorContrato || '—');
+                })
+                .fail(() => notify('error', 'Falha', 'Não foi possível carregar o contrato.', 'high'));
+        }
+
+        function carregarAnexos(page = 0, size = 10) {
+            const search = encodeURIComponent(`contrato ${contratoId}`);
+            $.get(`/juridico/api/documentos?search=${search}&page=${page}&size=${size}`)
+                .done(res => {
+                    const items = res.content || [];
+                    const $tbody = $('#anexosTbody');
+                    $tbody.empty();
+                    if (items.length === 0) {
+                        $tbody.append('<tr><td colspan="4" class="text-muted">Nenhum anexo encontrado.</td></tr>');
+                        return;
+                    }
+                    items.forEach(d => {
+                        const tr = `<tr>
+                            <td>${d.titulo || '—'}</td>
+                            <td>${d.categoria || '—'}</td>
+                            <td>${d.dataUpload || '—'}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger" data-id="${d.id}" data-action="excluir-anexo"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                        $tbody.append(tr);
+                    });
+                })
+                .fail(() => $('#anexosTbody').html('<tr><td colspan="4" class="text-muted">Erro ao carregar anexos.</td></tr>'));
+        }
+
+        $(document).on('click', 'button[data-action="excluir-anexo"]', function() {
+            const id = $(this).data('id');
+            $.ajax({ url: `/juridico/api/documentos/${id}`, method: 'DELETE' })
+                .done(() => { notify('success', 'Removido', 'Anexo excluído.'); carregarAnexos(); })
+                .fail(() => notify('error', 'Falha', 'Não foi possível excluir.', 'high'));
+        });
+
+        $('#btnUploadAnexo').on('click', function() {
+            const file = $('#anexoFile')[0].files[0];
+            if (!file) { notify('warning', 'Arquivo', 'Selecione um arquivo.'); return; }
+            const titulo = ($('#anexoTitulo').val() || file.name).trim();
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('titulo', titulo);
+            formData.append('categoria', 'CONTRATOS');
+            formData.append('descricao', `Anexo contrato ${contratoId}`);
+
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Enviando...');
+
+            $.ajax({
+                url: '/juridico/api/documentos/upload-multipart',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false
+            })
+                .done(() => { notify('success', 'Enviado', 'Anexo enviado com sucesso.'); carregarAnexos(); $('#anexoFile').val(''); $('#anexoTitulo').val(''); })
+                .fail(() => notify('error', 'Falha', 'Não foi possível enviar anexo.', 'high'))
+                .always(() => $btn.prop('disabled', false).html('<i class="fas fa-upload"></i> Enviar'));
+        });
+
+        carregarContrato();
+        carregarAnexos();
+    });
+</script>
+</body>
+</html>

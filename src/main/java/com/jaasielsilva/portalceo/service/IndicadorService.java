@@ -18,7 +18,6 @@ import com.jaasielsilva.portalceo.repository.indicadores.ViewRoiMensalRepository
 @Service
 public class IndicadorService {
 
-    private final VendaService vendaService;
     private final FinanceiroService financeiroService;
     private final ViewMargemLucroRepository margemLucroRepository;
     private final ViewInadimplenciaRepository inadimplenciaRepository;
@@ -26,12 +25,10 @@ public class IndicadorService {
 
     @Autowired
     public IndicadorService(
-            VendaService vendaService,
             FinanceiroService financeiroService,
             ViewMargemLucroRepository margemLucroRepository,
             ViewInadimplenciaRepository inadimplenciaRepository,
             ViewRoiMensalRepository roiMensalRepository) {
-        this.vendaService = vendaService;
         this.financeiroService = financeiroService;
         this.margemLucroRepository = margemLucroRepository;
         this.inadimplenciaRepository = inadimplenciaRepository;
@@ -54,16 +51,13 @@ public class IndicadorService {
                 .setScale(1, RoundingMode.HALF_UP);
     }
 
-    /** Ticket médio das vendas */
+    /** Ticket médio (calculado sobre contas a receber como proxy) */
     public BigDecimal getTicketMedio() {
-        BigDecimal totalVendas = vendaService.calcularTotalDeVendas();
-        long quantidadeVendas = vendaService.contarTotalVendas();
-
-        if (quantidadeVendas == 0) {
-            return BigDecimal.ZERO;
-        }
-
-        return totalVendas.divide(BigDecimal.valueOf(quantidadeVendas), 2, RoundingMode.HALF_UP);
+        BigDecimal totalReceber = financeiroService.calcularTotalContasReceber();
+        BigDecimal totalVencidas = financeiroService.calcularTotalContasVencidas();
+        BigDecimal base = totalReceber.subtract(totalVencidas);
+        if (base.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        return base.divide(new BigDecimal("12"), 2, RoundingMode.HALF_UP);
     }
 
     /** ROI mensal (via view SQL) */

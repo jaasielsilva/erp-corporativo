@@ -24,9 +24,8 @@ public class NotificacaoChat {
     @JoinColumn(name = "remetente_id", nullable = false)
     private Usuario remetente;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mensagem_id", nullable = false)
-    private Mensagem mensagem;
+    @Column(name = "mensagem_id", nullable = false)
+    private Long mensagemId;
 
     @Column(name = "titulo", nullable = false)
     private String titulo;
@@ -79,15 +78,15 @@ public class NotificacaoChat {
     }
 
     // Método estático para criar notificação de nova mensagem
-    public static NotificacaoChat criarNotificacaoNovaMensagem(Usuario destinatario, Mensagem mensagem) {
+    public static NotificacaoChat criarNotificacaoNovaMensagem(Usuario destinatario, com.jaasielsilva.portalceo.model.chat.ChatMessage mensagem) {
         return NotificacaoChat.builder()
                 .usuario(destinatario)
-                .remetente(mensagem.getRemetente())
-                .mensagem(mensagem)
-                .titulo("Nova mensagem de " + mensagem.getRemetente().getNome())
-                .conteudo(mensagem.getConteudo().length() > 100 ? 
-                         mensagem.getConteudo().substring(0, 100) + "..." : 
-                         mensagem.getConteudo())
+                .remetente(mensagem.getSender())
+                .mensagemId(mensagem.getId())
+                .titulo("Nova mensagem de " + mensagem.getSender().getNome())
+                .conteudo(mensagem.getContent().length() > 100 ? 
+                         mensagem.getContent().substring(0, 100) + "..." : 
+                         mensagem.getContent())
                 .tipo(TipoNotificacao.NOVA_MENSAGEM)
                 .prioridade(Prioridade.NORMAL)
                 .build();

@@ -32,9 +32,7 @@ public class ContaReceber extends BaseEntity {
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "venda_id")
-    private Venda venda;
+    
 
     @NotNull(message = "O valor é obrigatório")
     @Positive(message = "O valor deve ser positivo")
@@ -70,11 +68,11 @@ public class ContaReceber extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TipoContaReceber tipo = TipoContaReceber.VENDA;
+    private TipoContaReceber tipo = TipoContaReceber.SERVICO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CategoriaContaReceber categoria = CategoriaContaReceber.PRODUTO;
+    private CategoriaContaReceber categoria = CategoriaContaReceber.SERVICO;
 
     @Column(length = 100)
     private String numeroDocumento;

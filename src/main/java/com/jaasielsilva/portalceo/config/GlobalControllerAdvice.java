@@ -104,6 +104,23 @@ public class GlobalControllerAdvice {
         return usuario != null ? usuario.getNivelAcesso() : NivelAcesso.VISITANTE;
     }
 
+    @ModelAttribute("usuarioLogadoId")
+    public Long usuarioLogadoId() {
+        Usuario usuario = usuarioLogado();
+        return usuario != null ? usuario.getId() : null;
+    }
+
+    @ModelAttribute("usuarioLogadoNome")
+    public String usuarioLogadoNome() {
+        Usuario usuario = usuarioLogado();
+        return usuario != null ? usuario.getNome() : "";
+    }
+
+    @ModelAttribute("temUsuarioLogado")
+    public boolean temUsuarioLogado() {
+        return usuarioLogado() != null;
+    }
+
     // Variáveis específicas para controle de acesso por área
 
     @ModelAttribute("isRH")

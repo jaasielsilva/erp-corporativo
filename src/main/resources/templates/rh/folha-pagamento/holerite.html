@@ -261,7 +261,7 @@
                 <strong>Admissão:</strong> <span th:text="${#temporals.format(holerite.colaborador.dataAdmissao, 'dd/MM/yyyy')}"></span>
               </div>
               <div>
-                <strong>Matrícula:</strong> <span th:text="${holerite.colaborador.matricula}"></span><br>
+                <strong>E-mail:</strong> <span th:text="${holerite.colaborador.email != null ? holerite.colaborador.email : '-'}"></span><br>
                 <strong>CPF:</strong> <span th:text="${holerite.colaborador.cpf}"></span><br>
                 <strong>Salário Base:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span><br>
                 <strong>Dias Trabalhados:</strong> <span th:text="${holerite.diasTrabalhados}"></span>
@@ -502,21 +502,8 @@
       }
     }
   </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 
 </body>

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 
 @Service
 public class EmailService {
@@ -55,6 +56,25 @@ public class EmailService {
             enviarEmail(destinatario, assunto, corpoFormatado);
         } catch (Exception e) {
             logger.error("Erro ao enviar email com template para {}: {}", destinatario, e.getMessage());
+        }
+    }
+
+    @Async
+    public void enviarEmailComAnexo(String destinatario, String assunto, String corpoHtml, String nomeArquivo, byte[] anexo) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(destinatario);
+            helper.setSubject(assunto);
+            helper.setText(corpoHtml, true);
+            helper.setFrom("noreply@portalceo.com");
+            helper.addAttachment(nomeArquivo, new ByteArrayDataSource(anexo, "application/pdf"));
+
+            mailSender.send(message);
+            logger.info("Email com anexo enviado para: {}", destinatario);
+        } catch (Exception e) {
+            logger.error("Erro ao enviar email com anexo para {}: {}", destinatario, e.getMessage());
         }
     }
 

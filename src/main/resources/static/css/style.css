@@ -1465,6 +1465,11 @@ td .btn-sm {
   color: #333;
 }
 
+.status-badge.status-warning {
+  background: #f59e0b;
+  color: #fff;
+}
+
 /* Badges para tipo de pessoa */
 .badge-tipo {
   padding: 4px 10px;
@@ -1996,6 +2001,17 @@ td .btn-sm {
 .alert-danger i {
   color: #ef4444;
   font-size: 1.25rem;
+}
+
+.alert-container-right {
+  position: fixed;
+  right: 20px;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1100;
+  max-width: 360px;
 }
 
 

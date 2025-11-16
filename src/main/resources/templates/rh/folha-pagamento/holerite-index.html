@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Selecionar Holerite - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <h1><i class="fas fa-receipt"></i> Selecionar Holerite</h1>
+        <h2>Escolha colaborador e período</h2>
+
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <form class="form-container" id="selecionarHoleriteForm" onsubmit="abrirHolerites(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="colaborador">Colaborador *</label>
+                <select id="colaborador" name="colaborador" required class="form-control">
+                  <option value="">Selecione...</option>
+                  <option th:each="c : ${colaboradores}" th:value="${c.id}" th:text="${c.nome}"></option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="mes">Mês</label>
+                <select id="mes" name="mes" class="form-control">
+                  <option value="">Todos</option>
+                  <option th:each="m : ${meses}" th:value="${m}" th:text="${m}" th:selected="${m == mesAtual}"></option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ano">Ano</label>
+                <select id="ano" name="ano" class="form-control">
+                  <option value="">Todos</option>
+                  <option th:each="a : ${anos}" th:value="${a}" th:text="${a}" th:selected="${a == anoAtual}"></option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-folder-open"></i> Abrir Holerites
+              </button>
+              <a th:href="@{/rh/folha-pagamento}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+              </a>
+            </div>
+          </form>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script>
+    function abrirHolerites(e) {
+      e.preventDefault();
+      const colab = document.getElementById('colaborador').value;
+      const mes = document.getElementById('mes').value;
+      const ano = document.getElementById('ano').value;
+      if (!colab) return;
+      const params = new URLSearchParams();
+      if (ano) params.append('ano', ano);
+      if (mes) params.append('mes', mes);
+      const url = `/rh/folha-pagamento/holerites/colaborador/${colab}` + (params.toString() ? `?${params.toString()}` : '');
+      window.location.href = url;
+    }
+  </script>
+</body>
+</html>

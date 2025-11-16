@@ -18,6 +18,25 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
+        <div th:if="${mensagem}" class="alert alert-success" role="alert">
+          <i class="fas fa-check-circle"></i>
+          <span th:text="${mensagem}"></span>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger" role="alert">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span th:text="${erro}"></span>
+        </div>
+
+        <div class="alert-container-right">
+          <div th:if="${mensagem}" class="alert alert-success" role="alert">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${mensagem}"></span>
+          </div>
+          <div th:if="${erro}" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${erro}"></span>
+          </div>
+        </div>
         <h1>Gerar Folha de Pagamento</h1>
         <h2>Processamento da folha mensal</h2>
 
@@ -128,10 +147,13 @@
                 <td th:text="${c.salario != null ? #numbers.formatDecimal(c.salario, 1, 'POINT', 2, 'COMMA') : '0,00'}">
                 </td>
 
-                <td th:text="${(c.diasTrabalhados != null ? c.diasTrabalhados : 0) + '/' + (c.diasUteisMes != null ? c.diasUteisMes : 0)}"></td>
+                <td
+                  th:text="${(c.diasTrabalhados != null ? c.diasTrabalhados : 0) + '/' + (c.diasUteisMes != null ? c.diasUteisMes : 0)}">
+                </td>
 
                 <td>
-                  <span class="status-badge" th:classappend="${c.status == 'ATIVO' ? ' status-ativo' : (c.status == 'SUSPENSO' ? ' status-afastado' : ' status-ferias')}">
+                  <span class="status-badge"
+                    th:classappend="${c.status == 'ATIVO' ? ' status-ativo' : (c.status == 'SUSPENSO' ? ' status-afastado' : ' status-ferias')}">
                     <span th:text="${c.status}"></span>
                   </span>
                 </td>

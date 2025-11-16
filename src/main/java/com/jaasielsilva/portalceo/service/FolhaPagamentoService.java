@@ -105,6 +105,13 @@ public class FolhaPagamentoService {
         BigDecimal totalIrrf = BigDecimal.ZERO;
         BigDecimal totalFgts = BigDecimal.ZERO;
 
+        folha.setTotalBruto(totalBruto);
+        folha.setTotalDescontos(totalDescontos);
+        folha.setTotalLiquido(totalBruto.subtract(totalDescontos));
+        folha.setTotalInss(totalInss);
+        folha.setTotalIrrf(totalIrrf);
+        folha.setTotalFgts(totalFgts);
+
         // Salvar folha primeiro para obter ID
         folha = folhaPagamentoRepository.save(folha);
 

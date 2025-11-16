@@ -33,32 +33,22 @@
         <!-- Configurações da Folha -->
         <article class="card">
           <h3><i class="fas fa-cog"></i> Configurações da Folha</h3>
-          <form class="form-container">
+          <div th:if="${existeFolhaAtual}" class="alert alert-warning" role="alert">
+            Já existe folha para <span th:text="${mesAtual}"></span>/<span th:text="${anoAtual}"></span>.
+          </div>
+          <form class="form-container" th:action="@{/rh/folha-pagamento/processar}" method="post">
             <div class="form-row">
               <div class="form-group">
                 <label for="mesReferencia">Mês de Referência *</label>
-                <select id="mesReferencia" name="mesReferencia" required class="form-control">
-                  <option value="">Selecione o mês...</option>
-                  <option value="01">Janeiro</option>
-                  <option value="02">Fevereiro</option>
-                  <option value="03">Março</option>
-                  <option value="04">Abril</option>
-                  <option value="05">Maio</option>
-                  <option value="06">Junho</option>
-                  <option value="07">Julho</option>
-                  <option value="08">Agosto</option>
-                  <option value="09">Setembro</option>
-                  <option value="10">Outubro</option>
-                  <option value="11" selected>Novembro</option>
-                  <option value="12">Dezembro</option>
+                <select id="mesReferencia" name="mes" required class="form-control">
+                  <option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}" th:text="${m}"></option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="anoReferencia">Ano de Referência *</label>
-                <select id="anoReferencia" name="anoReferencia" required class="form-control">
-                  <option value="2022">2022</option>
-                  <option value="2023" selected>2023</option>
-                  <option value="2024">2024</option>
+                <select id="anoReferencia" name="ano" required class="form-control">
+                  <option th:each="a : ${#numbers.sequence(anoAtual-2,anoAtual+1)}" th:value="${a}" th:text="${a}"
+                    th:selected="${a == anoAtual}"></option>
                 </select>
               </div>
             </div>
@@ -68,11 +58,7 @@
                 <label for="departamento">Departamento</label>
                 <select id="departamento" name="departamento" class="form-control">
                   <option value="">Todos os departamentos</option>
-                  <option value="ti">TI</option>
-                  <option value="vendas">Vendas</option>
-                  <option value="financeiro">Financeiro</option>
-                  <option value="rh">RH</option>
-                  <option value="marketing">Marketing</option>
+                  <option th:each="d : ${departamentos}" th:value="${d.id}" th:text="${d.nome}"></option>
                 </select>
               </div>
               <div class="form-group">
@@ -87,8 +73,8 @@
             </div>
 
             <div class="form-actions">
-              <button type="button" onclick="calcularFolha()" class="btn btn-primary">
-                <i class="fas fa-calculator"></i> Calcular Folha
+              <button type="submit" class="btn btn-primary" th:disabled="${existeFolhaAtual}">
+                <i class="fas fa-cogs"></i> Processar Folha
               </button>
             </div>
           </form>
@@ -131,55 +117,42 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>João Silva</td>
-                <td>Desenvolvedor Senior</td>
-                <td>TI</td>
-                <td>R$ 8.500,00</td>
-                <td>22/22</td>
-                <td><span class="status-badge status-ativo">Incluído</span></td>
+              <tr th:each="c : ${colaboradoresResumo}">
+
+                <td th:text="${c.nome}"></td>
+
+                <td th:text="${c.cargoNome}"></td>
+
+                <td th:text="${c.departamentoNome}"></td>
+
+                <td th:text="${c.salario != null ? #numbers.formatDecimal(c.salario, 1, 'POINT', 2, 'COMMA') : '0,00'}">
+                </td>
+
+                <td th:text="${(c.diasTrabalhados != null ? c.diasTrabalhados : 0) + '/' + (c.diasUteisMes != null ? c.diasUteisMes : 0)}"></td>
+
                 <td>
-                  <button class="btn-icon" title="Ver Detalhes">
+                  <span class="status-badge" th:classappend="${c.status == 'ATIVO' ? ' status-ativo' : (c.status == 'SUSPENSO' ? ' status-afastado' : ' status-ferias')}">
+                    <span th:text="${c.status}"></span>
+                  </span>
+                </td>
+
+                <td>
+                  <button class="btn-icon" title="Ver Detalhes"
+                    th:onclick="'window.location.href=\'/folha/detalhes/' + c.id + '\';'">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button class="btn-icon" title="Editar">
+
+                  <button class="btn-icon" title="Editar"
+                    th:onclick="'window.location.href=\'/folha/editar/' + c.id + '\';'">
                     <i class="fas fa-edit"></i>
                   </button>
                 </td>
-              </tr>
-              <tr>
-                <td>Maria Santos</td>
-                <td>Analista de Vendas</td>
-                <td>Vendas</td>
-                <td>R$ 6.000,00</td>
-                <td>15/22</td>
-                <td><span class="status-badge status-ferias">Férias Parciais</span></td>
-                <td>
-                  <button class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Carlos Oliveira</td>
-                <td>Gerente Financeiro</td>
-                <td>Financeiro</td>
-                <td>R$ 12.000,00</td>
-                <td>22/22</td>
-                <td><span class="status-badge status-ativo">Incluído</span></td>
-                <td>
-                  <button class="btn-icon" title="Ver Detalhes">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                </td>
+
               </tr>
             </tbody>
+
+
+
           </table>
         </article>
 
@@ -197,7 +170,7 @@
                   <span>Comissões: R$ 5.000,00</span>
                 </div>
               </div>
-              
+
               <div class="resumo-item descontos">
                 <h4><i class="fas fa-minus-circle"></i> Descontos</h4>
                 <div class="valor-principal">R$ 32.450,00</div>
@@ -207,7 +180,7 @@
                   <span>Outros: R$ 1.500,00</span>
                 </div>
               </div>
-              
+
               <div class="resumo-item liquido">
                 <h4><i class="fas fa-hand-holding-usd"></i> Valor Líquido</h4>
                 <div class="valor-principal">R$ 113.300,00</div>
@@ -232,7 +205,7 @@
                 <i class="fas fa-calculator"></i> Calcular
               </button>
             </div>
-            
+
             <div class="acao-item">
               <div class="acao-info">
                 <h4>2. Revisar Cálculos</h4>
@@ -242,7 +215,7 @@
                 <i class="fas fa-search"></i> Revisar
               </button>
             </div>
-            
+
             <div class="acao-item">
               <div class="acao-info">
                 <h4>3. Gerar Holerites</h4>
@@ -252,7 +225,7 @@
                 <i class="fas fa-file-invoice"></i> Gerar Holerites
               </button>
             </div>
-            
+
             <div class="acao-item">
               <div class="acao-info">
                 <h4>4. Aprovar Folha</h4>
@@ -273,26 +246,26 @@
   <script th:src="@{/js/script.js}"></script>
   <script>
     let etapaAtual = 0;
-    
+
     function calcularFolha() {
       // Simular processamento
       const btn = event.target;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...';
       btn.disabled = true;
-      
+
       setTimeout(() => {
         btn.innerHTML = '<i class="fas fa-check"></i> Calculado';
         btn.classList.remove('btn-primary');
         btn.classList.add('btn-success');
-        
+
         // Habilitar próxima etapa
         document.querySelector('button[onclick="revisarCalculos()"]').disabled = false;
         etapaAtual = 1;
-        
+
         alert('Folha calculada com sucesso!');
       }, 3000);
     }
-    
+
     function revisarCalculos() {
       if (etapaAtual >= 1) {
         alert('Cálculos revisados e aprovados!');
@@ -300,7 +273,7 @@
         etapaAtual = 2;
       }
     }
-    
+
     function gerarHolerites() {
       if (etapaAtual >= 2) {
         alert('Holerites gerados com sucesso!');
@@ -308,7 +281,7 @@
         etapaAtual = 3;
       }
     }
-    
+
     function aprovarFolha() {
       if (etapaAtual >= 3) {
         if (confirm('Tem certeza que deseja aprovar a folha de pagamento? Esta ação não pode ser desfeita.')) {
@@ -317,21 +290,8 @@
       }
     }
   </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
+  <!-- jQuery e notificações (deduplicados) -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 
 </body>

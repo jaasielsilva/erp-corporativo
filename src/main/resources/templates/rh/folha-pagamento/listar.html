@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Folhas de Pagamento</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+      <section class="content-area">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1><i class="fas fa-list"></i> Folhas de Pagamento</h1>
+          <a th:href="@{/rh/folha-pagamento/gerar}" class="btn btn-primary"><i class="fas fa-plus"></i> Gerar Folha</a>
+        </div>
+
+        <form class="row g-3 mb-3" th:action="@{/rh/folha-pagamento/listar}" method="get">
+          <div class="col-auto">
+            <label for="ano" class="col-form-label">Ano</label>
+          </div>
+          <div class="col-auto">
+            <select id="ano" name="ano" class="form-select">
+              <option th:each="a : ${#numbers.sequence(T(java.time.LocalDate).now().year-5, T(java.time.LocalDate).now().year+1)}"
+                      th:value="${a}" th:text="${a}" th:selected="${a == anoSelecionado}"></option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-secondary"><i class="fas fa-search"></i> Filtrar</button>
+          </div>
+        </form>
+
+        <div class="card">
+          <div class="card-body table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Período</th>
+                  <th>Status</th>
+                  <th>Total Bruto</th>
+                  <th>Total Descontos</th>
+                  <th>Total Líquido</th>
+                  <th>Processada em</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="folha : ${folhas}">
+                  <td th:text="${folha.mesReferencia + '/' + folha.anoReferencia}"></td>
+                  <td th:text="${folha.status}"></td>
+                  <td th:text="${#numbers.formatCurrency(folha.totalBruto)}"></td>
+                  <td th:text="${#numbers.formatCurrency(folha.totalDescontos)}"></td>
+                  <td th:text="${#numbers.formatCurrency(folha.totalLiquido)}"></td>
+                  <td th:text="${#temporals.format(folha.dataProcessamento, 'dd/MM/yyyy')}"></td>
+                  <td>
+                    <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folha.id})}" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

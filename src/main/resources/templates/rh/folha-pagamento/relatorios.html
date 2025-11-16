@@ -46,12 +46,9 @@
               </div>
               <div class="form-group">
                 <label for="departamentoRel">Departamento</label>
-                <select id="departamentoRel" name="departamento" class="form-control">
+                <select id="departamentoRel" name="departamentoId" class="form-control">
                   <option value="">Todos os departamentos</option>
-                  <option value="ti">TI</option>
-                  <option value="vendas">Vendas</option>
-                  <option value="financeiro">Financeiro</option>
-                  <option value="rh">RH</option>
+                  <option th:each="d : ${departamentos}" th:value="${d.id}" th:text="${d.nome}"></option>
                 </select>
               </div>
               <div class="form-group">
@@ -66,7 +63,7 @@
         <!-- Resumo Executivo -->
         <article class="card">
           <h3><i class="fas fa-chart-line"></i> Resumo Executivo</h3>
-          <div class="resumo-executivo">
+          <div class="resumo-executivo" th:if="${resumoAtual}">
             <div class="resumo-grid">
               <div class="resumo-card salarios">
                 <div class="resumo-icon">
@@ -74,7 +71,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Total Salários</h4>
-                  <div class="resumo-valor">R$ 1.597.250,00</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(resumoAtual.totalProventos)}"></div>
                   <div class="resumo-variacao positiva">
                     <i class="fas fa-arrow-up"></i> +5.2% vs mês anterior
                   </div>
@@ -87,7 +84,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Total Descontos</h4>
-                  <div class="resumo-valor">R$ 356.950,00</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(resumoAtual.totalDescontos)}"></div>
                   <div class="resumo-variacao negativa">
                     <i class="fas fa-arrow-down"></i> -2.1% vs mês anterior
                   </div>
@@ -100,7 +97,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Folha Líquida</h4>
-                  <div class="resumo-valor">R$ 1.240.300,00</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(resumoAtual.totalLiquido)}"></div>
                   <div class="resumo-variacao positiva">
                     <i class="fas fa-arrow-up"></i> +7.8% vs mês anterior
                   </div>
@@ -113,7 +110,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Colaboradores</h4>
-                  <div class="resumo-valor">15</div>
+                  <div class="resumo-valor" th:text="${resumoAtual.quantidadeHolerites}"></div>
                   <div class="resumo-variacao neutra">
                     <i class="fas fa-minus"></i> Sem alteração
                   </div>

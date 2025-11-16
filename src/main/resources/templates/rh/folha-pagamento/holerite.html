@@ -184,14 +184,14 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
-        <h1>Holerites</h1>
-        <h2>Visualização e impressão de holerites</h2>
+        <h1>Holerite</h1>
+        <h2 th:text="${periodoReferencia}"></h2>
 
         <div class="action-buttons">
-          <a href="/rh/folha-pagamento/gerar" class="btn btn-secondary">
+          <a th:href="@{/rh/folha-pagamento}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Voltar
           </a>
-          <a href="/rh/folha-pagamento/relatorios" class="btn btn-info">
+          <a th:href="@{/rh/folha-pagamento/relatorios}" class="btn btn-info">
             <i class="fas fa-chart-bar"></i> Relatórios
           </a>
         </div>
@@ -248,23 +248,23 @@
               </div>
               <div class="periodo-info">
                 <strong>HOLERITE</strong><br>
-                Competência: Novembro/2023<br>
-                Emitido em: 30/11/2023
+                Competência: <span th:text="${periodoReferencia}"></span><br>
+                Emitido em: <span th:text="${dataReferencia}"></span>
               </div>
             </div>
             
             <div class="funcionario-info">
               <div>
-                <strong>Funcionário:</strong> João Silva<br>
-                <strong>Cargo:</strong> Desenvolvedor Senior<br>
-                <strong>Departamento:</strong> TI<br>
-                <strong>Admissão:</strong> 15/03/2022
+                <strong>Funcionário:</strong> <span th:text="${holerite.colaborador.nome}"></span><br>
+                <strong>Cargo:</strong> <span th:text="${holerite.colaborador.cargo != null ? holerite.colaborador.cargo.nome : '-'}"></span><br>
+                <strong>Departamento:</strong> <span th:text="${holerite.colaborador.departamento != null ? holerite.colaborador.departamento.nome : '-'}"></span><br>
+                <strong>Admissão:</strong> <span th:text="${#temporals.format(holerite.colaborador.dataAdmissao, 'dd/MM/yyyy')}"></span>
               </div>
               <div>
-                <strong>Matrícula:</strong> 001<br>
-                <strong>CPF:</strong> 123.456.789-00<br>
-                <strong>Salário Base:</strong> R$ 8.500,00<br>
-                <strong>Dias Trabalhados:</strong> 22/22
+                <strong>Matrícula:</strong> <span th:text="${holerite.colaborador.matricula}"></span><br>
+                <strong>CPF:</strong> <span th:text="${holerite.colaborador.cpf}"></span><br>
+                <strong>Salário Base:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span><br>
+                <strong>Dias Trabalhados:</strong> <span th:text="${holerite.diasTrabalhados}"></span>
               </div>
             </div>
           </div>
@@ -279,11 +279,11 @@
                 </div>
                 <div class="valor-item">
                   <span>Salário Base</span>
-                  <span>R$ 8.500,00</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span>
                 </div>
                 <div class="valor-item">
-                  <span>Horas Extras (8h)</span>
-                  <span>R$ 580,00</span>
+                  <span>Horas Extras</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></span>
                 </div>
                 <div class="valor-item">
                   <span>Adicional Noturno</span>
@@ -294,16 +294,16 @@
                   <span>R$ 0,00</span>
                 </div>
                 <div class="valor-item">
-                  <span>Vale Alimentação</span>
-                  <span>R$ 600,00</span>
+                  <span>Vale Refeição</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span>
                 </div>
                 <div class="valor-item">
                   <span>Vale Transporte</span>
-                  <span>R$ 220,00</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span>
                 </div>
                 <div class="valor-item total">
                   <span>TOTAL PROVENTOS</span>
-                  <span>R$ 9.900,00</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.totalProventos)}"></span>
                 </div>
               </div>
 
@@ -313,32 +313,32 @@
                   <i class="fas fa-minus-circle"></i> DESCONTOS
                 </div>
                 <div class="valor-item">
-                  <span>INSS (11%)</span>
-                  <span>R$ 935,00</span>
+                  <span>INSS</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.descontoInss)}"></span>
                 </div>
                 <div class="valor-item">
-                  <span>IRRF (15%)</span>
-                  <span>R$ 756,30</span>
+                  <span>IRRF</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.descontoIrrf)}"></span>
                 </div>
                 <div class="valor-item">
-                  <span>FGTS (8%)</span>
-                  <span>R$ 680,00</span>
+                  <span>FGTS</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.descontoFgts)}"></span>
                 </div>
                 <div class="valor-item">
                   <span>Plano de Saúde</span>
-                  <span>R$ 180,00</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.descontoPlanoSaude)}"></span>
                 </div>
                 <div class="valor-item">
-                  <span>Seguro de Vida</span>
-                  <span>R$ 25,00</span>
+                  <span>Desconto VR</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.descontoValeRefeicao)}"></span>
                 </div>
                 <div class="valor-item">
                   <span>Desconto VT</span>
-                  <span>R$ 132,00</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.descontoValeTransporte)}"></span>
                 </div>
                 <div class="valor-item total">
                   <span>TOTAL DESCONTOS</span>
-                  <span>R$ 2.708,30</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.totalDescontos)}"></span>
                 </div>
               </div>
             </div>
@@ -348,15 +348,15 @@
               <div class="resumo-grid">
                 <div class="resumo-item">
                   <div class="resumo-label">Total Proventos</div>
-                  <div class="resumo-valor">R$ 9.900,00</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalProventos)}"></div>
                 </div>
                 <div class="resumo-item">
                   <div class="resumo-label">Total Descontos</div>
-                  <div class="resumo-valor">R$ 2.708,30</div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalDescontos)}"></div>
                 </div>
                 <div class="resumo-item">
                   <div class="resumo-label">Salário Líquido</div>
-                  <div class="resumo-valor liquido">R$ 7.191,70</div>
+                  <div class="resumo-valor liquido" th:text="${#numbers.formatCurrency(holerite.salarioLiquido)}"></div>
                 </div>
               </div>
             </div>
@@ -381,7 +381,7 @@
 
           <!-- Rodapé -->
           <div class="holerite-footer">
-            <p><strong>ERP Corporativo Ltda</strong> - CNPJ: 12.345.678/0001-90</p>
+            <p><strong>ERP Corporativo Ltda</strong></p>
             <p>Rua das Empresas, 123 - Centro - São Paulo/SP - CEP: 01234-567</p>
             <p>Este documento foi gerado eletronicamente e é válido sem assinatura.</p>
           </div>
@@ -403,23 +403,20 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>João Silva</td>
-                <td>Nov/2023</td>
-                <td>R$ 9.900,00</td>
-                <td>R$ 2.708,30</td>
-                <td>R$ 7.191,70</td>
+              <tr th:each="h : ${holerite.folhaPagamento != null ? holerite.folhaPagamento.holerites : {}}">
+                <td th:text="${h.colaborador.nome}"></td>
+                <td th:text="${h.folhaPagamento.mesReferencia + '/' + h.folhaPagamento.anoReferencia}"></td>
+                <td th:text="${#numbers.formatCurrency(h.totalProventos)}"></td>
+                <td th:text="${#numbers.formatCurrency(h.totalDescontos)}"></td>
+                <td th:text="${#numbers.formatCurrency(h.salarioLiquido)}"></td>
                 <td><span class="status-badge status-ativo">Disponível</span></td>
                 <td>
-                  <button onclick="visualizarHolerite(1)" class="btn-icon" title="Visualizar">
+                  <a th:href="@{/rh/folha-pagamento/holerite/{id}(id=${h.id})}" class="btn-icon" title="Visualizar">
                     <i class="fas fa-eye"></i>
-                  </button>
-                  <button onclick="baixarPDF(1)" class="btn-icon" title="Baixar PDF">
+                  </a>
+                  <a th:href="@{/rh/folha-pagamento/holerite/{id}/pdf(id=${h.id})}" class="btn-icon" title="Baixar PDF">
                     <i class="fas fa-download"></i>
-                  </button>
-                  <button onclick="enviarEmail(1)" class="btn-icon" title="Enviar Email">
-                    <i class="fas fa-envelope"></i>
-                  </button>
+                  </a>
                 </td>
               </tr>
               <tr>
@@ -489,12 +486,8 @@
     }
     
     function baixarPDF(id) {
-      if (id) {
-        alert(`Baixando PDF do holerite ${id}...`);
-      } else {
-        alert('Baixando PDF do holerite atual...');
-      }
-      // Implementar download do PDF
+      const targetId = id || document.querySelector('[data-holerite-id]')?.getAttribute('data-holerite-id');
+      if (targetId) window.location.href = `/rh/folha-pagamento/holerite/${targetId}/pdf`;
     }
     
     function enviarEmail(id) {

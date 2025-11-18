@@ -324,10 +324,6 @@
                   <span th:text="${#numbers.formatCurrency(holerite.descontoIrrf)}"></span>
                 </div>
                 <div class="valor-item">
-                  <span>FGTS</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.descontoFgts)}"></span>
-                </div>
-                <div class="valor-item">
                   <span>Plano de Saúde</span>
                   <span th:text="${#numbers.formatCurrency(holerite.descontoPlanoSaude)}"></span>
                 </div>
@@ -369,9 +365,9 @@
               <h4 style="margin-bottom: 10px;"><i class="fas fa-info-circle"></i> Informações Adicionais</h4>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
                 <div>
-                  <strong>Base INSS:</strong> R$ 8.500,00<br>
-                  <strong>Base IRRF:</strong> R$ 5.042,00<br>
-                  <strong>Base FGTS:</strong> R$ 8.500,00
+                  <strong>Base INSS:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras))}"></span><br>
+                  <strong>Base IRRF:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoInss))}"></span><br>
+                  <strong>Depósito FGTS (8%):</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).multiply(0.08))}"></span>
                 </div>
                 <div>
                   <strong>Dependentes IR:</strong> 0<br>

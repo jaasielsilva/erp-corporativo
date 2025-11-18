@@ -43,6 +43,9 @@ public class FolhaPagamentoService {
     @Autowired
     private AdesaoPlanoSaudeRepository adesaoPlanoSaudeRepository;
 
+    @Autowired
+    private HoleriteCalculoService holeriteCalculoService;
+
     /**
      * Lista todas as folhas de pagamento ordenadas por ano e mês
      */
@@ -129,7 +132,8 @@ public class FolhaPagamentoService {
                 totalDescontos = totalDescontos.add(holerite.getTotalDescontos());
                 totalInss = totalInss.add(holerite.getDescontoInss());
                 totalIrrf = totalIrrf.add(holerite.getDescontoIrrf());
-                totalFgts = totalFgts.add(holerite.getDescontoFgts());
+                BigDecimal salarioBrutoHolerite = holerite.getSalarioBase().add(holerite.getHorasExtras());
+                totalFgts = totalFgts.add(holeriteCalculoService.calcularFgtsPatronal(salarioBrutoHolerite));
 
             } catch (Exception e) {
                 logger.error("Erro ao gerar holerite para colaborador {}: {}", colaborador.getNome(), e.getMessage());
@@ -249,15 +253,10 @@ public class FolhaPagamentoService {
     private void calcularDescontos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano) {
         BigDecimal salarioBruto = holerite.getSalarioBase().add(holerite.getHorasExtras());
 
-        // INSS
-        holerite.setDescontoInss(calcularInss(salarioBruto));
-
-        // IRRF (calculado após INSS)
+        holerite.setDescontoInss(holeriteCalculoService.calcularInssProgressivo(salarioBruto));
         BigDecimal baseIrrf = salarioBruto.subtract(holerite.getDescontoInss());
-        holerite.setDescontoIrrf(calcularIrrf(baseIrrf));
-
-        // FGTS (8% sobre salário bruto)
-        holerite.setDescontoFgts(salarioBruto.multiply(BigDecimal.valueOf(0.08)).setScale(2, RoundingMode.HALF_UP));
+        holerite.setDescontoIrrf(holeriteCalculoService.calcularIrrf(baseIrrf, 0));
+        holerite.setDescontoFgts(BigDecimal.ZERO);
 
         // Descontos de benefícios
         calcularDescontosBeneficios(holerite, colaborador, mes, ano);
@@ -277,6 +276,10 @@ public class FolhaPagamentoService {
         } else {
             holerite.setDescontoValeTransporte(BigDecimal.ZERO);
         }
+
+        holerite.setDescontoValeTransporte(
+                holeriteCalculoService.limitarDescontoValeTransporte(holerite.getSalarioBase(), holerite.getDescontoValeTransporte())
+        );
 
         // Desconto Vale Refeição
         Optional<ValeRefeicao> valeRefeicao = valeRefeicaoRepository

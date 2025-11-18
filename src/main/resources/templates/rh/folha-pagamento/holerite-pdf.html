@@ -66,7 +66,6 @@
           <div class="valores-header">DESCONTOS</div>
           <div class="valor-item"><span>INSS</span><span th:text="${#numbers.formatCurrency(holerite.descontoInss)}"></span></div>
           <div class="valor-item"><span>IRRF</span><span th:text="${#numbers.formatCurrency(holerite.descontoIrrf)}"></span></div>
-          <div class="valor-item"><span>FGTS</span><span th:text="${#numbers.formatCurrency(holerite.descontoFgts)}"></span></div>
           <div class="valor-item"><span>Plano de Saúde</span><span th:text="${#numbers.formatCurrency(holerite.descontoPlanoSaude)}"></span></div>
           <div class="valor-item"><span>Desconto VR</span><span th:text="${#numbers.formatCurrency(holerite.descontoValeRefeicao)}"></span></div>
           <div class="valor-item"><span>Desconto VT</span><span th:text="${#numbers.formatCurrency(holerite.descontoValeTransporte)}"></span></div>
@@ -86,6 +85,16 @@
           <div class="resumo-item">
             <div class="resumo-label">Salário Líquido</div>
             <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.salarioLiquido)}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="holerite-body">
+      <div class="resumo-final">
+        <div class="resumo-grid">
+          <div class="resumo-item">
+            <div class="resumo-label">Depósito FGTS (8%)</div>
+            <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).multiply(0.08))}"></div>
           </div>
         </div>
       </div>

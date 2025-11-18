@@ -9,23 +9,25 @@ import com.jaasielsilva.portalceo.service.FolhaPagamentoService;
 import com.jaasielsilva.portalceo.service.HoleriteService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.service.ResumoFolhaService;
+import com.jaasielsilva.portalceo.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.security.access.prepost.PreAuthorize;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.Element;
-import com.lowagie.text.Chunk;
-import com.lowagie.text.pdf.PdfWriter;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.awt.Color;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.MediaType;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -54,6 +56,15 @@ public class FolhaPagamentoController {
 
     @Autowired
     private ResumoFolhaService resumoFolhaService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private SpringTemplateEngine templateEngine;
+
+    @Autowired
+    private com.jaasielsilva.portalceo.service.HoleriteEmailService holeriteEmailService;
 
     /**
      * Página principal da folha de pagamento
@@ -229,9 +240,23 @@ public class FolhaPagamentoController {
      */
     @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
     @GetMapping("/holerites/colaborador/{colaboradorId}")
-    public String holeritesPorColaborador(@PathVariable Long colaboradorId, Model model) {
+    public String holeritesPorColaborador(@PathVariable Long colaboradorId,
+                                          @RequestParam(required = false) Integer ano,
+                                          @RequestParam(required = false) Integer mes,
+                                          Model model) {
         try {
-            model.addAttribute("holerites", holeriteService.listarPorColaborador(colaboradorId));
+            java.util.List<Holerite> holerites;
+            if (ano != null) {
+                holerites = holeriteService.listarPorColaboradorEAno(colaboradorId, ano);
+            } else {
+                holerites = holeriteService.listarPorColaborador(colaboradorId);
+            }
+            if (mes != null) {
+                holerites = holerites.stream()
+                        .filter(h -> h.getFolhaPagamento() != null && h.getFolhaPagamento().getMesReferencia() != null && h.getFolhaPagamento().getMesReferencia().equals(mes))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            model.addAttribute("holerites", holerites);
             model.addAttribute("colaborador", colaboradorService.buscarPorId(colaboradorId));
             return "rh/folha-pagamento/holerites-colaborador";
         } catch (Exception e) {
@@ -279,53 +304,86 @@ public class FolhaPagamentoController {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-
         Holerite h = holeriteOpt.get();
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=holerite_" + id + ".pdf");
 
-        Document document = new Document();
+        Context ctx = new Context(new Locale("pt", "BR"));
+        ctx.setVariable("holerite", h);
+        ctx.setVariable("numeroHolerite", holeriteService.gerarNumeroHolerite(h));
+        ctx.setVariable("periodoReferencia", holeriteService.gerarDescricaoPeriodo(h));
+        ctx.setVariable("dataReferencia", holeriteService.gerarDataReferencia(h));
+        ctx.setVariable("pdf", true);
+
+        String html = templateEngine.process("rh/folha-pagamento/holerite", ctx);
+
+        PdfRendererBuilder builder = new PdfRendererBuilder();
+        builder.useFastMode();
+        builder.withHtmlContent(html, null);
+        builder.toStream(response.getOutputStream());
         try {
-            PdfWriter.getInstance(document, response.getOutputStream());
-            document.open();
-
-            Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-            Paragraph pTitulo = new Paragraph("Holerite", titulo);
-            pTitulo.setAlignment(Element.ALIGN_CENTER);
-            pTitulo.setSpacingAfter(10f);
-            document.add(pTitulo);
-
-            Font normal = FontFactory.getFont(FontFactory.HELVETICA, 12);
-            document.add(new Paragraph("Colaborador: " + h.getColaborador().getNome(), normal));
-            document.add(new Paragraph("Departamento: " + (h.getColaborador().getDepartamento()!=null ? h.getColaborador().getDepartamento().getNome() : "-"), normal));
-            document.add(new Paragraph("Cargo: " + (h.getColaborador().getCargo()!=null ? h.getColaborador().getCargo().getNome() : "-"), normal));
-            document.add(new Paragraph("Período: " + holeriteService.gerarDescricaoPeriodo(h), normal));
-            document.add(Chunk.NEWLINE);
-
-            document.add(new Paragraph("Proventos", titulo));
-            document.add(new Paragraph("Salário Base: R$ " + h.getSalarioBase(), normal));
-            document.add(new Paragraph("Horas Extras: R$ " + h.getHorasExtras(), normal));
-            document.add(new Paragraph("Auxílio Saúde: R$ " + h.getAuxilioSaude(), normal));
-            document.add(new Paragraph("Vale Refeição: R$ " + h.getValeRefeicao(), normal));
-            document.add(new Paragraph("Vale Transporte: R$ " + h.getValeTransporte(), normal));
-            document.add(new Paragraph("Total Proventos: R$ " + h.getTotalProventos(), normal));
-            document.add(Chunk.NEWLINE);
-
-            document.add(new Paragraph("Descontos", titulo));
-            document.add(new Paragraph("INSS: R$ " + h.getDescontoInss(), normal));
-            document.add(new Paragraph("IRRF: R$ " + h.getDescontoIrrf(), normal));
-            document.add(new Paragraph("FGTS: R$ " + h.getDescontoFgts(), normal));
-            document.add(new Paragraph("Plano de Saúde: R$ " + h.getDescontoPlanoSaude(), normal));
-            document.add(new Paragraph("Desconto VT: R$ " + h.getDescontoValeTransporte(), normal));
-            document.add(new Paragraph("Desconto VR: R$ " + h.getDescontoValeRefeicao(), normal));
-            document.add(new Paragraph("Outros Descontos: R$ " + h.getOutrosDescontos(), normal));
-            document.add(new Paragraph("Total Descontos: R$ " + h.getTotalDescontos(), normal));
-            document.add(Chunk.NEWLINE);
-
-            document.add(new Paragraph("Salário Líquido: R$ " + h.getSalarioLiquido(), titulo));
-            document.close();
-        } catch (DocumentException e) {
+            builder.run();
+        } catch (Exception e) {
             throw new java.io.IOException("Erro ao gerar PDF", e);
         }
+    }
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @PostMapping(value = "/holerite/{id}/email", consumes = MediaType.ALL_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> enviarHoleriteEmail(@PathVariable Long id,
+                                                 @RequestParam(required = false) String email) {
+        Optional<Holerite> holeriteOpt = holeriteService.buscarPorId(id);
+        if (holeriteOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Holerite não encontrado");
+        }
+
+        Holerite h = holeriteOpt.get();
+        try {
+            holeriteEmailService.enviar(h, email);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email do colaborador não disponível");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao gerar ou enviar PDF");
+        }
+        String destinatarioMsg = email != null && !email.isBlank() ? email : (h.getColaborador() != null ? h.getColaborador().getEmail() : "");
+        return ResponseEntity.ok("Holerite enviado para " + destinatarioMsg);
+    }
+
+    private byte[] gerarPdfHolerite(Holerite h) throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+
+        Context ctx = new Context(new Locale("pt", "BR"));
+        ctx.setVariable("holerite", h);
+        ctx.setVariable("numeroHolerite", holeriteService.gerarNumeroHolerite(h));
+        ctx.setVariable("periodoReferencia", holeriteService.gerarDescricaoPeriodo(h));
+        ctx.setVariable("dataReferencia", holeriteService.gerarDataReferencia(h));
+        ctx.setVariable("pdf", true);
+
+        String html = templateEngine.process("rh/folha-pagamento/holerite", ctx);
+
+        PdfRendererBuilder builder = new PdfRendererBuilder();
+        builder.useFastMode();
+        builder.withHtmlContent(html, null);
+        builder.toStream(baos);
+        try {
+            builder.run();
+        } catch (Exception e) {
+            throw new java.io.IOException("Erro ao gerar PDF", e);
+        }
+        return baos.toByteArray();
+    }
+    /**
+     * Página de seleção de holerite
+     */
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @GetMapping("/holerite")
+    public String selecionarHolerite(Model model) {
+        LocalDate hoje = LocalDate.now();
+        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+        model.addAttribute("mesAtual", hoje.getMonthValue());
+        model.addAttribute("anoAtual", hoje.getYear());
+        model.addAttribute("meses", java.util.stream.IntStream.rangeClosed(1, 12).boxed().toList());
+        model.addAttribute("anos", java.util.stream.IntStream.rangeClosed(hoje.getYear() - 2, hoje.getYear() + 1).boxed().toList());
+        return "rh/folha-pagamento/holerite-index";
     }
 }

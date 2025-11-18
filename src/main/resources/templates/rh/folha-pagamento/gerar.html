@@ -147,13 +147,10 @@
                 <td th:text="${c.salario != null ? #numbers.formatDecimal(c.salario, 1, 'POINT', 2, 'COMMA') : '0,00'}">
                 </td>
 
-                <td
-                  th:text="${(c.diasTrabalhados != null ? c.diasTrabalhados : 0) + '/' + (c.diasUteisMes != null ? c.diasUteisMes : 0)}">
-                </td>
+                <td th:text="${(c.diasTrabalhados != null ? c.diasTrabalhados : 0) + '/' + (c.diasUteisMes != null ? c.diasUteisMes : 0)}"></td>
 
                 <td>
-                  <span class="status-badge"
-                    th:classappend="${c.status == 'ATIVO' ? ' status-ativo' : (c.status == 'SUSPENSO' ? ' status-afastado' : ' status-ferias')}">
+                  <span class="status-badge" th:classappend="${c.status == 'ATIVO' ? ' status-ativo' : (c.status == 'SUSPENSO' ? ' status-afastado' : ' status-ferias')}">
                     <span th:text="${c.status}"></span>
                   </span>
                 </td>

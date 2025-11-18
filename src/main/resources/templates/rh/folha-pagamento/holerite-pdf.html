@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Holerite</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .holerite-container { max-width: 800px; margin: 0 auto; background: #fff; border: 1px solid #ddd; }
+    .holerite-header { background: #f8f9fa; padding: 16px; border-bottom: 2px solid #007bff; }
+    .empresa-info { display: flex; justify-content: space-between; align-items: center; }
+    .empresa-logo { font-size: 18px; font-weight: bold; color: #007bff; }
+    .periodo-info { text-align: right; font-size: 12px; color: #333; }
+    .funcionario-info { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; font-size: 12px; }
+    .holerite-body { padding: 16px; }
+    .valores-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .valores-section { border: 1px solid #e9ecef; border-radius: 4px; overflow: hidden; }
+    .valores-header { background: #f0f0f0; padding: 8px 12px; font-weight: bold; border-bottom: 1px solid #e9ecef; }
+    .valor-item { display: flex; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #f8f9fa; font-size: 12px; }
+    .valor-item:last-child { border-bottom: none; }
+    .valor-item.total { background: #f8f9fa; font-weight: bold; border-top: 2px solid #dee2e6; }
+    .resumo-final { background: #e3f2fd; border: 2px solid #2196f3; border-radius: 6px; padding: 12px; margin-top: 16px; }
+    .resumo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center; }
+    .resumo-item { padding: 12px; background: white; border-radius: 4px; }
+    .resumo-label { font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 4px; }
+    .resumo-valor { font-size: 14px; font-weight: bold; color: #333; }
+    .holerite-footer { background: #f8f9fa; padding: 12px 16px; border-top: 1px solid #dee2e6; font-size: 10px; color: #666; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="holerite-container">
+    <div class="holerite-header">
+      <div class="empresa-info">
+        <div class="empresa-logo">ERP CORPORATIVO LTDA</div>
+        <div class="periodo-info">
+          <strong>HOLERITE</strong><br />
+          Competência: <span th:text="${periodoReferencia}"></span><br />
+          Emitido em: <span th:text="${dataReferencia}"></span>
+        </div>
+      </div>
+      <div class="funcionario-info">
+        <div>
+          <strong>Funcionário:</strong> <span th:text="${holerite.colaborador.nome}"></span><br />
+          <strong>Cargo:</strong> <span th:text="${holerite.colaborador.cargo != null ? holerite.colaborador.cargo.nome : '-'}"></span><br />
+          <strong>Departamento:</strong> <span th:text="${holerite.colaborador.departamento != null ? holerite.colaborador.departamento.nome : '-'}"></span><br />
+          <strong>Admissão:</strong> <span th:text="${#temporals.format(holerite.colaborador.dataAdmissao, 'dd/MM/yyyy')}"></span>
+        </div>
+        <div>
+          <strong>E-mail:</strong> <span th:text="${holerite.colaborador.email != null ? holerite.colaborador.email : '-'}"></span><br />
+          <strong>CPF:</strong> <span th:text="${holerite.colaborador.cpf}"></span><br />
+          <strong>Salário Base:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span><br />
+          <strong>Dias Trabalhados:</strong> <span th:text="${holerite.diasTrabalhados}"></span>
+        </div>
+      </div>
+    </div>
+    <div class="holerite-body">
+      <div class="valores-grid">
+        <div class="valores-section">
+          <div class="valores-header">PROVENTOS</div>
+          <div class="valor-item"><span>Salário Base</span><span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span></div>
+          <div class="valor-item"><span>Horas Extras</span><span th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></span></div>
+          <div class="valor-item"><span>Vale Refeição</span><span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span></div>
+          <div class="valor-item"><span>Vale Transporte</span><span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span></div>
+          <div class="valor-item total"><span>TOTAL PROVENTOS</span><span th:text="${#numbers.formatCurrency(holerite.totalProventos)}"></span></div>
+        </div>
+        <div class="valores-section">
+          <div class="valores-header">DESCONTOS</div>
+          <div class="valor-item"><span>INSS</span><span th:text="${#numbers.formatCurrency(holerite.descontoInss)}"></span></div>
+          <div class="valor-item"><span>IRRF</span><span th:text="${#numbers.formatCurrency(holerite.descontoIrrf)}"></span></div>
+          <div class="valor-item"><span>FGTS</span><span th:text="${#numbers.formatCurrency(holerite.descontoFgts)}"></span></div>
+          <div class="valor-item"><span>Plano de Saúde</span><span th:text="${#numbers.formatCurrency(holerite.descontoPlanoSaude)}"></span></div>
+          <div class="valor-item"><span>Desconto VR</span><span th:text="${#numbers.formatCurrency(holerite.descontoValeRefeicao)}"></span></div>
+          <div class="valor-item"><span>Desconto VT</span><span th:text="${#numbers.formatCurrency(holerite.descontoValeTransporte)}"></span></div>
+          <div class="valor-item total"><span>TOTAL DESCONTOS</span><span th:text="${#numbers.formatCurrency(holerite.totalDescontos)}"></span></div>
+        </div>
+      </div>
+      <div class="resumo-final">
+        <div class="resumo-grid">
+          <div class="resumo-item">
+            <div class="resumo-label">Total Proventos</div>
+            <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalProventos)}"></div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">Total Descontos</div>
+            <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalDescontos)}"></div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">Salário Líquido</div>
+            <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.salarioLiquido)}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="holerite-footer">
+      <p><strong>ERP Corporativo Ltda</strong></p>
+      <p>Este documento foi gerado eletronicamente e é válido sem assinatura.</p>
+    </div>
+  </div>
+</body>
+</html>

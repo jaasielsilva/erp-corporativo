@@ -60,7 +60,7 @@ public class HoleriteEmailService {
         ctx.setVariable("periodoReferencia", holeriteService.gerarDescricaoPeriodo(h));
         ctx.setVariable("dataReferencia", holeriteService.gerarDataReferencia(h));
         ctx.setVariable("pdf", true);
-        String html = templateEngine.process("rh/folha-pagamento/holerite", ctx);
+        String html = templateEngine.process("rh/folha-pagamento/holerite-pdf", ctx);
         PdfRendererBuilder builder = new PdfRendererBuilder();
         builder.useFastMode();
         builder.withHtmlContent(html, null);

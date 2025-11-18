@@ -218,7 +218,7 @@ public class FolhaPagamentoController {
     /**
      * Exibe holerite individual
      */
-    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH() or @holeriteService.podeVerHolerite(#id)")
     @GetMapping("/holerite/{id}")
     public String holerite(@PathVariable Long id, Model model) {
         Optional<Holerite> holeriteOpt = holeriteService.buscarPorId(id);
@@ -296,7 +296,7 @@ public class FolhaPagamentoController {
     /**
      * Exporta o holerite em PDF
      */
-    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH() or @holeriteService.podeVerHolerite(#id)")
     @GetMapping("/holerite/{id}/pdf")
     public void holeritePdf(@PathVariable Long id, HttpServletResponse response) throws java.io.IOException {
         Optional<Holerite> holeriteOpt = holeriteService.buscarPorId(id);
@@ -315,7 +315,7 @@ public class FolhaPagamentoController {
         ctx.setVariable("dataReferencia", holeriteService.gerarDataReferencia(h));
         ctx.setVariable("pdf", true);
 
-        String html = templateEngine.process("rh/folha-pagamento/holerite", ctx);
+        String html = templateEngine.process("rh/folha-pagamento/holerite-pdf", ctx);
 
         PdfRendererBuilder builder = new PdfRendererBuilder();
         builder.useFastMode();
@@ -359,7 +359,7 @@ public class FolhaPagamentoController {
         ctx.setVariable("dataReferencia", holeriteService.gerarDataReferencia(h));
         ctx.setVariable("pdf", true);
 
-        String html = templateEngine.process("rh/folha-pagamento/holerite", ctx);
+        String html = templateEngine.process("rh/folha-pagamento/holerite-pdf", ctx);
 
         PdfRendererBuilder builder = new PdfRendererBuilder();
         builder.useFastMode();

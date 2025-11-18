@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,6 +35,25 @@ public class HoleriteService {
      */
     public Optional<Holerite> buscarPorId(Long id) {
         return holeriteRepository.findById(id);
+    }
+
+    /**
+     * Verifica se o usuário logado pode visualizar/baixar o holerite
+     * Permite se for o próprio colaborador (e-mail igual ao do usuário autenticado)
+     */
+    public boolean podeVerHolerite(Long holeriteId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return false;
+        }
+        Optional<Holerite> opt = holeriteRepository.findById(holeriteId);
+        if (opt.isEmpty()) {
+            return false;
+        }
+        Holerite h = opt.get();
+        String usuarioEmail = auth.getName();
+        String colaboradorEmail = h.getColaborador() != null ? h.getColaborador().getEmail() : null;
+        return colaboradorEmail != null && usuarioEmail != null && colaboradorEmail.equalsIgnoreCase(usuarioEmail);
     }
 
     /**

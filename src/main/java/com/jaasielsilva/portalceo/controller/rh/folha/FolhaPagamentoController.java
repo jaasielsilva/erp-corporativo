@@ -25,6 +25,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.http.MediaType;
@@ -89,8 +92,10 @@ public class FolhaPagamentoController {
      */
     @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
     @GetMapping("/gerar")
-    public String gerar(Model model) {
-        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+    public String gerar(@RequestParam(name = "page", defaultValue = "0") int page, Model model) {
+        PageRequest pageable = PageRequest.of(page, 10, Sort.by("nome").ascending());
+        Page<com.jaasielsilva.portalceo.model.Colaborador> colaboradoresPage = colaboradorService.listarAtivosPaginado(pageable);
+        model.addAttribute("colaboradores", colaboradoresPage);
         model.addAttribute("departamentos", departamentoService.listarTodos());
         
         // Verificar se já existe folha para o mês atual
@@ -101,13 +106,28 @@ public class FolhaPagamentoController {
         model.addAttribute("anoAtual", hoje.getYear());
         YearMonth ym = YearMonth.of(hoje.getYear(), hoje.getMonthValue());
         model.addAttribute("diasMesAtual", ym.lengthOfMonth());
-        List<com.jaasielsilva.portalceo.dto.ColaboradorResumoFolhaDTO> colaboradoresResumo = colaboradorService
-                .listarAtivos()
+        List<com.jaasielsilva.portalceo.dto.ColaboradorResumoFolhaDTO> colaboradoresResumo = colaboradoresPage
+                .getContent()
                 .stream()
                 .map(c -> resumoFolhaService.criarResumo(c, ym))
                 .collect(Collectors.toList());
         model.addAttribute("colaboradoresResumo", colaboradoresResumo);
-        
+        model.addAttribute("currentPage", colaboradoresPage.getNumber());
+        model.addAttribute("totalPages", colaboradoresPage.getTotalPages());
+        model.addAttribute("totalElements", colaboradoresPage.getTotalElements());
+        model.addAttribute("hasPrevious", colaboradoresPage.hasPrevious());
+        model.addAttribute("hasNext", colaboradoresPage.hasNext());
+
+        List<com.jaasielsilva.portalceo.model.Colaborador> ativos = colaboradorService.listarAtivos();
+        long totalAtivos = ativos.size();
+        long totalClt = ativos.stream().filter(c -> "CLT".equalsIgnoreCase(c.getTipoContrato())).count();
+        long totalPj = ativos.stream().filter(c -> "PJ".equalsIgnoreCase(c.getTipoContrato())).count();
+        long totalEstagiario = ativos.stream().filter(c -> c.getTipoContrato() != null && c.getTipoContrato().toUpperCase().contains("ESTAG")).count();
+        model.addAttribute("totalAtivos", totalAtivos);
+        model.addAttribute("totalClt", totalClt);
+        model.addAttribute("totalPj", totalPj);
+        model.addAttribute("totalEstagiario", totalEstagiario);
+
         return "rh/folha-pagamento/gerar";
     }
 

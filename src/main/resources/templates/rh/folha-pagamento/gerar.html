@@ -105,19 +105,19 @@
           <div class="colaboradores-resumo">
             <div class="resumo-stats">
               <div class="stat-item">
-                <span class="stat-number">15</span>
+                <span class="stat-number" th:text="${totalAtivos}">0</span>
                 <span class="stat-label">Total de Colaboradores</span>
               </div>
               <div class="stat-item">
-                <span class="stat-number">12</span>
+                <span class="stat-number" th:text="${totalClt}">0</span>
                 <span class="stat-label">CLT</span>
               </div>
               <div class="stat-item">
-                <span class="stat-number">2</span>
+                <span class="stat-number" th:text="${totalPj}">0</span>
                 <span class="stat-label">PJ</span>
               </div>
               <div class="stat-item">
-                <span class="stat-number">1</span>
+                <span class="stat-number" th:text="${totalEstagiario}">0</span>
                 <span class="stat-label">Estagiário</span>
               </div>
             </div>
@@ -155,16 +155,16 @@
                   </span>
                 </td>
 
-                <td>
-                  <button class="btn-icon" title="Ver Detalhes"
-                    th:onclick="'window.location.href=\'/folha/detalhes/' + c.id + '\';'">
+                <td class="actions">
+                  <a th:href="@{/folha/detalhes/{id}(id=${c.id})}" 
+                     class="btn btn-sm btn-info" title="Ver Detalhes">
                     <i class="fas fa-eye"></i>
-                  </button>
+                  </a>
 
-                  <button class="btn-icon" title="Editar"
-                    th:onclick="'window.location.href=\'/folha/editar/' + c.id + '\';'">
+                  <a th:href="@{/folha/editar/{id}(id=${c.id})}" 
+                     class="btn btn-sm btn-warning" title="Editar">
                     <i class="fas fa-edit"></i>
-                  </button>
+                  </a>
                 </td>
 
               </tr>
@@ -173,6 +173,34 @@
 
 
           </table>
+
+          <div class="pagination" th:if="${totalPages > 1}">
+            <a th:href="@{/rh/folha-pagamento/gerar(page=${currentPage - 1})}"
+               th:class="'btn btn-secondary' + (${!hasPrevious} ? ' disabled' : '')"
+               th:if="${hasPrevious}">
+              <i class="fas fa-chevron-left"></i> Anterior
+            </a>
+            <span class="btn btn-secondary disabled" th:unless="${hasPrevious}">
+              <i class="fas fa-chevron-left"></i> Anterior
+            </span>
+
+            <span class="pagination-info">
+              Página <span th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">1</span>
+              (<span th:text="${totalElements}">0</span> colaboradores)
+            </span>
+
+            <a th:href="@{/rh/folha-pagamento/gerar(page=${currentPage + 1})}"
+               th:class="'btn btn-secondary' + (${!hasNext} ? ' disabled' : '')"
+               th:if="${hasNext}">
+              Próxima <i class="fas fa-chevron-right"></i>
+            </a>
+            <span class="btn btn-secondary disabled" th:unless="${hasNext}">
+              Próxima <i class="fas fa-chevron-right"></i>
+            </span>
+          </div>
+          <div class="pagination-summary" th:if="${totalPages <= 1}">
+            <span th:text="${totalElements}">0</span> colaborador(es) encontrado(s)
+          </div>
         </article>
 
         <!-- Resumo Financeiro -->

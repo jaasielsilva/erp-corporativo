@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}" />
     <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
 </head>
+
 <body>
     <div class="app-container">
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -51,21 +53,26 @@
                                 <div th:if="${folhaAtual}">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <strong>Período:</strong> <span th:text="${mesAtual + '/' + anoAtual}"></span><br>
-                                            <strong>Status:</strong> 
-                                            <span th:class="'badge ' + (${folhaAtual.status.name() == 'PROCESSADA'} ? 'bg-success' : 
-                                                         ${folhaAtual.status.name() == 'EM_PROCESSAMENTO'} ? 'bg-warning' : 
-                                                         ${folhaAtual.status.name() == 'FECHADA'} ? 'bg-info' : 'bg-danger')"
-                                                  th:text="${folhaAtual.status}"></span>
+                                            <strong>Período:</strong> <span
+                                                th:text="${mesAtual + '/' + anoAtual}"></span><br>
+                                            <strong>Status:</strong>
+                                            <span th:if="${folhaAtual != null and folhaAtual.status != null}"
+                                                th:class="'badge ' + (${folhaAtual.status.name() == 'PROCESSADA'} ? 'bg-success' : 
+                                                         (${folhaAtual.status.name() == 'EM_PROCESSAMENTO'} ? 'bg-warning' : 
+                                                         (${folhaAtual.status.name() == 'FECHADA'} ? 'bg-info' : 'bg-danger')))" th:text="${folhaAtual.status}"></span>
+                                            <span th:unless="${folhaAtual != null and folhaAtual.status != null}"
+                                                class="badge bg-secondary">-</span>
                                         </div>
                                         <div class="col-md-6">
                                             <strong>Total Líquido:</strong><br>
-                                            <h4 class="text-success" th:text="${#numbers.formatCurrency(folhaAtual.totalLiquido)}"></h4>
+                                            <h4 class="text-success"
+                                                th:text="${folhaAtual != null && folhaAtual.totalLiquido != null ? #numbers.formatCurrency(folhaAtual.totalLiquido) : 'R$ 0,00'}">
+                                            </h4>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folhaAtual.id})}" 
-                                           class="btn btn-outline-primary btn-sm">
+                                        <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folhaAtual.id})}"
+                                            class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-eye"></i> Visualizar
                                         </a>
                                     </div>
@@ -86,20 +93,16 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <a th:href="@{/rh/folha-pagamento/gerar}" 
-                                       class="btn btn-outline-primary">
+                                    <a th:href="@{/rh/folha-pagamento/gerar}" class="btn btn-outline-primary">
                                         <i class="fas fa-cogs"></i> Gerar Nova Folha
                                     </a>
-                                    <a th:href="@{/rh/folha-pagamento/listar}" 
-                                       class="btn btn-outline-secondary">
+                                    <a th:href="@{/rh/folha-pagamento/listar}" class="btn btn-outline-secondary">
                                         <i class="fas fa-list"></i> Todas as Folhas
                                     </a>
-                                    <a th:href="@{/rh/folha-pagamento/relatorios}" 
-                                       class="btn btn-outline-info">
+                                    <a th:href="@{/rh/folha-pagamento/relatorios}" class="btn btn-outline-info">
                                         <i class="fas fa-chart-line"></i> Relatórios
                                     </a>
-                                    <a th:href="@{/rh/folha-pagamento/descontos}" 
-                                       class="btn btn-outline-warning">
+                                    <a th:href="@{/rh/folha-pagamento/descontos}" class="btn btn-outline-warning">
                                         <i class="fas fa-minus-circle"></i> Gerenciar Descontos
                                     </a>
                                 </div>
@@ -136,36 +139,49 @@
                                 <tbody>
                                     <tr th:each="folha : ${folhasRecentes}">
                                         <td>
-                                            <strong th:text="${folha.mesReferencia + '/' + folha.anoReferencia}"></strong>
+                                            <strong
+                                                th:text="${folha.mesReferencia + '/' + folha.anoReferencia}"></strong>
                                         </td>
                                         <td>
-                                            <span th:class="'badge ' + (${folha.status.name() == 'PROCESSADA'} ? 'bg-success' : 
-                                                             ${folha.status.name() == 'EM_PROCESSAMENTO'} ? 'bg-warning' : 
-                                                             ${folha.status.name() == 'FECHADA'} ? 'bg-info' : 'bg-danger')"
-                                                  th:text="${folha.status}"></span>
+                                            <span th:if="${folha.status != null}"
+                                                th:class="'badge ' + (${folha.status.name() == 'PROCESSADA'} ? 'bg-success' : 
+                                                             (${folha.status.name() == 'EM_PROCESSAMENTO'} ? 'bg-warning' : 
+                                                             (${folha.status.name() == 'FECHADA'} ? 'bg-info' : 'bg-danger')))"
+                                                th:text="${folha.status}"></span>
+                                            <span th:unless="${folha.status != null}"
+                                                class="badge bg-secondary">-</span>
                                         </td>
-                                        <td th:text="${#numbers.formatCurrency(folha.totalBruto)}"></td>
-                                        <td th:text="${#numbers.formatCurrency(folha.totalDescontos)}"></td>
-                                        <td th:text="${#numbers.formatCurrency(folha.totalLiquido)}"></td>
-                                        <td th:text="${#temporals.format(folha.dataProcessamento, 'dd/MM/yyyy')}"></td>
+                                        <td
+                                            th:text="${folha.totalBruto != null ? #numbers.formatCurrency(folha.totalBruto) : 'R$ 0,00'}">
+                                        </td>
+                                        <td
+                                            th:text="${folha.totalDescontos != null ? #numbers.formatCurrency(folha.totalDescontos) : 'R$ 0,00'}">
+                                        </td>
+                                        <td
+                                            th:text="${folha.totalLiquido != null ? #numbers.formatCurrency(folha.totalLiquido) : 'R$ 0,00'}">
+                                        </td>
+                                        <td
+                                            th:text="${folha.dataProcessamento != null ? #temporals.format(folha.dataProcessamento, 'dd/MM/yyyy') : '-'}">
+                                        </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folha.id})}" 
-                                                   class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                                <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folha.id})}"
+                                                    class="btn btn-sm btn-outline-primary" title="Visualizar">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                
-                                                <button th:if="${folha.status.name() == 'PROCESSADA'}" 
-                                                        type="button" class="btn btn-sm btn-outline-success" 
-                                                        th:onclick="'fecharFolha(' + ${folha.id} + ')'" 
-                                                        title="Fechar Folha">
+
+                                                <button
+                                                    th:if="${folha.status != null and folha.status.name() == 'PROCESSADA'}"
+                                                    type="button" class="btn btn-sm btn-outline-success"
+                                                    th:onclick="'fecharFolha(' + ${folha.id} + ')'"
+                                                    title="Fechar Folha">
                                                     <i class="fas fa-lock"></i>
                                                 </button>
-                                                
-                                                <button th:if="${folha.status.name() != 'FECHADA'}" 
-                                                        type="button" class="btn btn-sm btn-outline-danger" 
-                                                        th:onclick="'cancelarFolha(' + ${folha.id} + ')'" 
-                                                        title="Cancelar">
+
+                                                <button
+                                                    th:if="${folha.status != null and folha.status.name() != 'FECHADA'}"
+                                                    type="button" class="btn btn-sm btn-outline-danger"
+                                                    th:onclick="'cancelarFolha(' + ${folha.id} + ')'" title="Cancelar">
                                                     <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
@@ -203,5 +219,9 @@
             }
         }
     </script>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/sidebar.js}"></script>
 </body>
+
 </html>

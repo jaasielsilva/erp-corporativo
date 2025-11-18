@@ -14,9 +14,16 @@
     <main class="main-content">
       <header th:replace="~{components/topbar :: topbar}"></header>
       <section class="content-area">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h1><i class="fas fa-list"></i> Folhas de Pagamento</h1>
-          <a th:href="@{/rh/folha-pagamento/gerar}" class="btn btn-primary"><i class="fas fa-plus"></i> Gerar Folha</a>
+        <h1>Folhas de Pagamento</h1>
+        <h2>Histórico e consulta de períodos gerados</h2>
+
+        <div class="action-buttons">
+          <a th:href="@{/rh/folha-pagamento/gerar}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Gerar Folha
+          </a>
+          <a th:href="@{/rh/folha-pagamento/relatorios}" class="btn btn-secondary">
+            <i class="fas fa-chart-line"></i> Relatórios
+          </a>
         </div>
 
         <form class="row g-3 mb-3" th:action="@{/rh/folha-pagamento/listar}" method="get">
@@ -34,9 +41,10 @@
           </div>
         </form>
 
-        <div class="card">
-          <div class="card-body table-responsive">
-            <table class="table table-striped">
+        <article class="card">
+          <h3><i class="fas fa-history"></i> Folhas Processadas</h3>
+          <div class="table-responsive">
+            <table class="table-list">
               <thead>
                 <tr>
                   <th>Período</th>
@@ -51,13 +59,20 @@
               <tbody>
                 <tr th:each="folha : ${folhas}">
                   <td th:text="${folha.mesReferencia + '/' + folha.anoReferencia}"></td>
-                  <td th:text="${folha.status}"></td>
-                  <td th:text="${#numbers.formatCurrency(folha.totalBruto)}"></td>
-                  <td th:text="${#numbers.formatCurrency(folha.totalDescontos)}"></td>
-                  <td th:text="${#numbers.formatCurrency(folha.totalLiquido)}"></td>
-                  <td th:text="${#temporals.format(folha.dataProcessamento, 'dd/MM/yyyy')}"></td>
                   <td>
-                    <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folha.id})}" class="btn btn-sm btn-outline-primary">
+                    <span th:if="${folha.status != null}"
+                          th:class="'badge ' + (${folha.status.name() == 'PROCESSADA'} ? 'bg-success' : 
+                                     (${folha.status.name() == 'EM_PROCESSAMENTO'} ? 'bg-warning' : 
+                                     (${folha.status.name() == 'FECHADA'} ? 'bg-info' : 'bg-danger')))"
+                          th:text="${folha.status}"></span>
+                    <span th:unless="${folha.status != null}" class="badge bg-secondary">-</span>
+                  </td>
+                  <td th:text="${folha.totalBruto != null ? #numbers.formatCurrency(folha.totalBruto) : 'R$ 0,00'}"></td>
+                  <td th:text="${folha.totalDescontos != null ? #numbers.formatCurrency(folha.totalDescontos) : 'R$ 0,00'}"></td>
+                  <td th:text="${folha.totalLiquido != null ? #numbers.formatCurrency(folha.totalLiquido) : 'R$ 0,00'}"></td>
+                  <td th:text="${folha.dataProcessamento != null ? #temporals.format(folha.dataProcessamento, 'dd/MM/yyyy') : '-'}"></td>
+                  <td class="actions">
+                    <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folha.id})}" class="btn btn-sm btn-info" title="Visualizar">
                       <i class="fas fa-eye"></i>
                     </a>
                   </td>
@@ -65,10 +80,12 @@
               </tbody>
             </table>
           </div>
-        </div>
+        </article>
       </section>
     </main>
   </div>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script th:src="@{/js/sidebar.js}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

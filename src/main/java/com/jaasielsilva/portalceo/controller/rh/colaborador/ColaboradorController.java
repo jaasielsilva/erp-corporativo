@@ -51,10 +51,20 @@ public class ColaboradorController {
     private HistoricoColaboradorService historicoColaboradorService;
 
     @GetMapping("/listar")
-    public String listar(Model model) {
-        List<Colaborador> colaboradores = colaboradorRepository.findAllWithCargo();
-        model.addAttribute("colaboradores", colaboradores);
-        model.addAttribute("usuarios", usuarioService.findAll());
+    public String listar(@RequestParam(name = "page", defaultValue = "0") int page,
+                         Model model) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(page, 0), 10, org.springframework.data.domain.Sort.by("nome").ascending());
+
+        org.springframework.data.domain.Page<Colaborador> pagina = colaboradorRepository.findByAtivoTrue(pageable);
+
+        model.addAttribute("colaboradores", pagina.getContent());
+        model.addAttribute("currentPage", pagina.getNumber());
+        model.addAttribute("totalPages", pagina.getTotalPages());
+        model.addAttribute("totalElements", pagina.getTotalElements());
+        model.addAttribute("hasPrevious", pagina.hasPrevious());
+        model.addAttribute("hasNext", pagina.hasNext());
+
         return "rh/colaboradores/listar";
     }
 

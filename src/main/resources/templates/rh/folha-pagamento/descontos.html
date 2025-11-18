@@ -8,6 +8,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -75,49 +76,42 @@
         <!-- Resumo de Descontos -->
         <article class="card">
           <h3><i class="fas fa-chart-pie"></i> Resumo de Descontos</h3>
-          <div class="resumo-descontos">
+          <div class="resumo-executivo">
             <div class="resumo-grid">
-              <div class="resumo-item obrigatorios">
+              <div class="resumo-card">
                 <div class="resumo-icon">
                   <i class="fas fa-gavel"></i>
                 </div>
                 <div class="resumo-info">
-                  <h4>Descontos Obrigatórios</h4>
+                  <h4>Obrigatórios</h4>
                   <div class="resumo-valor">R$ 28.450,00</div>
-                  <div class="resumo-detalhes">INSS, IRRF, FGTS</div>
                 </div>
               </div>
-              
-              <div class="resumo-item beneficios">
+              <div class="resumo-card">
                 <div class="resumo-icon">
                   <i class="fas fa-heart"></i>
                 </div>
                 <div class="resumo-info">
                   <h4>Benefícios</h4>
                   <div class="resumo-valor">R$ 3.200,00</div>
-                  <div class="resumo-detalhes">Plano de Saúde, Seguro</div>
                 </div>
               </div>
-              
-              <div class="resumo-item outros">
+              <div class="resumo-card">
                 <div class="resumo-icon">
                   <i class="fas fa-minus-circle"></i>
                 </div>
                 <div class="resumo-info">
-                  <h4>Outros Descontos</h4>
+                  <h4>Outros</h4>
                   <div class="resumo-valor">R$ 800,00</div>
-                  <div class="resumo-detalhes">Empréstimos, Faltas</div>
                 </div>
               </div>
-              
-              <div class="resumo-item total">
+              <div class="resumo-card">
                 <div class="resumo-icon">
                   <i class="fas fa-calculator"></i>
                 </div>
                 <div class="resumo-info">
-                  <h4>Total Geral</h4>
+                  <h4>Total</h4>
                   <div class="resumo-valor">R$ 32.450,00</div>
-                  <div class="resumo-detalhes">Todos os descontos</div>
                 </div>
               </div>
             </div>
@@ -149,12 +143,12 @@
                 <td>R$ 935,00</td>
                 <td>Permanente</td>
                 <td><span class="status-badge status-ativo">Ativo</span></td>
-                <td>
-                  <button onclick="editarDesconto(1)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(1)" class="btn-icon" title="Detalhes">
+                <td class="actions">
+                  <button type="button" onclick="verDetalhes(1)" class="btn btn-sm btn-info" title="Detalhes">
                     <i class="fas fa-eye"></i>
+                  </button>
+                  <button type="button" onclick="editarDesconto(1)" class="btn btn-sm btn-warning" title="Editar">
+                    <i class="fas fa-edit"></i>
                   </button>
                 </td>
               </tr>
@@ -166,12 +160,12 @@
                 <td>R$ 756,30</td>
                 <td>Permanente</td>
                 <td><span class="status-badge status-ativo">Ativo</span></td>
-                <td>
-                  <button onclick="editarDesconto(2)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(2)" class="btn-icon" title="Detalhes">
+                <td class="actions">
+                  <button type="button" onclick="verDetalhes(2)" class="btn btn-sm btn-info" title="Detalhes">
                     <i class="fas fa-eye"></i>
+                  </button>
+                  <button type="button" onclick="editarDesconto(2)" class="btn btn-sm btn-warning" title="Editar">
+                    <i class="fas fa-edit"></i>
                   </button>
                 </td>
               </tr>
@@ -183,14 +177,14 @@
                 <td>R$ 180,00</td>
                 <td>01/01/2023 - 31/12/2023</td>
                 <td><span class="status-badge status-ativo">Ativo</span></td>
-                <td>
-                  <button onclick="editarDesconto(3)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(3)" class="btn-icon" title="Detalhes">
+                <td class="actions">
+                  <button type="button" onclick="verDetalhes(3)" class="btn btn-sm btn-info" title="Detalhes">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button onclick="inativarDesconto(3)" class="btn-icon btn-danger" title="Inativar">
+                  <button type="button" onclick="editarDesconto(3)" class="btn btn-sm btn-warning" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" onclick="inativarDesconto(3)" class="btn btn-sm btn-danger" title="Inativar">
                     <i class="fas fa-times"></i>
                   </button>
                 </td>
@@ -203,14 +197,14 @@
                 <td>R$ 250,00</td>
                 <td>01/06/2023 - 01/06/2024</td>
                 <td><span class="status-badge status-ativo">Ativo</span></td>
-                <td>
-                  <button onclick="editarDesconto(4)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(4)" class="btn-icon" title="Detalhes">
+                <td class="actions">
+                  <button type="button" onclick="verDetalhes(4)" class="btn btn-sm btn-info" title="Detalhes">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button onclick="inativarDesconto(4)" class="btn-icon btn-danger" title="Inativar">
+                  <button type="button" onclick="editarDesconto(4)" class="btn btn-sm btn-warning" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" onclick="inativarDesconto(4)" class="btn btn-sm btn-danger" title="Inativar">
                     <i class="fas fa-times"></i>
                   </button>
                 </td>
@@ -223,14 +217,14 @@
                 <td>R$ 45,00</td>
                 <td>Permanente</td>
                 <td><span class="status-badge status-inativo">Inativo</span></td>
-                <td>
-                  <button onclick="editarDesconto(5)" class="btn-icon" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button onclick="verDetalhes(5)" class="btn-icon" title="Detalhes">
+                <td class="actions">
+                  <button type="button" onclick="verDetalhes(5)" class="btn btn-sm btn-info" title="Detalhes">
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button onclick="ativarDesconto(5)" class="btn-icon btn-success" title="Ativar">
+                  <button type="button" onclick="editarDesconto(5)" class="btn btn-sm btn-warning" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" onclick="ativarDesconto(5)" class="btn btn-sm btn-success" title="Ativar">
                     <i class="fas fa-check"></i>
                   </button>
                 </td>
@@ -591,21 +585,7 @@
       font-size: 14px;
     }
   </style>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 
 </body>

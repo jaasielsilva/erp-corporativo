@@ -58,6 +58,10 @@ public class ColaboradorService {
         return colaboradorRepository.findByAtivoTrue();
     }
 
+    public Page<Colaborador> listarAtivosPaginado(Pageable pageable) {
+        return colaboradorRepository.findByAtivoTrue(pageable);
+    }
+
     public long contarAtivos() {
         return colaboradorRepository.findByAtivoTrue().size();
     }

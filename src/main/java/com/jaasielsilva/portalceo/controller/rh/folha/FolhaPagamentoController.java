@@ -327,7 +327,7 @@ public class FolhaPagamentoController {
             throw new java.io.IOException("Erro ao gerar PDF", e);
         }
     }
-    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH() or @holeriteService.podeVerHolerite(#id)")
     @PostMapping(value = "/holerite/{id}/email", consumes = MediaType.ALL_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> enviarHoleriteEmail(@PathVariable Long id,

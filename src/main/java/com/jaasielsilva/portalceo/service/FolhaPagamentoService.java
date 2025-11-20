@@ -16,6 +16,10 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.scheduling.annotation.Async;
 
 @Service
 public class FolhaPagamentoService {
@@ -46,6 +50,8 @@ public class FolhaPagamentoService {
     @Autowired
     private HoleriteCalculoService holeriteCalculoService;
 
+    private final Map<String, Map<String, Object>> processamentoJobs = new ConcurrentHashMap<>();
+
     /**
      * Lista todas as folhas de pagamento ordenadas por ano e mês
      */
@@ -65,6 +71,37 @@ public class FolhaPagamentoService {
      */
     public Optional<FolhaPagamento> buscarPorMesAno(Integer mes, Integer ano) {
         return folhaPagamentoRepository.findFolhaByMesAno(mes, ano);
+    }
+
+    public String iniciarProcessamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento) {
+        String jobId = UUID.randomUUID().toString();
+        Map<String, Object> info = new java.util.HashMap<>();
+        info.put("status", "AGENDADO");
+        info.put("message", "Processamento agendado");
+        processamentoJobs.put(jobId, info);
+        gerarFolhaPagamentoAsync(mes, ano, usuarioProcessamento, jobId);
+        return jobId;
+    }
+
+    public Map<String, Object> obterStatusProcessamento(String jobId) {
+        return processamentoJobs.getOrDefault(jobId, java.util.Map.of("status", "DESCONHECIDO"));
+    }
+
+    @Async("taskExecutor")
+    @Transactional
+    public void gerarFolhaPagamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento, String jobId) {
+        Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+        info.put("status", "PROCESSANDO");
+        info.put("message", "Processando folha");
+        try {
+            FolhaPagamento folha = gerarFolhaPagamento(mes, ano, usuarioProcessamento);
+            info.put("status", "CONCLUIDO");
+            info.put("folhaId", folha.getId());
+            info.put("message", "Folha gerada com sucesso");
+        } catch (Exception e) {
+            info.put("status", "ERRO");
+            info.put("message", e.getMessage());
+        }
     }
 
     /**

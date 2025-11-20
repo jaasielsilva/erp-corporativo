@@ -178,6 +178,28 @@ public class FolhaPagamentoController {
         }
     }
 
+    @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
+    @PostMapping(value = "/processar-async", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> processarAsync(@RequestParam Integer mes,
+                                                                        @RequestParam Integer ano) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        String jobId = folhaPagamentoService.iniciarProcessamentoAsync(mes, ano, usuario);
+        java.util.Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("accepted", true);
+        resp.put("jobId", jobId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(resp);
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
+    @GetMapping(value = "/status-processamento", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> statusProcessamento(@RequestParam String jobId) {
+        java.util.Map<String, Object> status = folhaPagamentoService.obterStatusProcessamento(jobId);
+        return ResponseEntity.ok(status);
+    }
+
     /**
      * Visualiza uma folha de pagamento específica
      */

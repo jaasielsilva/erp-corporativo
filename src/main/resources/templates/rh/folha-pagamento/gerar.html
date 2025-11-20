@@ -38,7 +38,6 @@
           </div>
         </div>
         <h1>Gerar Folha de Pagamento</h1>
-        <h2>Processamento da folha mensal</h2>
 
         <!-- Configurações da Folha -->
         <article class="card">
@@ -46,7 +45,7 @@
           <div th:if="${existeFolhaAtual}" class="alert alert-warning" role="alert">
             Já existe folha para <span th:text="${mesAtual}"></span>/<span th:text="${anoAtual}"></span>.
           </div>
-          <form class="form-container" th:action="@{/rh/folha-pagamento/processar}" method="post">
+          <form id="processarFolhaForm" class="form-container" th:action="@{/rh/folha-pagamento/processar}" method="post" onsubmit="return processarFolhaAsync(event)">
             <div class="form-row">
               <div class="form-group">
                 <label for="mesReferencia">Mês de Referência *</label>
@@ -93,26 +92,7 @@
         <!-- Resumo dos Colaboradores -->
         <article class="card">
           <h3><i class="fas fa-users"></i> Colaboradores Incluídos</h3>
-          <div class="colaboradores-resumo">
-            <div class="resumo-stats">
-              <div class="stat-item">
-                <span class="stat-number" th:text="${totalAtivos}">0</span>
-                <span class="stat-label">Total de Colaboradores</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number" th:text="${totalClt}">0</span>
-                <span class="stat-label">CLT</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number" th:text="${totalPj}">0</span>
-                <span class="stat-label">PJ</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number" th:text="${totalEstagiario}">0</span>
-                <span class="stat-label">Estagiário</span>
-              </div>
-            </div>
-          </div>
+          
 
           <table class="table-list">
             <thead>
@@ -135,87 +115,7 @@
           <div id="paginationResumo" class="pagination"></div>
         </article>
 
-        <!-- Resumo Financeiro -->
-        <article class="card">
-          <h3><i class="fas fa-money-bill-wave"></i> Resumo Financeiro</h3>
-          <div class="resumo-financeiro">
-            <div class="resumo-grid">
-              <div class="resumo-item proventos">
-                <h4><i class="fas fa-plus-circle"></i> Proventos</h4>
-                <div class="valor-principal">R$ 145.750,00</div>
-                <div class="detalhes">
-                  <span>Salários: R$ 132.500,00</span>
-                  <span>Horas Extras: R$ 8.250,00</span>
-                  <span>Comissões: R$ 5.000,00</span>
-                </div>
-              </div>
 
-              <div class="resumo-item descontos">
-                <h4><i class="fas fa-minus-circle"></i> Descontos</h4>
-                <div class="valor-principal">R$ 32.450,00</div>
-                <div class="detalhes">
-                  <span>INSS: R$ 18.200,00</span>
-                  <span>IRRF: R$ 12.750,00</span>
-                  <span>Outros: R$ 1.500,00</span>
-                </div>
-              </div>
-
-              <div class="resumo-item liquido">
-                <h4><i class="fas fa-hand-holding-usd"></i> Valor Líquido</h4>
-                <div class="valor-principal">R$ 113.300,00</div>
-                <div class="detalhes">
-                  <span>Valor a pagar aos colaboradores</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <!-- Ações da Folha -->
-        <article class="card">
-          <h3><i class="fas fa-tasks"></i> Ações da Folha</h3>
-          <div class="acoes-folha">
-            <div class="acao-item">
-              <div class="acao-info">
-                <h4>1. Calcular Folha</h4>
-                <p>Processar cálculos de salários, descontos e benefícios</p>
-              </div>
-              <button onclick="calcularFolha()" class="btn btn-primary">
-                <i class="fas fa-calculator"></i> Calcular
-              </button>
-            </div>
-
-            <div class="acao-item">
-              <div class="acao-info">
-                <h4>2. Revisar Cálculos</h4>
-                <p>Verificar e validar todos os cálculos realizados</p>
-              </div>
-              <button onclick="revisarCalculos()" class="btn btn-warning" disabled>
-                <i class="fas fa-search"></i> Revisar
-              </button>
-            </div>
-
-            <div class="acao-item">
-              <div class="acao-info">
-                <h4>3. Gerar Holerites</h4>
-                <p>Criar holerites individuais para cada colaborador</p>
-              </div>
-              <button onclick="gerarHolerites()" class="btn btn-info" disabled>
-                <i class="fas fa-file-invoice"></i> Gerar Holerites
-              </button>
-            </div>
-
-            <div class="acao-item">
-              <div class="acao-info">
-                <h4>4. Aprovar Folha</h4>
-                <p>Aprovar a folha para processamento final</p>
-              </div>
-              <button onclick="aprovarFolha()" class="btn btn-success" disabled>
-                <i class="fas fa-check"></i> Aprovar
-              </button>
-            </div>
-          </div>
-        </article>
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
@@ -397,4 +297,45 @@
 </html>
   <script th:inline="javascript">
     window.podeAcessarRH = [[${podeAcessarRH}?:false]];
+  </script>
+  <script>
+    function mostrarAlerta(tipo, texto) {
+      const container = document.querySelector('.alert-container-right');
+      if (!container) return;
+      const el = document.createElement('div');
+      el.className = `alert alert-${tipo}`;
+      el.setAttribute('role', 'alert');
+      el.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> <span>${texto}</span>`;
+      container.prepend(el);
+      setTimeout(() => { el.remove(); }, 8000);
+    }
+    async function processarFolhaAsync(e) {
+      e.preventDefault();
+      const form = document.getElementById('processarFolhaForm');
+      const mes = document.getElementById('mesReferencia').value;
+      const ano = document.getElementById('anoReferencia').value;
+      const btn = form.querySelector('button[type="submit"]');
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+      try {
+        const res = await fetch('/rh/folha-pagamento/processar-async', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}`
+        });
+        const data = await res.json();
+        if (res.status === 202 && data.accepted) {
+          mostrarAlerta('success', 'Processamento da folha iniciado. Você será notificado.');
+        } else {
+          mostrarAlerta('danger', 'Não foi possível iniciar o processamento.');
+        }
+      } catch {
+        mostrarAlerta('danger', 'Erro ao iniciar processamento.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+      return false;
+    }
   </script>

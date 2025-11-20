@@ -40,15 +40,6 @@
         <h1>Gerar Folha de Pagamento</h1>
         <h2>Processamento da folha mensal</h2>
 
-        <div class="action-buttons">
-          <a href="/rh/folha-pagamento/relatorios" class="btn btn-secondary">
-            <i class="fas fa-chart-bar"></i> Ver Relatórios
-          </a>
-          <a href="/rh/folha-pagamento/listar" class="btn btn-info">
-            <i class="fas fa-history"></i> Histórico
-          </a>
-        </div>
-
         <!-- Configurações da Folha -->
         <article class="card">
           <h3><i class="fas fa-cog"></i> Configurações da Folha</h3>
@@ -156,15 +147,24 @@
                 </td>
 
                 <td class="actions">
-                  <a th:href="@{/folha/detalhes/{id}(id=${c.id})}" 
-                     class="btn btn-sm btn-info" title="Ver Detalhes">
+                  <a th:href="@{/rh/colaboradores/ficha/{id}(id=${c.id})}"
+                     class="btn btn-sm btn-info" title="Ver Ficha">
                     <i class="fas fa-eye"></i>
                   </a>
 
-                  <a th:href="@{/folha/editar/{id}(id=${c.id})}" 
+                  <a th:href="@{/rh/colaboradores/editar/{id}(id=${c.id})}"
                      class="btn btn-sm btn-warning" title="Editar">
                     <i class="fas fa-edit"></i>
                   </a>
+
+                  <button type="button"
+                          class="btn btn-sm btn-danger"
+                          th:if="${podeAcessarRH}"
+                          th:attr="data-id=${c.id},data-nome=${c.nome}"
+                          onclick="openDesligamentoFromDataset(this)"
+                          title="Desligar Colaborador">
+                    <i class="fas fa-user-times"></i>
+                  </button>
                 </td>
 
               </tr>
@@ -291,6 +291,45 @@
   </div>
 
   <script th:src="@{/js/script.js}"></script>
+  <div id="desligamentoModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content-desligamento">
+      <div class="modal-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> Confirmar Desligamento</h3>
+        <button type="button" class="modal-close" onclick="closeDesligamentoModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-message">
+          <i class="fas fa-user-times warning-icon"></i>
+          <div class="warning-text">
+            <h4>Tem certeza que deseja desligar este colaborador?</h4>
+            <p>Colaborador: <strong id="colaboradorNome"></strong></p>
+            <div class="confirm-section">
+              <label class="confirm-label">
+                <input type="checkbox" name="confirmarDesligamento" required form="desligamentoForm">
+                Confirmo que revisei o caso e autorizo o desligamento definitivo.
+              </label>
+              <div class="confirm-input">
+                <label for="confirmarTexto">Digite <strong>DESLIGAR</strong> para confirmar</label>
+                <input id="confirmarTexto" name="confirmarTexto" type="text" placeholder="DESLIGAR" required form="desligamentoForm">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeDesligamentoModal()">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <form id="desligamentoForm" method="post" style="display: inline;">
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-user-times"></i> Confirmar Desligamento
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
   <script>
     let etapaAtual = 0;
 
@@ -336,6 +375,30 @@
         }
       }
     }
+  </script>
+  <script>
+    function openDesligamentoFromDataset(el) {
+      const id = el.dataset.id;
+      const nome = el.dataset.nome;
+      document.getElementById('colaboradorNome').textContent = nome;
+      document.getElementById('desligamentoForm').action = '/rh/colaboradores/desativar/' + id;
+      document.getElementById('desligamentoModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDesligamentoModal() {
+      document.getElementById('desligamentoModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    document.getElementById('desligamentoModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDesligamentoModal();
+      }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeDesligamentoModal();
+      }
+    });
   </script>
   <!-- jQuery e notificações (deduplicados) -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

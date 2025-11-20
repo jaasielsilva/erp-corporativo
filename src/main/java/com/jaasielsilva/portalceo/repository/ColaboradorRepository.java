@@ -56,6 +56,16 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
            "ORDER BY c.nome")
     List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> findColaboradoresForAjax();
 
+    @Query(value = "SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome) " +
+           "FROM Colaborador c " +
+           "LEFT JOIN c.cargo cg " +
+           "LEFT JOIN c.departamento d " +
+           "WHERE c.ativo = true " +
+           "AND (:q IS NULL OR LOWER(c.nome) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(c.email) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(c.cpf) LIKE LOWER(CONCAT('%', :q, '%')))",
+           countQuery = "SELECT COUNT(c) FROM Colaborador c WHERE c.ativo = true AND (:q IS NULL OR LOWER(c.nome) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(c.email) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(c.cpf) LIKE LOWER(CONCAT('%', :q, '%')))"
+    )
+    Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> findColaboradoresForAjax(@Param("q") String q, Pageable pageable);
+
     @Query("SELECT COUNT(c) FROM Colaborador c WHERE c.dataAdmissao >= :dataInicio AND c.ativo = true")
     long countContratacoesPorPeriodo(@Param("dataInicio") LocalDate dataInicio);
 
@@ -74,5 +84,7 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     Optional<Colaborador> findByUsuarioMatricula(@Param("matricula") String matricula);
 
     List<Colaborador> findByCargoNomeIgnoreCase(String nomeCargo);
+
+    long countByAtivoTrue();
 
 }

@@ -63,7 +63,7 @@ public class ColaboradorService {
     }
 
     public long contarAtivos() {
-        return colaboradorRepository.findByAtivoTrue().size();
+        return colaboradorRepository.countByAtivoTrue();
     }
 
     public long contarContratacaosPorPeriodo(int meses) {
@@ -193,7 +193,8 @@ public class ColaboradorService {
     public List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> listarParaAjax() {
         logger.debug("Buscando colaboradores para AJAX (com cache)");
         try {
-            List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> colaboradores = colaboradorRepository.findColaboradoresForAjax();
+            List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> colaboradores = colaboradorRepository
+                    .findColaboradoresForAjax();
             logger.debug("Encontrados {} colaboradores ativos para AJAX", colaboradores.size());
             return colaboradores;
         } catch (Exception e) {
@@ -263,24 +264,26 @@ public class ColaboradorService {
         registrarPromocao(colaborador, cargoNovo, novoSalario, null);
     }
 
-    public void registrarPromocao(Colaborador colaborador, String cargoNovo, BigDecimal novoSalario, String descricaoPersonalizada) {
+    public void registrarPromocao(Colaborador colaborador, String cargoNovo, BigDecimal novoSalario,
+            String descricaoPersonalizada) {
         HistoricoColaborador historico = new HistoricoColaborador();
         historico.setColaborador(colaborador);
         historico.setEvento("Promoção");
-        
-        String descricao = descricaoPersonalizada != null && !descricaoPersonalizada.trim().isEmpty() 
-            ? descricaoPersonalizada 
-            : "Promovido para " + cargoNovo;
+
+        String descricao = descricaoPersonalizada != null && !descricaoPersonalizada.trim().isEmpty()
+                ? descricaoPersonalizada
+                : "Promovido para " + cargoNovo;
         historico.setDescricao(descricao);
-        
+
         historico.setCargoAnterior(colaborador.getCargo() != null ? colaborador.getCargo().getNome() : null);
         historico.setCargoNovo(cargoNovo);
         historico.setSalarioAnterior(colaborador.getSalario());
         historico.setSalarioNovo(novoSalario);
-        historico.setDepartamentoAnterior(colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
-        historico.setDepartamentoNovo(colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
+        historico.setDepartamentoAnterior(
+                colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
+        historico.setDepartamentoNovo(
+                colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
         historico.setDataRegistro(LocalDateTime.now());
-
 
         historicoRepository.save(historico);
     }
@@ -298,11 +301,13 @@ public class ColaboradorService {
         historico.setCargoNovo(null);
         historico.setSalarioAnterior(colaborador.getSalario());
         historico.setSalarioNovo(null);
-        historico.setDepartamentoAnterior(colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
+        historico.setDepartamentoAnterior(
+                colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
         historico.setDepartamentoNovo(null);
         historico.setDataRegistro(LocalDateTime.now());
         historicoRepository.save(historico);
     }
+
     public Optional<Colaborador> buscarPorUsuario(Usuario usuario) {
         return colaboradorRepository.findByUsuario(usuario);
     }

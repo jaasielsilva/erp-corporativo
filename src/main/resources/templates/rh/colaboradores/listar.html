@@ -38,15 +38,16 @@
           <a href="/rh/colaboradores/novo" class="btn btn-primary">
             <i class="fas fa-plus"></i> Novo Colaborador
           </a>
-          <a href="/rh/colaboradores/relatorio" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Relatório
-          </a>
+          <div class="search-box">
+            <input id="buscarColaborador" type="text" placeholder="Buscar por nome, email ou CPF" autocomplete="off" />
+          </div>
         </div>
 
         
 
         <article class="card">
           <h3>Colaboradores Cadastrados</h3>
+          <div id="loading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
           <table class="table-list">
             <thead>
               <tr>
@@ -58,70 +59,13 @@
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody>
-              <tr th:each="colaborador : ${colaboradores}">
-                <td th:text="${colaborador.nome}">Nome</td>
-                <td th:text="${colaborador.cargo != null ? colaborador.cargo.nome : '-'}">Cargo</td>
-                <td th:text="${colaborador.departamento != null ? colaborador.departamento.nome : '-'}">Departamento</td>
-                <td th:text="${colaborador.dataAdmissao != null ? #temporals.format(colaborador.dataAdmissao, 'dd/MM/yyyy') : '-'}">Admissão</td>
-                <td>
-                  <span th:class="'status-badge status-' + ${colaborador.status != null ? colaborador.status.name().toLowerCase() : 'inativo'}" 
-                        th:text="${colaborador.status != null ? colaborador.status.name() : 'INATIVO'}">Status</span>
-                </td>
-                <td class="actions">
-                  <a th:href="@{/rh/colaboradores/ficha/{id}(id=${colaborador.id})}" 
-                     class="btn btn-sm btn-info" title="Ver Ficha">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <a th:href="@{/rh/colaboradores/editar/{id}(id=${colaborador.id})}" 
-                     class="btn btn-sm btn-warning" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                  <button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador"
-                          th:if="${podeAcessarRH}"
-                          th:data-colaborador-id="${colaborador.id}"
-                          th:data-colaborador-nome="${colaborador.nome}"
-                          onclick="openDesligamentoModal(this.dataset.colaboradorId, this.dataset.colaboradorNome)">
-                    <i class="fas fa-user-times"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr th:if="${#lists.isEmpty(colaboradores)}">
-                <td colspan="6" class="text-center">Nenhum colaborador encontrado</td>
-              </tr>
+            <tbody id="colaboradoresBody">
             </tbody>
           </table>
 
         </article>
 
-        <div class="pagination" th:if="${totalPages > 1}">
-          <a th:href="@{/rh/colaboradores/listar(page=${currentPage - 1})}" 
-             th:class="'btn btn-secondary' + (${!hasPrevious} ? ' disabled' : '')"
-             th:if="${hasPrevious}">
-            <i class="fas fa-chevron-left"></i> Anterior
-          </a>
-          <span class="btn btn-secondary disabled" th:unless="${hasPrevious}">
-            <i class="fas fa-chevron-left"></i> Anterior
-          </span>
-          
-          <span class="pagination-info">
-            Página <span th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">1</span>
-            (<span th:text="${totalElements}">0</span> colaboradores)
-          </span>
-          
-          <a th:href="@{/rh/colaboradores/listar(page=${currentPage + 1})}" 
-             th:class="'btn btn-secondary' + (${!hasNext} ? ' disabled' : '')"
-             th:if="${hasNext}">
-            Próxima <i class="fas fa-chevron-right"></i>
-          </a>
-          <span class="btn btn-secondary disabled" th:unless="${hasNext}">
-            Próxima <i class="fas fa-chevron-right"></i>
-          </span>
-        </div>
-        
-        <div class="pagination-summary" th:if="${totalPages <= 1}">
-          <span th:text="${totalElements}">0</span> colaborador(es) encontrado(s)
-        </div>
+        <div id="pagination" class="pagination"></div>
       </section>
 
       
@@ -178,7 +122,83 @@
     </div>
   </div>
 
-  <script th:src="@{/js/script.js}"></script>
+  <script th:inline="javascript">
+    window.podeAcessarRH = [[${podeAcessarRH}?:false]];
+  </script>
+  <script>
+    let currentPage = 0;
+    let query = '';
+    let debounceTimer;
+
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function renderRows(items) {
+      const tbody = document.getElementById('colaboradoresBody');
+      tbody.innerHTML = '';
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum colaborador encontrado</td></tr>';
+        return;
+      }
+      const rows = items.map(it => {
+        const nome = it.nome || '-';
+        const cargo = it.cargo || '-';
+        const dep = it.departamento || '-';
+        return `<tr>
+          <td>${nome}</td>
+          <td>${cargo}</td>
+          <td>${dep}</td>
+          <td>-</td>
+          <td><span class="status-badge status-ativo">ATIVO</span></td>
+          <td class="actions">
+            <a href="/rh/colaboradores/ficha/${it.id}" class="btn btn-sm btn-info" title="Ver Ficha"><i class="fas fa-eye"></i></a>
+            <a href="/rh/colaboradores/editar/${it.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+            ${window.podeAcessarRH ? `<button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador" onclick="openDesligamentoModal('${it.id}', '${nome}')"><i class="fas fa-user-times"></i></button>` : ''}
+          </td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+
+    function renderPagination(data) {
+      const el = document.getElementById('pagination');
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = data.hasPrevious;
+      const hasNext = data.hasNext;
+      let html = '';
+      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} colaboradores)</span>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+
+    function loadColaboradores(page = 0) {
+      currentPage = page;
+      showLoading(true);
+      fetch(`/rh/colaboradores/api/listar?page=${page}&size=20&q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => { renderRows(data.content); renderPagination(data); })
+        .catch(() => { renderRows([]); renderPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); })
+        .finally(() => showLoading(false));
+    }
+
+    function goToPage(p) { loadColaboradores(Math.max(0, p)); }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('buscarColaborador');
+      if (input) {
+        input.addEventListener('input', function(e) {
+          clearTimeout(debounceTimer);
+          query = e.target.value;
+          debounceTimer = setTimeout(() => loadColaboradores(0), 250);
+        });
+      }
+      loadColaboradores(0);
+    });
+  </script>
   <script>
     function openDesligamentoModal(colaboradorId, colaboradorNome) {
       document.getElementById('colaboradorNome').textContent = colaboradorNome;

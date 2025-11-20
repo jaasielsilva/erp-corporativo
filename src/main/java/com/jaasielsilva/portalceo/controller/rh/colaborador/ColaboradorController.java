@@ -75,6 +75,30 @@ public class ColaboradorController {
         return "rh/colaboradores/listar";
     }
 
+    @GetMapping("/api/listar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarAjax(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "q", required = false) String q) {
+        try {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                    Math.max(page, 0), Math.min(Math.max(size, 1), 100), org.springframework.data.domain.Sort.by("nome").ascending());
+            org.springframework.data.domain.Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> pagina = colaboradorRepository.findColaboradoresForAjax(q != null && !q.isBlank() ? q.trim() : null, pageable);
+
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("content", pagina.getContent());
+            resp.put("currentPage", pagina.getNumber());
+            resp.put("totalPages", pagina.getTotalPages());
+            resp.put("totalElements", pagina.getTotalElements());
+            resp.put("hasPrevious", pagina.hasPrevious());
+            resp.put("hasNext", pagina.hasNext());
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao carregar colaboradores: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/novo")
     public String novo(Model model) {
         Colaborador colaborador = new Colaborador();

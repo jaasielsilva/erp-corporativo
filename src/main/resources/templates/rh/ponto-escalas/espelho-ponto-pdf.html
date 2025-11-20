@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Espelho de Ponto</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; }
+    h1 { font-size: 18px; margin: 0 0 10px 0; }
+    .header { margin-bottom: 10px; }
+    .header div { margin: 2px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #444; padding: 6px; text-align: center; }
+    th { background: #f0f0f0; }
+    .left { text-align: left; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Espelho de Ponto</h1>
+    <div><strong>Colaborador:</strong> <span th:text="${colaborador.nome}"></span></div>
+    <div><strong>Matrícula:</strong> <span th:text="${colaborador.usuario != null ? colaborador.usuario.matricula : 'N/A'}"></span></div>
+    <div><strong>Período:</strong> <span th:text="${String.format('%02d', mes)}"></span>/<span th:text="${ano}"></span></div>
+    <div><strong>Departamento:</strong> <span th:text="${colaborador.departamento != null ? colaborador.departamento.nome : 'N/A'}"></span></div>
+    <div><strong>Cargo:</strong> <span th:text="${colaborador.cargo != null ? colaborador.cargo.nome : 'N/A'}"></span></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Dia</th>
+        <th>Entrada 1</th>
+        <th>Saída 1</th>
+        <th>Entrada 2</th>
+        <th>Saída 2</th>
+        <th>Total</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="i : ${#numbers.sequence(1, dias)}">
+        <td class="left" th:text="${String.format('%02d', i)}"></td>
+        <td th:text="${porDia.containsKey(@java.time.LocalDate.of(ano, mes, i)) && porDia.get(@java.time.LocalDate.of(ano, mes, i)).entrada1 != null ? porDia.get(@java.time.LocalDate.of(ano, mes, i)).entrada1 : ''}"></td>
+        <td th:text="${porDia.containsKey(@java.time.LocalDate.of(ano, mes, i)) && porDia.get(@java.time.LocalDate.of(ano, mes, i)).saida1 != null ? porDia.get(@java.time.LocalDate.of(ano, mes, i)).saida1 : ''}"></td>
+        <td th:text="${porDia.containsKey(@java.time.LocalDate.of(ano, mes, i)) && porDia.get(@java.time.LocalDate.of(ano, mes, i)).entrada2 != null ? porDia.get(@java.time.LocalDate.of(ano, mes, i)).entrada2 : ''}"></td>
+        <td th:text="${porDia.containsKey(@java.time.LocalDate.of(ano, mes, i)) && porDia.get(@java.time.LocalDate.of(ano, mes, i)).saida2 != null ? porDia.get(@java.time.LocalDate.of(ano, mes, i)).saida2 : ''}"></td>
+        <td th:text="${porDia.containsKey(@java.time.LocalDate.of(ano, mes, i)) && porDia.get(@java.time.LocalDate.of(ano, mes, i)).horasTrabalhadasFormatadas != null ? porDia.get(@java.time.LocalDate.of(ano, mes, i)).horasTrabalhadasFormatadas : '00:00'}"></td>
+        <td th:text="${porDia.containsKey(@java.time.LocalDate.of(ano, mes, i)) ? porDia.get(@java.time.LocalDate.of(ano, mes, i)).statusDescricao : ''}"></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

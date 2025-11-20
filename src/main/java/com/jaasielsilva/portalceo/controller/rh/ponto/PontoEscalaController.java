@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/rh/ponto-escalas")
+@RequestMapping("/rh/ponto-escalas-v2")
 public class PontoEscalaController {
 
     @Autowired

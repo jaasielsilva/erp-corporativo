@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,41 +9,108 @@
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .faq-section { margin: 40px 0; }
+        .faq-section input { max-width: 400px; margin: 0 auto 20px auto; }
+        .faq-section ul { list-style: none; padding: 0; }
+        .faq-section li { background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; padding: 15px; text-align: left; }
+        .tutorials iframe { border-radius: 8px; }
+        .support-center a { margin: 5px; }
+        .docs-links ul { list-style: none; padding: 0; }
+        .docs-links li { margin-bottom: 8px; }
+        .feedback button { margin-left: 10px; }
+    </style>
 </head>
-
 <body>
-    <div class="app-container">
+<div class="app-container">
 
-        <!-- Sidebar -->
-        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <!-- Sidebar -->
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
+    <!-- Main Content -->
+    <main class="main-content">
 
-            <!-- Topbar -->
-            <header th:replace="~{components/topbar :: topbar}"></header>
+        <!-- Topbar -->
+        <header th:replace="~{components/topbar :: topbar}"></header>
 
-            <!-- Conteúdo da página Ajuda -->
-            <section class="content-area">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted"><i class="fas fa-question-circle"></i> Página de Ajuda</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+        <!-- Conteúdo da página Ajuda -->
+        <section class="content-area">
+            <div class="container-fluid">
+
+                <!-- FAQ Dinâmico -->
+                <div class="faq-section text-center">
+                    <h2><i class="fas fa-question"></i> Perguntas Frequentes</h2>
+                    <input type="text" class="form-control" placeholder="Buscar dúvida..." onkeyup="filtrarFaq(this.value)">
+                    <ul id="faq-list" class="mt-3">
+                        <li>
+                            <strong>Como registrar um novo colaborador?</strong>
+                            <p>Vá em RH &gt; Colaboradores &gt; Novo e preencha os dados obrigatórios.</p>
+                        </li>
+                        <li>
+                            <strong>Como gerar o espelho de ponto?</strong>
+                            <p>Acesse RH &gt; Ponto &gt; Relatórios e selecione o colaborador e período desejado.</p>
+                        </li>
+                        <!-- Adicione mais perguntas conforme necessário -->
+                    </ul>
+                </div>
+
+                <!-- Tutoriais em Vídeo -->
+                <div class="tutorials text-center my-5">
+                    <h2><i class="fas fa-video"></i> Tutoriais Rápidos</h2>
+                    <div class="row justify-content-center">
+                        <div class="col-md-4 mb-3">
+                            <iframe width="100%" height="200" src="https://www.youtube.com/embed/SEU_VIDEO_ID1" allowfullscreen></iframe>
+                            <p>Como lançar um ponto manualmente</p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <iframe width="100%" height="200" src="https://www.youtube.com/embed/SEU_VIDEO_ID2" allowfullscreen></iframe>
+                            <p>Como aprovar solicitações de correção</p>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Footer -->
-            <footer th:replace="~{components/footer :: footer}"></footer>
+                <!-- Central de Suporte -->
+                <div class="support-center text-center my-5">
+                    <h2><i class="fas fa-headset"></i> Precisa de Suporte?</h2>
+                    <a href="/suporte" class="btn btn-primary"><i class="fas fa-ticket-alt"></i> Abrir chamado</a>
+                    <a href="https://wa.me/SEUNUMERO" target="_blank" class="btn btn-success"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                </div>
 
-        </main>
-    </div>
+                <!-- Documentação e Manuais -->
+                <div class="docs-links text-center my-5">
+                    <h2><i class="fas fa-book"></i> Documentação</h2>
+                    <ul>
+                        <li><a href="/docs/manual-usuario.pdf" target="_blank"><i class="fas fa-file-pdf"></i> Manual do Usuário</a></li>
+                        <li><a href="/docs/politica-ponto.pdf" target="_blank"><i class="fas fa-file-pdf"></i> Política de Ponto</a></li>
+                        <!-- Adicione mais links conforme necessário -->
+                    </ul>
+                </div>
 
-    <script src="/js/sidebar.js" defer></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
+                <!-- Feedback Rápido -->
+                <div class="feedback text-center my-4">
+                    <span>Esta resposta foi útil?</span>
+                    <button class="btn btn-outline-success btn-sm">Sim</button>
+                    <button class="btn btn-outline-danger btn-sm">Não</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer th:replace="~{components/footer :: footer}"></footer>
+
+    </main>
+</div>
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script>
+function filtrarFaq(query) {
+    document.querySelectorAll('#faq-list li').forEach(li => {
+        li.style.display = li.innerText.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+    });
+}
+</script>
 </body>
-
 </html>

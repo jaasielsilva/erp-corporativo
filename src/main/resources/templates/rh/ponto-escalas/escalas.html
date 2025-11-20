@@ -44,30 +44,22 @@
               <div class="form-group">
                 <label for="mesEscala">Mês</label>
                 <select id="mesEscala" name="mesEscala" class="form-control" onchange="carregarEscala()">
-                  <option value="11">Novembro 2023</option>
-                  <option value="12">Dezembro 2023</option>
-                  <option value="1">Janeiro 2024</option>
+                  <option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}"
+                          th:text="${#temporals.monthName(m)}" th:selected="${m == mesAtual}"></option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="departamentoEscala">Departamento</label>
                 <select id="departamentoEscala" name="departamentoEscala" class="form-control" onchange="carregarEscala()">
                   <option value="">Todos os departamentos</option>
-                  <option value="ti">TI</option>
-                  <option value="vendas">Vendas</option>
-                  <option value="financeiro">Financeiro</option>
-                  <option value="rh">RH</option>
-                  <option value="operacional">Operacional</option>
+                  <option th:each="d : ${departamentos}" th:value="${d.id}" th:text="${d.nome}"></option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="turnoEscala">Turno</label>
                 <select id="turnoEscala" name="turnoEscala" class="form-control" onchange="carregarEscala()">
                   <option value="">Todos os turnos</option>
-                  <option value="manha">Manhã (08:00-17:00)</option>
-                  <option value="tarde">Tarde (14:00-23:00)</option>
-                  <option value="noite">Noite (22:00-07:00)</option>
-                  <option value="comercial">Comercial (08:00-18:00)</option>
+                  <option th:each="e : ${escalasVigentes}" th:value="${e.id}" th:text="${e.nome}"></option>
                 </select>
               </div>
             </div>

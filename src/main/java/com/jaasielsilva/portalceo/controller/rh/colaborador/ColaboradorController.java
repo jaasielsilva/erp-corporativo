@@ -52,7 +52,7 @@ public class ColaboradorController {
 
     @GetMapping("/listar")
     public String listar(@RequestParam(name = "page", defaultValue = "0") int page,
-                         Model model) {
+            Model model) {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
                 Math.max(page, 0), 10, org.springframework.data.domain.Sort.by("nome").ascending());
 
@@ -110,7 +110,8 @@ public class ColaboradorController {
         beneficioService.salvarBeneficiosDoColaborador(colaborador);
 
         // 🔹 Removido: criação automática de usuário vinculada ao colaborador
-        // Caso necessário, a criação de usuário deverá ser feita manualmente em outro fluxo
+        // Caso necessário, a criação de usuário deverá ser feita manualmente em outro
+        // fluxo
 
         redirectAttributes.addFlashAttribute("mensagem", "Colaborador e benefícios salvos com sucesso!");
         return "redirect:/rh/colaboradores/listar";
@@ -124,7 +125,7 @@ public class ColaboradorController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> criarNovoColaborador(@Valid @RequestBody Colaborador colaborador) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             // Validar se CPF já existe
             if (colaboradorService.existeByCpf(colaborador.getCpf())) {
@@ -132,42 +133,43 @@ public class ColaboradorController {
                 response.put("message", "CPF já cadastrado no sistema");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             // Validar se email já existe
             if (colaboradorService.existeByEmail(colaborador.getEmail())) {
                 response.put("success", false);
                 response.put("message", "Email já cadastrado no sistema");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             // Salvar o colaborador
             Colaborador colaboradorSalvo = colaboradorService.salvar(colaborador);
-            
+
             // Salvar os benefícios do colaborador se existirem
             if (colaborador.getBeneficios() != null && !colaborador.getBeneficios().isEmpty()) {
                 beneficioService.salvarBeneficiosDoColaborador(colaboradorSalvo);
             }
-            
+
             // Removido: criação e vínculo automático de usuário ao colaborador
             // A criação de usuário deve ocorrer por fluxo específico separado
-            
+
             // Recarregar o colaborador com o usuário vinculado
             colaboradorSalvo = colaboradorService.findById(colaboradorSalvo.getId());
-            
+
             response.put("success", true);
             response.put("message", "Colaborador criado com sucesso!");
             response.put("colaborador", Map.of(
-                "id", colaboradorSalvo.getId(),
-                "nome", colaboradorSalvo.getNome(),
-                "email", colaboradorSalvo.getEmail(),
-                "cpf", colaboradorSalvo.getCpf(),
-                "matricula", colaboradorSalvo.getUsuario() != null ? colaboradorSalvo.getUsuario().getMatricula() : null,
-                "cargo", colaboradorSalvo.getCargo() != null ? colaboradorSalvo.getCargo().getNome() : null,
-                "departamento", colaboradorSalvo.getDepartamento() != null ? colaboradorSalvo.getDepartamento().getNome() : null
-            ));
-            
+                    "id", colaboradorSalvo.getId(),
+                    "nome", colaboradorSalvo.getNome(),
+                    "email", colaboradorSalvo.getEmail(),
+                    "cpf", colaboradorSalvo.getCpf(),
+                    "matricula",
+                    colaboradorSalvo.getUsuario() != null ? colaboradorSalvo.getUsuario().getMatricula() : null,
+                    "cargo", colaboradorSalvo.getCargo() != null ? colaboradorSalvo.getCargo().getNome() : null,
+                    "departamento",
+                    colaboradorSalvo.getDepartamento() != null ? colaboradorSalvo.getDepartamento().getNome() : null));
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Erro ao criar colaborador: " + e.getMessage());
@@ -207,8 +209,14 @@ public class ColaboradorController {
 
     @PostMapping("/desativar/{id}")
     public String desligar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        colaboradorService.excluir(id);
-        redirectAttributes.addFlashAttribute("mensagem", "Colaborador desligado com sucesso!");
+        try {
+            colaboradorService.excluir(id);
+            redirectAttributes.addFlashAttribute("mensagem", "Colaborador desligado com sucesso!");
+        } catch (jakarta.validation.ConstraintViolationException e) {
+            redirectAttributes.addFlashAttribute("erro", "Não foi possível desligar: CPF inválido.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao desligar colaborador: " + e.getMessage());
+        }
         return "redirect:/rh/colaboradores/listar";
     }
 

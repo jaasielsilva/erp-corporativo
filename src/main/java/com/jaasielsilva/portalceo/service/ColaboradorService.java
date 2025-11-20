@@ -273,15 +273,34 @@ public class ColaboradorService {
             : "Promovido para " + cargoNovo;
         historico.setDescricao(descricao);
         
-        historico.setCargoAnterior(colaborador.getCargo().getNome());
+        historico.setCargoAnterior(colaborador.getCargo() != null ? colaborador.getCargo().getNome() : null);
         historico.setCargoNovo(cargoNovo);
         historico.setSalarioAnterior(colaborador.getSalario());
         historico.setSalarioNovo(novoSalario);
-        historico.setDepartamentoAnterior(colaborador.getDepartamento().getNome());
-        historico.setDepartamentoNovo(colaborador.getDepartamento().getNome());
+        historico.setDepartamentoAnterior(colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
+        historico.setDepartamentoNovo(colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
         historico.setDataRegistro(LocalDateTime.now());
 
 
+        historicoRepository.save(historico);
+    }
+
+    /**
+     * Registra evento de desligamento no histórico do colaborador
+     */
+    public void registrarDesligamento(Colaborador colaborador, Usuario responsavel) {
+        HistoricoColaborador historico = new HistoricoColaborador();
+        historico.setColaborador(colaborador);
+        historico.setEvento("Desligamento");
+        String nomeResp = responsavel != null ? responsavel.getNome() : "Sistema";
+        historico.setDescricao("Desligamento do colaborador confirmado por " + nomeResp);
+        historico.setCargoAnterior(colaborador.getCargo() != null ? colaborador.getCargo().getNome() : null);
+        historico.setCargoNovo(null);
+        historico.setSalarioAnterior(colaborador.getSalario());
+        historico.setSalarioNovo(null);
+        historico.setDepartamentoAnterior(colaborador.getDepartamento() != null ? colaborador.getDepartamento().getNome() : null);
+        historico.setDepartamentoNovo(null);
+        historico.setDataRegistro(LocalDateTime.now());
         historicoRepository.save(historico);
     }
     public Optional<Colaborador> buscarPorUsuario(Usuario usuario) {

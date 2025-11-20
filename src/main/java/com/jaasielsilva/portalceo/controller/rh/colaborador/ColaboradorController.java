@@ -19,6 +19,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.servlet.http.HttpServletRequest;
+import com.jaasielsilva.portalceo.model.Usuario;
 
 import jakarta.validation.Valid;
 import java.util.HashMap;
@@ -49,6 +52,10 @@ public class ColaboradorController {
     private ColaboradorRepository colaboradorRepository;
     @Autowired
     private HistoricoColaboradorService historicoColaboradorService;
+    @Autowired
+    private com.jaasielsilva.portalceo.repository.AcaoUsuarioRepository acaoUsuarioRepository;
+    @Autowired
+    private com.jaasielsilva.portalceo.repository.UsuarioRepository usuarioRepository;
 
     @GetMapping("/listar")
     public String listar(@RequestParam(name = "page", defaultValue = "0") int page,
@@ -208,10 +215,61 @@ public class ColaboradorController {
     }
 
     @PostMapping("/desativar/{id}")
-    public String desligar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    public String desligar(@PathVariable Long id,
+                           @RequestParam(name = "confirmarDesligamento", required = false) String confirmarDesligamento,
+                           @RequestParam(name = "confirmarTexto", required = false) String confirmarTexto,
+                           HttpServletRequest request,
+                           RedirectAttributes redirectAttributes) {
         try {
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null
+                    ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName()
+                    : null;
+            java.util.Optional<Usuario> usuarioLogadoOpt = email != null ? usuarioService.buscarPorEmail(email) : java.util.Optional.empty();
+            Usuario usuarioLogado = usuarioLogadoOpt.orElse(null);
+
+            boolean podeFinalizar = false;
+            if (usuarioLogado != null) {
+                var nivel = usuarioLogado.getNivelAcesso();
+                String cargoNome = usuarioLogado.getCargo() != null ? usuarioLogado.getCargo().getNome().toLowerCase() : "";
+                boolean isRH = cargoNome.contains("rh") || cargoNome.contains("recursos humanos") || cargoNome.contains("gerente de rh") || cargoNome.contains("analista de rh");
+                podeFinalizar = (nivel != null && (nivel.ehAdministrativo())) || isRH;
+            }
+
+            if (!podeFinalizar) {
+                redirectAttributes.addFlashAttribute("erro", "Desligamento requer confirmação por ADMIN ou RH.");
+                return "redirect:/rh/colaboradores/listar";
+            }
+
+            if (confirmarDesligamento == null || confirmarTexto == null || !"DESLIGAR".equalsIgnoreCase(confirmarTexto.trim())) {
+                redirectAttributes.addFlashAttribute("erro", "Confirmação reforçada obrigatória: marque o aceite e digite DESLIGAR.");
+                return "redirect:/rh/colaboradores/listar";
+            }
+
             colaboradorService.excluir(id);
             redirectAttributes.addFlashAttribute("mensagem", "Colaborador desligado com sucesso!");
+
+            Colaborador colaboradorAtualizado = colaboradorService.findById(id);
+            colaboradorService.registrarDesligamento(colaboradorAtualizado, usuarioLogado);
+
+            String ip = request.getHeader("X-Forwarded-For");
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getHeader("X-Real-IP");
+            }
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getRemoteAddr();
+            }
+
+            java.util.Optional<Usuario> usuarioAfetadoOpt = usuarioRepository.findByColaborador_Id(id);
+            Usuario usuarioAfetado = usuarioAfetadoOpt.orElse(null);
+
+            com.jaasielsilva.portalceo.model.AcaoUsuario acao = new com.jaasielsilva.portalceo.model.AcaoUsuario();
+            acao.setData(java.time.LocalDateTime.now());
+            acao.setAcao("DESLIGAMENTO_COLABORADOR");
+            acao.setUsuario(usuarioAfetado);
+            acao.setResponsavel(usuarioLogado);
+            acao.setIp(ip);
+            acaoUsuarioRepository.save(acao);
         } catch (jakarta.validation.ConstraintViolationException e) {
             redirectAttributes.addFlashAttribute("erro", "Não foi possível desligar: CPF inválido.");
         } catch (Exception e) {

@@ -78,6 +78,7 @@
                     <i class="fas fa-edit"></i>
                   </a>
                   <button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador"
+                          th:if="${podeAcessarRH}"
                           th:data-colaborador-id="${colaborador.id}"
                           th:data-colaborador-nome="${colaborador.nome}"
                           onclick="openDesligamentoModal(this.dataset.colaboradorId, this.dataset.colaboradorNome)">
@@ -147,6 +148,19 @@
               <i class="fas fa-info-circle"></i>
               Esta ação não pode ser desfeita. O colaborador será marcado como inativo no sistema.
             </p>
+            <div class="confirm-section">
+              <label class="confirm-label">
+                <input type="checkbox" name="confirmarDesligamento" required form="desligamentoForm">
+                Confirmo que revisei o caso e autorizo o desligamento definitivo.
+              </label>
+              <div class="confirm-input">
+                <label for="confirmarTexto">Digite <strong>DESLIGAR</strong> para confirmar</label>
+                <input id="confirmarTexto" name="confirmarTexto" type="text" placeholder="DESLIGAR" required form="desligamentoForm">
+              </div>
+              <p class="warning-note">
+                Esta operação requer confirmação por perfis ADMIN ou RH.
+              </p>
+            </div>
           </div>
         </div>
       </div>

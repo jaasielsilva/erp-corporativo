@@ -288,7 +288,7 @@
             </button>
             
             <button type="button" class="btn btn-warning btn-lg" onclick="confirmarDesligamento()" 
-                    th:if="${colaborador.status == 'ATIVO'}">
+                    th:if="${colaborador.status == 'ATIVO'} and ${podeAcessarRH}">
               <i class="fas fa-user-times me-2"></i> Desligar Funcionário
             </button>
             

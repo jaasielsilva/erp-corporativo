@@ -66,6 +66,18 @@ public class ColaboradorService {
         return colaboradorRepository.countByAtivoTrue();
     }
 
+    public long contarCltAtivos() {
+        return colaboradorRepository.countByAtivoTrueAndTipoContratoIgnoreCase("CLT");
+    }
+
+    public long contarPjAtivos() {
+        return colaboradorRepository.countByAtivoTrueAndTipoContratoIgnoreCase("PJ");
+    }
+
+    public long contarEstagiariosAtivos() {
+        return colaboradorRepository.countByAtivoTrueAndTipoContratoContainingIgnoreCase("ESTAG");
+    }
+
     public long contarContratacaosPorPeriodo(int meses) {
         LocalDate dataInicio = LocalDate.now().minusMonths(meses);
         return colaboradorRepository.countContratacoesPorPeriodo(dataInicio);

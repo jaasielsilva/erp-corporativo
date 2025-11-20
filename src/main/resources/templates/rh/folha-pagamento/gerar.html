@@ -126,81 +126,13 @@
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody>
-              <tr th:each="c : ${colaboradoresResumo}">
-
-                <td th:text="${c.nome}"></td>
-
-                <td th:text="${c.cargoNome}"></td>
-
-                <td th:text="${c.departamentoNome}"></td>
-
-                <td th:text="${c.salario != null ? #numbers.formatDecimal(c.salario, 1, 'POINT', 2, 'COMMA') : '0,00'}">
-                </td>
-
-                <td th:text="${(c.diasTrabalhados != null ? c.diasTrabalhados : 0) + '/' + (c.diasUteisMes != null ? c.diasUteisMes : 0)}"></td>
-
-                <td>
-                  <span class="status-badge" th:classappend="${c.status == 'ATIVO' ? ' status-ativo' : (c.status == 'SUSPENSO' ? ' status-afastado' : ' status-ferias')}">
-                    <span th:text="${c.status}"></span>
-                  </span>
-                </td>
-
-                <td class="actions">
-                  <a th:href="@{/rh/colaboradores/ficha/{id}(id=${c.id})}"
-                     class="btn btn-sm btn-info" title="Ver Ficha">
-                    <i class="fas fa-eye"></i>
-                  </a>
-
-                  <a th:href="@{/rh/colaboradores/editar/{id}(id=${c.id})}"
-                     class="btn btn-sm btn-warning" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </a>
-
-                  <button type="button"
-                          class="btn btn-sm btn-danger"
-                          th:if="${podeAcessarRH}"
-                          th:attr="data-id=${c.id},data-nome=${c.nome}"
-                          onclick="openDesligamentoFromDataset(this)"
-                          title="Desligar Colaborador">
-                    <i class="fas fa-user-times"></i>
-                  </button>
-                </td>
-
-              </tr>
-            </tbody>
+            <tbody id="colaboradoresResumoBody"></tbody>
 
 
 
           </table>
 
-          <div class="pagination" th:if="${totalPages > 1}">
-            <a th:href="@{/rh/folha-pagamento/gerar(page=${currentPage - 1})}"
-               th:class="'btn btn-secondary' + (${!hasPrevious} ? ' disabled' : '')"
-               th:if="${hasPrevious}">
-              <i class="fas fa-chevron-left"></i> Anterior
-            </a>
-            <span class="btn btn-secondary disabled" th:unless="${hasPrevious}">
-              <i class="fas fa-chevron-left"></i> Anterior
-            </span>
-
-            <span class="pagination-info">
-              Página <span th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">1</span>
-              (<span th:text="${totalElements}">0</span> colaboradores)
-            </span>
-
-            <a th:href="@{/rh/folha-pagamento/gerar(page=${currentPage + 1})}"
-               th:class="'btn btn-secondary' + (${!hasNext} ? ' disabled' : '')"
-               th:if="${hasNext}">
-              Próxima <i class="fas fa-chevron-right"></i>
-            </a>
-            <span class="btn btn-secondary disabled" th:unless="${hasNext}">
-              Próxima <i class="fas fa-chevron-right"></i>
-            </span>
-          </div>
-          <div class="pagination-summary" th:if="${totalPages <= 1}">
-            <span th:text="${totalElements}">0</span> colaborador(es) encontrado(s)
-          </div>
+          <div id="paginationResumo" class="pagination"></div>
         </article>
 
         <!-- Resumo Financeiro -->
@@ -377,6 +309,62 @@
     }
   </script>
   <script>
+    let currentResumoPage = 0;
+    function showResumoLoading(show) {
+      const tbody = document.getElementById('colaboradoresResumoBody');
+      if (show) tbody.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
+    }
+    function renderResumoRows(items) {
+      const tbody = document.getElementById('colaboradoresResumoBody');
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum colaborador encontrado</td></tr>';
+        return;
+      }
+      const rows = items.map(c => {
+        const salario = c.salario != null ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.salario) : 'R$ 0,00';
+        const dias = `${(c.diasTrabalhados ?? 0)}/${(c.diasUteisMes ?? 0)}`;
+        const statusClass = c.status === 'ATIVO' ? 'status-ativo' : (c.status === 'SUSPENSO' ? 'status-afastado' : 'status-ferias');
+        const desligarBtn = window.podeAcessarRH ? `<button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador" data-id="${c.id}" data-nome="${c.nome}" onclick="openDesligamentoFromDataset(this)"><i class="fas fa-user-times"></i></button>` : '';
+        return `<tr>
+          <td>${c.nome ?? '-'}</td>
+          <td>${c.cargoNome ?? '-'}</td>
+          <td>${c.departamentoNome ?? '-'}</td>
+          <td>${salario}</td>
+          <td>${dias}</td>
+          <td><span class="status-badge ${statusClass}"><span>${c.status ?? '-'}</span></span></td>
+          <td class="actions">
+            <a href="/rh/colaboradores/ficha/${c.id}" class="btn btn-sm btn-info" title="Ver Ficha"><i class="fas fa-eye"></i></a>
+            <a href="/rh/colaboradores/editar/${c.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+            ${desligarBtn}
+          </td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+    function renderResumoPagination(data) {
+      const el = document.getElementById('paginationResumo');
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = data.hasPrevious;
+      const hasNext = data.hasNext;
+      let html = '';
+      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} colaboradores)</span>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="loadResumo(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="loadResumo(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+    function loadResumo(page = 0) {
+      currentResumoPage = page;
+      showResumoLoading(true);
+      fetch(`/rh/folha-pagamento/api/colaboradores-resumo?page=${page}&size=10`)
+        .then(r => r.json())
+        .then(data => { renderResumoRows(data.content); renderResumoPagination(data); })
+        .catch(() => { renderResumoRows([]); renderResumoPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); });
+    }
+    document.addEventListener('DOMContentLoaded', function() { loadResumo(0); });
+  </script>
+  <script>
     function openDesligamentoFromDataset(el) {
       const id = el.dataset.id;
       const nome = el.dataset.nome;
@@ -407,3 +395,6 @@
 </body>
 
 </html>
+  <script th:inline="javascript">
+    window.podeAcessarRH = [[${podeAcessarRH}?:false]];
+  </script>

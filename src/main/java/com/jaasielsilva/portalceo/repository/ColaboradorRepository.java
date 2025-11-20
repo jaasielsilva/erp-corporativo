@@ -87,4 +87,8 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
 
     long countByAtivoTrue();
 
+    long countByAtivoTrueAndTipoContratoIgnoreCase(String tipoContrato);
+
+    long countByAtivoTrueAndTipoContratoContainingIgnoreCase(String tipoContrato);
+
 }

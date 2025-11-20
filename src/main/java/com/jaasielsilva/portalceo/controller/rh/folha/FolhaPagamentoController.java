@@ -106,29 +106,49 @@ public class FolhaPagamentoController {
         model.addAttribute("anoAtual", hoje.getYear());
         YearMonth ym = YearMonth.of(hoje.getYear(), hoje.getMonthValue());
         model.addAttribute("diasMesAtual", ym.lengthOfMonth());
-        List<com.jaasielsilva.portalceo.dto.ColaboradorResumoFolhaDTO> colaboradoresResumo = colaboradoresPage
-                .getContent()
-                .stream()
-                .map(c -> resumoFolhaService.criarResumo(c, ym))
-                .collect(Collectors.toList());
-        model.addAttribute("colaboradoresResumo", colaboradoresResumo);
+        model.addAttribute("colaboradoresResumo", java.util.Collections.emptyList());
         model.addAttribute("currentPage", colaboradoresPage.getNumber());
         model.addAttribute("totalPages", colaboradoresPage.getTotalPages());
         model.addAttribute("totalElements", colaboradoresPage.getTotalElements());
         model.addAttribute("hasPrevious", colaboradoresPage.hasPrevious());
         model.addAttribute("hasNext", colaboradoresPage.hasNext());
 
-        List<com.jaasielsilva.portalceo.model.Colaborador> ativos = colaboradorService.listarAtivos();
-        long totalAtivos = ativos.size();
-        long totalClt = ativos.stream().filter(c -> "CLT".equalsIgnoreCase(c.getTipoContrato())).count();
-        long totalPj = ativos.stream().filter(c -> "PJ".equalsIgnoreCase(c.getTipoContrato())).count();
-        long totalEstagiario = ativos.stream().filter(c -> c.getTipoContrato() != null && c.getTipoContrato().toUpperCase().contains("ESTAG")).count();
+        long totalAtivos = colaboradorService.contarAtivos();
+        long totalClt = colaboradorService.contarCltAtivos();
+        long totalPj = colaboradorService.contarPjAtivos();
+        long totalEstagiario = colaboradorService.contarEstagiariosAtivos();
         model.addAttribute("totalAtivos", totalAtivos);
         model.addAttribute("totalClt", totalClt);
         model.addAttribute("totalPj", totalPj);
         model.addAttribute("totalEstagiario", totalEstagiario);
 
         return "rh/folha-pagamento/gerar";
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
+    @GetMapping("/api/colaboradores-resumo")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<java.util.Map<String, Object>> listarColaboradoresResumo(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+        PageRequest pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("nome").ascending());
+        Page<com.jaasielsilva.portalceo.model.Colaborador> colaboradoresPage = colaboradorService.listarAtivosPaginado(pageable);
+        LocalDate hoje = LocalDate.now();
+        YearMonth ym = YearMonth.of(hoje.getYear(), hoje.getMonthValue());
+        java.util.List<com.jaasielsilva.portalceo.dto.ColaboradorResumoFolhaDTO> content = colaboradoresPage
+                .getContent()
+                .stream()
+                .map(c -> resumoFolhaService.criarResumo(c, ym))
+                .collect(Collectors.toList());
+
+        java.util.Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("content", content);
+        resp.put("currentPage", colaboradoresPage.getNumber());
+        resp.put("totalPages", colaboradoresPage.getTotalPages());
+        resp.put("totalElements", colaboradoresPage.getTotalElements());
+        resp.put("hasPrevious", colaboradoresPage.hasPrevious());
+        resp.put("hasNext", colaboradoresPage.hasNext());
+        return org.springframework.http.ResponseEntity.ok(resp);
     }
 
     /**

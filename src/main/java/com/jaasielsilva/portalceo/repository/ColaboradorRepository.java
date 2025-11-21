@@ -48,7 +48,7 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true ORDER BY c.nome")
     List<Colaborador> findBasicInfoForSelection();
 
-    @Query("SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome) " +
+    @Query("SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome, c.dataAdmissao) " +
            "FROM Colaborador c " +
            "LEFT JOIN c.cargo cg " +
            "LEFT JOIN c.departamento d " +
@@ -59,7 +59,7 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true AND c.status = 'ATIVO' ORDER BY c.nome")
     List<Colaborador> findPotentialSupervisorsBasic();
 
-    @Query(value = "SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome) " +
+    @Query(value = "SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome, c.dataAdmissao) " +
            "FROM Colaborador c " +
            "LEFT JOIN c.cargo cg " +
            "LEFT JOIN c.departamento d " +

@@ -275,19 +275,23 @@ public class JuridicoController {
     public String compliance(Model model) {
         model.addAttribute("pageTitle", "Compliance e Conformidade");
         model.addAttribute("moduleCSS", "juridico");
-        
-        // Status de compliance
-        model.addAttribute("statusCompliance", getStatusCompliance());
-        
-        // Normas e regulamentações
-        model.addAttribute("normasVigentes", getNormasVigentes());
-        
-        // Não conformidades
-        model.addAttribute("naoConformidades", getNaoConformidades());
-        
-        // Auditorias
-        model.addAttribute("auditorias", getAuditorias());
-        
+        java.util.Map<String, Object> status = new java.util.HashMap<>();
+        long totalNc = naoConformidadeRepository.count();
+        long totalAud = auditoriaComplianceRepository.count();
+        java.time.LocalDate ultimaAuditoria = auditoriaComplianceRepository.findAll().stream()
+                .map(a -> a.getDataInicio())
+                .filter(java.util.Objects::nonNull)
+                .max(java.util.Comparator.naturalOrder())
+                .orElse(null);
+        long resolvidas = naoConformidadeRepository.findAll().stream()
+                .filter(nc -> nc.isResolvida())
+                .count();
+        double conformidade = totalNc == 0 ? 100.0 : Math.round(100.0 * resolvidas / totalNc);
+        status.put("conformidade", conformidade);
+        status.put("naoConformidades", totalNc);
+        status.put("auditoriasPendentes", totalAud);
+        status.put("ultimaAuditoria", ultimaAuditoria);
+        model.addAttribute("statusCompliance", status);
         return "juridico/compliance";
     }
     
@@ -317,19 +321,37 @@ public class JuridicoController {
     public String documentos(Model model) {
         model.addAttribute("pageTitle", "Biblioteca de Documentos");
         model.addAttribute("moduleCSS", "juridico");
-        
-        // Categorias de documentos
-        model.addAttribute("categoriasDocumentos", getCategoriasDocumentos());
-        
-        // Documentos recentes
-        model.addAttribute("documentosRecentes", getDocumentosRecentes());
-        
-        // Modelos de documentos
+        java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico> todos = documentoJuridicoRepository.findAll();
+        java.util.List<java.util.Map<String, Object>> categorias = todos.stream()
+                .collect(java.util.stream.Collectors.groupingBy(d -> {
+                    String c = d.getCategoria();
+                    return c != null && !c.isBlank() ? c : "—";
+                }, java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .map(e -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("nome", e.getKey());
+                    m.put("quantidade", e.getValue());
+                    return m;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        model.addAttribute("categoriasDocumentos", categorias);
+
+        org.springframework.data.domain.Pageable pr = org.springframework.data.domain.PageRequest.of(
+                0, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "criadoEm"));
+        java.util.List<java.util.Map<String, Object>> recentes = documentoJuridicoRepository.findAll(pr).getContent().stream()
+                .map(d -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("titulo", d.getTitulo());
+                    m.put("categoria", d.getCategoria());
+                    m.put("dataUpload", d.getCriadoEm());
+                    return m;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        model.addAttribute("documentosRecentes", recentes);
+
         model.addAttribute("modelosDocumentos", getModelosDocumentos());
-        
-        // Documentos pendentes de assinatura
         model.addAttribute("documentosPendentes", getDocumentosPendentesAssinatura());
-        
         return "juridico/documentos";
     }
     

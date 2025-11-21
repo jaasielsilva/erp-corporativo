@@ -134,6 +134,25 @@
       document.getElementById('loading').style.display = show ? 'block' : 'none';
     }
 
+    function formatDateBr(v) {
+      if (!v) return '-';
+      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) {
+        const [y,m,d] = v.split('T')[0].split('-');
+        return `${d}/${m}/${y}`;
+      }
+      if (Array.isArray(v) && v.length >= 3) {
+        const y = v[0], m = (`0${v[1]}`).slice(-2), d = (`0${v[2]}`).slice(-2);
+        return `${d}/${m}/${y}`;
+      }
+      try {
+        const dt = new Date(v);
+        const d = (`0${dt.getDate()}`).slice(-2);
+        const m = (`0${dt.getMonth()+1}`).slice(-2);
+        const y = dt.getFullYear();
+        return `${d}/${m}/${y}`;
+      } catch { return '-'; }
+    }
+
     function renderRows(items) {
       const tbody = document.getElementById('colaboradoresBody');
       tbody.innerHTML = '';
@@ -145,16 +164,17 @@
         const nome = it.nome || '-';
         const cargo = it.cargo || '-';
         const dep = it.departamento || '-';
+        const adm = formatDateBr(it.dataAdmissao);
         return `<tr>
           <td>${nome}</td>
           <td>${cargo}</td>
           <td>${dep}</td>
-          <td>-</td>
+          <td>${adm}</td>
           <td><span class="status-badge status-ativo">ATIVO</span></td>
           <td class="actions">
-            <a href="/rh/colaboradores/ficha/${it.id}" class="btn btn-sm btn-info" title="Ver Ficha"><i class="fas fa-eye"></i></a>
-            <a href="/rh/colaboradores/editar/${it.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
-            ${window.podeAcessarRH ? `<button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador" onclick="openDesligamentoModal('${it.id}', '${nome}')"><i class="fas fa-user-times"></i></button>` : ''}
+          <a href="/rh/colaboradores/ficha/${it.id}" class="btn btn-sm btn-info" title="Ver Ficha"><i class="fas fa-eye"></i></a>
+          <a href="/rh/colaboradores/editar/${it.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+          ${window.podeAcessarRH ? `<button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador" onclick="openDesligamentoModal('${it.id}', '${nome}')"><i class="fas fa-user-times"></i></button>` : ''}
           </td>
         </tr>`;
       }).join('');

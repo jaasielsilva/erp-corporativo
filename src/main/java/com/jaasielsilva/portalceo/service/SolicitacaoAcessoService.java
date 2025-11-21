@@ -202,47 +202,85 @@ public class SolicitacaoAcessoService {
         novoUsuario.setCargo(solicitacao.getColaborador().getCargo());
         novoUsuario.setDepartamento(solicitacao.getColaborador().getDepartamento());
         novoUsuario.setDataAdmissao(solicitacao.getColaborador().getDataAdmissao());
+        novoUsuario.setColaborador(solicitacao.getColaborador());
         long userCreationEnd = System.currentTimeMillis();
         System.out.println("[PERFORMANCE] Tempo para criar objeto usuário: " + (userCreationEnd - userCreationStart) + "ms");
-
-        // Gerar matrícula única
-        long matriculaStart = System.currentTimeMillis();
-        String matricula = usuarioService.gerarMatriculaUnica();
-        novoUsuario.setMatricula(matricula);
-        long matriculaEnd = System.currentTimeMillis();
-        System.out.println("[PERFORMANCE] Tempo para gerar matrícula única: " + (matriculaEnd - matriculaStart) + "ms");
 
         // Definir nível de acesso baseado na aprovação
         NivelAcesso nivelAcesso = mapearNivelAcesso(solicitacao.getNivelAprovado());
         novoUsuario.setNivelAcesso(nivelAcesso);
 
-        // Gerar senha temporária
-        long senhaStart = System.currentTimeMillis();
-        String senhaTemporaria = gerarSenhaTemporaria();
-        novoUsuario.setSenha(senhaTemporaria); // Será criptografada pelo UsuarioService
-        long senhaEnd = System.currentTimeMillis();
-        System.out.println("[PERFORMANCE] Tempo para gerar senha temporária: " + (senhaEnd - senhaStart) + "ms");
+        // Preparar dados de criação apenas se não existir usuário previamente
+        String senhaTemporaria = null;
+        boolean criadoNovoUsuario = false;
+        String matricula = null;
 
-        // Salvar o novo usuário
+        // Salvar ou vincular usuário (pré-checar por email para evitar exceção e flush)
         long saveUserStart = System.currentTimeMillis();
-        try {
-            usuarioService.salvarUsuario(novoUsuario);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao salvar novo usuário: " + e.getMessage(), e);
+        java.util.Optional<Usuario> existenteEmailOpt = usuarioService.buscarPorEmail(novoUsuario.getEmail());
+        java.util.Optional<Usuario> existenteCpfOpt = usuarioService.buscarPorCpf(novoUsuario.getCpf());
+        Usuario existente = existenteEmailOpt.orElse(existenteCpfOpt.orElse(null));
+        if (existente != null) {
+            existente.setColaborador(solicitacao.getColaborador());
+            existente.setNivelAcesso(nivelAcesso);
+            existente.setDepartamento(solicitacao.getColaborador().getDepartamento());
+            existente.setCargo(solicitacao.getColaborador().getCargo());
+            try {
+                usuarioService.salvarUsuario(existente);
+            } catch (Exception e2) {
+                throw new RuntimeException("Erro ao vincular colaborador ao usuário existente: " + e2.getMessage(), e2);
+            }
+            novoUsuario = existente;
+        } else {
+            long matriculaStart = System.currentTimeMillis();
+            matricula = usuarioService.gerarMatriculaUnica();
+            novoUsuario.setMatricula(matricula);
+            long matriculaEnd = System.currentTimeMillis();
+            System.out.println("[PERFORMANCE] Tempo para buscar/gerar matrícula: " + (matriculaEnd - matriculaStart) + "ms");
+
+            long senhaStart = System.currentTimeMillis();
+            senhaTemporaria = gerarSenhaTemporaria();
+            novoUsuario.setSenha(senhaTemporaria); // Será criptografada pelo UsuarioService
+            long senhaEnd = System.currentTimeMillis();
+            System.out.println("[PERFORMANCE] Tempo para gerar senha temporária: " + (senhaEnd - senhaStart) + "ms");
+
+            try {
+                usuarioService.salvarUsuario(novoUsuario);
+            } catch (Exception e) {
+                throw new RuntimeException("Erro ao salvar novo usuário: " + e.getMessage(), e);
+            }
+            novoUsuario = usuarioService.buscarPorEmail(novoUsuario.getEmail()).orElse(novoUsuario);
+            criadoNovoUsuario = true;
         }
         long saveUserEnd = System.currentTimeMillis();
         System.out.println("[PERFORMANCE] Tempo para salvar usuário no banco: " + (saveUserEnd - saveUserStart) + "ms");
 
-        // Atualizar solicitação
         long updateSolicitacaoStart = System.currentTimeMillis();
-        solicitacao.setUsuarioCriado(novoUsuario);
+        boolean jaVinculadoEmOutra = solicitacaoAcessoRepository
+                .findByUsuarioCriado(novoUsuario)
+                .map(s -> !s.getId().equals(solicitacao.getId()))
+                .orElse(false);
+        if (!jaVinculadoEmOutra) {
+            solicitacao.setUsuarioCriado(novoUsuario);
+        }
         solicitacao.setStatus(StatusSolicitacao.USUARIO_CRIADO);
         solicitacaoAcessoRepository.save(solicitacao);
         long updateSolicitacaoEnd = System.currentTimeMillis();
         System.out.println("[PERFORMANCE] Tempo para atualizar solicitação: " + (updateSolicitacaoEnd - updateSolicitacaoStart) + "ms");
 
-        // Enviar credenciais por email (assíncrono)
-        enviarCredenciaisUsuario(solicitacao, novoUsuario, senhaTemporaria);
+        // Enviar notificação/credenciais
+        if (criadoNovoUsuario && senhaTemporaria != null) {
+            enviarCredenciaisUsuario(solicitacao, novoUsuario, senhaTemporaria);
+        } else {
+            notificationService.createNotification(
+                "user_linked_to_employee",
+                "Usuário Vinculado",
+                String.format("Usuário %s vinculado ao colaborador %s (Protocolo: %s)", 
+                    novoUsuario.getEmail(), solicitacao.getColaborador().getNome(), solicitacao.getProtocolo()),
+                com.jaasielsilva.portalceo.model.Notification.Priority.MEDIUM,
+                novoUsuario
+            );
+        }
 
         long endTime = System.currentTimeMillis();
         System.out.println("[PERFORMANCE] Tempo total para criar usuário: " + (endTime - startTime) + "ms");

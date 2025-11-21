@@ -721,8 +721,15 @@ public String listarSolicitacoes(
                 }
             }
 
+            String emailDestino;
+            Optional<SolicitacaoAcesso> solicitacaoOptMsg = solicitacaoAcessoService.buscarPorId(id);
+            if (solicitacaoOptMsg.isPresent() && solicitacaoOptMsg.get().getEmailCorporativo() != null) {
+                emailDestino = solicitacaoOptMsg.get().getEmailCorporativo();
+            } else {
+                emailDestino = novoUsuario.getEmail();
+            }
             redirectAttributes.addFlashAttribute("mensagem",
-                    "Usuário criado com sucesso! Credenciais enviadas por email para: " + novoUsuario.getEmail());
+                    "Usuário criado com sucesso! Credenciais enviadas por email para: " + emailDestino);
 
             return "redirect:/solicitacoes/" + id;
 

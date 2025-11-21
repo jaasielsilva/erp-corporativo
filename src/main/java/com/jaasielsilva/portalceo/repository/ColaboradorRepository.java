@@ -56,6 +56,9 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
            "ORDER BY c.nome")
     List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> findColaboradoresForAjax();
 
+    @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true AND c.status = 'ATIVO' ORDER BY c.nome")
+    List<Colaborador> findPotentialSupervisorsBasic();
+
     @Query(value = "SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome) " +
            "FROM Colaborador c " +
            "LEFT JOIN c.cargo cg " +

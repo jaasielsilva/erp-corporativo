@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}" />
     <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+    <link href="/css/notifications.css" rel="stylesheet">
 
     <style>
         .stat-card {
@@ -434,7 +435,7 @@
             try {
                 const response = await fetch('/solicitacoes/api/dados-ultimos-meses');
                 const data = await response.json();
-                
+
                 if (data.success) {
                     dadosTempo.labels = data.labels;
                     dadosTempo.datasets[0].data = data.dados;
@@ -589,8 +590,9 @@
     </script>
 
     <!-- Scripts necessários -->
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
-    <script th:src="@{/js/sidebar.js}"></script>
 
     <!-- RODAPÉ (Footer) -->
     <div th:replace="~{components/footer :: footer}"></div>

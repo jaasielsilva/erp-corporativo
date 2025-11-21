@@ -90,6 +90,10 @@ public interface ProcessoAdesaoRepository extends JpaRepository<ProcessoAdesao, 
     List<ProcessoAdesao> findProcessosHoje(@Param("inicio") LocalDateTime inicio,
                                            @Param("fim") LocalDateTime fim);
 
+    @Query("SELECT COUNT(p) FROM ProcessoAdesao p WHERE p.dataCriacao BETWEEN :inicio AND :fim")
+    Long countByDataCriacaoBetween(@Param("inicio") LocalDateTime inicio,
+                                   @Param("fim") LocalDateTime fim);
+
     // Busca por status e texto (nome ou CPF)
     @Query("SELECT p FROM ProcessoAdesao p WHERE p.status = :status AND " +
            "(LOWER(p.nomeColaborador) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

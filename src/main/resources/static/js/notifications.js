@@ -1,3 +1,6 @@
+if (typeof window.jQuery === 'undefined') {
+    console && console.warn && console.warn('Notifications desabilitadas: jQuery não carregado.');
+} else {
 $(document).ready(function () {
     const $center = $('<div class="notification-center"></div>').appendTo('body');
     const $overlay = $('<div class="notification-overlay"></div>').appendTo('body');
@@ -267,3 +270,4 @@ $(document).ready(function () {
     });
 
 });
+}

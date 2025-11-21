@@ -218,5 +218,7 @@ public interface SolicitacaoAcessoRepository extends JpaRepository<SolicitacaoAc
     long countAllSolicitacoes();
 
     Page<SolicitacaoAcesso> findBySolicitanteUsuarioAndStatus(Usuario usuario, StatusSolicitacao status, Pageable pageable);
+
+    Optional<SolicitacaoAcesso> findByUsuarioCriado(Usuario usuarioCriado);
        
 }

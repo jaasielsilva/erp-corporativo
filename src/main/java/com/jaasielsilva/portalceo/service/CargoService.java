@@ -17,6 +17,7 @@ public class CargoService {
     return cargoRepository.findByAtivoTrue();
 }
 
+    @org.springframework.cache.annotation.Cacheable(value = "cargosAll")
     public List<Cargo> listarTodos() {
         return cargoRepository.findAll();
     }

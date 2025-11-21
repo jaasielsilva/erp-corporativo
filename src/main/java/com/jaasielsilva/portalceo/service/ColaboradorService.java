@@ -104,7 +104,7 @@ public class ColaboradorService {
      * Busca colaboradores que podem ser supervisores (ativos e com status ATIVO)
      */
     public List<Colaborador> buscarSupervisoresPotenciais() {
-        return colaboradorRepository.findPotentialSupervisors();
+        return colaboradorRepository.findPotentialSupervisorsBasic();
     }
 
     /**

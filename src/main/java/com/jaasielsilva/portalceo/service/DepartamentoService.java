@@ -13,6 +13,7 @@ public class DepartamentoService {
     @Autowired
     private DepartamentoRepository departamentoRepository;
 
+    @org.springframework.cache.annotation.Cacheable(value = "departamentosAll")
     public List<Departamento> listarTodos() {
         return departamentoRepository.findAll();
     }

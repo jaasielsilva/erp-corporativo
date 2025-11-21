@@ -216,6 +216,9 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
            "LEFT JOIN FETCH col.departamento " +
            "WHERE c.id = :id")
     Optional<Chamado> findByIdWithColaborador(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT c.colaboradorResponsavel.id FROM Chamado c WHERE c.colaboradorResponsavel IS NOT NULL AND c.status IN ('ABERTO', 'EM_ANDAMENTO')")
+    List<Long> findColaboradorIdsComChamadosAtivos();
     
     /**
      * Buscar chamado por número com colaborador responsável (fetch join)

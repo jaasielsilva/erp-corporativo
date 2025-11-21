@@ -95,7 +95,7 @@ public class ValeTransporteService {
         
         // Estatísticas de colaboradores
         long totalColaboradores = colaboradorRepository.count();
-        long colaboradoresAtivos = colaboradorRepository.findByAtivoTrue().size();
+        long colaboradoresAtivos = colaboradorRepository.countByAtivoTrue();
         
         resumo.setTotalColaboradores((int) totalColaboradores);
         resumo.setTotalColaboradoresAtivos((int) colaboradoresAtivos);

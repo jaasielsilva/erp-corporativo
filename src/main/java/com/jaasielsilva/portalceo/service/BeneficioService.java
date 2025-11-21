@@ -33,6 +33,7 @@ public class BeneficioService {
     /**
      * Lista todos os benefícios disponíveis
      */
+    @org.springframework.cache.annotation.Cacheable(value = "beneficiosAll")
     public List<Beneficio> listarTodos() {
         return beneficioRepository.findAll();
     }

@@ -349,7 +349,7 @@ public class WorkflowAdesaoService {
         stats.setProcessosAguardandoAprovacao(statusCount.getOrDefault("AGUARDANDO_APROVACAO", 0L));
         LocalDateTime inicioHoje = LocalDateTime.now().toLocalDate().atStartOfDay();
         LocalDateTime fimHoje = inicioHoje.plusDays(1).minusSeconds(1);
-        stats.setProcessosHoje(processoRepository.findProcessosHoje(inicioHoje, fimHoje).size());
+        stats.setProcessosHoje(processoRepository.countByDataCriacaoBetween(inicioHoje, fimHoje).intValue());
 
         return stats;
     }
@@ -373,8 +373,8 @@ public class WorkflowAdesaoService {
             LocalDateTime inicioMes = agora.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
             LocalDateTime fimMes = inicioMes.plusMonths(1).minusSeconds(1);
             
-            List<ProcessoAdesao> processosMes = processoRepository.findByPeriodoCriacao(inicioMes, fimMes);
-            dadosMensais.add(processosMes.size());
+            Long countMes = processoRepository.countByDataCriacaoBetween(inicioMes, fimMes);
+            dadosMensais.add(countMes != null ? countMes.intValue() : 0);
         }
         
         return dadosMensais;

@@ -63,6 +63,16 @@
     </style>
 </head>
 <body>
+    <div class="container mt-3">
+        <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${mensagem}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${erro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
     <div th:replace="~{fragments/navbar :: navbar}"></div>
     
     <div class="container-fluid">
@@ -363,16 +373,16 @@
             }
         }, 30000); // 30 segundos
     </script>
-  <!-- Script de notificações -->  <!-- jQuery necessário para o sistema de notificações -->
+  <!-- Script de notificaï¿½ï¿½es -->  <!-- jQuery necessï¿½rio para o sistema de notificaï¿½ï¿½es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
 
   <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necessário para o sistema de notificações -->
+  <!-- jQuery necessï¿½rio para o sistema de notificaï¿½ï¿½es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   
-  <!-- Script de notificações -->  <!-- jQuery necessário para o sistema de notificações -->
+  <!-- Script de notificaï¿½ï¿½es -->  <!-- jQuery necessï¿½rio para o sistema de notificaï¿½ï¿½es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 

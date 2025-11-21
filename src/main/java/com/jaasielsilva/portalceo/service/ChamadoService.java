@@ -153,24 +153,17 @@ public class ChamadoService {
     // Buscar técnicos disponíveis (sem chamados abertos atribuídos)
     @Transactional(readOnly = true)
     public List<Colaborador> buscarTecnicosDisponiveis() {
-        // Buscar colaboradores ativos da área de TI com cargos específicos de suporte
         List<Colaborador> todosColaboradores = colaboradorRepository.findByAtivoTrueAndStatusOrderByNome(
             Colaborador.StatusColaborador.ATIVO);
-        
+
+        List<Long> idsComChamadosAtivos = chamadoRepository.findColaboradorIdsComChamadosAtivos();
+        java.util.Set<Long> setIdsComChamadosAtivos = new java.util.HashSet<>(idsComChamadosAtivos);
+
         return todosColaboradores.stream()
             .filter(colaborador -> {
-                // Verificar se é da área de TI/Suporte
                 boolean isDaTI = isDepartamentoTI(colaborador);
-                
-                // Verificar se tem cargo específico de suporte técnico
                 boolean isCargoSuporte = isCargoSuporteTecnico(colaborador);
-                
-                // Verificar se o colaborador não tem chamados abertos
-                List<Chamado> chamadosAbertos = chamadoRepository.findByColaboradorResponsavelAndStatusIn(
-                    colaborador, List.of(StatusChamado.ABERTO, StatusChamado.EM_ANDAMENTO));
-                boolean isDisponivel = chamadosAbertos.isEmpty();
-                
-                // Retornar apenas se for da TI, tiver cargo de suporte e estiver disponível
+                boolean isDisponivel = !setIdsComChamadosAtivos.contains(colaborador.getId());
                 return isDaTI && isCargoSuporte && isDisponivel;
             })
             .collect(Collectors.toList());

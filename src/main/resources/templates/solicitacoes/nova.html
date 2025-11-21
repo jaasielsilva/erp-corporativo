@@ -57,11 +57,10 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="colaborador" class="required">Colaborador</label>
-                <select id="colaborador" name="colaborador.id" class="form-control" required>
-                  <option value="">Selecione o colaborador...</option>
-                  <!-- Colaboradores serão carregados via AJAX -->
-                </select>
+                <label for="colaboradorBusca" class="required">Colaborador</label>
+                <input type="text" id="colaboradorBusca" class="form-control" placeholder="Digite nome, email ou CPF" autocomplete="off" />
+                <input type="hidden" id="colaboradorId" name="colaborador.id" />
+                <div id="colaboradorResultados" class="autocomplete-results"></div>
               </div>
 
               <div class="form-group">
@@ -248,76 +247,94 @@
   </div>
 
   <script>
-    // Carregar colaboradores via AJAX
     document.addEventListener('DOMContentLoaded', function () {
-      carregarColaboradores();
-      configurarEventListeners();
+      configurarAutocompleteColaborador();
+      configurarEventosGerais();
     });
 
-    function carregarColaboradores() {
-      // Verificar se já existe cache válido
-      const cacheKey = 'colaboradores_cache';
-      const cacheTime = 'colaboradores_cache_time';
-      const cacheValidity = 5 * 60 * 1000; // 5 minutos
-      
-      const cachedData = localStorage.getItem(cacheKey);
-      const cachedTime = localStorage.getItem(cacheTime);
-      
-      if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheValidity) {
-        console.log('Usando colaboradores do cache');
-        preencherSelectColaboradores(JSON.parse(cachedData));
-        return;
+    function configurarAutocompleteColaborador() {
+      const input = document.getElementById('colaboradorBusca');
+      const hiddenId = document.getElementById('colaboradorId');
+      const results = document.getElementById('colaboradorResultados');
+      let timer = null;
+      let pagina = 0;
+      let consultaAtual = '';
+      let carregandoMais = false;
+
+      function buscar(q, page) {
+        const params = new URLSearchParams();
+        if (q && q.trim().length > 0) params.set('q', q.trim());
+        params.set('page', page || 0);
+        params.set('size', 10);
+        return fetch('/solicitacoes/colaboradores/search?' + params.toString()).then(r => r.json());
       }
-      
-      fetch('/solicitacoes/colaboradores')
-        .then(response => response.json())
-        .then(colaboradores => {
-          // Salvar no cache
-          localStorage.setItem(cacheKey, JSON.stringify(colaboradores));
-          localStorage.setItem(cacheTime, Date.now().toString());
-          
-          preencherSelectColaboradores(colaboradores);
-        })
-        .catch(error => {
-          console.error('Erro ao carregar colaboradores:', error);
+
+      function render(dados, append) {
+        if (!append) results.innerHTML = '';
+        dados.content.forEach(c => {
+          const item = document.createElement('div');
+          item.className = 'autocomplete-item';
+          item.dataset.id = c.id;
+          item.dataset.nome = c.nome || '';
+          item.dataset.email = c.email || '';
+          item.dataset.cpf = c.cpf || '';
+          item.dataset.cargo = c.cargo || 'N/A';
+          item.dataset.departamento = c.departamento || 'N/A';
+          item.textContent = `${c.nome} - ${c.cargo || 'N/A'} (${c.departamento || 'N/A'})`;
+          item.addEventListener('click', function () {
+            input.value = this.dataset.nome;
+            hiddenId.value = this.dataset.id;
+            atualizarInfoSelecionado(this.dataset);
+            results.innerHTML = '';
+          });
+          results.appendChild(item);
         });
-    }
-    
-    function preencherSelectColaboradores(colaboradores) {
-      const select = document.getElementById('colaborador');
-      colaboradores.forEach(colaborador => {
-        const option = document.createElement('option');
-        option.value = colaborador.id;
-        option.textContent = `${colaborador.nome} - ${colaborador.cargo || 'N/A'} (${colaborador.departamento || 'N/A'})`;
-        option.dataset.email = colaborador.email;
-        option.dataset.cpf = colaborador.cpf;
-        option.dataset.cargo = colaborador.cargo || 'N/A';
-        option.dataset.departamento = colaborador.departamento || 'N/A';
-        select.appendChild(option);
-      });
-    }
-
-    function configurarEventListeners() {
-      // Mostrar informações do colaborador selecionado
-      document.getElementById('colaborador').addEventListener('change', function () {
-        const selectedOption = this.options[this.selectedIndex];
-        const infoDiv = document.getElementById('colaboradorInfo');
-
-        if (selectedOption.value) {
-          // Extrair apenas o nome do texto completo
-          const nomeCompleto = selectedOption.textContent.split(' - ')[0];
-          document.getElementById('colaboradorNome').textContent = nomeCompleto;
-          document.getElementById('colaboradorEmail').textContent = selectedOption.dataset.email || 'N/A';
-          document.getElementById('colaboradorCpf').textContent = selectedOption.dataset.cpf || 'N/A';
-          document.getElementById('colaboradorCargo').textContent = selectedOption.dataset.cargo || 'N/A';
-          document.getElementById('colaboradorDepartamento').textContent = selectedOption.dataset.departamento || 'N/A';
-          infoDiv.classList.remove('hidden');
-        } else {
-          infoDiv.classList.add('hidden');
+        if (dados.page + 1 < dados.totalPages) {
+          const more = document.createElement('div');
+          more.className = 'autocomplete-more';
+          more.textContent = 'Carregar mais...';
+          more.addEventListener('click', function () {
+            if (carregandoMais) return;
+            carregandoMais = true;
+            pagina = pagina + 1;
+            buscar(consultaAtual, pagina).then(novos => {
+              render(novos, true);
+            }).finally(() => {
+              carregandoMais = false;
+            });
+          });
+          results.appendChild(more);
         }
+      }
+
+      function atualizarInfoSelecionado(data) {
+        document.getElementById('colaboradorNome').textContent = data.nome || '';
+        document.getElementById('colaboradorEmail').textContent = data.email || 'N/A';
+        document.getElementById('colaboradorCpf').textContent = data.cpf || 'N/A';
+        document.getElementById('colaboradorCargo').textContent = data.cargo || 'N/A';
+        document.getElementById('colaboradorDepartamento').textContent = data.departamento || 'N/A';
+        document.getElementById('colaboradorInfo').classList.remove('hidden');
+      }
+
+      input.addEventListener('input', function () {
+        const q = this.value;
+        hiddenId.value = '';
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(function () {
+          consultaAtual = q;
+          pagina = 0;
+          buscar(q, 0).then(dados => {
+            render(dados, false);
+          });
+        }, 250);
       });
 
-      // Mostrar/ocultar campos de acesso temporário
+      input.addEventListener('blur', function () {
+        setTimeout(function(){ results.innerHTML = ''; }, 200);
+      });
+    }
+
+    function configurarEventosGerais() {
       document.getElementById('prazoAcesso').addEventListener('change', function () {
         const camposTemporarios = document.getElementById('camposTemporarios');
         if (this.value === 'TEMPORARIO') {
@@ -331,7 +348,6 @@
         }
       });
 
-      // Validação de datas
       document.getElementById('dataInicio').addEventListener('change', function () {
         const dataFim = document.getElementById('dataFim');
         if (this.value) {
@@ -339,12 +355,10 @@
         }
       });
 
-      // Contador de caracteres para justificativa
       document.getElementById('justificativa').addEventListener('input', function () {
         const minLength = 50;
         const currentLength = this.value.length;
         const small = this.nextElementSibling;
-
         if (currentLength < minLength) {
           small.textContent = `Mínimo de 50 caracteres (${currentLength}/${minLength})`;
           small.style.color = '#ef4444';
@@ -354,42 +368,34 @@
         }
       });
 
-      // Validação do formulário antes do envio
       document.querySelector('form').addEventListener('submit', function (e) {
-        const colaborador = document.getElementById('colaborador').value;
+        const colaboradorId = document.getElementById('colaboradorId').value;
         const modulos = document.querySelectorAll('input[name="modulos"]:checked');
         const justificativa = document.getElementById('justificativa').value;
-
-        if (!colaborador) {
+        if (!colaboradorId) {
           alert('Por favor, selecione um colaborador.');
           e.preventDefault();
           return;
         }
-
         if (modulos.length === 0) {
           alert('Por favor, selecione pelo menos um módulo de acesso.');
           e.preventDefault();
           return;
         }
-
         if (justificativa.length < 50) {
           alert('A justificativa deve ter pelo menos 50 caracteres.');
           e.preventDefault();
           return;
         }
-
-        // Validação para acesso temporário
         const prazoAcesso = document.getElementById('prazoAcesso').value;
         if (prazoAcesso === 'TEMPORARIO') {
           const dataInicio = document.getElementById('dataInicio').value;
           const dataFim = document.getElementById('dataFim').value;
-
           if (!dataInicio || !dataFim) {
             alert('Para acesso temporário, as datas de início e fim são obrigatórias.');
             e.preventDefault();
             return;
           }
-
           if (new Date(dataInicio) >= new Date(dataFim)) {
             alert('A data de fim deve ser posterior à data de início.');
             e.preventDefault();

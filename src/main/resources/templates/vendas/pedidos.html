@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendas - Pedidos</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+    <link th:href="@{/css/sidebar.css}" rel="stylesheet" />
+    <link th:href="@{/css/notifications.css}" rel="stylesheet" />
+    <link th:href="@{/css/chat.css}" rel="stylesheet" />
+       <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <h1><i class="fas fa-clipboard-list"></i> Pedidos</h1>
+            <div class="d-flex gap-2 mb-3">
+                <input class="form-control" style="max-width:300px" placeholder="Buscar por cliente ou nº pedido" />
+                <select class="form-select" style="max-width:200px">
+                    <option>Status</option>
+                    <option>Aguardando</option>
+                    <option>Pago</option>
+                    <option>Cancelado</option>
+                </select>
+                <button class="btn btn-primary"><i class="fas fa-search"></i> Filtrar</button>
+            </div>
+            <table class="table table-hover">
+                <thead><tr><th>Nº Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th><th>Ações</th></tr></thead>
+                <tbody>
+                    <tr><td>0001</td><td>Cliente Exemplo</td><td>2025-11-21</td><td>Aguardando</td><td>R$ 0,00</td><td>
+                        <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fas fa-eye"></i> Detalhes</a>
+                    </td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

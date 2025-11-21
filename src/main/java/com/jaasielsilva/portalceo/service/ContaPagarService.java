@@ -234,6 +234,27 @@ public class ContaPagarService {
         return contaPagarRepository.save(conta);
     }
 
+    // NOVO: Cancelar com auditoria de usuário
+    @Transactional
+    public ContaPagar cancelar(Long id, String motivo, Usuario usuario) {
+        ContaPagar conta = contaPagarRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
+
+        if (conta.getStatus() == ContaPagar.StatusContaPagar.PAGA) {
+            throw new IllegalStateException("Não é possível cancelar conta já paga");
+        }
+
+        conta.setStatus(ContaPagar.StatusContaPagar.CANCELADA);
+        conta.setObservacoes((conta.getObservacoes() != null ? conta.getObservacoes() + " | " : "") +
+                "CANCELADA: " + motivo);
+
+        registrarHistorico(conta, usuario, "Conta cancelada: " + motivo);
+
+        logger.info("Conta a pagar cancelada: {} - Motivo: {}", conta.getDescricao(), motivo);
+
+        return contaPagarRepository.save(conta);
+    }
+
     // ================= EXCLUIR =================
     @Transactional
     public void excluir(Long id) {

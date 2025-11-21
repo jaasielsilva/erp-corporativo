@@ -425,6 +425,39 @@ public String listarSolicitacoes(
         }
     }
 
+    @GetMapping("/colaboradores/search")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> buscarColaboradores(
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                    org.springframework.data.domain.Sort.by("nome").ascending());
+            org.springframework.data.domain.Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> resultado = colaboradorService
+                    .buscarParaAjax(q, pageable);
+
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("content", resultado.getContent());
+            body.put("page", resultado.getNumber());
+            body.put("size", resultado.getSize());
+            body.put("totalElements", resultado.getTotalElements());
+            body.put("totalPages", resultado.getTotalPages());
+
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "public, max-age=60")
+                    .body(body);
+        } catch (Exception e) {
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("content", java.util.Collections.emptyList());
+            body.put("page", 0);
+            body.put("size", size);
+            body.put("totalElements", 0);
+            body.put("totalPages", 0);
+            return ResponseEntity.ok(body);
+        }
+    }
+
     /**
      * Buscar solicitação por protocolo (AJAX)
      */

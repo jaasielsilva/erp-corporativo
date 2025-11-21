@@ -53,6 +53,9 @@ public class DashboardController {
     private IndicadorService indicadorService;
 
     @Autowired
+    private com.jaasielsilva.portalceo.service.ContaReceberService contaReceberService;
+
+    @Autowired
     private org.springframework.core.env.Environment environment;
 
     @GetMapping("/dashboard")
@@ -68,8 +71,18 @@ public class DashboardController {
         // ===== DADOS PRINCIPAIS =====
         long totalClientes = clienteService.contarTotal();
         long novosClientes30Dias = clienteService.contarNovosPorPeriodo(30);
+        java.time.YearMonth agoraYm = java.time.YearMonth.now();
+        java.time.LocalDate inicio12 = agoraYm.minusMonths(11).atDay(1);
+        java.time.LocalDate fim12 = agoraYm.atEndOfMonth();
         long totalVendas = 0;
-        String crescimentoVendas = "0%";
+        try {
+            totalVendas = contaReceberService.contarRecebimentosPeriodo(java.time.LocalDate.now().minusDays(30), java.time.LocalDate.now());
+        } catch (Exception e) {
+            totalVendas = 0;
+        }
+        long totalVendasAnterior = contaReceberService.contarRecebimentosPeriodo(java.time.LocalDate.now().minusDays(60), java.time.LocalDate.now().minusDays(31));
+        String crescimentoVendas = totalVendasAnterior == 0 ? "+0%" :
+                String.format("%+,.1f%%", ((double)(totalVendas - totalVendasAnterior) / (double) totalVendasAnterior) * 100.0);
         long produtosEstoque = produtoService.somarQuantidadeEstoque();
         BigDecimal faturamentoMensal = indicadorService.getRoiMensal();
         String crescimentoFaturamento = "0%";
@@ -90,14 +103,16 @@ public class DashboardController {
         String percentualMeta = "87%";
 
         // GRÁFICOS DE VENDAS
-        Map<YearMonth, BigDecimal> vendasUltimos12Meses = java.util.Collections.emptyMap();
+        Map<YearMonth, BigDecimal> vendasUltimos12Meses = contaReceberService.getRecebimentosPorMes(inicio12, fim12);
         List<String> ultimos12MesesLabels = new ArrayList<>();
         List<BigDecimal> ultimos12MesesValores = new ArrayList<>();
-        vendasUltimos12Meses.forEach((ym, valor) -> {
+        for (int i = 11; i >= 0; i--) {
+            YearMonth ym = agoraYm.minusMonths(i);
+            BigDecimal valor = vendasUltimos12Meses.getOrDefault(ym, BigDecimal.ZERO);
             String label = ym.getMonth().name().substring(0, 3) + "/" + String.valueOf(ym.getYear()).substring(2);
             ultimos12MesesLabels.add(label);
             ultimos12MesesValores.add(valor);
-        });
+        }
 
         List<BigDecimal> metaVendasMensal = new ArrayList<>();
         BigDecimal metaBase = faturamentoMensal.multiply(new BigDecimal("1.2"));
@@ -108,6 +123,12 @@ public class DashboardController {
         // Vendas por categoria
         List<String> categoriasLabels = new ArrayList<>();
         List<BigDecimal> categoriasValores = new ArrayList<>();
+        java.util.Map<com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber, BigDecimal> porCategoria =
+                contaReceberService.getRecebimentosPorCategoria(inicio12, fim12);
+        for (var e : porCategoria.entrySet()) {
+            categoriasLabels.add(e.getKey() != null ? e.getKey().name() : "—");
+            categoriasValores.add(e.getValue() != null ? e.getValue() : BigDecimal.ZERO);
+        }
 
         List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();
         List<Integer> solicitacoesStatus = new ArrayList<>();
@@ -243,8 +264,19 @@ public class DashboardController {
         java.util.List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();
         java.util.List<Integer> solicitacoesStatus = new java.util.ArrayList<>();
         for (Long v : solicitacoesStatusLong) solicitacoesStatus.add(v.intValue());
+        java.time.YearMonth agoraYmApi = java.time.YearMonth.now();
+        java.time.LocalDate inicio12Api = agoraYmApi.minusMonths(11).atDay(1);
+        java.time.LocalDate fim12Api = agoraYmApi.atEndOfMonth();
+        java.util.Map<java.time.YearMonth, java.math.BigDecimal> vendas12 = contaReceberService.getRecebimentosPorMes(inicio12Api, fim12Api);
         java.util.List<String> ultimos12MesesLabels = new java.util.ArrayList<>();
         java.util.List<java.math.BigDecimal> ultimos12MesesValores = new java.util.ArrayList<>();
+        for (int i = 11; i >= 0; i--) {
+            java.time.YearMonth ym = agoraYmApi.minusMonths(i);
+            java.math.BigDecimal valor = vendas12.getOrDefault(ym, java.math.BigDecimal.ZERO);
+            String label = ym.getMonth().name().substring(0, 3) + "/" + String.valueOf(ym.getYear()).substring(2);
+            ultimos12MesesLabels.add(label);
+            ultimos12MesesValores.add(valor);
+        }
         java.util.List<java.math.BigDecimal> metaVendasMensal = new java.util.ArrayList<>();
         java.math.BigDecimal metaBase = faturamentoMensal.multiply(new java.math.BigDecimal("1.2"));
         for (int i = 0; i < 12; i++) metaVendasMensal.add(metaBase);
@@ -283,8 +315,16 @@ public class DashboardController {
         vendas.put("valores", ultimos12MesesValores);
         vendas.put("meta", metaVendasMensal);
         java.util.Map<String, Object> categorias = new java.util.HashMap<>();
-        categorias.put("labels", new java.util.ArrayList<>());
-        categorias.put("valores", new java.util.ArrayList<>());
+        java.util.List<String> catLabels = new java.util.ArrayList<>();
+        java.util.List<java.math.BigDecimal> catValores = new java.util.ArrayList<>();
+        java.util.Map<com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber, java.math.BigDecimal> porCat =
+                contaReceberService.getRecebimentosPorCategoria(inicio12Api, fim12Api);
+        for (var e : porCat.entrySet()) {
+            catLabels.add(e.getKey() != null ? e.getKey().name() : "—");
+            catValores.add(e.getValue() != null ? e.getValue() : java.math.BigDecimal.ZERO);
+        }
+        categorias.put("labels", catLabels);
+        categorias.put("valores", catValores);
         java.util.Map<String, Object> solicitacoes = new java.util.HashMap<>();
         solicitacoes.put("valores", solicitacoesStatus);
         java.util.Map<String, Object> adesao = new java.util.HashMap<>();

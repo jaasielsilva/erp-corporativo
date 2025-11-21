@@ -59,6 +59,18 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
             "GROUP BY c.cliente ORDER BY SUM(c.valorOriginal + c.valorJuros + c.valorMulta - c.valorDesconto - c.valorRecebido) DESC")
     List<Object[]> sumSaldoReceberByCliente();
 
+    @Query("SELECT YEAR(c.dataRecebimento), MONTH(c.dataRecebimento), COALESCE(SUM(c.valorRecebido), 0) " +
+           "FROM ContaReceber c WHERE c.status = 'RECEBIDA' AND c.dataRecebimento BETWEEN :inicio AND :fim " +
+           "GROUP BY YEAR(c.dataRecebimento), MONTH(c.dataRecebimento) " +
+           "ORDER BY YEAR(c.dataRecebimento), MONTH(c.dataRecebimento)")
+    List<Object[]> sumRecebidoPorMes(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @org.springframework.data.jpa.repository.QueryHints({
+            @jakarta.persistence.QueryHint(name = "jakarta.persistence.query.timeout", value = "1000")
+    })
+    @Query("SELECT COUNT(c) FROM ContaReceber c WHERE c.status = 'RECEBIDA' AND c.dataRecebimento BETWEEN :inicio AND :fim")
+    Long countRecebidasPorPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
     @Query("SELECT DATE(c.dataRecebimento), SUM(c.valorRecebido) FROM ContaReceber c " +
             "WHERE c.dataRecebimento BETWEEN :inicio AND :fim GROUP BY DATE(c.dataRecebimento) ORDER BY DATE(c.dataRecebimento)")
     List<Object[]> sumValorRecebidoPorDia(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
@@ -80,4 +92,10 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
     BigDecimal sumSaldoReceber();
 
     boolean existsByNumeroDocumento(String numeroDocumento);
+
+    @Query("SELECT c FROM ContaReceber c LEFT JOIN FETCH c.cliente")
+    List<ContaReceber> findAllWithCliente();
+
+    @Query("SELECT c FROM ContaReceber c LEFT JOIN FETCH c.cliente WHERE c.status = :status ORDER BY c.dataVencimento")
+    List<ContaReceber> findByStatusWithCliente(@Param("status") ContaReceber.StatusContaReceber status);
 }

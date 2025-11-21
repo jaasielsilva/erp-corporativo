@@ -160,9 +160,11 @@ public class ContaPagarController {
 
     // ================= EXCLUIR =================
     @PostMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String excluir(@PathVariable Long id,
+                          @ModelAttribute("usuarioLogado") Usuario usuario,
+                          RedirectAttributes redirectAttributes) {
         try {
-            contaPagarService.excluir(id);
+            contaPagarService.excluir(id, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Conta excluída com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao excluir: " + e.getMessage());
@@ -204,9 +206,10 @@ public class ContaPagarController {
     @PostMapping("/cancelar/{id}")
     public String cancelar(@PathVariable Long id,
             @RequestParam("motivo") String motivo,
+            @ModelAttribute("usuarioLogado") Usuario usuario,
             RedirectAttributes redirectAttributes) {
         try {
-            contaPagarService.cancelar(id, motivo);
+            contaPagarService.cancelar(id, motivo, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Conta cancelada com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao cancelar: " + e.getMessage());

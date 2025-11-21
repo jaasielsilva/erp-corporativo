@@ -80,7 +80,7 @@ public class ContaReceberService {
 
     @Transactional(readOnly = true)
     public List<ContaReceber> findAll() {
-        return contaReceberRepository.findAll();
+        return contaReceberRepository.findAllWithCliente();
     }
 
     public void deleteById(Long id) {
@@ -199,7 +199,7 @@ public class ContaReceberService {
     // ---------------- Consultas ----------------
     @Transactional(readOnly = true)
     public List<ContaReceber> findByStatus(ContaReceber.StatusContaReceber status) {
-        return contaReceberRepository.findByStatusOrderByDataVencimento(status);
+        return contaReceberRepository.findByStatusWithCliente(status);
     }
 
     @Transactional(readOnly = true)
@@ -272,6 +272,27 @@ public class ContaReceberService {
                         row -> (ContaReceber.CategoriaContaReceber) row[0],
                         row -> (BigDecimal) row[1]
                 ));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<java.time.YearMonth, BigDecimal> getRecebimentosPorMes(LocalDate inicio, LocalDate fim) {
+        List<Object[]> rows = contaReceberRepository.sumRecebidoPorMes(inicio, fim);
+        Map<java.time.YearMonth, BigDecimal> mapa = new java.util.LinkedHashMap<>();
+        for (Object[] r : rows) {
+            Integer ano = (Integer) r[0];
+            Integer mes = (Integer) r[1];
+            BigDecimal total = (BigDecimal) r[2];
+            if (ano != null && mes != null) {
+                mapa.put(java.time.YearMonth.of(ano, mes), total != null ? total : BigDecimal.ZERO);
+            }
+        }
+        return mapa;
+    }
+
+    @Transactional(readOnly = true)
+    public long contarRecebimentosPeriodo(LocalDate inicio, LocalDate fim) {
+        Long count = contaReceberRepository.countRecebidasPorPeriodo(inicio, fim);
+        return count != null ? count : 0L;
     }
 
     @Transactional(readOnly = true)

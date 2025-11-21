@@ -1,10 +1,12 @@
 package com.jaasielsilva.portalceo.config;
 
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class UsuarioLogadoInterceptor implements HandlerInterceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(UsuarioLogadoInterceptor.class);
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -89,18 +94,19 @@ public class UsuarioLogadoInterceptor implements HandlerInterceptor {
      */
     private Usuario getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-        
-        Object principal = authentication.getPrincipal();
-        
-        if (principal instanceof Usuario) {
-            return (Usuario) principal;
+        String name = authentication.getName();
+        if (name == null || "anonymousUser".equalsIgnoreCase(name)) {
+            return null;
         }
-        
-        return null;
+        try {
+            return usuarioRepository.findByEmail(name).orElse(null);
+        } catch (Exception e) {
+            logger.warn("Falha ao obter usuário por email '{}': {}", name, e.getMessage());
+            return null;
+        }
     }
 
     /**

@@ -69,9 +69,9 @@ public class JuridicoController {
             for (ContratoLegal c : proximosVencimentos) {
                 Map<String, Object> item = new HashMap<>();
                 item.put("titulo", c.getTitulo());
-                // usar nome da contraparte quando disponível
                 item.put("contraparte", c.getNomeContraparte());
                 item.put("dataVencimento", c.getDataVencimento());
+                item.put("diasRestantes", c.getDiasParaVencimento());
                 item.put("valor", c.getValorContrato() != null ? c.getValorContrato() : c.getValorMensal());
                 item.put("status", c.getStatus());
                 contratosVencimentoVm.add(item);
@@ -418,6 +418,51 @@ public class JuridicoController {
         estatisticas.put("timestamp", LocalDateTime.now());
         
         return ResponseEntity.ok(estatisticas);
+    }
+
+    @GetMapping("/api/processos-urgentes")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarProcessosUrgentesApi(
+            @RequestParam(value = "dias", defaultValue = "7") int dias,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size) {
+        List<Map<String, Object>> todos = processoJuridicoService.obterProcessosUrgentes(dias);
+        int total = todos != null ? todos.size() : 0;
+        int from = Math.max(0, Math.min(page * size, total));
+        int to = Math.max(from, Math.min(from + size, total));
+        List<Map<String, Object>> content = total > 0 ? todos.subList(from, to) : java.util.Collections.emptyList();
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("content", content);
+        payload.put("totalElements", total);
+        payload.put("page", page);
+        payload.put("size", size);
+        payload.put("totalPages", size > 0 ? (int) Math.ceil(total / (double) size) : 0);
+        return ResponseEntity.ok(payload);
+    }
+
+    @GetMapping("/api/ultimas-atividades")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarUltimasAtividadesApi(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "dataHora"));
+        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso> pagina = andamentoProcessoRepository.findAll(pageable);
+        java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream()
+                .map(a -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("tipo", "Processo");
+                    m.put("descricao", a.getDescricao());
+                    m.put("data", a.getDataHora());
+                    m.put("usuario", a.getUsuario());
+                    return m;
+                }).toList();
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("content", content);
+        payload.put("totalElements", pagina.getTotalElements());
+        payload.put("page", pagina.getNumber());
+        payload.put("size", pagina.getSize());
+        payload.put("totalPages", pagina.getTotalPages());
+        return ResponseEntity.ok(payload);
     }
 
     @GetMapping("/api/contratos")

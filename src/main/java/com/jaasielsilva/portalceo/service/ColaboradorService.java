@@ -215,6 +215,17 @@ public class ColaboradorService {
         }
     }
 
+    public org.springframework.data.domain.Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> buscarParaAjax(
+            String q,
+            org.springframework.data.domain.Pageable pageable) {
+        try {
+            return colaboradorRepository.findColaboradoresForAjax(q, pageable);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar colaboradores paginados para AJAX: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
     public Page<Colaborador> listarTodosPaginado(Pageable pageable) {
         return colaboradorRepository.findAll(pageable);
     }

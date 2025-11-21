@@ -138,7 +138,7 @@
                                                 <h6 class="mb-1" th:text="${contrato.titulo}">Contrato de Prestação de Serviços</h6>
                                                 <small class="text-muted" th:text="${contrato.contraparte}">TechCorp Ltda</small>
                                                 <div class="mt-1">
-                                                    <span class="badge bg-warning" th:text="${contrato.dataVencimento}">15 dias</span>
+                                                    <span class="badge bg-warning" th:text="${contrato.diasRestantes} + ' dias'">15 dias</span>
                                                     <span class="badge bg-info" th:text="${contrato.valor}">R$ 50.000,00</span>
                                                 </div>
                                             </div>
@@ -156,23 +156,17 @@
                         <div class="col-md-6">
                             <div class="status-card">
                                 <h5><i class="fas fa-fire text-danger"></i> Processos com Prazos Urgentes</h5>
-                                <div class="mt-3" th:if="${processosUrgentes != null and !processosUrgentes.isEmpty()}">
-                                    <div th:each="processo : ${processosUrgentes}" class="process-item urgent">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1" th:text="${processo.numero}">1234567-89.2023.8.26.0100</h6>
-                                                <small class="text-muted" th:text="${processo.parte}">João Silva vs. Empresa</small>
-                                                <div class="mt-1">
-                                                    <span class="badge bg-danger" th:text="${processo.proximoPrazo}">3 dias</span>
-                                                    <span class="badge bg-secondary" th:text="${processo.acao}">Contestação</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="mt-3">
+                                    <div id="processosUrgentesList"></div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2" id="processosUrgentesPagination" style="display:none;">
+                                        <button class="btn btn-sm btn-outline-secondary" id="prevUrgentes">Anterior</button>
+                                        <span id="pageInfoUrgentes" class="text-muted"></span>
+                                        <button class="btn btn-sm btn-outline-secondary" id="nextUrgentes">Próximo</button>
                                     </div>
-                                </div>
-                                <div th:if="${processosUrgentes == null or processosUrgentes.isEmpty()}" class="text-center text-muted py-3">
-                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                    <p>Nenhum processo com prazo urgente</p>
+                                    <div class="text-center text-muted py-3" id="processosUrgentesEmpty" style="display:none;">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <p>Nenhum processo com prazo urgente</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -183,23 +177,17 @@
                         <div class="col-12">
                             <div class="status-card">
                                 <h5><i class="fas fa-history"></i> Últimas Atividades</h5>
-                                <div class="mt-3" th:if="${ultimasAtividades != null and !ultimasAtividades.isEmpty()}">
-                                    <div th:each="atividade : ${ultimasAtividades}" class="activity-item recent">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <h6 class="mb-1" th:text="${atividade.descricao}">Contrato de prestação de serviços aprovado</h6>
-                                                <small class="text-muted">
-                                                    <i class="fas fa-user"></i> <span th:text="${atividade.usuario}">Dr. Carlos Oliveira</span>
-                                                    <i class="fas fa-clock ms-2"></i> <span th:text="${atividade.data}">2 horas atrás</span>
-                                                </small>
-                                            </div>
-                                            <span class="badge bg-primary" th:text="${atividade.tipo}">Contrato</span>
-                                        </div>
+                                <div class="mt-3">
+                                    <div id="ultimasAtividadesList"></div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2" id="ultimasAtividadesPagination" style="display:none;">
+                                        <button class="btn btn-sm btn-outline-secondary" id="prevAtividades">Anterior</button>
+                                        <span id="pageInfoAtividades" class="text-muted"></span>
+                                        <button class="btn btn-sm btn-outline-secondary" id="nextAtividades">Próximo</button>
                                     </div>
-                                </div>
-                                <div th:if="${ultimasAtividades == null or ultimasAtividades.isEmpty()}" class="text-center text-muted py-3">
-                                    <i class="fas fa-inbox fa-2x mb-2"></i>
-                                    <p>Nenhuma atividade recente</p>
+                                    <div class="text-center text-muted py-3" id="ultimasAtividadesEmpty" style="display:none;">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <p>Nenhuma atividade recente</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -245,6 +233,80 @@
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
+            let urgentesPage = 0;
+            let urgentesSize = 5;
+            let atividadesPage = 0;
+            let atividadesSize = 10;
+            function renderUrgentes(data){
+                const list = document.getElementById('processosUrgentesList');
+                const empty = document.getElementById('processosUrgentesEmpty');
+                const pag = document.getElementById('processosUrgentesPagination');
+                list.innerHTML = '';
+                if(!data || !data.content || data.content.length===0){
+                    empty.style.display = 'block';
+                    pag.style.display = 'none';
+                    return;
+                }
+                empty.style.display = 'none';
+                pag.style.display = 'flex';
+                document.getElementById('pageInfoUrgentes').textContent = (data.page+1)+"/"+data.totalPages;
+                data.content.forEach(p=>{
+                    const div = document.createElement('div');
+                    div.className = 'process-item urgent';
+                    div.innerHTML = '<div class="d-flex justify-content-between align-items-start"><div><h6 class="mb-1">'+(p.numero||'')+'</h6><small class="text-muted">'+(p.parte||'')+'</small><div class="mt-1"><span class="badge bg-danger">'+(p.proximoPrazo||'')+'</span><span class="badge bg-secondary ms-1">'+(p.acao||'')+'</span></div></div></div>';
+                    list.appendChild(div);
+                });
+                document.getElementById('prevUrgentes').disabled = data.page<=0;
+                document.getElementById('nextUrgentes').disabled = data.page>=data.totalPages-1;
+            }
+            function loadUrgentes(){
+                fetch('/juridico/api/processos-urgentes?page='+urgentesPage+'&size='+urgentesSize)
+                    .then(r=>r.json())
+                    .then(renderUrgentes)
+                    .catch(()=>{});
+            }
+            document.getElementById('prevUrgentes').addEventListener('click',function(){
+                if(urgentesPage>0){ urgentesPage--; loadUrgentes(); }
+            });
+            document.getElementById('nextUrgentes').addEventListener('click',function(){
+                urgentesPage++; loadUrgentes();
+            });
+            function renderAtividades(data){
+                const list = document.getElementById('ultimasAtividadesList');
+                const empty = document.getElementById('ultimasAtividadesEmpty');
+                const pag = document.getElementById('ultimasAtividadesPagination');
+                list.innerHTML = '';
+                if(!data || !data.content || data.content.length===0){
+                    empty.style.display = 'block';
+                    pag.style.display = 'none';
+                    return;
+                }
+                empty.style.display = 'none';
+                pag.style.display = 'flex';
+                document.getElementById('pageInfoAtividades').textContent = (data.page+1)+"/"+data.totalPages;
+                data.content.forEach(a=>{
+                    const div = document.createElement('div');
+                    div.className = 'activity-item recent';
+                    div.innerHTML = '<div class="d-flex justify-content-between align-items-center"><div><h6 class="mb-1">'+(a.descricao||'')+'</h6><small class="text-muted"><i class="fas fa-user"></i> '+(a.usuario||'')+' <i class="fas fa-clock ms-2"></i> '+(a.data||'')+'</small></div><span class="badge bg-primary">'+(a.tipo||'')+'</span></div>';
+                    list.appendChild(div);
+                });
+                document.getElementById('prevAtividades').disabled = data.page<=0;
+                document.getElementById('nextAtividades').disabled = data.page>=data.totalPages-1;
+            }
+            function loadAtividades(){
+                fetch('/juridico/api/ultimas-atividades?page='+atividadesPage+'&size='+atividadesSize)
+                    .then(r=>r.json())
+                    .then(renderAtividades)
+                    .catch(()=>{});
+            }
+            document.getElementById('prevAtividades').addEventListener('click',function(){
+                if(atividadesPage>0){ atividadesPage--; loadAtividades(); }
+            });
+            document.getElementById('nextAtividades').addEventListener('click',function(){
+                atividadesPage++; loadAtividades();
+            });
+            loadUrgentes();
+            loadAtividades();
         });
     </script>
 </body>

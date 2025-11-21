@@ -218,20 +218,35 @@ public class FolhaPagamentoService {
      * Calcula dados de ponto para o holerite
      */
     private void calcularDadosPonto(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano) {
-        // Obter número de dias úteis do mês
-        YearMonth yearMonth = YearMonth.of(ano, mes);
-        int diasUteis = calcularDiasUteis(yearMonth);
-        
-        holerite.setDiasTrabalhados(diasUteis);
-        holerite.setHorasTrabalhadas(diasUteis * 8); // 8 horas por dia
-        holerite.setFaltas(0); // Implementar lógica de faltas futuramente
-        holerite.setAtrasos(0); // Implementar lógica de atrasos futuramente
+        YearMonth ym = YearMonth.of(ano, mes);
+        LocalDate inicio = ym.atDay(1);
+        LocalDate fim = ym.atEndOfMonth();
 
-        // Buscar registros de ponto do colaborador para calcular horas extras
-        // Por enquanto, assumir 0 horas extras
-        BigDecimal horasExtras = calcularHorasExtras(colaborador, mes, ano);
+        List<RegistroPonto> registros = registroPontoRepository
+                .findByColaboradorAndDataBetweenOrderByDataDesc(colaborador, inicio, fim);
+
+        Long faltas = registroPontoRepository
+                .countFaltasByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
+        Long atrasos = registroPontoRepository
+                .countAtrasosByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
+        Long minutosTrabalhados = registroPontoRepository
+                .sumMinutosTrabalhadosByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
+        Long minutosExtras = registroPontoRepository
+                .sumMinutosHoraExtraByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
+
+        int diasComRegistro = registros.size();
+        int diasTrabalhados = Math.max(0, diasComRegistro - (int) java.util.Optional.ofNullable(faltas).orElse(0L).intValue());
+        int horasTrabalhadas = (int) Math.floor(java.util.Optional.ofNullable(minutosTrabalhados).orElse(0L) / 60.0);
+
+        holerite.setDiasTrabalhados(diasTrabalhados);
+        holerite.setHorasTrabalhadas(horasTrabalhadas);
+        holerite.setFaltas(java.util.Optional.ofNullable(faltas).orElse(0L).intValue());
+        holerite.setAtrasos(java.util.Optional.ofNullable(atrasos).orElse(0L).intValue());
+
         BigDecimal valorHoraExtra = calcularValorHoraExtra(holerite.getSalarioBase());
-        holerite.setHorasExtras(horasExtras.multiply(valorHoraExtra));
+        BigDecimal horasExtrasDecimal = BigDecimal.valueOf(java.util.Optional.ofNullable(minutosExtras).orElse(0L))
+                .divide(BigDecimal.valueOf(60), 4, RoundingMode.HALF_UP);
+        holerite.setHorasExtras(valorHoraExtra.multiply(horasExtrasDecimal).setScale(2, RoundingMode.HALF_UP));
     }
 
     /**

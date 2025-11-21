@@ -36,9 +36,10 @@ public class EstoqueController {
     @GetMapping
     public String listarEstoque(
             @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String ean,
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) Long fornecedorId,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             Model model) {
 
         model.addAttribute("categorias", categoriaService.findAll());
@@ -50,7 +51,7 @@ public class EstoqueController {
         }
         model.addAttribute("totalEstoque", estoqueTotal);
 
-        var pagina = produtoService.filtrarEstoque(nome, categoriaId, fornecedorId, page);
+        var pagina = produtoService.filtrarEstoque(nome, ean, categoriaId, fornecedorId, page);
         model.addAttribute("produtos", pagina.getContent());
 
         List<Produto> produtosCriticos = pagina.getContent().stream()
@@ -65,8 +66,11 @@ public class EstoqueController {
                 .count();
         model.addAttribute("produtosZerados", produtosZerados);
 
-        model.addAttribute("paginaAtual", page);
-        model.addAttribute("totalPaginas", pagina.getTotalPages());
+        model.addAttribute("currentPage", pagina.getNumber());
+        model.addAttribute("totalPages", pagina.getTotalPages());
+        model.addAttribute("totalElements", pagina.getTotalElements());
+        model.addAttribute("hasPrevious", pagina.hasPrevious());
+        model.addAttribute("hasNext", pagina.hasNext());
 
         Map<String, Integer> graficoCategorias = produtoService.countProdutosPorCategoria();
         model.addAttribute("graficoCategorias", graficoCategorias);

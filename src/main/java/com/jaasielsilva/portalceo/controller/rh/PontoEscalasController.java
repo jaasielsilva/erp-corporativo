@@ -2,10 +2,16 @@ package com.jaasielsilva.portalceo.controller.rh;
 
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.RegistroPonto;
+import com.jaasielsilva.portalceo.model.ColaboradorEscala;
+import com.jaasielsilva.portalceo.repository.ColaboradorEscalaRepository;
 import com.jaasielsilva.portalceo.repository.RegistroPontoRepository;
 import com.jaasielsilva.portalceo.repository.EscalaTrabalhoRepository;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
+import com.jaasielsilva.portalceo.service.UsuarioService;
+import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.Usuario.Status;
+import com.jaasielsilva.portalceo.model.NivelAcesso;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -45,6 +51,10 @@ public class PontoEscalasController {
 
     @Autowired
     private EscalaTrabalhoRepository escalaTrabalhoRepository;
+    @Autowired
+    private ColaboradorEscalaRepository colaboradorEscalaRepository;
+    @Autowired
+    private UsuarioService usuarioService;
 
     @GetMapping("/registros")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
@@ -60,8 +70,43 @@ public class PontoEscalasController {
         model.addAttribute("anoAtual", ym.getYear());
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("escalasVigentes", escalaTrabalhoRepository.findEscalasVigentes(LocalDate.now()));
-        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         return "rh/ponto-escalas/escalas";
+    }
+
+    @GetMapping("/api/calendario")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> calendario(@RequestParam Integer mes,
+                                          @RequestParam Integer ano,
+                                          @RequestParam(required = false) Long departamentoId,
+                                          @RequestParam(required = false) Long escalaId) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            YearMonth ym = YearMonth.of(ano, mes);
+            List<Map<String, Object>> days = new ArrayList<>();
+            for (int d = 1; d <= ym.lengthOfMonth(); d++) {
+                LocalDate date = ym.atDay(d);
+                List<ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigentesByData(date);
+                long count = vigentes.stream()
+                        .filter(ce -> ce.getEscalaTrabalho() != null && ce.getEscalaTrabalho().trabalhaEm(date.getDayOfWeek()))
+                        .filter(ce -> departamentoId == null || (ce.getColaborador() != null && ce.getColaborador().getDepartamento() != null && Objects.equals(ce.getColaborador().getDepartamento().getId(), departamentoId)))
+                        .filter(ce -> escalaId == null || (ce.getEscalaTrabalho() != null && Objects.equals(ce.getEscalaTrabalho().getId(), escalaId)))
+                        .count();
+                Map<String, Object> m = new HashMap<>();
+                m.put("day", d);
+                m.put("total", count);
+                days.add(m);
+            }
+            resp.put("success", true);
+            resp.put("mes", mes);
+            resp.put("ano", ano);
+            resp.put("days", days);
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao carregar calendário");
+            return resp;
+        }
     }
 
     @GetMapping("/correcoes")
@@ -69,6 +114,61 @@ public class PontoEscalasController {
     public String paginaCorrecoes(Model model) {
         model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         return "rh/ponto-escalas/correcoes";
+    }
+
+    @PostMapping("/api/teste/criar-usuario")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> criarUsuarioTeste() {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            String email = "teste.ponto@sistema.com";
+            Optional<Colaborador> existenteCol = colaboradorService.listarAtivos().stream()
+                    .filter(c -> email.equalsIgnoreCase(c.getEmail()))
+                    .findFirst();
+            if (existenteCol.isPresent()) {
+                Colaborador col = existenteCol.get();
+                Usuario u = col.getUsuario();
+                resp.put("success", true);
+                resp.put("message", "Usuário de teste já existe");
+                resp.put("matricula", u != null ? u.getMatricula() : null);
+                resp.put("colaboradorId", col.getId());
+                return resp;
+            }
+
+            Colaborador col = new Colaborador();
+            col.setNome("Teste Ponto");
+            col.setEmail(email);
+            col.setCpf("999.999.990-01");
+            col.setTelefone("(11) 99999-9999");
+            col.setDataAdmissao(LocalDate.now().minusDays(1));
+            col.setStatus(Colaborador.StatusColaborador.ATIVO);
+            col.setAtivo(true);
+            col = colaboradorService.salvar(col);
+
+            Usuario usuario = new Usuario();
+            usuario.setNome(col.getNome());
+            usuario.setEmail(email);
+            usuario.setSenha("teste123");
+            usuario.setMatricula(usuarioService.gerarMatriculaUnica());
+            usuario.setNivelAcesso(NivelAcesso.USER);
+            usuario.setStatus(Status.ATIVO);
+            usuario.setColaborador(col);
+            usuarioService.salvarUsuario(usuario);
+
+            col.setUsuario(usuario);
+            colaboradorService.salvar(col);
+
+            resp.put("success", true);
+            resp.put("message", "Usuário e colaborador de teste criados");
+            resp.put("matricula", usuario.getMatricula());
+            resp.put("colaboradorId", col.getId());
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao criar usuário de teste");
+            return resp;
+        }
     }
 
     @GetMapping("/relatorios")

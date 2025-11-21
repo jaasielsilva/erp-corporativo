@@ -32,12 +32,20 @@ public class FornecedorController {
      * @param tamanho Quantidade de itens por página
      */
     @GetMapping
-    public String listar(
-            @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int tamanho,
-            Model model) {
-        Page<Fornecedor> paginaFornecedores = fornecedorService.listarTodosPaginado(pagina, tamanho);
-        model.addAttribute("pagina", paginaFornecedores);
+    public String listar(@RequestParam(value = "busca", required = false) String busca,
+                         @RequestParam(value = "status", required = false) String status,
+                         @RequestParam(value = "page", defaultValue = "0") int page,
+                         @RequestParam(value = "size", defaultValue = "20") int size,
+                         Model model) {
+        Page<Fornecedor> fornecedoresPage = fornecedorService.listarPaginado(busca, status, page, size);
+        model.addAttribute("fornecedores", fornecedoresPage.getContent());
+        model.addAttribute("currentPage", fornecedoresPage.getNumber());
+        model.addAttribute("totalPages", fornecedoresPage.getTotalPages());
+        model.addAttribute("totalElements", fornecedoresPage.getTotalElements());
+        model.addAttribute("hasPrevious", fornecedoresPage.hasPrevious());
+        model.addAttribute("hasNext", fornecedoresPage.hasNext());
+        model.addAttribute("busca", busca);
+        model.addAttribute("statusFiltro", status);
         return "fornecedor/listar";
     }
 
@@ -75,7 +83,7 @@ public class FornecedorController {
     public String excluirFornecedor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         fornecedorService.excluir(id);
         redirectAttributes.addFlashAttribute("msgSucesso", "Fornecedor excluído com sucesso.");
-        return "redirect:/fornecedores?pagina=0&tamanho=10";
+        return "redirect:/fornecedores?page=0&size=20";
     }
 
     // --- Contratos ---

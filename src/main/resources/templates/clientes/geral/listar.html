@@ -34,8 +34,8 @@
         <div class="toolbar">
           <form class="search-form" th:action="@{/clientes}" method="get">
             <input type="text" name="busca" placeholder="Buscar por nome, email ou telefone"
-              th:value="${param.busca}" />
-            <button type="submit"><i class="fas fa-search"></i> Buscar</button>
+              th:value="${busca}" />
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
           </form>
 
           <a th:href="@{/clientes/cadastro}" class="btn-novo">
@@ -86,6 +86,14 @@
             </tr>
           </tbody>
         </table>
+
+        <div class="pagination" th:if="${totalPages > 1}">
+          <span class="pagination-info">Página [[${currentPage + 1}]] de [[${totalPages}]] ([[${totalElements}]] clientes)</span>
+          <a class="btn btn-secondary" th:if="${hasPrevious}" th:href="@{/clientes(page=${currentPage - 1}, size=${20}, busca=${busca}, status=${statusFiltro})}"><i class="fas fa-chevron-left"></i> Anterior</a>
+          <span class="btn btn-secondary disabled" th:if="${!hasPrevious}"><i class="fas fa-chevron-left"></i> Anterior</span>
+          <a class="btn btn-secondary" th:if="${hasNext}" th:href="@{/clientes(page=${currentPage + 1}, size=${20}, busca=${busca}, status=${statusFiltro})}">Próxima <i class="fas fa-chevron-right"></i></a>
+          <span class="btn btn-secondary disabled" th:if="${!hasNext}">Próxima <i class="fas fa-chevron-right"></i></span>
+        </div>
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>

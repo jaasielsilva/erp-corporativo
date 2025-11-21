@@ -5,6 +5,10 @@ import com.jaasielsilva.portalceo.model.NivelAcesso;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -178,4 +182,12 @@ public class ClienteService {
         
         return (int) Math.min(100, Math.max(0, performance));
     }
+
+    // Paginação padronizada com filtro
+    public Page<Cliente> listarPaginado(String busca, String status, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("nome").ascending());
+        String termo = (busca != null && !busca.isBlank()) ? busca.trim() : null;
+        String st = (status != null && !status.isBlank()) ? status.trim() : null;
+        return repository.buscarComFiltros(termo, st, pageable);
     }
+}

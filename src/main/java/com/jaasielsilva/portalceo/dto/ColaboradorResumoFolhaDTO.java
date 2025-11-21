@@ -21,4 +21,5 @@ public class ColaboradorResumoFolhaDTO {
     private Integer diasMes;
     private Integer diasUteisMes;
     private String status;
+    private Boolean temEscala;
 }

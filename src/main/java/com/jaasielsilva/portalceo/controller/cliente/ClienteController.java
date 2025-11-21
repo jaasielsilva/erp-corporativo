@@ -34,19 +34,20 @@ public class ClienteController {
     }
 
     @GetMapping
-    public String listarClientes(@RequestParam(value = "busca", required = false) String busca, Model model) {
-        List<Cliente> clientes;
-
-        if (busca == null || busca.trim().isEmpty()) {
-            // Busca todos os clientes
-            clientes = clienteService.buscarTodos();
-        } else {
-            // Busca clientes pelo nome ou email (ignora case)
-            clientes = clienteService.buscarPorNomeOuEmail(busca.trim());
-        }
-
-        // Adiciona a lista de clientes no model para o Thymeleaf
-        model.addAttribute("clientes", clientes);
+    public String listarClientes(@RequestParam(value = "busca", required = false) String busca,
+                                 @RequestParam(value = "status", required = false) String status,
+                                 @RequestParam(value = "page", defaultValue = "0") int page,
+                                 @RequestParam(value = "size", defaultValue = "20") int size,
+                                 Model model) {
+        var clientesPage = clienteService.listarPaginado(busca, status, page, size);
+        model.addAttribute("clientes", clientesPage.getContent());
+        model.addAttribute("currentPage", clientesPage.getNumber());
+        model.addAttribute("totalPages", clientesPage.getTotalPages());
+        model.addAttribute("totalElements", clientesPage.getTotalElements());
+        model.addAttribute("hasPrevious", clientesPage.hasPrevious());
+        model.addAttribute("hasNext", clientesPage.hasNext());
+        model.addAttribute("busca", busca);
+        model.addAttribute("statusFiltro", status);
 
         // Estatísticas para exibir na tela
         model.addAttribute("totalClientes", clienteService.contarTotal());

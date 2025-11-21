@@ -51,37 +51,23 @@ public class ProdutoService {
     public Produto salvar(Produto produto) {
     return produtoRepository.save(produto);
     }
-    public Page<Produto> filtrarEstoque(String nome, Long categoriaId, Long fornecedorId, int page) {
-    Pageable pageable = PageRequest.of(page - 1, 10); // 10 itens por página
-
-    Specification<Produto> spec = Specification.where(null);
-
-    if (nome != null && !nome.isBlank()) {
-        spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("nome")), "%" + nome.toLowerCase() + "%"));
-    }
-
-    if (categoriaId != null) {
-        spec = spec.and((root, query, cb) -> cb.equal(root.get("categoria").get("id"), categoriaId));
-    }
-
-    if (fornecedorId != null) {
-        spec = spec.and((root, query, cb) -> cb.equal(root.get("fornecedor").get("id"), fornecedorId));
-    }
-
-    return produtoRepository.findAll(spec, pageable);
+    public Page<Produto> filtrarEstoque(String nome, String ean, Long categoriaId, Long fornecedorId, int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("nome").ascending());
+        return produtoRepository.buscarComFiltros(nome, ean, categoriaId, fornecedorId, pageable);
     }
     public Map<String, Integer> countProdutosPorCategoria() {
         Map<String, Integer> result = new HashMap<>();
-        var produtos = listarTodosProdutos();
-        for (var produto : produtos) {
-            String categoria = produto.getCategoria().getNome();
-            result.put(categoria, result.getOrDefault(categoria, 0) + 1);
+        List<Object[]> rows = produtoRepository.countProdutosPorCategoria();
+        for (Object[] r : rows) {
+            String categoria = (String) r[0];
+            Number total = (Number) r[1];
+            result.put(categoria != null ? categoria : "-", total != null ? total.intValue() : 0);
         }
         return result;
     }
 
     public Page<Produto> listarPaginado(Pageable pageable) {
-    return produtoRepository.findAll(pageable);
-}
+        return produtoRepository.buscarComFiltros(null, null, null, null, pageable);
+    }
 
 }

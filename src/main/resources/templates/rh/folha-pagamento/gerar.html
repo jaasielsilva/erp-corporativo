@@ -237,7 +237,10 @@
       const rows = items.map(c => {
         const salario = c.salario != null ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.salario) : 'R$ 0,00';
         const dias = `${(c.diasTrabalhados ?? 0)}/${(c.diasUteisMes ?? 0)}`;
-        const statusClass = c.status === 'ATIVO' ? 'status-ativo' : (c.status === 'SUSPENSO' ? 'status-afastado' : 'status-ferias');
+        const ok = !!c.temEscala;
+        const alertClass = ok ? 'alert alert-success' : 'alert alert-danger';
+        const icon = ok ? 'fa-check-circle' : 'fa-exclamation-triangle';
+        const statusHtml = `<div class="${alertClass}" role="alert" style="padding:6px 10px;display:inline-flex;align-items:center;gap:6px"><i class="fas ${icon}"></i><span>${ok ? 'true' : 'false'}</span></div>`;
         const desligarBtn = window.podeAcessarRH ? `<button type="button" class="btn btn-sm btn-danger" title="Desligar Colaborador" data-id="${c.id}" data-nome="${c.nome}" onclick="openDesligamentoFromDataset(this)"><i class="fas fa-user-times"></i></button>` : '';
         return `<tr>
           <td>${c.nome ?? '-'}</td>
@@ -245,8 +248,9 @@
           <td>${c.departamentoNome ?? '-'}</td>
           <td>${salario}</td>
           <td>${dias}</td>
-          <td><span class="status-badge ${statusClass}"><span>${c.status ?? '-'}</span></span></td>
+          <td>${statusHtml}</td>
           <td class="actions">
+            <a href="/rh/ponto-escalas/escalas" class="btn btn-sm btn-outline-primary" title="Escalas"><i class="fas fa-calendar"></i></a>
             <a href="/rh/colaboradores/ficha/${c.id}" class="btn btn-sm btn-info" title="Ver Ficha"><i class="fas fa-eye"></i></a>
             <a href="/rh/colaboradores/editar/${c.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
             ${desligarBtn}

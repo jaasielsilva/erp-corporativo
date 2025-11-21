@@ -18,6 +18,7 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
+        <div class="alert-container-right"></div>
         <h1>Escalas de Trabalho</h1>
         <h2>Gestão de horários e turnos dos colaboradores</h2>
 
@@ -37,34 +38,7 @@
         </div>
 
         <!-- Seletor de Período -->
-        <article class="card">
-          <h3><i class="fas fa-calendar"></i> Período da Escala</h3>
-          <div class="periodo-selector">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="mesEscala">Mês</label>
-                <select id="mesEscala" name="mesEscala" class="form-control" onchange="carregarEscala()">
-                  <option th:each="m : ${#numbers.sequence(1,12)}" th:value="${m}"
-                          th:text="${#temporals.monthName(m)}" th:selected="${m == mesAtual}"></option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="departamentoEscala">Departamento</label>
-                <select id="departamentoEscala" name="departamentoEscala" class="form-control" onchange="carregarEscala()">
-                  <option value="">Todos os departamentos</option>
-                  <option th:each="d : ${departamentos}" th:value="${d.id}" th:text="${d.nome}"></option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="turnoEscala">Turno</label>
-                <select id="turnoEscala" name="turnoEscala" class="form-control" onchange="carregarEscala()">
-                  <option value="">Todos os turnos</option>
-                  <option th:each="e : ${escalasVigentes}" th:value="${e.id}" th:text="${e.nome}"></option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </article>
+        
 
         <!-- Resumo da Escala -->
         <article class="card">
@@ -145,7 +119,7 @@
                 <div class="dia-semana">Sáb</div>
               </div>
               
-              <div class="calendario-dias">
+              <div class="calendario-dias" id="calendarioDias">
                 <!-- Dias do mês -->
                 <div class="dia-calendario dia-outro-mes">29</div>
                 <div class="dia-calendario dia-outro-mes">30</div>
@@ -617,58 +591,64 @@
       document.querySelector('#modalEscala form').reset();
     }
     
+    function mostrarAlerta(tipo, texto) {
+      const container = document.querySelector('.alert-container-right');
+      if (!container) return;
+      const el = document.createElement('div');
+      el.className = `alert alert-${tipo}`;
+      el.setAttribute('role', 'alert');
+      const iconClass = tipo === 'success' ? 'fa-check-circle' : (tipo === 'danger' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+      el.innerHTML = `<i class="fas ${iconClass}"></i> <span>${texto}</span>`;
+      container.prepend(el);
+      setTimeout(() => { el.remove(); }, 6000);
+    }
+
     function salvarEscala() {
       const form = document.querySelector('#modalEscala form');
       if (form.checkValidity()) {
-        alert('Escala criada com sucesso!');
+        mostrarAlerta('success', 'Escala criada com sucesso!');
         fecharModalEscala();
         location.reload();
       } else {
-        alert('Por favor, preencha todos os campos obrigatórios.');
+        mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios.');
       }
     }
     
     function carregarEscala() {
-      alert('Carregando escala...');
+      mostrarAlerta('info', 'Carregando escala...');
     }
     
-    function mesAnterior() {
-      alert('Navegando para o mês anterior...');
-    }
-    
-    function proximoMes() {
-      alert('Navegando para o próximo mês...');
-    }
+    function mesAnterior() { mostrarAlerta('info', 'Mês anterior'); }
+    function proximoMes() { mostrarAlerta('info', 'Próximo mês'); }
     
     function verDetalheDia(dia) {
-      alert(`Visualizando detalhes do dia ${dia}`);
+      mostrarAlerta('info', `Visualizando detalhes do dia ${dia}`);
     }
     
     function trocarTurno(colaboradorId) {
-      alert(`Iniciando troca de turno para colaborador ${colaboradorId}`);
+      mostrarAlerta('info', `Iniciando troca de turno para colaborador ${colaboradorId}`);
     }
     
     function resolverConflito(conflito) {
-      alert(`Resolvendo conflito ${conflito}`);
+      mostrarAlerta('info', `Resolvendo conflito ${conflito}`);
     }
     
     function copiarEscala() {
-      alert('Copiando escala de outro período...');
+      mostrarAlerta('info', 'Copiando escala de outro período...');
     }
     
     function gerarEscalaAutomatica() {
       if (confirm('Gerar escala automaticamente? Isso substituirá a escala atual.')) {
-        alert('Gerando escala automaticamente...');
+        mostrarAlerta('info', 'Gerando escala automaticamente...');
         setTimeout(() => {
-          alert('Escala gerada com sucesso!');
+          mostrarAlerta('success', 'Escala gerada com sucesso!');
           location.reload();
         }, 2000);
       }
     }
     
-    function exportarEscala() {
-      alert('Exportando escala...');
-    }
+    function exportarEscala() { mostrarAlerta('info', 'Exportando escala...'); }
+    document.addEventListener('DOMContentLoaded', function(){ carregarEscala(); });
   </script>
   
   <style>
@@ -1000,22 +980,6 @@
       margin-top: 5px;
     }
   </style>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
 
 </body>
 

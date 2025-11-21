@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.dto.ColaboradorResumoFolhaDTO;
 import com.jaasielsilva.portalceo.model.Colaborador;
+import com.jaasielsilva.portalceo.repository.ColaboradorEscalaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -10,6 +12,8 @@ import java.time.YearMonth;
 
 @Service
 public class ResumoFolhaService {
+    @Autowired
+    private ColaboradorEscalaRepository colaboradorEscalaRepository;
 
     public ColaboradorResumoFolhaDTO criarResumo(Colaborador c, YearMonth ym) {
         int diasMes = ym.lengthOfMonth();
@@ -29,6 +33,9 @@ public class ResumoFolhaService {
         String departamentoNome = c.getDepartamento() != null ? c.getDepartamento().getNome() : "—";
         String status = c.getStatus() != null ? c.getStatus().name() : "";
 
+        LocalDate dataCheck = YearMonth.from(LocalDate.now()).equals(ym) ? LocalDate.now() : ym.atEndOfMonth();
+        boolean temEscala = !colaboradorEscalaRepository.findVigenteByColaboradorAndData(c.getId(), dataCheck).isEmpty();
+
         return new ColaboradorResumoFolhaDTO(
                 c.getId(),
                 c.getNome(),
@@ -38,7 +45,8 @@ public class ResumoFolhaService {
                 diasTrabalhados,
                 diasMes,
                 diasUteisMes,
-                status
+                status,
+                temEscala
         );
     }
 

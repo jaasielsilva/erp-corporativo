@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpecificationExecutor<Produto> {
 
@@ -19,6 +20,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpec
     long somarQuantidadeEstoque();
 
      // Filtros combinados para paginação
+    @EntityGraph(attributePaths = {"categoria", "fornecedor"})
     @Query("SELECT p FROM Produto p " +
            "WHERE (:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', :nome, '%'))) " +
            "AND (:ean IS NULL OR p.ean = :ean) " +

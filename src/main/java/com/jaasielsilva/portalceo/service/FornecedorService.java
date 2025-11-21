@@ -5,6 +5,8 @@ import com.jaasielsilva.portalceo.repository.FornecedorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
@@ -69,8 +71,15 @@ public class FornecedorService {
     }
 
     public Page<Fornecedor> listarTodosPaginado(int pagina, int tamanho) {
-    Pageable pageable = PageRequest.of(pagina, tamanho);
-    return fornecedorRepository.findAll(pageable); // traz TODOS (ativos e inativos)
-}
+        Pageable pageable = PageRequest.of(pagina, tamanho, Sort.by("razaoSocial").ascending());
+        return fornecedorRepository.findAll(pageable);
+    }
+
+    public Page<Fornecedor> listarPaginado(String busca, String status, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("razaoSocial").ascending());
+        String termo = (busca != null && !busca.isBlank()) ? busca.trim() : null;
+        String st = (status != null && !status.isBlank()) ? status.trim() : null;
+        return fornecedorRepository.buscarComFiltros(termo, st, pageable);
+    }
     
 }

@@ -43,14 +43,21 @@ public class ProdutoController {
     private FornecedorService fornecedorService;
 
     @GetMapping
-    public String listar(@RequestParam(defaultValue = "0") int pagina,
-                     @RequestParam(defaultValue = "10") int tamanho,
-                     Model model) {
-    Pageable pageable = PageRequest.of(pagina, tamanho);
-    Page<Produto> paginaProdutos = produtoService.listarPaginado(pageable);
-    model.addAttribute("pagina", paginaProdutos);
-    return "produto/lista";
-}
+    public String listar(@RequestParam(name = "page", defaultValue = "0") int page,
+                         @RequestParam(name = "size", defaultValue = "20") int size,
+                         Model model) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), org.springframework.data.domain.Sort.by("nome").ascending());
+        Page<Produto> paginaProdutos = produtoService.listarPaginado(pageable);
+
+        model.addAttribute("produtos", paginaProdutos.getContent());
+        model.addAttribute("currentPage", paginaProdutos.getNumber());
+        model.addAttribute("totalPages", paginaProdutos.getTotalPages());
+        model.addAttribute("totalElements", paginaProdutos.getTotalElements());
+        model.addAttribute("hasPrevious", paginaProdutos.hasPrevious());
+        model.addAttribute("hasNext", paginaProdutos.hasNext());
+
+        return "produto/lista";
+    }
 
 
     @GetMapping("/novo")

@@ -133,19 +133,17 @@
                 <td th:text="${produto.categoria?.nome ?: '-'}"></td>
                 <td th:text="${produto.fornecedor?.nomeFantasia ?: '-'}"></td>
                 <td class="text-center">
-                  <a th:href="@{'/estoque/' + ${produto.id} + '/detalhes'}" class="btn-icon btn-info"
+                  <a th:href="@{'/estoque/' + ${produto.id} + '/detalhes'}" class="btn btn-sm btn-info"
                     title="Ver detalhes">
                     <i class="fas fa-list"></i>
                   </a>
                   <a th:href="@{'/estoque/entrada?produtoId=' + ${produto.id}}" title="Entrada"
-                    class="btn-icon btn-success"><i class="fas fa-plus"></i></a>
+                    class="btn btn-sm btn-success"><i class="fas fa-plus"></i></a>
                   <a th:href="@{'/estoque/saida?produtoId=' + ${produto.id}}" title="Saída"
-                    class="btn-icon btn-danger"><i class="fas fa-minus"></i></a>
-                  <a th:href="@{/estoque/ajuste}" title="Ajuste" class="btn-icon btn-secondary">
+                    class="btn btn-sm btn-danger"><i class="fas fa-minus"></i></a>
+                  <a th:href="@{/estoque/ajuste}" title="Ajuste" class="btn btn-sm btn-secondary">
                     <i class="fas fa-sliders-h"></i>
                   </a>
-
-
                 </td>
               </tr>
               <tr th:if="${produtos.isEmpty()}">
@@ -156,14 +154,13 @@
         </div>
 
         <!-- Paginação -->
-        <nav th:if="${totalPaginas > 1}" class="pagination-nav">
-          <ul>
-            <li th:each="pageNum : ${#numbers.sequence(1, totalPaginas)}">
-              <a th:href="@{|/estoque?page=${pageNum}|}" th:text="${pageNum}"
-                th:classappend="${pageNum == paginaAtual} ? 'active' : ''"></a>
-            </li>
-          </ul>
-        </nav>
+        <div class="pagination" th:if="${totalPages > 1}">
+          <span class="pagination-info">Página [[${currentPage + 1}]] de [[${totalPages}]] ([[${totalElements}]] produtos)</span>
+          <a class="btn btn-secondary" th:if="${hasPrevious}" th:href="@{/estoque(page=${currentPage - 1})}"><i class="fas fa-chevron-left"></i> Anterior</a>
+          <span class="btn btn-secondary disabled" th:if="${!hasPrevious}"><i class="fas fa-chevron-left"></i> Anterior</span>
+          <a class="btn btn-secondary" th:if="${hasNext}" th:href="@{/estoque(page=${currentPage + 1})}">Próxima <i class="fas fa-chevron-right"></i></a>
+          <span class="btn btn-secondary disabled" th:if="${!hasNext}">Próxima <i class="fas fa-chevron-right"></i></span>
+        </div>
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>

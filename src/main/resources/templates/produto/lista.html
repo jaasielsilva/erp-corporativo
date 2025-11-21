@@ -8,6 +8,7 @@
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link href="/css/sidebar.css" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/produto.css}" />
+  <link href="/css/notifications.css" rel="stylesheet">
 </head>
 
 <body>
@@ -36,7 +37,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr th:each="produto : ${pagina.content}">
+              <tr th:each="produto : ${produtos}">
                 <td th:text="${produto.id}"></td>
                 <td th:text="${produto.nome}"></td>
                 <td th:text="${produto.ean}"></td>
@@ -51,15 +52,12 @@
           </table>
 
           <!-- Paginação -->
-          <div class="pagination mt-3">
-            <a th:href="@{/produtos(pagina=${pagina.number - 1}, tamanho=${pagina.size})}" th:if="${!pagina.first}"
-              class="btn btn-primary">Anterior</a>
-
-            <span class="mx-2">Página <span th:text="${pagina.number + 1}"></span> de <span
-                th:text="${pagina.totalPages}"></span></span>
-
-            <a th:href="@{/produtos(pagina=${pagina.number + 1}, tamanho=${pagina.size})}" th:if="${!pagina.last}"
-              class="btn btn-primary">Próximo</a>
+          <div class="pagination mt-3" th:if="${totalPages > 1}">
+            <span class="pagination-info">Página [[${currentPage + 1}]] de [[${totalPages}]] ([[${totalElements}]] produtos)</span>
+            <a class="btn btn-secondary" th:if="${hasPrevious}" th:href="@{/produtos(page=${currentPage - 1}, size=${20})}"><i class="fas fa-chevron-left"></i> Anterior</a>
+            <span class="btn btn-secondary disabled" th:if="${!hasPrevious}"><i class="fas fa-chevron-left"></i> Anterior</span>
+            <a class="btn btn-secondary" th:if="${hasNext}" th:href="@{/produtos(page=${currentPage + 1}, size=${20})}">Próxima <i class="fas fa-chevron-right"></i></a>
+            <span class="btn btn-secondary disabled" th:if="${!hasNext}">Próxima <i class="fas fa-chevron-right"></i></span>
           </div>
 
 
@@ -69,22 +67,9 @@
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
   <script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
 </body>
 
 </html>

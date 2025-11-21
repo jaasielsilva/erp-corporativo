@@ -41,6 +41,7 @@ public class JuridicoController {
     private final NaoConformidadeRepository naoConformidadeRepository;
     private final AuditoriaComplianceRepository auditoriaComplianceRepository;
     private final DocumentoJuridicoRepository documentoJuridicoRepository;
+    private final com.jaasielsilva.portalceo.repository.juridico.DocumentoModeloRepository documentoModeloRepository;
 
     // Página principal do Jurídico
     @GetMapping
@@ -321,20 +322,15 @@ public class JuridicoController {
     public String documentos(Model model) {
         model.addAttribute("pageTitle", "Biblioteca de Documentos");
         model.addAttribute("moduleCSS", "juridico");
-        java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico> todos = documentoJuridicoRepository.findAll();
-        java.util.List<java.util.Map<String, Object>> categorias = todos.stream()
-                .collect(java.util.stream.Collectors.groupingBy(d -> {
-                    String c = d.getCategoria();
-                    return c != null && !c.isBlank() ? c : "—";
-                }, java.util.stream.Collectors.counting()))
-                .entrySet().stream()
-                .map(e -> {
-                    java.util.Map<String, Object> m = new java.util.HashMap<>();
-                    m.put("nome", e.getKey());
-                    m.put("quantidade", e.getValue());
-                    return m;
-                })
-                .collect(java.util.stream.Collectors.toList());
+        long totalDocumentos = documentoJuridicoRepository.count();
+        model.addAttribute("totalDocumentos", totalDocumentos);
+        java.util.List<java.util.Map<String, Object>> categorias = new java.util.ArrayList<>();
+        for (Object[] row : documentoJuridicoRepository.contagemPorCategoria()) {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("nome", String.valueOf(row[0]));
+            m.put("quantidade", ((Number) row[1]).longValue());
+            categorias.add(m);
+        }
         model.addAttribute("categoriasDocumentos", categorias);
 
         org.springframework.data.domain.Pageable pr = org.springframework.data.domain.PageRequest.of(
@@ -342,15 +338,47 @@ public class JuridicoController {
         java.util.List<java.util.Map<String, Object>> recentes = documentoJuridicoRepository.findAll(pr).getContent().stream()
                 .map(d -> {
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("id", d.getId());
                     m.put("titulo", d.getTitulo());
                     m.put("categoria", d.getCategoria());
                     m.put("dataUpload", d.getCriadoEm());
+                    m.put("autor", d.getAutor());
                     return m;
                 })
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("documentosRecentes", recentes);
 
-        model.addAttribute("modelosDocumentos", getModelosDocumentos());
+        if (documentoModeloRepository.count() == 0) {
+            try {
+                String baseDirModelos = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
+                java.nio.file.Path dirM = java.nio.file.Paths.get(baseDirModelos);
+                java.nio.file.Files.createDirectories(dirM);
+                java.nio.file.Path target = dirM.resolve("modelo_contrato_prestacao_servicos_v2_1.docx");
+                if (!java.nio.file.Files.exists(target)) {
+                    java.nio.file.Files.write(target, new byte[0]);
+                }
+                com.jaasielsilva.portalceo.model.juridico.DocumentoModelo novo = new com.jaasielsilva.portalceo.model.juridico.DocumentoModelo();
+                novo.setNome("Modelo de Contrato de Prestação de Serviços");
+                novo.setCategoria("CONTRATOS");
+                novo.setVersao("2.1");
+                novo.setStatus(com.jaasielsilva.portalceo.model.juridico.ModeloStatus.PUBLICADO);
+                novo.setArquivoModelo(target.toString());
+                novo.setDataCriacao(java.time.LocalDateTime.now());
+                novo.setDataPublicacao(java.time.LocalDateTime.now());
+                documentoModeloRepository.save(novo);
+            } catch (Exception ignored) {}
+        }
+        java.util.List<java.util.Map<String, Object>> modelosVm = documentoModeloRepository.findAll().stream()
+                .map(m -> {
+                    java.util.Map<String, Object> vm = new java.util.HashMap<>();
+                    vm.put("id", m.getId());
+                    vm.put("nome", m.getNome());
+                    vm.put("categoria", m.getCategoria());
+                    vm.put("versao", m.getVersao());
+                    vm.put("status", m.getStatus() != null ? m.getStatus().name() : null);
+                    return vm;
+                }).collect(java.util.stream.Collectors.toList());
+        model.addAttribute("modelosDocumentos", modelosVm);
         model.addAttribute("documentosPendentes", getDocumentosPendentesAssinatura());
         return "juridico/documentos";
     }
@@ -601,18 +629,28 @@ public class JuridicoController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico> processos = processoJuridicoRepository.findAll(pageable);
+        com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso statusEnum = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                statusEnum = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.valueOf(status);
+            } catch (IllegalArgumentException ignored) {}
+        }
+
+        Page<com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico> processos;
+        boolean hasSearch = search != null && !search.isBlank();
+        if (statusEnum != null && hasSearch) {
+            processos = processoJuridicoRepository.searchByStatusAndText(statusEnum, search, pageable);
+        } else if (statusEnum != null) {
+            processos = processoJuridicoRepository.findByStatus(statusEnum, pageable);
+        } else if (hasSearch) {
+            processos = processoJuridicoRepository.findByNumeroContainingIgnoreCaseOrParteContainingIgnoreCaseOrAssuntoContainingIgnoreCase(
+                    search, search, search, pageable);
+        } else {
+            processos = processoJuridicoRepository.findAll(pageable);
+        }
+
         List<Map<String, Object>> content = new ArrayList<>();
         for (var p : processos.getContent()) {
-            if (status != null && !status.isBlank() && p.getStatus() != null && !p.getStatus().name().equalsIgnoreCase(status)) {
-                continue;
-            }
-            if (search != null && !search.isBlank()) {
-                String texto = ((p.getNumero() == null ? "" : p.getNumero()) + " " +
-                        (p.getParte() == null ? "" : p.getParte()) + " " +
-                        (p.getAssunto() == null ? "" : p.getAssunto())).toLowerCase();
-                if (!texto.contains(search.toLowerCase())) continue;
-            }
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
             item.put("numero", p.getNumero());
@@ -637,16 +675,18 @@ public class JuridicoController {
     @ResponseBody
     public ResponseEntity<?> obterProcessoPorId(@PathVariable Long id) {
         return processoJuridicoRepository.findById(id)
-                .map(p -> ResponseEntity.ok(Map.of(
-                        "id", p.getId(),
-                        "numero", p.getNumero(),
-                        "tipo", p.getTipo(),
-                        "tribunal", p.getTribunal(),
-                        "parte", p.getParte(),
-                        "assunto", p.getAssunto(),
-                        "status", p.getStatus(),
-                        "dataAbertura", p.getDataAbertura()
-                )))
+                .map(p -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("id", p.getId());
+                    m.put("numero", p.getNumero());
+                    m.put("tipo", p.getTipo());
+                    m.put("tribunal", p.getTribunal());
+                    m.put("parte", p.getParte());
+                    m.put("assunto", p.getAssunto());
+                    m.put("status", p.getStatus());
+                    m.put("dataAbertura", p.getDataAbertura());
+                    return ResponseEntity.ok(m);
+                })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado")));
     }
 
@@ -772,6 +812,26 @@ public class JuridicoController {
         return ResponseEntity.ok(items);
     }
 
+    @PostMapping("/api/compliance/nao-conformidades")
+    @ResponseBody
+    public ResponseEntity<?> criarNaoConformidadeApi(@RequestBody Map<String, Object> body) {
+        com.jaasielsilva.portalceo.model.juridico.NaoConformidade nc = new com.jaasielsilva.portalceo.model.juridico.NaoConformidade();
+        nc.setCodigo(String.valueOf(body.getOrDefault("codigo", "NC-" + System.currentTimeMillis())));
+        nc.setTitulo(String.valueOf(body.getOrDefault("titulo", "Não conformidade")));
+        nc.setDescricao(String.valueOf(body.getOrDefault("descricao", "")));
+        nc.setSeveridade(String.valueOf(body.getOrDefault("severidade", "MEDIA")));
+        Object dd = body.get("dataDeteccao");
+        if (dd != null && !String.valueOf(dd).isBlank()) {
+            nc.setDataDeteccao(java.time.LocalDate.parse(String.valueOf(dd)));
+        } else {
+            nc.setDataDeteccao(java.time.LocalDate.now());
+        }
+        Object res = body.get("resolvida");
+        nc.setResolvida(res != null && Boolean.parseBoolean(String.valueOf(res)));
+        naoConformidadeRepository.save(nc);
+        return ResponseEntity.ok(Map.of("id", nc.getId()));
+    }
+
     @PutMapping("/api/compliance/nao-conformidades/{id}/status")
     @ResponseBody
     public ResponseEntity<?> atualizarStatusNaoConformidade(@PathVariable Long id,
@@ -807,20 +867,42 @@ public class JuridicoController {
         return ResponseEntity.ok(items);
     }
 
+    @PostMapping("/api/compliance/normas")
+    @ResponseBody
+    public ResponseEntity<?> criarNormaApi(@RequestBody Map<String, Object> body) {
+        com.jaasielsilva.portalceo.model.juridico.Norma n = new com.jaasielsilva.portalceo.model.juridico.Norma();
+        String codigo = String.valueOf(body.getOrDefault("codigo", "NR-" + System.currentTimeMillis()));
+        String titulo = String.valueOf(body.getOrDefault("titulo", "Norma"));
+        String orgao = String.valueOf(body.getOrDefault("orgao", "Órgão Regulador"));
+        String descricao = String.valueOf(body.getOrDefault("descricao", ""));
+        codigo = codigo.length() > 255 ? codigo.substring(0, 255) : codigo;
+        titulo = titulo.length() > 255 ? titulo.substring(0, 255) : titulo;
+        orgao = orgao.length() > 255 ? orgao.substring(0, 255) : orgao;
+        descricao = descricao.length() > 2048 ? descricao.substring(0, 2048) : descricao;
+        n.setCodigo(codigo);
+        n.setTitulo(titulo);
+        n.setOrgao(orgao);
+        n.setDescricao(descricao);
+        Object vig = body.get("vigente");
+        n.setVigente(vig != null && Boolean.parseBoolean(String.valueOf(vig)));
+        normaRepository.save(n);
+        return ResponseEntity.ok(Map.of("id", n.getId()));
+    }
+
     @GetMapping("/api/compliance/normas/{id}")
     @ResponseBody
     public ResponseEntity<?> obterNormaPorId(@PathVariable Long id) {
         return normaRepository.findById(id)
-                .map(n -> ResponseEntity.ok(Map.of(
-                        "id", n.getId(),
-                        "codigo", n.getCodigo(),
-                        "nome", n.getTitulo(),
-                        "descricao", n.getDescricao(),
-                        // Deriva status com base em 'vigente'
-                        "status", n.isVigente() ? "VIGENTE" : "OBSOLETA",
-                        // Campo não existente em Norma; manter nulo para compatibilidade de template
-                        "ultimaRevisao", null
-                )))
+                .map(n -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("id", n.getId());
+                    m.put("codigo", n.getCodigo());
+                    m.put("nome", n.getTitulo());
+                    m.put("descricao", n.getDescricao());
+                    m.put("status", n.isVigente() ? "VIGENTE" : "OBSOLETA");
+                    m.put("ultimaRevisao", null);
+                    return ResponseEntity.ok(m);
+                })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Norma não encontrada")));
     }
 
@@ -836,6 +918,7 @@ public class JuridicoController {
             m.put("dataInicio", a.getDataInicio());
             m.put("auditor", a.getAuditor());
             m.put("resultado", a.getResultado());
+            m.put("status", a.getResultado() == null ? "PLANEJADA" : "CONCLUÍDA");
             items.add(m);
         }
         return ResponseEntity.ok(items);
@@ -845,14 +928,17 @@ public class JuridicoController {
     @ResponseBody
     public ResponseEntity<?> obterAuditoriaPorId(@PathVariable Long id) {
         return auditoriaComplianceRepository.findById(id)
-                .map(a -> ResponseEntity.ok(Map.of(
-                        "id", a.getId(),
-                        "tipo", a.getTipo(),
-                        "escopo", a.getEscopo(),
-                        "dataInicio", a.getDataInicio(),
-                        "auditor", a.getAuditor(),
-                        "resultado", a.getResultado()
-                )))
+                .map(a -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("id", a.getId());
+                    m.put("tipo", a.getTipo());
+                    m.put("escopo", a.getEscopo());
+                    m.put("dataInicio", a.getDataInicio());
+                    m.put("auditor", a.getAuditor());
+                    m.put("resultado", a.getResultado());
+                    m.put("status", a.getResultado() == null ? "PLANEJADA" : "CONCLUÍDA");
+                    return ResponseEntity.ok(m);
+                })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Auditoria não encontrada")));
     }
 
@@ -872,6 +958,24 @@ public class JuridicoController {
         ac.setAuditor(String.valueOf(body.getOrDefault("auditor", userDetails != null ? userDetails.getUsername() : "sistema")));
         auditoriaComplianceRepository.save(ac);
         return ResponseEntity.ok(Map.of("id", ac.getId()));
+    }
+
+    @PutMapping("/api/compliance/auditorias/{id}/resultado")
+    @ResponseBody
+    public ResponseEntity<?> atualizarResultadoAuditoria(@PathVariable Long id,
+                                                         @RequestBody Map<String, Object> body) {
+        return auditoriaComplianceRepository.findById(id)
+                .map(a -> {
+                    String resultado = String.valueOf(body.getOrDefault("resultado", "")).trim();
+                    a.setResultado(resultado.isEmpty() ? null : resultado);
+                    auditoriaComplianceRepository.save(a);
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", a.getId());
+                    m.put("resultado", a.getResultado());
+                    m.put("status", a.getResultado() == null ? "PLANEJADA" : "CONCLUÍDA");
+                    return ResponseEntity.ok(m);
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Auditoria não encontrada")));
     }
 
     // =============== APIs de Documentos ===============
@@ -913,6 +1017,231 @@ public class JuridicoController {
         return ResponseEntity.ok(payload);
     }
 
+    @GetMapping("/api/documentos/metrics")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> metricsDocumentos() {
+        long total = documentoJuridicoRepository.count();
+        java.util.List<java.util.Map<String, Object>> categorias = new java.util.ArrayList<>();
+        for (Object[] row : documentoJuridicoRepository.contagemPorCategoria()) {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("nome", String.valueOf(row[0]));
+            m.put("quantidade", ((Number) row[1]).longValue());
+            categorias.add(m);
+        }
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("total", total);
+        payload.put("categorias", categorias);
+        return ResponseEntity.ok(payload);
+    }
+
+    @GetMapping("/api/modelos")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> listarModelos(
+            @RequestParam(value = "categoria", required = false) String categoria,
+            @RequestParam(value = "status", required = false) com.jaasielsilva.portalceo.model.juridico.ModeloStatus status,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> modelos;
+        if (categoria != null && !categoria.isBlank() && status != null) {
+            modelos = documentoModeloRepository.findByCategoriaContainingIgnoreCaseAndStatus(categoria, status, pageable);
+        } else if (categoria != null && !categoria.isBlank()) {
+            modelos = documentoModeloRepository.findByCategoriaContainingIgnoreCase(categoria, pageable);
+        } else if (status != null) {
+            modelos = documentoModeloRepository.findByStatus(status, pageable);
+        } else {
+            modelos = documentoModeloRepository.findAll(pageable);
+        }
+        java.util.List<java.util.Map<String, Object>> content = new java.util.ArrayList<>();
+        for (var m : modelos.getContent()) {
+            if (search != null && !search.isBlank()) {
+                String s = search.toLowerCase();
+                String txt = ((m.getNome() == null ? "" : m.getNome()) + " " + (m.getCategoria() == null ? "" : m.getCategoria())).toLowerCase();
+                if (!txt.contains(s)) continue;
+            }
+            java.util.Map<String, Object> vm = new java.util.HashMap<>();
+            vm.put("id", m.getId());
+            vm.put("nome", m.getNome());
+            vm.put("categoria", m.getCategoria());
+            vm.put("versao", m.getVersao());
+            vm.put("status", m.getStatus() != null ? m.getStatus().name() : null);
+            content.add(vm);
+        }
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("content", content);
+        payload.put("totalElements", modelos.getTotalElements());
+        payload.put("page", modelos.getNumber());
+        payload.put("size", modelos.getSize());
+        payload.put("totalPages", modelos.getTotalPages());
+        return ResponseEntity.ok(payload);
+    }
+
+    @PostMapping("/api/modelos/upload-multipart")
+    @ResponseBody
+    public ResponseEntity<?> criarModeloMultipart(@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+                                                  @RequestParam String nome,
+                                                  @RequestParam String categoria,
+                                                  @RequestParam(required = false) String versao,
+                                                  @RequestParam(required = false) String changelog,
+                                                  @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        try {
+            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
+            java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
+            java.nio.file.Files.createDirectories(dir);
+            String sanitized = java.util.UUID.randomUUID() + "_" + (
+                    file.getOriginalFilename() == null
+                            ? "modelo"
+                            : file.getOriginalFilename().replaceAll("[^a-zA-Z0-9_\\.\\-]", "_")
+            );
+            java.nio.file.Path target = dir.resolve(sanitized);
+            file.transferTo(target.toFile());
+
+            com.jaasielsilva.portalceo.model.juridico.DocumentoModelo m = new com.jaasielsilva.portalceo.model.juridico.DocumentoModelo();
+            m.setNome(nome);
+            m.setCategoria(categoria);
+            m.setVersao(versao != null && !versao.isBlank() ? versao : "1.0.0");
+            m.setStatus(com.jaasielsilva.portalceo.model.juridico.ModeloStatus.RASCUNHO);
+            m.setArquivoModelo(target.toString());
+            m.setChangelog(changelog);
+            m.setCriadoPor(userDetails != null ? userDetails.getUsername() : null);
+            m.setDataCriacao(java.time.LocalDateTime.now());
+            documentoModeloRepository.save(m);
+            return ResponseEntity.ok(java.util.Map.of("id", m.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao criar modelo", "detalhes", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/modelos/upload-batch")
+    @ResponseBody
+    public ResponseEntity<?> criarModelosBatch(@RequestParam("files") java.util.List<org.springframework.web.multipart.MultipartFile> files,
+                                               @RequestParam(required = false) String categoria,
+                                               @RequestParam(required = false) String versao,
+                                               @RequestParam(required = false) String changelog,
+                                               @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        try {
+            if (files == null || files.isEmpty()) {
+                return ResponseEntity.badRequest().body(java.util.Map.of("erro", "Selecione ao menos um arquivo"));
+            }
+            long maxSize = 10L * 1024 * 1024;
+            java.util.Set<String> allowed = java.util.Set.of(".doc", ".docx", ".pdf");
+            java.util.List<java.util.Map<String, Object>> criados = new java.util.ArrayList<>();
+            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
+            java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
+            java.nio.file.Files.createDirectories(dir);
+            for (var file : files) {
+                if (file == null || file.isEmpty()) continue;
+                if (file.getSize() > maxSize) {
+                    return ResponseEntity.badRequest().body(java.util.Map.of("erro", "Arquivo excede 10MB"));
+                }
+                String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "modelo";
+                String lower = originalName.toLowerCase();
+                boolean ok = allowed.stream().anyMatch(lower::endsWith);
+                if (!ok) {
+                    return ResponseEntity.badRequest().body(java.util.Map.of("erro", "Tipos permitidos: PDF, DOC, DOCX"));
+                }
+                String sanitized = java.util.UUID.randomUUID() + "_" + originalName.replaceAll("[^a-zA-Z0-9_\\.\\-]", "_");
+                java.nio.file.Path target = dir.resolve(sanitized);
+                file.transferTo(target.toFile());
+
+                com.jaasielsilva.portalceo.model.juridico.DocumentoModelo m = new com.jaasielsilva.portalceo.model.juridico.DocumentoModelo();
+                String nomeDerivado = originalName.replaceFirst("\\.[^.]*$", "").replaceAll("[_-]", " ").trim();
+                m.setNome(nomeDerivado.isBlank() ? "Modelo" : nomeDerivado);
+                m.setCategoria(categoria != null && !categoria.isBlank() ? categoria : "CONTRATOS");
+                m.setVersao(versao != null && !versao.isBlank() ? versao : "1.0.0");
+                m.setStatus(com.jaasielsilva.portalceo.model.juridico.ModeloStatus.RASCUNHO);
+                m.setArquivoModelo(target.toString());
+                m.setChangelog(changelog);
+                m.setCriadoPor(userDetails != null ? userDetails.getUsername() : null);
+                m.setDataCriacao(java.time.LocalDateTime.now());
+                documentoModeloRepository.save(m);
+                criados.add(java.util.Map.of("id", m.getId(), "nome", m.getNome(), "categoria", m.getCategoria(), "versao", m.getVersao()));
+            }
+            return ResponseEntity.ok(java.util.Map.of("criados", criados));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao criar modelos", "detalhes", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/api/modelos/{id}/status")
+    @ResponseBody
+    public ResponseEntity<?> atualizarStatusModelo(@PathVariable Long id,
+                                                   @RequestParam com.jaasielsilva.portalceo.model.juridico.ModeloStatus status,
+                                                   @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        return documentoModeloRepository.findById(id)
+                .map(m -> {
+                    m.setStatus(status);
+                    if (status == com.jaasielsilva.portalceo.model.juridico.ModeloStatus.APROVADO) {
+                        m.setAprovadoPor(userDetails != null ? userDetails.getUsername() : null);
+                    }
+                    if (status == com.jaasielsilva.portalceo.model.juridico.ModeloStatus.PUBLICADO) {
+                        m.setDataPublicacao(java.time.LocalDateTime.now());
+                    }
+                    if (status == com.jaasielsilva.portalceo.model.juridico.ModeloStatus.DEPRECADO) {
+                        m.setDeprecadoEm(java.time.LocalDateTime.now());
+                    }
+                    documentoModeloRepository.save(m);
+                    return ResponseEntity.ok(java.util.Map.of("id", m.getId(), "status", m.getStatus().name()));
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Modelo não encontrado")));
+    }
+
+    @GetMapping("/modelos/download/{id}")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadModelo(@PathVariable Long id) {
+        return documentoModeloRepository.findById(id)
+                .map(m -> {
+                    try {
+                        java.nio.file.Path path = java.nio.file.Paths.get(m.getArquivoModelo());
+                        if (!java.nio.file.Files.exists(path)) {
+                            return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
+                        }
+                        String contentType = java.nio.file.Files.probeContentType(path);
+                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(path);
+                        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                        headers.setContentType(contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                        headers.setContentDispositionFormData("attachment", path.getFileName().toString());
+                        return ResponseEntity.ok().headers(headers).body(resource);
+                    } catch (Exception e) {
+                        return ResponseEntity.status(500).body((org.springframework.core.io.Resource) null);
+                    }
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body((org.springframework.core.io.Resource) null));
+    }
+
+    @PostMapping("/api/documentos/gerar")
+    @ResponseBody
+    public ResponseEntity<?> gerarDocumentoAPartirDeModelo(@RequestParam Long modeloId,
+                                                           @RequestParam String titulo,
+                                                           @RequestParam(required = false) String categoria,
+                                                           @RequestParam(required = false) String descricao,
+                                                           @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        return documentoModeloRepository.findById(modeloId)
+                .map(m -> {
+                    try {
+                        String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "documentos";
+                        java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
+                        java.nio.file.Files.createDirectories(dir);
+                        String filename = java.util.UUID.randomUUID() + "_" + java.nio.file.Paths.get(m.getArquivoModelo()).getFileName().toString();
+                        java.nio.file.Path target = dir.resolve(filename);
+                        java.nio.file.Files.copy(java.nio.file.Paths.get(m.getArquivoModelo()), target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                        com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
+                        d.setTitulo(titulo);
+                        d.setCategoria(categoria != null && !categoria.isBlank() ? categoria : m.getCategoria());
+                        d.setDescricao((descricao != null && !descricao.isBlank() ? descricao + " | " : "") + "Gerado a partir do modelo: " + m.getNome());
+                        d.setCaminhoArquivo(target.toString());
+                        d.setCriadoEm(java.time.LocalDateTime.now());
+                        d.setAutor(userDetails != null ? userDetails.getUsername() : null);
+                        documentoJuridicoRepository.save(d);
+                        return ResponseEntity.ok(java.util.Map.of("id", d.getId(), "caminhoArquivo", d.getCaminhoArquivo()));
+                    } catch (Exception e) {
+                        return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao gerar documento", "detalhes", e.getMessage()));
+                    }
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Modelo não encontrado")));
+    }
+
     @PostMapping("/api/documentos/upload")
     @ResponseBody
     public ResponseEntity<?> uploadDocumentoApi(@RequestBody Map<String, Object> body,
@@ -923,6 +1252,7 @@ public class JuridicoController {
         d.setDescricao(String.valueOf(body.getOrDefault("descricao", "")));
         d.setCaminhoArquivo(String.valueOf(body.getOrDefault("caminhoArquivo", "")));
         d.setCriadoEm(java.time.LocalDateTime.now());
+        d.setAutor(userDetails != null ? userDetails.getUsername() : null);
         documentoJuridicoRepository.save(d);
         return ResponseEntity.ok(Map.of("id", d.getId()));
     }
@@ -952,6 +1282,7 @@ public class JuridicoController {
             d.setDescricao(descricao != null ? descricao : "");
             d.setCaminhoArquivo(target.toString());
             d.setCriadoEm(java.time.LocalDateTime.now());
+            d.setAutor(userDetails != null ? userDetails.getUsername() : null);
             documentoJuridicoRepository.save(d);
             return ResponseEntity.ok(Map.of("id", d.getId(), "caminhoArquivo", d.getCaminhoArquivo()));
         } catch (Exception e) {
@@ -963,14 +1294,16 @@ public class JuridicoController {
     @ResponseBody
     public ResponseEntity<?> obterDocumentoPorId(@PathVariable Long id) {
         return documentoJuridicoRepository.findById(id)
-                .map(d -> ResponseEntity.ok(Map.of(
-                        "id", d.getId(),
-                        "titulo", d.getTitulo(),
-                        "categoria", d.getCategoria(),
-                        "descricao", d.getDescricao(),
-                        "caminhoArquivo", d.getCaminhoArquivo(),
-                        "criadoEm", d.getCriadoEm()
-                )))
+                .map(d -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("id", d.getId());
+                    m.put("titulo", d.getTitulo());
+                    m.put("categoria", d.getCategoria());
+                    m.put("descricao", d.getDescricao());
+                    m.put("caminhoArquivo", d.getCaminhoArquivo());
+                    m.put("criadoEm", d.getCriadoEm());
+                    return ResponseEntity.ok(m);
+                })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado")));
     }
 
@@ -982,6 +1315,28 @@ public class JuridicoController {
         }
         documentoJuridicoRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("id", id, "excluido", true));
+    }
+
+    @GetMapping("/documentos/download/{id}")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadDocumento(@PathVariable Long id) {
+        return documentoJuridicoRepository.findById(id)
+                .map(d -> {
+                    try {
+                        java.nio.file.Path path = java.nio.file.Paths.get(d.getCaminhoArquivo());
+                        if (!java.nio.file.Files.exists(path)) {
+                            return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
+                        }
+                        String contentType = java.nio.file.Files.probeContentType(path);
+                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(path);
+                        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                        headers.setContentType(contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                        headers.setContentDispositionFormData("attachment", path.getFileName().toString());
+                        return ResponseEntity.ok().headers(headers).body(resource);
+                    } catch (Exception e) {
+                        return ResponseEntity.status(500).body((org.springframework.core.io.Resource) null);
+                    }
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body((org.springframework.core.io.Resource) null));
     }
 
     // =============== Endpoints de Ações de Contrato ===============

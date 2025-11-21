@@ -215,48 +215,47 @@
                     <div class="stats-row">
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                            <div class="stat-number" th:text="${faturamentoMensal}">R$ 2.847.350</div>
+                            <div class="stat-number" id="kpiFaturamentoMensal" th:text="${faturamentoMensal}">R$ 2.847.350</div>
                             <div class="stat-label">Faturamento Últimos 12 Meses</div>
-                            <div class="stat-change"
+                            <div class="stat-change" id="kpiCrescimentoFaturamento"
                                 th:class="${crescimentoFaturamento.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}"
                                 th:text="${crescimentoFaturamento} + ' vs mês anterior'">+12.5% vs mês anterior</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
-                            <div class="stat-number" th:text="${totalVendas}">1.247</div>
+                            <div class="stat-number" id="kpiTotalVendas" th:text="${totalVendas}">1.247</div>
                             <div class="stat-label">Quantidade de Vendas</div>
-                            <div class="stat-change"
+                            <div class="stat-change" id="kpiCrescimentoVendas"
                                 th:class="${crescimentoVendas.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}"
                                 th:text="${crescimentoVendas} + ' vs mês anterior'">+8.3% vs mês anterior</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-users"></i></div>
-                            <div class="stat-number" th:text="${totalClientes}">3.892</div>
+                            <div class="stat-number" id="kpiTotalClientes" th:text="${totalClientes}">3.892</div>
                             <div class="stat-label">Clientes Ativos</div>
-                            <div class="stat-change positive"
-                                th:text="'+' + ${novosClientes30Dias} + ' novos nos últimos 30 dias'">+156 novos nos
-                                últimos 30 dias</div>
+                            <div class="stat-change positive" id="kpiNovosClientes"
+                                th:text="'+' + ${novosClientes30Dias} + ' novos nos últimos 30 dias'">+156 novos nos últimos 30 dias</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-boxes"></i></div>
-                            <div class="stat-number" th:text="${totalProdutos}">847</div>
+                            <div class="stat-number" id="kpiTotalProdutos" th:text="${totalProdutos}">847</div>
                             <div class="stat-label">Produtos em Estoque</div>
-                            <div class="stat-change negative" th:text="'-' + ${produtosCriticos} + ' produto crítico'">
+                            <div class="stat-change negative" id="kpiProdutosCriticos" th:text="'-' + ${produtosCriticos} + ' produto crítico'">
                                 -23 produtos críticos</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
-                            <div class="stat-number" th:text="${totalFuncionarios}">156</div>
+                            <div class="stat-number" id="kpiTotalFuncionarios" th:text="${totalFuncionarios}">156</div>
                             <div class="stat-label">Funcionários Ativos</div>
-                            <div class="stat-change positive"
-                                th:text="'+' + ${contratacoes12Meses} + ' contratações nos últimos 12 meses'">+5
-                                contratações nos últimos 12 meses</div>
+                            <div class="stat-change positive" id="kpiContratacoes12Meses"
+                                th:text="'+' + ${contratacoes12Meses} + ' contratações nos últimos 12 meses'">+5 contratações nos últimos 12 meses</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
-                            <div class="stat-number" th:text="${processosAdesaoTotal}">23</div>
+                            <div class="stat-number" id="kpiProcessosAdesaoTotal" th:text="${processosAdesaoTotal}">23</div>
                             <div class="stat-label">Processos de Adesão</div>
                             <div class="stat-change"
+                                id="kpiProcessosAguardando"
                                 th:class="${processosAguardandoAprovacao > 0 ? 'stat-change negative' : 'stat-change positive'}"
                                 th:text="${processosAguardandoAprovacao} + ' aguardando aprovação'">
                                 5 aguardando aprovação
@@ -318,6 +317,32 @@
                         </div>
                     </div>
 
+                    <div class="performance-grid" style="margin-top: 20px;">
+                        <div class="performance-card">
+                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-info-circle"></i> Informações do Sistema</h4>
+                            <div class="performance-metric">
+                                <span class="metric-label">Ambiente</span>
+                                <span class="metric-value" id="sysAmbiente">—</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Versão</span>
+                                <span class="metric-value" id="sysVersao">—</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Uptime</span>
+                                <span class="metric-value" id="sysUptime">—</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Memória</span>
+                                <span class="metric-value" id="sysMemoria">—</span>
+                            </div>
+                            <div class="performance-metric">
+                                <span class="metric-label">Java</span>
+                                <span class="metric-value" id="sysJava">—</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Métricas de Performance -->
                     <div class="performance-grid">
                         <div class="performance-card">
@@ -325,20 +350,20 @@
                                 Indicadores Financeiros</h4>
                             <div class="performance-metric">
                                 <span class="metric-label">Margem de Lucro</span>
-                                <span class="metric-value" th:text="${margemLucro}">23.5%</span>
+                                <span class="metric-value" id="kpiMargemLucro" th:text="${margemLucro}">23.5%</span>
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Ticket Médio</span>
-                                <span class="metric-value" th:text="${ticketMedio}">R$ 0,00</span>
+                                <span class="metric-value" id="kpiTicketMedio" th:text="${ticketMedio}">R$ 0,00</span>
                             </div>
 
                             <div class="performance-metric">
                                 <span class="metric-label">ROI Mensal</span>
-                                <span class="metric-value" th:text="${roiMensal}">18.7%</span>
+                                <span class="metric-value" id="kpiRoiMensal" th:text="${roiMensal}">18.7%</span>
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Inadimplência</span>
-                                <span class="metric-value" th:text="${inadimplencia}">0,0%</span>
+                                <span class="metric-value" id="kpiInadimplencia" th:text="${inadimplencia}">0,0%</span>
                             </div>
 
                         </div>
@@ -347,11 +372,11 @@
                                 Humanos</h4>
                             <div class="performance-metric">
                                 <span class="metric-label">Taxa de Retenção</span>
-                                <span class="metric-value" th:text="${taxaRetencao}">94.2%</span>
+                                <span class="metric-value" id="kpiTaxaRetencao" th:text="${taxaRetencao}">94.2%</span>
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Produtividade Média</span>
-                                <span class="metric-value" th:text="${produtividadeMedia}">87.3%</span>
+                                <span class="metric-value" id="kpiProdutividadeMedia" th:text="${produtividadeMedia}">87.3%</span>
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Processos Aprovados</span>
@@ -363,7 +388,7 @@
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Satisfação Interna</span>
-                                <span class="metric-value" th:text="${satisfacaoInterna}">8.7/10</span>
+                                <span class="metric-value" id="kpiSatisfacaoInterna" th:text="${satisfacaoInterna}">8.7/10</span>
                             </div>
                         </div>
                         <div class="performance-card">
@@ -371,19 +396,19 @@
                             </h4>
                             <div class="performance-metric">
                                 <span class="metric-label">Giro de Estoque</span>
-                                <span class="metric-value" th:text="${giroEstoque}">4.2x</span>
+                                <span class="metric-value" id="kpiGiroEstoque" th:text="${giroEstoque}">4.2x</span>
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Tempo Médio Entrega</span>
-                                <span class="metric-value" th:text="${tempoEntrega}">2.3 dias</span>
+                                <span class="metric-value" id="kpiTempoEntrega" th:text="${tempoEntrega}">2.3 dias</span>
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Taxa de Devolução</span>
-                                <span class="metric-value" th:text="${taxaDevolucao}">1.8%</span>
+                                <span class="metric-value" id="kpiTaxaDevolucao" th:text="${taxaDevolucao}">1.8%</span>
                             </div>
                             <div class="performance-metric">
                                 <span class="metric-label">Eficiência Logística</span>
-                                <span class="metric-value" th:text="${eficienciaLogistica}">91.5%</span>
+                                <span class="metric-value" id="kpiEficienciaLogistica" th:text="${eficienciaLogistica}">91.5%</span>
                             </div>
                         </div>
                     </div>
@@ -762,13 +787,114 @@
             observer.observe(card);
         });
 
-        // Atualização automática dos dados (simulação)
-        setInterval(() => {
-            // Aqui você pode implementar atualizações em tempo real
-            console.log('Atualizando dados do dashboard...');
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('pt-BR');
-            verificarNovasNotificacoes();
-        }, 300000); // A cada 5 minutos
+        function atualizarDashboard() {
+            fetch('/dashboard/api/metrics')
+                .then(r => r.json())
+                .then(d => {
+                    const t = d && d.totais ? d.totais : {};
+                    const g = d && d.graficos ? d.graficos : {};
+                    const vf = v => (v === null || typeof v === 'undefined') ? '—' : v;
+                    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = vf(val); };
+                    el('kpiFaturamentoMensal', t.faturamentoMensal);
+                    el('kpiCrescimentoFaturamento', t.crescimentoFaturamento + ' vs mês anterior');
+                    el('kpiTotalVendas', t.totalVendas);
+                    el('kpiCrescimentoVendas', t.crescimentoVendas + ' vs mês anterior');
+                    el('kpiTotalClientes', t.totalClientes);
+                    el('kpiNovosClientes', '+' + vf(t.novosClientes30Dias) + ' novos nos últimos 30 dias');
+                    el('kpiTotalProdutos', t.totalProdutos);
+                    el('kpiProdutosCriticos', '-' + vf(t.produtosCriticos) + ' produto crítico');
+                    el('kpiTotalFuncionarios', t.totalFuncionarios);
+                    el('kpiContratacoes12Meses', '+' + vf(t.contratacoes12Meses) + ' contratações nos últimos 12 meses');
+                    el('kpiProcessosAdesaoTotal', t.processosAdesaoTotal);
+                    el('kpiProcessosAguardando', vf(t.processosAguardandoAprovacao) + ' aguardando aprovação');
+                    el('kpiMargemLucro', t.margemLucro);
+                    el('kpiTicketMedio', t.ticketMedio);
+                    el('kpiRoiMensal', t.roiMensal);
+                    el('kpiInadimplencia', t.inadimplencia);
+                    el('kpiTaxaRetencao', t.taxaRetencao);
+                    el('kpiProdutividadeMedia', t.produtividadeMedia);
+                    el('kpiSatisfacaoInterna', t.satisfacaoInterna);
+                    el('kpiGiroEstoque', t.giroEstoque);
+                    el('kpiTempoEntrega', t.tempoEntrega);
+                    el('kpiTaxaDevolucao', t.taxaDevolucao);
+                    el('kpiEficienciaLogistica', t.eficienciaLogistica);
+                    if (g.vendas) {
+                        const vl = Array.isArray(g.vendas.labels) ? g.vendas.labels : [];
+                        const vv = Array.isArray(g.vendas.valores) ? g.vendas.valores : [];
+                        const vm = Array.isArray(g.vendas.meta) ? g.vendas.meta : [];
+                        if (vl.length > 0) {
+                            chartVendas.data.labels = vl;
+                            chartVendas.data.datasets[0].data = vv;
+                            chartVendas.data.datasets[1].data = vm;
+                            chartVendas.update();
+                        }
+                    }
+                    if (g.categorias) {
+                        const cl = Array.isArray(g.categorias.labels) ? g.categorias.labels : [];
+                        const cv = Array.isArray(g.categorias.valores) ? g.categorias.valores : [];
+                        if (cl.length > 0 && cv.some(v => v > 0)) {
+                            chartCategorias.data.labels = cl;
+                            chartCategorias.data.datasets[0].data = cv;
+                            chartCategorias.update();
+                        }
+                    }
+                    if (g.solicitacoes && Array.isArray(g.solicitacoes.valores)) {
+                        chartSolicitacoes.data.datasets[0].data = g.solicitacoes.valores;
+                        chartSolicitacoes.update();
+                    }
+                    if (g.adesao) {
+                        const al = Array.isArray(g.adesao.labels) ? g.adesao.labels : [];
+                        const av = Array.isArray(g.adesao.valores) ? g.adesao.valores : [];
+                        if (al.length > 0) chartAdesaoRH.data.labels = al;
+                        if (av.length > 0) chartAdesaoRH.data.datasets[0].data = av;
+                        chartAdesaoRH.update();
+                    }
+                    if (Array.isArray(g.performance) && g.performance.length > 0) {
+                        chartPerformance.data.datasets[0].data = g.performance;
+                        chartPerformance.update();
+                    }
+                    const lu = document.getElementById('lastUpdate');
+                    if (lu) lu.textContent = new Date().toLocaleString('pt-BR');
+                });
+        }
+        function formatBytes(bytes) {
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            if (bytes === 0) return '0 B';
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+        }
+
+        function formatUptime(ms) {
+            const s = Math.floor(ms / 1000);
+            const d = Math.floor(s / 86400);
+            const h = Math.floor((s % 86400) / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            return `${d}d ${h}h ${m}m ${sec}s`;
+        }
+
+        function atualizarSistema() {
+            fetch('/dashboard/api/system')
+                .then(r => r.json())
+                .then(d => {
+                    const perf = v => (v === null || typeof v === 'undefined') ? '—' : v;
+                    const amb = Array.isArray(d.activeProfiles) && d.activeProfiles.length > 0 ? d.activeProfiles.join(', ') : 'default';
+                    const mem = d.memory ? `${formatBytes(d.memory.used)} / ${formatBytes(d.memory.total)}` : '—';
+                    const up = typeof d.uptimeMillis === 'number' ? formatUptime(d.uptimeMillis) : '—';
+                    const ver = d.app && d.app.version ? d.app.version : '—';
+                    const jv = perf(d.java);
+                    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+                    el('sysAmbiente', amb);
+                    el('sysVersao', ver);
+                    el('sysUptime', up);
+                    el('sysMemoria', mem);
+                    el('sysJava', jv);
+                });
+        }
+
+        atualizarDashboard();
+        atualizarSistema();
+        setInterval(() => { atualizarDashboard(); verificarNovasNotificacoes(); atualizarSistema(); }, 300000);
 
         // Função para abrir painel de notificações
         function abrirNotificacoes() {

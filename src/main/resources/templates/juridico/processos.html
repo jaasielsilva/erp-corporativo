@@ -175,10 +175,10 @@
                                         <div class="list-group-item" th:each="a : ${proximasAudiencias}">
                                             <div class="d-flex justify-content-between">
                                                 <div>
-                                                    <div class="fw-semibold" th:text="${a.processo}">Proc. 000000</div>
+                                                    <div class="fw-semibold" th:text="${a.processoNumero}">Proc. 000000</div>
                                                     <small class="text-muted" th:text="${a.tipo}">Audiência</small>
                                                 </div>
-                                                <span class="badge bg-info" th:text="${a.data}">2025-01-01</span>
+                                                <span class="badge bg-info" th:text="${a.dataHora}">2025-01-01</span>
                                             </div>
                                         </div>
                                     </div>
@@ -195,9 +195,9 @@
                                             <div class="d-flex justify-content-between">
                                                 <div>
                                                     <div class="fw-semibold" th:text="${p.acao}">Ação</div>
-                                                    <small class="text-muted" th:text="${p.responsavel}">Responsável</small>
+                                                    <small class="text-muted" th:text="${p.parte}">Parte</small>
                                                 </div>
-                                                <span class="badge bg-danger" th:text="${p.dataLimite}">2025-01-01</span>
+                                                <span class="badge bg-danger" th:text="${p.proximoPrazo}">2025-01-01</span>
                                             </div>
                                         </div>
                                     </div>
@@ -301,12 +301,13 @@
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
 
                 $.ajax({
-                    url: '/juridico/processos',
+                    url: '/juridico/api/processos',
                     method: 'POST',
-                    data: payload,
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(payload),
                     success: function(res) {
-                        notify('success', 'Processo criado', `Número: ${res.numero}`, 'low', { durationMs: 6000 });
-                        setTimeout(() => window.location.reload(), 1200);
+                        notify('success', 'Processo criado', `ID: ${res.id}`, 'low', { durationMs: 6000 });
+                        carregarProcessos(0);
                     },
                     error: function(xhr) {
                         const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao criar processo';

@@ -10,6 +10,7 @@ public class Norma {
     private String codigo;
     private String titulo;
     private String orgao;
+    @Column(length = 2048)
     private String descricao;
     private boolean vigente;
 

@@ -13,6 +13,7 @@ public class DocumentoJuridico {
     private String descricao;
     private String caminhoArquivo;
     private LocalDateTime criadoEm;
+    private String autor;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -26,4 +27,6 @@ public class DocumentoJuridico {
     public void setCaminhoArquivo(String caminhoArquivo) { this.caminhoArquivo = caminhoArquivo; }
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
+    public String getAutor() { return autor; }
+    public void setAutor(String autor) { this.autor = autor; }
 }

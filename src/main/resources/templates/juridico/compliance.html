@@ -58,7 +58,10 @@
                         <!-- Normas Vigentes -->
                         <div class="col-md-6">
                             <div class="card p-3 shadow-sm">
-                                <h5 class="mb-3"><i class="fas fa-book"></i> Normas Vigentes</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0"><i class="fas fa-book"></i> Normas Vigentes</h5>
+                                    <button id="btnCriarNorma" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Cadastrar Norma</button>
+                                </div>
                                 <div id="normasList" class="list-group list-group-flush">
                                     <div class="list-group-item text-muted">Carregando normas...</div>
                                 </div>
@@ -68,7 +71,10 @@
                         <!-- Não Conformidades -->
                         <div class="col-md-6">
                             <div class="card p-3 shadow-sm">
-                                <h5 class="mb-3"><i class="fas fa-exclamation-circle text-warning"></i> Não Conformidades</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0"><i class="fas fa-exclamation-circle text-warning"></i> Não Conformidades</h5>
+                                    <button id="btnCriarNc" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Cadastrar NC</button>
+                                </div>
                                 <div id="ncList" class="list-group list-group-flush">
                                     <div class="list-group-item text-muted">Carregando não conformidades...</div>
                                 </div>
@@ -136,6 +142,95 @@
         </main>
     </div>
 
+    <div class="modal fade" id="complianceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="complianceModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="complianceModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="normaCreateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cadastrar Norma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label class="form-label">Título</label>
+                        <input id="normaTitulo" class="form-control" type="text" placeholder="Ex.: LGPD" maxlength="255">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Código</label>
+                        <input id="normaCodigo" class="form-control" type="text" placeholder="Ex.: LGPD, NR-12" maxlength="255">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Órgão Regulador</label>
+                        <input id="normaOrgao" class="form-control" type="text" placeholder="Ex.: ANPD" maxlength="255">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Descrição</label>
+                        <textarea id="normaDescricao" class="form-control" rows="3" placeholder="Descrição da norma" maxlength="2048"></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Status</label>
+                        <select id="normaStatus" class="form-select">
+                            <option value="VIGENTE" selected>VIGENTE</option>
+                            <option value="OBSOLETA">OBSOLETA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="salvarNorma">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="ncCreateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cadastrar Não Conformidade</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label class="form-label">Título</label>
+                        <input id="ncTitulo" class="form-control" type="text" placeholder="Ex.: Falha de controle de acesso" maxlength="255">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Descrição</label>
+                        <textarea id="ncDescricao" class="form-control" rows="3" placeholder="Descrição da não conformidade" maxlength="255"></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Severidade</label>
+                        <select id="ncSeveridade" class="form-select">
+                            <option value="BAIXA">BAIXA</option>
+                            <option value="MEDIA" selected>MEDIA</option>
+                            <option value="ALTA">ALTA</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Código</label>
+                        <input id="ncCodigo" class="form-control" type="text" placeholder="Ex.: NC-001" maxlength="255">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="salvarNc">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
@@ -187,8 +282,15 @@
                 const id = $(this).data('id');
                 $.get(`/juridico/api/compliance/normas/${id}`)
                     .done(n => {
-                        const detalhes = `Código: ${n.codigo || '—'}\nStatus: ${n.status || '—'}\nÚltima revisão: ${n.ultimaRevisao || '—'}\n\n${n.descricao || ''}`;
-                        notify('info', n.nome || 'Norma', detalhes, 'low', { durationMs: 8000 });
+                        $('#complianceModalTitle').text(n.nome || 'Norma');
+                        const html = `
+                            <div class="mb-2"><small class="text-muted">Código</small><div class="fw-semibold">${n.codigo || '—'}</div></div>
+                            <div class="mb-2"><small class="text-muted">Status</small><div class="fw-semibold">${n.status || '—'}</div></div>
+                            <div class="mb-2"><small class="text-muted">Descrição</small><div>${n.descricao || '—'}</div></div>
+                        `;
+                        $('#complianceModalBody').html(html);
+                        const modal = new bootstrap.Modal(document.getElementById('complianceModal'));
+                        modal.show();
                     })
                     .fail(() => notify('error', 'Falha', 'Não foi possível carregar detalhes da norma.', 'high'));
             });
@@ -258,22 +360,52 @@
                                     <td>${a.auditor || '—'}</td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-secondary" data-action="ver-auditoria" data-id="${a.id}"><i class="fas fa-eye"></i> Detalhes</button>
+                                        <button class="btn btn-sm btn-outline-success ms-1" data-action="registrar-resultado" data-id="${a.id}"><i class="fas fa-check"></i> Registrar Resultado</button>
                                     </td>
                                 </tr>`;
                             $tbody.append(tr);
                         });
                     })
                     .fail(() => $tbody.html('<tr><td colspan="5" class="text-muted">Erro ao carregar auditorias.</td></tr>'));
-            }
+                }
 
             $(document).on('click', 'button[data-action="ver-auditoria"]', function() {
                 const id = $(this).data('id');
                 $.get(`/juridico/api/compliance/auditorias/${id}`)
                     .done(a => {
-                        const detalhes = `Tipo: ${a.tipo || '—'}\nEscopo: ${a.escopo || '—'}\nInício: ${a.dataInicio || '—'}\nAuditor: ${a.auditor || '—'}\nStatus: ${a.status || '—'}\nResultado: ${a.resultado || '—'}\n\n${a.achados || ''}`;
-                        notify('info', 'Auditoria', detalhes, 'low', { durationMs: 9000 });
+                        $('#complianceModalTitle').text('Auditoria');
+                        const html = `
+                            <div class="mb-2"><small class="text-muted">Tipo</small><div class="fw-semibold">${a.tipo || '—'}</div></div>
+                            <div class="mb-2"><small class="text-muted">Escopo</small><div class="fw-semibold">${a.escopo || '—'}</div></div>
+                            <div class="mb-2"><small class="text-muted">Início</small><div class="fw-semibold">${a.dataInicio || '—'}</div></div>
+                            <div class="mb-2"><small class="text-muted">Auditor</small><div class="fw-semibold">${a.auditor || '—'}</div></div>
+                            <div class="mb-2"><small class="text-muted">Status</small><div class="fw-semibold">${a.status || '—'}</div></div>
+                            <div class="mb-2"><small class="text-muted">Resultado</small><div>${a.resultado || '—'}</div></div>
+                        `;
+                        $('#complianceModalBody').html(html);
+                        const modal = new bootstrap.Modal(document.getElementById('complianceModal'));
+                        modal.show();
                     })
                     .fail(() => notify('error', 'Falha', 'Não foi possível carregar detalhes da auditoria.', 'high'));
+            });
+
+            $(document).on('click', 'button[data-action="registrar-resultado"]', function() {
+                const id = $(this).data('id');
+                const resultado = prompt('Informe o resultado da auditoria (deixe vazio para remover):');
+                if (resultado === null) return;
+                $.ajax({
+                    url: `/juridico/api/compliance/auditorias/${id}/resultado`,
+                    method: 'PUT',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ resultado }),
+                    success: function(res) {
+                        notify('success', 'Resultado registrado', res.resultado ? `Status: ${res.status}` : 'Resultado removido');
+                        carregarAuditorias();
+                    },
+                    error: function() {
+                        notify('error', 'Falha', 'Não foi possível registrar o resultado.', 'high');
+                    }
+                });
             });
 
             carregarAuditorias();
@@ -296,12 +428,13 @@
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
 
                 $.ajax({
-                    url: '/juridico/compliance/auditoria',
+                    url: '/juridico/api/compliance/auditorias',
                     method: 'POST',
-                    data: payload,
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(payload),
                     success: function(res) {
-                        notify('success', 'Auditoria criada', `${res.tipo} planejada`, 'low', { durationMs: 6000 });
-                        setTimeout(() => window.location.reload(), 1200);
+                        notify('success', 'Auditoria criada', res.id ? `ID ${res.id}` : 'Criada com sucesso', 'low', { durationMs: 6000 });
+                        carregarAuditorias();
                     },
                     error: function(xhr) {
                         const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao criar auditoria';
@@ -311,6 +444,69 @@
                         $btn.prop('disabled', false).html(originalHtml);
                     }
                 });
+            });
+
+            $('#btnCriarNc').on('click', function() {
+                $('#ncTitulo').val('');
+                $('#ncDescricao').val('');
+                $('#ncSeveridade').val('MEDIA');
+                $('#ncCodigo').val('');
+                const modal = new bootstrap.Modal(document.getElementById('ncCreateModal'));
+                modal.show();
+            });
+
+            $('#salvarNc').on('click', function() {
+                const titulo = $('#ncTitulo').val()?.trim();
+                const descricao = $('#ncDescricao').val()?.trim() || '';
+                const severidade = $('#ncSeveridade').val() || 'MEDIA';
+                const codigo = $('#ncCodigo').val()?.trim() || '';
+                if (!titulo) { notify('error', 'Campos obrigatórios', 'Informe o título da NC'); return; }
+                const payload = { titulo, descricao, severidade, codigo };
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+                $.ajax({
+                    url: '/juridico/api/compliance/nao-conformidades',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(payload)
+                })
+                .done(res => { notify('success', 'NC criada', res.id ? `ID ${res.id}` : 'Criada com sucesso'); carregarNc(); bootstrap.Modal.getInstance(document.getElementById('ncCreateModal')).hide(); })
+                .fail(xhr => { const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao criar NC'; notify('error', 'Falha', msg, 'high'); })
+                .always(() => { $btn.prop('disabled', false).html(originalHtml); });
+            });
+
+            $('#btnCriarNorma').on('click', function() {
+                $('#normaTitulo').val('');
+                $('#normaCodigo').val('');
+                $('#normaOrgao').val('');
+                $('#normaDescricao').val('');
+                $('#normaStatus').val('VIGENTE');
+                const modal = new bootstrap.Modal(document.getElementById('normaCreateModal'));
+                modal.show();
+            });
+
+            $('#salvarNorma').on('click', function() {
+                const titulo = $('#normaTitulo').val()?.trim();
+                const codigo = $('#normaCodigo').val()?.trim() || '';
+                const orgao = $('#normaOrgao').val()?.trim() || '';
+                const descricao = $('#normaDescricao').val()?.trim() || '';
+                const status = $('#normaStatus').val() || 'VIGENTE';
+                const vigente = String(status).toUpperCase() === 'VIGENTE';
+                if (!titulo) { notify('error', 'Campos obrigatórios', 'Informe o título da norma'); return; }
+                const payload = { titulo, codigo, orgao, descricao, vigente };
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Salvando...');
+                $.ajax({
+                    url: '/juridico/api/compliance/normas',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(payload)
+                })
+                .done(res => { notify('success', 'Norma criada', res.id ? `ID ${res.id}` : 'Criada com sucesso'); carregarNormas(); bootstrap.Modal.getInstance(document.getElementById('normaCreateModal')).hide(); })
+                .fail(xhr => { const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao criar norma'; notify('error', 'Falha', msg, 'high'); })
+                .always(() => { $btn.prop('disabled', false).html(originalHtml); });
             });
         });
     </script>

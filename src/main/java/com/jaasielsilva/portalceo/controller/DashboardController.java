@@ -52,6 +52,9 @@ public class DashboardController {
     @Autowired
     private IndicadorService indicadorService;
 
+    @Autowired
+    private org.springframework.core.env.Environment environment;
+
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
 
@@ -215,6 +218,120 @@ public class DashboardController {
     @GetMapping("/dashboard/alertas")
     public String dashboardAlertas(Model model) {
         return "dashboard/alertas";
+    }
+
+    @GetMapping("/dashboard/api/metrics")
+    public org.springframework.http.ResponseEntity<java.util.Map<String, Object>> apiMetrics(Principal principal) {
+        Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+        long totalClientes = clienteService.contarTotal();
+        long novosClientes30Dias = clienteService.contarNovosPorPeriodo(30);
+        long totalVendas = 0;
+        String crescimentoVendas = "0%";
+        long produtosEstoque = produtoService.somarQuantidadeEstoque();
+        java.math.BigDecimal faturamentoMensal = indicadorService.getRoiMensal();
+        String crescimentoFaturamento = "0%";
+        long produtosCriticos = produtoService.contarProdutosCriticos();
+        long totalFuncionarios = colaboradorService.contarAtivos();
+        long contratacoes12Meses = colaboradorService.contarContratacaosPorPeriodo(12);
+        long solicitacoesPendentes = solicitacaoAcessoService.contarSolicitacoesPendentes();
+        long solicitacoesAtrasadas = solicitacaoAcessoService.contarSolicitacoesAtrasadas();
+        WorkflowAdesaoService.DashboardEstatisticas estatisticasAdesao = workflowAdesaoService.obterEstatisticas();
+        long processosAdesaoTotal = estatisticasAdesao.getProcessosPorStatus().values().stream().mapToLong(Long::longValue).sum();
+        long processosAguardandoAprovacao = estatisticasAdesao.getProcessosAguardandoAprovacao();
+        java.util.List<String> adesaoRHLabels = workflowAdesaoService.obterLabelsUltimos6Meses();
+        java.util.List<Integer> adesaoRHValores = workflowAdesaoService.obterDadosAdesaoUltimos6Meses();
+        java.util.List<Long> solicitacoesStatusLong = solicitacaoAcessoService.obterValoresGraficoStatus();
+        java.util.List<Integer> solicitacoesStatus = new java.util.ArrayList<>();
+        for (Long v : solicitacoesStatusLong) solicitacoesStatus.add(v.intValue());
+        java.util.List<String> ultimos12MesesLabels = new java.util.ArrayList<>();
+        java.util.List<java.math.BigDecimal> ultimos12MesesValores = new java.util.ArrayList<>();
+        java.util.List<java.math.BigDecimal> metaVendasMensal = new java.util.ArrayList<>();
+        java.math.BigDecimal metaBase = faturamentoMensal.multiply(new java.math.BigDecimal("1.2"));
+        for (int i = 0; i < 12; i++) metaVendasMensal.add(metaBase);
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        java.util.Map<String, Object> totais = new java.util.HashMap<>();
+        totais.put("usuario", usuarioLogado != null ? usuarioLogado.getEmail() : null);
+        totais.put("totalClientes", totalClientes);
+        totais.put("novosClientes30Dias", novosClientes30Dias);
+        totais.put("totalVendas", totalVendas);
+        totais.put("crescimentoVendas", crescimentoVendas);
+        totais.put("totalProdutos", produtosEstoque);
+        totais.put("produtosCriticos", produtosCriticos);
+        totais.put("totalFuncionarios", totalFuncionarios);
+        totais.put("contratacoes12Meses", contratacoes12Meses);
+        totais.put("solicitacoesPendentes", solicitacoesPendentes);
+        totais.put("solicitacoesAtrasadas", solicitacoesAtrasadas);
+        totais.put("processosAdesaoTotal", processosAdesaoTotal);
+        totais.put("processosAguardandoAprovacao", processosAguardandoAprovacao);
+        totais.put("faturamentoMensal", indicadorService.formatarMoeda(faturamentoMensal));
+        totais.put("crescimentoFaturamento", crescimentoFaturamento);
+        totais.put("margemLucro", indicadorService.formatarPercentual(indicadorService.getMargemLucro()));
+        totais.put("roiMensal", indicadorService.formatarPercentual(indicadorService.getRoiMensal()));
+        totais.put("inadimplencia", indicadorService.formatarPercentual(indicadorService.getInadimplencia()));
+        totais.put("ticketMedio", indicadorService.formatarMoeda(indicadorService.getTicketMedio()));
+        totais.put("taxaRetencao", "94,2%");
+        totais.put("produtividadeMedia", "87,3%");
+        totais.put("horasExtras", "234h");
+        totais.put("satisfacaoInterna", "8,7/10");
+        totais.put("giroEstoque", "4,2x");
+        totais.put("tempoEntrega", "2,3 dias");
+        totais.put("taxaDevolucao", "1,8%");
+        totais.put("eficienciaLogistica", "91,5%");
+        java.util.Map<String, Object> graficos = new java.util.HashMap<>();
+        java.util.Map<String, Object> vendas = new java.util.HashMap<>();
+        vendas.put("labels", ultimos12MesesLabels);
+        vendas.put("valores", ultimos12MesesValores);
+        vendas.put("meta", metaVendasMensal);
+        java.util.Map<String, Object> categorias = new java.util.HashMap<>();
+        categorias.put("labels", new java.util.ArrayList<>());
+        categorias.put("valores", new java.util.ArrayList<>());
+        java.util.Map<String, Object> solicitacoes = new java.util.HashMap<>();
+        solicitacoes.put("valores", solicitacoesStatus);
+        java.util.Map<String, Object> adesao = new java.util.HashMap<>();
+        adesao.put("labels", adesaoRHLabels);
+        adesao.put("valores", adesaoRHValores);
+        graficos.put("vendas", vendas);
+        graficos.put("categorias", categorias);
+        graficos.put("solicitacoes", solicitacoes);
+        graficos.put("adesao", adesao);
+        graficos.put("performance", java.util.Arrays.asList(
+                75,
+                solicitacaoAcessoService.calcularPerformanceAtendimento(),
+                estoqueService.calcularPerformanceLogistica(),
+                clienteService.calcularPerformanceQualidade(),
+                usuarioService.calcularPerformanceFinanceiro()
+        ));
+        payload.put("totais", totais);
+        payload.put("graficos", graficos);
+        return org.springframework.http.ResponseEntity.ok(payload);
+    }
+
+    @GetMapping("/dashboard/api/system")
+    public org.springframework.http.ResponseEntity<java.util.Map<String, Object>> apiSystem() {
+        Runtime rt = Runtime.getRuntime();
+        java.lang.management.RuntimeMXBean mx = java.lang.management.ManagementFactory.getRuntimeMXBean();
+        String version = DashboardController.class.getPackage().getImplementationVersion();
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        java.util.Map<String, Object> app = new java.util.HashMap<>();
+        app.put("name", "ERP Corporativo");
+        app.put("version", version);
+        payload.put("app", app);
+        java.util.Map<String, Object> os = new java.util.HashMap<>();
+        os.put("name", System.getProperty("os.name"));
+        os.put("arch", System.getProperty("os.arch"));
+        os.put("version", System.getProperty("os.version"));
+        payload.put("os", os);
+        payload.put("java", System.getProperty("java.version"));
+        payload.put("activeProfiles", java.util.Arrays.asList(environment.getActiveProfiles()));
+        java.util.Map<String, Object> mem = new java.util.HashMap<>();
+        mem.put("max", rt.maxMemory());
+        mem.put("total", rt.totalMemory());
+        mem.put("free", rt.freeMemory());
+        mem.put("used", rt.totalMemory() - rt.freeMemory());
+        payload.put("memory", mem);
+        payload.put("uptimeMillis", mx.getUptime());
+        payload.put("startTimeMillis", mx.getStartTime());
+        return org.springframework.http.ResponseEntity.ok(payload);
     }
 
 }

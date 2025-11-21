@@ -15,6 +15,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class HoleriteService {
@@ -81,6 +85,11 @@ public class HoleriteService {
                 .orElseThrow(() -> new IllegalArgumentException("Folha de pagamento não encontrada"));
         
         return holeriteRepository.findByFolhaPagamento(folha);
+    }
+
+    public Page<Holerite> listarPorFolhaPaginado(Long folhaId, int page, int size, String q) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("colaborador.nome").ascending());
+        return holeriteRepository.findByFolhaPaginado(folhaId, q != null && !q.isBlank() ? q.trim() : null, pageable);
     }
 
     /**

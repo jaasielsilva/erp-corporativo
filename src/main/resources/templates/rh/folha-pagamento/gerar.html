@@ -39,6 +39,20 @@
         </div>
         <h1>Gerar Folha de Pagamento</h1>
 
+        <article id="processamentoStatusCard" class="card" style="display:none;">
+          <h3><i class="fas fa-sync-alt"></i> Status de Processamento</h3>
+          <div id="processamentoAlert" class="alert alert-info" role="alert">
+            <i id="processamentoAlertIcon" class="fas fa-sync-alt"></i>
+            <span id="processamentoStatusText">Processando...</span>
+            <small id="processamentoStatusInfo" style="display:block;margin-top:4px"></small>
+          </div>
+          <div class="form-actions">
+            <a id="abrirFolhaBtn" href="#" class="btn btn-success" style="display:none;">
+              <i class="fas fa-eye"></i> Visualizar Folha
+            </a>
+          </div>
+        </article>
+
         <!-- Configurações da Folha -->
         <article class="card">
           <h3><i class="fas fa-cog"></i> Configurações da Folha</h3>
@@ -309,6 +323,54 @@
       container.prepend(el);
       setTimeout(() => { el.remove(); }, 8000);
     }
+    let processamentoInterval = null;
+    let processamentoJobId = null;
+    function mostrarStatusCard(show) {
+      const card = document.getElementById('processamentoStatusCard');
+      card.style.display = show ? 'block' : 'none';
+    }
+    function atualizarStatusUI(data) {
+      const statusText = document.getElementById('processamentoStatusText');
+      const statusInfo = document.getElementById('processamentoStatusInfo');
+      const abrirBtn = document.getElementById('abrirFolhaBtn');
+      const alertBox = document.getElementById('processamentoAlert');
+      const alertIcon = document.getElementById('processamentoAlertIcon');
+      const status = (data && data.status) ? data.status : 'DESCONHECIDO';
+      statusText.textContent = status;
+      statusInfo.textContent = (data && data.message) ? data.message : '';
+      let cls = 'alert alert-info';
+      let icon = 'fas fa-sync-alt';
+      if (status === 'CONCLUIDO') { cls = 'alert alert-success'; icon = 'fas fa-check-circle'; }
+      else if (status === 'ERRO') { cls = 'alert alert-danger'; icon = 'fas fa-exclamation-triangle'; }
+      alertBox.className = cls;
+      alertIcon.className = icon;
+      if (data && data.folhaId) {
+        abrirBtn.href = '/rh/folha-pagamento/visualizar/' + data.folhaId;
+        abrirBtn.style.display = status === 'CONCLUIDO' ? 'inline-block' : 'none';
+      } else {
+        abrirBtn.style.display = 'none';
+      }
+    }
+    async function pollStatus() {
+      if (!processamentoJobId) return;
+      try {
+        const r = await fetch('/rh/folha-pagamento/status-processamento?jobId=' + encodeURIComponent(processamentoJobId));
+        const data = await r.json();
+        atualizarStatusUI(data);
+        if (data.status === 'CONCLUIDO') {
+          mostrarAlerta('success', 'Folha processada com sucesso.');
+          clearInterval(processamentoInterval);
+          processamentoInterval = null;
+        } else if (data.status === 'ERRO') {
+          mostrarAlerta('danger', 'Erro no processamento: ' + (data.message || ''));
+          clearInterval(processamentoInterval);
+          processamentoInterval = null;
+        }
+      } catch (e) {
+        clearInterval(processamentoInterval);
+        processamentoInterval = null;
+      }
+    }
     async function processarFolhaAsync(e) {
       e.preventDefault();
       const form = document.getElementById('processarFolhaForm');
@@ -325,8 +387,13 @@
           body: `mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}`
         });
         const data = await res.json();
-        if (res.status === 202 && data.accepted) {
-          mostrarAlerta('success', 'Processamento da folha iniciado. Você será notificado.');
+        if (res.status === 202 && data.accepted && data.jobId) {
+          processamentoJobId = data.jobId;
+          mostrarStatusCard(true);
+          atualizarStatusUI({ status: 'AGENDADO', message: 'Processamento agendado' });
+          mostrarAlerta('success', 'Processamento da folha iniciado. Acompanhe o status abaixo.');
+          if (processamentoInterval) clearInterval(processamentoInterval);
+          processamentoInterval = setInterval(pollStatus, 3000);
         } else {
           mostrarAlerta('danger', 'Não foi possível iniciar o processamento.');
         }

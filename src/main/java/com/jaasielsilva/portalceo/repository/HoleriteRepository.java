@@ -6,6 +6,8 @@ import com.jaasielsilva.portalceo.model.Holerite;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -45,4 +47,7 @@ public interface HoleriteRepository extends JpaRepository<Holerite, Long> {
 
     @Query("SELECT h FROM Holerite h WHERE h.colaborador.ativo = true AND h.folhaPagamento.id = :folhaId ORDER BY h.colaborador.nome")
     List<Holerite> findByFolhaAndColaboradorAtivo(@Param("folhaId") Long folhaId);
+
+    @Query("SELECT h FROM Holerite h WHERE h.folhaPagamento.id = :folhaId AND (:q IS NULL OR LOWER(h.colaborador.nome) LIKE LOWER(CONCAT('%', :q, '%')))" )
+    Page<Holerite> findByFolhaPaginado(@Param("folhaId") Long folhaId, @Param("q") String q, Pageable pageable);
 }

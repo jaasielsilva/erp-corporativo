@@ -213,10 +213,40 @@ public class FolhaPagamentoController {
         
         FolhaPagamento folha = folhaOpt.get();
         model.addAttribute("folha", folha);
-        model.addAttribute("holerites", holeriteService.listarPorFolha(id));
+        model.addAttribute("holerites", java.util.Collections.emptyList());
         model.addAttribute("resumo", holeriteService.calcularResumoFolha(id));
         
         return "rh/folha-pagamento/visualizar";
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @GetMapping("/api/folha/{id}/holerites")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> listarHoleritesFolha(
+            @PathVariable Long id,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "q", required = false) String q) {
+        org.springframework.data.domain.Page<Holerite> pagina = holeriteService.listarPorFolhaPaginado(id, page, size, q);
+        java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream().map(h -> {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("id", h.getId());
+            m.put("nome", h.getColaborador() != null ? h.getColaborador().getNome() : "-");
+            m.put("departamento", h.getColaborador() != null && h.getColaborador().getDepartamento() != null ? h.getColaborador().getDepartamento().getNome() : "-");
+            m.put("salarioBase", h.getSalarioBase());
+            m.put("totalProventos", h.getTotalProventos());
+            m.put("totalDescontos", h.getTotalDescontos());
+            m.put("salarioLiquido", h.getSalarioLiquido());
+            return m;
+        }).collect(java.util.stream.Collectors.toList());
+        java.util.Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("content", content);
+        resp.put("currentPage", pagina.getNumber());
+        resp.put("totalPages", pagina.getTotalPages());
+        resp.put("totalElements", pagina.getTotalElements());
+        resp.put("hasPrevious", pagina.hasPrevious());
+        resp.put("hasNext", pagina.hasNext());
+        return ResponseEntity.ok(resp);
     }
 
     /**

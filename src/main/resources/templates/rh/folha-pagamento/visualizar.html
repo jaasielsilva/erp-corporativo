@@ -33,6 +33,12 @@
           </div>
         </div>
 
+        <div class="action-buttons" style="margin-bottom:12px;">
+          <div class="search-box">
+            <input id="buscarHolerite" type="text" placeholder="Buscar por colaborador" autocomplete="off" />
+          </div>
+        </div>
+
         <div class="row mb-3">
           <div class="col-md-3">
             <div class="card text-center">
@@ -70,6 +76,7 @@
 
         <div class="card">
           <div class="card-body table-responsive">
+            <div id="loading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
             <table class="table table-striped">
               <thead>
                 <tr>
@@ -82,32 +89,92 @@
                   <th>Ações</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="h : ${holerites}">
-                  <td th:text="${h.colaborador.nome}"></td>
-                  <td th:text="${h.colaborador.departamento != null ? h.colaborador.departamento.nome : '-'}"></td>
-                  <td th:text="${#numbers.formatCurrency(h.salarioBase)}"></td>
-                  <td th:text="${#numbers.formatCurrency(h.totalProventos)}"></td>
-                  <td th:text="${#numbers.formatCurrency(h.totalDescontos)}"></td>
-                  <td th:text="${#numbers.formatCurrency(h.salarioLiquido)}"></td>
-                  <td>
-                    <a th:href="@{/rh/folha-pagamento/holerite/{id}(id=${h.id})}"
-                       class="btn btn-sm btn-outline-primary" title="Ver Holerite">
-                      <i class="fas fa-file-invoice"></i> Ver
-                    </a>
-                    <a th:href="@{/rh/folha-pagamento/holerite/{id}/pdf(id=${h.id})}"
-                       class="btn btn-sm btn-outline-success" title="Baixar PDF">
-                      <i class="fas fa-file-pdf"></i> PDF
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
+              <tbody id="holeritesBody"></tbody>
             </table>
           </div>
         </div>
+        <div id="pagination" class="pagination"></div>
       </section>
     </main>
   </div>
+  <script th:inline="javascript">window.folhaId = [[${folha.id}]];</script>
+  <script>
+    let currentPage = 0;
+    let query = '';
+    let debounceTimer;
+
+    function brl(v) {
+      try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0); } catch { return v ?? 0; }
+    }
+
+    function showLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
+
+    function renderRows(items) {
+      const tbody = document.getElementById('holeritesBody');
+      tbody.innerHTML = '';
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum registro encontrado</td></tr>';
+        return;
+      }
+      const rows = items.map(it => {
+        const nome = it.nome || '-';
+        const dep = it.departamento || '-';
+        const id = it.id;
+        return `<tr>
+          <td>${nome}</td>
+          <td>${dep}</td>
+          <td>${brl(it.salarioBase)}</td>
+          <td>${brl(it.totalProventos)}</td>
+          <td>${brl(it.totalDescontos)}</td>
+          <td>${brl(it.salarioLiquido)}</td>
+          <td>
+            <a href="/rh/folha-pagamento/holerite/${id}" class="btn btn-sm btn-outline-primary" title="Ver Holerite"><i class="fas fa-file-invoice"></i> Ver</a>
+            <a href="/rh/folha-pagamento/holerite/${id}/pdf" class="btn btn-sm btn-outline-success" title="Baixar PDF"><i class="fas fa-file-pdf"></i> PDF</a>
+          </td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+
+    function renderPagination(data) {
+      const el = document.getElementById('pagination');
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = data.hasPrevious;
+      const hasNext = data.hasNext;
+      let html = '';
+      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</span>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+
+    function loadHolerites(page = 0) {
+      currentPage = page;
+      showLoading(true);
+      const url = `/rh/folha-pagamento/api/folha/${window.folhaId}/holerites?page=${page}&size=20&q=${encodeURIComponent(query)}`;
+      fetch(url)
+        .then(r => r.json())
+        .then(data => { renderRows(data.content); renderPagination(data); })
+        .catch(() => { renderRows([]); renderPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); })
+        .finally(() => showLoading(false));
+    }
+
+    function goToPage(p) { loadHolerites(Math.max(0, p)); }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('buscarHolerite');
+      if (input) {
+        input.addEventListener('input', function(e) {
+          clearTimeout(debounceTimer);
+          query = e.target.value;
+          debounceTimer = setTimeout(() => loadHolerites(0), 250);
+        });
+      }
+      loadHolerites(0);
+    });
+  </script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script th:src="@{/js/sidebar.js}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

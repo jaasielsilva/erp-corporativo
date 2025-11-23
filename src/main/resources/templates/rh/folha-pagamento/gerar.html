@@ -329,6 +329,10 @@
     }
     let processamentoInterval = null;
     let processamentoJobId = null;
+    let processamentoStartAt = null;
+    let processamentoEndAt = null;
+    let processamentoMesRef = null;
+    let processamentoAnoRef = null;
     function mostrarStatusCard(show) {
       const card = document.getElementById('processamentoStatusCard');
       card.style.display = show ? 'block' : 'none';
@@ -363,10 +367,53 @@
         atualizarStatusUI(data);
         if (data.status === 'CONCLUIDO') {
           mostrarAlerta('success', 'Folha processada com sucesso.');
+          processamentoEndAt = performance.now();
+          const durationMs = processamentoStartAt ? (processamentoEndAt - processamentoStartAt) : null;
+          try {
+            const metrics = {
+              jobId: processamentoJobId,
+              folhaId: data.folhaId || null,
+              status: data.status,
+              mes: processamentoMesRef,
+              ano: processamentoAnoRef,
+              durationMs: durationMs != null ? Math.round(durationMs) : null,
+              startedAt: window.processamentoStartIso || null,
+              endedAt: new Date().toISOString(),
+              userAgent: navigator.userAgent
+            };
+            console.log(`[Métricas Folha] Tempo total ${(durationMs/1000).toFixed(2)}s | mes=${processamentoMesRef}/${processamentoAnoRef} | jobId=${processamentoJobId} | folhaId=${data.folhaId ?? '-'}`);
+            fetch('/rh/folha-pagamento/metrics/processamento', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(metrics)
+            }).catch(() => {});
+          } catch (_) {}
           clearInterval(processamentoInterval);
           processamentoInterval = null;
         } else if (data.status === 'ERRO') {
           mostrarAlerta('danger', 'Erro no processamento: ' + (data.message || ''));
+          processamentoEndAt = performance.now();
+          const durationMs = processamentoStartAt ? (processamentoEndAt - processamentoStartAt) : null;
+          try {
+            const metrics = {
+              jobId: processamentoJobId,
+              folhaId: data.folhaId || null,
+              status: data.status,
+              mes: processamentoMesRef,
+              ano: processamentoAnoRef,
+              durationMs: durationMs != null ? Math.round(durationMs) : null,
+              startedAt: window.processamentoStartIso || null,
+              endedAt: new Date().toISOString(),
+              userAgent: navigator.userAgent,
+              errorMessage: data.message || null
+            };
+            console.log(`[Métricas Folha] ERRO após ${(durationMs/1000).toFixed(2)}s | mes=${processamentoMesRef}/${processamentoAnoRef} | jobId=${processamentoJobId}`);
+            fetch('/rh/folha-pagamento/metrics/processamento', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(metrics)
+            }).catch(() => {});
+          } catch (_) {}
           clearInterval(processamentoInterval);
           processamentoInterval = null;
         }
@@ -385,6 +432,10 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
       try {
+        processamentoStartAt = performance.now();
+        processamentoMesRef = mes;
+        processamentoAnoRef = ano;
+        window.processamentoStartIso = new Date().toISOString();
         const res = await fetch('/rh/folha-pagamento/processar-async', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -397,7 +448,7 @@
           atualizarStatusUI({ status: 'AGENDADO', message: 'Processamento agendado' });
           mostrarAlerta('success', 'Processamento da folha iniciado. Acompanhe o status abaixo.');
           if (processamentoInterval) clearInterval(processamentoInterval);
-          processamentoInterval = setInterval(pollStatus, 3000);
+          processamentoInterval = setInterval(pollStatus, 1000);
         } else {
           mostrarAlerta('danger', 'Não foi possível iniciar o processamento.');
         }

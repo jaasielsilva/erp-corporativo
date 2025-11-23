@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -19,6 +21,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.scheduling.annotation.Async;
 
 @Service
@@ -51,6 +55,9 @@ public class FolhaPagamentoService {
     private HoleriteCalculoService holeriteCalculoService;
 
     private final Map<String, Map<String, Object>> processamentoJobs = new ConcurrentHashMap<>();
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Lista todas as folhas de pagamento ordenadas por ano e mês
@@ -156,13 +163,32 @@ public class FolhaPagamentoService {
         folha = folhaPagamentoRepository.save(folha);
 
         // Buscar colaboradores ativos
+        long tInicio = System.nanoTime();
         List<Colaborador> colaboradores = colaboradorRepository.findByAtivoTrue();
-        List<Holerite> holerites = new ArrayList<>();
+
+        // Agregar dados de ponto em uma única consulta por período
+        YearMonth ymPeriodo = YearMonth.of(ano, mes);
+        LocalDate inicioPeriodo = ymPeriodo.atDay(1);
+        LocalDate fimPeriodo = ymPeriodo.atEndOfMonth();
+        List<RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumosPeriodo =
+                registroPontoRepository.aggregateResumoPorPeriodoGroupByColaborador(inicioPeriodo, fimPeriodo);
+        Map<Long, RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumoPorColaborador =
+                resumosPeriodo.stream().collect(Collectors.toMap(
+                        RegistroPontoRepository.PontoResumoPorColaboradorProjection::getColaboradorId,
+                        Function.identity()
+                ));
+        final int CHUNK_SIZE = 200;
+        List<Holerite> holeritesChunk = new ArrayList<>(CHUNK_SIZE);
+        int totalProcessados = 0;
 
         for (Colaborador colaborador : colaboradores) {
             try {
-                Holerite holerite = gerarHolerite(colaborador, folha, mes, ano);
-                holerites.add(holerite);
+                long tColabInicio = System.nanoTime();
+                RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo =
+                        resumoPorColaborador.get(colaborador.getId());
+                Holerite holerite = gerarHolerite(colaborador, folha, mes, ano, resumo);
+                holeritesChunk.add(holerite);
+                totalProcessados++;
 
                 // Somar aos totais da folha
                 totalBruto = totalBruto.add(holerite.getTotalProventos());
@@ -172,6 +198,23 @@ public class FolhaPagamentoService {
                 BigDecimal salarioBrutoHolerite = holerite.getSalarioBase().add(holerite.getHorasExtras());
                 totalFgts = totalFgts.add(holeriteCalculoService.calcularFgtsPatronal(salarioBrutoHolerite));
 
+                long tColabFim = System.nanoTime();
+                if (totalProcessados % 100 == 0) {
+                    logger.info("Processados {} holerites em {} ms", totalProcessados, (tColabFim - tInicio) / 1_000_000);
+                }
+
+                // Persistir em blocos de 200 para aliviar memória e I/O
+                if (holeritesChunk.size() >= CHUNK_SIZE) {
+                    holeriteRepository.saveAll(holeritesChunk);
+                    holeriteRepository.flush();
+                    holeritesChunk.clear();
+
+                    // Limpar contexto para evitar crescimento da persistence context em grandes volumes
+                    entityManager.clear();
+
+                    // Reanexar 'folha' para continuar atualizações dos totais/status
+                    folha = entityManager.merge(folha);
+                }
             } catch (Exception e) {
                 logger.error("Erro ao gerar holerite para colaborador {}: {}", colaborador.getNome(), e.getMessage());
                 // Continua processando outros colaboradores
@@ -187,9 +230,17 @@ public class FolhaPagamentoService {
         folha.setTotalFgts(totalFgts);
         folha.setStatus(FolhaPagamento.StatusFolha.PROCESSADA);
 
+        // Persistir holerites restantes do último bloco
+        if (!holeritesChunk.isEmpty()) {
+            holeriteRepository.saveAll(holeritesChunk);
+            holeriteRepository.flush();
+            holeritesChunk.clear();
+        }
+
         folha = folhaPagamentoRepository.save(folha);
 
-        logger.info("Folha de pagamento {}/{} gerada com sucesso. {} holerites criados.", mes, ano, holerites.size());
+        long tFim = System.nanoTime();
+        logger.info("Folha de pagamento {}/{} gerada com sucesso. {} holerites criados em {} ms.", mes, ano, totalProcessados, (tFim - tInicio) / 1_000_000);
         return folha;
     }
 
@@ -197,21 +248,36 @@ public class FolhaPagamentoService {
      * Gera holerite individual para um colaborador
      */
     private Holerite gerarHolerite(Colaborador colaborador, FolhaPagamento folha, Integer mes, Integer ano) {
+        return gerarHolerite(colaborador, folha, mes, ano, null);
+    }
+
+    /**
+     * Gera holerite individual com possibilidade de usar resumo de ponto pré-agregado
+     */
+    private Holerite gerarHolerite(Colaborador colaborador, FolhaPagamento folha, Integer mes, Integer ano,
+                                   RegistroPontoRepository.PontoResumoPorColaboradorProjection resumoAgregado) {
         Holerite holerite = new Holerite();
         holerite.setColaborador(colaborador);
         holerite.setFolhaPagamento(folha);
         holerite.setSalarioBase(colaborador.getSalario());
 
         // Calcular dados de ponto (dias e horas trabalhadas)
-        calcularDadosPonto(holerite, colaborador, mes, ano);
+        if (resumoAgregado != null) {
+            aplicarResumoPonto(holerite, resumoAgregado);
+        } else {
+            calcularDadosPonto(holerite, colaborador, mes, ano);
+        }
+
+        // Carregar benefícios uma vez e reutilizar
+        BeneficiosInfo beneficios = carregarBeneficios(colaborador, mes, ano);
 
         // Calcular proventos
-        calcularProventos(holerite, colaborador, mes, ano);
+        calcularProventos(holerite, colaborador, mes, ano, beneficios);
 
         // Calcular descontos
-        calcularDescontos(holerite, colaborador, mes, ano);
+        calcularDescontos(holerite, colaborador, mes, ano, beneficios);
 
-        return holeriteRepository.save(holerite);
+        return holerite;
     }
 
     /**
@@ -222,29 +288,31 @@ public class FolhaPagamentoService {
         LocalDate inicio = ym.atDay(1);
         LocalDate fim = ym.atEndOfMonth();
 
-        List<RegistroPonto> registros = registroPontoRepository
-                .findByColaboradorAndDataBetweenOrderByDataDesc(colaborador, inicio, fim);
+        RegistroPontoRepository.PontoResumoProjection resumo = registroPontoRepository
+                .aggregateResumoByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
+        aplicarResumoPonto(holerite, resumo);
+    }
 
-        Long faltas = registroPontoRepository
-                .countFaltasByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
-        Long atrasos = registroPontoRepository
-                .countAtrasosByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
-        Long minutosTrabalhados = registroPontoRepository
-                .sumMinutosTrabalhadosByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
-        Long minutosExtras = registroPontoRepository
-                .sumMinutosHoraExtraByColaboradorAndPeriodo(colaborador.getId(), inicio, fim);
+    /**
+     * Aplica dados agregados de ponto no holerite
+     */
+    private void aplicarResumoPonto(Holerite holerite, RegistroPontoRepository.PontoResumoProjection resumo) {
+        Long faltas = resumo != null && resumo.getFaltas() != null ? resumo.getFaltas() : 0L;
+        Long atrasos = resumo != null && resumo.getAtrasos() != null ? resumo.getAtrasos() : 0L;
+        Long minutosTrabalhados = resumo != null && resumo.getMinutosTrabalhados() != null ? resumo.getMinutosTrabalhados() : 0L;
+        Long minutosExtras = resumo != null && resumo.getMinutosExtras() != null ? resumo.getMinutosExtras() : 0L;
+        Long diasComRegistro = resumo != null && resumo.getDiasComRegistro() != null ? resumo.getDiasComRegistro() : 0L;
 
-        int diasComRegistro = registros.size();
-        int diasTrabalhados = Math.max(0, diasComRegistro - (int) java.util.Optional.ofNullable(faltas).orElse(0L).intValue());
-        int horasTrabalhadas = (int) Math.floor(java.util.Optional.ofNullable(minutosTrabalhados).orElse(0L) / 60.0);
+        int diasTrabalhados = Math.max(0, diasComRegistro.intValue() - faltas.intValue());
+        int horasTrabalhadas = (int) Math.floor(minutosTrabalhados / 60.0);
 
         holerite.setDiasTrabalhados(diasTrabalhados);
         holerite.setHorasTrabalhadas(horasTrabalhadas);
-        holerite.setFaltas(java.util.Optional.ofNullable(faltas).orElse(0L).intValue());
-        holerite.setAtrasos(java.util.Optional.ofNullable(atrasos).orElse(0L).intValue());
+        holerite.setFaltas(faltas.intValue());
+        holerite.setAtrasos(atrasos.intValue());
 
         BigDecimal valorHoraExtra = calcularValorHoraExtra(holerite.getSalarioBase());
-        BigDecimal horasExtrasDecimal = BigDecimal.valueOf(java.util.Optional.ofNullable(minutosExtras).orElse(0L))
+        BigDecimal horasExtrasDecimal = BigDecimal.valueOf(minutosExtras)
                 .divide(BigDecimal.valueOf(60), 4, RoundingMode.HALF_UP);
         holerite.setHorasExtras(valorHoraExtra.multiply(horasExtrasDecimal).setScale(2, RoundingMode.HALF_UP));
     }
@@ -252,7 +320,7 @@ public class FolhaPagamentoService {
     /**
      * Calcula proventos do holerite
      */
-    private void calcularProventos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano) {
+    private void calcularProventos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios) {
         // Proventos básicos já definidos
         // Adicionar outros proventos conforme necessário
         holerite.setAdicionalNoturno(BigDecimal.ZERO);
@@ -261,38 +329,31 @@ public class FolhaPagamentoService {
         holerite.setComissoes(BigDecimal.ZERO);
         holerite.setBonificacoes(BigDecimal.ZERO);
 
-        // Buscar benefícios do colaborador
-        calcularBeneficios(holerite, colaborador, mes, ano);
+        // Aplicar benefícios carregados
+        calcularBeneficios(holerite, beneficios);
     }
 
     /**
      * Calcula benefícios do colaborador
      */
-    private void calcularBeneficios(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano) {
+    private void calcularBeneficios(Holerite holerite, BeneficiosInfo beneficios) {
         // Vale Transporte
-        Optional<ValeTransporte> valeTransporte = valeTransporteRepository
-                .findByColaboradorAndMesReferenciaAndAnoReferencia(colaborador, mes, ano);
-        if (valeTransporte.isPresent() && valeTransporte.get().isAtivo()) {
-            holerite.setValeTransporte(valeTransporte.get().getValorSubsidioEmpresa());
+        if (beneficios.valeTransporte.isPresent() && beneficios.valeTransporte.get().isAtivo()) {
+            holerite.setValeTransporte(beneficios.valeTransporte.get().getValorSubsidioEmpresa());
         } else {
             holerite.setValeTransporte(BigDecimal.ZERO);
         }
 
         // Vale Refeição
-        Optional<ValeRefeicao> valeRefeicao = valeRefeicaoRepository
-                .findByColaboradorAndMesReferenciaAndAnoReferencia(colaborador, mes, ano);
-        if (valeRefeicao.isPresent() && valeRefeicao.get().isAtivo()) {
-            holerite.setValeRefeicao(valeRefeicao.get().getValorSubsidioEmpresa());
+        if (beneficios.valeRefeicao.isPresent() && beneficios.valeRefeicao.get().isAtivo()) {
+            holerite.setValeRefeicao(beneficios.valeRefeicao.get().getValorSubsidioEmpresa());
         } else {
             holerite.setValeRefeicao(BigDecimal.ZERO);
         }
 
         // Auxílio Saúde
-        Optional<AdesaoPlanoSaude> planoSaude = adesaoPlanoSaudeRepository
-                .findAdesaoAtivaByColaborador(colaborador.getId());
-        if (planoSaude.isPresent()) {
-            // Usar o método correto para calcular subsídio da empresa
-            BigDecimal subsidio = planoSaude.get().getValorSubsidioEmpresa();
+        if (beneficios.planoSaude.isPresent()) {
+            BigDecimal subsidio = beneficios.planoSaude.get().getValorSubsidioEmpresa();
             holerite.setAuxilioSaude(subsidio);
         } else {
             holerite.setAuxilioSaude(BigDecimal.ZERO);
@@ -302,7 +363,7 @@ public class FolhaPagamentoService {
     /**
      * Calcula descontos do holerite
      */
-    private void calcularDescontos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano) {
+    private void calcularDescontos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios) {
         BigDecimal salarioBruto = holerite.getSalarioBase().add(holerite.getHorasExtras());
 
         holerite.setDescontoInss(holeriteCalculoService.calcularInssProgressivo(salarioBruto));
@@ -310,8 +371,8 @@ public class FolhaPagamentoService {
         holerite.setDescontoIrrf(holeriteCalculoService.calcularIrrf(baseIrrf, 0));
         holerite.setDescontoFgts(BigDecimal.ZERO);
 
-        // Descontos de benefícios
-        calcularDescontosBeneficios(holerite, colaborador, mes, ano);
+        // Descontos de benefícios com dados já carregados
+        calcularDescontosBeneficios(holerite, colaborador, mes, ano, beneficios);
 
         holerite.setOutrosDescontos(BigDecimal.ZERO);
     }
@@ -319,12 +380,10 @@ public class FolhaPagamentoService {
     /**
      * Calcula descontos de benefícios
      */
-    private void calcularDescontosBeneficios(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano) {
+    private void calcularDescontosBeneficios(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios) {
         // Desconto Vale Transporte
-        Optional<ValeTransporte> valeTransporte = valeTransporteRepository
-                .findByColaboradorAndMesReferenciaAndAnoReferencia(colaborador, mes, ano);
-        if (valeTransporte.isPresent() && valeTransporte.get().isAtivo()) {
-            holerite.setDescontoValeTransporte(valeTransporte.get().getValorDesconto());
+        if (beneficios.valeTransporte.isPresent() && beneficios.valeTransporte.get().isAtivo()) {
+            holerite.setDescontoValeTransporte(beneficios.valeTransporte.get().getValorDesconto());
         } else {
             holerite.setDescontoValeTransporte(BigDecimal.ZERO);
         }
@@ -334,24 +393,39 @@ public class FolhaPagamentoService {
         );
 
         // Desconto Vale Refeição
-        Optional<ValeRefeicao> valeRefeicao = valeRefeicaoRepository
-                .findByColaboradorAndMesReferenciaAndAnoReferencia(colaborador, mes, ano);
-        if (valeRefeicao.isPresent() && valeRefeicao.get().isAtivo()) {
-            holerite.setDescontoValeRefeicao(valeRefeicao.get().getValorDesconto());
+        if (beneficios.valeRefeicao.isPresent() && beneficios.valeRefeicao.get().isAtivo()) {
+            holerite.setDescontoValeRefeicao(beneficios.valeRefeicao.get().getValorDesconto());
         } else {
             holerite.setDescontoValeRefeicao(BigDecimal.ZERO);
         }
 
         // Desconto Plano de Saúde
-        Optional<AdesaoPlanoSaude> planoSaude = adesaoPlanoSaudeRepository
-                .findAdesaoAtivaByColaborador(colaborador.getId());
-        if (planoSaude.isPresent()) {
-            // Usar o método correto para calcular desconto do colaborador
-            BigDecimal desconto = planoSaude.get().getValorDesconto();
+        if (beneficios.planoSaude.isPresent()) {
+            BigDecimal desconto = beneficios.planoSaude.get().getValorDesconto();
             holerite.setDescontoPlanoSaude(desconto);
         } else {
             holerite.setDescontoPlanoSaude(BigDecimal.ZERO);
         }
+    }
+
+    // Estrutura interna para consolidar consultas de benefícios por colaborador
+    private static class BeneficiosInfo {
+        Optional<ValeTransporte> valeTransporte;
+        Optional<ValeRefeicao> valeRefeicao;
+        Optional<AdesaoPlanoSaude> planoSaude;
+
+        BeneficiosInfo(Optional<ValeTransporte> vt, Optional<ValeRefeicao> vr, Optional<AdesaoPlanoSaude> ps) {
+            this.valeTransporte = vt;
+            this.valeRefeicao = vr;
+            this.planoSaude = ps;
+        }
+    }
+
+    private BeneficiosInfo carregarBeneficios(Colaborador colaborador, Integer mes, Integer ano) {
+        Optional<ValeTransporte> vt = valeTransporteRepository.findByColaboradorAndMesReferenciaAndAnoReferencia(colaborador, mes, ano);
+        Optional<ValeRefeicao> vr = valeRefeicaoRepository.findByColaboradorAndMesReferenciaAndAnoReferencia(colaborador, mes, ano);
+        Optional<AdesaoPlanoSaude> ps = adesaoPlanoSaudeRepository.findAdesaoAtivaByColaborador(colaborador.getId());
+        return new BeneficiosInfo(vt, vr, ps);
     }
 
     /**

@@ -18,24 +18,10 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
-        <div th:if="${mensagem}" class="alert alert-success" role="alert">
-          <i class="fas fa-check-circle"></i>
-          <span th:text="${mensagem}"></span>
-        </div>
-        <div th:if="${erro}" class="alert alert-danger" role="alert">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span th:text="${erro}"></span>
-        </div>
+        <!-- Removido bloco duplicado de alerts superiores para evitar conflito visual -->
 
         <div class="alert-container-right">
-          <div th:if="${mensagem}" class="alert alert-success" role="alert">
-            <i class="fas fa-check-circle"></i>
-            <span th:text="${mensagem}"></span>
-          </div>
-          <div th:if="${erro}" class="alert alert-danger" role="alert">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span th:text="${erro}"></span>
-          </div>
+          <!-- Alerts server-side removidos: apenas alertas dinâmicos via JavaScript -->
         </div>
         <h1>Gerar Folha de Pagamento</h1>
 
@@ -45,6 +31,27 @@
             <i id="processamentoAlertIcon" class="fas fa-sync-alt"></i>
             <span id="processamentoStatusText">Processando...</span>
             <small id="processamentoStatusInfo" style="display:block;margin-top:4px"></small>
+            <div style="margin-top:8px">
+              <div class="progress" style="height:16px;background:#eee;border-radius:8px;overflow:hidden">
+                <div id="processamentoProgressBar" class="progress-bar" style="width:0%;background:#0d6efd;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600">
+                  <span id="processamentoProgressBadge">0%</span>
+                </div>
+              </div>
+              <small id="processamentoProgressText" style="display:block;margin-top:6px;color:#555">0% • Processando…</small>
+              <small id="processamentoTempoInfo" style="display:block;margin-top:2px;color:#777"></small>
+            </div>
+            <div style="margin-top:8px; display:flex; align-items:center; gap:8px">
+              <button id="toggleLogsBtn" type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleProcessamentoLogs()">
+                <i class="fas fa-list"></i> Ver detalhes
+              </button>
+              <small style="color:#888">Mensagens de processamento (últimos eventos)</small>
+            </div>
+          </div>
+          <div id="processamentoLogsContainer" class="card" style="display:none; margin-top:8px;">
+            <div style="padding:8px 10px;">
+              <h4 style="font-size:14px; margin:0 0 6px 0; color:#333"><i class="fas fa-stream"></i> Mensagens de Processamento</h4>
+              <div id="processamentoLogsBox" style="max-height:160px; overflow:auto; background:#f8f9fa; border:1px solid #ddd; border-radius:6px; padding:8px; font-size:12px; line-height:1.4; color:#333"></div>
+            </div>
           </div>
           <div class="form-actions">
             <a id="abrirFolhaBtn" href="#" class="btn btn-success" style="display:none;">
@@ -96,9 +103,15 @@
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" th:disabled="${existeFolhaAtual}">
-                <i class="fas fa-cogs"></i> Processar Folha
-              </button>
+              <div style="display:flex;align-items:center;gap:12px">
+                <button type="submit" class="btn btn-primary" th:disabled="${existeFolhaAtual}">
+                  <i class="fas fa-cogs"></i> Processar Folha
+                </button>
+                <div id="processarInlineAlert" class="alert alert-info" role="alert" style="display:none;padding:6px 10px;align-items:center;gap:6px;margin:0">
+                  <i class="fas fa-sync-alt fa-spin"></i>
+                  <span id="processarInlineAlertText"></span>
+                </div>
+              </div>
             </div>
           </form>
         </article>
@@ -317,18 +330,104 @@
     window.podeAcessarRH = [[${podeAcessarRH}?:false]];
   </script>
   <script>
+    // Adiciona botão "X" e auto-hide APENAS nos alerts dinâmicos do container direito
+    function enhanceAlerts() {
+      const container = document.querySelector('.alert-container-right');
+      if (!container) return;
+      container.querySelectorAll('.alert').forEach(a => {
+        // Adiciona botão de fechar se não existir
+        if (!a.querySelector('.alert-close-x')) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'alert-close-x';
+          btn.setAttribute('aria-label', 'Fechar');
+          btn.innerHTML = '&times;';
+          btn.style.cssText = 'float:right;background:transparent;border:none;font-size:18px;line-height:1;color:#000;opacity:.6;cursor:pointer;margin-left:8px';
+          btn.onclick = () => { a.remove(); };
+          a.insertAdjacentElement('afterbegin', btn);
+        }
+        // Auto-esconde após 4 segundos
+        if (!a.dataset.autohideBound) {
+          a.dataset.autohideBound = '1';
+          setTimeout(() => { if (a.isConnected) a.remove(); }, 4000);
+        }
+      });
+    }
+    document.addEventListener('DOMContentLoaded', enhanceAlerts);
+
+    // Deduplicação simples de mensagens para evitar alerts repetidos em curto intervalo
+    const recentAlerts = new Map(); // texto -> timestamp
     function mostrarAlerta(tipo, texto) {
       const container = document.querySelector('.alert-container-right');
       if (!container) return;
+      const now = Date.now();
+      const last = recentAlerts.get(texto);
+      if (last && (now - last) < 2500) {
+        // Ignora duplicata recente
+        return;
+      }
+      recentAlerts.set(texto, now);
       const el = document.createElement('div');
       el.className = `alert alert-${tipo}`;
       el.setAttribute('role', 'alert');
-      el.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> <span>${texto}</span>`;
+      const icon = tipo === 'success' ? 'fa-check-circle' : (tipo === 'warning' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle');
+      // inclui botão de fechar "X" e escapa o texto
+      const safeText = escapeHtml(String(texto ?? ''));
+      el.innerHTML = `<button type="button" class="alert-close-x" aria-label="Fechar" style="float:right;background:transparent;border:none;font-size:18px;line-height:1;color:#000;opacity:.6;cursor:pointer;margin-left:8px" onclick="this.closest('.alert').remove()">&times;</button>` +
+                     `<i class="fas ${icon}"></i> <span>${safeText}</span>`;
       container.prepend(el);
-      setTimeout(() => { el.remove(); }, 8000);
+      // auto-esconde em 4 segundos
+      setTimeout(() => { if (el.isConnected) el.remove(); }, 4000);
     }
     let processamentoInterval = null;
     let processamentoJobId = null;
+    let processamentoStartAt = null;
+    let processamentoEndAt = null;
+    let processamentoMesRef = null;
+    let processamentoAnoRef = null;
+    let processarBtnEl = null;
+    let processarBtnOriginalHtml = null;
+    // Progresso fake até termos dados reais
+    let fakeProgressInterval = null;
+    let fakeProgressPct = 0;
+    let hasRealProgress = false;
+    // Inline alert ao lado do botão
+    function showInlineLoadingAlert(text = 'Status de Processamento') {
+      const box = document.getElementById('processarInlineAlert');
+      const span = document.getElementById('processarInlineAlertText');
+      if (!box || !span) return;
+      span.textContent = text;
+      box.className = 'alert alert-info';
+      box.style.display = 'inline-flex';
+    }
+    function updateInlineLoadingAlert(text) {
+      const span = document.getElementById('processarInlineAlertText');
+      const box = document.getElementById('processarInlineAlert');
+      if (!span || !box || box.style.display === 'none') return;
+      span.textContent = text;
+    }
+    function hideInlineLoadingAlert() {
+      const box = document.getElementById('processarInlineAlert');
+      if (box) box.style.display = 'none';
+    }
+    function startFakeProgress(maxCap = 85) {
+      stopFakeProgress();
+      fakeProgressPct = 0;
+      fakeProgressInterval = setInterval(() => {
+        if (hasRealProgress) { stopFakeProgress(); return; }
+        fakeProgressPct = Math.min(maxCap, fakeProgressPct + 1.5); // ~1.5% por tick
+        const progressBar = document.getElementById('processamentoProgressBar');
+        const progressText = document.getElementById('processamentoProgressText');
+        const progressBadge = document.getElementById('processamentoProgressBadge');
+        if (progressBar) progressBar.style.width = fakeProgressPct + '%';
+        if (progressBadge) progressBadge.textContent = `${Math.floor(fakeProgressPct)}%`;
+        if (progressText) progressText.textContent = `${Math.floor(fakeProgressPct)}% • Processando…`;
+        updateInlineLoadingAlert(`Status de Processamento • ${Math.floor(fakeProgressPct)}%`);
+      }, 200);
+    }
+    function stopFakeProgress() {
+      if (fakeProgressInterval) { clearInterval(fakeProgressInterval); fakeProgressInterval = null; }
+    }
     function mostrarStatusCard(show) {
       const card = document.getElementById('processamentoStatusCard');
       card.style.display = show ? 'block' : 'none';
@@ -339,6 +438,11 @@
       const abrirBtn = document.getElementById('abrirFolhaBtn');
       const alertBox = document.getElementById('processamentoAlert');
       const alertIcon = document.getElementById('processamentoAlertIcon');
+      const progressBar = document.getElementById('processamentoProgressBar');
+      const progressText = document.getElementById('processamentoProgressText');
+      const progressBadge = document.getElementById('processamentoProgressBadge');
+      const tempoInfo = document.getElementById('processamentoTempoInfo');
+      const logsBox = document.getElementById('processamentoLogsBox');
       const status = (data && data.status) ? data.status : 'DESCONHECIDO';
       statusText.textContent = status;
       statusInfo.textContent = (data && data.message) ? data.message : '';
@@ -354,6 +458,85 @@
       } else {
         abrirBtn.style.display = 'none';
       }
+
+      // Progresso e tempo
+      const total = (data && typeof data.total === 'number') ? data.total : null;
+      const processed = (data && typeof data.processed === 'number') ? data.processed : null;
+      const pct = (data && typeof data.progressPct === 'number') ? data.progressPct : null;
+      const lastFlushMs = (data && typeof data.lastFlushMs === 'number') ? data.lastFlushMs : null;
+      const elapsedMs = (data && typeof data.elapsedMs === 'number') ? data.elapsedMs : null;
+      const etaMs = (data && typeof data.etaMs === 'number') ? data.etaMs : null;
+      // Determina pct a exibir: real se existir, senão fake
+      let displayPct = pct;
+      if (typeof pct === 'number') {
+        hasRealProgress = true;
+      } else if (!hasRealProgress) {
+        displayPct = Math.floor(fakeProgressPct);
+      }
+      if (status === 'CONCLUIDO') {
+        displayPct = 100;
+      }
+      if (progressBar && displayPct != null) {
+        const p = Math.max(0, Math.min(100, displayPct));
+        progressBar.style.width = p + '%';
+      }
+      if (progressBadge && displayPct != null) {
+        progressBadge.textContent = `${Math.floor(displayPct)}%`;
+      }
+      if (progressText) {
+        if (processed != null && total != null && typeof pct === 'number') {
+          progressText.textContent = `${Math.floor(displayPct)}% • ${processed}/${total} processados`;
+          updateInlineLoadingAlert(`Status de Processamento • ${Math.floor(displayPct)}% (${processed}/${total})`);
+        } else {
+          progressText.textContent = `${Math.floor(displayPct || 0)}% • Processando…`;
+          updateInlineLoadingAlert(`Status de Processamento • ${Math.floor(displayPct || 0)}%`);
+        }
+      }
+      if (tempoInfo) {
+        let texto = '';
+        if (elapsedMs != null) {
+          texto += `Tempo decorrido: ${(elapsedMs/1000).toFixed(1)}s`;
+        }
+        // taxa média de processamento
+        if (processed != null && elapsedMs != null && elapsedMs > 0) {
+          const rate = processed / (elapsedMs/1000);
+          texto += texto ? ' • ' : '';
+          texto += `Itens/s: ${rate.toFixed(1)}`;
+        }
+        if (etaMs != null && etaMs >= 0) {
+          texto += texto ? ' • ' : '';
+          texto += `Estimado restante: ${(etaMs/1000).toFixed(1)}s`;
+        }
+        if (lastFlushMs != null) {
+          texto += texto ? ' • ' : '';
+          texto += `Último flush: ${lastFlushMs} ms`;
+        }
+        tempoInfo.textContent = texto;
+      }
+
+      // Renderizar logs em tempo real
+      if (logsBox && data && Array.isArray(data.logs)) {
+        const html = data.logs.map(l => `<div>${escapeHtml(l)}</div>`).join('');
+        logsBox.innerHTML = html;
+        // Auto-scroll para o final
+        logsBox.scrollTop = logsBox.scrollHeight;
+      }
+    }
+    function toggleProcessamentoLogs() {
+      const cont = document.getElementById('processamentoLogsContainer');
+      const btn = document.getElementById('toggleLogsBtn');
+      if (!cont || !btn) return;
+      const show = cont.style.display === 'none';
+      cont.style.display = show ? 'block' : 'none';
+      btn.innerHTML = show ? '<i class="fas fa-list"></i> Ocultar detalhes' : '<i class="fas fa-list"></i> Ver detalhes';
+    }
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
     }
     async function pollStatus() {
       if (!processamentoJobId) return;
@@ -362,13 +545,77 @@
         const data = await r.json();
         atualizarStatusUI(data);
         if (data.status === 'CONCLUIDO') {
+          // Garante que o card de status permaneça visível no sucesso
+          mostrarStatusCard(true);
+          // Abre automaticamente o container de logs e ajusta o texto do botão
+          const cont = document.getElementById('processamentoLogsContainer');
+          const btn = document.getElementById('toggleLogsBtn');
+          if (cont) cont.style.display = 'block';
+          if (btn) btn.innerHTML = '<i class="fas fa-list"></i> Ocultar detalhes';
           mostrarAlerta('success', 'Folha processada com sucesso.');
+          processamentoEndAt = performance.now();
+          const durationMs = processamentoStartAt ? (processamentoEndAt - processamentoStartAt) : null;
+          try {
+            const metrics = {
+              jobId: processamentoJobId,
+              folhaId: data.folhaId || null,
+              status: data.status,
+              mes: processamentoMesRef,
+              ano: processamentoAnoRef,
+              durationMs: durationMs != null ? Math.round(durationMs) : null,
+              startedAt: window.processamentoStartIso || null,
+              endedAt: new Date().toISOString(),
+              userAgent: navigator.userAgent
+            };
+            console.log(`[Métricas Folha] Tempo total ${(durationMs/1000).toFixed(2)}s | mes=${processamentoMesRef}/${processamentoAnoRef} | jobId=${processamentoJobId} | folhaId=${data.folhaId ?? '-'}`);
+            fetch('/rh/folha-pagamento/metrics/processamento', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(metrics)
+            }).catch(() => {});
+          } catch (_) {}
           clearInterval(processamentoInterval);
           processamentoInterval = null;
+          // Finaliza progresso fake e restaura botão
+          stopFakeProgress();
+          hideInlineLoadingAlert();
+          if (processarBtnEl) {
+            processarBtnEl.disabled = false;
+            if (processarBtnOriginalHtml) processarBtnEl.innerHTML = processarBtnOriginalHtml;
+          }
         } else if (data.status === 'ERRO') {
           mostrarAlerta('danger', 'Erro no processamento: ' + (data.message || ''));
+          processamentoEndAt = performance.now();
+          const durationMs = processamentoStartAt ? (processamentoEndAt - processamentoStartAt) : null;
+          try {
+            const metrics = {
+              jobId: processamentoJobId,
+              folhaId: data.folhaId || null,
+              status: data.status,
+              mes: processamentoMesRef,
+              ano: processamentoAnoRef,
+              durationMs: durationMs != null ? Math.round(durationMs) : null,
+              startedAt: window.processamentoStartIso || null,
+              endedAt: new Date().toISOString(),
+              userAgent: navigator.userAgent,
+              errorMessage: data.message || null
+            };
+            console.log(`[Métricas Folha] ERRO após ${(durationMs/1000).toFixed(2)}s | mes=${processamentoMesRef}/${processamentoAnoRef} | jobId=${processamentoJobId}`);
+            fetch('/rh/folha-pagamento/metrics/processamento', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(metrics)
+            }).catch(() => {});
+          } catch (_) {}
           clearInterval(processamentoInterval);
           processamentoInterval = null;
+          // Finaliza progresso fake e mantém botão desativado conforme fluxo solicitado
+          stopFakeProgress();
+          hideInlineLoadingAlert();
+          if (processarBtnEl) {
+            processarBtnEl.disabled = true;
+            if (processarBtnOriginalHtml) processarBtnEl.innerHTML = processarBtnOriginalHtml;
+          }
         }
       } catch (e) {
         clearInterval(processamentoInterval);
@@ -382,9 +629,16 @@
       const ano = document.getElementById('anoReferencia').value;
       const btn = form.querySelector('button[type="submit"]');
       const original = btn.innerHTML;
+      processarBtnEl = btn;
+      processarBtnOriginalHtml = original;
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+      showInlineLoadingAlert('Status de Processamento • 0%');
       try {
+        processamentoStartAt = performance.now();
+        processamentoMesRef = mes;
+        processamentoAnoRef = ano;
+        window.processamentoStartIso = new Date().toISOString();
         const res = await fetch('/rh/folha-pagamento/processar-async', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -395,17 +649,23 @@
           processamentoJobId = data.jobId;
           mostrarStatusCard(true);
           atualizarStatusUI({ status: 'AGENDADO', message: 'Processamento agendado' });
-          mostrarAlerta('success', 'Processamento da folha iniciado. Acompanhe o status abaixo.');
+          // Inicia progresso fake até termos dados reais do backend
+          hasRealProgress = false;
+          startFakeProgress(85);
           if (processamentoInterval) clearInterval(processamentoInterval);
-          processamentoInterval = setInterval(pollStatus, 3000);
+          processamentoInterval = setInterval(pollStatus, 1000);
+          // Mantém o botão desativado até concluir ou erro
         } else {
           mostrarAlerta('danger', 'Não foi possível iniciar o processamento.');
+          btn.disabled = false;
+          btn.innerHTML = original;
+          hideInlineLoadingAlert();
         }
       } catch {
         mostrarAlerta('danger', 'Erro ao iniciar processamento.');
-      } finally {
         btn.disabled = false;
         btn.innerHTML = original;
+        hideInlineLoadingAlert();
       }
       return false;
     }

@@ -31,6 +31,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.http.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -41,6 +43,8 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/rh/folha-pagamento")
 public class FolhaPagamentoController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FolhaPagamentoController.class);
 
     @Autowired
     private FolhaPagamentoService folhaPagamentoService;
@@ -198,6 +202,41 @@ public class FolhaPagamentoController {
     public ResponseEntity<java.util.Map<String, Object>> statusProcessamento(@RequestParam String jobId) {
         java.util.Map<String, Object> status = folhaPagamentoService.obterStatusProcessamento(jobId);
         return ResponseEntity.ok(status);
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
+    @PostMapping(value = "/metrics/processamento", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Void> registrarMetricas(@RequestBody java.util.Map<String, Object> body) {
+        String jobId = String.valueOf(body.getOrDefault("jobId", ""));
+        Object folhaId = body.get("folhaId");
+        String status = String.valueOf(body.getOrDefault("status", ""));
+        String mes = String.valueOf(body.getOrDefault("mes", ""));
+        String ano = String.valueOf(body.getOrDefault("ano", ""));
+        Object durationMsObj = body.get("durationMs");
+        Long durationMs = null;
+        try { if (durationMsObj != null) durationMs = Long.valueOf(String.valueOf(durationMsObj)); } catch (Exception ignored) {}
+        String startedAt = String.valueOf(body.getOrDefault("startedAt", ""));
+        String endedAt = String.valueOf(body.getOrDefault("endedAt", ""));
+        String userAgent = String.valueOf(body.getOrDefault("userAgent", ""));
+        String errMsg = String.valueOf(body.getOrDefault("errorMessage", ""));
+
+        String msg = String.format(
+                "Métricas Folha [jobId=%s, folhaId=%s, ref=%s/%s, status=%s] Tempo total=%.2fs (durationMs=%s) start=%s end=%s UA=%s%s",
+                jobId,
+                folhaId,
+                mes,
+                ano,
+                status,
+                durationMs != null ? (durationMs / 1000.0) : -1.0,
+                String.valueOf(durationMs),
+                startedAt,
+                endedAt,
+                userAgent,
+                (errMsg != null && !errMsg.isBlank() ? (" | error=" + errMsg) : "")
+        );
+        logger.info(msg);
+        return ResponseEntity.accepted().build();
     }
 
     /**

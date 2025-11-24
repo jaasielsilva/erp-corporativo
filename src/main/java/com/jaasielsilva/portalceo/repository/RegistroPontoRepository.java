@@ -97,5 +97,58 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
 
     // Buscar os últimos registros ordenados por data de criação
     List<RegistroPonto> findTop10ByOrderByDataCriacaoDesc();
-    
+
+    /**
+     * Projeção agregada para resumo mensal de ponto por colaborador
+     */
+    public static interface PontoResumoProjection {
+        Long getFaltas();
+        Long getAtrasos();
+        Long getMinutosTrabalhados();
+        Long getMinutosExtras();
+        Long getDiasComRegistro();
+    }
+
+    /**
+     * Projeção agregada mensal de ponto agrupada por colaborador, herdando o resumo base
+     */
+    public static interface PontoResumoPorColaboradorProjection extends PontoResumoProjection {
+        Long getColaboradorId();
+    }
+
+    /**
+     * Consulta única agregada para reduzir múltiplas queries por colaborador
+     */
+    @Query("SELECT " +
+           "SUM(CASE WHEN r.falta = true THEN 1 ELSE 0 END) AS faltas, " +
+           "SUM(CASE WHEN r.minutosAtraso > 0 THEN 1 ELSE 0 END) AS atrasos, " +
+           "SUM(r.totalMinutosTrabalhados) AS minutosTrabalhados, " +
+           "SUM(r.minutosHoraExtra) AS minutosExtras, " +
+           "COUNT(DISTINCT r.data) AS diasComRegistro " +
+           "FROM RegistroPonto r WHERE r.colaborador.id = :colaboradorId " +
+           "AND r.data BETWEEN :dataInicio AND :dataFim")
+    PontoResumoProjection aggregateResumoByColaboradorAndPeriodo(
+            @Param("colaboradorId") Long colaboradorId,
+            @Param("dataInicio") LocalDate dataInicio,
+            @Param("dataFim") LocalDate dataFim
+    );
+
+    /**
+     * Consulta única para o período, agregando por colaborador (reduz N consultas para 1)
+     */
+    @Query("SELECT " +
+           "r.colaborador.id AS colaboradorId, " +
+           "SUM(CASE WHEN r.falta = true THEN 1 ELSE 0 END) AS faltas, " +
+           "SUM(CASE WHEN r.minutosAtraso > 0 THEN 1 ELSE 0 END) AS atrasos, " +
+           "SUM(r.totalMinutosTrabalhados) AS minutosTrabalhados, " +
+           "SUM(r.minutosHoraExtra) AS minutosExtras, " +
+           "COUNT(DISTINCT r.data) AS diasComRegistro " +
+           "FROM RegistroPonto r " +
+           "WHERE r.data BETWEEN :dataInicio AND :dataFim " +
+           "GROUP BY r.colaborador.id")
+    List<PontoResumoPorColaboradorProjection> aggregateResumoPorPeriodoGroupByColaborador(
+            @Param("dataInicio") LocalDate dataInicio,
+            @Param("dataFim") LocalDate dataFim
+    );
+
 }

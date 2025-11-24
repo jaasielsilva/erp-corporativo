@@ -37,8 +37,77 @@
           </button>
         </div>
 
+        <article class="card">
+          <h3><i class="fas fa-list"></i> Escalas Vigentes</h3>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Tipo</th>
+                  <th>Dias</th>
+                  <th>Carga Diária</th>
+                  <th>Vigência</th>
+                  <th>Ativo</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="e : ${escalasVigentes}">
+                  <td th:text="${e.nome}"></td>
+                  <td th:text="${e.getTipoDescricao()}"></td>
+                  <td th:text="${e.getDiasTrabalhados()}"></td>
+                  <td th:text="${e.getCargaHorariaDiariaFormatada()}"></td>
+                  <td>
+                    <span th:text="${e.dataVigenciaInicio}"></span>
+                    <span> - </span>
+                    <span th:text="${e.dataVigenciaFim}"></span>
+                  </td>
+                  <td>
+                    <span th:text="${e.ativo} ? 'Sim' : 'Não'"></span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-primary" th:attr="data-id=${e.id}" onclick="editarEscala(this)"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger" th:attr="data-id=${e.id}" onclick="encerrarVigencia(this)"><i class="fas fa-stop"></i></button>
+                    <button class="btn btn-sm btn-secondary" th:attr="data-id=${e.id}" onclick="clonarEscala(this)"><i class="fas fa-clone"></i></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
         <!-- Seletor de Período -->
-        
+        <article class="card">
+          <h3><i class="fas fa-filter"></i> Filtros</h3>
+          <div class="row">
+            <div class="col">
+              <label>Departamento</label>
+              <select id="filtroDepartamento" class="form-control">
+                <option value="">Todos</option>
+                <option th:each="d : ${departamentos}" th:value="${d.id}" th:text="${d.nome}"></option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Escala</label>
+              <select id="filtroEscala" class="form-control">
+                <option value="">Todas</option>
+                <option th:each="e : ${escalasVigentes}" th:value="${e.id}" th:text="${e.nome}"></option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Mês</label>
+              <input type="number" id="filtroMes" min="1" max="12" class="form-control" th:value="${mesAtual}" />
+            </div>
+            <div class="col">
+              <label>Ano</label>
+              <input type="number" id="filtroAno" min="2000" max="2100" class="form-control" th:value="${anoAtual}" />
+            </div>
+            <div class="col">
+              <button class="btn btn-primary" style="margin-top:24px" onclick="carregarCalendario()"><i class="fas fa-search"></i> Atualizar</button>
+            </div>
+          </div>
+        </article>
 
         <!-- Resumo da Escala -->
         <article class="card">
@@ -94,14 +163,14 @@
 
         <!-- Calendário de Escalas -->
         <article class="card">
-          <h3><i class="fas fa-calendar-alt"></i> Calendário de Escalas - Novembro 2023</h3>
+          <h3><i class="fas fa-calendar-alt"></i> Calendário de Escalas - <span id="calTitulo">Mês/Ano</span></h3>
           <div class="calendario-escala">
             <div class="calendario-header">
               <button onclick="mesAnterior()" class="btn-nav" title="Mês anterior" aria-label="Mês anterior">
                 <i class="fas fa-chevron-left"></i>
                 <span class="sr-only" style="position:absolute;left:-9999px;">Mês anterior</span>
               </button>
-              <h4>Novembro 2023</h4>
+              <h4 id="calSubtitulo">-</h4>
               <button onclick="proximoMes()" class="btn-nav" title="Próximo mês" aria-label="Próximo mês">
                 <i class="fas fa-chevron-right"></i>
                 <span class="sr-only" style="position:absolute;left:-9999px;">Próximo mês</span>
@@ -119,114 +188,154 @@
                 <div class="dia-semana">Sáb</div>
               </div>
               
-              <div class="calendario-dias" id="calendarioDias">
-                <!-- Dias do mês -->
-                <div class="dia-calendario dia-outro-mes">29</div>
-                <div class="dia-calendario dia-outro-mes">30</div>
-                <div class="dia-calendario dia-outro-mes">31</div>
-                <div class="dia-calendario" onclick="verDetalheDia(1)">1
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(2)">2
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(3)">3
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(4)">4
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 2</span>
-                  </div>
-                </div>
-                
-                <!-- Semana 2 -->
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(5)">5
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 2</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(6)">6
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(7)">7
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(8)">8
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(9)">9
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(10)">10
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(11)">11
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 2</span>
-                  </div>
-                </div>
-                
-                <!-- Continuar com mais dias... -->
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(12)">12</div>
-                <div class="dia-calendario" onclick="verDetalheDia(13)">13</div>
-                <div class="dia-calendario" onclick="verDetalheDia(14)">14</div>
-                <div class="dia-calendario feriado" onclick="verDetalheDia(15)">15
-                  <div class="feriado-label">Proclamação</div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(16)">16</div>
-                <div class="dia-calendario" onclick="verDetalheDia(17)">17</div>
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(18)">18</div>
-                
-                <!-- Mais dias... -->
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(19)">19</div>
-                <div class="dia-calendario" onclick="verDetalheDia(20)">20</div>
-                <div class="dia-calendario" onclick="verDetalheDia(21)">21</div>
-                <div class="dia-calendario" onclick="verDetalheDia(22)">22</div>
-                <div class="dia-calendario" onclick="verDetalheDia(23)">23</div>
-                <div class="dia-calendario" onclick="verDetalheDia(24)">24</div>
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(25)">25</div>
-                
-                <!-- Última semana -->
-                <div class="dia-calendario fim-semana" onclick="verDetalheDia(26)">26</div>
-                <div class="dia-calendario" onclick="verDetalheDia(27)">27</div>
-                <div class="dia-calendario" onclick="verDetalheDia(28)">28</div>
-                <div class="dia-calendario hoje" onclick="verDetalheDia(29)">29
-                  <div class="escalas-dia">
-                    <span class="escala-turno manha">M: 5</span>
-                    <span class="escala-turno tarde">T: 3</span>
-                  </div>
-                </div>
-                <div class="dia-calendario" onclick="verDetalheDia(30)">30</div>
-                <div class="dia-calendario dia-outro-mes">1</div>
-                <div class="dia-calendario dia-outro-mes">2</div>
-              </div>
+              <div class="calendario-dias" id="calendarioDias"></div>
             </div>
           </div>
         </article>
+
+        <div class="modal" id="modalEscala" style="display:none;">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 id="modalEscalaTitulo">Nova Escala</h5>
+              <button class="btn btn-close" onclick="fecharModalEscala()">×</button>
+            </div>
+            <div class="modal-body">
+              <form id="formEscala">
+                <input type="hidden" name="id" id="escalaId" />
+                <div class="row">
+                  <div class="col">
+                    <label>Nome</label>
+                    <input type="text" name="nome" id="escalaNome" class="form-control" />
+                  </div>
+                  <div class="col">
+                    <label>Tipo</label>
+                    <select name="tipo" id="escalaTipo" class="form-control" th:field="*{tipo}" th:remove="tag">
+                      <option th:each="t : ${T(com.jaasielsilva.portalceo.model.EscalaTrabalho$TipoEscala).values()}" th:value="${t}" th:text="${t}"></option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <label>Entrada 1</label>
+                    <input type="time" name="horarioEntrada1" id="entrada1" class="form-control" />
+                  </div>
+                  <div class="col">
+                    <label>Saída 1</label>
+                    <input type="time" name="horarioSaida1" id="saida1" class="form-control" />
+                  </div>
+                  <div class="col">
+                    <label>Entrada 2</label>
+                    <input type="time" name="horarioEntrada2" id="entrada2" class="form-control" />
+                  </div>
+                  <div class="col">
+                    <label>Saída 2</label>
+                    <input type="time" name="horarioSaida2" id="saida2" class="form-control" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <label>Intervalo Mínimo (min)</label>
+                    <input type="number" name="intervaloMinimo" id="intervaloMinimo" class="form-control" />
+                  </div>
+                  <div class="col">
+                    <label>Vigência Início</label>
+                    <input type="date" name="dataVigenciaInicio" id="vigenciaInicio" class="form-control" />
+                  </div>
+                  <div class="col">
+                    <label>Vigência Fim</label>
+                    <input type="date" name="dataVigenciaFim" id="vigenciaFim" class="form-control" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <label>Tolerância Atraso</label>
+                    <select name="toleranciaAtraso" id="toleranciaAtraso" class="form-control">
+                      <option value="true">Sim</option>
+                      <option value="false">Não</option>
+                    </select>
+                  </div>
+                  <div class="col">
+                    <label>Minutos Tolerância</label>
+                    <input type="number" name="minutosTolerancia" id="minutosTolerancia" class="form-control" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <label>Dias Trabalhados</label>
+                    <div class="dias-grid">
+                      <label><input type="checkbox" id="dSeg" checked /> Seg</label>
+                      <label><input type="checkbox" id="dTer" checked /> Ter</label>
+                      <label><input type="checkbox" id="dQua" checked /> Qua</label>
+                      <label><input type="checkbox" id="dQui" checked /> Qui</label>
+                      <label><input type="checkbox" id="dSex" checked /> Sex</label>
+                      <label><input type="checkbox" id="dSab" /> Sáb</label>
+                      <label><input type="checkbox" id="dDom" /> Dom</label>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" onclick="fecharModalEscala()">Cancelar</button>
+              <button class="btn btn-primary" onclick="salvarEscala()">Salvar</button>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          function abrirModalEscala() {
+            document.getElementById('modalEscalaTitulo').innerText = 'Nova Escala';
+            document.getElementById('formEscala').reset();
+            document.getElementById('modalEscala').style.display = 'block';
+          }
+          function fecharModalEscala() {
+            document.getElementById('modalEscala').style.display = 'none';
+          }
+          function editarEscala(btn) {
+            var id = btn.getAttribute('data-id');
+            document.getElementById('escalaId').value = id;
+            document.getElementById('modalEscalaTitulo').innerText = 'Editar Escala';
+            document.getElementById('modalEscala').style.display = 'block';
+          }
+          async function salvarEscala() {
+            var payload = {
+              id: document.getElementById('escalaId').value || null,
+              nome: document.getElementById('escalaNome').value,
+              tipo: document.getElementById('escalaTipo').value,
+              horarioEntrada1: document.getElementById('entrada1').value,
+              horarioSaida1: document.getElementById('saida1').value,
+              horarioEntrada2: document.getElementById('entrada2').value || null,
+              horarioSaida2: document.getElementById('saida2').value || null,
+              intervaloMinimo: parseInt(document.getElementById('intervaloMinimo').value || '0'),
+              dataVigenciaInicio: document.getElementById('vigenciaInicio').value || null,
+              dataVigenciaFim: document.getElementById('vigenciaFim').value || null,
+              toleranciaAtraso: document.getElementById('toleranciaAtraso').value === 'true',
+              minutosTolerancia: parseInt(document.getElementById('minutosTolerancia').value || '0'),
+              trabalhaSegunda: document.getElementById('dSeg').checked,
+              trabalhaTerca: document.getElementById('dTer').checked,
+              trabalhaQuarta: document.getElementById('dQua').checked,
+              trabalhaQuinta: document.getElementById('dQui').checked,
+              trabalhaSexta: document.getElementById('dSex').checked,
+              trabalhaSabado: document.getElementById('dSab').checked,
+              trabalhaDomingo: document.getElementById('dDom').checked
+            };
+            var r = await fetch('/rh/ponto-escalas/api/escalas/salvar', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+            var j = await r.json();
+            if (j.success) { location.reload(); }
+          }
+          async function encerrarVigencia(btn) {
+            var id = btn.getAttribute('data-id');
+            var r = await fetch('/rh/ponto-escalas/api/escalas/encerrar', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id: id})});
+            var j = await r.json();
+            if (j.success) { location.reload(); }
+          }
+          async function clonarEscala(btn) {
+            var id = btn.getAttribute('data-id');
+            var r = await fetch('/rh/ponto-escalas/api/escalas/clonar', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id: id})});
+            var j = await r.json();
+            if (j.success) { location.reload(); }
+          }
+        </script>
 
         <!-- Lista de Colaboradores por Turno -->
         <article class="card">

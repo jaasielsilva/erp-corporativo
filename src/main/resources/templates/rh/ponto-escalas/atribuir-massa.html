@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atribuição em Massa - Escalas</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+      <section class="content-area">
+        <h1>Atribuição em Massa de Escalas</h1>
+        <article class="card">
+          <h3><i class="fas fa-users-cog"></i> Parâmetros</h3>
+          <div class="row">
+            <div class="col">
+              <label>Escala</label>
+              <select id="escalaId" class="form-control">
+                <option th:each="e : ${escalasVigentes}" th:value="${e.id}" th:text="${e.nome}"></option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Início</label>
+              <input type="date" id="dataInicio" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Fim</label>
+              <input type="date" id="dataFim" class="form-control" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>Colaboradores Ativos</label>
+              <div class="list-box" style="max-height:300px;overflow:auto;border:1px solid #ddd;padding:8px;">
+                <div th:each="c : ${colaboradoresAtivos}">
+                  <label>
+                    <input type="checkbox" class="col-check" th:value="${c.id}" />
+                    <span th:text="${c.nome}"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <button class="btn btn-primary" onclick="atribuirMassa()"><i class="fas fa-check"></i> Atribuir</button>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+  <script>
+    async function atribuirMassa() {
+      var escalaId = document.getElementById('escalaId').value;
+      var dataInicio = document.getElementById('dataInicio').value;
+      var dataFim = document.getElementById('dataFim').value;
+      var ids = Array.from(document.querySelectorAll('.col-check:checked')).map(function(i){ return parseInt(i.value); });
+      var r = await fetch('/rh/ponto-escalas/api/atribuir-massa', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({escalaId: parseInt(escalaId), dataInicio: dataInicio, dataFim: dataFim || null, colaboradorIds: ids})});
+      var j = await r.json();
+      if (j.success) { alert('Processados: ' + j.processados); }
+    }
+  </script>
+</body>
+</html>

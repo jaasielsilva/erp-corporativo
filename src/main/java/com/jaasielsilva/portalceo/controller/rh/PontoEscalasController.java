@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.controller.rh;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.RegistroPonto;
 import com.jaasielsilva.portalceo.model.ColaboradorEscala;
+import com.jaasielsilva.portalceo.model.EscalaTrabalho;
 import com.jaasielsilva.portalceo.repository.ColaboradorEscalaRepository;
 import com.jaasielsilva.portalceo.repository.RegistroPontoRepository;
 import com.jaasielsilva.portalceo.repository.EscalaTrabalhoRepository;
@@ -71,6 +72,212 @@ public class PontoEscalasController {
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("escalasVigentes", escalaTrabalhoRepository.findEscalasVigentes(LocalDate.now()));
         return "rh/ponto-escalas/escalas";
+    }
+
+    @GetMapping("/atribuir-massa")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public String paginaAtribuirMassa(Model model) {
+        model.addAttribute("departamentos", departamentoService.listarTodos());
+        model.addAttribute("escalasVigentes", escalaTrabalhoRepository.findEscalasVigentes(LocalDate.now()));
+        model.addAttribute("colaboradoresAtivos", colaboradorService.listarAtivos());
+        return "rh/ponto-escalas/atribuir-massa";
+    }
+
+    @PostMapping("/api/atribuir-massa")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> atribuirMassa(@RequestBody Map<String, Object> payload) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long escalaId = Long.valueOf(String.valueOf(payload.get("escalaId")));
+            EscalaTrabalho escala = escalaTrabalhoRepository.findById(escalaId).orElse(null);
+            if (escala == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return resp;
+            }
+            LocalDate dataInicio = LocalDate.parse(String.valueOf(payload.get("dataInicio")));
+            Object dfObj = payload.get("dataFim");
+            LocalDate dataFim = dfObj != null && !String.valueOf(dfObj).isBlank() ? LocalDate.parse(String.valueOf(dfObj)) : null;
+            @SuppressWarnings("unchecked")
+            List<Integer> ids = (List<Integer>) payload.get("colaboradorIds");
+            if (ids == null || ids.isEmpty()) {
+                resp.put("success", false);
+                resp.put("message", "Nenhum colaborador informado");
+                return resp;
+            }
+
+            List<Long> processed = new ArrayList<>();
+            for (Integer i : ids) {
+                Long colId = Long.valueOf(i);
+                List<ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigenteByColaboradorAndData(colId, dataInicio);
+                for (ColaboradorEscala ce : vigentes) {
+                    LocalDate fim = dataInicio.minusDays(1);
+                    ce.setDataFim(fim);
+                    colaboradorEscalaRepository.save(ce);
+                }
+                ColaboradorEscala novo = new ColaboradorEscala();
+                Colaborador col = colaboradorService.findById(colId);
+                novo.setColaborador(col);
+                novo.setEscalaTrabalho(escala);
+                novo.setDataInicio(dataInicio);
+                novo.setDataFim(dataFim);
+                novo.setAtivo(true);
+                colaboradorEscalaRepository.save(novo);
+                processed.add(colId);
+            }
+            resp.put("success", true);
+            resp.put("processados", processed.size());
+            return resp;
+        } catch (Exception ex) {
+            resp.put("success", false);
+            resp.put("message", "Erro na atribuição em massa");
+            return resp;
+        }
+    }
+
+    @PostMapping("/api/escalas/salvar")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> salvarEscala(@RequestBody Map<String, Object> payload) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            EscalaTrabalho e;
+            Object idObj = payload.get("id");
+            if (idObj != null && !String.valueOf(idObj).isBlank()) {
+                Long id = Long.valueOf(String.valueOf(idObj));
+                e = escalaTrabalhoRepository.findById(id).orElseGet(EscalaTrabalho::new);
+                e.setId(id);
+            } else {
+                e = new EscalaTrabalho();
+            }
+
+            e.setNome(String.valueOf(payload.get("nome")));
+            e.setDescricao(null);
+            String tipo = String.valueOf(payload.get("tipo"));
+            e.setTipo(EscalaTrabalho.TipoEscala.valueOf(tipo));
+
+            String entrada1 = String.valueOf(payload.get("horarioEntrada1"));
+            String saida1 = String.valueOf(payload.get("horarioSaida1"));
+            String entrada2 = String.valueOf(payload.getOrDefault("horarioEntrada2", null));
+            String saida2 = String.valueOf(payload.getOrDefault("horarioSaida2", null));
+
+            e.setHorarioEntrada1(LocalTime.parse(entrada1));
+            e.setHorarioSaida1(LocalTime.parse(saida1));
+            if (entrada2 != null && !entrada2.equals("null") && !entrada2.isBlank()) e.setHorarioEntrada2(LocalTime.parse(entrada2));
+            else e.setHorarioEntrada2(null);
+            if (saida2 != null && !saida2.equals("null") && !saida2.isBlank()) e.setHorarioSaida2(LocalTime.parse(saida2));
+            else e.setHorarioSaida2(null);
+
+            Integer intervaloMinimo = Integer.valueOf(String.valueOf(payload.getOrDefault("intervaloMinimo", 0)));
+            e.setIntervaloMinimo(intervaloMinimo);
+
+            Object dvi = payload.get("dataVigenciaInicio");
+            Object dvf = payload.get("dataVigenciaFim");
+            e.setDataVigenciaInicio(dvi != null && !String.valueOf(dvi).isBlank() ? LocalDate.parse(String.valueOf(dvi)) : null);
+            e.setDataVigenciaFim(dvf != null && !String.valueOf(dvf).isBlank() ? LocalDate.parse(String.valueOf(dvf)) : null);
+
+            e.setToleranciaAtraso(Boolean.valueOf(String.valueOf(payload.getOrDefault("toleranciaAtraso", true))));
+            e.setMinutosTolerancia(Integer.valueOf(String.valueOf(payload.getOrDefault("minutosTolerancia", 10))));
+
+            e.setTrabalhaSegunda(Boolean.valueOf(String.valueOf(payload.getOrDefault("trabalhaSegunda", true))));
+            e.setTrabalhaTerca(Boolean.valueOf(String.valueOf(payload.getOrDefault("trabalhaTerca", true))));
+            e.setTrabalhaQuarta(Boolean.valueOf(String.valueOf(payload.getOrDefault("trabalhaQuarta", true))));
+            e.setTrabalhaQuinta(Boolean.valueOf(String.valueOf(payload.getOrDefault("trabalhaQuinta", true))));
+            e.setTrabalhaSexta(Boolean.valueOf(String.valueOf(payload.getOrDefault("trabalhaSexta", true))));
+            e.setTrabalhaSabado(Boolean.valueOf(String.valueOf(payload.getOrDefault("trabalhaSabado", false))));
+            e.setTrabalhaDomingo(Boolean.valueOf(String.valueOf(payload.getOrDefault("trabalhaDomingo", false))));
+
+            if (!e.getHorarioEntrada1().isBefore(e.getHorarioSaida1())) {
+                resp.put("success", false);
+                resp.put("message", "Horários do primeiro período inválidos");
+                return resp;
+            }
+            if (e.getHorarioEntrada2() != null && e.getHorarioSaida2() != null && !e.getHorarioEntrada2().isBefore(e.getHorarioSaida2())) {
+                resp.put("success", false);
+                resp.put("message", "Horários do segundo período inválidos");
+                return resp;
+            }
+
+            escalaTrabalhoRepository.save(e);
+            resp.put("success", true);
+            return resp;
+        } catch (Exception ex) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Erro ao salvar escala");
+            return err;
+        }
+    }
+
+    @PostMapping("/api/escalas/encerrar")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> encerrarEscala(@RequestBody Map<String, Object> payload) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long id = Long.valueOf(String.valueOf(payload.get("id")));
+            EscalaTrabalho e = escalaTrabalhoRepository.findById(id).orElse(null);
+            if (e == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return resp;
+            }
+            Object dvf = payload.get("dataVigenciaFim");
+            LocalDate fim = dvf != null && !String.valueOf(dvf).isBlank() ? LocalDate.parse(String.valueOf(dvf)) : LocalDate.now();
+            e.setDataVigenciaFim(fim);
+            escalaTrabalhoRepository.save(e);
+            resp.put("success", true);
+            return resp;
+        } catch (Exception ex) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao encerrar vigência");
+            return resp;
+        }
+    }
+
+    @PostMapping("/api/escalas/clonar")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> clonarEscala(@RequestBody Map<String, Object> payload) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long id = Long.valueOf(String.valueOf(payload.get("id")));
+            EscalaTrabalho o = escalaTrabalhoRepository.findById(id).orElse(null);
+            if (o == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return resp;
+            }
+            EscalaTrabalho e = new EscalaTrabalho();
+            e.setNome(o.getNome() + " (cópia)");
+            e.setDescricao(o.getDescricao());
+            e.setTipo(o.getTipo());
+            e.setHorarioEntrada1(o.getHorarioEntrada1());
+            e.setHorarioSaida1(o.getHorarioSaida1());
+            e.setHorarioEntrada2(o.getHorarioEntrada2());
+            e.setHorarioSaida2(o.getHorarioSaida2());
+            e.setIntervaloMinimo(o.getIntervaloMinimo());
+            e.setTrabalhaSegunda(o.getTrabalhaSegunda());
+            e.setTrabalhaTerca(o.getTrabalhaTerca());
+            e.setTrabalhaQuarta(o.getTrabalhaQuarta());
+            e.setTrabalhaQuinta(o.getTrabalhaQuinta());
+            e.setTrabalhaSexta(o.getTrabalhaSexta());
+            e.setTrabalhaSabado(o.getTrabalhaSabado());
+            e.setTrabalhaDomingo(o.getTrabalhaDomingo());
+            e.setToleranciaAtraso(o.getToleranciaAtraso());
+            e.setMinutosTolerancia(o.getMinutosTolerancia());
+            e.setAtivo(true);
+            e.setDataVigenciaInicio(LocalDate.now());
+            e.setDataVigenciaFim(null);
+            escalaTrabalhoRepository.save(e);
+            resp.put("success", true);
+            return resp;
+        } catch (Exception ex) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao clonar escala");
+            return resp;
+        }
     }
 
     @GetMapping("/api/calendario")

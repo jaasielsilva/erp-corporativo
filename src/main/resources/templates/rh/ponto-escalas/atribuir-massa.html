@@ -36,14 +36,26 @@
           <div class="row">
             <div class="col">
               <label>Colaboradores Ativos</label>
-              <div class="list-box" style="max-height:300px;overflow:auto;border:1px solid #ddd;padding:8px;">
-                <div th:each="c : ${colaboradoresAtivos}">
-                  <label>
-                    <input type="checkbox" class="col-check" th:value="${c.id}" />
-                    <span th:text="${c.nome}"></span>
-                  </label>
+              <div class="action-buttons" style="margin-bottom:8px;">
+                <div class="search-box">
+                  <input id="buscarAtribuicao" type="text" placeholder="Buscar por nome, email ou CPF" autocomplete="off" />
                 </div>
               </div>
+              <div class="table-responsive">
+                <table class="table-list">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Nome</th>
+                      <th>Cargo</th>
+                      <th>Departamento</th>
+                      <th>Admissão</th>
+                    </tr>
+                  </thead>
+                  <tbody id="atribuirBody"></tbody>
+                </table>
+              </div>
+              <div id="paginationAtribuicao" class="pagination"></div>
             </div>
           </div>
           <div class="row">
@@ -56,15 +68,89 @@
     </main>
   </div>
   <script>
-    async function atribuirMassa() {
-      var escalaId = document.getElementById('escalaId').value;
-      var dataInicio = document.getElementById('dataInicio').value;
-      var dataFim = document.getElementById('dataFim').value;
-      var ids = Array.from(document.querySelectorAll('.col-check:checked')).map(function(i){ return parseInt(i.value); });
-      var r = await fetch('/rh/ponto-escalas/api/atribuir-massa', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({escalaId: parseInt(escalaId), dataInicio: dataInicio, dataFim: dataFim || null, colaboradorIds: ids})});
-      var j = await r.json();
-      if (j.success) { alert('Processados: ' + j.processados); }
+    let atribPage = 0;
+    let atribQuery = '';
+    const selecionados = new Set();
+    function formatDateBr(v) {
+      if (!v) return '-';
+      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) {
+        const [y,m,d] = v.split('T')[0].split('-');
+        return `${d}/${m}/${y}`;
+      }
+      if (Array.isArray(v) && v.length >= 3) {
+        const y = v[0], m = (`0${v[1]}`).slice(-2), d = (`0${v[2]}`).slice(-2);
+        return `${d}/${m}/${y}`;
+      }
+      try {
+        const dt = new Date(v);
+        const d = (`0${dt.getDate()}`).slice(-2);
+        const m = (`0${dt.getMonth()+1}`).slice(-2);
+        const y = dt.getFullYear();
+        return `${d}/${m}/${y}`;
+      } catch { return '-'; }
     }
+    function renderAtribRows(items) {
+      const tbody = document.getElementById('atribuirBody');
+      tbody.innerHTML = '';
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum colaborador encontrado</td></tr>';
+        return;
+      }
+      const rows = items.map(it => {
+        const checked = selecionados.has(it.id) ? 'checked' : '';
+        return `<tr>
+          <td><input type="checkbox" class="col-check" value="${it.id}" ${checked} onchange="onSelectCol(this)"></td>
+          <td>${it.nome||'-'}</td>
+          <td>${it.cargo||'-'}</td>
+          <td>${it.departamento||'-'}</td>
+          <td>${formatDateBr(it.dataAdmissao)}</td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+    function renderAtribPagination(data) {
+      const el = document.getElementById('paginationAtribuicao');
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = data.hasPrevious;
+      const hasNext = data.hasNext;
+      let html = '';
+      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} colaboradores)</span>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goAtribPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goAtribPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+    function loadAtribColaboradores(page = 0) {
+      atribPage = page;
+      fetch(`/rh/colaboradores/api/listar?page=${page}&size=20&q=${encodeURIComponent(atribQuery)}`)
+        .then(r => r.json())
+        .then(data => { renderAtribRows(data.content); renderAtribPagination(data); })
+        .catch(() => { renderAtribRows([]); renderAtribPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); });
+    }
+    function goAtribPage(p) { loadAtribColaboradores(Math.max(0, p)); }
+    function onSelectCol(cb) { const id = parseInt(cb.value, 10); if (cb.checked) selecionados.add(id); else selecionados.delete(id); }
+    async function atribuirMassa() {
+      const escalaId = document.getElementById('escalaId').value;
+      const dataInicio = document.getElementById('dataInicio').value;
+      const dataFim = document.getElementById('dataFim').value;
+      const ids = Array.from(selecionados);
+      const r = await fetch('/rh/ponto-escalas/api/atribuir-massa', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({escalaId: parseInt(escalaId), dataInicio: dataInicio, dataFim: dataFim || null, colaboradorIds: ids})});
+      const j = await r.json();
+      if (j.success) { alert('Processados: ' + j.processados); selecionados.clear(); loadAtribColaboradores(atribPage); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+      const input = document.getElementById('buscarAtribuicao');
+      let debounceTimer;
+      if (input) {
+        input.addEventListener('input', function(e){
+          clearTimeout(debounceTimer);
+          atribQuery = e.target.value;
+          debounceTimer = setTimeout(() => loadAtribColaboradores(0), 250);
+        });
+      }
+      loadAtribColaboradores(0);
+    });
   </script>
 </body>
 </html>

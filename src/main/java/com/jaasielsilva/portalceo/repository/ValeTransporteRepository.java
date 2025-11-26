@@ -29,6 +29,9 @@ public interface ValeTransporteRepository extends JpaRepository<ValeTransporte, 
             Integer anoReferencia
     );
 
+    @Query("SELECT v FROM ValeTransporte v WHERE v.mesReferencia = :mes AND v.anoReferencia = :ano AND v.colaborador.id IN :ids")
+    List<ValeTransporte> findByMesAnoAndColaboradorIdIn(@Param("mes") Integer mes, @Param("ano") Integer ano, @Param("ids") java.util.Collection<Long> ids);
+
     List<ValeTransporte> findByStatusOrderByColaborador_Nome(ValeTransporte.StatusValeTransporte status);
 
     @Query("SELECT v FROM ValeTransporte v WHERE v.colaborador.ativo = true AND v.status = :status ORDER BY v.colaborador.nome")

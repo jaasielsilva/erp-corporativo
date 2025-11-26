@@ -23,6 +23,9 @@ public interface ValeRefeicaoRepository extends JpaRepository<ValeRefeicao, Long
 
     List<ValeRefeicao> findByMesReferenciaAndAnoReferencia(Integer mesReferencia, Integer anoReferencia);
 
+    @Query("SELECT v FROM ValeRefeicao v WHERE v.mesReferencia = :mes AND v.anoReferencia = :ano AND v.colaborador.id IN :ids")
+    List<ValeRefeicao> findByMesAnoAndColaboradorIdIn(@Param("mes") Integer mes, @Param("ano") Integer ano, @Param("ids") java.util.Collection<Long> ids);
+
     List<ValeRefeicao> findByAnoReferenciaOrderByMesReferenciaDesc(Integer anoReferencia);
 
     @Query("SELECT v FROM ValeRefeicao v WHERE v.colaborador.id = :colaboradorId AND v.status = :status ORDER BY v.anoReferencia DESC, v.mesReferencia DESC")

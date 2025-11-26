@@ -23,9 +23,9 @@
         <h2>Gestão de horários e turnos dos colaboradores</h2>
 
         <div class="action-buttons">
-          <button onclick="abrirModalEscala()" class="btn btn-primary">
+          <a th:href="@{/rh/ponto-escalas/nova}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Nova Escala
-          </button>
+          </a>
           <button onclick="copiarEscala()" class="btn btn-info">
             <i class="fas fa-copy"></i> Copiar Escala
           </button>
@@ -77,6 +77,8 @@
           </div>
         </article>
 
+        
+
         <!-- Seletor de Período -->
         <article class="card">
           <h3><i class="fas fa-filter"></i> Filtros</h3>
@@ -104,6 +106,10 @@
               <input type="number" id="filtroAno" min="2000" max="2100" class="form-control" th:value="${anoAtual}" />
             </div>
             <div class="col">
+              <label>Busca (nome ou matrícula)</label>
+              <input type="text" id="buscaDia" class="form-control" placeholder="Ex.: Ana ou 1234" />
+            </div>
+            <div class="col">
               <button class="btn btn-primary" style="margin-top:24px" onclick="carregarCalendario()"><i class="fas fa-search"></i> Atualizar</button>
             </div>
           </div>
@@ -111,7 +117,7 @@
 
         <!-- Resumo da Escala -->
         <article class="card">
-          <h3><i class="fas fa-chart-pie"></i> Resumo da Escala - Novembro 2023</h3>
+          <h3><i class="fas fa-chart-pie"></i> Resumo da Escala - <span id="resumoMesLabel">Novembro 2023</span></h3>
           <div class="resumo-escala">
             <div class="resumo-grid">
               <div class="resumo-item colaboradores">
@@ -120,7 +126,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Colaboradores</h4>
-                  <div class="resumo-valor">15</div>
+                  <div class="resumo-valor" id="resColaboradores">-</div>
                   <div class="resumo-detalhes">Escalados</div>
                 </div>
               </div>
@@ -131,7 +137,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Turnos</h4>
-                  <div class="resumo-valor">3</div>
+                  <div class="resumo-valor" id="resTurnos">-</div>
                   <div class="resumo-detalhes">Ativos</div>
                 </div>
               </div>
@@ -142,7 +148,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Horas/Mês</h4>
-                  <div class="resumo-valor">2.640h</div>
+                  <div class="resumo-valor" id="resHoras">-</div>
                   <div class="resumo-detalhes">Total planejado</div>
                 </div>
               </div>
@@ -153,7 +159,7 @@
                 </div>
                 <div class="resumo-info">
                   <h4>Cobertura</h4>
-                  <div class="resumo-valor">98%</div>
+                  <div class="resumo-valor" id="resCobertura">-</div>
                   <div class="resumo-detalhes">Dos horários</div>
                 </div>
               </div>
@@ -337,188 +343,36 @@
           }
         </script>
 
-        <!-- Lista de Colaboradores por Turno -->
+        <style>
+          .card .table-centered { max-width: 1000px; margin: 0 auto; }
+          .table-centered th, .table-centered td { padding: 10px 14px; text-align: center; vertical-align: middle; }
+          .table-centered thead th { font-weight: 600; }
+          .horarios-cell div { line-height: 1.4; }
+          #paginationDia { text-align: center; margin-top: 14px; }
+          #paginationDia .btn { min-width: 120px; }
+          .card h3 { margin-bottom: 16px; }
+        </style>
+
         <article class="card">
-          <h3><i class="fas fa-list"></i> Colaboradores por Turno - 29/11/2023</h3>
-          
-          <div class="turnos-container">
-            <!-- Turno Manhã -->
-            <div class="turno-card">
-              <div class="turno-header manha">
-                <h4><i class="fas fa-sun"></i> Turno Manhã (08:00 - 17:00)</h4>
-                <span class="turno-count">5 colaboradores</span>
-              </div>
-              <div class="turno-colaboradores">
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>João Silva</strong>
-                    <small>TI - Mat: 001</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(1)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Maria Santos</strong>
-                    <small>Vendas - Mat: 002</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(2)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Carlos Oliveira</strong>
-                    <small>Financeiro - Mat: 003</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(3)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Ana Costa</strong>
-                    <small>Design - Mat: 004</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge ferias">Férias</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(4)" class="btn-icon" title="Trocar Turno" disabled>
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Pedro Lima</strong>
-                    <small>Marketing - Mat: 005</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(5)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Turno Tarde -->
-            <div class="turno-card">
-              <div class="turno-header tarde">
-                <h4><i class="fas fa-sun"></i> Turno Tarde (14:00 - 23:00)</h4>
-                <span class="turno-count">3 colaboradores</span>
-              </div>
-              <div class="turno-colaboradores">
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Lucas Ferreira</strong>
-                    <small>Suporte - Mat: 006</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(6)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Fernanda Souza</strong>
-                    <small>Atendimento - Mat: 007</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(7)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Roberto Alves</strong>
-                    <small>Segurança - Mat: 008</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(8)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Turno Noite -->
-            <div class="turno-card">
-              <div class="turno-header noite">
-                <h4><i class="fas fa-moon"></i> Turno Noite (22:00 - 07:00)</h4>
-                <span class="turno-count">2 colaboradores</span>
-              </div>
-              <div class="turno-colaboradores">
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Marcos Silva</strong>
-                    <small>Segurança - Mat: 009</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(9)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="colaborador-turno">
-                  <div class="colaborador-info">
-                    <strong>Juliana Costa</strong>
-                    <small>Limpeza - Mat: 010</small>
-                  </div>
-                  <div class="colaborador-status">
-                    <span class="status-badge presente">Presente</span>
-                  </div>
-                  <div class="colaborador-acoes">
-                    <button onclick="trocarTurno(10)" class="btn-icon" title="Trocar Turno">
-                      <i class="fas fa-exchange-alt"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <h3 class="text-center"><i class="fas fa-users"></i> Escalados no dia <span id="diaSelecionadoLabel">-</span></h3>
+          <div id="loadingDia" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+          <div class="table-responsive">
+            <table class="table table-sm text-center align-middle table-centered" style="border-collapse: separate;">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Departamento</th>
+                  <th>Matrícula</th>
+                  <th>Escala</th>
+                  <th>Horários</th>
+                  <th>Situação</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="diaBody"></tbody>
+            </table>
           </div>
+          <div id="paginationDia" class="pagination" style="text-align:center"></div>
         </article>
 
         <!-- Conflitos e Alertas -->
@@ -723,15 +577,136 @@
       }
     }
     
-    function carregarEscala() {
-      mostrarAlerta('info', 'Carregando escala...');
+    let calMes = parseInt(document.getElementById('filtroMes')?.value || new Date().getMonth()+1, 10);
+    let calAno = parseInt(document.getElementById('filtroAno')?.value || new Date().getFullYear(), 10);
+    let filtroDepartamentoId = document.getElementById('filtroDepartamento')?.value || '';
+    let filtroEscalaId = document.getElementById('filtroEscala')?.value || '';
+    let diaSelecionado = null;
+
+    function mesAnterior() {
+      if (calMes === 1) { calMes = 12; calAno--; } else { calMes--; }
+      carregarCalendario();
     }
-    
-    function mesAnterior() { mostrarAlerta('info', 'Mês anterior'); }
-    function proximoMes() { mostrarAlerta('info', 'Próximo mês'); }
-    
+    function proximoMes() {
+      if (calMes === 12) { calMes = 1; calAno++; } else { calMes++; }
+      carregarCalendario();
+    }
+    function carregarCalendario() {
+      const dep = filtroDepartamentoId || '';
+      const esc = filtroEscalaId || '';
+      document.getElementById('filtroMes').value = calMes;
+      document.getElementById('filtroAno').value = calAno;
+      document.getElementById('resumoMesLabel').textContent = `${String(calMes).padStart(2,'0')}/${calAno}`;
+      fetch(`/rh/ponto-escalas/api/calendario?mes=${calMes}&ano=${calAno}${dep?`&departamentoId=${dep}`:''}${esc?`&escalaId=${esc}`:''}`)
+        .then(r => r.json())
+        .then(data => renderCalendario(data))
+        .catch(() => { document.getElementById('calendarioDias').innerHTML = ''; mostrarAlerta('danger','Falha ao carregar calendário'); });
+      atualizarResumo();
+    }
+    function renderCalendario(data) {
+      const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      document.getElementById('calTitulo').textContent = `Calendário - ${meses[data.mes-1]} ${data.ano}`;
+      document.getElementById('calSubtitulo').textContent = `${meses[data.mes-1]} / ${data.ano}`;
+      const diasEl = document.getElementById('calendarioDias');
+      diasEl.innerHTML = '';
+      const ym = new Date(data.ano, data.mes-1, 1);
+      const primeiroDiaSemana = new Date(data.ano, data.mes-1, 1).getDay();
+      for (let i=0;i<primeiroDiaSemana;i++) {
+        diasEl.innerHTML += `<div class="dia-calendario dia-outro-mes"></div>`;
+      }
+      for (const d of data.days) {
+        const hoje = new Date();
+        const isHoje = hoje.getFullYear()===data.ano && (hoje.getMonth()+1)===data.mes && hoje.getDate()===d.day;
+        const classes = ['dia-calendario'];
+        if (isHoje) classes.push('hoje');
+        const diaStr = `${String(d.day).padStart(2,'0')}/${String(data.mes).padStart(2,'0')}/${data.ano}`;
+        diasEl.innerHTML += `<div class="${classes.join(' ')}" onclick="verDetalheDia(${d.day})">
+          <div><strong>${d.day}</strong></div>
+          <div class="escalas-dia">
+            <span class="escala-turno manha">${d.total} escalados</span>
+          </div>
+        </div>`;
+      }
+      const hoje = new Date();
+      if (hoje.getFullYear()===data.ano && (hoje.getMonth()+1)===data.mes) { verDetalheDia(hoje.getDate()); }
+    }
     function verDetalheDia(dia) {
-      mostrarAlerta('info', `Visualizando detalhes do dia ${dia}`);
+      diaSelecionado = `${calAno}-${String(calMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+      document.getElementById('diaSelecionadoLabel').textContent = `${String(dia).padStart(2,'0')}/${String(calMes).padStart(2,'0')}/${calAno}`;
+      loadColaboradoresDia(0);
+    }
+    function showLoadingDia(show) { document.getElementById('loadingDia').style.display = show ? 'block' : 'none'; }
+    function renderDiaRows(items) {
+      const tbody = document.getElementById('diaBody');
+      tbody.innerHTML = '';
+      if (!items || items.length===0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center">Sem colaboradores escalados neste dia</td></tr>'; return; }
+      const rows = items.map(it => {
+        const horarios = [it.entrada1 && it.saida1 ? `${it.entrada1} - ${it.saida1}` : null, it.entrada2 && it.saida2 ? `${it.entrada2} - ${it.saida2}` : null].filter(Boolean);
+        const status = it.status || '-';
+        const badgeClass = status.includes('Concluído') ? 'badge-success' : status.includes('Em andamento') ? 'badge-info' : status.includes('Atrasado') ? 'badge-danger' : status.includes('Falta') ? 'badge-danger' : status.includes('Sem registro') ? 'badge-warning' : 'badge-secondary';
+        const detalhe = it.atrasoMinutos ? ` (${it.atrasoMinutos} min atraso)` : (it.proximaBatida ? ` (Próx: ${it.proximaBatida})` : '');
+        return `<tr>
+          <td class="align-middle">${it.nome||'-'}</td>
+          <td class="align-middle">${it.departamento||'-'}</td>
+          <td class="align-middle">${it.matricula||'-'}</td>
+          <td class="align-middle">${it.escalaNome||'-'}</td>
+          <td class="align-middle horarios-cell">${horarios.length ? `<div>${horarios[0]}</div>${horarios[1] ? `<div>${horarios[1]}</div>` : ''}` : '-'}</td>
+          <td class="align-middle"><span class="badge ${badgeClass}">${status}${detalhe}</span></td>
+          <td class="actions align-middle">
+            <button class="btn btn-sm btn-secondary" onclick="abrirModalEscala()" title="Criar nova escala"><i class="fas fa-plus"></i></button>
+          </td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+    function renderPaginationDia(data) {
+      const el = document.getElementById('paginationDia');
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = data.hasPrevious;
+      const hasNext = data.hasNext;
+      let html = '';
+      html += `<div class="pagination-info" style="display:block;margin-bottom:8px;">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</div>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goDiaPage(${page - 1});return false;" style="margin-right:8px"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled" style="margin-right:8px"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goDiaPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+    function loadColaboradoresDia(page) {
+      if (!diaSelecionado) return;
+      showLoadingDia(true);
+      const dep = filtroDepartamentoId || '';
+      const esc = filtroEscalaId || '';
+      const q = document.getElementById('buscaDia')?.value || '';
+      fetch(`/rh/ponto-escalas/api/colaboradores-dia?dia=${encodeURIComponent(diaSelecionado)}&page=${page}&size=20${dep?`&departamentoId=${dep}`:''}${esc?`&escalaId=${esc}`:''}${q?`&q=${encodeURIComponent(q)}`:''}`)
+        .then(r => r.json())
+        .then(data => { renderDiaRows(data.content); renderPaginationDia(data); })
+        .catch(() => { renderDiaRows([]); renderPaginationDia({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); })
+        .finally(() => showLoadingDia(false));
+    }
+    function goDiaPage(p) { loadColaboradoresDia(Math.max(0, p)); }
+    document.addEventListener('DOMContentLoaded', function(){
+      document.getElementById('filtroDepartamento')?.addEventListener('change', function(e){ filtroDepartamentoId = e.target.value; carregarCalendario(); });
+      document.getElementById('filtroEscala')?.addEventListener('change', function(e){ filtroEscalaId = e.target.value; carregarCalendario(); });
+      document.getElementById('filtroMes')?.addEventListener('change', function(e){ calMes = parseInt(e.target.value,10)||calMes; carregarCalendario(); });
+      document.getElementById('filtroAno')?.addEventListener('change', function(e){ calAno = parseInt(e.target.value,10)||calAno; carregarCalendario(); });
+      carregarCalendario();
+      setInterval(atualizarResumo, 30000);
+    });
+
+    function atualizarResumo(){
+      const dep = filtroDepartamentoId || '';
+      const esc = filtroEscalaId || '';
+      fetch(`/rh/ponto-escalas/api/resumo?mes=${calMes}&ano=${calAno}${dep?`&departamentoId=${dep}`:''}${esc?`&escalaId=${esc}`:''}`)
+        .then(r => r.json())
+        .then(d => {
+          if (!d.success) return;
+          const r = d.resumo;
+          document.getElementById('resColaboradores').textContent = r.escalados;
+          document.getElementById('resTurnos').textContent = r.turnos;
+          document.getElementById('resHoras').textContent = r.horasMesFormatado;
+          document.getElementById('resCobertura').textContent = `${r.coberturaPercent}%`;
+        }).catch(()=>{ mostrarAlerta('danger','Falha ao carregar resumo'); });
     }
     
     function trocarTurno(colaboradorId) {

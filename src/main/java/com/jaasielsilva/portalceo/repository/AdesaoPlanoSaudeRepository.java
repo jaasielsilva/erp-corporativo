@@ -43,4 +43,7 @@ public interface AdesaoPlanoSaudeRepository extends JpaRepository<AdesaoPlanoSau
     // Busca adesão ativa por colaborador
     @Query("SELECT a FROM AdesaoPlanoSaude a WHERE a.colaborador.id = :colaboradorId AND a.status = 'ATIVA'")
     Optional<AdesaoPlanoSaude> findAdesaoAtivaByColaborador(@Param("colaboradorId") Long colaboradorId);
+
+    @Query("SELECT a FROM AdesaoPlanoSaude a WHERE a.status = :status AND a.colaborador.id IN :ids")
+    List<AdesaoPlanoSaude> findByStatusAndColaboradorIdIn(@Param("status") AdesaoPlanoSaude.StatusAdesao status, @Param("ids") java.util.Collection<Long> ids);
 }

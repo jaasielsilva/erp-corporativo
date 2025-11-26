@@ -14,7 +14,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "escala_trabalho")
+@Table(name = "escala_trabalho", indexes = {
+    @Index(name = "idx_escala_vigencia", columnList = "ativo, dataVigenciaInicio, dataVigenciaFim")
+})
 public class EscalaTrabalho {
 
     @Id

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Criar Escala de Trabalho - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+      <section class="content-area">
+        <div class="alert-container-right"></div>
+        <h1>Criar Escala de Trabalho</h1>
+        <h2>Preencha os dados e atribua ao colaborador</h2>
+
+        <article class="card">
+          <h3><i class="fas fa-calendar-plus"></i> Dados da Escala</h3>
+          <div class="row">
+            <div class="col">
+              <label>Nome</label>
+              <input id="escNome" class="form-control" placeholder="Ex.: Comercial 08-18" />
+            </div>
+            <div class="col">
+              <label>Tipo</label>
+              <select id="escTipo" class="form-control">
+                <option value="NORMAL">Normal (8h com intervalo)</option>
+                <option value="CORRIDA">Corrida (6h sem intervalo)</option>
+                <option value="TURNO_12X36">Turno 12x36</option>
+                <option value="TURNO_6X1">Turno 6x1</option>
+                <option value="FLEXIVEL">Flexível</option>
+                <option value="PERSONALIZADA">Personalizada</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Intervalo mínimo (min)</label>
+              <input id="escIntervalo" type="number" min="0" class="form-control" value="60" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Entrada 1</label>
+              <input id="escEntrada1" type="time" class="form-control" value="08:00" />
+            </div>
+            <div class="col">
+              <label>Saída 1</label>
+              <input id="escSaida1" type="time" class="form-control" value="12:00" />
+            </div>
+            <div class="col">
+              <label>Entrada 2 (opcional)</label>
+              <input id="escEntrada2" type="time" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Saída 2 (opcional)</label>
+              <input id="escSaida2" type="time" class="form-control" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Início da vigência</label>
+              <input id="escVigenciaInicio" type="date" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Fim da vigência (opcional)</label>
+              <input id="escVigenciaFim" type="date" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Tolerância de atraso</label>
+              <select id="escTolAtraso" class="form-control">
+                <option value="true" selected>Ativa</option>
+                <option value="false">Desativada</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Minutos tolerância</label>
+              <input id="escMinTol" type="number" min="0" class="form-control" value="10" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Dias trabalhados</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" id="dSeg" checked /> Seg</label>
+                <label><input type="checkbox" id="dTer" checked /> Ter</label>
+                <label><input type="checkbox" id="dQua" checked /> Qua</label>
+                <label><input type="checkbox" id="dQui" checked /> Qui</label>
+                <label><input type="checkbox" id="dSex" checked /> Sex</label>
+                <label><input type="checkbox" id="dSab" /> Sáb</label>
+                <label><input type="checkbox" id="dDom" /> Dom</label>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3><i class="fas fa-user-tag"></i> Atribuir ao Colaborador</h3>
+          <div class="row">
+            <div class="col">
+              <label>Buscar colaborador</label>
+              <input id="buscaCol" class="form-control" placeholder="Nome ou matrícula" />
+            </div>
+            <div class="col">
+              <label>&nbsp;</label>
+              <button class="btn btn-secondary" onclick="buscarColaboradores()"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+          </div>
+          <div class="table-responsive" style="margin-top:10px">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Matrícula</th>
+                  <th>Departamento</th>
+                  <th>Selecionar</th>
+                </tr>
+              </thead>
+              <tbody id="colRows"></tbody>
+            </table>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Início atribuição</label>
+              <input id="atrInicio" type="date" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Fim atribuição (opcional)</label>
+              <input id="atrFim" type="date" class="form-control" />
+            </div>
+          </div>
+        </article>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="salvarEAtribuir()"><i class="fas fa-save"></i> Salvar e atribuir</button>
+          <a class="btn btn-light" th:href="@{/rh/ponto-escalas/escalas}"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let colaboradorSelecionado = null;
+
+    function mostrarAlerta(tipo, msg) {
+      const cont = document.querySelector('.alert-container-right');
+      if (!cont) return;
+      const el = document.createElement('div');
+      el.className = `alert alert-${tipo}`;
+      el.innerHTML = msg;
+      cont.appendChild(el);
+      setTimeout(() => el.remove(), 5000);
+    }
+
+    function renderColabRows(items){
+      const tbody = document.getElementById('colRows');
+      const rows = (items||[]).map(it => {
+        const dep = it.departamento || '-';
+        const mat = it.matricula || '-';
+        return `<tr>
+          <td>${it.nome}</td>
+          <td>${mat}</td>
+          <td>${dep}</td>
+          <td><input type="radio" name="selCol" value="${it.id}" onclick="colaboradorSelecionado=${it.id}" /></td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+
+    function buscarColaboradores(page = 0){
+      const q = document.getElementById('buscaCol').value || '';
+      fetch(`/rh/colaboradores/api/listar?page=${page}&size=10&q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => renderColabRows(data.content || []))
+        .catch(() => renderColabRows([]));
+    }
+
+    function salvarEAtribuir(){
+      const nome = document.getElementById('escNome').value?.trim();
+      const tipo = document.getElementById('escTipo').value;
+      const intervaloMinimo = parseInt(document.getElementById('escIntervalo').value||'0',10);
+      const entrada1 = document.getElementById('escEntrada1').value;
+      const saida1 = document.getElementById('escSaida1').value;
+      const entrada2 = document.getElementById('escEntrada2').value || null;
+      const saida2 = document.getElementById('escSaida2').value || null;
+      const atrInicio = document.getElementById('atrInicio').value;
+      const atrFim = document.getElementById('atrFim').value || null;
+      const dvi = document.getElementById('escVigenciaInicio').value || atrInicio || null;
+      const dvf = document.getElementById('escVigenciaFim').value || null;
+      const tol = document.getElementById('escTolAtraso').value === 'true';
+      const minTol = parseInt(document.getElementById('escMinTol').value||'10',10);
+      const trabalhaSegunda = document.getElementById('dSeg').checked;
+      const trabalhaTerca = document.getElementById('dTer').checked;
+      const trabalhaQuarta = document.getElementById('dQua').checked;
+      const trabalhaQuinta = document.getElementById('dQui').checked;
+      const trabalhaSexta = document.getElementById('dSex').checked;
+      const trabalhaSabado = document.getElementById('dSab').checked;
+      const trabalhaDomingo = document.getElementById('dDom').checked;
+
+      if (!nome || !entrada1 || !saida1){
+        mostrarAlerta('warning','Preencha nome e horários principais.');
+        return;
+      }
+      if (!colaboradorSelecionado){
+        mostrarAlerta('warning','Selecione um colaborador para atribuição.');
+        return;
+      }
+      if (!atrInicio){
+        mostrarAlerta('warning','Informe a data de início da atribuição.');
+        return;
+      }
+
+      const payload = {
+        nome,
+        tipo,
+        intervaloMinimo,
+        horarioEntrada1: entrada1,
+        horarioSaida1: saida1,
+        horarioEntrada2: entrada2,
+        horarioSaida2: saida2,
+        dataVigenciaInicio: dvi,
+        dataVigenciaFim: dvf,
+        toleranciaAtraso: tol,
+        minutosTolerancia: minTol,
+        trabalhaSegunda,
+        trabalhaTerca,
+        trabalhaQuarta,
+        trabalhaQuinta,
+        trabalhaSexta,
+        trabalhaSabado,
+        trabalhaDomingo
+      };
+
+      fetch('/rh/ponto-escalas/api/escalas/salvar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success){ mostrarAlerta('danger','Falha ao salvar escala.'); return; }
+        const escalaId = data.id;
+        if (!escalaId){ mostrarAlerta('danger','Escala salva, mas id não retornado.'); return; }
+        const atrib = {
+          escalaId,
+          dataInicio: atrInicio,
+          dataFim: atrFim,
+          colaboradorIds: [ parseInt(colaboradorSelecionado,10) ]
+        };
+        return fetch('/rh/ponto-escalas/api/atribuir-massa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(atrib)
+        }).then(r => r.json()).then(resp => {
+          if (resp.success){
+            mostrarAlerta('success','Escala criada e atribuída com sucesso.');
+            setTimeout(() => { window.location.href = '/rh/ponto-escalas/escalas'; }, 800);
+          } else {
+            mostrarAlerta('danger','Falha ao atribuir escala ao colaborador.');
+          }
+        });
+      })
+      .catch(() => mostrarAlerta('danger','Erro na operação.'));
+    }
+  </script>
+</body>
+</html>

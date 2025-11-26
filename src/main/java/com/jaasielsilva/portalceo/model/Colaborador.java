@@ -18,7 +18,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "colaboradores")
+@Table(name = "colaboradores", indexes = {
+    @Index(name = "idx_colaboradores_nome", columnList = "nome"),
+    @Index(name = "idx_colaboradores_departamento", columnList = "departamento_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -130,7 +133,7 @@ public class Colaborador {
     @JsonIgnoreProperties({ "supervisor", "cargo", "departamento" })
     private Colaborador supervisor;
 
-    @OneToOne(mappedBy = "colaborador")
+    @OneToOne(mappedBy = "colaborador", fetch = FetchType.LAZY)
     @JsonIgnore
     private Usuario usuario;
 

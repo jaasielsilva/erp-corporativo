@@ -12,7 +12,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "colaborador_escala")
+@Table(name = "colaborador_escala", indexes = {
+    @Index(name = "idx_colab_escala_colab_data", columnList = "colaborador_id, data_inicio, data_fim"),
+    @Index(name = "idx_colab_escala_escala", columnList = "escala_trabalho_id"),
+    @Index(name = "idx_colab_escala_ativo", columnList = "ativo")
+})
 public class ColaboradorEscala {
 
     @Id

@@ -98,7 +98,6 @@ import org.springframework.scheduling.annotation.Async;
     }
 
     @Async("taskExecutor")
-    @Transactional
     public void gerarFolhaPagamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento, String jobId) {
         Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
         info.put("status", "PROCESSANDO");
@@ -137,7 +136,6 @@ import org.springframework.scheduling.annotation.Async;
     /**
      * Gera folha de pagamento para um mês/ano específico
      */
-    @Transactional
     public FolhaPagamento gerarFolhaPagamento(Integer mes, Integer ano, Usuario usuarioProcessamento) {
         logger.info("Iniciando geração de folha de pagamento para {}/{}", mes, ano);
 
@@ -171,13 +169,13 @@ import org.springframework.scheduling.annotation.Async;
         // Salvar folha primeiro para obter ID
         folha = folhaPagamentoRepository.save(folha);
 
-        // Buscar colaboradores ativos
+        // Buscar colaboradores ativos em paginação para evitar carga total na memória
         long tInicio = System.nanoTime();
-        List<Colaborador> colaboradores = colaboradorRepository.findByAtivoTrue();
         String jobId = currentJobId.get();
+        long totalAtivos = colaboradorRepository.countByAtivoTrue();
         if (jobId != null) {
             Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
-            info.put("total", colaboradores.size());
+            info.put("total", totalAtivos);
             info.put("processed", 0);
             info.put("progressPct", 0);
             info.put("startedAt", java.time.LocalDateTime.now().toString());
@@ -196,16 +194,28 @@ import org.springframework.scheduling.annotation.Async;
                         Function.identity()
                 ));
         final int CHUNK_SIZE = 400;
+        final int PAGE_SIZE = 500;
         List<Holerite> holeritesChunk = new ArrayList<>(CHUNK_SIZE);
         int totalProcessados = 0;
         int blocosProcessados = 0;
 
-        for (Colaborador colaborador : colaboradores) {
-            try {
+        int pageIndex = 0;
+        while (true) {
+            org.springframework.data.domain.Page<Colaborador> page = colaboradorRepository.findByAtivoTrue(org.springframework.data.domain.PageRequest.of(pageIndex, PAGE_SIZE, org.springframework.data.domain.Sort.by("nome").ascending()));
+            List<Colaborador> colaboradores = page.getContent();
+            if (colaboradores == null || colaboradores.isEmpty()) break;
+
+            Map<Long, BeneficiosInfo> beneficiosPorColaborador = carregarBeneficiosEmLote(colaboradores, mes, ano);
+            for (Colaborador colaborador : colaboradores) {
+                try {
                 long tColabInicio = System.nanoTime();
                 RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo =
                         resumoPorColaborador.get(colaborador.getId());
-                Holerite holerite = gerarHolerite(colaborador, folha, mes, ano, resumo);
+                BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(
+                        colaborador.getId(),
+                        new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty())
+                );
+                Holerite holerite = gerarHoleriteComBeneficios(colaborador, folha, mes, ano, resumo, beneficios);
                 holeritesChunk.add(holerite);
                 totalProcessados++;
 
@@ -223,10 +233,10 @@ import org.springframework.scheduling.annotation.Async;
                     if (jobId != null) {
                         Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
                         long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                        int total = colaboradores.size();
+                        long total = totalAtivos;
                         double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
-                        long etaMs = rateMsPerItem > 0 ? (long) ((total - totalProcessados) * rateMsPerItem) : -1;
-                        int pct = total > 0 ? (int) Math.round(100.0 * totalProcessados / total) : 0;
+                        long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
+                        int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
                         info.put("processed", totalProcessados);
                         info.put("progressPct", pct);
                         info.put("elapsedMs", elapsedMs);
@@ -251,8 +261,8 @@ import org.springframework.scheduling.annotation.Async;
                         Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
                         long flushMs = (tPersistFim - tPersistIni) / 1_000_000;
                         long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                        int total = colaboradores.size();
-                        int pct = total > 0 ? (int) Math.round(100.0 * totalProcessados / total) : 0;
+                        long total = totalAtivos;
+                        int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
                         info.put("lastFlushMs", flushMs);
                         info.put("blocksProcessed", blocosProcessados);
                         info.put("processed", totalProcessados);
@@ -272,6 +282,8 @@ import org.springframework.scheduling.annotation.Async;
                 logger.error("Erro ao gerar holerite para colaborador {}: {}", colaborador.getNome(), e.getMessage());
                 // Continua processando outros colaboradores
             }
+            }
+            pageIndex++;
         }
 
         // Atualizar totais da folha
@@ -297,7 +309,7 @@ import org.springframework.scheduling.annotation.Async;
                 Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
                 long flushMs = (tPersistFim - tPersistIni) / 1_000_000;
                 long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                int total = colaboradores.size();
+                long total = totalAtivos;
                 info.put("lastFlushMs", flushMs);
                 info.put("blocksProcessed", blocosProcessados);
                 info.put("processed", totalProcessados);
@@ -368,6 +380,25 @@ import org.springframework.scheduling.annotation.Async;
         // Calcular descontos
         calcularDescontos(holerite, colaborador, mes, ano, beneficios);
 
+        return holerite;
+    }
+
+    private Holerite gerarHoleriteComBeneficios(Colaborador colaborador, FolhaPagamento folha, Integer mes, Integer ano,
+                                                RegistroPontoRepository.PontoResumoPorColaboradorProjection resumoAgregado,
+                                                BeneficiosInfo beneficios) {
+        Holerite holerite = new Holerite();
+        holerite.setColaborador(colaborador);
+        holerite.setFolhaPagamento(folha);
+        holerite.setSalarioBase(colaborador.getSalario());
+
+        if (resumoAgregado != null) {
+            aplicarResumoPonto(holerite, resumoAgregado);
+        } else {
+            calcularDadosPonto(holerite, colaborador, mes, ano);
+        }
+
+        calcularProventos(holerite, colaborador, mes, ano, beneficios);
+        calcularDescontos(holerite, colaborador, mes, ano, beneficios);
         return holerite;
     }
 
@@ -517,6 +548,46 @@ import org.springframework.scheduling.annotation.Async;
         Optional<ValeRefeicao> vr = valeRefeicaoRepository.findByColaboradorAndMesReferenciaAndAnoReferencia(colaborador, mes, ano);
         Optional<AdesaoPlanoSaude> ps = adesaoPlanoSaudeRepository.findAdesaoAtivaByColaborador(colaborador.getId());
         return new BeneficiosInfo(vt, vr, ps);
+    }
+
+    private Map<Long, BeneficiosInfo> carregarBeneficiosEmLote(List<Colaborador> colaboradores, Integer mes, Integer ano) {
+        java.util.Set<Long> ids = colaboradores.stream().map(Colaborador::getId).collect(java.util.stream.Collectors.toSet());
+
+        List<ValeTransporte> vts = valeTransporteRepository.findByMesAnoAndColaboradorIdIn(mes, ano, ids);
+        Map<Long, ValeTransporte> vtPorColab = new java.util.HashMap<>();
+        for (ValeTransporte vt : vts) {
+            if (vt.getColaborador() != null) {
+                if (vtPorColab.containsKey(vt.getColaborador().getId())) continue;
+                if (vt.isAtivo()) vtPorColab.put(vt.getColaborador().getId(), vt);
+            }
+        }
+
+        List<ValeRefeicao> vrs = valeRefeicaoRepository.findByMesAnoAndColaboradorIdIn(mes, ano, ids);
+        Map<Long, ValeRefeicao> vrPorColab = new java.util.HashMap<>();
+        for (ValeRefeicao vr : vrs) {
+            if (vr.getColaborador() != null) {
+                if (vrPorColab.containsKey(vr.getColaborador().getId())) continue;
+                if (vr.isAtivo()) vrPorColab.put(vr.getColaborador().getId(), vr);
+            }
+        }
+
+        List<AdesaoPlanoSaude> adesoesAtivas = adesaoPlanoSaudeRepository.findByStatusAndColaboradorIdIn(AdesaoPlanoSaude.StatusAdesao.ATIVA, ids);
+        Map<Long, AdesaoPlanoSaude> psPorColab = new java.util.HashMap<>();
+        for (AdesaoPlanoSaude ps : adesoesAtivas) {
+            if (ps.getColaborador() != null) {
+                if (psPorColab.containsKey(ps.getColaborador().getId())) continue;
+                psPorColab.put(ps.getColaborador().getId(), ps);
+            }
+        }
+
+        Map<Long, BeneficiosInfo> map = new java.util.HashMap<>();
+        for (Long id : ids) {
+            Optional<ValeTransporte> vtOpt = Optional.ofNullable(vtPorColab.get(id));
+            Optional<ValeRefeicao> vrOpt = Optional.ofNullable(vrPorColab.get(id));
+            Optional<AdesaoPlanoSaude> psOpt = Optional.ofNullable(psPorColab.get(id));
+            map.put(id, new BeneficiosInfo(vtOpt, vrOpt, psOpt));
+        }
+        return map;
     }
 
     /**

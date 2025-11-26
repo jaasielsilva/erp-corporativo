@@ -27,6 +27,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
 import java.io.ByteArrayOutputStream;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -65,6 +66,7 @@ public class PontoEscalasController {
 
     @GetMapping("/escalas")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String paginaEscalas(Model model) {
         YearMonth ym = YearMonth.now();
         model.addAttribute("mesAtual", ym.getMonthValue());
@@ -76,6 +78,7 @@ public class PontoEscalasController {
 
     @GetMapping("/atribuir-massa")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String paginaAtribuirMassa(Model model) {
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("escalasVigentes", escalaTrabalhoRepository.findEscalasVigentes(LocalDate.now()));
@@ -86,25 +89,45 @@ public class PontoEscalasController {
     @PostMapping("/api/atribuir-massa")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    public Map<String, Object> atribuirMassa(@RequestBody Map<String, Object> payload) {
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    public ResponseEntity<Map<String, Object>> atribuirMassa(@RequestBody Map<String, Object> payload, Principal principal) {
         Map<String, Object> resp = new HashMap<>();
         try {
+            Usuario usuarioLogado = null;
+            if (principal != null && principal.getName() != null) {
+                usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            }
+            if (payload.get("escalaId") == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala obrigatória");
+                return ResponseEntity.badRequest().body(resp);
+            }
             Long escalaId = Long.valueOf(String.valueOf(payload.get("escalaId")));
             EscalaTrabalho escala = escalaTrabalhoRepository.findById(escalaId).orElse(null);
             if (escala == null) {
                 resp.put("success", false);
                 resp.put("message", "Escala não encontrada");
-                return resp;
+                return ResponseEntity.badRequest().body(resp);
+            }
+            if (payload.get("dataInicio") == null || String.valueOf(payload.get("dataInicio")).isBlank()) {
+                resp.put("success", false);
+                resp.put("message", "Data início obrigatória");
+                return ResponseEntity.badRequest().body(resp);
             }
             LocalDate dataInicio = LocalDate.parse(String.valueOf(payload.get("dataInicio")));
             Object dfObj = payload.get("dataFim");
             LocalDate dataFim = dfObj != null && !String.valueOf(dfObj).isBlank() ? LocalDate.parse(String.valueOf(dfObj)) : null;
+            if (dataFim != null && dataFim.isBefore(dataInicio)) {
+                resp.put("success", false);
+                resp.put("message", "Data fim não pode ser antes de início");
+                return ResponseEntity.badRequest().body(resp);
+            }
             @SuppressWarnings("unchecked")
             List<Integer> ids = (List<Integer>) payload.get("colaboradorIds");
             if (ids == null || ids.isEmpty()) {
                 resp.put("success", false);
                 resp.put("message", "Nenhum colaborador informado");
-                return resp;
+                return ResponseEntity.badRequest().body(resp);
             }
 
             List<Long> processed = new ArrayList<>();
@@ -123,25 +146,33 @@ public class PontoEscalasController {
                 novo.setDataInicio(dataInicio);
                 novo.setDataFim(dataFim);
                 novo.setAtivo(true);
+                if (usuarioLogado != null) {
+                    novo.setUsuarioCriacao(usuarioLogado);
+                }
                 colaboradorEscalaRepository.save(novo);
                 processed.add(colId);
             }
             resp.put("success", true);
             resp.put("processados", processed.size());
-            return resp;
+            return ResponseEntity.ok(resp);
         } catch (Exception ex) {
             resp.put("success", false);
             resp.put("message", "Erro na atribuição em massa");
-            return resp;
+            return ResponseEntity.internalServerError().body(resp);
         }
     }
 
     @PostMapping("/api/escalas/salvar")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    public Map<String, Object> salvarEscala(@RequestBody Map<String, Object> payload) {
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    public ResponseEntity<Map<String, Object>> salvarEscala(@RequestBody Map<String, Object> payload, Principal principal) {
         Map<String, Object> resp = new HashMap<>();
         try {
+            Usuario usuarioLogado = null;
+            if (principal != null && principal.getName() != null) {
+                usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            }
             EscalaTrabalho e;
             Object idObj = payload.get("id");
             if (idObj != null && !String.valueOf(idObj).isBlank()) {
@@ -152,13 +183,28 @@ public class PontoEscalasController {
                 e = new EscalaTrabalho();
             }
 
+            if (payload.get("nome") == null || String.valueOf(payload.get("nome")).isBlank()) {
+                resp.put("success", false);
+                resp.put("message", "Nome da escala é obrigatório");
+                return ResponseEntity.badRequest().body(resp);
+            }
             e.setNome(String.valueOf(payload.get("nome")));
             e.setDescricao(null);
             String tipo = String.valueOf(payload.get("tipo"));
+            if (tipo == null || tipo.isBlank()) {
+                resp.put("success", false);
+                resp.put("message", "Tipo da escala é obrigatório");
+                return ResponseEntity.badRequest().body(resp);
+            }
             e.setTipo(EscalaTrabalho.TipoEscala.valueOf(tipo));
 
             String entrada1 = String.valueOf(payload.get("horarioEntrada1"));
             String saida1 = String.valueOf(payload.get("horarioSaida1"));
+            if (entrada1 == null || saida1 == null || entrada1.isBlank() || saida1.isBlank()) {
+                resp.put("success", false);
+                resp.put("message", "Horários do primeiro período são obrigatórios");
+                return ResponseEntity.badRequest().body(resp);
+            }
             String entrada2 = String.valueOf(payload.getOrDefault("horarioEntrada2", null));
             String saida2 = String.valueOf(payload.getOrDefault("horarioSaida2", null));
 
@@ -170,12 +216,18 @@ public class PontoEscalasController {
             else e.setHorarioSaida2(null);
 
             Integer intervaloMinimo = Integer.valueOf(String.valueOf(payload.getOrDefault("intervaloMinimo", 0)));
+            if (intervaloMinimo != null && intervaloMinimo < 0) intervaloMinimo = 0;
             e.setIntervaloMinimo(intervaloMinimo);
 
             Object dvi = payload.get("dataVigenciaInicio");
             Object dvf = payload.get("dataVigenciaFim");
             e.setDataVigenciaInicio(dvi != null && !String.valueOf(dvi).isBlank() ? LocalDate.parse(String.valueOf(dvi)) : null);
             e.setDataVigenciaFim(dvf != null && !String.valueOf(dvf).isBlank() ? LocalDate.parse(String.valueOf(dvf)) : null);
+            if (e.getDataVigenciaInicio() != null && e.getDataVigenciaFim() != null && e.getDataVigenciaFim().isBefore(e.getDataVigenciaInicio())) {
+                resp.put("success", false);
+                resp.put("message", "Vigência fim não pode ser antes do início");
+                return ResponseEntity.badRequest().body(resp);
+            }
 
             e.setToleranciaAtraso(Boolean.valueOf(String.valueOf(payload.getOrDefault("toleranciaAtraso", true))));
             e.setMinutosTolerancia(Integer.valueOf(String.valueOf(payload.getOrDefault("minutosTolerancia", 10))));
@@ -191,28 +243,43 @@ public class PontoEscalasController {
             if (!e.getHorarioEntrada1().isBefore(e.getHorarioSaida1())) {
                 resp.put("success", false);
                 resp.put("message", "Horários do primeiro período inválidos");
-                return resp;
+                return ResponseEntity.badRequest().body(resp);
             }
             if (e.getHorarioEntrada2() != null && e.getHorarioSaida2() != null && !e.getHorarioEntrada2().isBefore(e.getHorarioSaida2())) {
                 resp.put("success", false);
                 resp.put("message", "Horários do segundo período inválidos");
-                return resp;
+                return ResponseEntity.badRequest().body(resp);
             }
 
+            if (usuarioLogado != null) {
+                e.setUsuarioCriacao(usuarioLogado);
+            }
             escalaTrabalhoRepository.save(e);
             resp.put("success", true);
-            return resp;
+            resp.put("id", e.getId());
+            return ResponseEntity.ok(resp);
         } catch (Exception ex) {
             Map<String, Object> err = new HashMap<>();
             err.put("success", false);
             err.put("message", "Erro ao salvar escala");
-            return err;
+            return ResponseEntity.internalServerError().body(err);
         }
+    }
+
+    @GetMapping("/nova")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public String novaEscala(Model model) {
+        model.addAttribute("mesAtual", java.time.LocalDate.now().getMonthValue());
+        model.addAttribute("anoAtual", java.time.LocalDate.now().getYear());
+        model.addAttribute("departamentos", departamentoService.listarTodos());
+        return "rh/ponto-escalas/nova";
     }
 
     @PostMapping("/api/escalas/encerrar")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
     public Map<String, Object> encerrarEscala(@RequestBody Map<String, Object> payload) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -239,6 +306,7 @@ public class PontoEscalasController {
     @PostMapping("/api/escalas/clonar")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
     public Map<String, Object> clonarEscala(@RequestBody Map<String, Object> payload) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -281,8 +349,13 @@ public class PontoEscalasController {
     }
 
     @GetMapping("/api/calendario")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.Cacheable(
+        value = "escalaCalendario",
+        key = "#mes + '_' + #ano + '_' + (#departamentoId == null ? 'all' : #departamentoId) + '_' + (#escalaId == null ? 'all' : #escalaId)"
+    )
     public Map<String, Object> calendario(@RequestParam Integer mes,
                                           @RequestParam Integer ano,
                                           @RequestParam(required = false) Long departamentoId,
@@ -290,18 +363,72 @@ public class PontoEscalasController {
         Map<String, Object> resp = new HashMap<>();
         try {
             YearMonth ym = YearMonth.of(ano, mes);
+            LocalDate inicio = ym.atDay(1);
+            LocalDate fim = ym.atEndOfMonth();
+
+            List<Object[]> atribs = colaboradorEscalaRepository.listarAtribuicoesNoPeriodo(inicio, fim, departamentoId, escalaId);
+            int diasMes = ym.lengthOfMonth();
+            int[] counts = new int[diasMes + 1];
+
+            for (Object[] arr : atribs) {
+                EscalaTrabalho.TipoEscala tipo = (EscalaTrabalho.TipoEscala) arr[6];
+                Boolean seg = (Boolean) arr[7];
+                Boolean ter = (Boolean) arr[8];
+                Boolean qua = (Boolean) arr[9];
+                Boolean qui = (Boolean) arr[10];
+                Boolean sex = (Boolean) arr[11];
+                Boolean sab = (Boolean) arr[12];
+                Boolean dom = (Boolean) arr[13];
+                LocalDate atribInicio = (LocalDate) arr[15];
+                LocalDate atribFim = (LocalDate) arr[16];
+                LocalDate vigEscInicio = (LocalDate) arr[17];
+                LocalDate vigEscFim = (LocalDate) arr[18];
+
+                LocalDate startBound = inicio;
+                if (atribInicio != null && atribInicio.isAfter(startBound)) startBound = atribInicio;
+                if (vigEscInicio != null && vigEscInicio.isAfter(startBound)) startBound = vigEscInicio;
+                LocalDate endBound = fim;
+                if (atribFim != null && atribFim.isBefore(endBound)) endBound = atribFim;
+                if (vigEscFim != null && vigEscFim.isBefore(endBound)) endBound = vigEscFim;
+                if (startBound.isAfter(endBound)) continue;
+
+                if (tipo == EscalaTrabalho.TipoEscala.TURNO_12X36) {
+                    LocalDate base = atribInicio != null ? atribInicio : startBound;
+                    LocalDate cursor = startBound;
+                    long diff = java.time.temporal.ChronoUnit.DAYS.between(base, cursor);
+                    if (diff % 2 != 0) cursor = cursor.plusDays(1);
+                    while (!cursor.isAfter(endBound)) {
+                        int idx = cursor.getDayOfMonth();
+                        counts[idx]++;
+                        cursor = cursor.plusDays(2);
+                    }
+                } else if (tipo == EscalaTrabalho.TipoEscala.TURNO_6X1) {
+                    LocalDate base = atribInicio != null ? atribInicio : startBound;
+                    LocalDate cursor = startBound;
+                    while (!cursor.isAfter(endBound)) {
+                        long d = java.time.temporal.ChronoUnit.DAYS.between(base, cursor);
+                        if ((d % 7) < 6) {
+                            int idx = cursor.getDayOfMonth();
+                            counts[idx]++;
+                        }
+                        cursor = cursor.plusDays(1);
+                    }
+                } else {
+                    if (Boolean.TRUE.equals(seg)) incrementarDias(counts, startBound, endBound, java.time.DayOfWeek.MONDAY);
+                    if (Boolean.TRUE.equals(ter)) incrementarDias(counts, startBound, endBound, java.time.DayOfWeek.TUESDAY);
+                    if (Boolean.TRUE.equals(qua)) incrementarDias(counts, startBound, endBound, java.time.DayOfWeek.WEDNESDAY);
+                    if (Boolean.TRUE.equals(qui)) incrementarDias(counts, startBound, endBound, java.time.DayOfWeek.THURSDAY);
+                    if (Boolean.TRUE.equals(sex)) incrementarDias(counts, startBound, endBound, java.time.DayOfWeek.FRIDAY);
+                    if (Boolean.TRUE.equals(sab)) incrementarDias(counts, startBound, endBound, java.time.DayOfWeek.SATURDAY);
+                    if (Boolean.TRUE.equals(dom)) incrementarDias(counts, startBound, endBound, java.time.DayOfWeek.SUNDAY);
+                }
+            }
+
             List<Map<String, Object>> days = new ArrayList<>();
-            for (int d = 1; d <= ym.lengthOfMonth(); d++) {
-                LocalDate date = ym.atDay(d);
-                List<ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigentesByData(date);
-                long count = vigentes.stream()
-                        .filter(ce -> ce.getEscalaTrabalho() != null && ce.getEscalaTrabalho().trabalhaEm(date.getDayOfWeek()))
-                        .filter(ce -> departamentoId == null || (ce.getColaborador() != null && ce.getColaborador().getDepartamento() != null && Objects.equals(ce.getColaborador().getDepartamento().getId(), departamentoId)))
-                        .filter(ce -> escalaId == null || (ce.getEscalaTrabalho() != null && Objects.equals(ce.getEscalaTrabalho().getId(), escalaId)))
-                        .count();
+            for (int d = 1; d <= diasMes; d++) {
                 Map<String, Object> m = new HashMap<>();
                 m.put("day", d);
-                m.put("total", count);
+                m.put("total", counts[d]);
                 days.add(m);
             }
             resp.put("success", true);
@@ -575,6 +702,264 @@ public class PontoEscalasController {
         }
     }
 
+    @GetMapping("/api/colaboradores-dia")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Map<String, Object> colaboradoresPorDia(@RequestParam String dia,
+                                                   @RequestParam(required = false) Long departamentoId,
+                                                   @RequestParam(required = false) Long escalaId,
+                                                   @RequestParam(name = "q", required = false) String q,
+                                                   @RequestParam(name = "page", defaultValue = "0") int page,
+                                                   @RequestParam(name = "size", defaultValue = "20") int size) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            LocalDate data = LocalDate.parse(dia);
+            java.time.DayOfWeek dow = data.getDayOfWeek();
+            boolean seg = dow == java.time.DayOfWeek.MONDAY;
+            boolean ter = dow == java.time.DayOfWeek.TUESDAY;
+            boolean qua = dow == java.time.DayOfWeek.WEDNESDAY;
+            boolean qui = dow == java.time.DayOfWeek.THURSDAY;
+            boolean sex = dow == java.time.DayOfWeek.FRIDAY;
+            boolean sab = dow == java.time.DayOfWeek.SATURDAY;
+            boolean dom = dow == java.time.DayOfWeek.SUNDAY;
+
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(page, 0), Math.min(Math.max(size, 1), 100), org.springframework.data.domain.Sort.by("c.nome").ascending()
+            );
+
+            org.springframework.data.domain.Page<Object[]> pagina = colaboradorEscalaRepository.listarParaDia(
+                data,
+                departamentoId,
+                escalaId,
+                q != null && !q.isBlank() ? q.trim() : null,
+                seg, ter, qua, qui, sex, sab, dom,
+                pageable
+            );
+
+            List<Object[]> registrosDia = registroPontoRepository.findCamposDia(data);
+            Map<Long, Object[]> registroPorColaborador = new HashMap<>();
+            for (Object[] r : registrosDia) {
+                Long cid = (Long) r[0];
+                if (cid != null) registroPorColaborador.put(cid, r);
+            }
+
+            List<Map<String, Object>> content = pagina.getContent().stream()
+                .filter(arr -> {
+                    EscalaTrabalho.TipoEscala tipo = (EscalaTrabalho.TipoEscala) arr[10];
+                    LocalDate atribInicio = (LocalDate) arr[11];
+                    if (tipo == EscalaTrabalho.TipoEscala.TURNO_12X36) {
+                        if (atribInicio == null) return true;
+                        long diff = java.time.temporal.ChronoUnit.DAYS.between(atribInicio, data);
+                        return diff >= 0 && diff % 2 == 0;
+                    } else if (tipo == EscalaTrabalho.TipoEscala.TURNO_6X1) {
+                        if (atribInicio == null) return true;
+                        long diff = java.time.temporal.ChronoUnit.DAYS.between(atribInicio, data);
+                        return diff >= 0 && (diff % 7) < 6;
+                    }
+                    return true;
+                })
+                .map(arr -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", (Long) arr[0]);
+                m.put("nome", (String) arr[1]);
+                m.put("departamento", (String) arr[2]);
+                m.put("matricula", (String) arr[3]);
+                m.put("escalaId", (Long) arr[4]);
+                m.put("escalaNome", (String) arr[5]);
+                m.put("entrada1", arr[6] != null ? arr[6].toString() : null);
+                m.put("saida1", arr[7] != null ? arr[7].toString() : null);
+                m.put("entrada2", arr[8] != null ? arr[8].toString() : null);
+                m.put("saida2", arr[9] != null ? arr[9].toString() : null);
+                EscalaTrabalho.TipoEscala tipo = (EscalaTrabalho.TipoEscala) arr[10];
+                m.put("tipoEscala", tipo != null ? tipo.name() : null);
+
+                Object[] r = registroPorColaborador.get((Long) arr[0]);
+                String status = "Previsto";
+                String proximoTipo = null;
+                Integer atrasoMin = null;
+                Integer minutosTrabalhados = null;
+                boolean isHoje = LocalDate.now().equals(data);
+                java.time.LocalTime hEnt1 = (java.time.LocalTime) arr[6];
+
+                if (r != null) {
+                    Boolean falta = (Boolean) r[5];
+                    java.time.LocalTime rEnt1 = (java.time.LocalTime) r[1];
+                    java.time.LocalTime rSai1 = (java.time.LocalTime) r[2];
+                    java.time.LocalTime rEnt2 = (java.time.LocalTime) r[3];
+                    java.time.LocalTime rSai2 = (java.time.LocalTime) r[4];
+                    Integer rAtraso = (Integer) r[6];
+                    Integer rMinTrab = (Integer) r[7];
+                    if (Boolean.TRUE.equals(falta)) {
+                        status = "Falta";
+                    } else if (rSai2 != null || (rSai1 != null && rEnt2 == null)) {
+                        status = "Concluído";
+                    } else if (rEnt1 != null) {
+                        status = "Em andamento";
+                        proximoTipo = calcularProximoTipoTimes(rEnt1, rSai1, rEnt2, rSai2);
+                    }
+                    if (rAtraso != null && rAtraso > 0) {
+                        atrasoMin = rAtraso;
+                        if (!"Falta".equals(status)) status = "Atrasado";
+                    }
+                    minutosTrabalhados = rMinTrab;
+                } else {
+                    if (isHoje && hEnt1 != null) {
+                        java.time.LocalTime agora = java.time.LocalTime.now();
+                        if (agora.isAfter(hEnt1)) {
+                            status = "Aguardando (após início)";
+                        } else {
+                            status = "Aguardando";
+                        }
+                    } else if (data.isBefore(LocalDate.now())) {
+                        status = "Sem registro";
+                    }
+                }
+
+                m.put("status", status);
+                if (proximoTipo != null) m.put("proximaBatida", proximoTipo);
+                if (atrasoMin != null) m.put("atrasoMinutos", atrasoMin);
+                if (minutosTrabalhados != null) m.put("minutosTrabalhados", minutosTrabalhados);
+                return m;
+            }).collect(java.util.stream.Collectors.toList());
+
+            return montarRespostaPagina(resp, pagina, content);
+        
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao carregar colaboradores do dia");
+            return resp;
+        }
+    }
+
+    private Map<String, Object> montarRespostaPagina(Map<String, Object> resp, org.springframework.data.domain.Page<Object[]> pagina, List<Map<String, Object>> content) {
+        resp.put("success", true);
+        resp.put("content", content);
+        resp.put("currentPage", pagina.getNumber());
+        resp.put("totalPages", pagina.getTotalPages());
+        resp.put("totalElements", pagina.getTotalElements());
+        resp.put("hasPrevious", pagina.hasPrevious());
+        resp.put("hasNext", pagina.hasNext());
+        return resp;
+    }
+
+    private String calcularProximoTipoTimes(java.time.LocalTime e1, java.time.LocalTime s1, java.time.LocalTime e2, java.time.LocalTime s2) {
+        if (e1 != null && s1 == null) return "Saída";
+        if (e1 != null && s1 != null && e2 != null && s2 == null) return "Saída";
+        if (e1 != null && s1 != null && e2 == null) return "Retorno";
+        return null;
+    }
+
+    @GetMapping("/api/resumo")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(
+        value = "escalaResumo",
+        key = "#mes + '_' + #ano + '_' + (#departamentoId == null ? 'all' : #departamentoId) + '_' + (#escalaId == null ? 'all' : #escalaId)"
+    )
+    public Map<String, Object> resumoMensal(@RequestParam int mes,
+                                            @RequestParam int ano,
+                                            @RequestParam(required = false) Long departamentoId,
+                                            @RequestParam(required = false) Long escalaId) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            java.time.YearMonth ym = java.time.YearMonth.of(ano, mes);
+            LocalDate inicio = ym.atDay(1);
+            LocalDate fim = ym.atEndOfMonth();
+
+            List<Object[]> atribs = colaboradorEscalaRepository.listarAtribuicoesNoPeriodo(inicio, fim, departamentoId, escalaId);
+            java.util.Set<Long> colaboradoresEscalados = new java.util.HashSet<>();
+            java.util.Set<Long> turnosNoMes = new java.util.HashSet<>();
+
+            int minutosPlanejadosTotal = 0;
+            int diasComCobertura = 0;
+            int diasUteisNoMes = 0;
+
+            // Precomputar dias úteis do mês
+            for (int d = 1; d <= ym.lengthOfMonth(); d++) {
+                java.time.DayOfWeek dow = ym.atDay(d).getDayOfWeek();
+                if (dow != java.time.DayOfWeek.SATURDAY && dow != java.time.DayOfWeek.SUNDAY) diasUteisNoMes++;
+            }
+
+            // Mapa de dia -> houve cobertura
+            boolean[] coberturaDia = new boolean[ym.lengthOfMonth()+1];
+
+            for (Object[] arr : atribs) {
+                Long colabId = (Long) arr[1];
+                Long escalaIdRow = (Long) arr[4];
+                Boolean seg = (Boolean) arr[7];
+                Boolean ter = (Boolean) arr[8];
+                Boolean qua = (Boolean) arr[9];
+                Boolean qui = (Boolean) arr[10];
+                Boolean sex = (Boolean) arr[11];
+                Boolean sab = (Boolean) arr[12];
+                Boolean dom = (Boolean) arr[13];
+                Integer cargaDiariaMin = (Integer) arr[14];
+                LocalDate atribInicio = (LocalDate) arr[15];
+                LocalDate atribFim = (LocalDate) arr[16];
+                LocalDate vigEscInicio = (LocalDate) arr[17];
+                LocalDate vigEscFim = (LocalDate) arr[18];
+
+                colaboradoresEscalados.add(colabId);
+                turnosNoMes.add(escalaIdRow);
+
+                LocalDate startBound = inicio;
+                if (atribInicio != null && atribInicio.isAfter(startBound)) startBound = atribInicio;
+                if (vigEscInicio != null && vigEscInicio.isAfter(startBound)) startBound = vigEscInicio;
+                LocalDate endBound = fim;
+                if (atribFim != null && atribFim.isBefore(endBound)) endBound = atribFim;
+                if (vigEscFim != null && vigEscFim.isBefore(endBound)) endBound = vigEscFim;
+                if (startBound.isAfter(endBound)) continue;
+
+                int diasTrabalhados = contarDiasTrabalhados(startBound, endBound, seg, ter, qua, qui, sex, sab, dom);
+                minutosPlanejadosTotal += (cargaDiariaMin != null ? cargaDiariaMin : 0) * diasTrabalhados;
+
+                LocalDate cursor = startBound;
+                while (!cursor.isAfter(endBound)) {
+                    java.time.DayOfWeek dow = cursor.getDayOfWeek();
+                    boolean trabalhaDiaUtil = (dow == java.time.DayOfWeek.MONDAY && Boolean.TRUE.equals(seg)) ||
+                                              (dow == java.time.DayOfWeek.TUESDAY && Boolean.TRUE.equals(ter)) ||
+                                              (dow == java.time.DayOfWeek.WEDNESDAY && Boolean.TRUE.equals(qua)) ||
+                                              (dow == java.time.DayOfWeek.THURSDAY && Boolean.TRUE.equals(qui)) ||
+                                              (dow == java.time.DayOfWeek.FRIDAY && Boolean.TRUE.equals(sex));
+                    if (trabalhaDiaUtil) {
+                        int dIndex = cursor.getDayOfMonth();
+                        coberturaDia[dIndex] = true;
+                    }
+                    cursor = cursor.plusDays(1);
+                }
+            }
+
+            for (int d = 1; d <= ym.lengthOfMonth(); d++) {
+                java.time.DayOfWeek dow = ym.atDay(d).getDayOfWeek();
+                if (dow == java.time.DayOfWeek.SATURDAY || dow == java.time.DayOfWeek.SUNDAY) continue;
+                if (coberturaDia[d]) diasComCobertura++;
+            }
+
+            int totalColaboradoresAtivos = colaboradorService.listarAtivos().size();
+
+            Map<String, Object> resumo = new HashMap<>();
+            resumo.put("mes", mes);
+            resumo.put("ano", ano);
+            resumo.put("colaboradoresAtivos", totalColaboradoresAtivos);
+            resumo.put("escalados", colaboradoresEscalados.size());
+            resumo.put("turnos", turnosNoMes.size());
+            resumo.put("horasMesMinutos", minutosPlanejadosTotal);
+            resumo.put("horasMesFormatado", String.format("%d:%02d", (minutosPlanejadosTotal/60), (minutosPlanejadosTotal%60)));
+            double coberturaPercent = diasUteisNoMes == 0 ? 0.0 : (diasComCobertura * 100.0 / diasUteisNoMes);
+            resumo.put("coberturaPercent", Math.round(coberturaPercent));
+
+            resp.put("success", true);
+            resp.put("resumo", resumo);
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao calcular resumo do mês");
+            return resp;
+        }
+    }
+
     private String calcularProximoTipo(RegistroPonto r) {
         if (r == null || r.getEntrada1() == null) return "Entrada";
         if (r.getSaida1() == null) return "Saída";
@@ -590,5 +975,35 @@ public class PontoEscalasController {
         m.put("dataFormatada", String.format("%02d/%02d/%04d", r.getData().getDayOfMonth(), r.getData().getMonthValue(), r.getData().getYear()));
         m.put("colaboradorNome", r.getColaborador().getNome());
         return m;
+    }
+
+    private int contarDiasTrabalhados(LocalDate inicio, LocalDate fim,
+                                      Boolean seg, Boolean ter, Boolean qua, Boolean qui, Boolean sex, Boolean sab, Boolean dom) {
+        int count = 0;
+        LocalDate cursor = inicio;
+        while (!cursor.isAfter(fim)) {
+            java.time.DayOfWeek dow = cursor.getDayOfWeek();
+            boolean trabalhaDia = (dow == java.time.DayOfWeek.MONDAY && Boolean.TRUE.equals(seg)) ||
+                                  (dow == java.time.DayOfWeek.TUESDAY && Boolean.TRUE.equals(ter)) ||
+                                  (dow == java.time.DayOfWeek.WEDNESDAY && Boolean.TRUE.equals(qua)) ||
+                                  (dow == java.time.DayOfWeek.THURSDAY && Boolean.TRUE.equals(qui)) ||
+                                  (dow == java.time.DayOfWeek.FRIDAY && Boolean.TRUE.equals(sex)) ||
+                                  (dow == java.time.DayOfWeek.SATURDAY && Boolean.TRUE.equals(sab)) ||
+                                  (dow == java.time.DayOfWeek.SUNDAY && Boolean.TRUE.equals(dom));
+            if (trabalhaDia) count++;
+            cursor = cursor.plusDays(1);
+        }
+        return count;
+    }
+
+    private void incrementarDias(int[] counts, LocalDate startBound, LocalDate endBound, java.time.DayOfWeek dow) {
+        LocalDate first = startBound;
+        int shift = (dow.getValue() - first.getDayOfWeek().getValue() + 7) % 7;
+        first = first.plusDays(shift);
+        while (!first.isAfter(endBound)) {
+            int idx = first.getDayOfMonth();
+            counts[idx]++;
+            first = first.plusDays(7);
+        }
     }
 }

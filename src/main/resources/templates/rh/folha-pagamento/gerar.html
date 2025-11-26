@@ -614,10 +614,31 @@
             if (processarBtnOriginalHtml) processarBtnEl.innerHTML = processarBtnOriginalHtml;
           }
         }
+        if (data && typeof data.processed === 'number') {
+          if (window.__lastProcessedCount == null) {
+            window.__lastProcessedCount = data.processed;
+            window.__noChangeTicks = 0;
+            window.__pollMs = 2500;
+          } else if (data.processed === window.__lastProcessedCount) {
+            window.__noChangeTicks = (window.__noChangeTicks || 0) + 1;
+            if (window.__noChangeTicks >= 5) {
+              window.__pollMs = Math.min(5000, (window.__pollMs || 2500) * 1.5);
+            }
+          } else {
+            window.__lastProcessedCount = data.processed;
+            window.__noChangeTicks = 0;
+            window.__pollMs = 2500;
+          }
+        }
       } catch (e) {
         clearInterval(processamentoInterval);
         processamentoInterval = null;
       }
+    }
+    function scheduleNextPoll() {
+      if (processamentoInterval) { clearInterval(processamentoInterval); processamentoInterval = null; }
+      const delay = window.__pollMs || 2500;
+      processamentoInterval = setTimeout(() => { pollStatus().then(scheduleNextPoll); }, delay);
     }
     async function processarFolhaAsync(e) {
       e.preventDefault();
@@ -649,8 +670,10 @@
           // Inicia progresso fake até termos dados reais do backend
           hasRealProgress = false;
           startFakeProgress(85);
-          if (processamentoInterval) clearInterval(processamentoInterval);
-          processamentoInterval = setInterval(pollStatus, 1000);
+          window.__pollMs = 2500;
+          window.__lastProcessedCount = null;
+          window.__noChangeTicks = 0;
+          scheduleNextPoll();
           // Mantém o botão desativado até concluir ou erro
         } else {
           mostrarAlerta('danger', 'Não foi possível iniciar o processamento.');

@@ -37,6 +37,10 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     @Query("SELECT r FROM RegistroPonto r WHERE r.data = :data ORDER BY r.colaborador.nome")
     List<RegistroPonto> findByData(@Param("data") LocalDate data);
 
+    @Query("SELECT r.colaborador.id, r.entrada1, r.saida1, r.entrada2, r.saida2, r.falta, r.minutosAtraso, r.totalMinutosTrabalhados " +
+           "FROM RegistroPonto r WHERE r.data = :data")
+    List<Object[]> findCamposDia(@Param("data") LocalDate data);
+
     @Query("SELECT r FROM RegistroPonto r WHERE r.colaborador.departamento.id = :departamentoId AND r.data BETWEEN :dataInicio AND :dataFim ORDER BY r.colaborador.nome, r.data DESC")
     List<RegistroPonto> findByDepartamentoAndPeriodo(
             @Param("departamentoId") Long departamentoId,

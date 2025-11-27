@@ -156,8 +156,10 @@ public class FolhaPagamentoController {
      */
     @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
     @PostMapping("/processar")
-    public String processar(@RequestParam Integer mes, 
+    public String processar(@RequestParam Integer mes,
                            @RequestParam Integer ano,
+                           @RequestParam(name = "departamento", required = false) Long departamentoId,
+                           @RequestParam(name = "tipoFolha", defaultValue = "normal") String tipoFolha,
                            RedirectAttributes redirectAttributes) {
         try {
             // Obter usuário logado
@@ -165,7 +167,7 @@ public class FolhaPagamentoController {
             Usuario usuario = usuarioService.buscarPorEmailLeve(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
             
-            FolhaPagamento folha = folhaPagamentoService.gerarFolhaPagamento(mes, ano, usuario);
+            FolhaPagamento folha = folhaPagamentoService.gerarFolhaPagamento(mes, ano, usuario, departamentoId, tipoFolha);
             
             redirectAttributes.addFlashAttribute("mensagem", 
                 "Folha de pagamento " + mes + "/" + ano + " gerada com sucesso!");
@@ -182,10 +184,12 @@ public class FolhaPagamentoController {
     @PostMapping(value = "/processar-async", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<java.util.Map<String, Object>> processarAsync(@RequestParam Integer mes,
-                                                                        @RequestParam Integer ano) {
+                                                                        @RequestParam Integer ano,
+                                                                        @RequestParam(name = "departamento", required = false) Long departamentoId,
+                                                                        @RequestParam(name = "tipoFolha", defaultValue = "normal") String tipoFolha) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Usuario usuario = usuarioService.buscarPorEmailLeve(auth.getName()).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        String jobId = folhaPagamentoService.iniciarProcessamentoAsync(mes, ano, usuario);
+        String jobId = folhaPagamentoService.iniciarProcessamentoAsync(mes, ano, usuario, departamentoId, tipoFolha);
         java.util.Map<String, Object> resp = new java.util.HashMap<>();
         resp.put("accepted", true);
         resp.put("jobId", jobId);
@@ -282,6 +286,55 @@ public class FolhaPagamentoController {
         resp.put("hasPrevious", pagina.hasPrevious());
         resp.put("hasNext", pagina.hasNext());
         return ResponseEntity.ok(resp);
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @GetMapping(value = "/api/colaborador/{colaboradorId}/holerites", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> listarHoleritesPorColaborador(
+            @PathVariable Long colaboradorId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "ano", required = false) Integer ano,
+            @RequestParam(name = "mes", required = false) Integer mes) {
+        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.repository.HoleriteRepository.HoleriteColabListProjection> pagina = holeriteService.listarPorColaboradorPaginado(colaboradorId, page, size, ano, mes);
+        java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream().map(h -> {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("id", h.getId());
+            m.put("mes", h.getMesReferencia());
+            m.put("ano", h.getAnoReferencia());
+            m.put("salarioBase", h.getSalarioBase());
+            m.put("totalProventos", h.getTotalProventos());
+            m.put("totalDescontos", h.getTotalDescontos());
+            m.put("salarioLiquido", h.getSalarioLiquido());
+            return m;
+        }).collect(java.util.stream.Collectors.toList());
+        java.util.Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("content", content);
+        resp.put("currentPage", pagina.getNumber());
+        resp.put("totalPages", pagina.getTotalPages());
+        resp.put("totalElements", pagina.getTotalElements());
+        resp.put("hasPrevious", pagina.hasPrevious());
+        resp.put("hasNext", pagina.hasNext());
+        return ResponseEntity.ok(resp);
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @GetMapping(value = "/api/holerite/{id}/colaborador", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> obterColaboradorPorHolerite(@PathVariable Long id) {
+        java.util.Optional<Holerite> holeriteOpt = holeriteService.buscarPorId(id);
+        if (holeriteOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("erro", "Holerite não encontrado"));
+        }
+        Holerite holerite = holeriteOpt.get();
+        com.jaasielsilva.portalceo.model.Colaborador colab = holerite.getColaborador();
+        if (colab == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("erro", "Colaborador não associado"));
+        }
+        return ResponseEntity.ok(java.util.Map.of("id", colab.getId(), "nome", colab.getNome()));
     }
 
     /**
@@ -506,7 +559,6 @@ public class FolhaPagamentoController {
     @GetMapping("/holerite")
     public String selecionarHolerite(Model model) {
         LocalDate hoje = LocalDate.now();
-        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         model.addAttribute("mesAtual", hoje.getMonthValue());
         model.addAttribute("anoAtual", hoje.getYear());
         model.addAttribute("meses", java.util.stream.IntStream.rangeClosed(1, 12).boxed().toList());

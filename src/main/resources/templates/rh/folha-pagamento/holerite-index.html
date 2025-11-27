@@ -22,12 +22,13 @@
           <h3><i class="fas fa-filter"></i> Filtros</h3>
           <form class="form-container" id="selecionarHoleriteForm" onsubmit="abrirHolerites(event)">
             <div class="form-row">
-              <div class="form-group">
-                <label for="colaborador">Colaborador *</label>
-                <select id="colaborador" name="colaborador" required class="form-control">
+              <div class="form-group" style="min-width:280px;">
+                <label for="colaboradorSearch">Colaborador *</label>
+                <input id="colaboradorSearch" type="search" class="form-control" placeholder="Digite para buscar" autocomplete="off" />
+                <select id="colaborador" name="colaborador" required class="form-control" style="margin-top:6px;">
                   <option value="">Selecione...</option>
-                  <option th:each="c : ${colaboradores}" th:value="${c.id}" th:text="${c.nome}"></option>
                 </select>
+                <div id="colabLoading" class="text-muted" style="display:none; font-size:.9em; margin-top:4px;"><i class="fas fa-spinner fa-spin"></i> Carregando colaboradores...</div>
               </div>
               <div class="form-group">
                 <label for="mes">Mês</label>
@@ -64,6 +65,8 @@
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script th:src="@{/js/sidebar.js}"></script>
   <script>
+    let debounceTimer;
+
     function abrirHolerites(e) {
       e.preventDefault();
       const colab = document.getElementById('colaborador').value;
@@ -76,6 +79,37 @@
       const url = `/rh/folha-pagamento/holerites/colaborador/${colab}` + (params.toString() ? `?${params.toString()}` : '');
       window.location.href = url;
     }
+
+    function carregarColaboradores(q = '') {
+      const sel = document.getElementById('colaborador');
+      const loading = document.getElementById('colabLoading');
+      loading.style.display = 'block';
+      fetch(`/rh/colaboradores/api/listar?page=0&size=20&q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => {
+          sel.innerHTML = '<option value="">Selecione...</option>';
+          (data.content || []).forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.nome;
+            sel.appendChild(opt);
+          });
+        })
+        .catch(() => { sel.innerHTML = '<option value="">Falha ao carregar</option>'; })
+        .finally(() => { loading.style.display = 'none'; });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      carregarColaboradores('');
+      const input = document.getElementById('colaboradorSearch');
+      if (input) {
+        input.addEventListener('input', function(e) {
+          clearTimeout(debounceTimer);
+          const q = e.target.value || '';
+          debounceTimer = setTimeout(() => carregarColaboradores(q), 250);
+        });
+      }
+    });
   </script>
 </body>
 </html>

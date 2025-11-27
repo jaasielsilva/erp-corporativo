@@ -108,6 +108,9 @@ public class Holerite {
     private LocalDateTime dataCriacao;
     private LocalDateTime dataUltimaEdicao;
 
+    @Column(name = "tipo_folha", length = 32)
+    private String tipoFolha;
+
     @PrePersist
     public void onPrePersist() {
         dataCriacao = LocalDateTime.now();

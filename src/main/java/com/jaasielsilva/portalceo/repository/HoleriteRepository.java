@@ -65,7 +65,21 @@ public interface HoleriteRepository extends JpaRepository<Holerite, Long> {
         java.math.BigDecimal getSalarioLiquido();
     }
 
+    public static interface HoleriteColabListProjection {
+        Long getId();
+        Integer getMesReferencia();
+        Integer getAnoReferencia();
+        java.math.BigDecimal getSalarioBase();
+        java.math.BigDecimal getTotalProventos();
+        java.math.BigDecimal getTotalDescontos();
+        java.math.BigDecimal getSalarioLiquido();
+    }
+
     @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
     @Query("SELECT h.id as id, c.nome as colaboradorNome, d.nome as departamentoNome, h.salarioBase as salarioBase, h.totalProventos as totalProventos, h.totalDescontos as totalDescontos, h.salarioLiquido as salarioLiquido FROM Holerite h JOIN h.colaborador c LEFT JOIN c.departamento d WHERE h.folhaPagamento.id = :folhaId AND (:q IS NULL OR LOWER(c.nome) LIKE LOWER(CONCAT('%', :q, '%'))) ORDER BY c.nome ASC" )
     Page<HoleriteListProjection> findListByFolhaPaginado(@Param("folhaId") Long folhaId, @Param("q") String q, Pageable pageable);
+
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    @Query("SELECT h.id as id, f.mesReferencia as mesReferencia, f.anoReferencia as anoReferencia, h.salarioBase as salarioBase, h.totalProventos as totalProventos, h.totalDescontos as totalDescontos, h.salarioLiquido as salarioLiquido FROM Holerite h JOIN h.folhaPagamento f WHERE h.colaborador.id = :colaboradorId AND (:ano IS NULL OR f.anoReferencia = :ano) AND (:mes IS NULL OR f.mesReferencia = :mes) ORDER BY f.anoReferencia DESC, f.mesReferencia DESC")
+    Page<HoleriteColabListProjection> findListByColaboradorPaginado(@Param("colaboradorId") Long colaboradorId, @Param("ano") Integer ano, @Param("mes") Integer mes, Pageable pageable);
 }

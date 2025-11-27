@@ -92,6 +92,11 @@ public class HoleriteService {
         return holeriteRepository.findListByFolhaPaginado(folhaId, q != null && !q.isBlank() ? q.trim() : null, pageable);
     }
 
+    public Page<HoleriteRepository.HoleriteColabListProjection> listarPorColaboradorPaginado(Long colaboradorId, int page, int size, Integer ano, Integer mes) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("folhaPagamento.anoReferencia").descending().and(Sort.by("folhaPagamento.mesReferencia").descending()));
+        return holeriteRepository.findListByColaboradorPaginado(colaboradorId, ano, mes, pageable);
+    }
+
     /**
      * Lista holerites por mês e ano
      */

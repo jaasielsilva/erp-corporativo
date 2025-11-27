@@ -52,10 +52,16 @@
                             <td>
                                 <form th:action="@{/projetos/tarefas/{id}/atribuir(id=${t.id})}" method="post">
                                     <input type="hidden" name="projetoId" th:value="${t.projeto != null ? t.projeto.id : ''}" />
-                                    <select name="colaboradorId" class="form-select">
-                                        <option th:each="c : ${colaboradores}" th:value="${c.id}" th:text="${c.nome}" 
-                                            th:selected="${t.atribuidaA != null and t.atribuidaA.id == c.id}"></option>
-                                    </select>
+                                    <div class="d-flex flex-column" style="gap:6px;">
+                                        <input type="search" class="form-control" th:id="${'colabSearch__' + t.id}" placeholder="Digite para buscar" autocomplete="off" />
+                                        <select name="colaboradorId" class="form-select" th:id="${'colabSelect__' + t.id}">
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                        <div class="d-flex justify-content-end" style="gap:6px;">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" th:id="${'colabPrev__' + t.id}"><i class="fas fa-chevron-left"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" th:id="${'colabNext__' + t.id}"><i class="fas fa-chevron-right"></i></button>
+                                        </div>
+                                    </div>
                             </td>
                             <td th:text="${t.status}">Status</td>
                             <td>
@@ -82,5 +88,45 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/sidebar.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rows = document.querySelectorAll('tr[th\:each]');
+            /* Fallback: initialize for each tarefa using its id attribute in controls */
+            const selects = document.querySelectorAll('[id^=colabSelect__]');
+            selects.forEach(function(sel) {
+                const idSuffix = sel.id.split('__')[1];
+                const input = document.getElementById('colabSearch__' + idSuffix);
+                const prev = document.getElementById('colabPrev__' + idSuffix);
+                const next = document.getElementById('colabNext__' + idSuffix);
+                let page = 0; let totalPages = 0; let debounceTimer;
+                function updateButtons() { if (prev && next) { prev.disabled = page <= 0; next.disabled = page >= Math.max(totalPages - 1, 0); } }
+                function carregar(q) {
+                    fetch('/rh/colaboradores/api/listar?page=' + page + '&size=20&q=' + encodeURIComponent(q || ''))
+                        .then(r => r.json())
+                        .then(data => {
+                            totalPages = data.totalPages || 0;
+                            sel.innerHTML = '<option value="">Selecione...</option>';
+                            (data.content || []).forEach(item => {
+                                const opt = document.createElement('option');
+                                opt.value = item.id; opt.textContent = item.nome;
+                                sel.appendChild(opt);
+                            });
+                            updateButtons();
+                        })
+                        .catch(() => { sel.innerHTML = '<option value="">Falha ao carregar</option>'; totalPages = 0; updateButtons(); });
+                }
+                carregar('');
+                if (input) {
+                    input.addEventListener('input', function(e) {
+                        clearTimeout(debounceTimer); page = 0;
+                        const q = e.target.value || '';
+                        debounceTimer = setTimeout(() => carregar(q), 250);
+                    });
+                }
+                if (prev) prev.addEventListener('click', function() { if (page > 0) { page--; carregar(input && input.value || ''); } });
+                if (next) next.addEventListener('click', function() { page++; carregar(input && input.value || ''); });
+            });
+        });
+    </script>
 </body>
 </html>

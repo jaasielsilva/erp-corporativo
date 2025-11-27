@@ -35,7 +35,7 @@
 
         <div class="action-buttons" style="margin-bottom:12px;">
           <div class="search-box">
-            <input id="buscarHolerite" type="text" placeholder="Buscar por colaborador" autocomplete="off" />
+            <input id="buscarHoleriteFolha" type="text" placeholder="Buscar por nome" autocomplete="off" />
           </div>
         </div>
 
@@ -76,24 +76,24 @@
 
         <div class="card">
           <div class="card-body table-responsive">
-            <div id="loading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
-            <table class="table table-striped">
+            <div id="holeritesLoading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+            <table class="table-list">
               <thead>
                 <tr>
-                  <th>Colaborador</th>
-                  <th>Departamento</th>
-                  <th>Salário Base</th>
-                  <th>Proventos</th>
-                  <th>Descontos</th>
-                  <th>Líquido</th>
-                  <th>Ações</th>
+                  <th class="text-center">Colaborador</th>
+                  <th class="text-center">Departamento</th>
+                  <th class="text-center">Salário Base</th>
+                  <th class="text-center">Proventos</th>
+                  <th class="text-center">Descontos</th>
+                  <th class="text-center">Líquido</th>
+                  <th class="text-center">Ações</th>
                 </tr>
               </thead>
               <tbody id="holeritesBody"></tbody>
             </table>
+            <div id="holeritesPagination" class="pagination"></div>
           </div>
         </div>
-        <div id="pagination" class="pagination"></div>
       </section>
     </main>
   </div>
@@ -107,7 +107,7 @@
       try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0); } catch { return v ?? 0; }
     }
 
-    function showLoading(show) { document.getElementById('loading').style.display = show ? 'block' : 'none'; }
+    function showLoading(show) { const el = document.getElementById('holeritesLoading'); if (el) el.style.display = show ? 'block' : 'none'; }
 
     function renderRows(items) {
       const tbody = document.getElementById('holeritesBody');
@@ -121,15 +121,15 @@
         const dep = it.departamento || '-';
         const id = it.id;
         return `<tr>
-          <td>${nome}</td>
-          <td>${dep}</td>
-          <td>${brl(it.salarioBase)}</td>
-          <td>${brl(it.totalProventos)}</td>
-          <td>${brl(it.totalDescontos)}</td>
-          <td>${brl(it.salarioLiquido)}</td>
-          <td>
-            <a href="/rh/folha-pagamento/holerite/${id}" class="btn btn-sm btn-outline-primary" title="Ver Holerite"><i class="fas fa-file-invoice"></i> Ver</a>
-            <a href="/rh/folha-pagamento/holerite/${id}/pdf" class="btn btn-sm btn-outline-success" title="Baixar PDF"><i class="fas fa-file-pdf"></i> PDF</a>
+          <td class="text-center">${nome}</td>
+          <td class="text-center">${dep}</td>
+          <td class="text-center">${brl(it.salarioBase)}</td>
+          <td class="text-center">${brl(it.totalProventos)}</td>
+          <td class="text-center">${brl(it.totalDescontos)}</td>
+          <td class="text-center">${brl(it.salarioLiquido)}</td>
+          <td class="actions">
+            <a href="/rh/folha-pagamento/holerite/${id}" class="btn btn-sm btn-info" title="Ver"><i class="fas fa-eye"></i></a>
+            <a href="/rh/folha-pagamento/holerite/${id}/pdf" class="btn btn-sm btn-success" title="PDF"><i class="fas fa-file-pdf"></i></a>
           </td>
         </tr>`;
       }).join('');
@@ -137,7 +137,7 @@
     }
 
     function renderPagination(data) {
-      const el = document.getElementById('pagination');
+      const el = document.getElementById('holeritesPagination');
       const totalPages = data.totalPages || 0;
       const totalElements = data.totalElements || 0;
       const page = data.currentPage || 0;
@@ -147,7 +147,7 @@
       html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</span>`;
       html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
       html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
-      el.innerHTML = html;
+      if (el) el.innerHTML = html;
     }
 
     function loadHolerites(page = 0) {
@@ -164,7 +164,7 @@
     function goToPage(p) { loadHolerites(Math.max(0, p)); }
 
     document.addEventListener('DOMContentLoaded', function() {
-      const input = document.getElementById('buscarHolerite');
+      const input = document.getElementById('buscarHoleriteFolha');
       if (input) {
         input.addEventListener('input', function(e) {
           clearTimeout(debounceTimer);

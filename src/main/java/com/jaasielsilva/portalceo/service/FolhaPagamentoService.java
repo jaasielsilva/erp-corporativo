@@ -105,14 +105,18 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     }
 
     public String iniciarProcessamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento) {
+        return iniciarProcessamentoAsync(mes, ano, usuarioProcessamento, null, "normal");
+    }
+
+    public String iniciarProcessamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento, Long departamentoId, String tipoFolha) {
         String jobId = UUID.randomUUID().toString();
         Map<String, Object> info = new java.util.HashMap<>();
         info.put("status", "AGENDADO");
         info.put("message", "Processamento agendado");
         processamentoJobs.put(jobId, info);
-        appendJobLog(jobId, String.format("Agendado processamento para %02d/%d", mes, ano));
+        appendJobLog(jobId, String.format("Agendado processamento para %02d/%d (tipo=%s%s)", mes, ano, String.valueOf(tipoFolha), departamentoId != null ? (", dept=" + departamentoId) : ""));
         pushJobStatus(jobId);
-        gerarFolhaPagamentoAsync(mes, ano, usuarioProcessamento, jobId);
+        gerarFolhaPagamentoAsync(mes, ano, usuarioProcessamento, departamentoId, tipoFolha, jobId);
         return jobId;
     }
 
@@ -122,6 +126,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
     @Async("taskExecutor")
     public void gerarFolhaPagamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento, String jobId) {
+        gerarFolhaPagamentoAsync(mes, ano, usuarioProcessamento, null, "normal", jobId);
+    }
+
+    @Async("taskExecutor")
+    public void gerarFolhaPagamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento, Long departamentoId, String tipoFolha, String jobId) {
         Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
         info.put("status", "PROCESSANDO");
         info.put("message", "Processando folha");
@@ -129,7 +138,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         pushJobStatus(jobId);
         currentJobId.set(jobId);
         try {
-            FolhaPagamento folha = gerarFolhaPagamento(mes, ano, usuarioProcessamento);
+            FolhaPagamento folha = gerarFolhaPagamento(mes, ano, usuarioProcessamento, departamentoId, tipoFolha);
             info.put("status", "CONCLUIDO");
             info.put("folhaId", folha.getId());
             info.put("message", "Folha gerada com sucesso");
@@ -164,29 +173,38 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
      */
     @Transactional
     public FolhaPagamento gerarFolhaPagamento(Integer mes, Integer ano, Usuario usuarioProcessamento) {
+        return gerarFolhaPagamento(mes, ano, usuarioProcessamento, null, "normal");
+    }
+
+    @Transactional
+    public FolhaPagamento gerarFolhaPagamento(Integer mes, Integer ano, Usuario usuarioProcessamento, Long departamentoId, String tipoFolha) {
         logger.info("Iniciando geração de folha de pagamento para {}/{}", mes, ano);
 
         entityManager.setFlushMode(FlushModeType.COMMIT);
 
-        // Verificar se já existe folha para este período
-        if (existeFolhaPorMesAno(mes, ano)) {
-            throw new IllegalStateException("Já existe folha de pagamento para " + mes + "/" + ano);
+        // Verificar existência e decidir criar ou reutilizar
+        Optional<FolhaPagamento> existenteOpt = buscarPorMesAno(mes, ano);
+        FolhaPagamento folha;
+        if (existenteOpt.isPresent()) {
+            folha = existenteOpt.get();
+            if (folha.getStatus() == FolhaPagamento.StatusFolha.FECHADA || folha.getStatus() == FolhaPagamento.StatusFolha.CANCELADA) {
+                throw new IllegalStateException("Folha " + mes + "/" + ano + " está " + folha.getStatus() + ". Não é possível adicionar holerites.");
+            }
+        } else {
+            folha = new FolhaPagamento();
+            folha.setMesReferencia(mes);
+            folha.setAnoReferencia(ano);
+            folha.setUsuarioProcessamento(usuarioProcessamento);
+            folha.setDataProcessamento(LocalDate.now());
+            folha.setStatus(FolhaPagamento.StatusFolha.EM_PROCESSAMENTO);
         }
 
-        // Criar nova folha de pagamento
-        FolhaPagamento folha = new FolhaPagamento();
-        folha.setMesReferencia(mes);
-        folha.setAnoReferencia(ano);
-        folha.setUsuarioProcessamento(usuarioProcessamento);
-        folha.setDataProcessamento(LocalDate.now());
-        folha.setStatus(FolhaPagamento.StatusFolha.EM_PROCESSAMENTO);
-
-        // Inicializar totais
-        BigDecimal totalBruto = BigDecimal.ZERO;
-        BigDecimal totalDescontos = BigDecimal.ZERO;
-        BigDecimal totalInss = BigDecimal.ZERO;
-        BigDecimal totalIrrf = BigDecimal.ZERO;
-        BigDecimal totalFgts = BigDecimal.ZERO;
+        // Inicializar totais (se reutilizando folha, partir dos totais atuais)
+        BigDecimal totalBruto = folha.getTotalBruto() != null ? folha.getTotalBruto() : BigDecimal.ZERO;
+        BigDecimal totalDescontos = folha.getTotalDescontos() != null ? folha.getTotalDescontos() : BigDecimal.ZERO;
+        BigDecimal totalInss = folha.getTotalInss() != null ? folha.getTotalInss() : BigDecimal.ZERO;
+        BigDecimal totalIrrf = folha.getTotalIrrf() != null ? folha.getTotalIrrf() : BigDecimal.ZERO;
+        BigDecimal totalFgts = folha.getTotalFgts() != null ? folha.getTotalFgts() : BigDecimal.ZERO;
 
         folha.setTotalBruto(totalBruto);
         folha.setTotalDescontos(totalDescontos);
@@ -195,92 +213,216 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         folha.setTotalIrrf(totalIrrf);
         folha.setTotalFgts(totalFgts);
 
-        // Salvar folha primeiro para obter ID
-        folha = folhaPagamentoRepository.save(folha);
+        // Salvar folha (novo) para obter ID; se reutilizada, apenas usar ID existente
+        if (folha.getId() == null) {
+            folha = folhaPagamentoRepository.save(folha);
+        }
         final Long folhaId = folha.getId();
 
-        // Buscar colaboradores ativos em paginação para evitar carga total na memória
+        // Buscar colaboradores conforme filtro
         long tInicio = System.nanoTime();
         String jobId = currentJobId.get();
-        long totalAtivos = colaboradorRepository.countByAtivoTrue();
-        if (jobId != null) {
-            Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
-            info.put("total", totalAtivos);
-            info.put("processed", 0);
-            info.put("progressPct", 0);
-            info.put("startedAt", java.time.LocalDateTime.now().toString());
-            info.put("message", "Calculando holerites e preparando persistência em blocos...");
-            pushJobStatus(jobId);
-        }
-
-        // Agregar dados de ponto em uma única consulta por período
-        YearMonth ymPeriodo = YearMonth.of(ano, mes);
-        LocalDate inicioPeriodo = ymPeriodo.atDay(1);
-        LocalDate fimPeriodo = ymPeriodo.atEndOfMonth();
-        List<RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumosPeriodo =
-                registroPontoRepository.aggregateResumoPorPeriodoGroupByColaborador(inicioPeriodo, fimPeriodo);
-        Map<Long, RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumoPorColaborador =
-                resumosPeriodo.stream().collect(Collectors.toMap(
-                        RegistroPontoRepository.PontoResumoPorColaboradorProjection::getColaboradorId,
-                        Function.identity()
-                ));
-        final int CHUNK_SIZE = 500;
-        final int PAGE_SIZE = 800;
-
-        int totalProcessados = 0;
-        int blocosProcessados = 0;
-
-        int totalPages = (int) Math.ceil((double) totalAtivos / (double) PAGE_SIZE);
-
-        java.util.function.IntFunction<java.util.concurrent.Callable<PageResult>> pageTaskFactory = (int idx) -> () -> processarPaginaFolha(idx, PAGE_SIZE, CHUNK_SIZE, folhaId, mes, ano, resumoPorColaborador);
-
-        for (int pageIndex = 0; pageIndex < totalPages; pageIndex += 2) {
-            java.util.concurrent.Future<PageResult> f1 = taskExecutor.submit(pageTaskFactory.apply(pageIndex));
-            java.util.concurrent.Future<PageResult> f2 = pageIndex + 1 < totalPages ? taskExecutor.submit(pageTaskFactory.apply(pageIndex + 1)) : null;
-
-            try {
-                PageResult r1 = f1.get();
-                totalProcessados += r1.processed;
-                blocosProcessados += r1.blocks;
-                totalBruto = totalBruto.add(r1.bruto);
-                totalDescontos = totalDescontos.add(r1.descontos);
-                totalInss = totalInss.add(r1.inss);
-                totalIrrf = totalIrrf.add(r1.irrf);
-                totalFgts = totalFgts.add(r1.fgts);
+        if (departamentoId != null) {
+            List<Colaborador> colaboradoresFiltrados = colaboradorRepository.findByDepartamentoIdAndAtivoTrue(departamentoId);
+            // Excluir colaboradores que já possuem holerite nessa folha
+            List<Holerite> existentesFolha = holeriteRepository.findByFolhaPagamento(folha);
+            java.util.Set<Long> colabsJaProcessados = existentesFolha.stream()
+                    .map(h -> h.getColaborador() != null ? h.getColaborador().getId() : null)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(java.util.stream.Collectors.toSet());
+            List<Colaborador> colaboradoresRestantes = colaboradoresFiltrados.stream()
+                    .filter(c -> !colabsJaProcessados.contains(c.getId()))
+                    .collect(java.util.stream.Collectors.toList());
+            long total = colaboradoresRestantes != null ? colaboradoresRestantes.size() : 0L;
+            if (jobId != null) {
+                Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                info.put("total", total);
+                info.put("processed", 0);
+                info.put("progressPct", 0);
+                info.put("startedAt", java.time.LocalDateTime.now().toString());
+                info.put("message", "Processando colaboradores do departamento em blocos...");
+                pushJobStatus(jobId);
+            }
+            if (total == 0L) {
                 if (jobId != null) {
                     Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
-                    long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                    long total = totalAtivos;
-                    double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
-                    long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
-                    int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
-                    info.put("lastFlushMs", r1.lastFlushMs);
-                    info.put("blocksProcessed", blocosProcessados);
-                    info.put("processed", totalProcessados);
-                    info.put("progressPct", pct);
-                    info.put("elapsedMs", elapsedMs);
-                    info.put("etaMs", etaMs);
-                    info.put("message", "Processando cálculos de holerites em paralelo...");
-                    appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
+                    info.put("status", "CONCLUIDO");
+                    info.put("message", "Nenhum colaborador restante para processar no departamento");
                     pushJobStatus(jobId);
                 }
-                if (f2 != null) {
-                    PageResult r2 = f2.get();
-                    totalProcessados += r2.processed;
-                    blocosProcessados += r2.blocks;
-                    totalBruto = totalBruto.add(r2.bruto);
-                    totalDescontos = totalDescontos.add(r2.descontos);
-                    totalInss = totalInss.add(r2.inss);
-                    totalIrrf = totalIrrf.add(r2.irrf);
-                    totalFgts = totalFgts.add(r2.fgts);
+                folha = folhaPagamentoRepository.save(folha);
+                return folha;
+            }
+            YearMonth ymPeriodo = YearMonth.of(ano, mes);
+            LocalDate inicioPeriodo = ymPeriodo.atDay(1);
+            LocalDate fimPeriodo = ymPeriodo.atEndOfMonth();
+            List<RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumosPeriodo =
+                    registroPontoRepository.aggregateResumoPorPeriodoGroupByColaborador(inicioPeriodo, fimPeriodo);
+            Map<Long, RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumoPorColaborador =
+                    resumosPeriodo.stream().collect(Collectors.toMap(
+                            RegistroPontoRepository.PontoResumoPorColaboradorProjection::getColaboradorId,
+                            Function.identity()
+                    ));
+            final int CHUNK_SIZE = 500;
+            int totalProcessados = 0;
+            int blocosProcessados = 0;
+            List<Holerite> holeritesChunk = new ArrayList<>(CHUNK_SIZE);
+            FolhaPagamento folhaRef = new FolhaPagamento();
+            folhaRef.setId(folhaId);
+            Map<Long, BeneficiosInfo> beneficiosPorColaborador = carregarBeneficiosEmLote(colaboradoresRestantes, mes, ano);
+            for (Colaborador col : colaboradoresRestantes) {
+                RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo = resumoPorColaborador.get(col.getId());
+                BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(col.getId(), new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()));
+                Holerite hol = gerarHoleriteComBeneficios(col, folhaRef, mes, ano, resumo, beneficios, tipoFolha);
+                holeritesChunk.add(hol);
+                BigDecimal salarioBase = hol.getSalarioBase() != null ? hol.getSalarioBase() : BigDecimal.ZERO;
+                BigDecimal horasExtras = hol.getHorasExtras() != null ? hol.getHorasExtras() : BigDecimal.ZERO;
+                BigDecimal adicionalNoturno = hol.getAdicionalNoturno() != null ? hol.getAdicionalNoturno() : BigDecimal.ZERO;
+                BigDecimal adicionalPericulosidade = hol.getAdicionalPericulosidade() != null ? hol.getAdicionalPericulosidade() : BigDecimal.ZERO;
+                BigDecimal adicionalInsalubridade = hol.getAdicionalInsalubridade() != null ? hol.getAdicionalInsalubridade() : BigDecimal.ZERO;
+                BigDecimal comissoes = hol.getComissoes() != null ? hol.getComissoes() : BigDecimal.ZERO;
+                BigDecimal bonificacoes = hol.getBonificacoes() != null ? hol.getBonificacoes() : BigDecimal.ZERO;
+                BigDecimal vt = hol.getValeTransporte() != null ? hol.getValeTransporte() : BigDecimal.ZERO;
+                BigDecimal vr = hol.getValeRefeicao() != null ? hol.getValeRefeicao() : BigDecimal.ZERO;
+                BigDecimal saude = hol.getAuxilioSaude() != null ? hol.getAuxilioSaude() : BigDecimal.ZERO;
+                BigDecimal totalProventosCalc = salarioBase
+                        .add(horasExtras)
+                        .add(adicionalNoturno)
+                        .add(adicionalPericulosidade)
+                        .add(adicionalInsalubridade)
+                        .add(comissoes)
+                        .add(bonificacoes)
+                        .add(vt)
+                        .add(vr)
+                        .add(saude);
+                totalBruto = totalBruto.add(totalProventosCalc);
+
+                BigDecimal descInss = hol.getDescontoInss() != null ? hol.getDescontoInss() : BigDecimal.ZERO;
+                BigDecimal descIrrf = hol.getDescontoIrrf() != null ? hol.getDescontoIrrf() : BigDecimal.ZERO;
+                BigDecimal descFgts = hol.getDescontoFgts() != null ? hol.getDescontoFgts() : BigDecimal.ZERO;
+                BigDecimal descVt = hol.getDescontoValeTransporte() != null ? hol.getDescontoValeTransporte() : BigDecimal.ZERO;
+                BigDecimal descVr = hol.getDescontoValeRefeicao() != null ? hol.getDescontoValeRefeicao() : BigDecimal.ZERO;
+                BigDecimal descSaude = hol.getDescontoPlanoSaude() != null ? hol.getDescontoPlanoSaude() : BigDecimal.ZERO;
+                BigDecimal outros = hol.getOutrosDescontos() != null ? hol.getOutrosDescontos() : BigDecimal.ZERO;
+                BigDecimal totalDescontosCalc = descInss
+                        .add(descIrrf)
+                        .add(descFgts)
+                        .add(descVt)
+                        .add(descVr)
+                        .add(descSaude)
+                        .add(outros);
+                totalDescontos = totalDescontos.add(totalDescontosCalc);
+                totalInss = totalInss.add(descInss);
+                totalIrrf = totalIrrf.add(descIrrf);
+                BigDecimal salarioBrutoHolerite = salarioBase.add(horasExtras);
+                totalFgts = totalFgts.add(holeriteCalculoService.calcularFgtsPatronal(salarioBrutoHolerite));
+
+                if (holeritesChunk.size() >= CHUNK_SIZE) {
+                    long tPersistIni = System.nanoTime();
+                    holeriteRepository.saveAll(holeritesChunk);
+                    holeriteRepository.flush();
+                    long tPersistFim = System.nanoTime();
+                    if (jobId != null) {
+                        Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                        info.put("lastFlushMs", (tPersistFim - tPersistIni) / 1_000_000);
+                    }
+                    totalProcessados += holeritesChunk.size();
+                    holeritesChunk.clear();
+                    blocosProcessados++;
                     if (jobId != null) {
                         Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
                         long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                        long total = totalAtivos;
+                        double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
+                        long etaMs = rateMsPerItem > 0 ? (long) (((long) total - (long) totalProcessados) * rateMsPerItem) : -1;
+                        int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
+                        info.put("blocksProcessed", blocosProcessados);
+                        info.put("processed", totalProcessados);
+                        info.put("progressPct", pct);
+                        info.put("elapsedMs", elapsedMs);
+                        info.put("etaMs", etaMs);
+                        info.put("message", "Processando cálculos de holerites (departamento)...");
+                        appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
+                        pushJobStatus(jobId);
+                    }
+                }
+            }
+            if (!holeritesChunk.isEmpty()) {
+                long tPersistIni = System.nanoTime();
+                holeriteRepository.saveAll(holeritesChunk);
+                holeriteRepository.flush();
+                long tPersistFim = System.nanoTime();
+                if (jobId != null) {
+                    Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                    info.put("lastFlushMs", (tPersistFim - tPersistIni) / 1_000_000);
+                }
+                totalProcessados += holeritesChunk.size();
+                holeritesChunk.clear();
+                blocosProcessados++;
+            }
+        } else {
+            long totalAtivos = colaboradorRepository.countByAtivoTrue();
+            List<Holerite> existentesFolha = holeriteRepository.findByFolhaPagamento(folha);
+            java.util.Set<Long> colabsJaProcessados = existentesFolha.stream()
+                    .map(h -> h.getColaborador() != null ? h.getColaborador().getId() : null)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(java.util.stream.Collectors.toSet());
+            long totalRestantes = Math.max(0L, totalAtivos - (long) colabsJaProcessados.size());
+            if (jobId != null) {
+                Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                info.put("total", totalRestantes);
+                info.put("processed", 0);
+                info.put("progressPct", 0);
+                info.put("startedAt", java.time.LocalDateTime.now().toString());
+                info.put("message", "Calculando holerites e preparando persistência em blocos...");
+                pushJobStatus(jobId);
+            }
+            if (totalRestantes == 0L) {
+                if (jobId != null) {
+                    Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                    info.put("status", "CONCLUIDO");
+                    info.put("message", "Nenhum colaborador restante para processar");
+                    pushJobStatus(jobId);
+                }
+                folha = folhaPagamentoRepository.save(folha);
+                return folha;
+            }
+
+            YearMonth ymPeriodo = YearMonth.of(ano, mes);
+            LocalDate inicioPeriodo = ymPeriodo.atDay(1);
+            LocalDate fimPeriodo = ymPeriodo.atEndOfMonth();
+            List<RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumosPeriodo =
+                    registroPontoRepository.aggregateResumoPorPeriodoGroupByColaborador(inicioPeriodo, fimPeriodo);
+            Map<Long, RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumoPorColaborador =
+                    resumosPeriodo.stream().collect(Collectors.toMap(
+                            RegistroPontoRepository.PontoResumoPorColaboradorProjection::getColaboradorId,
+                            Function.identity()
+                    ));
+            final int CHUNK_SIZE = 500;
+            final int PAGE_SIZE = 800;
+            int totalProcessados = 0;
+            int blocosProcessados = 0;
+            int totalPages = (int) Math.ceil((double) totalAtivos / (double) PAGE_SIZE);
+            java.util.function.IntFunction<java.util.concurrent.Callable<PageResult>> pageTaskFactory = (int idx) -> () -> processarPaginaFolha(idx, PAGE_SIZE, CHUNK_SIZE, folhaId, mes, ano, resumoPorColaborador, tipoFolha, colabsJaProcessados);
+            for (int pageIndex = 0; pageIndex < totalPages; pageIndex += 2) {
+                java.util.concurrent.Future<PageResult> f1 = taskExecutor.submit(pageTaskFactory.apply(pageIndex));
+                java.util.concurrent.Future<PageResult> f2 = pageIndex + 1 < totalPages ? taskExecutor.submit(pageTaskFactory.apply(pageIndex + 1)) : null;
+                try {
+                    PageResult r1 = f1.get();
+                    totalProcessados += r1.processed;
+                    blocosProcessados += r1.blocks;
+                    totalBruto = totalBruto.add(r1.bruto);
+                    totalDescontos = totalDescontos.add(r1.descontos);
+                    totalInss = totalInss.add(r1.inss);
+                    totalIrrf = totalIrrf.add(r1.irrf);
+                    totalFgts = totalFgts.add(r1.fgts);
+                    if (jobId != null) {
+                        Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                        long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
+                        long total = totalRestantes;
                         double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
                         long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
                         int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
-                        info.put("lastFlushMs", r2.lastFlushMs);
+                        info.put("lastFlushMs", r1.lastFlushMs);
                         info.put("blocksProcessed", blocosProcessados);
                         info.put("processed", totalProcessados);
                         info.put("progressPct", pct);
@@ -290,13 +432,39 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                         appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
                         pushJobStatus(jobId);
                     }
+                    if (f2 != null) {
+                        PageResult r2 = f2.get();
+                        totalProcessados += r2.processed;
+                        blocosProcessados += r2.blocks;
+                        totalBruto = totalBruto.add(r2.bruto);
+                        totalDescontos = totalDescontos.add(r2.descontos);
+                        totalInss = totalInss.add(r2.inss);
+                        totalIrrf = totalIrrf.add(r2.irrf);
+                        totalFgts = totalFgts.add(r2.fgts);
+                        if (jobId != null) {
+                            Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                            long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
+                            long total = totalRestantes;
+                            double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
+                            long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
+                            int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
+                            info.put("lastFlushMs", r2.lastFlushMs);
+                            info.put("blocksProcessed", blocosProcessados);
+                            info.put("processed", totalProcessados);
+                            info.put("progressPct", pct);
+                            info.put("elapsedMs", elapsedMs);
+                            info.put("etaMs", etaMs);
+                            info.put("message", "Processando cálculos de holerites em paralelo...");
+                            appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
+                            pushJobStatus(jobId);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Erro ao processar páginas em paralelo: {}", e.getMessage());
                 }
-            } catch (Exception e) {
-                logger.error("Erro ao processar páginas em paralelo: {}", e.getMessage());
             }
         }
 
-        // Atualizar totais da folha
         folha.setTotalBruto(totalBruto);
         folha.setTotalDescontos(totalDescontos);
         folha.setTotalLiquido(totalBruto.subtract(totalDescontos));
@@ -305,17 +473,16 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         folha.setTotalFgts(totalFgts);
         folha.setStatus(FolhaPagamento.StatusFolha.PROCESSADA);
 
-        // Não há bloco restante aqui; cada página faz seus próprios flushes
-
         folha = folhaPagamentoRepository.save(folha);
 
         long tFim = System.nanoTime();
-        logger.info("Folha de pagamento {}/{} gerada com sucesso. {} holerites criados em {} ms.", mes, ano, totalProcessados, (tFim - tInicio) / 1_000_000);
+        logger.info("Folha de pagamento {}/{} gerada com sucesso em {} ms.", mes, ano, (tFim - tInicio) / 1_000_000);
         if (jobId != null) {
-            appendJobLog(jobId, String.format("Conclusão: %d holerites em %d ms", totalProcessados, (tFim - tInicio) / 1_000_000));
+            appendJobLog(jobId, String.format("Conclusão em %d ms", (tFim - tInicio) / 1_000_000));
             pushJobStatus(jobId);
         }
         return folha;
+
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -325,11 +492,18 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                                             Long folhaId,
                                             Integer mes,
                                             Integer ano,
-                                            Map<Long, RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumoPorColaborador) {
+                                            Map<Long, RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumoPorColaborador,
+                                            String tipoFolha,
+                                            java.util.Set<Long> colabsJaProcessados) {
         entityManager.setFlushMode(FlushModeType.COMMIT);
         PageResult r = new PageResult();
         org.springframework.data.domain.Page<Colaborador> page = colaboradorRepository.findByAtivoTrue(org.springframework.data.domain.PageRequest.of(pageIndex, PAGE_SIZE, org.springframework.data.domain.Sort.by("nome").ascending()));
         List<Colaborador> colaboradores = page.getContent();
+        if (colabsJaProcessados != null && !colabsJaProcessados.isEmpty()) {
+            colaboradores = colaboradores.stream()
+                    .filter(c -> c.getId() != null && !colabsJaProcessados.contains(c.getId()))
+                    .collect(Collectors.toList());
+        }
         if (colaboradores == null || colaboradores.isEmpty()) return r;
 
         Map<Long, BeneficiosInfo> beneficiosPorColaborador = carregarBeneficiosEmLote(colaboradores, mes, ano);
@@ -340,7 +514,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                 .map(col -> {
                     RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo = resumoPorColaborador.get(col.getId());
                     BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(col.getId(), new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()));
-                    return gerarHoleriteComBeneficios(col, folhaRef, mes, ano, resumo, beneficios);
+                    return gerarHoleriteComBeneficios(col, folhaRef, mes, ano, resumo, beneficios, tipoFolha);
                 })
                 .collect(Collectors.toList());
 
@@ -447,14 +621,15 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
      * Gera holerite individual para um colaborador
      */
     private Holerite gerarHolerite(Colaborador colaborador, FolhaPagamento folha, Integer mes, Integer ano) {
-        return gerarHolerite(colaborador, folha, mes, ano, null);
+        return gerarHolerite(colaborador, folha, mes, ano, null, "normal");
     }
 
     /**
      * Gera holerite individual com possibilidade de usar resumo de ponto pré-agregado
      */
     private Holerite gerarHolerite(Colaborador colaborador, FolhaPagamento folha, Integer mes, Integer ano,
-                                   RegistroPontoRepository.PontoResumoPorColaboradorProjection resumoAgregado) {
+                                   RegistroPontoRepository.PontoResumoPorColaboradorProjection resumoAgregado,
+                                   String tipoFolha) {
         Holerite holerite = new Holerite();
         holerite.setColaborador(colaborador);
         holerite.setFolhaPagamento(folha);
@@ -470,18 +645,17 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         // Carregar benefícios uma vez e reutilizar
         BeneficiosInfo beneficios = carregarBeneficios(colaborador, mes, ano);
 
-        // Calcular proventos
-        calcularProventos(holerite, colaborador, mes, ano, beneficios);
-
-        // Calcular descontos
-        calcularDescontos(holerite, colaborador, mes, ano, beneficios);
-
+        calcularProventos(holerite, colaborador, mes, ano, beneficios, tipoFolha);
+        calcularDescontos(holerite, colaborador, mes, ano, beneficios, tipoFolha);
+        holerite.setTipoFolha(tipoFolha);
+        
         return holerite;
     }
 
     private Holerite gerarHoleriteComBeneficios(Colaborador colaborador, FolhaPagamento folha, Integer mes, Integer ano,
                                                 RegistroPontoRepository.PontoResumoPorColaboradorProjection resumoAgregado,
-                                                BeneficiosInfo beneficios) {
+                                                BeneficiosInfo beneficios,
+                                                String tipoFolha) {
         Holerite holerite = new Holerite();
         holerite.setColaborador(colaborador);
         holerite.setFolhaPagamento(folha);
@@ -493,8 +667,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             calcularDadosPonto(holerite, colaborador, mes, ano);
         }
 
-        calcularProventos(holerite, colaborador, mes, ano, beneficios);
-        calcularDescontos(holerite, colaborador, mes, ano, beneficios);
+        calcularProventos(holerite, colaborador, mes, ano, beneficios, tipoFolha);
+        calcularDescontos(holerite, colaborador, mes, ano, beneficios, tipoFolha);
+        holerite.setTipoFolha(tipoFolha);
         return holerite;
     }
 
@@ -538,7 +713,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     /**
      * Calcula proventos do holerite
      */
-    private void calcularProventos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios) {
+    private void calcularProventos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios, String tipoFolha) {
         // Proventos básicos já definidos
         // Adicionar outros proventos conforme necessário
         holerite.setAdicionalNoturno(BigDecimal.ZERO);
@@ -547,30 +722,59 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         holerite.setComissoes(BigDecimal.ZERO);
         holerite.setBonificacoes(BigDecimal.ZERO);
 
-        // Aplicar benefícios carregados
-        calcularBeneficios(holerite, beneficios);
+        if (tipoFolha != null) {
+            switch (tipoFolha.toLowerCase()) {
+                case "decimo_terceiro":
+                    holerite.setHorasExtras(BigDecimal.ZERO);
+                    holerite.setValeTransporte(BigDecimal.ZERO);
+                    holerite.setValeRefeicao(BigDecimal.ZERO);
+                    holerite.setAuxilioSaude(BigDecimal.ZERO);
+                    break;
+                case "complementar":
+                    holerite.setSalarioBase(BigDecimal.ZERO);
+                    holerite.setValeTransporte(BigDecimal.ZERO);
+                    holerite.setValeRefeicao(BigDecimal.ZERO);
+                    holerite.setAuxilioSaude(BigDecimal.ZERO);
+                    break;
+                case "ferias":
+                    BigDecimal salarioBase = holerite.getSalarioBase() != null ? holerite.getSalarioBase() : BigDecimal.ZERO;
+                    holerite.setBonificacoes(salarioBase.divide(BigDecimal.valueOf(3), 2, RoundingMode.HALF_UP));
+                    holerite.setValeTransporte(BigDecimal.ZERO);
+                    holerite.setValeRefeicao(BigDecimal.ZERO);
+                    holerite.setAuxilioSaude(BigDecimal.ZERO);
+                    break;
+                default:
+                    calcularBeneficios(holerite, beneficios, tipoFolha);
+                    break;
+            }
+        } else {
+            calcularBeneficios(holerite, beneficios, "normal");
+        }
     }
 
     /**
      * Calcula benefícios do colaborador
      */
-    private void calcularBeneficios(Holerite holerite, BeneficiosInfo beneficios) {
+    private void calcularBeneficios(Holerite holerite, BeneficiosInfo beneficios, String tipoFolha) {
         // Vale Transporte
-        if (beneficios.valeTransporte.isPresent() && beneficios.valeTransporte.get().isAtivo()) {
+        if (!"decimo_terceiro".equalsIgnoreCase(tipoFolha) && !"ferias".equalsIgnoreCase(tipoFolha) && !"complementar".equalsIgnoreCase(tipoFolha)
+                && beneficios.valeTransporte.isPresent() && beneficios.valeTransporte.get().isAtivo()) {
             holerite.setValeTransporte(beneficios.valeTransporte.get().getValorSubsidioEmpresa());
         } else {
             holerite.setValeTransporte(BigDecimal.ZERO);
         }
 
         // Vale Refeição
-        if (beneficios.valeRefeicao.isPresent() && beneficios.valeRefeicao.get().isAtivo()) {
+        if (!"decimo_terceiro".equalsIgnoreCase(tipoFolha) && !"ferias".equalsIgnoreCase(tipoFolha) && !"complementar".equalsIgnoreCase(tipoFolha)
+                && beneficios.valeRefeicao.isPresent() && beneficios.valeRefeicao.get().isAtivo()) {
             holerite.setValeRefeicao(beneficios.valeRefeicao.get().getValorSubsidioEmpresa());
         } else {
             holerite.setValeRefeicao(BigDecimal.ZERO);
         }
 
         // Auxílio Saúde
-        if (beneficios.planoSaude.isPresent()) {
+        if (!"decimo_terceiro".equalsIgnoreCase(tipoFolha) && !"ferias".equalsIgnoreCase(tipoFolha) && !"complementar".equalsIgnoreCase(tipoFolha)
+                && beneficios.planoSaude.isPresent()) {
             BigDecimal subsidio = beneficios.planoSaude.get().getValorSubsidioEmpresa();
             holerite.setAuxilioSaude(subsidio);
         } else {
@@ -581,7 +785,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     /**
      * Calcula descontos do holerite
      */
-    private void calcularDescontos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios) {
+    private void calcularDescontos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios, String tipoFolha) {
         BigDecimal salarioBruto = holerite.getSalarioBase().add(holerite.getHorasExtras());
 
         holerite.setDescontoInss(holeriteCalculoService.calcularInssProgressivo(salarioBruto));
@@ -590,7 +794,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         holerite.setDescontoFgts(BigDecimal.ZERO);
 
         // Descontos de benefícios com dados já carregados
-        calcularDescontosBeneficios(holerite, colaborador, mes, ano, beneficios);
+        calcularDescontosBeneficios(holerite, colaborador, mes, ano, beneficios, tipoFolha);
 
         holerite.setOutrosDescontos(BigDecimal.ZERO);
     }
@@ -598,9 +802,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     /**
      * Calcula descontos de benefícios
      */
-    private void calcularDescontosBeneficios(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios) {
+    private void calcularDescontosBeneficios(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios, String tipoFolha) {
         // Desconto Vale Transporte
-        if (beneficios.valeTransporte.isPresent() && beneficios.valeTransporte.get().isAtivo()) {
+        if (!"decimo_terceiro".equalsIgnoreCase(tipoFolha) && !"ferias".equalsIgnoreCase(tipoFolha) && !"complementar".equalsIgnoreCase(tipoFolha)
+                && beneficios.valeTransporte.isPresent() && beneficios.valeTransporte.get().isAtivo()) {
             holerite.setDescontoValeTransporte(beneficios.valeTransporte.get().getValorDesconto());
         } else {
             holerite.setDescontoValeTransporte(BigDecimal.ZERO);
@@ -611,14 +816,16 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         );
 
         // Desconto Vale Refeição
-        if (beneficios.valeRefeicao.isPresent() && beneficios.valeRefeicao.get().isAtivo()) {
+        if (!"decimo_terceiro".equalsIgnoreCase(tipoFolha) && !"ferias".equalsIgnoreCase(tipoFolha) && !"complementar".equalsIgnoreCase(tipoFolha)
+                && beneficios.valeRefeicao.isPresent() && beneficios.valeRefeicao.get().isAtivo()) {
             holerite.setDescontoValeRefeicao(beneficios.valeRefeicao.get().getValorDesconto());
         } else {
             holerite.setDescontoValeRefeicao(BigDecimal.ZERO);
         }
 
         // Desconto Plano de Saúde
-        if (beneficios.planoSaude.isPresent()) {
+        if (!"decimo_terceiro".equalsIgnoreCase(tipoFolha) && !"ferias".equalsIgnoreCase(tipoFolha) && !"complementar".equalsIgnoreCase(tipoFolha)
+                && beneficios.planoSaude.isPresent()) {
             BigDecimal desconto = beneficios.planoSaude.get().getValorDesconto();
             holerite.setDescontoPlanoSaude(desconto);
         } else {

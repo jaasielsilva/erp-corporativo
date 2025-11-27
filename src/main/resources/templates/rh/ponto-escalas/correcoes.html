@@ -103,12 +103,19 @@
                   <option value="CANCELADA">Cancelada</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label for="colaboradorFiltro">Colaborador</label>
-                <select id="colaboradorFiltro" name="colaborador" class="form-control">
+              <div class="form-group" style="min-width:280px;">
+                <label for="colaboradorFiltroSearch">Colaborador</label>
+                <input id="colaboradorFiltroSearch" type="search" class="form-control" placeholder="Digite para buscar" autocomplete="off" />
+                <select id="colaboradorFiltro" name="colaborador" class="form-control" style="margin-top:6px;">
                   <option value="">Todos os colaboradores</option>
-                  <option th:each="c : ${colaboradores}" th:value="${c.id}" th:text="${c.nome}"></option>
                 </select>
+                <div class="d-flex justify-content-between align-items-center" style="gap:8px; margin-top:6px;">
+                  <div id="colabCorrLoading" class="text-muted" style="display:none; font-size:.9em;"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+                  <div class="btn-group" role="group">
+                    <button type="button" id="colabCorrPrev" class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-chevron-left"></i></button>
+                    <button type="button" id="colabCorrNext" class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-chevron-right"></i></button>
+                  </div>
+                </div>
               </div>
               <div class="form-group">
                 <label for="tipoCorrecao">Tipo de Correção</label>
@@ -679,6 +686,59 @@
   </style>
 
 
+  <script>
+    (function() {
+      let page = 0;
+      let totalPages = 0;
+      let debounceTimer;
+      const sel = document.getElementById('colaboradorFiltro');
+      const input = document.getElementById('colaboradorFiltroSearch');
+      const loading = document.getElementById('colabCorrLoading');
+      const btnPrev = document.getElementById('colabCorrPrev');
+      const btnNext = document.getElementById('colabCorrNext');
+
+      function updateButtons() {
+        if (!btnPrev || !btnNext) return;
+        btnPrev.disabled = page <= 0;
+        btnNext.disabled = page >= Math.max(totalPages - 1, 0);
+      }
+
+      function carregar(q = '') {
+        if (loading) loading.style.display = 'block';
+        fetch(`/rh/colaboradores/api/listar?page=${page}&size=20&q=${encodeURIComponent(q)}`)
+          .then(r => r.json())
+          .then(data => {
+            totalPages = data.totalPages || 0;
+            if (sel) {
+              sel.innerHTML = '<option value="">Todos os colaboradores</option>';
+              (data.content || []).forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.nome;
+                sel.appendChild(opt);
+              });
+            }
+            updateButtons();
+          })
+          .catch(() => { if (sel) sel.innerHTML = '<option value="">Falha ao carregar</option>'; totalPages = 0; updateButtons(); })
+          .finally(() => { if (loading) loading.style.display = 'none'; });
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        carregar('');
+        if (input) {
+          input.addEventListener('input', function(e) {
+            clearTimeout(debounceTimer);
+            page = 0;
+            const q = e.target.value || '';
+            debounceTimer = setTimeout(() => carregar(q), 250);
+          });
+        }
+        if (btnPrev) btnPrev.addEventListener('click', function() { if (page > 0) { page--; carregar(input && input.value || ''); } });
+        if (btnNext) btnNext.addEventListener('click', function() { page++; carregar(input && input.value || ''); });
+      });
+    })();
+  </script>
 </body>
 
 </html>

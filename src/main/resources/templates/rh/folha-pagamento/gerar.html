@@ -354,6 +354,9 @@
 
     // Deduplicação simples de mensagens para evitar alerts repetidos em curto intervalo
     const recentAlerts = new Map(); // texto -> timestamp
+    let __lastStatus = null;
+    let __statusNotified = false;
+    let __stopPolling = false;
     function mostrarAlerta(tipo, texto) {
       const container = document.querySelector('.alert-container-right');
       if (!container) return;
@@ -374,7 +377,7 @@
                      `<i class="fas ${icon}"></i> <span>${safeText}</span>`;
       container.prepend(el);
       // auto-esconde em 4 segundos
-      setTimeout(() => { if (el.isConnected) el.remove(); }, 4000);
+      setTimeout(() => { if (el.isConnected) el.remove(); }, 5000);
     }
     let processamentoInterval = null;
     let processamentoJobId = null;
@@ -542,6 +545,7 @@
         const data = await r.json();
         atualizarStatusUI(data);
         if (data.status === 'CONCLUIDO') {
+          __stopPolling = true;
           // Garante que o card de status permaneça visível no sucesso
           mostrarStatusCard(true);
           // Abre automaticamente o container de logs e ajusta o texto do botão
@@ -549,7 +553,10 @@
           const btn = document.getElementById('toggleLogsBtn');
           if (cont) cont.style.display = 'block';
           if (btn) btn.innerHTML = '<i class="fas fa-list"></i> Ocultar detalhes';
-          mostrarAlerta('success', 'Folha processada com sucesso.');
+          if (!__statusNotified || __lastStatus !== 'CONCLUIDO') {
+            mostrarAlerta('success', 'Folha processada com sucesso.');
+            __statusNotified = true;
+          }
           processamentoEndAt = performance.now();
           const durationMs = processamentoStartAt ? (processamentoEndAt - processamentoStartAt) : null;
           try {
@@ -571,7 +578,7 @@
               body: JSON.stringify(metrics)
             }).catch(() => {});
           } catch (_) {}
-          clearInterval(processamentoInterval);
+          clearTimeout(processamentoInterval);
           processamentoInterval = null;
           // Finaliza progresso fake e restaura botão
           stopFakeProgress();
@@ -580,8 +587,20 @@
             processarBtnEl.disabled = false;
             if (processarBtnOriginalHtml) processarBtnEl.innerHTML = processarBtnOriginalHtml;
           }
+          // Redireciona para visualizar a folha após 5s, se disponível; senão recarrega a página
+          setTimeout(() => {
+            if (data.folhaId) {
+              window.location.href = '/rh/folha-pagamento/visualizar/' + data.folhaId;
+            } else {
+              window.location.reload();
+            }
+          }, 5000);
         } else if (data.status === 'ERRO') {
-          mostrarAlerta('danger', 'Erro no processamento: ' + (data.message || ''));
+          __stopPolling = true;
+          if (!__statusNotified || __lastStatus !== 'ERRO') {
+            mostrarAlerta('danger', 'Erro no processamento: ' + (data.message || ''));
+            __statusNotified = true;
+          }
           processamentoEndAt = performance.now();
           const durationMs = processamentoStartAt ? (processamentoEndAt - processamentoStartAt) : null;
           try {
@@ -604,7 +623,7 @@
               body: JSON.stringify(metrics)
             }).catch(() => {});
           } catch (_) {}
-          clearInterval(processamentoInterval);
+          clearTimeout(processamentoInterval);
           processamentoInterval = null;
           // Finaliza progresso fake e mantém botão desativado conforme fluxo solicitado
           stopFakeProgress();
@@ -613,7 +632,10 @@
             processarBtnEl.disabled = true;
             if (processarBtnOriginalHtml) processarBtnEl.innerHTML = processarBtnOriginalHtml;
           }
+          // Recarrega a página após 5s para limpar estado
+          setTimeout(() => { window.location.reload(); }, 5000);
         }
+        __lastStatus = data.status;
         if (data && typeof data.processed === 'number') {
           if (window.__lastProcessedCount == null) {
             window.__lastProcessedCount = data.processed;
@@ -636,15 +658,21 @@
       }
     }
     function scheduleNextPoll() {
-      if (processamentoInterval) { clearInterval(processamentoInterval); processamentoInterval = null; }
+      if (__stopPolling) return;
+      if (processamentoInterval) { clearTimeout(processamentoInterval); processamentoInterval = null; }
       const delay = window.__pollMs || 2500;
-      processamentoInterval = setTimeout(() => { pollStatus().then(scheduleNextPoll); }, delay);
+      processamentoInterval = setTimeout(() => {
+        if (__stopPolling) { clearTimeout(processamentoInterval); processamentoInterval = null; return; }
+        pollStatus().then(scheduleNextPoll);
+      }, delay);
     }
     async function processarFolhaAsync(e) {
       e.preventDefault();
       const form = document.getElementById('processarFolhaForm');
       const mes = document.getElementById('mesReferencia').value;
       const ano = document.getElementById('anoReferencia').value;
+      const departamento = document.getElementById('departamento').value;
+      const tipoFolha = document.getElementById('tipoFolha').value;
       const btn = form.querySelector('button[type="submit"]');
       const original = btn.innerHTML;
       processarBtnEl = btn;
@@ -660,7 +688,13 @@
         const res = await fetch('/rh/folha-pagamento/processar-async', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}`
+          body: (() => {
+            let params = `mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}&tipoFolha=${encodeURIComponent(tipoFolha)}`;
+            if (departamento && departamento.trim() !== '') {
+              params += `&departamento=${encodeURIComponent(departamento)}`;
+            }
+            return params;
+          })()
         });
         const data = await res.json();
         if (res.status === 202 && data.accepted && data.jobId) {
@@ -673,6 +707,9 @@
           window.__pollMs = 2500;
           window.__lastProcessedCount = null;
           window.__noChangeTicks = 0;
+          __stopPolling = false;
+          __statusNotified = false;
+          __lastStatus = null;
           scheduleNextPoll();
           // Mantém o botão desativado até concluir ou erro
         } else {

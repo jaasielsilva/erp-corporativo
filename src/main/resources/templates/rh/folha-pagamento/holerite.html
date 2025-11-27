@@ -233,7 +233,7 @@
           <button id="btn-print" onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Imprimir Holerite
           </button>
-          <a id="btn-pdf" th:href="@{/rh/folha-pagamento/holerite/{id}/pdf(id=${holerite.id})}" class="btn btn-success" onclick="baixarPDF()">
+          <a id="btn-pdf" th:href="@{/rh/folha-pagamento/holerite/{id}/pdf(id=${holerite.id})}" class="btn btn-sm btn-success" onclick="baixarPDF()">
             <i class="fas fa-file-pdf"></i> Baixar PDF
           </a>
           <button id="btn-email" onclick="enviarEmail()" class="btn btn-info">

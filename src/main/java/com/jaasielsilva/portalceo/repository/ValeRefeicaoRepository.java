@@ -4,6 +4,8 @@ import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.ValeRefeicao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +25,7 @@ public interface ValeRefeicaoRepository extends JpaRepository<ValeRefeicao, Long
 
     List<ValeRefeicao> findByMesReferenciaAndAnoReferencia(Integer mesReferencia, Integer anoReferencia);
 
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
     @Query("SELECT v FROM ValeRefeicao v WHERE v.mesReferencia = :mes AND v.anoReferencia = :ano AND v.colaborador.id IN :ids")
     List<ValeRefeicao> findByMesAnoAndColaboradorIdIn(@Param("mes") Integer mes, @Param("ano") Integer ano, @Param("ids") java.util.Collection<Long> ids);
 

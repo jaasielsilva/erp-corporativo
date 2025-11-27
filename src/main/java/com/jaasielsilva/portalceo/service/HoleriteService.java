@@ -87,9 +87,9 @@ public class HoleriteService {
         return holeriteRepository.findByFolhaPagamento(folha);
     }
 
-    public Page<Holerite> listarPorFolhaPaginado(Long folhaId, int page, int size, String q) {
+    public Page<HoleriteRepository.HoleriteListProjection> listarPorFolhaPaginado(Long folhaId, int page, int size, String q) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("colaborador.nome").ascending());
-        return holeriteRepository.findByFolhaPaginado(folhaId, q != null && !q.isBlank() ? q.trim() : null, pageable);
+        return holeriteRepository.findListByFolhaPaginado(folhaId, q != null && !q.isBlank() ? q.trim() : null, pageable);
     }
 
     /**

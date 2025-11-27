@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.QueryHints;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +27,8 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     List<Colaborador> findByAtivoTrue();
 
     // Paginação de colaboradores ativos
+    @EntityGraph(attributePaths = {"cargo","departamento"})
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
     Page<Colaborador> findByAtivoTrue(Pageable pageable);
 
     Optional<Colaborador> findByCpf(String cpf);

@@ -50,6 +50,33 @@ public class ResumoFolhaService {
         );
     }
 
+    public java.util.List<ColaboradorResumoFolhaDTO> criarResumoBatch(java.util.List<Colaborador> colaboradores, YearMonth ym) {
+        int diasMes = ym.lengthOfMonth();
+        int diasUteisMes = contarDiasUteisNoMes(ym);
+        java.time.LocalDate dataCheck = java.time.YearMonth.from(java.time.LocalDate.now()).equals(ym) ? java.time.LocalDate.now() : ym.atEndOfMonth();
+        java.util.List<com.jaasielsilva.portalceo.model.ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigentesByData(dataCheck);
+        java.util.Set<Long> idsComEscala = vigentes.stream().map(e -> e.getColaborador().getId()).collect(java.util.stream.Collectors.toSet());
+        return colaboradores.stream().map(c -> {
+            int diasTrabalhados = (c.getStatus() != null && c.getStatus() == com.jaasielsilva.portalceo.model.Colaborador.StatusColaborador.INATIVO) ? 0 : (java.time.YearMonth.from(java.time.LocalDate.now()).equals(ym) ? contarDiasUteisAte(java.time.LocalDate.now().withDayOfMonth(java.time.LocalDate.now().getDayOfMonth())) : diasUteisMes);
+            String cargoNome = c.getCargo() != null ? c.getCargo().getNome() : "—";
+            String departamentoNome = c.getDepartamento() != null ? c.getDepartamento().getNome() : "—";
+            String status = c.getStatus() != null ? c.getStatus().name() : "";
+            boolean temEscala = idsComEscala.contains(c.getId());
+            return new ColaboradorResumoFolhaDTO(
+                    c.getId(),
+                    c.getNome(),
+                    cargoNome,
+                    departamentoNome,
+                    c.getSalario(),
+                    diasTrabalhados,
+                    diasMes,
+                    diasUteisMes,
+                    status,
+                    temEscala
+            );
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
     private int contarDiasUteisNoMes(YearMonth ym) {
         int count = 0;
         for (int d = 1; d <= ym.lengthOfMonth(); d++) {

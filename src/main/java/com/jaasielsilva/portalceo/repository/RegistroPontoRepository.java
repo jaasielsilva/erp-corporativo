@@ -4,6 +4,8 @@ import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.RegistroPonto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -37,6 +39,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     @Query("SELECT r FROM RegistroPonto r WHERE r.data = :data ORDER BY r.colaborador.nome")
     List<RegistroPonto> findByData(@Param("data") LocalDate data);
 
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
     @Query("SELECT r.colaborador.id, r.entrada1, r.saida1, r.entrada2, r.saida2, r.falta, r.minutosAtraso, r.totalMinutosTrabalhados " +
            "FROM RegistroPonto r WHERE r.data = :data")
     List<Object[]> findCamposDia(@Param("data") LocalDate data);
@@ -123,6 +126,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     /**
      * Consulta única agregada para reduzir múltiplas queries por colaborador
      */
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
     @Query("SELECT " +
            "SUM(CASE WHEN r.falta = true THEN 1 ELSE 0 END) AS faltas, " +
            "SUM(CASE WHEN r.minutosAtraso > 0 THEN 1 ELSE 0 END) AS atrasos, " +
@@ -140,6 +144,7 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     /**
      * Consulta única para o período, agregando por colaborador (reduz N consultas para 1)
      */
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
     @Query("SELECT " +
            "r.colaborador.id AS colaboradorId, " +
            "SUM(CASE WHEN r.falta = true THEN 1 ELSE 0 END) AS faltas, " +

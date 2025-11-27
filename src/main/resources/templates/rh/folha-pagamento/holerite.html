@@ -386,78 +386,28 @@
           </div>
         </div>
 
-        <!-- Lista de Holerites Disponíveis -->
-        <article class="card" style="margin-top: 30px;">
+        <article class="card" style="margin-top: 30px;" th:attr="data-folha-id=${holerite.folhaPagamento != null ? holerite.folhaPagamento.id : 0}">
           <h3><i class="fas fa-list"></i> Holerites Disponíveis</h3>
+          <div class="action-buttons">
+            <div class="search-box">
+              <input id="buscarHoleriteFolha" type="text" placeholder="Buscar por nome" autocomplete="off" />
+            </div>
+          </div>
+          <div id="holeritesLoading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
           <table class="table-list">
             <thead>
               <tr>
                 <th>Colaborador</th>
-                <th>Competência</th>
-                <th>Salário Bruto</th>
+                <th>Salário Base</th>
+                <th>Proventos</th>
                 <th>Descontos</th>
-                <th>Salário Líquido</th>
-                <th>Status</th>
+                <th>Líquido</th>
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody>
-              <tr th:each="h : ${holerite.folhaPagamento != null ? holerite.folhaPagamento.holerites : {}}">
-                <td th:text="${h.colaborador.nome}"></td>
-                <td th:text="${h.folhaPagamento.mesReferencia + '/' + h.folhaPagamento.anoReferencia}"></td>
-                <td th:text="${#numbers.formatCurrency(h.totalProventos)}"></td>
-                <td th:text="${#numbers.formatCurrency(h.totalDescontos)}"></td>
-                <td th:text="${#numbers.formatCurrency(h.salarioLiquido)}"></td>
-                <td><span class="status-badge status-ativo">Disponível</span></td>
-                <td>
-                  <a th:href="@{/rh/folha-pagamento/holerite/{id}(id=${h.id})}" class="btn-icon" title="Visualizar">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <a th:href="@{/rh/folha-pagamento/holerite/{id}/pdf(id=${h.id})}" class="btn-icon" title="Baixar PDF">
-                    <i class="fas fa-download"></i>
-                  </a>
-                </td>
-              </tr>
-              <tr>
-                <td>Maria Santos</td>
-                <td>Nov/2023</td>
-                <td>R$ 6.000,00</td>
-                <td>R$ 1.580,00</td>
-                <td>R$ 4.420,00</td>
-                <td><span class="status-badge status-ativo">Disponível</span></td>
-                <td>
-                  <button onclick="visualizarHolerite(2)" class="btn-icon" title="Visualizar">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button onclick="baixarPDF(2)" class="btn-icon" title="Baixar PDF">
-                    <i class="fas fa-download"></i>
-                  </button>
-                  <button onclick="enviarEmail(2)" class="btn-icon" title="Enviar Email">
-                    <i class="fas fa-envelope"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>Carlos Oliveira</td>
-                <td>Nov/2023</td>
-                <td>R$ 12.000,00</td>
-                <td>R$ 3.240,00</td>
-                <td>R$ 8.760,00</td>
-                <td><span class="status-badge status-ativo">Disponível</span></td>
-                <td>
-                  <button onclick="visualizarHolerite(3)" class="btn-icon" title="Visualizar">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button onclick="baixarPDF(3)" class="btn-icon" title="Baixar PDF">
-                    <i class="fas fa-download"></i>
-                  </button>
-                  <button onclick="enviarEmail(3)" class="btn-icon" title="Enviar Email">
-                    <i class="fas fa-envelope"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="holeritesBody"></tbody>
           </table>
+          <div id="holeritesPagination" class="pagination"></div>
         </article>
       </section>
 
@@ -536,6 +486,83 @@
         }
       });
     }
+    let currentHoleritesPage = 0;
+    let queryHolerites = '';
+    let debounceHolerites;
+    function showHoleritesLoading(show){
+      const el = document.getElementById('holeritesLoading');
+      if (el) el.style.display = show ? 'block' : 'none';
+    }
+    function formatCurrencyBr(v){
+      try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0); } catch { return 'R$ 0,00'; }
+    }
+    function renderHoleritesRows(items){
+      const tbody = document.getElementById('holeritesBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (!items || items.length === 0){
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum holerite encontrado</td></tr>';
+        return;
+      }
+      const rows = items.map(h => {
+        const id = h.id;
+        const nome = h.nome || '-';
+        const salBase = formatCurrencyBr(h.salarioBase);
+        const prov = formatCurrencyBr(h.totalProventos);
+        const desc = formatCurrencyBr(h.totalDescontos);
+        const liq = formatCurrencyBr(h.salarioLiquido);
+        return `<tr>
+          <td>${nome}</td>
+          <td>${salBase}</td>
+          <td>${prov}</td>
+          <td>${desc}</td>
+          <td>${liq}</td>
+          <td class="actions">
+            <a href="/rh/folha-pagamento/holerite/${id}" class="btn btn-sm btn-info" title="Ver"><i class="fas fa-eye"></i></a>
+            <a href="/rh/folha-pagamento/holerite/${id}/pdf" class="btn btn-sm btn-success" title="PDF"><i class="fas fa-file-pdf"></i></a>
+          </td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+    function renderHoleritesPagination(data){
+      const el = document.getElementById('holeritesPagination');
+      if (!el) return;
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = data.hasPrevious;
+      const hasNext = data.hasNext;
+      let html = '';
+      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} holerites)</span>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goHoleritesPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goHoleritesPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+    function loadHolerites(page=0){
+      currentHoleritesPage = page;
+      showHoleritesLoading(true);
+      const card = document.querySelector('article.card[data-folha-id]');
+      const folhaId = card ? card.getAttribute('data-folha-id') : (document.querySelector('[data-holerite-id]')?.getAttribute('data-holerite-id'));
+      const q = encodeURIComponent(queryHolerites||'');
+      fetch(`/rh/folha-pagamento/api/folha/${folhaId}/holerites?page=${page}&size=20&q=${q}`)
+        .then(r => r.json())
+        .then(data => { renderHoleritesRows(data.content); renderHoleritesPagination(data); })
+        .catch(() => { renderHoleritesRows([]); renderHoleritesPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); })
+        .finally(() => showHoleritesLoading(false));
+    }
+    function goHoleritesPage(p){ loadHolerites(Math.max(0,p)); }
+    document.addEventListener('DOMContentLoaded', function(){
+      const input = document.getElementById('buscarHoleriteFolha');
+      if (input){
+        input.addEventListener('input', function(e){
+          clearTimeout(debounceHolerites);
+          queryHolerites = e.target.value || '';
+          debounceHolerites = setTimeout(() => loadHolerites(0), 250);
+        });
+      }
+      loadHolerites(0);
+    });
   </script>
   
   <script th:if="${pdf == null}" src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

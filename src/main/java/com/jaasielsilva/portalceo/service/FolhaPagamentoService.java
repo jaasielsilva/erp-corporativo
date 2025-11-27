@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.FlushModeType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -24,6 +25,10 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
  @Service
  public class FolhaPagamentoService {
@@ -61,6 +66,23 @@ import org.springframework.scheduling.annotation.Async;
     @PersistenceContext
     private EntityManager entityManager;
 
+    @Autowired
+    @Qualifier("taskExecutor")
+    private ThreadPoolTaskExecutor taskExecutor;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    private static class PageResult {
+        int processed;
+        int blocks;
+        long lastFlushMs;
+        BigDecimal bruto = BigDecimal.ZERO;
+        BigDecimal descontos = BigDecimal.ZERO;
+        BigDecimal inss = BigDecimal.ZERO;
+        BigDecimal irrf = BigDecimal.ZERO;
+        BigDecimal fgts = BigDecimal.ZERO;
+    }
+
     /**
      * Lista todas as folhas de pagamento ordenadas por ano e mês
      */
@@ -89,6 +111,7 @@ import org.springframework.scheduling.annotation.Async;
         info.put("message", "Processamento agendado");
         processamentoJobs.put(jobId, info);
         appendJobLog(jobId, String.format("Agendado processamento para %02d/%d", mes, ano));
+        pushJobStatus(jobId);
         gerarFolhaPagamentoAsync(mes, ano, usuarioProcessamento, jobId);
         return jobId;
     }
@@ -103,6 +126,7 @@ import org.springframework.scheduling.annotation.Async;
         info.put("status", "PROCESSANDO");
         info.put("message", "Processando folha");
         appendJobLog(jobId, String.format("Iniciando processamento da folha %02d/%d", mes, ano));
+        pushJobStatus(jobId);
         currentJobId.set(jobId);
         try {
             FolhaPagamento folha = gerarFolhaPagamento(mes, ano, usuarioProcessamento);
@@ -110,10 +134,12 @@ import org.springframework.scheduling.annotation.Async;
             info.put("folhaId", folha.getId());
             info.put("message", "Folha gerada com sucesso");
             appendJobLog(jobId, String.format("Folha gerada com sucesso (folhaId=%d)", folha.getId()));
+            pushJobStatus(jobId);
         } catch (Exception e) {
             info.put("status", "ERRO");
             info.put("message", e.getMessage());
             appendJobLog(jobId, String.format("Erro no processamento: %s", e.getMessage()));
+            pushJobStatus(jobId);
         } finally {
             currentJobId.remove();
         }
@@ -136,8 +162,11 @@ import org.springframework.scheduling.annotation.Async;
     /**
      * Gera folha de pagamento para um mês/ano específico
      */
+    @Transactional
     public FolhaPagamento gerarFolhaPagamento(Integer mes, Integer ano, Usuario usuarioProcessamento) {
         logger.info("Iniciando geração de folha de pagamento para {}/{}", mes, ano);
+
+        entityManager.setFlushMode(FlushModeType.COMMIT);
 
         // Verificar se já existe folha para este período
         if (existeFolhaPorMesAno(mes, ano)) {
@@ -168,6 +197,7 @@ import org.springframework.scheduling.annotation.Async;
 
         // Salvar folha primeiro para obter ID
         folha = folhaPagamentoRepository.save(folha);
+        final Long folhaId = folha.getId();
 
         // Buscar colaboradores ativos em paginação para evitar carga total na memória
         long tInicio = System.nanoTime();
@@ -180,6 +210,7 @@ import org.springframework.scheduling.annotation.Async;
             info.put("progressPct", 0);
             info.put("startedAt", java.time.LocalDateTime.now().toString());
             info.put("message", "Calculando holerites e preparando persistência em blocos...");
+            pushJobStatus(jobId);
         }
 
         // Agregar dados de ponto em uma única consulta por período
@@ -193,43 +224,55 @@ import org.springframework.scheduling.annotation.Async;
                         RegistroPontoRepository.PontoResumoPorColaboradorProjection::getColaboradorId,
                         Function.identity()
                 ));
-        final int CHUNK_SIZE = 400;
-        final int PAGE_SIZE = 500;
-        List<Holerite> holeritesChunk = new ArrayList<>(CHUNK_SIZE);
+        final int CHUNK_SIZE = 500;
+        final int PAGE_SIZE = 800;
+
         int totalProcessados = 0;
         int blocosProcessados = 0;
 
-        int pageIndex = 0;
-        while (true) {
-            org.springframework.data.domain.Page<Colaborador> page = colaboradorRepository.findByAtivoTrue(org.springframework.data.domain.PageRequest.of(pageIndex, PAGE_SIZE, org.springframework.data.domain.Sort.by("nome").ascending()));
-            List<Colaborador> colaboradores = page.getContent();
-            if (colaboradores == null || colaboradores.isEmpty()) break;
+        int totalPages = (int) Math.ceil((double) totalAtivos / (double) PAGE_SIZE);
 
-            Map<Long, BeneficiosInfo> beneficiosPorColaborador = carregarBeneficiosEmLote(colaboradores, mes, ano);
-            for (Colaborador colaborador : colaboradores) {
-                try {
-                long tColabInicio = System.nanoTime();
-                RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo =
-                        resumoPorColaborador.get(colaborador.getId());
-                BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(
-                        colaborador.getId(),
-                        new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty())
-                );
-                Holerite holerite = gerarHoleriteComBeneficios(colaborador, folha, mes, ano, resumo, beneficios);
-                holeritesChunk.add(holerite);
-                totalProcessados++;
+        java.util.function.IntFunction<java.util.concurrent.Callable<PageResult>> pageTaskFactory = (int idx) -> () -> processarPaginaFolha(idx, PAGE_SIZE, CHUNK_SIZE, folhaId, mes, ano, resumoPorColaborador);
 
-                // Somar aos totais da folha
-                totalBruto = totalBruto.add(holerite.getTotalProventos());
-                totalDescontos = totalDescontos.add(holerite.getTotalDescontos());
-                totalInss = totalInss.add(holerite.getDescontoInss());
-                totalIrrf = totalIrrf.add(holerite.getDescontoIrrf());
-                BigDecimal salarioBrutoHolerite = holerite.getSalarioBase().add(holerite.getHorasExtras());
-                totalFgts = totalFgts.add(holeriteCalculoService.calcularFgtsPatronal(salarioBrutoHolerite));
+        for (int pageIndex = 0; pageIndex < totalPages; pageIndex += 2) {
+            java.util.concurrent.Future<PageResult> f1 = taskExecutor.submit(pageTaskFactory.apply(pageIndex));
+            java.util.concurrent.Future<PageResult> f2 = pageIndex + 1 < totalPages ? taskExecutor.submit(pageTaskFactory.apply(pageIndex + 1)) : null;
 
-                long tColabFim = System.nanoTime();
-                if (totalProcessados % 100 == 0) {
-                    logger.info("Processados {} holerites em {} ms", totalProcessados, (tColabFim - tInicio) / 1_000_000);
+            try {
+                PageResult r1 = f1.get();
+                totalProcessados += r1.processed;
+                blocosProcessados += r1.blocks;
+                totalBruto = totalBruto.add(r1.bruto);
+                totalDescontos = totalDescontos.add(r1.descontos);
+                totalInss = totalInss.add(r1.inss);
+                totalIrrf = totalIrrf.add(r1.irrf);
+                totalFgts = totalFgts.add(r1.fgts);
+                if (jobId != null) {
+                    Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                    long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
+                    long total = totalAtivos;
+                    double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
+                    long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
+                    int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
+                    info.put("lastFlushMs", r1.lastFlushMs);
+                    info.put("blocksProcessed", blocosProcessados);
+                    info.put("processed", totalProcessados);
+                    info.put("progressPct", pct);
+                    info.put("elapsedMs", elapsedMs);
+                    info.put("etaMs", etaMs);
+                    info.put("message", "Processando cálculos de holerites em paralelo...");
+                    appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
+                    pushJobStatus(jobId);
+                }
+                if (f2 != null) {
+                    PageResult r2 = f2.get();
+                    totalProcessados += r2.processed;
+                    blocosProcessados += r2.blocks;
+                    totalBruto = totalBruto.add(r2.bruto);
+                    totalDescontos = totalDescontos.add(r2.descontos);
+                    totalInss = totalInss.add(r2.inss);
+                    totalIrrf = totalIrrf.add(r2.irrf);
+                    totalFgts = totalFgts.add(r2.fgts);
                     if (jobId != null) {
                         Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
                         long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
@@ -237,53 +280,20 @@ import org.springframework.scheduling.annotation.Async;
                         double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
                         long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
                         int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
-                        info.put("processed", totalProcessados);
-                        info.put("progressPct", pct);
-                        info.put("elapsedMs", elapsedMs);
-                        info.put("etaMs", etaMs);
-                        info.put("message", "Processando cálculos de holerites...");
-                        appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
-                    }
-                }
-
-                // Persistir em blocos para aliviar memória e I/O
-                if (holeritesChunk.size() >= CHUNK_SIZE) {
-                    int blocoSize = holeritesChunk.size();
-                    long tPersistIni = System.nanoTime();
-                    holeriteRepository.saveAll(holeritesChunk);
-                    holeriteRepository.flush();
-                    long tPersistFim = System.nanoTime();
-                    logger.info("Flush de bloco ({} holerites) em {} ms", blocoSize, (tPersistFim - tPersistIni) / 1_000_000);
-                    holeritesChunk.clear();
-                    blocosProcessados++;
-
-                    if (jobId != null) {
-                        Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
-                        long flushMs = (tPersistFim - tPersistIni) / 1_000_000;
-                        long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                        long total = totalAtivos;
-                        int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
-                        info.put("lastFlushMs", flushMs);
+                        info.put("lastFlushMs", r2.lastFlushMs);
                         info.put("blocksProcessed", blocosProcessados);
                         info.put("processed", totalProcessados);
                         info.put("progressPct", pct);
                         info.put("elapsedMs", elapsedMs);
-                        info.put("message", String.format("Gravado bloco de %d holerites (último flush %d ms)", blocoSize, flushMs));
-                        appendJobLog(jobId, String.format("Flush bloco %d: %d holerites em %d ms", blocosProcessados, blocoSize, flushMs));
+                        info.put("etaMs", etaMs);
+                        info.put("message", "Processando cálculos de holerites em paralelo...");
+                        appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
+                        pushJobStatus(jobId);
                     }
-
-                    // Limpar contexto para evitar crescimento da persistence context em grandes volumes
-                    entityManager.clear();
-
-                    // Reanexar 'folha' para continuar atualizações dos totais/status
-                    folha = entityManager.merge(folha);
                 }
             } catch (Exception e) {
-                logger.error("Erro ao gerar holerite para colaborador {}: {}", colaborador.getNome(), e.getMessage());
-                // Continua processando outros colaboradores
+                logger.error("Erro ao processar páginas em paralelo: {}", e.getMessage());
             }
-            }
-            pageIndex++;
         }
 
         // Atualizar totais da folha
@@ -295,30 +305,7 @@ import org.springframework.scheduling.annotation.Async;
         folha.setTotalFgts(totalFgts);
         folha.setStatus(FolhaPagamento.StatusFolha.PROCESSADA);
 
-        // Persistir holerites restantes do último bloco
-        if (!holeritesChunk.isEmpty()) {
-            int blocoSize = holeritesChunk.size();
-            long tPersistIni = System.nanoTime();
-            holeriteRepository.saveAll(holeritesChunk);
-            holeriteRepository.flush();
-            long tPersistFim = System.nanoTime();
-            logger.info("Flush do último bloco ({} holerites) em {} ms", blocoSize, (tPersistFim - tPersistIni) / 1_000_000);
-            holeritesChunk.clear();
-            blocosProcessados++;
-            if (jobId != null) {
-                Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
-                long flushMs = (tPersistFim - tPersistIni) / 1_000_000;
-                long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                long total = totalAtivos;
-                info.put("lastFlushMs", flushMs);
-                info.put("blocksProcessed", blocosProcessados);
-                info.put("processed", totalProcessados);
-                info.put("progressPct", 100);
-                info.put("elapsedMs", elapsedMs);
-                info.put("message", String.format("Último bloco gravado (%d holerites) em %d ms", blocoSize, flushMs));
-                appendJobLog(jobId, String.format("Último flush: %d holerites em %d ms", blocoSize, flushMs));
-            }
-        }
+        // Não há bloco restante aqui; cada página faz seus próprios flushes
 
         folha = folhaPagamentoRepository.save(folha);
 
@@ -326,8 +313,106 @@ import org.springframework.scheduling.annotation.Async;
         logger.info("Folha de pagamento {}/{} gerada com sucesso. {} holerites criados em {} ms.", mes, ano, totalProcessados, (tFim - tInicio) / 1_000_000);
         if (jobId != null) {
             appendJobLog(jobId, String.format("Conclusão: %d holerites em %d ms", totalProcessados, (tFim - tInicio) / 1_000_000));
+            pushJobStatus(jobId);
         }
         return folha;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    private PageResult processarPaginaFolha(int pageIndex,
+                                            int PAGE_SIZE,
+                                            int CHUNK_SIZE,
+                                            Long folhaId,
+                                            Integer mes,
+                                            Integer ano,
+                                            Map<Long, RegistroPontoRepository.PontoResumoPorColaboradorProjection> resumoPorColaborador) {
+        entityManager.setFlushMode(FlushModeType.COMMIT);
+        PageResult r = new PageResult();
+        org.springframework.data.domain.Page<Colaborador> page = colaboradorRepository.findByAtivoTrue(org.springframework.data.domain.PageRequest.of(pageIndex, PAGE_SIZE, org.springframework.data.domain.Sort.by("nome").ascending()));
+        List<Colaborador> colaboradores = page.getContent();
+        if (colaboradores == null || colaboradores.isEmpty()) return r;
+
+        Map<Long, BeneficiosInfo> beneficiosPorColaborador = carregarBeneficiosEmLote(colaboradores, mes, ano);
+        FolhaPagamento folhaRef = new FolhaPagamento();
+        folhaRef.setId(folhaId);
+
+        List<Holerite> holeritesAll = colaboradores.parallelStream()
+                .map(col -> {
+                    RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo = resumoPorColaborador.get(col.getId());
+                    BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(col.getId(), new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()));
+                    return gerarHoleriteComBeneficios(col, folhaRef, mes, ano, resumo, beneficios);
+                })
+                .collect(Collectors.toList());
+
+        List<Holerite> holeritesChunk = new ArrayList<>(CHUNK_SIZE);
+        for (Holerite holerite : holeritesAll) {
+            holeritesChunk.add(holerite);
+            BigDecimal salarioBase = holerite.getSalarioBase() != null ? holerite.getSalarioBase() : BigDecimal.ZERO;
+            BigDecimal horasExtras = holerite.getHorasExtras() != null ? holerite.getHorasExtras() : BigDecimal.ZERO;
+            BigDecimal adicionalNoturno = holerite.getAdicionalNoturno() != null ? holerite.getAdicionalNoturno() : BigDecimal.ZERO;
+            BigDecimal adicionalPericulosidade = holerite.getAdicionalPericulosidade() != null ? holerite.getAdicionalPericulosidade() : BigDecimal.ZERO;
+            BigDecimal adicionalInsalubridade = holerite.getAdicionalInsalubridade() != null ? holerite.getAdicionalInsalubridade() : BigDecimal.ZERO;
+            BigDecimal comissoes = holerite.getComissoes() != null ? holerite.getComissoes() : BigDecimal.ZERO;
+            BigDecimal bonificacoes = holerite.getBonificacoes() != null ? holerite.getBonificacoes() : BigDecimal.ZERO;
+            BigDecimal vt = holerite.getValeTransporte() != null ? holerite.getValeTransporte() : BigDecimal.ZERO;
+            BigDecimal vr = holerite.getValeRefeicao() != null ? holerite.getValeRefeicao() : BigDecimal.ZERO;
+            BigDecimal saude = holerite.getAuxilioSaude() != null ? holerite.getAuxilioSaude() : BigDecimal.ZERO;
+            BigDecimal totalProventosCalc = salarioBase
+                    .add(horasExtras)
+                    .add(adicionalNoturno)
+                    .add(adicionalPericulosidade)
+                    .add(adicionalInsalubridade)
+                    .add(comissoes)
+                    .add(bonificacoes)
+                    .add(vt)
+                    .add(vr)
+                    .add(saude);
+            r.bruto = r.bruto.add(totalProventosCalc);
+
+            BigDecimal descInss = holerite.getDescontoInss() != null ? holerite.getDescontoInss() : BigDecimal.ZERO;
+            BigDecimal descIrrf = holerite.getDescontoIrrf() != null ? holerite.getDescontoIrrf() : BigDecimal.ZERO;
+            BigDecimal descFgts = holerite.getDescontoFgts() != null ? holerite.getDescontoFgts() : BigDecimal.ZERO;
+            BigDecimal descVt = holerite.getDescontoValeTransporte() != null ? holerite.getDescontoValeTransporte() : BigDecimal.ZERO;
+            BigDecimal descVr = holerite.getDescontoValeRefeicao() != null ? holerite.getDescontoValeRefeicao() : BigDecimal.ZERO;
+            BigDecimal descSaude = holerite.getDescontoPlanoSaude() != null ? holerite.getDescontoPlanoSaude() : BigDecimal.ZERO;
+            BigDecimal outros = holerite.getOutrosDescontos() != null ? holerite.getOutrosDescontos() : BigDecimal.ZERO;
+            BigDecimal totalDescontosCalc = descInss
+                    .add(descIrrf)
+                    .add(descFgts)
+                    .add(descVt)
+                    .add(descVr)
+                    .add(descSaude)
+                    .add(outros);
+            r.descontos = r.descontos.add(totalDescontosCalc);
+
+            r.inss = r.inss.add(descInss);
+            r.irrf = r.irrf.add(descIrrf);
+            BigDecimal salarioBrutoHolerite = salarioBase.add(horasExtras);
+            r.fgts = r.fgts.add(holeriteCalculoService.calcularFgtsPatronal(salarioBrutoHolerite));
+
+            if (holeritesChunk.size() >= CHUNK_SIZE) {
+                long tPersistIni = System.nanoTime();
+                holeriteRepository.saveAll(holeritesChunk);
+                holeriteRepository.flush();
+                long tPersistFim = System.nanoTime();
+                r.lastFlushMs = (tPersistFim - tPersistIni) / 1_000_000;
+                r.processed += holeritesChunk.size();
+                holeritesChunk.clear();
+                r.blocks++;
+            }
+        }
+        if (!holeritesChunk.isEmpty()) {
+            long tPersistIni = System.nanoTime();
+            holeriteRepository.saveAll(holeritesChunk);
+            holeriteRepository.flush();
+            long tPersistFim = System.nanoTime();
+            r.lastFlushMs = (tPersistFim - tPersistIni) / 1_000_000;
+            r.processed += holeritesChunk.size();
+            holeritesChunk.clear();
+            r.blocks++;
+        }
+        entityManager.clear();
+        return r;
     }
 
     private void appendJobLog(String jobId, String message) {
@@ -344,6 +429,17 @@ import org.springframework.scheduling.annotation.Async;
         if (logs.size() > MAX_LOG_ITEMS) {
             // manter apenas os últimos MAX_LOG_ITEMS
             logs.remove(0);
+        }
+        pushJobStatus(jobId);
+    }
+
+    private void pushJobStatus(String jobId) {
+        if (jobId == null) return;
+        Map<String, Object> info = processamentoJobs.get(jobId);
+        if (info != null) {
+            try {
+                messagingTemplate.convertAndSend("/topic/folha-status/" + jobId, info);
+            } catch (Exception ignored) {}
         }
     }
 

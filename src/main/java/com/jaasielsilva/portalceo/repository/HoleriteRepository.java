@@ -9,6 +9,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.QueryHints;
+import jakarta.persistence.QueryHint;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +51,21 @@ public interface HoleriteRepository extends JpaRepository<Holerite, Long> {
     @Query("SELECT h FROM Holerite h WHERE h.colaborador.ativo = true AND h.folhaPagamento.id = :folhaId ORDER BY h.colaborador.nome")
     List<Holerite> findByFolhaAndColaboradorAtivo(@Param("folhaId") Long folhaId);
 
+    @EntityGraph(attributePaths = {"colaborador","colaborador.departamento"})
     @Query("SELECT h FROM Holerite h WHERE h.folhaPagamento.id = :folhaId AND (:q IS NULL OR LOWER(h.colaborador.nome) LIKE LOWER(CONCAT('%', :q, '%')))" )
     Page<Holerite> findByFolhaPaginado(@Param("folhaId") Long folhaId, @Param("q") String q, Pageable pageable);
+
+    public static interface HoleriteListProjection {
+        Long getId();
+        String getColaboradorNome();
+        String getDepartamentoNome();
+        java.math.BigDecimal getSalarioBase();
+        java.math.BigDecimal getTotalProventos();
+        java.math.BigDecimal getTotalDescontos();
+        java.math.BigDecimal getSalarioLiquido();
+    }
+
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    @Query("SELECT h.id as id, c.nome as colaboradorNome, d.nome as departamentoNome, h.salarioBase as salarioBase, h.totalProventos as totalProventos, h.totalDescontos as totalDescontos, h.salarioLiquido as salarioLiquido FROM Holerite h JOIN h.colaborador c LEFT JOIN c.departamento d WHERE h.folhaPagamento.id = :folhaId AND (:q IS NULL OR LOWER(c.nome) LIKE LOWER(CONCAT('%', :q, '%'))) ORDER BY c.nome ASC" )
+    Page<HoleriteListProjection> findListByFolhaPaginado(@Param("folhaId") Long folhaId, @Param("q") String q, Pageable pageable);
 }

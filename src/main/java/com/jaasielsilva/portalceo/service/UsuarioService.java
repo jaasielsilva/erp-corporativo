@@ -179,6 +179,10 @@ public class UsuarioService {
         return usuarioRepository.findByEmail(email);
     }
 
+    public Optional<Usuario> buscarPorEmailLeve(String email) {
+        return usuarioRepository.findByEmailSimple(email);
+    }
+
     @Transactional
     public void setOnline(String email, boolean online) {
         usuarioRepository.findByEmail(email).ifPresent(u -> { u.setOnline(online); usuarioRepository.save(u); });

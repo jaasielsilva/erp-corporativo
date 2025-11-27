@@ -139,11 +139,7 @@ public class FolhaPagamentoController {
         Page<com.jaasielsilva.portalceo.model.Colaborador> colaboradoresPage = colaboradorService.listarAtivosPaginado(pageable);
         LocalDate hoje = LocalDate.now();
         YearMonth ym = YearMonth.of(hoje.getYear(), hoje.getMonthValue());
-        java.util.List<com.jaasielsilva.portalceo.dto.ColaboradorResumoFolhaDTO> content = colaboradoresPage
-                .getContent()
-                .stream()
-                .map(c -> resumoFolhaService.criarResumo(c, ym))
-                .collect(Collectors.toList());
+        java.util.List<com.jaasielsilva.portalceo.dto.ColaboradorResumoFolhaDTO> content = resumoFolhaService.criarResumoBatch(colaboradoresPage.getContent(), ym);
 
         java.util.Map<String, Object> resp = new java.util.HashMap<>();
         resp.put("content", content);
@@ -166,7 +162,7 @@ public class FolhaPagamentoController {
         try {
             // Obter usuário logado
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            Usuario usuario = usuarioService.buscarPorEmail(auth.getName())
+            Usuario usuario = usuarioService.buscarPorEmailLeve(auth.getName())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
             
             FolhaPagamento folha = folhaPagamentoService.gerarFolhaPagamento(mes, ano, usuario);
@@ -188,7 +184,7 @@ public class FolhaPagamentoController {
     public ResponseEntity<java.util.Map<String, Object>> processarAsync(@RequestParam Integer mes,
                                                                         @RequestParam Integer ano) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Usuario usuario = usuarioService.buscarPorEmail(auth.getName()).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        Usuario usuario = usuarioService.buscarPorEmailLeve(auth.getName()).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         String jobId = folhaPagamentoService.iniciarProcessamentoAsync(mes, ano, usuario);
         java.util.Map<String, Object> resp = new java.util.HashMap<>();
         resp.put("accepted", true);
@@ -266,12 +262,12 @@ public class FolhaPagamentoController {
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "q", required = false) String q) {
-        org.springframework.data.domain.Page<Holerite> pagina = holeriteService.listarPorFolhaPaginado(id, page, size, q);
+        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.repository.HoleriteRepository.HoleriteListProjection> pagina = holeriteService.listarPorFolhaPaginado(id, page, size, q);
         java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream().map(h -> {
             java.util.Map<String, Object> m = new java.util.HashMap<>();
             m.put("id", h.getId());
-            m.put("nome", h.getColaborador() != null ? h.getColaborador().getNome() : "-");
-            m.put("departamento", h.getColaborador() != null && h.getColaborador().getDepartamento() != null ? h.getColaborador().getDepartamento().getNome() : "-");
+            m.put("nome", h.getColaboradorNome());
+            m.put("departamento", h.getDepartamentoNome());
             m.put("salarioBase", h.getSalarioBase());
             m.put("totalProventos", h.getTotalProventos());
             m.put("totalDescontos", h.getTotalDescontos());

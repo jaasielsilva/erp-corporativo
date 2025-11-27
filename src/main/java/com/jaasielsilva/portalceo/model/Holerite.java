@@ -1,6 +1,7 @@
 package com.jaasielsilva.portalceo.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicInsert;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@DynamicInsert
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

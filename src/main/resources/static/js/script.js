@@ -1,17 +1,12 @@
 
 /*<![CDATA[*/
-  // Verificar se Chart.js está disponível antes de usar
-  if (typeof Chart !== 'undefined') {
-    const labels = /*[[${graficoLabels}]]*/[];
-    const data = /*[[${graficoValores}]]*/[];
-
-    console.log("Labels recebidos:", labels);
-    console.log("Valores recebidos:", data);
-
-    const graficoElement = document.getElementById('graficoVendas');
-    if (graficoElement) {
-      const ctx = graficoElement.getContext('2d');
-      const graficoVendas = new Chart(ctx, {
+  // Inicializa gráfico de vendas somente quando o elemento existir e Chart.js estiver disponível
+  var graficoElement = document.getElementById('graficoVendas');
+  if (graficoElement && typeof Chart !== 'undefined') {
+    var labels = /*[[${graficoLabels}]]*/[];
+    var data = /*[[${graficoValores}]]*/[];
+    var ctx = graficoElement.getContext('2d');
+    new Chart(ctx, {
       type: 'bar',
       data: {
         labels: labels,
@@ -25,14 +20,9 @@
       },
       options: {
         scales: {
-          y: {
-            beginAtZero: true
-          }
+          y: { beginAtZero: true }
         }
       }
     });
-    }
-  } else {
-    console.warn('Chart.js não está carregado. Gráficos não serão exibidos.');
   }
   /*]]>*/

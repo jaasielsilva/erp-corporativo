@@ -288,6 +288,12 @@
                   <span>Horas Extras</span>
                   <span th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></span>
                 </div>
+                <th:block th:if="${#strings.toLowerCase(holerite.tipoFolha) == 'ferias'}">
+                  <div class="valor-item">
+                    <span>1/3 Constitucional (Férias)</span>
+                    <span th:text="${#numbers.formatCurrency(holerite.bonificacoes)}"></span>
+                  </div>
+                </th:block>
                 <div class="valor-item">
                   <span>Adicional Noturno</span>
                   <span>R$ 0,00</span>
@@ -366,8 +372,16 @@
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
                 <div>
                   <strong>Base INSS:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras))}"></span><br>
-                  <strong>Base IRRF:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoInss))}"></span><br>
-                  <strong>Depósito FGTS (8%):</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).multiply(0.08))}"></span>
+                  <strong>Base IRRF:</strong>
+                  <span th:switch="${#strings.toLowerCase(holerite.tipoFolha)}">
+                    <span th:case="'ferias'" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoInss).add(holerite.bonificacoes))}"></span>
+                    <span th:case="*" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoInss))}"></span>
+                  </span><br>
+                  <strong>Depósito FGTS (8%):</strong>
+                  <span th:switch="${#strings.toLowerCase(holerite.tipoFolha)}">
+                    <span th:case="'ferias'" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).add(holerite.bonificacoes).multiply(0.08))}"></span>
+                    <span th:case="*" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).multiply(0.08))}"></span>
+                  </span>
                 </div>
                 <div>
                   <strong>Dependentes IR:</strong> 0<br>

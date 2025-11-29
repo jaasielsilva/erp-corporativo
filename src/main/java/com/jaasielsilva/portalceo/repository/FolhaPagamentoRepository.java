@@ -27,6 +27,9 @@ public interface FolhaPagamentoRepository extends JpaRepository<FolhaPagamento, 
     @Query("SELECT f FROM FolhaPagamento f WHERE f.anoReferencia = :ano AND f.mesReferencia = :mes")
     Optional<FolhaPagamento> findFolhaByMesAno(@Param("mes") Integer mes, @Param("ano") Integer ano);
 
+    @Query("SELECT f FROM FolhaPagamento f WHERE f.anoReferencia = :ano AND f.mesReferencia = :mes AND LOWER(COALESCE(f.tipoFolha, 'normal')) = LOWER(:tipo)")
+    Optional<FolhaPagamento> findFolhaByMesAnoAndTipo(@Param("mes") Integer mes, @Param("ano") Integer ano, @Param("tipo") String tipo);
+
     @Query("SELECT f FROM FolhaPagamento f WHERE f.status IN :statuses ORDER BY f.anoReferencia DESC, f.mesReferencia DESC")
     List<FolhaPagamento> findByStatusIn(@Param("statuses") List<FolhaPagamento.StatusFolha> statuses);
 
@@ -37,4 +40,7 @@ public interface FolhaPagamentoRepository extends JpaRepository<FolhaPagamento, 
     List<FolhaPagamento> findFolhasRecentes(@Param("anoInicio") Integer anoInicio);
 
     boolean existsByMesReferenciaAndAnoReferencia(Integer mesReferencia, Integer anoReferencia);
+
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN TRUE ELSE FALSE END FROM FolhaPagamento f WHERE f.anoReferencia = :ano AND f.mesReferencia = :mes AND LOWER(COALESCE(f.tipoFolha, 'normal')) = LOWER(:tipo)")
+    boolean existsByMesAnoAndTipo(@Param("mes") Integer mes, @Param("ano") Integer ano, @Param("tipo") String tipo);
 }

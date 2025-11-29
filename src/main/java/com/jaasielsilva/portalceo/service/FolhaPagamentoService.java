@@ -104,6 +104,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         return folhaPagamentoRepository.findFolhaByMesAno(mes, ano);
     }
 
+    public Optional<FolhaPagamento> buscarPorMesAnoTipo(Integer mes, Integer ano, String tipoFolha) {
+        String tipo = tipoFolha == null || tipoFolha.isBlank() ? "normal" : tipoFolha.toLowerCase();
+        return folhaPagamentoRepository.findFolhaByMesAnoAndTipo(mes, ano, tipo);
+    }
+
     public String iniciarProcessamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento) {
         return iniciarProcessamentoAsync(mes, ano, usuarioProcessamento, null, "normal");
     }
@@ -183,12 +188,17 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         entityManager.setFlushMode(FlushModeType.COMMIT);
 
         // Verificar existência e decidir criar ou reutilizar
-        Optional<FolhaPagamento> existenteOpt = buscarPorMesAno(mes, ano);
+        String tipoKey = tipoFolha == null || tipoFolha.isBlank() ? "normal" : tipoFolha.toLowerCase();
+        boolean tipoEspecial = "ferias".equals(tipoKey) || "decimo_terceiro".equals(tipoKey);
+        Optional<FolhaPagamento> existenteOpt = tipoEspecial ? buscarPorMesAnoTipo(mes, ano, tipoKey) : buscarPorMesAno(mes, ano);
         FolhaPagamento folha;
         if (existenteOpt.isPresent()) {
             folha = existenteOpt.get();
             if (folha.getStatus() == FolhaPagamento.StatusFolha.FECHADA || folha.getStatus() == FolhaPagamento.StatusFolha.CANCELADA) {
                 throw new IllegalStateException("Folha " + mes + "/" + ano + " está " + folha.getStatus() + ". Não é possível adicionar holerites.");
+            }
+            if (tipoEspecial && (folha.getTipoFolha() == null || !folha.getTipoFolha().equalsIgnoreCase(tipoKey))) {
+                folha.setTipoFolha(tipoKey);
             }
         } else {
             folha = new FolhaPagamento();
@@ -197,6 +207,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             folha.setUsuarioProcessamento(usuarioProcessamento);
             folha.setDataProcessamento(LocalDate.now());
             folha.setStatus(FolhaPagamento.StatusFolha.EM_PROCESSAMENTO);
+            folha.setTipoFolha(tipoEspecial ? tipoKey : "normal");
         }
 
         // Inicializar totais (se reutilizando folha, partir dos totais atuais)
@@ -315,6 +326,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                 totalInss = totalInss.add(descInss);
                 totalIrrf = totalIrrf.add(descIrrf);
                 BigDecimal salarioBrutoHolerite = salarioBase.add(horasExtras);
+                if ("ferias".equalsIgnoreCase(tipoFolha)) {
+                    salarioBrutoHolerite = salarioBrutoHolerite.add(bonificacoes);
+                }
                 totalFgts = totalFgts.add(holeriteCalculoService.calcularFgtsPatronal(salarioBrutoHolerite));
 
                 if (holeritesChunk.size() >= CHUNK_SIZE) {
@@ -562,6 +576,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             r.inss = r.inss.add(descInss);
             r.irrf = r.irrf.add(descIrrf);
             BigDecimal salarioBrutoHolerite = salarioBase.add(horasExtras);
+            if ("ferias".equalsIgnoreCase(tipoFolha)) {
+                BigDecimal bonif = holerite.getBonificacoes() != null ? holerite.getBonificacoes() : BigDecimal.ZERO;
+                salarioBrutoHolerite = salarioBrutoHolerite.add(bonif);
+            }
             r.fgts = r.fgts.add(holeriteCalculoService.calcularFgtsPatronal(salarioBrutoHolerite));
 
             if (holeritesChunk.size() >= CHUNK_SIZE) {
@@ -790,6 +808,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
         holerite.setDescontoInss(holeriteCalculoService.calcularInssProgressivo(salarioBruto));
         BigDecimal baseIrrf = salarioBruto.subtract(holerite.getDescontoInss());
+        if ("ferias".equalsIgnoreCase(tipoFolha)) {
+            BigDecimal bonif = holerite.getBonificacoes() != null ? holerite.getBonificacoes() : BigDecimal.ZERO;
+            baseIrrf = baseIrrf.add(bonif);
+        }
         holerite.setDescontoIrrf(holeriteCalculoService.calcularIrrf(baseIrrf, 0));
         holerite.setDescontoFgts(BigDecimal.ZERO);
 

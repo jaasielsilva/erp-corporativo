@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Relatórios de Folha - ERP Corporativo</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Relatórios de Folha - ERP Corporativo</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
 
 <body>
   <div class="app-container">
@@ -34,7 +36,7 @@
         <!-- Filtros Gerais -->
         <article class="card">
           <h3><i class="fas fa-filter"></i> Filtros</h3>
-          <form class="form-container">
+          <form class="form-container" method="get" action="/rh/folha-pagamento/relatorios">
             <div class="form-row">
               <div class="form-group">
                 <label for="periodoInicio">Período - Início</label>
@@ -52,7 +54,25 @@
                 </select>
               </div>
               <div class="form-group">
-                <button type="button" onclick="atualizarRelatorios()" class="btn btn-primary">
+                <label for="tipoFolhaRel">Tipo de Folha</label>
+                <select id="tipoFolhaRel" name="tipoFolha" class="form-control">
+                  <option value="normal" th:selected="${tipoFolhaSelecionado == 'normal'}">Folha Normal</option>
+                  <option value="complementar" th:selected="${tipoFolhaSelecionado == 'complementar'}">Folha Complementar</option>
+                  <option value="decimo_terceiro" th:selected="${tipoFolhaSelecionado == 'decimo_terceiro'}">13º Salário</option>
+                  <option value="ferias" th:selected="${tipoFolhaSelecionado == 'ferias'}">Férias</option>
+                </select>
+              </div>
+              <div class="form-group" style="min-width:280px">
+                <label for="folhaSelecionada">Folhas Recentes</label>
+                <select id="folhaSelecionada" class="form-control">
+                  <option value="" selected>Selecione uma folha...</option>
+                  <option th:each="f : ${folhasRecentes}"
+                          th:value="${f.id}"
+                          th:text="${(f.mesReferencia != null ? f.mesReferencia : '') + '/' + (f.anoReferencia != null ? f.anoReferencia : '') + ' - ' + (f.tipoFolha != null ? f.tipoFolha : 'normal')}"></option>
+                </select>
+              </div>
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary">
                   <i class="fas fa-sync"></i> Atualizar
                 </button>
               </div>
@@ -124,12 +144,20 @@
         <div class="charts-container">
           <article class="card chart-card">
             <h3><i class="fas fa-chart-bar"></i> Evolução da Folha de Pagamento</h3>
-            <canvas id="chartEvolucaoFolha" width="400" height="200"></canvas>
+            <div class="chart-help" id="helpEvolucao" style="display:none">Falha ao carregar dados para o período selecionado</div>
+            <div class="chart-wrapper">
+              <canvas id="chartEvolucaoFolha" style="width:100%; height:220px; display:block; margin:0 auto"></canvas>
+              <div class="chart-empty" id="emptyEvolucao" style="display:none">Sem dados disponíveis</div>
+            </div>
           </article>
           
           <article class="card chart-card">
             <h3><i class="fas fa-chart-pie"></i> Distribuição por Departamento</h3>
-            <canvas id="chartDepartamentos" width="400" height="200"></canvas>
+            <div class="chart-help" id="helpDepartamentos" style="display:none">Falha ao carregar dados para o período selecionado</div>
+            <div class="chart-wrapper">
+              <canvas id="chartDepartamentos" style="width:100%; height:220px; display:block; margin:0 auto"></canvas>
+              <div class="chart-empty" id="emptyDepartamentos" style="display:none">Sem dados disponíveis</div>
+            </div>
           </article>
         </div>
 
@@ -268,7 +296,13 @@
         <!-- Tabela Detalhada -->
         <article class="card">
           <h3><i class="fas fa-table"></i> Detalhamento da Folha Atual</h3>
+          <div class="action-buttons" style="margin-bottom:12px;">
+            <div class="search-box">
+              <input id="buscarHoleriteRel" type="text" placeholder="Buscar por nome ou departamento" autocomplete="off" />
+            </div>
+          </div>
           <div class="table-responsive">
+            <div id="holeritesLoadingRel" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
             <table class="table-list">
               <thead>
                 <tr>
@@ -282,156 +316,345 @@
                   <th>Ações</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>João Silva</td>
-                  <td>TI</td>
-                  <td>R$ 8.500,00</td>
-                  <td>R$ 9.900,00</td>
-                  <td>R$ 2.708,30</td>
-                  <td>R$ 7.191,70</td>
-                  <td>27.4%</td>
-                  <td>
-                    <button onclick="verDetalhesColaborador(1)" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="gerarHolerite(1)" class="btn-icon" title="Gerar Holerite">
-                      <i class="fas fa-file-invoice"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Maria Santos</td>
-                  <td>Vendas</td>
-                  <td>R$ 6.000,00</td>
-                  <td>R$ 6.820,00</td>
-                  <td>R$ 1.580,00</td>
-                  <td>R$ 5.240,00</td>
-                  <td>23.2%</td>
-                  <td>
-                    <button onclick="verDetalhesColaborador(2)" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="gerarHolerite(2)" class="btn-icon" title="Gerar Holerite">
-                      <i class="fas fa-file-invoice"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Carlos Oliveira</td>
-                  <td>Financeiro</td>
-                  <td>R$ 12.000,00</td>
-                  <td>R$ 13.200,00</td>
-                  <td>R$ 3.240,00</td>
-                  <td>R$ 9.960,00</td>
-                  <td>24.5%</td>
-                  <td>
-                    <button onclick="verDetalhesColaborador(3)" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="gerarHolerite(3)" class="btn-icon" title="Gerar Holerite">
-                      <i class="fas fa-file-invoice"></i>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
+              <tbody id="tbodyHolerites"></tbody>
               <tfoot>
                 <tr class="total-row">
                   <td colspan="2"><strong>TOTAIS</strong></td>
-                  <td><strong>R$ 132.500,00</strong></td>
-                  <td><strong>R$ 145.750,00</strong></td>
-                  <td><strong>R$ 32.450,00</strong></td>
-                  <td><strong>R$ 113.300,00</strong></td>
-                  <td><strong>22.3%</strong></td>
+                  <td><strong id="totalSalarioBase">R$ 0,00</strong></td>
+                  <td><strong id="totalProventos">R$ 0,00</strong></td>
+                  <td><strong id="totalDescontos">R$ 0,00</strong></td>
+                  <td><strong id="totalLiquido">R$ 0,00</strong></td>
+                  <td><strong id="percentualDesconto">0%</strong></td>
                   <td></td>
                 </tr>
               </tfoot>
             </table>
           </div>
         </article>
+        <div class="pagination-tools" style="display:flex; align-items:center; justify-content:center; gap:12px; margin:16px 0; width:100%; text-align:center;">
+          <div id="pagination" class="pagination"></div>
+          <div class="page-size">
+            <label for="pageSizeRel" style="margin-right:6px;">Itens por página:</label>
+            <select id="pageSizeRel">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+        </div>
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
 
+  <div class="modal fade" id="relatorioModal" tabindex="-1" aria-labelledby="relatorioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="relatorioModalLabel">Relatório</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="relatorioContent"></div>
+        </div>
+        <div class="modal-footer">
+          <div id="relatorioExportStatus" class="me-auto"></div>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Exportar</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#" id="btnExportPdf">Exportar PDF</a></li>
+              <li><a class="dropdown-item" href="#" id="btnExportExcel">Exportar Excel</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script th:src="@{/js/script.js}"></script>
   <script>
-    // Gráfico de Evolução da Folha
-    const ctxEvolucao = document.getElementById('chartEvolucaoFolha').getContext('2d');
-    new Chart(ctxEvolucao, {
-      type: 'line',
-      data: {
-        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov'],
-        datasets: [{
-          label: 'Folha Bruta',
-          data: [120000, 125000, 130000, 128000, 135000, 140000, 138000, 142000, 145000, 143000, 145750],
-          borderColor: '#007bff',
-          backgroundColor: 'rgba(0, 123, 255, 0.1)',
-          tension: 0.4
-        }, {
-          label: 'Folha Líquida',
-          data: [95000, 98000, 102000, 100000, 105000, 108000, 106000, 110000, 112000, 110000, 113300],
-          borderColor: '#28a745',
-          backgroundColor: 'rgba(40, 167, 69, 0.1)',
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: false,
-            ticks: {
-              callback: function(value) {
-                return 'R$ ' + value.toLocaleString('pt-BR');
-              }
-            }
-          }
-        }
-      }
-    });
+    let chartEvolucao = null;
+    let chartDepartamentos = null;
+    let chartEvoController = null;
+    let chartDepController = null;
 
-    // Gráfico de Departamentos
-    const ctxDepartamentos = document.getElementById('chartDepartamentos').getContext('2d');
-    new Chart(ctxDepartamentos, {
-      type: 'doughnut',
-      data: {
-        labels: ['TI', 'Vendas', 'Financeiro', 'RH', 'Marketing'],
-        datasets: [{
-          data: [45000, 35000, 25000, 15000, 10000],
-          backgroundColor: [
-            '#007bff',
-            '#28a745',
-            '#ffc107',
-            '#dc3545',
-            '#6f42c1'
-          ]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'right',
-          }
-        }
-      }
-    });
-
-    function atualizarRelatorios() {
-      alert('Atualizando relatórios com os filtros selecionados...');
-      // Implementar atualização dos dados
+    function getInputValue(id){
+      var el = document.getElementById(id);
+      return el ? el.value : '';
     }
 
+    function normalizeDateParam(value, isEnd){
+      if (!value) return '';
+      if (/^\d{4}-\d{2}$/.test(value)){
+        var parts = value.split('-');
+        var y = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        var last = new Date(y, m, 0).getDate();
+        var day = isEnd ? last : 1;
+        return parts[0] + '-' + parts[1] + '-' + (day < 10 ? ('0' + day) : day);
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+      return value;
+    }
+
+    let chartsDisabled = false;
+
+    async function updateEvolucaoChart(){
+      try {
+        if (!window.Chart || chartsDisabled) { return; }
+        if (chartEvoController) { chartEvoController.abort(); }
+        chartEvoController = new AbortController();
+        const signal = chartEvoController.signal;
+        const inicio = normalizeDateParam(getInputValue('periodoInicio') || '', false);
+        const fim = normalizeDateParam(getInputValue('periodoFim') || '', true);
+        const params = new URLSearchParams();
+        if (inicio) params.set('inicio', inicio);
+        if (fim) params.set('fim', fim);
+        const resp = await fetch('/rh/api/relatorios/comparativo?' + params.toString(), { signal });
+        if (!resp.ok) { chartsDisabled = true; showChartEmpty('emptyEvolucao', true); showChartHelp('helpEvolucao', true); return; }
+        const data = await resp.json();
+        const el = document.getElementById('chartEvolucaoFolha');
+        if (!el) return;
+        const ctx = el.getContext('2d');
+        const meses = data && data.dadosPorMes ? Object.keys(data.dadosPorMes).sort() : [];
+        const totais = meses.map(m => (data.dadosPorMes[m]?.totalFolha) || 0);
+        if (!meses.length) { showChartEmpty('emptyEvolucao', true); showChartHelp('helpEvolucao', true); return; }
+        showChartEmpty('emptyEvolucao', false);
+        showChartHelp('helpEvolucao', false);
+        const dataset = {
+          label: 'Total da Folha',
+          data: totais,
+          borderColor: '#007bff',
+          backgroundColor: 'rgba(0,123,255,0.1)',
+          tension: 0.4
+        };
+        if (chartEvolucao) {
+          chartEvolucao.data.labels = meses;
+          chartEvolucao.data.datasets = [dataset];
+          chartEvolucao.update();
+        } else {
+          chartEvolucao = new Chart(ctx, {
+            type: 'line',
+            data: { labels: meses, datasets: [dataset] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: false, ticks: { callback: function(value){ return 'R$ ' + Number(value).toLocaleString('pt-BR'); } } } } }
+          });
+        }
+      } catch(e){ console.error('Erro ao atualizar gráfico de evolução', e); }
+    }
+
+    async function updateDepartamentoChart(){
+      try {
+        if (!window.Chart || chartsDisabled) { return; }
+        if (chartDepController) { chartDepController.abort(); }
+        chartDepController = new AbortController();
+        const signal = chartDepController.signal;
+        const inicio = normalizeDateParam(getInputValue('periodoInicio') || '', false);
+        const fim = normalizeDateParam(getInputValue('periodoFim') || '', true);
+        const dep = getInputValue('departamentoRel') || '';
+        const params = new URLSearchParams();
+        if (inicio) params.set('inicio', inicio);
+        if (fim) params.set('fim', fim);
+        if (dep) params.set('departamentoId', dep);
+        const resp = await fetch('/rh/api/relatorios/gerencial?' + params.toString(), { signal });
+        if (!resp.ok) { chartsDisabled = true; showChartEmpty('emptyDepartamentos', true); showChartHelp('helpDepartamentos', true); return; }
+        const data = await resp.json();
+        const el = document.getElementById('chartDepartamentos');
+        if (!el) return;
+        const ctx = el.getContext('2d');
+        const itens = data && data.resumoPorDepartamento ? Object.values(data.resumoPorDepartamento) : [];
+        const labels = itens.map(i => i.departamento || '');
+        const valores = itens.map(i => (i.custoTotal || 0));
+        if (!labels.length) { showChartEmpty('emptyDepartamentos', true); showChartHelp('helpDepartamentos', true); return; }
+        showChartEmpty('emptyDepartamentos', false);
+        showChartHelp('helpDepartamentos', false);
+        const ds = [{ data: valores, backgroundColor: ['#007bff','#28a745','#ffc107','#dc3545','#6f42c1','#17a2b8','#6c757d','#20c997','#fd7e14','#6610f2'] }];
+        if (chartDepartamentos) {
+          chartDepartamentos.data.labels = labels;
+          chartDepartamentos.data.datasets = ds;
+          chartDepartamentos.update();
+        } else {
+          chartDepartamentos = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels, datasets: ds },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+          });
+        }
+      } catch(e){ console.error('Erro ao atualizar gráfico de departamentos', e); }
+    }
+
+    function updateCharts(){
+      updateEvolucaoChart();
+      updateDepartamentoChart();
+    }
+
+    function showChartEmpty(id, show){
+      var el = document.getElementById(id);
+      if (el) el.style.display = show ? 'flex' : 'none';
+    }
+
+    function showChartHelp(id, show){
+      var el = document.getElementById(id);
+      if (el) el.style.display = show ? 'block' : 'none';
+    }
+
+    window.addEventListener('load', function(){
+      updateCharts();
+      const i = document.getElementById('periodoInicio');
+      const f = document.getElementById('periodoFim');
+      const d = document.getElementById('departamentoRel');
+      if (i) i.addEventListener('change', updateCharts);
+      if (f) f.addEventListener('change', updateCharts);
+      if (d) d.addEventListener('change', updateCharts);
+    });
+
+    function formatCurrencyBr(v){
+      try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0); } catch { return 'R$ 0,00'; }
+    }
+
+    function showLoadingRel(show){
+      const el = document.getElementById('holeritesLoadingRel');
+      if (el) el.style.display = show ? 'block' : 'none';
+    }
+
+    let currentPage = 0;
+    let folhaIdAtualRel = null;
+    let queryRel = '';
+    let pageSizeRel = 20;
+    let debounceTimerRel;
+
+    async function carregarHoleritesFolha(folhaId, page = 0){
+      folhaIdAtualRel = folhaId;
+      currentPage = page;
+      const tbody = document.getElementById('tbodyHolerites');
+      const prevScroll = window.scrollY;
+      showLoadingRel(true);
+      try {
+        const depEl = document.getElementById('departamentoRel');
+        const departamentoParam = (depEl && depEl.value ? depEl.value : '').trim();
+        const sizeParam = pageSizeRel || 20;
+        const url = '/rh/folha-pagamento/api/folha/' + folhaId + '/holerites?page=' + page + '&size=' + sizeParam + '&q=' + encodeURIComponent(queryRel) + (departamentoParam ? '&departamentoId=' + encodeURIComponent(departamentoParam) : '');
+        const resp = await fetch(url);
+        const data = await resp.json();
+        const itens = (data && data.content) ? data.content : [];
+        let rows = '';
+        let totalBase = 0, totalProv = 0, totalDesc = 0, totalLiq = 0;
+        for (const it of itens){
+          const pctDesc = it.totalProventos > 0 ? Math.round(10000 * (it.totalDescontos / it.totalProventos)) / 100 : 0;
+          rows += '<tr>' +
+            '<td>' + (it.nome || '-') + '</td>' +
+            '<td>' + (it.departamento || '-') + '</td>' +
+            '<td>' + formatCurrencyBr(it.salarioBase) + '</td>' +
+            '<td>' + formatCurrencyBr(it.totalProventos) + '</td>' +
+            '<td>' + formatCurrencyBr(it.totalDescontos) + '</td>' +
+            '<td>' + formatCurrencyBr(it.salarioLiquido) + '</td>' +
+            '<td>' + pctDesc + '%</td>' +
+            '<td class="actions">' +
+              '<a href="/rh/folha-pagamento/holerite/' + it.id + '" class="btn btn-sm btn-info" title="Ver"><i class="fas fa-eye"></i></a>' +
+              '<a href="/rh/folha-pagamento/holerite/' + it.id + '/pdf" class="btn btn-sm btn-primary" title="PDF"><i class="fas fa-file-pdf"></i></a>' +
+            '</td>' +
+          '</tr>';
+        
+          totalBase += (it.salarioBase || 0);
+          totalProv += (it.totalProventos || 0);
+          totalDesc += (it.totalDescontos || 0);
+          totalLiq += (it.salarioLiquido || 0);
+        }
+        tbody.innerHTML = rows || '<tr><td colspan="8" class="text-center">Nenhum holerite encontrado</td></tr>';
+        document.getElementById('totalSalarioBase').innerText = formatCurrencyBr(totalBase);
+        document.getElementById('totalProventos').innerText = formatCurrencyBr(totalProv);
+        document.getElementById('totalDescontos').innerText = formatCurrencyBr(totalDesc);
+        document.getElementById('totalLiquido').innerText = formatCurrencyBr(totalLiq);
+        const pct = totalProv > 0 ? Math.round(10000 * (totalDesc / totalProv)) / 100 : 0;
+        document.getElementById('percentualDesconto').innerText = pct + '%';
+        renderPagination(data);
+        showLoadingRel(false);
+        window.scrollTo(0, prevScroll);
+      } catch (e){
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Erro ao carregar holerites</td></tr>';
+        renderPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false });
+        showLoadingRel(false);
+        window.scrollTo(0, prevScroll);
+      }
+    }
+
+    function renderPagination(data){
+      const el = document.getElementById('pagination');
+      if (!el) return;
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = !!data.hasPrevious;
+      const hasNext = !!data.hasNext;
+      let html = '';
+      const lastPage = Math.max(0, totalPages - 1);
+      html += '<span class="pagination-info">Página ' + (page + 1) + ' de ' + Math.max(totalPages, 1) + ' (' + totalElements + ' registros)</span>';
+      html += page > 0 ? '<a class="btn btn-secondary" href="#" data-page="0"><i class="fas fa-angle-double-left"></i> Primeira</a>' : '<span class="btn btn-secondary disabled"><i class="fas fa-angle-double-left"></i> Primeira</span>';
+      html += hasPrev ? '<a class="btn btn-secondary" href="#" data-page="' + (page - 1) + '"><i class="fas fa-chevron-left"></i> Anterior</a>' : '<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>';
+      html += hasNext ? '<a class="btn btn-secondary" href="#" data-page="' + (page + 1) + '">Próxima <i class="fas fa-chevron-right"></i></a>' : '<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>';
+      html += page < lastPage ? '<a class="btn btn-secondary" href="#" data-page="' + lastPage + '">Última <i class="fas fa-angle-double-right"></i></a>' : '<span class="btn btn-secondary disabled">Última <i class="fas fa-angle-double-right"></i></span>';
+      el.innerHTML = html;
+      bindPaginationEvents();
+    }
+
+    function goToPage(p){
+      const next = Math.max(0, p);
+      if (folhaIdAtualRel) carregarHoleritesFolha(folhaIdAtualRel, next);
+    }
+
+    function bindPaginationEvents(){
+      const el = document.getElementById('pagination');
+      if (!el) return;
+      const links = el.querySelectorAll('a[data-page]');
+      links.forEach(function(a){
+        a.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          const p = parseInt(a.getAttribute('data-page'), 10);
+          if (!isNaN(p)) goToPage(p);
+        });
+      });
+    }
+    (function init(){
+      const sel = document.getElementById('folhaSelecionada');
+      if (sel){
+        sel.addEventListener('change', () => {
+          const v = sel.value;
+          if (v) carregarHoleritesFolha(v, 0);
+        });
+        if (sel.options.length > 1){
+          const first = sel.options[1].value;
+          sel.value = first;
+          carregarHoleritesFolha(first, 0);
+        }
+      }
+    })();
+
+    document.addEventListener('DOMContentLoaded', function(){
+      const inputRel = document.getElementById('buscarHoleriteRel');
+      if (inputRel) {
+        inputRel.addEventListener('input', function(e){
+          clearTimeout(debounceTimerRel);
+          queryRel = e.target.value || '';
+          debounceTimerRel = setTimeout(function(){
+            if (folhaIdAtualRel) carregarHoleritesFolha(folhaIdAtualRel, 0);
+          }, 250);
+        });
+      }
+      const selPageSize = document.getElementById('pageSizeRel');
+      if (selPageSize){
+        selPageSize.addEventListener('change', function(){
+          const v = parseInt(selPageSize.value, 10);
+          pageSizeRel = (!isNaN(v) && v > 0) ? v : 20;
+          if (folhaIdAtualRel) carregarHoleritesFolha(folhaIdAtualRel, 0);
+        });
+      }
+    });
+
     function gerarRelatorio(tipo, formato = 'pdf') {
-      const inicio = document.getElementById('periodoInicio').value;
-      const fim = document.getElementById('periodoFim').value;
+      const inicio = normalizeDateParam(document.getElementById('periodoInicio').value, false);
+      const fim = normalizeDateParam(document.getElementById('periodoFim').value, true);
       const departamento = document.getElementById('departamentoRel').value;
       
       if (!inicio || !fim) {
@@ -439,14 +662,8 @@
         return;
       }
       
-      // Mostrar loading
-      const loadingDiv = document.createElement('div');
-      loadingDiv.innerHTML = '<div class="alert alert-info">Gerando relatório... <i class="fas fa-spinner fa-spin"></i></div>';
-      loadingDiv.style.position = 'fixed';
-      loadingDiv.style.top = '20px';
-      loadingDiv.style.right = '20px';
-      loadingDiv.style.zIndex = '9999';
-      document.body.appendChild(loadingDiv);
+      const statusEl = document.getElementById('relatorioExportStatus');
+      if (statusEl) statusEl.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin"></i> Gerando...</span>';
       
       let url;
       const params = new URLSearchParams({
@@ -460,94 +677,187 @@
       
       // Determinar URL baseada no tipo e formato
       if (formato === 'visualizar') {
+        if (tipo === 'analitica') {
+          const sel = document.getElementById('folhaSelecionada');
+          const folhaId = sel && sel.value ? sel.value : null;
+          if (!folhaId){
+            alert('Selecione uma folha em "Folhas Recentes" para visualizar o analítico');
+            if (statusEl) statusEl.innerHTML = '';
+            return;
+          }
+          fetch('/rh/folha-pagamento/api/folha/' + folhaId + '/holerites?page=0&size=1000&q=' + encodeURIComponent(queryRel || ''))
+            .then(r => r.json())
+            .then(pagina => {
+              const itens = Array.isArray(pagina.content) ? pagina.content : [];
+              const dataAnalitica = montarDadosAnaliticaDeHolerites(itens);
+              if (statusEl) statusEl.innerHTML = '';
+              exibirRelatorio('analitica', dataAnalitica);
+            })
+            .catch(err => {
+              if (statusEl) statusEl.innerHTML = '';
+              console.error('Erro ao carregar holerites para analítico', err);
+              alert('Erro ao carregar dados analíticos');
+            });
+          return;
+        }
         switch(tipo) {
-          case 'analitica':
-            url = `/rh/api/relatorios/folha-analitica?${params}`;
-            break;
           case 'gerencial':
-            url = `/rh/api/relatorios/gerencial?${params}`;
+            url = '/rh/api/relatorios/gerencial?' + params;
             break;
           case 'obrigacoes':
-            url = `/rh/api/relatorios/obrigacoes?${params}`;
+            url = '/rh/api/relatorios/obrigacoes?' + params;
             break;
           case 'departamento':
             if (!departamento) {
               alert('Selecione um departamento para este relatório.');
-              document.body.removeChild(loadingDiv);
+              if (statusEl) statusEl.innerHTML = '';
               return;
             }
-            url = `/rh/api/relatorios/departamento?${params}`;
+            url = '/rh/api/relatorios/departamento?' + params;
             break;
           case 'comparativo':
-            url = `/rh/api/relatorios/comparativo?${params}`;
+            url = '/rh/api/relatorios/comparativo?' + params;
             break;
           case 'beneficios':
-            url = `/rh/api/relatorios/beneficios?${params}`;
+            url = '/rh/api/relatorios/beneficios?' + params;
             break;
           default:
             alert('Tipo de relatório não suportado.');
-            document.body.removeChild(loadingDiv);
+            if (statusEl) statusEl.innerHTML = '';
             return;
-        }
+          }
+        
+        
+        
+        
+        
         
         // Fazer requisição AJAX para visualizar
         fetch(url)
           .then(response => response.json())
           .then(data => {
-            document.body.removeChild(loadingDiv);
+            if (statusEl) statusEl.innerHTML = '';
             exibirRelatorio(tipo, data);
           })
           .catch(error => {
-            document.body.removeChild(loadingDiv);
+            if (statusEl) statusEl.innerHTML = '';
             console.error('Erro ao gerar relatório:', error);
             alert('Erro ao gerar relatório. Verifique o console para mais detalhes.');
           });
       } else {
-        // Para exportação (PDF, Excel)
-        params.append('tipo', tipo);
-        url = `/rh/api/relatorios/exportar/${formato}?${params}`;
-        
-        // Fazer download direto
-        window.open(url, '_blank');
-        setTimeout(() => {
-          document.body.removeChild(loadingDiv);
-        }, 2000);
+        // Exportação client-side
+        try {
+          if (formato === 'excel') {
+            exportarTabelaModalCSV('relatorioContent', 'relatorio_' + tipo + '.csv');
+          } else if (formato === 'pdf') {
+            exportarModalParaPDF('relatorioModal', 'Relatorio - ' + tipo.toUpperCase());
+          }
+        } finally {
+          if (statusEl) statusEl.innerHTML = '';
+        }
       }
     }
     
     function exibirRelatorio(tipo, data) {
-      // Criar modal para exibir o relatório
-      const modal = document.createElement('div');
-      modal.className = 'modal-overlay';
-      modal.innerHTML = `
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Relatório - ${tipo.replace('-', ' ').toUpperCase()}</h5>
-              <button type="button" class="btn-close" onclick="fecharModal(this)">&times;</button>
-            </div>
-            <div class="modal-body">
-              <div id="relatorio-content"></div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" onclick="fecharModal(this)">Fechar</button>
-              <button type="button" class="btn btn-primary" onclick="gerarRelatorio('${tipo}', 'pdf')">Exportar PDF</button>
-              <button type="button" class="btn btn-success" onclick="gerarRelatorio('${tipo}', 'excel')">Exportar Excel</button>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      document.body.appendChild(modal);
-      
-      // Formatar dados baseado no tipo
-      const content = document.getElementById('relatorio-content');
+      const modalEl = document.getElementById('relatorioModal');
+      if (!modalEl) return;
+      const titleEl = document.getElementById('relatorioModalLabel');
+      if (titleEl) {
+        const inicio = getInputValue('periodoInicio');
+        const fim = getInputValue('periodoFim');
+        const depEl = document.getElementById('departamentoRel');
+        const depTxt = depEl && depEl.options && depEl.selectedIndex >= 0 ? depEl.options[depEl.selectedIndex].text : '';
+        let contexto = '';
+        if (inicio && fim) contexto = contexto + ' (' + inicio + '–' + fim + ')';
+        if (depTxt && depTxt.trim() && depEl.value) contexto = contexto + ' - ' + depTxt;
+        titleEl.textContent = 'Relatório - ' + tipo.replace('-', ' ').toUpperCase() + contexto;
+      }
+      const content = document.getElementById('relatorioContent');
       formatarDadosRelatorio(tipo, data, content);
+      const btnPdf = document.getElementById('btnExportPdf');
+      const btnExcel = document.getElementById('btnExportExcel');
+      if (btnPdf) btnPdf.onclick = function(){ gerarRelatorio(tipo, 'pdf'); };
+      if (btnExcel) btnExcel.onclick = function(){ gerarRelatorio(tipo, 'excel'); };
+      const bsModal = new bootstrap.Modal(modalEl);
+      bsModal.show();
     }
-    
-    function fecharModal(btn) {
-      const modal = btn.closest('.modal-overlay');
-      document.body.removeChild(modal);
+
+    function montarDadosAnaliticaDeHolerites(itens){
+      let totalSalarios = 0, totalDescontos = 0, totalLiquido = 0;
+      const mapped = itens.map(it => {
+        totalSalarios += (it.salarioBase || 0);
+        totalDescontos += (it.totalDescontos || 0);
+        totalLiquido += (it.salarioLiquido || 0);
+        return {
+          nomeColaborador: it.nome || '-',
+          departamento: it.departamento || '-',
+          cargo: it.cargo || '-',
+          salarioBase: it.salarioBase || 0,
+          inss: it.inss || 0,
+          irrf: it.irrf || 0,
+          totalDescontos: it.totalDescontos || 0,
+          salarioLiquido: it.salarioLiquido || 0
+        };
+      });
+      return {
+        totalSalarios,
+        totalDescontos,
+        totalLiquido,
+        itens: mapped
+      };
+    }
+
+    function exportarTabelaModalCSV(containerId, filename){
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const table = container.querySelector('table');
+      if (!table) { alert('Nada para exportar'); return; }
+      let csv = '';
+      const rows = table.querySelectorAll('tr');
+      rows.forEach(tr => {
+        const cells = tr.querySelectorAll('th,td');
+        const line = Array.from(cells).map(td => '"' + String(td.textContent).replace(/"/g,'""') + '"').join(',');
+        csv += line + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportarModalParaPDF(modalId, title){
+      const modalEl = document.getElementById(modalId);
+      const contentEl = document.getElementById('relatorioContent');
+      if (!modalEl || !contentEl) return;
+      const printWindow = window.open('', '_blank');
+      const html = '' +
+        '<!DOCTYPE html><html><head>' +
+        '<meta charset="utf-8" />' +
+        '<title>' + title + '</title>' +
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />' +
+        '<style> .table-list{ width:100%; } .resumo-cards{ display:flex; gap:16px; } .resumo-item{ background:#f8f9fa; padding:12px; border-radius:6px; } </style>' +
+        '</head><body>' +
+        '<div class="container mt-3">' +
+        '<h3>' + title + '</h3>' +
+        contentEl.innerHTML +
+        '</div>' +
+        '</body></html>';
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = function(){
+        try {
+          printWindow.focus();
+          printWindow.print();
+        } finally {
+          setTimeout(function(){ printWindow.close(); }, 500);
+        }
+      };
     }
     
     function formatarDadosRelatorio(tipo, data, container) {
@@ -555,112 +865,220 @@
       
       switch(tipo) {
         case 'analitica':
-          html = `
-            <div class="resumo-cards">
-              <div class="resumo-item">
-                <h5>Total Salários</h5>
-                <h3 class="text-primary">R$ ${data.totalSalarios ? data.totalSalarios.toFixed(2) : '0,00'}</h3>
-              </div>
-              <div class="resumo-item">
-                <h5>Total Descontos</h5>
-                <h3 class="text-danger">R$ ${data.totalDescontos ? data.totalDescontos.toFixed(2) : '0,00'}</h3>
-              </div>
-              <div class="resumo-item">
-                <h5>Total Líquido</h5>
-                <h3 class="text-success">R$ ${data.totalLiquido ? data.totalLiquido.toFixed(2) : '0,00'}</h3>
-              </div>
-              <div class="resumo-item">
-                <h5>Colaboradores</h5>
-                <h3 class="text-info">${data.itens ? data.itens.length : 0}</h3>
-              </div>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>Departamento</th>
-                    <th>Cargo</th>
-                    <th>Salário Base</th>
-                    <th>INSS</th>
-                    <th>IRRF</th>
-                    <th>Total Descontos</th>
-                    <th>Salário Líquido</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
+          html = '' +
+            '<div class="resumo-cards">' +
+              '<div class="resumo-item">' +
+                '<h5>Total Salários</h5>' +
+                '<h3 class="text-primary">R$ ' + (data.totalSalarios ? data.totalSalarios.toFixed(2) : '0,00') + '</h3>' +
+              '</div>' +
+              '<div class="resumo-item">' +
+                '<h5>Total Descontos</h5>' +
+                '<h3 class="text-danger">R$ ' + (data.totalDescontos ? data.totalDescontos.toFixed(2) : '0,00') + '</h3>' +
+              '</div>' +
+              '<div class="resumo-item">' +
+                '<h5>Total Líquido</h5>' +
+                '<h3 class="text-success">R$ ' + (data.totalLiquido ? data.totalLiquido.toFixed(2) : '0,00') + '</h3>' +
+              '</div>' +
+              '<div class="resumo-item">' +
+                '<h5>Colaboradores</h5>' +
+                '<h3 class="text-info">' + (data.itens ? data.itens.length : 0) + '</h3>' +
+              '</div>' +
+            '</div>' +
+            '<div class="table-responsive">' +
+              '<table class="table-list">' +
+                '<thead>' +
+                  '<tr>' +
+                    '<th>Nome</th>' +
+                    '<th>Departamento</th>' +
+                    '<th>Cargo</th>' +
+                    '<th>Salário Base</th>' +
+                    '<th>INSS</th>' +
+                    '<th>IRRF</th>' +
+                    '<th>Total Descontos</th>' +
+                    '<th>Salário Líquido</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+          '';
           if (data.itens) {
             data.itens.forEach(item => {
-              html += `
-                <tr>
-                  <td>${item.nomeColaborador || ''}</td>
-                  <td>${item.departamento || ''}</td>
-                  <td>${item.cargo || ''}</td>
-                  <td>R$ ${item.salarioBase ? item.salarioBase.toFixed(2) : '0,00'}</td>
-                  <td>R$ ${item.inss ? item.inss.toFixed(2) : '0,00'}</td>
-                  <td>R$ ${item.irrf ? item.irrf.toFixed(2) : '0,00'}</td>
-                  <td>R$ ${item.totalDescontos ? item.totalDescontos.toFixed(2) : '0,00'}</td>
-                  <td>R$ ${item.salarioLiquido ? item.salarioLiquido.toFixed(2) : '0,00'}</td>
-                </tr>
-              `;
+              html += '<tr>' +
+                  '<td>' + (item.nomeColaborador || '') + '</td>' +
+                  '<td>' + (item.departamento || '') + '</td>' +
+                  '<td>' + (item.cargo || '') + '</td>' +
+                  '<td>R$ ' + (item.salarioBase ? item.salarioBase.toFixed(2) : '0,00') + '</td>' +
+                  '<td>R$ ' + (item.inss ? item.inss.toFixed(2) : '0,00') + '</td>' +
+                  '<td>R$ ' + (item.irrf ? item.irrf.toFixed(2) : '0,00') + '</td>' +
+                  '<td>R$ ' + (item.totalDescontos ? item.totalDescontos.toFixed(2) : '0,00') + '</td>' +
+                  '<td>R$ ' + (item.salarioLiquido ? item.salarioLiquido.toFixed(2) : '0,00') + '</td>' +
+                '</tr>';
             });
           }
-          html += `
-                </tbody>
-              </table>
-            </div>
-          `;
+          html += '</tbody></table></div>';
           break;
-          
+
         case 'gerencial':
-          html = `
-            <div class="resumo-cards">
-              <div class="resumo-item">
-                <h5>Total Colaboradores</h5>
-                <h3 class="text-primary">${data.totalColaboradores || 0}</h3>
-              </div>
-              <div class="resumo-item">
-                <h5>Total Folha</h5>
-                <h3 class="text-success">R$ ${data.totalFolha ? data.totalFolha.toFixed(2) : '0,00'}</h3>
-              </div>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Departamento</th>
-                    <th>Colaboradores</th>
-                    <th>Custo Total</th>
-                    <th>Média Salarial</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
+          html = '' +
+            '<div class="resumo-cards">' +
+              '<div class="resumo-item">' +
+                '<h5>Total Colaboradores</h5>' +
+                '<h3 class="text-primary">' + (data.totalColaboradores || 0) + '</h3>' +
+              '</div>' +
+              '<div class="resumo-item">' +
+                '<h5>Total Folha</h5>' +
+                '<h3 class="text-success">R$ ' + (data.totalFolha ? data.totalFolha.toFixed(2) : '0,00') + '</h3>' +
+              '</div>' +
+            '</div>' +
+            '<div class="table-responsive">' +
+              '<table class="table-list">' +
+                '<thead>' +
+                  '<tr>' +
+                    '<th>Departamento</th>' +
+                    '<th>Colaboradores</th>' +
+                    '<th>Custo Total</th>' +
+                    '<th>Média Salarial</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+          '';
           if (data.resumoPorDepartamento) {
             Object.values(data.resumoPorDepartamento).forEach(resumo => {
-              html += `
-                <tr>
-                  <td>${resumo.departamento || ''}</td>
-                  <td>${resumo.colaboradores || 0}</td>
-                  <td>R$ ${resumo.custoTotal ? resumo.custoTotal.toFixed(2) : '0,00'}</td>
-                  <td>R$ ${resumo.mediaSalarial ? resumo.mediaSalarial.toFixed(2) : '0,00'}</td>
-                </tr>
-              `;
+              html += '<tr>' +
+                  '<td>' + (resumo.departamento || '') + '</td>' +
+                  '<td>' + (resumo.colaboradores || 0) + '</td>' +
+                  '<td>R$ ' + (resumo.custoTotal ? resumo.custoTotal.toFixed(2) : '0,00') + '</td>' +
+                  '<td>R$ ' + (resumo.mediaSalarial ? resumo.mediaSalarial.toFixed(2) : '0,00') + '</td>' +
+                '</tr>';
             });
           }
-          html += `
-                </tbody>
-              </table>
-            </div>
-          `;
+          html += '</tbody></table></div>';
           break;
-          
+        case 'obrigacoes':
+          html = '' +
+            '<div class="table-responsive">' +
+              '<table class="table-list">' +
+                '<thead>' +
+                  '<tr>' +
+                    '<th>Colaborador</th>' +
+                    '<th>Departamento</th>' +
+                    '<th>INSS</th>' +
+                    '<th>IRRF</th>' +
+                    '<th>FGTS</th>' +
+                    '<th>Total Obrigações</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+          '';
+          if (data.itens) {
+            data.itens.forEach(item => {
+              const inss = item.inss || 0;
+              const irrf = item.irrf || 0;
+              const fgts = item.fgts || 0;
+              const total = inss + irrf + fgts;
+              html += '<tr>' +
+                '<td>' + (item.nomeColaborador || item.nome || '-') + '</td>' +
+                '<td>' + (item.departamento || '-') + '</td>' +
+                '<td>' + formatCurrencyBr(inss) + '</td>' +
+                '<td>' + formatCurrencyBr(irrf) + '</td>' +
+                '<td>' + formatCurrencyBr(fgts) + '</td>' +
+                '<td>' + formatCurrencyBr(total) + '</td>' +
+              '</tr>';
+            });
+          }
+          html += '</tbody></table></div>';
+          break;
+        case 'departamento':
+          html = '' +
+            '<div class="table-responsive">' +
+              '<table class="table-list">' +
+                '<thead>' +
+                  '<tr>' +
+                    '<th>Departamento</th>' +
+                    '<th>Colaboradores</th>' +
+                    '<th>Custo Total</th>' +
+                    '<th>Média Salarial</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+          '';
+          if (data.resumoPorDepartamento) {
+            Object.values(data.resumoPorDepartamento).forEach(resumo => {
+              html += '<tr>' +
+                '<td>' + (resumo.departamento || '') + '</td>' +
+                '<td>' + (resumo.colaboradores || 0) + '</td>' +
+                '<td>' + formatCurrencyBr(resumo.custoTotal || 0) + '</td>' +
+                '<td>' + formatCurrencyBr(resumo.mediaSalarial || 0) + '</td>' +
+              '</tr>';
+            });
+          }
+          html += '</tbody></table></div>';
+          break;
+        case 'comparativo':
+          html = '' +
+            '<div class="table-responsive">' +
+              '<table class="table-list">' +
+                '<thead>' +
+                  '<tr>' +
+                    '<th>Mês</th>' +
+                    '<th>Colaboradores</th>' +
+                    '<th>Total da Folha</th>' +
+                    '<th>Novas Contratações</th>' +
+                    '<th>Desligamentos</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+          '';
+          if (data.dadosPorMes) {
+            Object.keys(data.dadosPorMes).forEach(mes => {
+              const d = data.dadosPorMes[mes] || {};
+              html += '<tr>' +
+                '<td>' + mes + '</td>' +
+                '<td>' + (d.colaboradores || 0) + '</td>' +
+                '<td>' + formatCurrencyBr(d.totalFolha || 0) + '</td>' +
+                '<td>' + (d.novasContratacoes || 0) + '</td>' +
+                '<td>' + (d.desligamentos || 0) + '</td>' +
+              '</tr>';
+            });
+          }
+          html += '</tbody></table></div>';
+          break;
+        case 'beneficios':
+          html = '' +
+            '<div class="resumo-cards">' +
+              '<div class="resumo-item">' +
+                '<h5>Custo Total de Benefícios</h5>' +
+                '<h3 class="text-primary">' + formatCurrencyBr((data.custoTotalBeneficios || 0)) + '</h3>' +
+              '</div>' +
+            '</div>' +
+            '<div class="table-responsive">' +
+              '<table class="table-list">' +
+                '<thead>' +
+                  '<tr>' +
+                    '<th>Benefício</th>' +
+                    '<th>Colaboradores</th>' +
+                    '<th>Custo Total</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' +
+          '';
+          if (data.beneficiosPorTipo) {
+            Object.keys(data.beneficiosPorTipo).forEach(nome => {
+              const b = data.beneficiosPorTipo[nome] || {};
+              html += '<tr>' +
+                '<td>' + (b.nome || nome) + '</td>' +
+                '<td>' + (b.colaboradores || b.quantidade || 0) + '</td>' +
+                '<td>' + formatCurrencyBr(b.custoTotal || 0) + '</td>' +
+              '</tr>';
+            });
+          }
+          html += '</tbody></table></div>';
+          break;
+        
         default:
           html = '<div class="alert alert-warning">Formato de relatório não suportado.</div>';
       }
       
-      container.innerHTML = html;
+      container.innerHTML = '<div class="modal-report">' + html + '</div>';
     }
 
     function exportarTodosRelatorios() {
@@ -671,12 +1089,12 @@
     }
 
     function verDetalhesColaborador(id) {
-      alert(`Visualizando detalhes do colaborador ${id}`);
+      alert('Visualizando detalhes do colaborador ' + id);
       // Implementar visualização de detalhes
     }
 
     function gerarHolerite(id) {
-      alert(`Gerando holerite para o colaborador ${id}`);
+      alert('Gerando holerite para o colaborador ' + id);
       // Implementar geração de holerite individual
     }
   </script>
@@ -880,6 +1298,7 @@
       max-height: 60vh;
       overflow-y: auto;
     }
+    #relatorioContent { width: 100%; }
     
     .modal-footer {
       padding: 20px;
@@ -920,6 +1339,17 @@
     .text-success { color: #28a745 !important; }
     .text-danger { color: #dc3545 !important; }
     .text-info { color: #17a2b8 !important; }
+    .table-list { width: 100%; }
+    .table-list thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
+    .table-list tbody tr:nth-child(even) { background: #f9fafb; }
+    .pagination { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+    .pagination-info { margin-right: 8px; }
+    .page-size { display:flex; align-items:center; gap:8px; }
+    .charts-container { display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:16px; align-items:start; }
+    .chart-card { min-height: 320px; }
+    .chart-wrapper { position: relative; }
+    .chart-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(248,249,250,0.7); color:#6c757d; font-weight:600; border-radius:8px; }
+    .chart-help { margin-top:6px; color:#dc3545; font-size: 0.9rem; }
     
     @media (max-width: 768px) {
       .charts-container {
@@ -944,9 +1374,11 @@
       }
     }
   </style>
+  
+  <script src="/js/sidebar.js" defer></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

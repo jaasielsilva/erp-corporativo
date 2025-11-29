@@ -65,6 +65,9 @@ public class FolhaPagamento {
     private LocalDateTime dataCriacao;
     private LocalDateTime dataUltimaEdicao;
 
+    @Column(name = "tipo_folha", length = 32)
+    private String tipoFolha;
+
     public enum StatusFolha {
         EM_PROCESSAMENTO,
         PROCESSADA,

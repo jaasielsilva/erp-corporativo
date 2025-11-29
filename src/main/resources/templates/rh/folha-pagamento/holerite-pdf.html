@@ -59,6 +59,9 @@
           <div class="valores-header">PROVENTOS</div>
           <div class="valor-item"><span>Salário Base</span><span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span></div>
           <div class="valor-item"><span>Horas Extras</span><span th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></span></div>
+          <th:block th:if="${#strings.toLowerCase(holerite.tipoFolha) == 'ferias'}">
+            <div class="valor-item"><span>1/3 Constitucional (Férias)</span><span th:text="${#numbers.formatCurrency(holerite.bonificacoes)}"></span></div>
+          </th:block>
           <div class="valor-item"><span>Vale Refeição</span><span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span></div>
           <div class="valor-item"><span>Vale Transporte</span><span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span></div>
           <div class="valor-item total"><span>TOTAL PROVENTOS</span><span th:text="${#numbers.formatCurrency(holerite.totalProventos)}"></span></div>
@@ -95,7 +98,10 @@
         <div class="resumo-grid">
           <div class="resumo-item">
             <div class="resumo-label">Depósito FGTS (8%)</div>
-            <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).multiply(0.08))}"></div>
+            <div class="resumo-valor" th:switch="${#strings.toLowerCase(holerite.tipoFolha)}">
+              <span th:case="'ferias'" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).add(holerite.bonificacoes).multiply(0.08))}"></span>
+              <span th:case="*" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).multiply(0.08))}"></span>
+            </div>
           </div>
         </div>
       </div>

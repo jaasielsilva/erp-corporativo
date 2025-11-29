@@ -73,6 +73,8 @@ public class FolhaPagamentoController {
     @Autowired
     private com.jaasielsilva.portalceo.service.HoleriteEmailService holeriteEmailService;
 
+    
+
     /**
      * Página principal da folha de pagamento
      */
@@ -459,20 +461,28 @@ public class FolhaPagamentoController {
      */
     @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
     @GetMapping("/relatorios")
-    public String relatorios(Model model) {
-        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
+    public String relatorios(@RequestParam(name = "tipoFolha", required = false) String tipoFolha,
+                             Model model) {
         model.addAttribute("departamentos", departamentoService.listarTodos());
         model.addAttribute("folhasRecentes", folhaPagamentoService.buscarFolhasRecentes());
         
         // Dados do mês atual para resumo
         LocalDate hoje = LocalDate.now();
-        Optional<FolhaPagamento> folhaAtual = folhaPagamentoService.buscarPorMesAno(hoje.getMonthValue(), hoje.getYear());
+        Optional<FolhaPagamento> folhaAtual;
+        String tipoKey = tipoFolha == null || tipoFolha.isBlank() ? "normal" : tipoFolha.toLowerCase();
+        if ("ferias".equals(tipoKey) || "decimo_terceiro".equals(tipoKey)) {
+            folhaAtual = folhaPagamentoService.buscarPorMesAnoTipo(hoje.getMonthValue(), hoje.getYear(), tipoKey);
+        } else {
+            folhaAtual = folhaPagamentoService.buscarPorMesAno(hoje.getMonthValue(), hoje.getYear());
+        }
         if (folhaAtual.isPresent()) {
             model.addAttribute("resumoAtual", holeriteService.calcularResumoFolha(folhaAtual.get().getId()));
         }
+        model.addAttribute("tipoFolhaSelecionado", tipoKey);
         
         return "rh/folha-pagamento/relatorios";
     }
+
     /**
      * Exporta o holerite em PDF
      */

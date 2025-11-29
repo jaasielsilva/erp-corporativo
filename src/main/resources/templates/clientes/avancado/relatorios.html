@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relatórios de Clientes</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="header-section">
+          <div>
+            <p class="breadcrumb"><a href="/clientes">Clientes</a> / Avançado / Relatórios</p>
+            <h1>Relatórios e Indicadores</h1>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="card metric-card">
+            <span>Total de clientes</span>
+            <strong th:text="${totalClientes}">0</strong>
+          </article>
+          <article class="card metric-card success">
+            <span>Novos (30 dias)</span>
+            <strong th:text="${clientesNovos30}">0</strong>
+          </article>
+          <article class="card metric-card warning">
+            <span>Contratos ativos (R$)</span>
+            <strong th:text="${valorContratos != null ? #numbers.formatDecimal(valorContratos, 2, 2) : '0,00'}">
+              0,00</strong>
+          </article>
+          <article class="card metric-card">
+            <span>Contratos em risco</span>
+            <strong th:text="${contratosClientes.vencendo}">0</strong>
+          </article>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <h2>Status dos Clientes</h2>
+            <ul class="list-stats">
+              <li th:each="entry : ${statusClientes.entrySet()}">
+                <span th:text="${entry.key}">Ativos</span>
+                <strong th:text="${entry.value}">0</strong>
+              </li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h2>Contratos com Clientes</h2>
+            <ul class="list-stats">
+              <li><span>Total</span><strong th:text="${contratosClientes.totalContratos}">0</strong></li>
+              <li><span>Ativos</span><strong th:text="${contratosClientes.ativos}">0</strong></li>
+              <li><span>Expirados</span><strong th:text="${contratosClientes.expirados}">0</strong></li>
+              <li><span>Vencendo em 30 dias</span><strong th:text="${contratosClientes.vencendo}">0</strong></li>
+            </ul>
+          </article>
+        </div>
+
+        <article class="card">
+          <h2>Pedidos por Status</h2>
+          <div class="chips-container">
+            <span class="status-chip" th:each="entry : ${pedidosPorStatus.entrySet()}"
+              th:text="${entry.key + ': ' + entry.value}">FATURADO: 0</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Clientes recentes</h2>
+          <div class="table-responsive">
+            <table class="table-list">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Status</th>
+                  <th>Tipo</th>
+                  <th>Cadastro</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="cliente : ${clientesRecentes}">
+                  <td th:text="${cliente.nomeFantasia != null && !cliente.nomeFantasia.isBlank() ? cliente.nomeFantasia : cliente.nome}">
+                    Cliente</td>
+                  <td th:text="${cliente.status}">ATIVO</td>
+                  <td th:text="${cliente.tipoCliente}">PJ</td>
+                  <td th:text="${cliente.dataCadastro != null ? #temporals.format(cliente.dataCadastro, 'dd/MM/yyyy') : '-'}">
+                    -</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(clientesRecentes)}">
+                  <td colspan="4" class="text-center">Nenhum cliente recente encontrado.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+  <script src="/js/sidebar.js" defer></script>
+</body>
+
+</html>
+

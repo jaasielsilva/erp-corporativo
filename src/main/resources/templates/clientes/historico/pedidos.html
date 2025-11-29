@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Histórico de Pedidos - Clientes</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="header-section">
+          <div>
+            <p class="breadcrumb"><a href="/clientes">Clientes</a> / Histórico / Pedidos</p>
+            <h1>Pedidos dos Clientes</h1>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="card metric-card">
+            <span>Pedidos listados</span>
+            <strong th:text="${totalPedidos}">0</strong>
+          </article>
+          <article class="card metric-card success">
+            <span>Últimos 7 dias</span>
+            <strong th:text="${pedidos7dias}">0</strong>
+          </article>
+          <article class="card metric-card warning">
+            <span>Valor faturado</span>
+            <strong th:text="${valorFaturado != null ? 'R$ ' + #numbers.formatDecimal(valorFaturado, 2, 2) : 'R$ 0,00'}">
+              R$ 0,00</strong>
+          </article>
+          <article class="card metric-card">
+            <span>Status mais recorrente</span>
+            <strong th:text="${statusMaisRecorrente}">FATURADO</strong>
+          </article>
+        </div>
+
+        <form class="card filter-form" method="get" action="/clientes/historico/pedidos">
+          <div class="form-group">
+            <label for="busca">Busca</label>
+            <input type="text" id="busca" name="busca" placeholder="Número do pedido ou cliente"
+              th:value="${filtros.busca}" />
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="" th:selected="${filtros.status == null || filtros.status.isBlank()}">Todos</option>
+              <option value="ABERTO" th:selected="${filtros.status == 'ABERTO'}">Aberto</option>
+              <option value="FATURADO" th:selected="${filtros.status == 'FATURADO'}">Faturado</option>
+              <option value="CANCELADO" th:selected="${filtros.status == 'CANCELADO'}">Cancelado</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-secondary">
+              <i class="fas fa-filter"></i> Filtrar
+            </button>
+            <a href="/clientes/historico/pedidos" class="btn-link">Limpar</a>
+          </div>
+        </form>
+
+        <article class="card">
+          <div class="table-responsive">
+            <table class="table-list">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>Data</th>
+                  <th>Status</th>
+                  <th>Tipo Cliente</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="pedido : ${pedidos}">
+                  <td th:text="${pedido.pedidoId}">1001</td>
+                  <td th:text="${pedido.clienteNome}">Cliente XPTO</td>
+                  <td th:text="${pedido.dataCriacao != null ? #temporals.format(pedido.dataCriacao, 'dd/MM/yyyy HH:mm') : '-'}">
+                    01/01/2025</td>
+                  <td>
+                    <span class="status-chip"
+                      th:text="${pedido.status}"
+                      th:classappend="${pedido.status == T(com.jaasielsilva.portalceo.model.Pedido.Status).FATURADO ? ' success' :
+                                      pedido.status == T(com.jaasielsilva.portalceo.model.Pedido.Status).ABERTO ? ' warning' :
+                                      ' danger'}">
+                      FATURADO</span>
+                  </td>
+                  <td th:text="${pedido.tipoCliente != null ? pedido.tipoCliente : '-'}">PJ</td>
+                  <td th:text="${pedido.total != null ? 'R$ ' + #numbers.formatDecimal(pedido.total, 2, 2) : 'R$ 0,00'}">
+                    R$ 0,00</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pedidos)}">
+                  <td colspan="6" class="text-center">Nenhum pedido encontrado.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+  <script src="/js/sidebar.js" defer></script>
+</body>
+
+</html>
+

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalhes do Contrato - Portal CEO</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="header-section">
+          <div>
+            <p class="breadcrumb">
+              <a href="/clientes">Clientes</a> /
+              <a href="/clientes/contratos/listar">Contratos</a> /
+              Detalhes
+            </p>
+            <h1>Contrato
+              <span th:text="${contrato.numeroContrato != null ? '#' + contrato.numeroContrato : contrato.id}">#0001</span>
+            </h1>
+          </div>
+          <div class="actions">
+            <a href="/clientes/contratos/listar" class="btn-secondary">
+              <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+            <a th:href="@{'/contratos/' + ${contrato.id} + '/editar'}" class="btn-primary">
+              <i class="fas fa-edit"></i> Editar
+            </a>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="card metric-card">
+            <span>Status</span>
+            <strong th:text="${contrato.status != null ? contrato.status.name() : 'N/A'}">ATIVO</strong>
+          </article>
+          <article class="card metric-card">
+            <span>Valor</span>
+            <strong th:text="${contrato.valor != null ? 'R$ ' + #numbers.formatDecimal(contrato.valor, 2, 2) : '—'}">
+              R$ 0,00</strong>
+          </article>
+          <article class="card metric-card">
+            <span>Período</span>
+            <strong>
+              <span th:text="${contrato.dataInicio != null ? #temporals.format(contrato.dataInicio, 'dd/MM/yyyy') : '-'}">01/01/2025</span>
+              -
+              <span th:text="${contrato.dataFim != null ? #temporals.format(contrato.dataFim, 'dd/MM/yyyy') : '-'}">01/12/2025</span>
+            </strong>
+          </article>
+          <article class="card metric-card">
+            <span>Última Atualização</span>
+            <strong
+              th:text="${contrato.ultimaAtualizacao != null ? #temporals.format(contrato.ultimaAtualizacao, 'dd/MM/yyyy HH:mm') : '-'}">
+              01/01/2025 10:00
+            </strong>
+          </article>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <h2>Informações do Cliente</h2>
+            <div class="details-grid">
+              <div>
+                <span>Cliente</span>
+                <strong
+                  th:text="${contrato.cliente != null ? (contrato.cliente.nomeFantasia != null && !contrato.cliente.nomeFantasia.isBlank() ? contrato.cliente.nomeFantasia : contrato.cliente.nome) : '—'}">
+                  Cliente</strong>
+              </div>
+              <div>
+                <span>CPF/CNPJ</span>
+                <strong th:text="${contrato.cliente != null ? contrato.cliente.cpfCnpj : '—'}">00.000.000/0000-00</strong>
+              </div>
+              <div>
+                <span>Email</span>
+                <strong th:text="${contrato.cliente != null ? contrato.cliente.email : '—'}">email@empresa.com</strong>
+              </div>
+              <div>
+                <span>Telefone</span>
+                <strong th:text="${contrato.cliente != null ? contrato.cliente.telefone : '—'}">(00) 0000-0000</strong>
+              </div>
+              <div>
+                <span>Status do Cliente</span>
+                <strong th:text="${contrato.cliente != null ? contrato.cliente.status : '—'}">ATIVO</strong>
+              </div>
+              <div>
+                <span>Responsável</span>
+                <strong th:text="${contrato.cliente != null ? contrato.cliente.pessoaContato : '—'}">Responsável</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2>Informações do Contrato</h2>
+            <div class="details-grid">
+              <div>
+                <span>Tipo</span>
+                <strong th:text="${contrato.tipo != null ? contrato.tipo.name() : 'CLIENTE'}">CLIENTE</strong>
+              </div>
+              <div>
+                <span>Status</span>
+                <strong th:text="${contrato.status != null ? contrato.status.name() : '—'}">ATIVO</strong>
+              </div>
+              <div>
+                <span>Departamento</span>
+                <strong th:text="${contrato.departamento != null ? contrato.departamento.nome : '—'}">VENDAS</strong>
+              </div>
+              <div>
+                <span>Responsável Interno</span>
+                <strong th:text="${contrato.colaborador != null ? contrato.colaborador.nome : '—'}">
+                  Colaborador</strong>
+              </div>
+              <div>
+                <span>Data de Criação</span>
+                <strong th:text="${contrato.dataCriacao != null ? #temporals.format(contrato.dataCriacao, 'dd/MM/yyyy HH:mm') : '—'}">
+                  01/01/2025 10:00</strong>
+              </div>
+              <div>
+                <span>Última Edição</span>
+                <strong th:text="${contrato.dataUltimaEdicao != null ? #temporals.format(contrato.dataUltimaEdicao, 'dd/MM/yyyy HH:mm') : '—'}">
+                  01/02/2025 12:00</strong>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <article class="card">
+          <h2>Descrição</h2>
+          <p th:text="${contrato.descricao != null && !contrato.descricao.isBlank() ? contrato.descricao : 'Contrato sem descrição cadastrada.'}">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi.
+          </p>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+  <script src="/js/sidebar.js" defer></script>
+</body>
+
+</html>
+

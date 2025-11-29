@@ -190,4 +190,19 @@ public class ClienteService {
         String st = (status != null && !status.isBlank()) ? status.trim() : null;
         return repository.buscarComFiltros(termo, st, pageable);
     }
+
+    public Page<Cliente> listarAvancado(String busca,
+            String status,
+            String tipoCliente,
+            Boolean vip,
+            Boolean ativo,
+            int page,
+            int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100),
+                Sort.by("dataCadastro").descending());
+        String termo = (busca != null && !busca.isBlank()) ? busca.trim() : null;
+        String st = (status != null && !status.isBlank()) ? status.trim() : null;
+        String tipo = (tipoCliente != null && !tipoCliente.isBlank()) ? tipoCliente.trim() : null;
+        return repository.buscarAvancado(termo, st, tipo, vip, ativo, pageable);
+    }
 }

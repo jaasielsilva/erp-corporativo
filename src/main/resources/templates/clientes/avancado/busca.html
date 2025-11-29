@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Busca Avançada de Clientes</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="header-section">
+          <div>
+            <p class="breadcrumb"><a href="/clientes">Clientes</a> / Avançado / Busca</p>
+            <h1>Busca Avançada</h1>
+          </div>
+        </div>
+
+        <form class="card filter-form" method="get" action="/clientes/avancado/busca">
+          <div class="form-group">
+            <label for="busca">Termo</label>
+            <input type="text" id="busca" name="busca" placeholder="Nome, e-mail, telefone ou documento"
+              th:value="${filtros.busca}" />
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="" th:selected="${filtros.status == null || filtros.status.isBlank()}">Todos</option>
+              <option value="ATIVO"
+                th:selected="${filtros.status != null && filtros.status.equalsIgnoreCase('ATIVO')}">Ativo</option>
+              <option value="INATIVO"
+                th:selected="${filtros.status != null && filtros.status.equalsIgnoreCase('INATIVO')}">Inativo</option>
+              <option value="PENDENTE"
+                th:selected="${filtros.status != null && filtros.status.equalsIgnoreCase('PENDENTE')}">Pendente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tipoCliente">Tipo</label>
+            <select id="tipoCliente" name="tipoCliente">
+              <option value="" th:selected="${filtros.tipoCliente == null || filtros.tipoCliente.isBlank()}">Todos
+              </option>
+              <option th:each="tipo : ${tiposCliente}" th:value="${tipo}" th:text="${tipo}"
+                th:selected="${tipo == filtros.tipoCliente}"></option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ativo">Situação</label>
+            <select id="ativo" name="ativo">
+              <option value="" th:selected="${filtros.ativo == null}">Todos</option>
+              <option value="true" th:selected="${filtros.ativo == true}">Somente ativos</option>
+              <option value="false" th:selected="${filtros.ativo == false}">Inativos</option>
+            </select>
+          </div>
+          <div class="form-group checkbox">
+            <label>
+              <input type="checkbox" name="vip" value="true" th:checked="${filtros.vip == true}" />
+              Somente clientes VIP
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="size">Itens por página</label>
+            <select id="size" name="size">
+              <option value="10" th:selected="${clientesPage.size == 10}">10</option>
+              <option value="20" th:selected="${clientesPage.size == 20}">20</option>
+              <option value="50" th:selected="${clientesPage.size == 50}">50</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-secondary">
+              <i class="fas fa-search"></i> Buscar
+            </button>
+            <a href="/clientes/avancado/busca" class="btn-link">Limpar</a>
+          </div>
+        </form>
+
+        <article class="card">
+          <div class="table-responsive">
+            <table class="table-list">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Status</th>
+                  <th>Tipo</th>
+                  <th>VIP</th>
+                  <th>Último acesso</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="cliente : ${clientes}">
+                  <td th:text="${cliente.id}">1</td>
+                  <td th:text="${cliente.nomeFantasia != null && !cliente.nomeFantasia.isBlank() ? cliente.nomeFantasia : cliente.nome}">
+                    Cliente</td>
+                  <td th:text="${cliente.status}">ATIVO</td>
+                  <td th:text="${cliente.tipoCliente}">PJ</td>
+                  <td>
+                    <span class="status-chip"
+                      th:classappend="${cliente.vip ? ' success' : ' muted'}"
+                      th:text="${cliente.vip ? 'SIM' : 'NÃO'}">NÃO</span>
+                  </td>
+                  <td th:text="${cliente.ultimoAcesso != null ? #temporals.format(cliente.ultimoAcesso, 'dd/MM/yyyy HH:mm') : '-'}">
+                    -</td>
+                  <td class="table-actions">
+                    <a th:href="@{'/clientes/' + ${cliente.id} + '/detalhes'}" class="btn btn-info btn-sm">
+                      <i class="fas fa-eye"></i> Detalhes
+                    </a>
+                  </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(clientes)}">
+                  <td colspan="7" class="text-center">Nenhum cliente encontrado.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination" th:if="${clientesPage.totalPages > 1}">
+            <a th:if="${clientesPage.hasPrevious()}"
+              th:href="@{/clientes/avancado/busca(page=${clientesPage.number - 1}, size=${clientesPage.size}, busca=${filtros.busca}, status=${filtros.status}, tipoCliente=${filtros.tipoCliente}, vip=${filtros.vip}, ativo=${filtros.ativo})}">
+              &laquo; Anterior
+            </a>
+            <span>Página <strong th:text="${clientesPage.number + 1}">1</strong> de
+              <strong th:text="${clientesPage.totalPages}">1</strong></span>
+            <a th:if="${clientesPage.hasNext()}"
+              th:href="@{/clientes/avancado/busca(page=${clientesPage.number + 1}, size=${clientesPage.size}, busca=${filtros.busca}, status=${filtros.status}, tipoCliente=${filtros.tipoCliente}, vip=${filtros.vip}, ativo=${filtros.ativo})}">
+              Próxima &raquo;
+            </a>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+  <script src="/js/sidebar.js" defer></script>
+</body>
+
+</html>
+

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Histórico de Interações - Clientes</title>
+
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="header-section">
+          <div>
+            <p class="breadcrumb"><a href="/clientes">Clientes</a> / Histórico / Interações</p>
+            <h1>Interações com Clientes</h1>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="card metric-card">
+            <span>Total de eventos</span>
+            <strong th:text="${totalInteracoes}">0</strong>
+          </article>
+          <article class="card metric-card success">
+            <span>Últimos 7 dias</span>
+            <strong th:text="${interacoes7dias}">0</strong>
+          </article>
+          <article class="card metric-card warning">
+            <span>Últimos 30 dias</span>
+            <strong th:text="${interacoes30dias}">0</strong>
+          </article>
+          <article class="card metric-card">
+            <span>Principais canais</span>
+            <strong th:text="${#lists.isEmpty(canalDistribuicao) ? '-' : canalDistribuicao.keySet().iterator().next()}">-</strong>
+          </article>
+        </div>
+
+        <form class="card filter-form" method="get" action="/clientes/historico/interacoes">
+          <div class="form-group">
+            <label for="busca">Busca rápida</label>
+            <input type="text" id="busca" name="busca" placeholder="Cliente, responsável ou resumo"
+              th:value="${filtros.busca}" />
+          </div>
+          <div class="form-group">
+            <label for="canal">Canal</label>
+            <select id="canal" name="canal">
+              <option value="" th:selected="${filtros.canal == null || filtros.canal.isBlank()}">Todos</option>
+              <option value="CADASTRO" th:selected="${filtros.canal == 'CADASTRO'}">Cadastro</option>
+              <option value="ATUALIZACAO" th:selected="${filtros.canal == 'ATUALIZACAO'}">Atualização</option>
+              <option value="PORTAL" th:selected="${filtros.canal == 'PORTAL'}">Portal</option>
+              <option value="ANOTACAO" th:selected="${filtros.canal == 'ANOTACAO'}">Anotações</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-secondary">
+              <i class="fas fa-filter"></i> Filtrar
+            </button>
+            <a href="/clientes/historico/interacoes" class="btn-link">Limpar</a>
+          </div>
+        </form>
+
+        <article class="card">
+          <h2>Linha do tempo</h2>
+          <div class="timeline">
+            <div class="timeline-item" th:each="interacao : ${interacoes}">
+              <div class="timeline-date" th:text="${#temporals.format(interacao.data, 'dd/MM/yyyy HH:mm')}">
+                01/01/2025 09:00
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <span class="tag" th:text="${interacao.canal}">CADASTRO</span>
+                  <h3 th:text="${interacao.clienteNome}">Cliente</h3>
+                </div>
+                <p th:text="${interacao.resumo}">Descrição da interação</p>
+                <div class="timeline-footer">
+                  <span><i class="fas fa-user"></i> <span th:text="${interacao.responsavel}">Responsável</span></span>
+                  <a th:href="@{'/clientes/' + ${interacao.clienteId} + '/detalhes'}" class="btn-link">
+                    Ver cliente
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-empty" th:if="${#lists.isEmpty(interacoes)}">
+              Nenhuma interação encontrada para os filtros aplicados.
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+  <script src="/js/sidebar.js" defer></script>
+</body>
+
+</html>
+

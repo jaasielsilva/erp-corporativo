@@ -30,47 +30,58 @@
         <div class="metrics-grid">
           <article class="card metric-card">
             <span>Pedidos listados</span>
-            <strong th:text="${totalPedidos}">0</strong>
+            <strong id="pedidosTotal" th:text="${totalPedidos}">0</strong>
           </article>
           <article class="card metric-card success">
             <span>Últimos 7 dias</span>
-            <strong th:text="${pedidos7dias}">0</strong>
+            <strong id="pedidos7dias" th:text="${pedidos7dias}">0</strong>
           </article>
           <article class="card metric-card warning">
             <span>Valor faturado</span>
-            <strong th:text="${valorFaturado != null ? 'R$ ' + #numbers.formatDecimal(valorFaturado, 2, 2) : 'R$ 0,00'}">
+            <strong id="pedidosValor" th:text="${valorFaturado != null ? 'R$ ' + #numbers.formatDecimal(valorFaturado, 2, 2) : 'R$ 0,00'}">
               R$ 0,00</strong>
           </article>
           <article class="card metric-card">
             <span>Status mais recorrente</span>
-            <strong th:text="${statusMaisRecorrente}">FATURADO</strong>
+            <strong id="pedidosStatusTop" th:text="${statusMaisRecorrente}">FATURADO</strong>
           </article>
         </div>
 
-        <form class="card filter-form" method="get" action="/clientes/historico/pedidos">
-          <div class="form-group">
-            <label for="busca">Busca</label>
-            <input type="text" id="busca" name="busca" placeholder="Número do pedido ou cliente"
-              th:value="${filtros.busca}" />
+        <div class="card">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <label for="pedidosBusca">Busca</label>
+              <input type="text" id="pedidosBusca" placeholder="Número do pedido ou cliente">
+            </div>
+            <div class="toolbar-group">
+              <label for="pedidosStatus">Status</label>
+              <select id="pedidosStatus">
+                <option value="">Todos</option>
+                <option value="ABERTO">Aberto</option>
+                <option value="FATURADO">Faturado</option>
+                <option value="CANCELADO">Cancelado</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <label for="pedidosSize">Itens</label>
+              <select id="pedidosSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" id="pedidosLimpar" class="btn btn-secondary">
+                <i class="fas fa-eraser"></i> Limpar
+              </button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status">
-              <option value="" th:selected="${filtros.status == null || filtros.status.isBlank()}">Todos</option>
-              <option value="ABERTO" th:selected="${filtros.status == 'ABERTO'}">Aberto</option>
-              <option value="FATURADO" th:selected="${filtros.status == 'FATURADO'}">Faturado</option>
-              <option value="CANCELADO" th:selected="${filtros.status == 'CANCELADO'}">Cancelado</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-secondary">
-              <i class="fas fa-filter"></i> Filtrar
-            </button>
-            <a href="/clientes/historico/pedidos" class="btn-link">Limpar</a>
-          </div>
-        </form>
+        </div>
 
         <article class="card">
+          <div id="pedidosLoading" class="loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i> Carregando pedidos...
+          </div>
           <div class="table-responsive">
             <table class="table-list">
               <thead>
@@ -83,30 +94,14 @@
                   <th>Valor</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="pedido : ${pedidos}">
-                  <td th:text="${pedido.pedidoId}">1001</td>
-                  <td th:text="${pedido.clienteNome}">Cliente XPTO</td>
-                  <td th:text="${pedido.dataCriacao != null ? #temporals.format(pedido.dataCriacao, 'dd/MM/yyyy HH:mm') : '-'}">
-                    01/01/2025</td>
-                  <td>
-                    <span class="status-chip"
-                      th:text="${pedido.status}"
-                      th:classappend="${pedido.status == T(com.jaasielsilva.portalceo.model.Pedido.Status).FATURADO ? ' success' :
-                                      pedido.status == T(com.jaasielsilva.portalceo.model.Pedido.Status).ABERTO ? ' warning' :
-                                      ' danger'}">
-                      FATURADO</span>
-                  </td>
-                  <td th:text="${pedido.tipoCliente != null ? pedido.tipoCliente : '-'}">PJ</td>
-                  <td th:text="${pedido.total != null ? 'R$ ' + #numbers.formatDecimal(pedido.total, 2, 2) : 'R$ 0,00'}">
-                    R$ 0,00</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(pedidos)}">
-                  <td colspan="6" class="text-center">Nenhum pedido encontrado.</td>
+              <tbody id="pedidosBody">
+                <tr>
+                  <td colspan="6" class="text-center">Carregando pedidos...</td>
                 </tr>
               </tbody>
             </table>
           </div>
+          <div id="pedidosPagination" class="pagination"></div>
         </article>
       </section>
 
@@ -114,7 +109,160 @@
     </main>
   </div>
 
-  <script th:src="@{/js/script.js}"></script>
+  <script th:inline="javascript">
+    window.pedidosInitialFilters = {
+      busca: /*[[${filtros.busca}]]*/ '',
+      status: /*[[${filtros.status}]]*/ '',
+      size: 10
+    };
+    window.pedidosMetrics = {
+      valor: /*[[${valorFaturado}]]*/ 0,
+      statusTop: /*[[${statusMaisRecorrente}]]*/ '-'
+    };
+  </script>
+  <script>
+    const pedidosState = {
+      page: 0,
+      size: window.pedidosInitialFilters.size || 10,
+      busca: window.pedidosInitialFilters.busca || '',
+      status: window.pedidosInitialFilters.status || ''
+    };
+
+    const pedidosElements = {
+      busca: document.getElementById('pedidosBusca'),
+      status: document.getElementById('pedidosStatus'),
+      size: document.getElementById('pedidosSize'),
+      body: document.getElementById('pedidosBody'),
+      pagination: document.getElementById('pedidosPagination'),
+      loading: document.getElementById('pedidosLoading'),
+      limpar: document.getElementById('pedidosLimpar'),
+      total: document.getElementById('pedidosTotal'),
+      dias7: document.getElementById('pedidos7dias'),
+      valor: document.getElementById('pedidosValor'),
+      statusTop: document.getElementById('pedidosStatusTop')
+    };
+
+    function formatValor(valor) {
+      if (valor === null || valor === undefined) return 'R$ 0,00';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+    }
+
+    function statusClassPedido(status) {
+      if (status === 'FATURADO') return 'status-chip success';
+      if (status === 'ABERTO') return 'status-chip warning';
+      if (status === 'CANCELADO') return 'status-chip danger';
+      return 'status-chip';
+    }
+
+    function renderPedidosRows(pedidos) {
+      if (!pedidos || pedidos.length === 0) {
+        pedidosElements.body.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum pedido encontrado.</td></tr>';
+        return;
+      }
+      pedidosElements.body.innerHTML = pedidos.map(p => `
+        <tr>
+          <td>${p.pedidoId ?? '-'}</td>
+          <td>${p.clienteNome ?? '-'}</td>
+          <td>${p.dataCriacao ? new Date(p.dataCriacao).toLocaleString('pt-BR') : '-'}</td>
+          <td><span class="${statusClassPedido(p.status)}">${p.status ?? '-'}</span></td>
+          <td>${p.tipoCliente ?? '-'}</td>
+          <td>${formatValor(p.total)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPedidosPagination(data) {
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = !!data.hasPrevious;
+      const hasNext = !!data.hasNext;
+      let html = `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} pedidos)</span>`;
+      html += hasPrev
+        ? `<a class="btn btn-secondary" href="#" onclick="return pedidosGoToPage(${page - 1});"><i class="fas fa-chevron-left"></i> Anterior</a>`
+        : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext
+        ? `<a class="btn btn-secondary" href="#" onclick="return pedidosGoToPage(${page + 1});">Próxima <i class="fas fa-chevron-right"></i></a>`
+        : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      pedidosElements.pagination.innerHTML = html;
+      if (pedidosElements.total) pedidosElements.total.textContent = totalElements;
+      if (pedidosElements.valor && data.valorFaturado !== undefined) {
+        pedidosElements.valor.textContent = formatValor(data.valorFaturado);
+      }
+      if (pedidosElements.statusTop && data.statusMaisRecorrente) {
+        pedidosElements.statusTop.textContent = data.statusMaisRecorrente;
+      }
+      if (pedidosElements.dias7 && data.pedidos7dias !== undefined) {
+        pedidosElements.dias7.textContent = data.pedidos7dias;
+      }
+    }
+
+    function pedidosGoToPage(page) {
+      pedidosLoad(Math.max(0, page));
+      return false;
+    }
+
+    function pedidosBuildParams(page) {
+      const params = new URLSearchParams();
+      params.set('page', page);
+      params.set('size', pedidosState.size);
+      if (pedidosState.busca) params.set('busca', pedidosState.busca);
+      if (pedidosState.status) params.set('status', pedidosState.status);
+      return params.toString();
+    }
+
+    function pedidosLoad(page = 0) {
+      pedidosState.page = page;
+      pedidosElements.loading.style.display = 'block';
+      fetch(`/clientes/historico/api/pedidos?${pedidosBuildParams(page)}`)
+        .then(resp => resp.json())
+        .then(data => {
+          renderPedidosRows(data.content || []);
+          renderPedidosPagination(data);
+        })
+        .catch(() => {
+          pedidosElements.body.innerHTML = '<tr><td colspan="6" class="text-center">Erro ao carregar pedidos.</td></tr>';
+          pedidosElements.pagination.innerHTML = '';
+        })
+        .finally(() => {
+          pedidosElements.loading.style.display = 'none';
+        });
+    }
+
+    function pedidosBindEvents() {
+      pedidosElements.busca.value = pedidosState.busca;
+      pedidosElements.status.value = pedidosState.status;
+      pedidosElements.size.value = pedidosState.size;
+
+      pedidosElements.busca.addEventListener('input', (e) => {
+        pedidosState.busca = e.target.value || '';
+        pedidosLoad(0);
+      });
+
+      pedidosElements.status.addEventListener('change', (e) => {
+        pedidosState.status = e.target.value || '';
+        pedidosLoad(0);
+      });
+
+      pedidosElements.size.addEventListener('change', (e) => {
+        pedidosState.size = Number(e.target.value) || 10;
+        pedidosLoad(0);
+      });
+
+      pedidosElements.limpar.addEventListener('click', () => {
+        pedidosState.busca = '';
+        pedidosState.status = '';
+        pedidosElements.busca.value = '';
+        pedidosElements.status.value = '';
+        pedidosLoad(0);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      pedidosBindEvents();
+      pedidosLoad(0);
+    });
+  </script>
   <script th:src="@{/js/notifications.js}"></script>
   <script src="/js/sidebar.js" defer></script>
 </body>

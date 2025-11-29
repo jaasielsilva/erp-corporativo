@@ -56,46 +56,48 @@
           </article>
         </div>
 
-        <form class="card filter-form" method="get" action="/clientes/contratos/listar">
-          <div class="form-group">
-            <label for="busca">Pesquisar</label>
-            <input type="text" id="busca" name="busca" placeholder="Cliente, contrato ou descrição"
-              th:value="${filtros.busca}" />
+        <div class="card">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <label for="contratosBusca">Pesquisar</label>
+              <input type="text" id="contratosBusca" placeholder="Cliente, contrato ou descrição">
+            </div>
+            <div class="toolbar-group">
+              <label for="contratosCliente">Cliente</label>
+              <select id="contratosCliente">
+                <option value="">Todos</option>
+                <option th:each="cliente : ${clientes}" th:value="${cliente.id}"
+                  th:text="${cliente.nomeFantasia != null && !cliente.nomeFantasia.isBlank() ? cliente.nomeFantasia : cliente.nome}">
+                </option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <label for="contratosStatus">Status</label>
+              <select id="contratosStatus">
+                <option value="">Todos</option>
+                <option th:each="s : ${statusContrato}" th:value="${s.name()}" th:text="${s.name()}"></option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <label for="contratosSize">Itens</label>
+              <select id="contratosSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" id="contratosLimpar" class="btn btn-secondary">
+                <i class="fas fa-eraser"></i> Limpar
+              </button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="clienteId">Cliente</label>
-            <select id="clienteId" name="clienteId">
-              <option th:value="" th:selected="${filtros.clienteId == null}">Todos</option>
-              <option th:each="cliente : ${clientes}" th:value="${cliente.id}"
-                th:text="${cliente.nomeFantasia != null && !cliente.nomeFantasia.isBlank() ? cliente.nomeFantasia : cliente.nome}"
-                th:selected="${filtros.clienteId == cliente.id}"></option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status">
-              <option value="" th:selected="${filtros.status == null || filtros.status.isBlank()}">Todos</option>
-              <option th:each="s : ${statusContrato}" th:value="${s.name()}" th:text="${s.name()}"
-                th:selected="${filtros.status == s.name()}"></option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="size">Itens por página</label>
-            <select id="size" name="size">
-              <option th:selected="${contratosPage.size == 10}">10</option>
-              <option th:selected="${contratosPage.size == 20}">20</option>
-              <option th:selected="${contratosPage.size == 50}">50</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-secondary">
-              <i class="fas fa-filter"></i> Aplicar
-            </button>
-            <a href="/clientes/contratos/listar" class="btn-link">Limpar</a>
-          </div>
-        </form>
+        </div>
 
         <article class="card">
+          <div id="contratosLoading" class="loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i> Carregando contratos...
+          </div>
           <div class="table-responsive">
             <table class="table-list">
               <thead>
@@ -110,53 +112,14 @@
                   <th></th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="contrato : ${contratos}">
-                  <td th:text="${contrato.id}">1</td>
-                  <td th:text="${contrato.numeroContrato != null ? contrato.numeroContrato : '--'}">0001</td>
-                  <td
-                    th:text="${contrato.cliente != null ? (contrato.cliente.nomeFantasia != null && !contrato.cliente.nomeFantasia.isBlank() ? contrato.cliente.nomeFantasia : contrato.cliente.nome) : '—'}">
-                    Cliente</td>
-                  <td th:text="${contrato.dataInicio != null ? #temporals.format(contrato.dataInicio, 'dd/MM/yyyy') : '-'}">
-                    01/01/2025</td>
-                  <td th:text="${contrato.dataFim != null ? #temporals.format(contrato.dataFim, 'dd/MM/yyyy') : '-'}">
-                    01/12/2025</td>
-                  <td>
-                    <span class="status-chip"
-                      th:text="${contrato.status != null ? contrato.status.name() : 'N/A'}"
-                      th:classappend="${contrato.status == T(com.jaasielsilva.portalceo.model.StatusContrato).ATIVO ? ' success' :
-                                      contrato.status == T(com.jaasielsilva.portalceo.model.StatusContrato).EXPIRADO ? ' danger' :
-                                      contrato.status == T(com.jaasielsilva.portalceo.model.StatusContrato).EM_RENEGOCIACAO ? ' warning' :
-                                      contrato.status == T(com.jaasielsilva.portalceo.model.StatusContrato).CANCELADO ? ' muted' : ''}">
-                      ATIVO</span>
-                  </td>
-                  <td th:text="${contrato.valor != null ? 'R$ ' + #numbers.formatDecimal(contrato.valor, 2, 2) : '—'}">
-                    R$ 0,00</td>
-                  <td class="table-actions">
-                    <a th:href="@{'/clientes/contratos/' + ${contrato.id} + '/detalhes'}" class="btn btn-info btn-sm">
-                      <i class="fas fa-eye"></i> Detalhes
-                    </a>
-                  </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(contratos)}">
-                  <td colspan="8" class="text-center">Nenhum contrato encontrado para os filtros informados.</td>
+              <tbody id="contratosBody">
+                <tr>
+                  <td colspan="8" class="text-center">Carregando contratos...</td>
                 </tr>
               </tbody>
             </table>
           </div>
-
-          <div class="pagination" th:if="${contratosPage.totalPages > 1}">
-            <a th:if="${contratosPage.hasPrevious()}"
-              th:href="@{/clientes/contratos/listar(page=${contratosPage.number - 1}, size=${contratosPage.size}, busca=${filtros.busca}, status=${filtros.status}, clienteId=${filtros.clienteId})}">
-              &laquo; Anterior
-            </a>
-            <span>Página <strong th:text="${contratosPage.number + 1}">1</strong> de
-              <strong th:text="${contratosPage.totalPages}">1</strong></span>
-            <a th:if="${contratosPage.hasNext()}"
-              th:href="@{/clientes/contratos/listar(page=${contratosPage.number + 1}, size=${contratosPage.size}, busca=${filtros.busca}, status=${filtros.status}, clienteId=${filtros.clienteId})}">
-              Próxima &raquo;
-            </a>
-          </div>
+          <div id="contratosPagination" class="pagination"></div>
         </article>
       </section>
 
@@ -164,7 +127,197 @@
     </main>
   </div>
 
-  <script th:src="@{/js/script.js}"></script>
+  <script th:inline="javascript">
+    window.contratosInitialFilters = {
+      busca: /*[[${filtros.busca}]]*/ '',
+      status: /*[[${filtros.status}]]*/ '',
+      clienteId: /*[[${filtros.clienteId}]]*/ '',
+      size: /*[[${filtros.pageSize}]]*/ 10
+    };
+    window.contratosMetricas = {
+      total: /*[[${metricas.total}]]*/ 0,
+      ativos: /*[[${metricas.ativos}]]*/ 0,
+      expirados: /*[[${metricas.expirados}]]*/ 0,
+      vencendo: /*[[${metricas.vencendo}]]*/ 0,
+      valorAtivo: /*[[${metricas.valorAtivo}]]*/ 0
+    };
+  </script>
+  <script>
+    const contratosState = {
+      page: 0,
+      size: Number(window.contratosInitialFilters.size) || 10,
+      busca: window.contratosInitialFilters.busca || '',
+      status: window.contratosInitialFilters.status || '',
+      clienteId: window.contratosInitialFilters.clienteId || ''
+    };
+
+    const contratosElements = {
+      busca: document.getElementById('contratosBusca'),
+      status: document.getElementById('contratosStatus'),
+      cliente: document.getElementById('contratosCliente'),
+      size: document.getElementById('contratosSize'),
+      body: document.getElementById('contratosBody'),
+      pagination: document.getElementById('contratosPagination'),
+      loading: document.getElementById('contratosLoading'),
+      limpar: document.getElementById('contratosLimpar')
+    };
+
+    function formatCurrency(valor) {
+      if (valor === null || valor === undefined) return '—';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const data = new Date(dateStr);
+      return Number.isNaN(data.getTime()) ? '-' : data.toLocaleDateString('pt-BR');
+    }
+
+    function statusClass(status) {
+      if (!status) return 'status-chip';
+      switch (status) {
+        case 'ATIVO':
+          return 'status-chip success';
+        case 'EXPIRADO':
+          return 'status-chip danger';
+        case 'EM_RENEGOCIACAO':
+          return 'status-chip warning';
+        case 'CANCELADO':
+          return 'status-chip muted';
+        default:
+          return 'status-chip';
+      }
+    }
+
+    function renderContratosRows(contratos) {
+      if (!contratos || contratos.length === 0) {
+        contratosElements.body.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum contrato encontrado.</td></tr>';
+        return;
+      }
+      contratosElements.body.innerHTML = contratos.map(c => `
+        <tr>
+          <td>${c.id ?? '-'}</td>
+          <td>${c.numeroContrato ?? '—'}</td>
+          <td>${c.clienteNome ?? '—'}</td>
+          <td>${formatDate(c.dataInicio)}</td>
+          <td>${formatDate(c.dataFim)}</td>
+          <td><span class="${statusClass(c.status)}">${c.status ?? 'N/A'}</span></td>
+          <td>${formatCurrency(c.valor)}</td>
+          <td class="table-actions">
+            <a href="/clientes/contratos/${c.id}/detalhes" class="btn btn-info btn-sm">
+              <i class="fas fa-eye"></i> Detalhes
+            </a>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderContratosPagination(data) {
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = !!data.hasPrevious;
+      const hasNext = !!data.hasNext;
+      let html = `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} contratos)</span>`;
+      html += hasPrev
+        ? `<a class="btn btn-secondary" href="#" onclick="return contratosGoToPage(${page - 1});"><i class="fas fa-chevron-left"></i> Anterior</a>`
+        : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext
+        ? `<a class="btn btn-secondary" href="#" onclick="return contratosGoToPage(${page + 1});">Próxima <i class="fas fa-chevron-right"></i></a>`
+        : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      contratosElements.pagination.innerHTML = html;
+    }
+
+    function updateMetricas(metricas) {
+      if (!metricas) return;
+      const formatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const cards = document.querySelectorAll('.metrics-grid .metric-card strong');
+      if (cards.length >= 5) {
+        cards[0].textContent = metricas.total ?? 0;
+        cards[1].textContent = metricas.ativos ?? 0;
+        cards[2].textContent = metricas.vencendo ?? 0;
+        cards[3].textContent = metricas.expirados ?? 0;
+        cards[4].textContent = metricas.valorAtivo != null ? formatter.format(metricas.valorAtivo) : '0,00';
+      }
+    }
+
+    function contratosGoToPage(page) {
+      contratosLoad(Math.max(0, page));
+      return false;
+    }
+
+    function contratosBuildParams(page) {
+      const params = new URLSearchParams();
+      params.set('page', page);
+      params.set('size', contratosState.size);
+      if (contratosState.busca) params.set('busca', contratosState.busca);
+      if (contratosState.status) params.set('status', contratosState.status);
+      if (contratosState.clienteId) params.set('clienteId', contratosState.clienteId);
+      return params.toString();
+    }
+
+    function contratosLoad(page = 0) {
+      contratosState.page = page;
+      contratosElements.loading.style.display = 'block';
+      fetch(`/clientes/contratos/api/listar?${contratosBuildParams(page)}`)
+        .then(resp => resp.json())
+        .then(data => {
+          renderContratosRows(data.content || []);
+          renderContratosPagination(data);
+          updateMetricas(data.metrics);
+        })
+        .catch(() => {
+          contratosElements.body.innerHTML = '<tr><td colspan="8" class="text-center">Erro ao carregar contratos.</td></tr>';
+          contratosElements.pagination.innerHTML = '';
+        })
+        .finally(() => {
+          contratosElements.loading.style.display = 'none';
+        });
+    }
+
+    function contratosBindEvents() {
+      contratosElements.busca.value = contratosState.busca;
+      contratosElements.status.value = contratosState.status;
+      contratosElements.cliente.value = contratosState.clienteId;
+      contratosElements.size.value = contratosState.size;
+
+      contratosElements.busca.addEventListener('input', (e) => {
+        contratosState.busca = e.target.value || '';
+        contratosLoad(0);
+      });
+
+      contratosElements.status.addEventListener('change', (e) => {
+        contratosState.status = e.target.value || '';
+        contratosLoad(0);
+      });
+
+      contratosElements.cliente.addEventListener('change', (e) => {
+        contratosState.clienteId = e.target.value || '';
+        contratosLoad(0);
+      });
+
+      contratosElements.size.addEventListener('change', (e) => {
+        contratosState.size = Number(e.target.value) || 10;
+        contratosLoad(0);
+      });
+
+      contratosElements.limpar.addEventListener('click', () => {
+        contratosState.busca = '';
+        contratosState.status = '';
+        contratosState.clienteId = '';
+        contratosElements.busca.value = '';
+        contratosElements.status.value = '';
+        contratosElements.cliente.value = '';
+        contratosLoad(0);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      contratosBindEvents();
+      updateMetricas(window.contratosMetricas);
+      contratosLoad(0);
+    });
+  </script>
   <script th:src="@{/js/notifications.js}"></script>
   <script src="/js/sidebar.js" defer></script>
 </body>

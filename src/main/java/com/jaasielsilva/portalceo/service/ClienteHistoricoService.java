@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -90,6 +93,11 @@ public class ClienteHistoricoService {
         return filtrado;
     }
 
+    public Page<InteracaoTimeline> listarInteracoesPaginado(String busca, String canal, int page, int size) {
+        List<InteracaoTimeline> filtrado = listarInteracoes(busca, canal);
+        return paginar(filtrado, page, size);
+    }
+
     public Map<String, Long> contarInteracoesPorCanal(List<InteracaoTimeline> interacoes) {
         return interacoes.stream()
                 .collect(Collectors.groupingBy(InteracaoTimeline::canal, Collectors.counting()));
@@ -128,6 +136,11 @@ public class ClienteHistoricoService {
                 .toList();
     }
 
+    public Page<PedidoHistorico> listarPedidosPaginado(String busca, Pedido.Status status, int page, int size) {
+        List<PedidoHistorico> filtrado = listarPedidos(busca, status);
+        return paginar(filtrado, page, size);
+    }
+
     public Map<Pedido.Status, Long> contarPedidosPorStatus() {
         Map<Pedido.Status, Long> mapa = new EnumMap<>(Pedido.Status.class);
         for (Pedido.Status status : Pedido.Status.values()) {
@@ -148,6 +161,15 @@ public class ClienteHistoricoService {
                 .map(Pedido::getTotal)
                 .filter(total -> total != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private <T> Page<T> paginar(List<T> dados, int page, int size) {
+        int pagina = Math.max(page, 0);
+        int tamanho = Math.min(Math.max(size, 1), 100);
+        int start = Math.min(pagina * tamanho, dados.size());
+        int end = Math.min(start + tamanho, dados.size());
+        List<T> subLista = dados.subList(start, end);
+        return new PageImpl<>(subLista, PageRequest.of(pagina, tamanho), dados.size());
     }
 
     private String resolveNomeCliente(Cliente cliente) {

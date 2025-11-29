@@ -27,64 +27,62 @@
           </div>
         </div>
 
-        <form class="card filter-form" method="get" action="/clientes/avancado/busca">
-          <div class="form-group">
-            <label for="busca">Termo</label>
-            <input type="text" id="busca" name="busca" placeholder="Nome, e-mail, telefone ou documento"
-              th:value="${filtros.busca}" />
+        <div class="card">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <label for="avancadoBusca">Termo</label>
+              <input type="text" id="avancadoBusca" placeholder="Nome, e-mail, telefone ou documento">
+            </div>
+            <div class="toolbar-group">
+              <label for="avancadoStatus">Status</label>
+              <select id="avancadoStatus">
+                <option value="">Todos</option>
+                <option value="ATIVO">Ativo</option>
+                <option value="INATIVO">Inativo</option>
+                <option value="PENDENTE">Pendente</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <label for="avancadoTipo">Tipo</label>
+              <select id="avancadoTipo">
+                <option value="">Todos</option>
+                <option th:each="tipo : ${tiposCliente}" th:value="${tipo}" th:text="${tipo}"></option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <label for="avancadoAtivo">Situação</label>
+              <select id="avancadoAtivo">
+                <option value="">Todos</option>
+                <option value="true">Somente ativos</option>
+                <option value="false">Inativos</option>
+              </select>
+            </div>
+            <div class="toolbar-group checkbox">
+              <label>
+                <input type="checkbox" id="avancadoVip">
+                Somente VIP
+              </label>
+            </div>
+            <div class="toolbar-group">
+              <label for="avancadoSize">Itens</label>
+              <select id="avancadoSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" id="avancadoLimpar" class="btn btn-secondary">
+                <i class="fas fa-eraser"></i> Limpar
+              </button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status">
-              <option value="" th:selected="${filtros.status == null || filtros.status.isBlank()}">Todos</option>
-              <option value="ATIVO"
-                th:selected="${filtros.status != null && filtros.status.equalsIgnoreCase('ATIVO')}">Ativo</option>
-              <option value="INATIVO"
-                th:selected="${filtros.status != null && filtros.status.equalsIgnoreCase('INATIVO')}">Inativo</option>
-              <option value="PENDENTE"
-                th:selected="${filtros.status != null && filtros.status.equalsIgnoreCase('PENDENTE')}">Pendente</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="tipoCliente">Tipo</label>
-            <select id="tipoCliente" name="tipoCliente">
-              <option value="" th:selected="${filtros.tipoCliente == null || filtros.tipoCliente.isBlank()}">Todos
-              </option>
-              <option th:each="tipo : ${tiposCliente}" th:value="${tipo}" th:text="${tipo}"
-                th:selected="${tipo == filtros.tipoCliente}"></option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="ativo">Situação</label>
-            <select id="ativo" name="ativo">
-              <option value="" th:selected="${filtros.ativo == null}">Todos</option>
-              <option value="true" th:selected="${filtros.ativo == true}">Somente ativos</option>
-              <option value="false" th:selected="${filtros.ativo == false}">Inativos</option>
-            </select>
-          </div>
-          <div class="form-group checkbox">
-            <label>
-              <input type="checkbox" name="vip" value="true" th:checked="${filtros.vip == true}" />
-              Somente clientes VIP
-            </label>
-          </div>
-          <div class="form-group">
-            <label for="size">Itens por página</label>
-            <select id="size" name="size">
-              <option value="10" th:selected="${clientesPage.size == 10}">10</option>
-              <option value="20" th:selected="${clientesPage.size == 20}">20</option>
-              <option value="50" th:selected="${clientesPage.size == 50}">50</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-secondary">
-              <i class="fas fa-search"></i> Buscar
-            </button>
-            <a href="/clientes/avancado/busca" class="btn-link">Limpar</a>
-          </div>
-        </form>
+        </div>
 
         <article class="card">
+          <div id="avancadoLoading" class="loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i> Carregando clientes...
+          </div>
           <div class="table-responsive">
             <table class="table-list">
               <thead>
@@ -98,45 +96,15 @@
                   <th></th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="cliente : ${clientes}">
-                  <td th:text="${cliente.id}">1</td>
-                  <td th:text="${cliente.nomeFantasia != null && !cliente.nomeFantasia.isBlank() ? cliente.nomeFantasia : cliente.nome}">
-                    Cliente</td>
-                  <td th:text="${cliente.status}">ATIVO</td>
-                  <td th:text="${cliente.tipoCliente}">PJ</td>
-                  <td>
-                    <span class="status-chip"
-                      th:classappend="${cliente.vip ? ' success' : ' muted'}"
-                      th:text="${cliente.vip ? 'SIM' : 'NÃO'}">NÃO</span>
-                  </td>
-                  <td th:text="${cliente.ultimoAcesso != null ? #temporals.format(cliente.ultimoAcesso, 'dd/MM/yyyy HH:mm') : '-'}">
-                    -</td>
-                  <td class="table-actions">
-                    <a th:href="@{'/clientes/' + ${cliente.id} + '/detalhes'}" class="btn btn-info btn-sm">
-                      <i class="fas fa-eye"></i> Detalhes
-                    </a>
-                  </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(clientes)}">
-                  <td colspan="7" class="text-center">Nenhum cliente encontrado.</td>
+              <tbody id="avancadoBody">
+                <tr>
+                  <td colspan="7" class="text-center">Carregando clientes...</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div class="pagination" th:if="${clientesPage.totalPages > 1}">
-            <a th:if="${clientesPage.hasPrevious()}"
-              th:href="@{/clientes/avancado/busca(page=${clientesPage.number - 1}, size=${clientesPage.size}, busca=${filtros.busca}, status=${filtros.status}, tipoCliente=${filtros.tipoCliente}, vip=${filtros.vip}, ativo=${filtros.ativo})}">
-              &laquo; Anterior
-            </a>
-            <span>Página <strong th:text="${clientesPage.number + 1}">1</strong> de
-              <strong th:text="${clientesPage.totalPages}">1</strong></span>
-            <a th:if="${clientesPage.hasNext()}"
-              th:href="@{/clientes/avancado/busca(page=${clientesPage.number + 1}, size=${clientesPage.size}, busca=${filtros.busca}, status=${filtros.status}, tipoCliente=${filtros.tipoCliente}, vip=${filtros.vip}, ativo=${filtros.ativo})}">
-              Próxima &raquo;
-            </a>
-          </div>
+          <div id="avancadoPagination" class="pagination"></div>
         </article>
       </section>
 
@@ -144,7 +112,177 @@
     </main>
   </div>
 
-  <script th:src="@{/js/script.js}"></script>
+  <script th:inline="javascript">
+    window.avancadoInitialFilters = {
+      busca: /*[[${filtros.busca}]]*/ '',
+      status: /*[[${filtros.status}]]*/ '',
+      tipoCliente: /*[[${filtros.tipoCliente}]]*/ '',
+      vip: /*[[${filtros.vip}]]*/ false,
+      ativo: /*[[${filtros.ativo}]]*/ '',
+      size: /*[[${filtros.pageSize}]]*/ 10
+    };
+  </script>
+  <script>
+    const avancadoState = {
+      page: 0,
+      size: Number(window.avancadoInitialFilters.size) || 10,
+      busca: window.avancadoInitialFilters.busca || '',
+      status: window.avancadoInitialFilters.status || '',
+      tipoCliente: window.avancadoInitialFilters.tipoCliente || '',
+      vip: window.avancadoInitialFilters.vip === true || window.avancadoInitialFilters.vip === 'true',
+      ativo: window.avancadoInitialFilters.ativo === true || window.avancadoInitialFilters.ativo === 'true'
+        ? 'true'
+        : (window.avancadoInitialFilters.ativo === false || window.avancadoInitialFilters.ativo === 'false' ? 'false' : '')
+    };
+
+    const avancadoElements = {
+      busca: document.getElementById('avancadoBusca'),
+      status: document.getElementById('avancadoStatus'),
+      tipo: document.getElementById('avancadoTipo'),
+      ativo: document.getElementById('avancadoAtivo'),
+      vip: document.getElementById('avancadoVip'),
+      size: document.getElementById('avancadoSize'),
+      body: document.getElementById('avancadoBody'),
+      pagination: document.getElementById('avancadoPagination'),
+      loading: document.getElementById('avancadoLoading'),
+      limpar: document.getElementById('avancadoLimpar')
+    };
+
+    function renderClientesAvancado(clientes) {
+      if (!clientes || clientes.length === 0) {
+        avancadoElements.body.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum cliente encontrado.</td></tr>';
+        return;
+      }
+      avancadoElements.body.innerHTML = clientes.map(cliente => `
+        <tr>
+          <td>${cliente.id ?? '-'}</td>
+          <td>${cliente.nomeFantasia && cliente.nomeFantasia.trim() ? cliente.nomeFantasia : (cliente.nome ?? '-')}</td>
+          <td>${cliente.status ?? '-'}</td>
+          <td>${cliente.tipoCliente ?? '-'}</td>
+          <td>
+            <span class="status-chip ${cliente.vip ? 'success' : 'muted'}">
+              ${cliente.vip ? 'SIM' : 'NÃO'}
+            </span>
+          </td>
+          <td>${cliente.ultimoAcesso ? new Date(cliente.ultimoAcesso).toLocaleString('pt-BR') : '-'}</td>
+          <td class="table-actions">
+            <a href="/clientes/${cliente.id}/detalhes" class="btn btn-info btn-sm">
+              <i class="fas fa-eye"></i> Detalhes
+            </a>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderAvancadoPagination(data) {
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = !!data.hasPrevious;
+      const hasNext = !!data.hasNext;
+      let html = `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} clientes)</span>`;
+      html += hasPrev
+        ? `<a class="btn btn-secondary" href="#" onclick="return avancadoGoToPage(${page - 1});"><i class="fas fa-chevron-left"></i> Anterior</a>`
+        : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext
+        ? `<a class="btn btn-secondary" href="#" onclick="return avancadoGoToPage(${page + 1});">Próxima <i class="fas fa-chevron-right"></i></a>`
+        : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      avancadoElements.pagination.innerHTML = html;
+    }
+
+    function avancadoGoToPage(page) {
+      avancadoLoad(Math.max(0, page));
+      return false;
+    }
+
+    function avancadoBuildParams(page) {
+      const params = new URLSearchParams();
+      params.set('page', page);
+      params.set('size', avancadoState.size);
+      if (avancadoState.busca) params.set('busca', avancadoState.busca);
+      if (avancadoState.status) params.set('status', avancadoState.status);
+      if (avancadoState.tipoCliente) params.set('tipoCliente', avancadoState.tipoCliente);
+      if (avancadoState.vip) params.set('vip', true);
+      if (avancadoState.ativo) params.set('ativo', avancadoState.ativo);
+      return params.toString();
+    }
+
+    function avancadoLoad(page = 0) {
+      avancadoState.page = page;
+      avancadoElements.loading.style.display = 'block';
+      fetch(`/clientes/avancado/api/busca?${avancadoBuildParams(page)}`)
+        .then(resp => resp.json())
+        .then(data => {
+          renderClientesAvancado(data.content || []);
+          renderAvancadoPagination(data);
+        })
+        .catch(() => {
+          avancadoElements.body.innerHTML = '<tr><td colspan="7" class="text-center">Erro ao carregar clientes.</td></tr>';
+          avancadoElements.pagination.innerHTML = '';
+        })
+        .finally(() => {
+          avancadoElements.loading.style.display = 'none';
+        });
+    }
+
+    function avancadoBindEvents() {
+      avancadoElements.busca.value = avancadoState.busca;
+      avancadoElements.status.value = avancadoState.status;
+      avancadoElements.tipo.value = avancadoState.tipoCliente;
+      avancadoElements.ativo.value = avancadoState.ativo;
+      avancadoElements.vip.checked = !!avancadoState.vip;
+      avancadoElements.size.value = avancadoState.size;
+
+      avancadoElements.busca.addEventListener('input', (e) => {
+        avancadoState.busca = e.target.value || '';
+        avancadoLoad(0);
+      });
+
+      avancadoElements.status.addEventListener('change', (e) => {
+        avancadoState.status = e.target.value || '';
+        avancadoLoad(0);
+      });
+
+      avancadoElements.tipo.addEventListener('change', (e) => {
+        avancadoState.tipoCliente = e.target.value || '';
+        avancadoLoad(0);
+      });
+
+      avancadoElements.ativo.addEventListener('change', (e) => {
+        avancadoState.ativo = e.target.value || '';
+        avancadoLoad(0);
+      });
+
+      avancadoElements.vip.addEventListener('change', (e) => {
+        avancadoState.vip = e.target.checked;
+        avancadoLoad(0);
+      });
+
+      avancadoElements.size.addEventListener('change', (e) => {
+        avancadoState.size = Number(e.target.value) || 10;
+        avancadoLoad(0);
+      });
+
+      avancadoElements.limpar.addEventListener('click', () => {
+        avancadoState.busca = '';
+        avancadoState.status = '';
+        avancadoState.tipoCliente = '';
+        avancadoState.vip = false;
+        avancadoState.ativo = '';
+        avancadoElements.busca.value = '';
+        avancadoElements.status.value = '';
+        avancadoElements.tipo.value = '';
+        avancadoElements.ativo.value = '';
+        avancadoElements.vip.checked = false;
+        avancadoLoad(0);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      avancadoBindEvents();
+      avancadoLoad(0);
+    });
+  </script>
   <script th:src="@{/js/notifications.js}"></script>
   <script src="/js/sidebar.js" defer></script>
 </body>

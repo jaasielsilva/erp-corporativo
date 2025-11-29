@@ -1,19 +1,21 @@
 package com.jaasielsilva.portalceo.controller.cliente;
 
 import com.jaasielsilva.portalceo.model.Cliente;
-import com.jaasielsilva.portalceo.model.Pedido;
 import com.jaasielsilva.portalceo.service.ClienteContratoService;
 import com.jaasielsilva.portalceo.service.ClienteInsightService;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping("/clientes/avancado")
@@ -37,11 +39,8 @@ public class ClienteAvancadoController {
             @RequestParam(value = "tipoCliente", required = false) String tipoCliente,
             @RequestParam(value = "vip", required = false) Boolean vip,
             @RequestParam(value = "ativo", required = false) Boolean ativo,
-            @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             Model model) {
-
-        Page<Cliente> clientesPage = clienteService.listarAvancado(busca, status, tipoCliente, vip, ativo, page, size);
 
         Map<String, Object> filtros = new HashMap<>();
         filtros.put("busca", busca);
@@ -49,9 +48,8 @@ public class ClienteAvancadoController {
         filtros.put("tipoCliente", tipoCliente);
         filtros.put("vip", vip);
         filtros.put("ativo", ativo);
+        filtros.put("pageSize", size);
 
-        model.addAttribute("clientesPage", clientesPage);
-        model.addAttribute("clientes", clientesPage.getContent());
         model.addAttribute("filtros", filtros);
         model.addAttribute("tiposCliente", List.of("PF", "PJ"));
 
@@ -73,6 +71,45 @@ public class ClienteAvancadoController {
         model.addAttribute("valorContratos", clienteContratoService.somarValorContratosAtivos());
 
         return "clientes/avancado/relatorios";
+    }
+
+    @GetMapping("/api/busca")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> buscaAvancadaApi(
+            @RequestParam(value = "busca", required = false) String busca,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "tipoCliente", required = false) String tipoCliente,
+            @RequestParam(value = "vip", required = false) Boolean vip,
+            @RequestParam(value = "ativo", required = false) Boolean ativo,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        Page<Cliente> clientesPage = clienteService.listarAvancado(busca, status, tipoCliente, vip, ativo, page, size);
+
+        List<Map<String, Object>> content = clientesPage.getContent().stream()
+                .map(cliente -> {
+                    Map<String, Object> mapa = new HashMap<>();
+                    mapa.put("id", cliente.getId());
+                    mapa.put("nome", cliente.getNome());
+                    mapa.put("nomeFantasia", cliente.getNomeFantasia());
+                    mapa.put("status", cliente.getStatus());
+                    mapa.put("tipoCliente", cliente.getTipoCliente());
+                    mapa.put("vip", cliente.getVip());
+                    mapa.put("ativo", cliente.getAtivo());
+                    mapa.put("ultimoAcesso", cliente.getUltimoAcesso());
+                    return mapa;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("content", content);
+        resp.put("currentPage", clientesPage.getNumber());
+        resp.put("totalPages", clientesPage.getTotalPages());
+        resp.put("totalElements", clientesPage.getTotalElements());
+        resp.put("hasPrevious", clientesPage.hasPrevious());
+        resp.put("hasNext", clientesPage.hasNext());
+
+        return ResponseEntity.ok(resp);
     }
 }
 

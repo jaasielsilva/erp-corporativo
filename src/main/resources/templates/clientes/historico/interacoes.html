@@ -30,71 +30,79 @@
         <div class="metrics-grid">
           <article class="card metric-card">
             <span>Total de eventos</span>
-            <strong th:text="${totalInteracoes}">0</strong>
+            <strong id="interacoesTotal" th:text="${totalInteracoes}">0</strong>
           </article>
           <article class="card metric-card success">
             <span>Últimos 7 dias</span>
-            <strong th:text="${interacoes7dias}">0</strong>
+            <strong id="interacoes7dias" th:text="${interacoes7dias}">0</strong>
           </article>
           <article class="card metric-card warning">
             <span>Últimos 30 dias</span>
-            <strong th:text="${interacoes30dias}">0</strong>
+            <strong id="interacoes30dias" th:text="${interacoes30dias}">0</strong>
           </article>
           <article class="card metric-card">
             <span>Principais canais</span>
-            <strong th:text="${#lists.isEmpty(canalDistribuicao) ? '-' : canalDistribuicao.keySet().iterator().next()}">-</strong>
+            <strong id="interacoesCanalDestaque"
+              th:text="${#lists.isEmpty(canalDistribuicao) ? '-' : canalDistribuicao.keySet().iterator().next()}">-</strong>
           </article>
         </div>
 
-        <form class="card filter-form" method="get" action="/clientes/historico/interacoes">
-          <div class="form-group">
-            <label for="busca">Busca rápida</label>
-            <input type="text" id="busca" name="busca" placeholder="Cliente, responsável ou resumo"
-              th:value="${filtros.busca}" />
+        <div class="card">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <label for="interacoesBusca">Busca rápida</label>
+              <input type="text" id="interacoesBusca" placeholder="Cliente, responsável ou resumo">
+            </div>
+            <div class="toolbar-group">
+              <label for="interacoesCanal">Canal</label>
+              <select id="interacoesCanal">
+                <option value="">Todos</option>
+                <option value="CADASTRO">Cadastro</option>
+                <option value="ATUALIZACAO">Atualização</option>
+                <option value="PORTAL">Portal</option>
+                <option value="ANOTACAO">Anotações</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <label for="interacoesSize">Itens</label>
+              <select id="interacoesSize">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" id="interacoesLimpar" class="btn btn-secondary">
+                <i class="fas fa-eraser"></i> Limpar
+              </button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="canal">Canal</label>
-            <select id="canal" name="canal">
-              <option value="" th:selected="${filtros.canal == null || filtros.canal.isBlank()}">Todos</option>
-              <option value="CADASTRO" th:selected="${filtros.canal == 'CADASTRO'}">Cadastro</option>
-              <option value="ATUALIZACAO" th:selected="${filtros.canal == 'ATUALIZACAO'}">Atualização</option>
-              <option value="PORTAL" th:selected="${filtros.canal == 'PORTAL'}">Portal</option>
-              <option value="ANOTACAO" th:selected="${filtros.canal == 'ANOTACAO'}">Anotações</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-secondary">
-              <i class="fas fa-filter"></i> Filtrar
-            </button>
-            <a href="/clientes/historico/interacoes" class="btn-link">Limpar</a>
-          </div>
-        </form>
+        </div>
 
         <article class="card">
-          <h2>Linha do tempo</h2>
-          <div class="timeline">
-            <div class="timeline-item" th:each="interacao : ${interacoes}">
-              <div class="timeline-date" th:text="${#temporals.format(interacao.data, 'dd/MM/yyyy HH:mm')}">
-                01/01/2025 09:00
-              </div>
-              <div class="timeline-content">
-                <div class="timeline-header">
-                  <span class="tag" th:text="${interacao.canal}">CADASTRO</span>
-                  <h3 th:text="${interacao.clienteNome}">Cliente</h3>
-                </div>
-                <p th:text="${interacao.resumo}">Descrição da interação</p>
-                <div class="timeline-footer">
-                  <span><i class="fas fa-user"></i> <span th:text="${interacao.responsavel}">Responsável</span></span>
-                  <a th:href="@{'/clientes/' + ${interacao.clienteId} + '/detalhes'}" class="btn-link">
-                    Ver cliente
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div class="timeline-empty" th:if="${#lists.isEmpty(interacoes)}">
-              Nenhuma interação encontrada para os filtros aplicados.
-            </div>
+          <div id="interacoesLoading" class="loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i> Carregando interações...
           </div>
+          <div class="table-responsive">
+            <table class="table-list">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Cliente</th>
+                  <th>Canal</th>
+                  <th>Responsável</th>
+                  <th>Resumo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="interacoesBody">
+                <tr>
+                  <td colspan="6" class="text-center">Carregando interações...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="interacoesPagination" class="pagination"></div>
         </article>
       </section>
 
@@ -102,7 +110,137 @@
     </main>
   </div>
 
-  <script th:src="@{/js/script.js}"></script>
+  <script th:inline="javascript">
+    window.interacoesInitialFilters = {
+      busca: /*[[${filtros.busca}]]*/ '',
+      canal: /*[[${filtros.canal}]]*/ '',
+      size: 10
+    };
+  </script>
+  <script>
+    const interacoesState = {
+      page: 0,
+      size: window.interacoesInitialFilters.size || 10,
+      busca: window.interacoesInitialFilters.busca || '',
+      canal: window.interacoesInitialFilters.canal || ''
+    };
+
+    const interacoesElements = {
+      busca: document.getElementById('interacoesBusca'),
+      canal: document.getElementById('interacoesCanal'),
+      size: document.getElementById('interacoesSize'),
+      body: document.getElementById('interacoesBody'),
+      pagination: document.getElementById('interacoesPagination'),
+      loading: document.getElementById('interacoesLoading'),
+      limpar: document.getElementById('interacoesLimpar'),
+      total: document.getElementById('interacoesTotal')
+    };
+
+    function renderInteracoesRows(interacoes) {
+      if (!interacoes || interacoes.length === 0) {
+        interacoesElements.body.innerHTML = '<tr><td colspan="6" class="text-center">Nenhuma interação encontrada.</td></tr>';
+        return;
+      }
+
+      interacoesElements.body.innerHTML = interacoes.map(i => `
+        <tr>
+          <td>${i.data ? new Date(i.data).toLocaleString('pt-BR') : '-'}</td>
+          <td>${i.clienteNome ?? '-'}</td>
+          <td>${i.canal ?? '-'}</td>
+          <td>${i.responsavel ?? '-'}</td>
+          <td>${i.resumo ?? '-'}</td>
+          <td class="table-actions">
+            ${i.clienteId ? `<a href="/clientes/${i.clienteId}/detalhes" class="btn btn-link btn-sm">Ver cliente</a>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderInteracoesPagination(data) {
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = !!data.hasPrevious;
+      const hasNext = !!data.hasNext;
+      let html = `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</span>`;
+      html += hasPrev
+        ? `<a class="btn btn-secondary" href="#" onclick="return interacoesGoToPage(${page - 1});"><i class="fas fa-chevron-left"></i> Anterior</a>`
+        : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext
+        ? `<a class="btn btn-secondary" href="#" onclick="return interacoesGoToPage(${page + 1});">Próxima <i class="fas fa-chevron-right"></i></a>`
+        : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      interacoesElements.pagination.innerHTML = html;
+      if (interacoesElements.total) {
+        interacoesElements.total.textContent = totalElements;
+      }
+    }
+
+    function interacoesGoToPage(page) {
+      interacoesLoad(Math.max(0, page));
+      return false;
+    }
+
+    function interacoesBuildParams(page) {
+      const params = new URLSearchParams();
+      params.set('page', page);
+      params.set('size', interacoesState.size);
+      if (interacoesState.busca) params.set('busca', interacoesState.busca);
+      if (interacoesState.canal) params.set('canal', interacoesState.canal);
+      return params.toString();
+    }
+
+    function interacoesLoad(page = 0) {
+      interacoesState.page = page;
+      interacoesElements.loading.style.display = 'block';
+      fetch(`/clientes/historico/api/interacoes?${interacoesBuildParams(page)}`)
+        .then(resp => resp.json())
+        .then(data => {
+          renderInteracoesRows(data.content || []);
+          renderInteracoesPagination(data);
+        })
+        .catch(() => {
+          interacoesElements.body.innerHTML = '<tr><td colspan="6" class="text-center">Erro ao carregar interações.</td></tr>';
+          interacoesElements.pagination.innerHTML = '';
+        })
+        .finally(() => {
+          interacoesElements.loading.style.display = 'none';
+        });
+    }
+
+    function interacoesBindEvents() {
+      interacoesElements.busca.value = interacoesState.busca;
+      interacoesElements.canal.value = interacoesState.canal;
+      interacoesElements.size.value = interacoesState.size;
+
+      interacoesElements.busca.addEventListener('input', (e) => {
+        interacoesState.busca = e.target.value || '';
+        interacoesLoad(0);
+      });
+
+      interacoesElements.canal.addEventListener('change', (e) => {
+        interacoesState.canal = e.target.value || '';
+        interacoesLoad(0);
+      });
+
+      interacoesElements.size.addEventListener('change', (e) => {
+        interacoesState.size = Number(e.target.value) || 10;
+        interacoesLoad(0);
+      });
+
+      interacoesElements.limpar.addEventListener('click', () => {
+        interacoesState.busca = '';
+        interacoesState.canal = '';
+        interacoesElements.busca.value = '';
+        interacoesElements.canal.value = '';
+        interacoesLoad(0);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      interacoesBindEvents();
+      interacoesLoad(0);
+    });
+  </script>
   <script th:src="@{/js/notifications.js}"></script>
   <script src="/js/sidebar.js" defer></script>
 </body>

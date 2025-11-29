@@ -37,7 +37,7 @@ public class ClienteController {
     public String listarClientes(@RequestParam(value = "busca", required = false) String busca,
                                  @RequestParam(value = "status", required = false) String status,
                                  @RequestParam(value = "page", defaultValue = "0") int page,
-                                 @RequestParam(value = "size", defaultValue = "20") int size,
+                                 @RequestParam(value = "size", defaultValue = "10") int size,
                                  Model model) {
         var clientesPage = clienteService.listarPaginado(busca, status, page, size);
         model.addAttribute("clientes", clientesPage.getContent());
@@ -62,6 +62,42 @@ public class ClienteController {
         model.addAttribute("clientesFidelizados", clienteService.contarFidelizados());
 
         return "clientes/geral/listar";
+    }
+
+    @GetMapping("/api/listar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarAjax(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "q", required = false) String q,
+            @RequestParam(name = "status", required = false) String status) {
+        try {
+            var pagina = clienteService.listarPaginado(q, status, Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+
+            java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream().map(c -> {
+                java.util.Map<String, Object> m = new java.util.HashMap<>();
+                m.put("id", c.getId());
+                m.put("nome", c.getNome());
+                m.put("tipoCliente", c.getTipoCliente());
+                m.put("email", c.getEmail());
+                m.put("telefone", c.getTelefone());
+                m.put("status", c.getStatus());
+                return m;
+            }).collect(java.util.stream.Collectors.toList());
+
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("content", content);
+            resp.put("currentPage", pagina.getNumber());
+            resp.put("totalPages", pagina.getTotalPages());
+            resp.put("totalElements", pagina.getTotalElements());
+            resp.put("hasPrevious", pagina.hasPrevious());
+            resp.put("hasNext", pagina.hasNext());
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.add("Cache-Control", "public, max-age=90");
+            return new org.springframework.http.ResponseEntity<>(resp, headers, org.springframework.http.HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao carregar clientes: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/cadastro")

@@ -7,15 +7,20 @@
   <title>Clientes - Painel do CEO</title>
 
   <!-- Toastr CSS e JS (se quiser notificação estilo toast) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
 
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <!-- Seu CSS padrão -->
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-  <link rel="stylesheet" th:href="@{/css/cliente-lista.css}" />
+  <style>
+    .status-badge{padding:6px 10px;border-radius:999px;font-size:0.85rem;font-weight:600;color:#fff;display:inline-block;min-width:70px;text-align:center}
+    .status-ativo{background-color:#22c55e}
+    .status-inativo{background-color:#ef4444}
+    .status-pendente{background-color:#fbbf24;color:#000}
+  </style>
   <link href="/css/notifications.css" rel="stylesheet">
 
 
@@ -38,62 +43,27 @@
             <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
           </form>
 
-          <a th:href="@{/clientes/cadastro}" class="btn-novo">
+          <a th:href="@{/clientes/cadastro}" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Novo Cliente
           </a>
         </div>
 
-        <table>
+        <div id="loading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+        <table class="table-list" style="text-align:center">
           <thead>
             <tr>
-              <th>Nome / Fantasia</th>
-              <th>Tipo</th>
-              <th>Email</th>
-              <th>Telefone</th>
-              <th>Status</th>
-              <th>Ações</th>
+              <th style="text-align:center">Nome / Fantasia</th>
+              <th style="text-align:center">Tipo</th>
+              <th style="text-align:center">Email</th>
+              <th style="text-align:center">Telefone</th>
+              <th style="text-align:center">Status</th>
+              <th style="text-align:center">Ações</th>
             </tr>
           </thead>
-          <tbody>
-            <tr th:each="cliente : ${clientes}">
-              <td th:text="${cliente.nome}">Cliente Exemplo</td>
-              <td th:text="${cliente.tipoCliente}">PF</td>
-              <td th:text="${cliente.email}">email@exemplo.com</td>
-              <td th:text="${cliente.telefone}">(00) 00000-0000</td>
-              <td>
-                <span class="badge"
-                  th:classappend="${#strings.toUpperCase(cliente.status)} == 'ATIVO' ? ' badge-ativo' : 
-                                      (${#strings.toUpperCase(cliente.status)} == 'PENDENTE' ? ' badge-pendente' : ' badge-inativo')"
-                  th:text="${cliente.status != null} ? ${cliente.status} : 'Sem status'">
-                </span>
-              </td>
-
-
-              <td class="acoes">
-                <a th:href="@{'/clientes/' + ${cliente.id} + '/detalhes'}" title="Detalhes">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" title="Editar">
-                  <i class="fas fa-edit"></i>
-                </a>
-                <button type="button" th:onclick="'abrirModalExcluir(' + ${cliente.id} + ')'" title="Excluir">
-                  <i class="fas fa-trash-alt" style="color:#dc2626;"></i>
-                </button>
-              </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(clientes)}">
-              <td colspan="6" class="table-center">Nenhum cliente encontrado.</td>
-            </tr>
-          </tbody>
+          <tbody id="clientesBody"></tbody>
         </table>
 
-        <div class="pagination" th:if="${totalPages > 1}">
-          <span class="pagination-info">Página [[${currentPage + 1}]] de [[${totalPages}]] ([[${totalElements}]] clientes)</span>
-          <a class="btn btn-secondary" th:if="${hasPrevious}" th:href="@{/clientes(page=${currentPage - 1}, size=${20}, busca=${busca}, status=${statusFiltro})}"><i class="fas fa-chevron-left"></i> Anterior</a>
-          <span class="btn btn-secondary disabled" th:if="${!hasPrevious}"><i class="fas fa-chevron-left"></i> Anterior</span>
-          <a class="btn btn-secondary" th:if="${hasNext}" th:href="@{/clientes(page=${currentPage + 1}, size=${20}, busca=${busca}, status=${statusFiltro})}">Próxima <i class="fas fa-chevron-right"></i></a>
-          <span class="btn btn-secondary disabled" th:if="${!hasNext}">Próxima <i class="fas fa-chevron-right"></i></span>
-        </div>
+        <div id="pagination" class="pagination"></div>
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
@@ -107,109 +77,170 @@
       <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
       <div id="msgErroMatricula"></div>
       <div id="msgSucessoExcluir"></div>
-      <button onclick="validarEExcluir()">Confirmar exclusão</button>
-      <button onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-danger" data-action="confirmar-exclusao" onclick="validarEExcluir()"><i class="fas fa-trash-alt"></i> Confirmar exclusão</button>
+      <button class="btn btn-secondary" onclick="closeDesligamentoModal()"><i class="fas fa-times"></i> Cancelar</button>
     </div>
   </div>
 
+  <script th:inline="javascript">
+    window.statusFiltro = /*[[${statusFiltro}]]*/ '';
+    window.buscaInicial = /*[[${busca}]]*/ '';
+  </script>
   <script>
-    let clienteIdParaExcluir = null;
-
-    function abrirModalExcluir(id) {
-      clienteIdParaExcluir = id;
-      const modal = document.getElementById('modal-excluir');
-      modal.style.display = 'flex';
-
-      const matriculaInput = document.getElementById('matriculaInput');
-      matriculaInput.value = '';
-
-      const msgErro = document.getElementById('msgErroMatricula');
-      const msgSucesso = document.getElementById('msgSucessoExcluir');
-      msgErro.style.display = 'none';
-      msgErro.textContent = '';
-      msgSucesso.style.display = 'none';
-      msgSucesso.textContent = '';
-
-      // Habilitar o botão confirmar
-      document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
+    let currentPage = 0;
+    let query = window.buscaInicial || '';
+    let debounceTimer;
+    function showLoading(show){
+      const el = document.getElementById('loading');
+      if(el) el.style.display = show ? 'block' : 'none';
     }
 
-    function fecharModal() {
-      clienteIdParaExcluir = null;
+    function statusBadgeClass(status) {
+      const s = (status || '').toUpperCase();
+      if (s === 'ATIVO') return 'status-badge status-ativo';
+      if (s === 'PENDENTE') return 'status-badge status-pendente';
+      return 'status-badge status-inativo';
+    }
+
+    function renderRows(items) {
+      const tbody = document.getElementById('clientesBody');
+      tbody.innerHTML = '';
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="table-center">Nenhum cliente encontrado.</td></tr>';
+        return;
+      }
+      const rows = items.map(c => {
+        const nome = c.nome || '-';
+        const tipo = c.tipoCliente || '-';
+        const email = c.email || '-';
+        const tel = c.telefone || '-';
+        const status = c.status || '-';
+        const badge = statusBadgeClass(status);
+        return `<tr>
+          <td style="text-align:center">${nome}</td>
+          <td style="text-align:center">${tipo}</td>
+          <td style="text-align:center">${email}</td>
+          <td style="text-align:center">${tel}</td>
+          <td style="text-align:center"><span class="${badge}">${status}</span></td>
+          <td class="acoes" style="text-align:center">
+            <a href="/clientes/${c.id}/detalhes" class="btn btn-sm btn-info" title="Detalhes"><i class="fas fa-eye"></i></a>
+            <a href="/clientes/${c.id}/editar" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+            <button type="button" class="btn btn-sm btn-danger" onclick="openDesligamentoModal(${c.id})" title="Excluir"><i class="fas fa-user-times"></i></button>
+          </td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+
+    function renderPagination(data) {
+      const el = document.getElementById('pagination');
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = !!data.hasPrevious;
+      const hasNext = !!data.hasNext;
+      let html = '';
+      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} clientes)</span>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+
+    function loadClientes(page = 0) {
+      currentPage = page;
+      const statusParam = typeof window.statusFiltro === 'string' ? window.statusFiltro : (window.statusFiltro || '');
+      showLoading(true);
+      fetch(`/clientes/api/listar?page=${page}&size=10&q=${encodeURIComponent(query || '')}&status=${encodeURIComponent(statusParam || '')}`)
+        .then(r => r.json())
+        .then(data => { renderRows(data.content); renderPagination(data); })
+        .catch(() => { renderRows([]); renderPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); })
+        .finally(() => showLoading(false));
+    }
+
+    function goToPage(p) { loadClientes(Math.max(0, p)); }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.querySelector('input[name="busca"]');
+      const form = document.querySelector('form.search-form');
+      if (input) {
+        input.addEventListener('input', function(e) {
+          clearTimeout(debounceTimer);
+          query = e.target.value || '';
+          debounceTimer = setTimeout(() => loadClientes(0), 300);
+        });
+      }
+      if (form) {
+        form.addEventListener('submit', function(e) { e.preventDefault(); loadClientes(0); });
+      }
+      loadClientes(0);
+    });
+
+    let clienteIdParaExcluir = null;
+    function openDesligamentoModal(id) {
+      clienteIdParaExcluir = id;
       const modal = document.getElementById('modal-excluir');
-      modal.style.display = 'none';
-
+      if (modal) modal.style.display = 'flex';
       const matriculaInput = document.getElementById('matriculaInput');
-      matriculaInput.value = '';
-
+      if (matriculaInput) matriculaInput.value = '';
       const msgErro = document.getElementById('msgErroMatricula');
       const msgSucesso = document.getElementById('msgSucessoExcluir');
-      msgErro.style.display = 'none';
-      msgErro.textContent = '';
-      msgSucesso.style.display = 'none';
-      msgSucesso.textContent = '';
+      if (msgErro) { msgErro.style.display = 'none'; msgErro.textContent = ''; }
+      if (msgSucesso) { msgSucesso.style.display = 'none'; msgSucesso.textContent = ''; }
+      const btn = document.querySelector('#modal-excluir button[data-action="confirmar-exclusao"]');
+      if (btn) btn.disabled = false;
+    }
 
-      // Habilitar o botão confirmar (caso esteja desabilitado)
-      document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]').disabled = false;
+    function closeDesligamentoModal() {
+      clienteIdParaExcluir = null;
+      const modal = document.getElementById('modal-excluir');
+      if (modal) modal.style.display = 'none';
+      const matriculaInput = document.getElementById('matriculaInput');
+      if (matriculaInput) matriculaInput.value = '';
+      const msgErro = document.getElementById('msgErroMatricula');
+      const msgSucesso = document.getElementById('msgSucessoExcluir');
+      if (msgErro) { msgErro.style.display = 'none'; msgErro.textContent = ''; }
+      if (msgSucesso) { msgSucesso.style.display = 'none'; msgSucesso.textContent = ''; }
+      const btn = document.querySelector('#modal-excluir button[data-action="confirmar-exclusao"]');
+      if (btn) btn.disabled = false;
     }
 
     async function validarEExcluir() {
-      const matricula = document.getElementById('matriculaInput').value.trim();
+      const matriculaInput = document.getElementById('matriculaInput');
+      const matricula = matriculaInput ? matriculaInput.value.trim() : '';
       const msgErro = document.getElementById('msgErroMatricula');
       const msgSucesso = document.getElementById('msgSucessoExcluir');
-      const btnConfirmar = document.querySelector('#modal-excluir button[onclick="validarEExcluir()"]');
+      const btnConfirmar = document.querySelector('#modal-excluir button[data-action="confirmar-exclusao"]');
 
-      // Reset mensagens
-      msgErro.style.display = 'none';
-      msgErro.textContent = '';
-      msgSucesso.style.display = 'none';
-      msgSucesso.textContent = '';
-
+      if (msgErro) { msgErro.style.display = 'none'; msgErro.textContent = ''; }
+      if (msgSucesso) { msgSucesso.style.display = 'none'; msgSucesso.textContent = ''; }
       if (!matricula) {
-        msgErro.textContent = 'Digite a matrícula do administrador.';
-        msgErro.style.display = 'block';
+        if (msgErro) { msgErro.textContent = 'Digite a matrícula do administrador.'; msgErro.style.display = 'block'; }
         return;
       }
-
-      btnConfirmar.disabled = true;
+      if (btnConfirmar) btnConfirmar.disabled = true;
 
       try {
         const response = await fetch('/clientes/' + clienteIdParaExcluir + '/excluir', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Matricula': matricula
-          }
+          headers: { 'Content-Type': 'application/json', 'X-Matricula': matricula }
         });
-
         if (response.ok) {
-          msgSucesso.textContent = 'Cliente excluído com sucesso!';
-          msgSucesso.style.display = 'block';
-
-          setTimeout(() => {
-            fecharModal();
-            window.location.href = '/clientes';
-          }, 1500);
+          if (msgSucesso) { msgSucesso.textContent = 'Cliente excluído com sucesso!'; msgSucesso.style.display = 'block'; }
+          setTimeout(() => { closeDesligamentoModal(); window.location.href = '/clientes'; }, 1500);
         } else {
           let errorText = 'Erro ao excluir cliente. Contate o ADMINISTRADOR DO SISTEMA.';
-          try {
-            const errorData = await response.json();
-            if (errorData.erro) errorText = errorData.erro;
-          } catch { }
-
-          msgErro.textContent = errorText;
-          msgErro.style.display = 'block';
-          btnConfirmar.disabled = false;
+          try { const errorData = await response.json(); if (errorData.erro) errorText = errorData.erro; } catch {}
+          if (msgErro) { msgErro.textContent = errorText; msgErro.style.display = 'block'; }
+          if (btnConfirmar) btnConfirmar.disabled = false;
         }
       } catch (error) {
-        msgErro.textContent = 'Erro de rede ou servidor: ' + error.message;
-        msgErro.style.display = 'block';
-        btnConfirmar.disabled = false;
+        if (msgErro) { msgErro.textContent = 'Erro de rede ou servidor: ' + error.message; msgErro.style.display = 'block'; }
+        if (btnConfirmar) btnConfirmar.disabled = false;
       }
     }
   </script>
-
-
+    
+  </script>
    <script th:src="@{/js/sidebar.js}"></script>
 
   <!-- jQuery necessário -->

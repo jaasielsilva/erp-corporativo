@@ -150,33 +150,45 @@ function showToast(notification) {
     const priorityClass = notification.priority ? `priority-${notification.priority.toLowerCase()}` : "priority-medium";
     const iconClass = notification.type === "chat" ? "fas fa-comments" : "fas fa-info-circle";
 
-    const $toast = $(`
-        <div class="notification-toast ${priorityClass}">
-            <div class="toast-icon"><i class="${iconClass}"></i></div>
-            <div class="toast-content">
-                <h4>${notification.title}</h4>
-                <p>${notification.message}</p>
-            </div>
-            <button class="toast-close">&times;</button>
-        </div>
-    `);
+    const toast = document.createElement('div');
+    toast.className = `notification-toast ${priorityClass}`;
 
-    $('body').append($toast);
+    const icon = document.createElement('div');
+    icon.className = 'toast-icon';
+    const i = document.createElement('i');
+    i.className = iconClass;
+    icon.appendChild(i);
 
-    // Mostrar toast e tocar som
+    const content = document.createElement('div');
+    content.className = 'toast-content';
+    const h4 = document.createElement('h4');
+    h4.textContent = notification.title;
+    const p = document.createElement('p');
+    p.textContent = notification.message;
+    content.appendChild(h4);
+    content.appendChild(p);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', () => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    });
+
+    toast.appendChild(icon);
+    toast.appendChild(content);
+    toast.appendChild(closeBtn);
+    document.body.appendChild(toast);
+
     setTimeout(() => {
-        $toast.addClass("show");
+        toast.classList.add('show');
         playNotificationSound();
     }, 10);
 
-    // Fechar toast ao clicar
-    $toast.find(".toast-close").on("click", function () {
-        $toast.removeClass("show").fadeOut(300, function () {
-            $(this).remove();
-        });
-    });
-
-    // Auto fechar após duração configurável
     const baseDurations = { low: 4000, medium: 5000, high: 7000 };
     const prio = (notification.priority || 'medium').toLowerCase();
     const defaultDuration = baseDurations[prio] || 5000;
@@ -185,9 +197,11 @@ function showToast(notification) {
 
     if (!sticky && durationMs > 0) {
         setTimeout(() => {
-            $toast.removeClass("show").fadeOut(300, function () {
-                $(this).remove();
-            });
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
         }, durationMs);
     }
 }

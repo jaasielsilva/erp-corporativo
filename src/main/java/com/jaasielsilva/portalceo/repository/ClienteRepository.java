@@ -76,6 +76,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     List<Cliente> findByAtivoTrueAndTipoCliente(String tipoCliente);
 
+    List<Cliente> findByTipoClienteIgnoreCaseAndCpfCnpjIsNotNull(String tipoCliente);
+
     // Clientes VIP (exemplo: com campo boolean vip = true)
     @Query("SELECT c FROM Cliente c WHERE c.vip = true")
     List<Cliente> findClientesVIP();

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/css/fontawesome.min.css"/>
 </head>
 <body>
-    <header class="topbar" th:fragment="topbar">
+    <header class="topbar" th:fragment="topbar" th:inline="text">
         <div class="topbar-title">
             <h1>Sistema ERP Corporativo</h1>
         </div>
@@ -31,7 +31,7 @@
             <span class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Usuário</span>
         </div>
 
-        <!-- Email do usuário para WebSocket global (sem thymeleaf-extras-springsecurity) -->
+        <!-- Email do usuário para WebSocket global (injeta via Thymeleaf corretamente) -->
         <div data-user-email="[[${#httpServletRequest.remoteUser != null ? #httpServletRequest.remoteUser : ''}]]" style="display:none;"></div>
 
         <!-- jQuery fallback (para toasts) -->

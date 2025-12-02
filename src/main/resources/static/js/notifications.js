@@ -84,12 +84,16 @@ $(document).ready(function () {
             let systemNotifications = systemData.notifications || [];
             let chatNotifications = chatData || [];
 
-            // Processar notificações do sistema
+            // Processar notificações do sistema com fallbacks
             systemNotifications.forEach(n => {
+                const ts = new Date(n.timestamp);
+                const safeTs = isNaN(ts.getTime()) ? null : ts;
                 allNotifications.push({
                     ...n,
                     type: 'system',
-                    timestamp: new Date(n.timestamp)
+                    timestamp: safeTs,
+                    remetenteNome: n.user && n.user.nome ? n.user.nome : 'Sistema',
+                    actionUrl: n.actionUrl || null
                 });
             });
 
@@ -121,7 +125,9 @@ $(document).ready(function () {
                 const priorityClass = n.priority;
                 const typeClass = n.type;
                 const icon = n.type === 'chat' ? 'fas fa-comments' : 'fas fa-info-circle';
-                const subtitle = n.type === 'chat' ? `De: ${n.remetenteNome}` : '';
+                const subtitle = n.type === 'chat' ? `De: ${n.remetenteNome}` : `De: ${n.remetenteNome || 'Sistema'}`;
+                const timeText = n.timestamp ? n.timestamp.toLocaleString('pt-BR') : '';
+                const actionLink = n.actionUrl ? `<a href="${n.actionUrl}" class="btn-text">Abrir</a>` : '';
                 
                 const $item = $(`
                     <li class="notification-item ${unreadClass} priority-${priorityClass} type-${typeClass}" data-id="${n.id}" data-type="${n.type}">
@@ -130,10 +136,11 @@ $(document).ready(function () {
                             <h4>${n.title}</h4>
                             ${subtitle ? `<p class="notification-subtitle">${subtitle}</p>` : ''}
                             <p>${n.message}</p>
-                            <span class="notification-time">${n.timestamp.toLocaleString()}</span>
+                            <span class="notification-time">${timeText || ''}</span>
                             <div class="notification-actions">
                                 <button class="mark-read-btn btn-text" data-id="${n.id}" data-type="${n.type}">Marcar como lida</button>
                                 ${n.entityId ? `<a href="/rh/colaboradores/${n.entityId}" class="btn-text">Ir para detalhe</a>` : ''}
+                                ${actionLink}
                                 <button class="silence-btn btn-text" data-id="${n.id}" data-type="${n.type}">Silenciar</button>
                             </div>
                         </div>

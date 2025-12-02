@@ -13,12 +13,17 @@ public class ReceitaService {
     @Autowired
     private CnpjProvider cnpjProvider;
 
+    @Autowired
+    private CnpjConsultaLogService cnpjConsultaLogService;
+
     @Cacheable(value = "cnpjCache", key = "#cnpj")
     public CnpjConsultaDto consultarCnpj(String cnpj) {
         String s = CnpjUtils.sanitize(cnpj);
         if (!CnpjUtils.isValid(s)) {
             throw new IllegalArgumentException("CNPJ inválido");
         }
-        return cnpjProvider.consultar(s);
+        CnpjConsultaDto dto = cnpjProvider.consultar(s);
+        cnpjConsultaLogService.salvarSnapshot(s, dto, null);
+        return dto;
     }
 }

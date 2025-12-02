@@ -14,11 +14,10 @@ public class CnpjFonteRepository {
 
     public List<String> buscarLote(int limit, int offset) {
         return em.createQuery(
-                        "SELECT c.cpfCnpj FROM Cliente c WHERE c.tipoCliente = 'PJ' AND c.cpfCnpj IS NOT NULL ORDER BY c.id",
+                        "SELECT c.cpfCnpj FROM Cliente c WHERE LOWER(c.tipoCliente) = 'pj' AND c.cpfCnpj IS NOT NULL ORDER BY c.id",
                         String.class)
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
     }
 }
-

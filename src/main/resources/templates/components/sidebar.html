@@ -383,6 +383,26 @@
             <li><a href="/juridico/documentos"><i class="fas fa-folder-open"></i> Documentos</a></li>
           </ul>
         </li>
+
+        <!-- Cadastros -->
+        <li class="has-submenu">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-id-card"></i> Cadastros
+          </a>
+          <ul class="submenu">
+            <li><a href="/cadastros/consultar-cnpj"><i class="fas fa-building"></i> Consultar CNPJ (Receita Federal)</a></li>
+          </ul>
+        </li>
+
+        <!-- Utilidades -->
+        <li class="has-submenu">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-wrench"></i> Utilidades
+          </a>
+          <ul class="submenu">
+            <li><a href="/utilidades/processar-cnpj"><i class="fas fa-tasks"></i> Processar CNPJs (Async)</a></li>
+          </ul>
+        </li>
         <!-- Módulo Projetos -->
         <li class="has-submenu" th:if="${podeAcessarProjetos}">
           <a href="javascript:void(0);" class="submenu-toggle">

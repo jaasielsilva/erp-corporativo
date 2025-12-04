@@ -79,7 +79,7 @@ public class ProcessamentoCnpjService {
                 nStart.setMetadata("{\"protocol\":\"" + protocolo + "\"}");
                 notificationRepository.save(nStart);
             }
-            int limit = 200;
+            int limit = 50;
             int offset = 0;
             int concurrency = currentConcurrency;
             ThreadPoolTaskExecutor executor = taskExecutor;

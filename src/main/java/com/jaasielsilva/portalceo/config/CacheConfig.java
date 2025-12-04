@@ -22,11 +22,17 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
+
         Caffeine<Object, Object> builder = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(ttlHours))
                 .maximumSize(maxSize);
 
-        CaffeineCacheManager manager = new CaffeineCacheManager("cnpjCache");
+        // Registra todos os caches que sua aplicação usa
+        CaffeineCacheManager manager = new CaffeineCacheManager(
+                "cnpjCache",
+                "departamentosAll"   // <-- CACHE QUE ESTAVA FALTANDO
+        );
+
         manager.setCaffeine(builder);
         return manager;
     }

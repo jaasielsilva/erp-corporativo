@@ -745,10 +745,28 @@
             alert('Erro ao gerar relatório. Verifique o console para mais detalhes.');
           });
       } else {
-        // Exportação client-side
         try {
           if (formato === 'excel') {
-            exportarTabelaModalCSV('relatorioContent', 'relatorio_' + tipo + '.csv');
+            const suportadosXlsx = ['analitica','gerencial','obrigacoes','beneficios'];
+            if (suportadosXlsx.indexOf(tipo) >= 0) {
+              const tipoParam = (tipo === 'analitica') ? 'folha-analitica' : tipo;
+              const downloadUrl = '/rh/api/relatorios/exportar/xlsx?tipo=' + encodeURIComponent(tipoParam) + '&' + params.toString();
+              fetch(downloadUrl).then(function(resp){ return resp.blob(); }).then(function(blob){
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                link.download = 'relatorio_' + tipo + '.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+              }).catch(function(err){
+                console.error('Falha ao baixar XLSX', err);
+                exportarTabelaModalCSV('relatorioContent', 'relatorio_' + tipo + '.csv');
+              });
+            } else {
+              exportarTabelaModalCSV('relatorioContent', 'relatorio_' + tipo + '.csv');
+            }
           } else if (formato === 'pdf') {
             exportarModalParaPDF('relatorioModal', 'Relatorio - ' + tipo.toUpperCase());
           }

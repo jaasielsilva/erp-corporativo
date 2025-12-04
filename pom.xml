@@ -148,6 +148,13 @@
             <version>3.5.0</version>
         </dependency>
 
+        <!-- Apache POI for native XLSX generation -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import java.io.ByteArrayOutputStream;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -420,5 +424,162 @@ public class RhController {
         pdf.append(csvContent.replace(",", " | "));
         
         return pdf.toString();
+    }
+
+    /**
+     * Exporta relatório em formato Excel nativo (XLSX)
+     */
+    @GetMapping("/api/relatorios/exportar/xlsx")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RH')")
+    public ResponseEntity<byte[]> exportarRelatorioXlsx(
+            @RequestParam String tipo,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
+            @RequestParam(required = false) Long departamentoId) {
+        try {
+            byte[] arquivo = gerarXlsxPorTipo(tipo, inicio, fim, departamentoId);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDispositionFormData("attachment",
+                "relatorio_" + tipo + "_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx");
+
+            return ResponseEntity.ok()
+                .headers(headers)
+                .body(arquivo);
+        } catch (Exception e) {
+            logger.error("Erro ao exportar relatório XLSX", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erro ao gerar relatório XLSX".getBytes());
+        }
+    }
+
+    private byte[] gerarXlsxPorTipo(String tipo, LocalDate inicio, LocalDate fim, Long departamentoId) throws Exception {
+        try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            CreationHelper creationHelper = wb.getCreationHelper();
+            DataFormat dataFormat = wb.createDataFormat();
+
+            CellStyle headerStyle = wb.createCellStyle();
+            Font headerFont = wb.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            CellStyle currencyStyle = wb.createCellStyle();
+            currencyStyle.setDataFormat(dataFormat.getFormat("#,##0.00"));
+
+            Sheet sheet;
+            int lastColumn = 0;
+
+            switch (tipo.toLowerCase()) {
+                case "folha-analitica":
+                    sheet = wb.createSheet("Folha Analítica");
+                    Row h1 = sheet.createRow(0);
+                    String[] headersFolha = new String[] {
+                        "Nome", "Departamento", "Cargo", "Salário Base", "INSS", "IRRF", "Total Descontos", "Salário Líquido"
+                    };
+                    for (int i = 0; i < headersFolha.length; i++) {
+                        Cell c = h1.createCell(i);
+                        c.setCellValue(headersFolha[i]);
+                        c.setCellStyle(headerStyle);
+                    }
+                    lastColumn = headersFolha.length - 1;
+                    RhRelatorioService.RelatorioFolhaAnalitica rel = rhRelatorioService.gerarRelatorioFolhaAnalitica(inicio, fim, departamentoId);
+                    int r = 1;
+                    for (RhRelatorioService.ItemFolhaAnalitica item : rel.getItens()) {
+                        Row row = sheet.createRow(r++);
+                        row.createCell(0).setCellValue(item.getNomeColaborador());
+                        row.createCell(1).setCellValue(item.getDepartamento());
+                        row.createCell(2).setCellValue(item.getCargo());
+                        Cell c3 = row.createCell(3); c3.setCellValue(item.getSalarioBase().doubleValue()); c3.setCellStyle(currencyStyle);
+                        Cell c4 = row.createCell(4); c4.setCellValue(item.getInss().doubleValue()); c4.setCellStyle(currencyStyle);
+                        Cell c5 = row.createCell(5); c5.setCellValue(item.getIrrf().doubleValue()); c5.setCellStyle(currencyStyle);
+                        Cell c6 = row.createCell(6); c6.setCellValue(item.getTotalDescontos().doubleValue()); c6.setCellStyle(currencyStyle);
+                        Cell c7 = row.createCell(7); c7.setCellValue(item.getSalarioLiquido().doubleValue()); c7.setCellStyle(currencyStyle);
+                    }
+                    break;
+
+                case "gerencial":
+                    sheet = wb.createSheet("Gerencial");
+                    Row h2 = sheet.createRow(0);
+                    String[] headersGer = new String[] { "Departamento", "Colaboradores", "Custo Total", "Média Salarial" };
+                    for (int i = 0; i < headersGer.length; i++) {
+                        Cell c = h2.createCell(i);
+                        c.setCellValue(headersGer[i]);
+                        c.setCellStyle(headerStyle);
+                    }
+                    lastColumn = headersGer.length - 1;
+                    RhRelatorioService.RelatorioGerencial rg = rhRelatorioService.gerarRelatorioGerencial(inicio, fim);
+                    int r2 = 1;
+                    for (RhRelatorioService.ResumoGerencial resumo : rg.getResumoPorDepartamento().values()) {
+                        Row row = sheet.createRow(r2++);
+                        row.createCell(0).setCellValue(resumo.getDepartamento());
+                        row.createCell(1).setCellValue(resumo.getColaboradores());
+                        Cell c2 = row.createCell(2); c2.setCellValue(resumo.getCustoTotal().doubleValue()); c2.setCellStyle(currencyStyle);
+                        Cell c3m = row.createCell(3); c3m.setCellValue(resumo.getMediaSalarial().doubleValue()); c3m.setCellStyle(currencyStyle);
+                    }
+                    break;
+
+                case "obrigacoes":
+                    sheet = wb.createSheet("Obrigações");
+                    Row h3 = sheet.createRow(0);
+                    String[] headersObr = new String[] { "Nome", "Salário Base", "INSS", "IRRF", "FGTS" };
+                    for (int i = 0; i < headersObr.length; i++) {
+                        Cell c = h3.createCell(i);
+                        c.setCellValue(headersObr[i]);
+                        c.setCellStyle(headerStyle);
+                    }
+                    lastColumn = headersObr.length - 1;
+                    RhRelatorioService.RelatorioObrigacoes ro = rhRelatorioService.gerarRelatorioObrigacoes(inicio, fim);
+                    int r3 = 1;
+                    for (RhRelatorioService.ItemObrigacao item : ro.getItens()) {
+                        Row row = sheet.createRow(r3++);
+                        row.createCell(0).setCellValue(item.getNomeColaborador());
+                        Cell cSb = row.createCell(1); cSb.setCellValue(item.getSalarioBase().doubleValue()); cSb.setCellStyle(currencyStyle);
+                        Cell cInss = row.createCell(2); cInss.setCellValue(item.getInss().doubleValue()); cInss.setCellStyle(currencyStyle);
+                        Cell cIrrf = row.createCell(3); cIrrf.setCellValue(item.getIrrf().doubleValue()); cIrrf.setCellStyle(currencyStyle);
+                        Cell cFgts = row.createCell(4); cFgts.setCellValue(item.getFgts().doubleValue()); cFgts.setCellStyle(currencyStyle);
+                    }
+                    break;
+
+                case "beneficios":
+                    sheet = wb.createSheet("Benefícios");
+                    Row h4 = sheet.createRow(0);
+                    String[] headersBen = new String[] { "Benefício", "Colaboradores Atendidos", "Custo Total" };
+                    for (int i = 0; i < headersBen.length; i++) {
+                        Cell c = h4.createCell(i);
+                        c.setCellValue(headersBen[i]);
+                        c.setCellStyle(headerStyle);
+                    }
+                    lastColumn = headersBen.length - 1;
+                    RhRelatorioService.RelatorioBeneficios rb = rhRelatorioService.gerarRelatorioBeneficios(inicio, fim);
+                    int r4 = 1;
+                    for (RhRelatorioService.ItemBeneficio item : rb.getBeneficiosPorTipo().values()) {
+                        Row row = sheet.createRow(r4++);
+                        row.createCell(0).setCellValue(item.getNomeBeneficio());
+                        row.createCell(1).setCellValue(item.getColaboradoresAtendidos());
+                        Cell cCt = row.createCell(2); cCt.setCellValue(item.getCustoTotal().doubleValue()); cCt.setCellStyle(currencyStyle);
+                    }
+                    break;
+
+                default:
+                    sheet = wb.createSheet("Relatório");
+                    Row h = sheet.createRow(0);
+                    Cell c = h.createCell(0);
+                    c.setCellValue("Tipo de relatório não suportado");
+                    lastColumn = 0;
+            }
+
+            sheet.createFreezePane(0, 1);
+            sheet.setAutoFilter(new CellRangeAddress(0, 0, 0, lastColumn));
+            for (int i = 0; i <= lastColumn; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            wb.write(out);
+            return out.toByteArray();
+        }
     }
 }

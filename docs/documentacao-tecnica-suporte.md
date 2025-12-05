@@ -25,9 +25,9 @@ O módulo de suporte do Portal CEO é um sistema completo para gerenciamento de 
 - **Dashboard**: Métricas e indicadores de performance
 
 ### Tecnologias Utilizadas
-- **Backend**: Spring Boot 3.x, JPA/Hibernate
+- **Backend**: Spring Boot 3.5.5, JPA/Hibernate
 - **Frontend**: Thymeleaf, Bootstrap, JavaScript
-- **Banco de Dados**: MySQL/MariaDB
+- **Banco de Dados**: MySQL 8.0
 - **Email**: Spring Mail
 - **Agendamento**: Spring Scheduler
 

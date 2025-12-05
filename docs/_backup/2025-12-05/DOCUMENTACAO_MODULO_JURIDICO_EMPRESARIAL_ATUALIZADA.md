@@ -77,13 +77,3 @@ Consolidar a gestão jurídica corporativa com dados reais, indicadores executiv
 ## UX
 - Dashboard com atualização periódica e componentes reutilizáveis.
 - Tabelas com paginação, filtros e ordenação, badgets de status e indicadores.
-
-## Observabilidade
-- Métricas de entidades, prazos críticos, estatísticas mensais e logs estruturados.
-
-## Fases
-1. Integração de contratos com dados reais e estatísticas.
-2. Serviços e fluxo de processos (prazos/audiências/andamentos).
-3. Compliance integrado a indicadores.
-4. Documentos com upload e listagem.
-5. Dashboard consolidado e testes de endpoints.

@@ -27,7 +27,7 @@ O sistema de chat interno do ERP Corporativo foi analisado, corrigido e está ag
 ### 1. Stack Tecnológica
 
 #### Backend
-- **Spring Boot 3.5.3** - Framework principal
+- **Spring Boot 3.5.5** - Framework principal
 - **WebSocket + STOMP** - Comunicação em tempo real
 - **Spring Security** - Autenticação e autorização  
 - **JPA/Hibernate** - Persistência de dados

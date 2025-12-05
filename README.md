@@ -1,4 +1,4 @@
-# Painel do CEO - ERP Corporativo
+# Portal CEO - ERP Corporativo
 
 Sistema ERP completo para gestão empresarial desenvolvido com **Spring Boot**, **Thymeleaf**, **MySQL** e **HTML/CSS puro**.  
 > Ideal para controle administrativo de pequenas e médias empresas, com foco em **modularidade, usabilidade e escalabilidade**.
@@ -631,23 +631,23 @@ public void addAttributes(Model model, Authentication authentication) {
 
 1. Clone o repositório  
 ```bash
-git clone https://github.com/seu-usuario/painel-do-ceo.git
+git clone https://github.com/seu-usuario/erp-corporativo.git
 ```
 
 2. Acesse a pasta do projeto  
 ```bash
-cd painel-do-ceo
+cd erp-corporativo
 ```
 
 3. Configure o banco de dados MySQL  
 Certifique que o MySQL está rodando e execute no console:  
 ```sql
-CREATE DATABASE painel_ceo;
+CREATE DATABASE portal_ceo;
 ```
 
 4. Configure o arquivo `application.properties` para conectar ao banco:  
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/painel_ceo
+spring.datasource.url=jdbc:mysql://localhost:3306/portal_ceo
 spring.datasource.username=seu_usuario_mysql
 spring.datasource.password=sua_senha_mysql
 ```
@@ -670,10 +670,14 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 7. Ou gerar o .jar e executar manualmente  
 ```bash
 ./mvnw clean package
-java -jar target/painel-do-ceo-0.0.1-SNAPSHOT.jar
+java -jar target/portal-ceo-0.0.1-SNAPSHOT.jar
 ```
 
 Acesse o sistema em: [http://localhost:8080](http://localhost:8080)
+
+## Documentação Completa
+
+Para detalhes de arquitetura, módulos, endpoints e instruções de deploy, consulte `DOCUMENTACAO_COMPLETA_SISTEMA_UNIFICADA.md` na raiz do projeto.
 
 ## Contato e Contribuição
 

@@ -2,6 +2,8 @@
 
 Esta pasta contém a documentação técnica e guias de uso para os diversos módulos do sistema ERP.
 
+> Documentação canônica do sistema: consulte `../DOCUMENTACAO_COMPLETA_SISTEMA_UNIFICADA.md` (arquitetura, módulos e endpoints).
+
 ## 📋 Índice da Documentação
 
 ### 📖 Módulos do Sistema
@@ -86,7 +88,7 @@ Esta pasta contém a documentação técnica e guias de uso para os diversos mó
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Backend**: Spring Boot 3.x, Java 17
+- **Backend**: Spring Boot 3.5.5, Java 21
 - **Frontend**: Thymeleaf, Bootstrap 5, JavaScript
 - **Banco de Dados**: JPA/Hibernate
 - **APIs**: REST com JSON

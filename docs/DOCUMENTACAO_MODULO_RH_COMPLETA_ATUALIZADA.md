@@ -40,8 +40,8 @@ O Módulo de Recursos Humanos do ERP Corporativo é uma solução completa para 
 
 ### 🔧 Stack Tecnológico
 
-- **Backend**: Spring Boot 3.x, Java 17
-- **Frontend**: Thymeleaf, Bootstrap 5.3.0, jQuery 3.7.0
+- **Backend**: Spring Boot 3.5.5, Java 21
+- **Frontend**: Thymeleaf, Bootstrap 5.3.3, jQuery 3.7.0
 - **Banco de Dados**: MySQL 8.0
 - **Segurança**: Spring Security com autenticação por sessão
 - **Upload de Arquivos**: MultipartFile com validações
@@ -525,7 +525,7 @@ CREATE TABLE historico_processo_adesao (
 **application.properties**:
 ```properties
 # Banco de Dados
-spring.datasource.url=jdbc:mysql://localhost:3306/painelceo
+spring.datasource.url=jdbc:mysql://localhost:3306/portal_ceo
 spring.datasource.username=root
 spring.datasource.password=senha
 spring.jpa.hibernate.ddl-auto=update
@@ -553,9 +553,9 @@ C:/uploads/adesao-colaboradores/
 ### 🚀 Deploy
 
 **Requisitos**:
-- Java 17+
+- Java 21+
 - MySQL 8.0+
-- Maven 3.8+
+- Maven 3.9+
 - 2GB RAM mínimo
 
 **Comandos**:
@@ -564,7 +564,7 @@ C:/uploads/adesao-colaboradores/
 mvn clean package -DskipTests
 
 # Executar
-java -jar target/erp-corporativo-1.0.0.jar
+java -jar target/portal-ceo-0.0.1-SNAPSHOT.jar
 
 # Acesso
 http://localhost:8080/rh

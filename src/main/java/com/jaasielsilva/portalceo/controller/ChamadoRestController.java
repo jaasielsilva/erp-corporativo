@@ -46,6 +46,43 @@ public class ChamadoRestController {
     }
 
     /**
+     * Criar novo chamado (uso pelo módulo de Ajuda)
+     */
+    @PostMapping("/ajuda")
+    public ResponseEntity<Map<String,Object>> criarChamado(
+            @RequestParam String assunto,
+            @RequestParam String descricao,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String subcategoria,
+            @RequestParam(defaultValue = "MEDIA") String prioridade,
+            org.springframework.security.core.Authentication auth
+    ) {
+        try {
+            if (auth == null || !auth.isAuthenticated()) {
+                return ResponseEntity.status(401).body(Map.of("sucesso", false, "mensagem", "Não autenticado"));
+            }
+            String solicitanteEmail = auth.getName();
+            com.jaasielsilva.portalceo.model.Chamado chamado = new com.jaasielsilva.portalceo.model.Chamado();
+            chamado.setAssunto(assunto);
+            chamado.setDescricao(descricao);
+            chamado.setCategoria(categoria);
+            chamado.setSubcategoria(subcategoria);
+            chamado.setSolicitanteEmail(solicitanteEmail);
+            chamado.setSolicitanteNome(solicitanteEmail);
+            chamado.setPrioridade(com.jaasielsilva.portalceo.model.Chamado.Prioridade.valueOf(prioridade));
+            com.jaasielsilva.portalceo.model.Chamado criado = chamadoService.criarChamado(chamado);
+            Map<String,Object> out = new java.util.LinkedHashMap<>();
+            out.put("sucesso", true);
+            out.put("id", criado.getId());
+            out.put("numero", criado.getNumero());
+            out.put("status", criado.getStatus().name());
+            return ResponseEntity.ok(out);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("sucesso", false, "erro", e.getMessage()));
+        }
+    }
+
+    /**
      * Busca chamado por ID como DTO
      */
     @GetMapping("/{id}")

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title th:text="${conteudo.titulo}">Conteúdo de Ajuda</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="header-section">
+          <h1 th:text="${conteudo.titulo}"></h1>
+          <p><span th:text="${conteudo.categoria != null ? conteudo.categoria.nome : ''}"></span> • <span th:text="${conteudo.tipo}"></span></p>
+        </div>
+
+        <article class="card" style="padding:16px; white-space:pre-wrap;">
+          <div th:text="${conteudo.corpo}"></div>
+        </article>
+
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button class="btn-success" onclick="feedback(true)"><i class="fas fa-thumbs-up"></i></button>
+          <button class="btn-danger" onclick="feedback(false)"><i class="fas fa-thumbs-down"></i></button>
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <script>
+    function getXsrfToken() {
+      const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+      return match ? decodeURIComponent(match[1]) : null;
+    }
+    async function feedback(upvote) {
+      const token = getXsrfToken();
+      const id = window.location.pathname.split('/').pop();
+      const res = await fetch('/api/ajuda/feedback?conteudoId=' + id + '&upvote=' + upvote, {
+        method: 'POST',
+        headers: token ? { 'X-XSRF-TOKEN': token } : {}
+      });
+      if (res.status === 401) { alert('Faça login para enviar feedback.'); return; }
+      alert('Feedback registrado.');
+    }
+  </script>
+</body>
+</html>

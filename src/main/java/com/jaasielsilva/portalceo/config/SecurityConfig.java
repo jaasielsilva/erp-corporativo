@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -117,6 +118,9 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 // WebSocket endpoints (manter público para funcionalidade)
                                                 .requestMatchers("/ws/**", "/ws-chat/**", "/ws-notifications/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/ajuda/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/ajuda/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/ajuda/**").authenticated()
                                                 // Endpoints que DEVEM ser autenticados
                                                 .requestMatchers("/api/rh/**").authenticated()
                                                 .requestMatchers("/api/chamados/**").authenticated()

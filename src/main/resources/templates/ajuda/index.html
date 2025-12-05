@@ -1,116 +1,203 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajuda - ERP Empresarial</title>
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/sidebar.css" rel="stylesheet">
-    <link href="/css/notifications.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .faq-section { margin: 40px 0; }
-        .faq-section input { max-width: 400px; margin: 0 auto 20px auto; }
-        .faq-section ul { list-style: none; padding: 0; }
-        .faq-section li { background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; padding: 15px; text-align: left; }
-        .tutorials iframe { border-radius: 8px; }
-        .support-center a { margin: 5px; }
-        .docs-links ul { list-style: none; padding: 0; }
-        .docs-links li { margin-bottom: 8px; }
-        .feedback button { margin-left: 10px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ajuda - ERP Corporativo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
-<div class="app-container">
-
-    <!-- Sidebar -->
+  <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-    <!-- Main Content -->
     <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
 
-        <!-- Topbar -->
-        <header th:replace="~{components/topbar :: topbar}"></header>
+      <section class="content-area container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h1 class="h3 m-0"><i class="fas fa-question-circle me-2"></i> Ajuda</h1>
+            <small class="text-muted">Busque conteúdos, FAQs e vídeos. Se precisar, acione a IA.</small>
+          </div>
+        </div>
 
-        <!-- Conteúdo da página Ajuda -->
-        <section class="content-area">
-            <div class="container-fluid">
+        <div class="card mb-3">
+          <div class="card-body">
+            <form id="helpSearchForm" class="row g-2" onsubmit="event.preventDefault(); doSearch();">
+              <div class="col-md-6">
+                <input type="text" id="q" class="form-control" placeholder="Digite sua dúvida" />
+              </div>
+              <div class="col-md-3">
+                <select id="categoria" class="form-select"></select>
+              </div>
+              <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
+                <button type="button" class="btn btn-info" onclick="askIA()"><i class="fas fa-robot"></i> IA</button>
+              </div>
+            </form>
+          </div>
+        </div>
 
-                <!-- FAQ Dinâmico -->
-                <div class="faq-section text-center">
-                    <h2><i class="fas fa-question"></i> Perguntas Frequentes</h2>
-                    <input type="text" class="form-control" placeholder="Buscar dúvida..." onkeyup="filtrarFaq(this.value)">
-                    <ul id="faq-list" class="mt-3">
-                        <li>
-                            <strong>Como registrar um novo colaborador?</strong>
-                            <p>Vá em RH &gt; Colaboradores &gt; Novo e preencha os dados obrigatórios.</p>
-                        </li>
-                        <li>
-                            <strong>Como gerar o espelho de ponto?</strong>
-                            <p>Acesse RH &gt; Ponto &gt; Relatórios e selecione o colaborador e período desejado.</p>
-                        </li>
-                        <!-- Adicione mais perguntas conforme necessário -->
-                    </ul>
-                </div>
-
-                <!-- Tutoriais em Vídeo -->
-                <div class="tutorials text-center my-5">
-                    <h2><i class="fas fa-video"></i> Tutoriais Rápidos</h2>
-                    <div class="row justify-content-center">
-                        <div class="col-md-4 mb-3">
-                            <iframe width="100%" height="200" src="https://www.youtube.com/embed/SEU_VIDEO_ID1" allowfullscreen></iframe>
-                            <p>Como lançar um ponto manualmente</p>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <iframe width="100%" height="200" src="https://www.youtube.com/embed/SEU_VIDEO_ID2" allowfullscreen></iframe>
-                            <p>Como aprovar solicitações de correção</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Central de Suporte -->
-                <div class="support-center text-center my-5">
-                    <h2><i class="fas fa-headset"></i> Precisa de Suporte?</h2>
-                    <a href="/suporte" class="btn btn-primary"><i class="fas fa-ticket-alt"></i> Abrir chamado</a>
-                    <a href="https://wa.me/SEUNUMERO" target="_blank" class="btn btn-success"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                </div>
-
-                <!-- Documentação e Manuais -->
-                <div class="docs-links text-center my-5">
-                    <h2><i class="fas fa-book"></i> Documentação</h2>
-                    <ul>
-                        <li><a href="/docs/manual-usuario.pdf" target="_blank"><i class="fas fa-file-pdf"></i> Manual do Usuário</a></li>
-                        <li><a href="/docs/politica-ponto.pdf" target="_blank"><i class="fas fa-file-pdf"></i> Política de Ponto</a></li>
-                        <!-- Adicione mais links conforme necessário -->
-                    </ul>
-                </div>
-
-                <!-- Feedback Rápido -->
-                <div class="feedback text-center my-4">
-                    <span>Esta resposta foi útil?</span>
-                    <button class="btn btn-outline-success btn-sm">Sim</button>
-                    <button class="btn btn-outline-danger btn-sm">Não</button>
-                </div>
-
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-header">Categorias</div>
+              <ul id="cats" class="list-group list-group-flush"></ul>
             </div>
-        </section>
+          </div>
+          <div class="col-md-9">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Resultados</span>
+                <div id="actions" class="d-none">
+                  <button class="btn btn-outline-secondary btn-sm" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>
+                </div>
+              </div>
+              <div id="results" class="card-body"></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <!-- Footer -->
-        <footer th:replace="~{components/footer :: footer}"></footer>
-
+      <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
-</div>
+  </div>
 
-<script src="/js/sidebar.js" defer></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script th:src="@{/js/notifications.js}"></script>
-<script>
-function filtrarFaq(query) {
-    document.querySelectorAll('#faq-list li').forEach(li => {
-        li.style.display = li.innerText.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
-    });
-}
-</script>
+  <script>
+    async function loadCategories() {
+      const res = await fetch('/api/ajuda/categorias');
+      const cats = await res.json();
+      const select = document.getElementById('categoria');
+      select.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c.slug}">${c.nome}</option>`).join('');
+      const list = document.getElementById('cats');
+      list.innerHTML = cats.map(c => `<li><a href="#" onclick="filterBy('${c.slug}')"><i class="fas fa-folder"></i> ${c.nome}</a></li>`).join('');
+    }
+
+    function filterBy(slug) {
+      document.getElementById('categoria').value = slug;
+      doSearch();
+    }
+
+    async function doSearch(page=0) {
+      const q = document.getElementById('q').value;
+      const categoria = document.getElementById('categoria').value;
+      const url = new URL(window.location.origin + '/api/ajuda/busca');
+      if (q) url.searchParams.set('q', q);
+      if (categoria) url.searchParams.set('categoria', categoria);
+      url.searchParams.set('page', page);
+      url.searchParams.set('size', 10);
+      const res = await fetch(url);
+      const json = await res.json();
+      const items = json.items || [];
+      const results = document.getElementById('results');
+      const actions = document.getElementById('actions');
+      if (items.length === 0) {
+        actions.classList.remove('d-none');
+        results.innerHTML = `
+          <div class="alert alert-warning" role="alert">
+            <i class="fas fa-info-circle"></i> Nenhum resultado encontrado.
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="askIA()"><i class="fas fa-robot"></i> Falar com IA</button>
+            <button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>
+          </div>
+        `;
+      } else {
+        actions.classList.add('d-none');
+        results.innerHTML = items.map(renderItem).join('');
+      }
+    }
+
+    function renderItem(it) {
+      const tipoIcon = it.tipo === 'VIDEO' ? 'fa-video' : it.tipo === 'FAQ' ? 'fa-question' : 'fa-file-alt';
+      return `
+        <article class="mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas ${tipoIcon} text-primary"></i>
+            <strong>${it.titulo}</strong>
+            <span class="ms-auto text-muted small">${it.categoria?.nome || ''}</span>
+          </div>
+          <div class="mt-2 text-secondary">${(it.corpo || '').substring(0, 240)}...</div>
+          <div class="mt-2 d-flex gap-2">
+            <a class="btn btn-sm btn-outline-primary" href="/ajuda/conteudo/${it.id}"><i class="fas fa-external-link-alt"></i> Abrir</a>
+            <button class="btn btn-sm btn-success" onclick="feedback(${it.id}, true)"><i class="fas fa-thumbs-up"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="feedback(${it.id}, false)"><i class="fas fa-thumbs-down"></i></button>
+          </div>
+        </article>
+      `;
+    }
+
+    function getXsrfToken() {
+      const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+      return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    async function feedback(conteudoId, upvote) {
+      const token = getXsrfToken();
+      const res = await fetch('/api/ajuda/feedback?conteudoId=' + conteudoId + '&upvote=' + upvote, {
+        method: 'POST',
+        headers: token ? { 'X-XSRF-TOKEN': token } : {}
+      });
+      if (res.status === 401) { if (typeof showToast === 'function') { showToast({ title: 'Autenticação', message: 'Faça login para enviar feedback.', priority: 'MEDIUM' }); } return; }
+      if (typeof showToast === 'function') {
+        showToast({ title: 'Ajuda', message: 'Feedback registrado.', priority: 'LOW' });
+      }
+    }
+
+    async function askIA() {
+      const q = document.getElementById('q').value || 'Ajuda';
+      const token = getXsrfToken();
+      const res = await fetch('/api/ajuda/ia/generate?query=' + encodeURIComponent(q), {
+        method: 'POST',
+        headers: token ? { 'X-XSRF-TOKEN': token } : {}
+      });
+      if (res.status === 401) { alert('Faça login para usar a IA.'); return; }
+      const json = await res.json();
+      const results = document.getElementById('results');
+      if (json.sugestoes && json.sugestoes.length) {
+        const cards = json.sugestoes.map(s => `
+          <div class="card mb-2"><div class="card-body p-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fas fa-lightbulb text-info"></i>
+              <strong>${s.titulo}</strong>
+              <span class="ms-auto text-muted small">${s.categoria}</span>
+            </div>
+          </div></div>`).join('');
+        results.innerHTML = `<div class="alert alert-info"><i class="fas fa-robot"></i> ${json.resposta}</div>` + cards;
+      } else {
+        results.innerHTML = `<div class="alert alert-warning"><i class="fas fa-info-circle"></i> ${json.resposta}</div>
+          <button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>`;
+      }
+    }
+
+    async function openTicket() {
+      const q = document.getElementById('q').value || 'Ajuda';
+      const categoria = document.getElementById('categoria').value || 'AJUDA';
+      const token = getXsrfToken();
+      const params = new URLSearchParams();
+      params.set('assunto', 'Ajuda: ' + q);
+      params.set('descricao', 'Origem: Módulo de Ajuda\n\n' + q);
+      params.set('categoria', categoria);
+      params.set('prioridade', 'MEDIA');
+      const res = await fetch('/api/chamados/ajuda', {
+        method: 'POST',
+        headers: token ? { 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': token } : { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+      });
+      const results = document.getElementById('results');
+      if (res.status === 401) { results.innerHTML = '<div class="alert alert-danger">Faça login para abrir chamado.</div>'; return; }
+      const json = await res.json();
+      if (json.sucesso) {
+        results.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> Chamado aberto: ${json.numero}</div>`;
+      } else {
+        results.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Erro ao abrir chamado: ${json.erro || json.mensagem}</div>`;
+      }
+    }
+    loadCategories();
+    doSearch();
+  </script>
 </body>
 </html>

@@ -16,38 +16,56 @@
     <main class="main-content">
         <header th:replace="~{components/topbar :: topbar}"></header>
         <section class="content-area container py-4">
-            <h1 class="mb-4"><i class="fas fa-tasks"></i> Processar CNPJs (Assíncrono)</h1>
-            <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="page-header">
+                <h1 class="mb-1"><i class="fas fa-cogs"></i> Processar CNPJs (Assíncrono)</h1>
+                <p class="text-muted">Defina a concorrência, inicie o processamento e acompanhe o status em tempo real.</p>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body d-flex align-items-center gap-2">
                 <button id="btn-processar" class="btn btn-primary"><i class="fas fa-play"></i> Processar CNPJs</button>
                 <button id="btn-pause" class="btn btn-warning"><i class="fas fa-pause"></i> Pausar</button>
                 <button id="btn-resume" class="btn btn-success"><i class="fas fa-play"></i> Retomar</button>
                 <button id="btn-cancel" class="btn btn-danger"><i class="fas fa-stop"></i> Cancelar</button>
                 <div class="ms-3">
-                    <label class="form-label me-2">Concorrência</label>
+                    <label class="form-label me-2" data-bs-toggle="tooltip" title="Número de tarefas concorrentes executando em paralelo">Concorrência</label>
                     <input type="range" id="concurrency" min="1" max="8" value="4" />
                     <span id="concurrency-label" class="ms-1">4</span>
                 </div>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button id="btn-exportar" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Exportar amostras do pré‑relatório em CSV"><i class="fas fa-file-export"></i> Exportar CSV</button>
+                </div>
+                </div>
             </div>
-            <div class="mt-3">
+
+            <div class="card mb-3">
+                <div class="card-body">
                 <span id="status-label" class="badge bg-secondary">Aguardando</span>
+                </div>
             </div>
-            <div class="mt-3">
+
+            <div class="card mb-3">
+                <div class="card-body">
                 <div class="progress" style="height: 20px;">
                     <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
                 </div>
                 <div class="mt-2" id="status-details"></div>
+                </div>
             </div>
-            <div class="mt-3" id="report-panel" style="display:none;">
-                <h5><i class="fas fa-exclamation-triangle"></i> Pré‑relatório</h5>
+
+            <div class="card mb-3" id="report-panel" style="display:none;">
+                <div class="card-body">
+                <h5 class="mb-3"><i class="fas fa-list"></i> Pré‑relatório</h5>
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>Inválidos (amostra)</h6>
+                        <h6><i class="fas fa-triangle-exclamation me-1"></i> Inválidos (amostra)</h6>
                         <ul id="invalid-list" class="list-group"></ul>
                     </div>
                     <div class="col-md-6">
-                        <h6>Erros (amostra)</h6>
+                        <h6><i class="fas fa-bug me-1"></i> Erros (amostra)</h6>
                         <ul id="error-list" class="list-group"></ul>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -61,9 +79,22 @@
                     <div class="toast-body" id="toast-body"></div>
                 </div>
             </div>
-            <div class="mt-4">
-                <button id="btn-sanitizar-dry" class="btn btn-outline-secondary"><i class="fas fa-broom"></i> Sanitizar CNPJs (Simulação)</button>
-                <button id="btn-sanitizar-apply" class="btn btn-outline-danger"><i class="fas fa-check"></i> Aplicar Sanitização</button>
+            <div class="card">
+                <div class="card-body d-flex align-items-center gap-2">
+                    <button id="btn-sanitizar-dry" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Executa sem alterar o banco"><i class="fas fa-broom"></i> Sanitizar (Simulação)</button>
+                    <button id="btn-sanitizar-apply" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Aplica a sanitização no banco"><i class="fas fa-check"></i> Aplicar Sanitização</button>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="mb-2"><i class="fas fa-circle-question"></i> Como usar</h5>
+                    <ol class="mb-0">
+                        <li>Ajuste a concorrência conforme sua necessidade.</li>
+                        <li>Clique em “Processar CNPJs” e acompanhe o status.</li>
+                        <li>Use “Pausar/Retomar/Cancelar” conforme necessário; exporte o pré‑relatório.</li>
+                    </ol>
+                </div>
             </div>
         </section>
         <footer th:replace="~{components/footer :: footer}"></footer>

@@ -782,7 +782,16 @@
                     
                     if (response.success) {
                         $('#protocoloAdesao').text(response.protocolo);
-                        $('#successModal').modal('show');
+                        try {
+                            const el = document.getElementById('successModal');
+                            const modal = bootstrap.Modal.getOrCreateInstance(el);
+                            modal.show();
+                        } catch (e) {
+                            // fallback mínimo: exibir componente
+                            document.getElementById('successModal').classList.add('show');
+                            document.getElementById('successModal').style.display = 'block';
+                            document.getElementById('successModal').setAttribute('aria-hidden', 'false');
+                        }
                     } else {
                         mostrarErro(response.message || 'Erro ao finalizar adesão');
                     }

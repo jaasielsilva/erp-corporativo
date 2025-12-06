@@ -522,7 +522,7 @@ html, body {
 
 /* Títulos principais */
 .content-area h1 {
-  font-size: 28px;
+  font-size: clamp(1.4rem, 2.2vw, 1.75rem);
   margin-bottom: 15px;
   color: #0f172a;
 }
@@ -569,9 +569,9 @@ html, body {
 .card {
   background-color: #f8fafc;
   border-radius: 8px;
-  padding: 25px 30px;
+  padding: clamp(16px, 2.2vw, 25px) clamp(18px, 2.5vw, 30px);
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
-  margin-bottom: 30px;
+  margin-bottom: clamp(16px, 3vw, 30px);
   color: #334155;
 }
 
@@ -2098,3 +2098,7 @@ td .btn-sm {
 
 
 
+.page-header p { font-size: clamp(0.9rem, 1.4vw, 1rem); }
+.page-header { margin-bottom: clamp(12px, 2.2vw, 18px); }
+
+.btn { font-size: clamp(0.9rem, 1.4vw, 1rem); }

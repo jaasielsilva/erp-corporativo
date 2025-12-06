@@ -6,6 +6,8 @@
   const btn = document.getElementById('btn-filtrar');
   const fromEl = document.getElementById('from-date');
   const toEl = document.getElementById('to-date');
+  const sitEl = document.getElementById('situacao');
+  const qEl = document.getElementById('q-text');
   const tbody = document.getElementById('hist-body');
 
   function showToast(msg) { toastBody.textContent = msg; toast.show(); }
@@ -17,11 +19,20 @@
     const params = new URLSearchParams();
     params.set('cnpj', cnpj);
     if (fromEl.value && toEl.value) { params.set('from', fromEl.value); params.set('to', toEl.value); }
+    if (sitEl && sitEl.value) params.set('situacao', sitEl.value);
     try {
       const resp = await fetch(`/cadastros/historico?${params.toString()}`);
       if (!resp.ok) { showToast('Erro ao carregar histórico'); return; }
       const data = await resp.json();
-      tbody.innerHTML = data.map(row => {
+      let rows = data;
+      const q = (qEl && qEl.value) ? String(qEl.value).toLowerCase() : '';
+      if (q) {
+        rows = rows.filter(row => {
+          const vals = [row.razaoSocial, row.nomeFantasia, row.cnaePrincipalDescricao].map(x => String(x||'').toLowerCase());
+          return vals.some(v => v.includes(q));
+        });
+      }
+      tbody.innerHTML = rows.map(row => {
         const dt = row.consultedAt ? new Date(row.consultedAt) : null;
         const dtText = dt ? dt.toLocaleString('pt-BR') : '';
         const cnae = [row.cnaePrincipalCodigo, row.cnaePrincipalDescricao].filter(Boolean).join(' - ');
@@ -35,10 +46,10 @@
           <td>${end}</td>
         </tr>`;
       }).join('');
-      showToast(`Carregado ${data.length} registro(s)`);
+      showToast(`Carregado ${rows.length} registro(s)`);
     } catch { showToast('Falha ao carregar'); }
   }
 
   btn.addEventListener('click', load);
+  [input, fromEl, toEl, sitEl, qEl].forEach(el => { if (el) el.addEventListener('change', () => {}); });
 })();
-

@@ -72,14 +72,32 @@ function initBenefitsModal() {
  */
 function abrirModalAdesao() {
     resetModal();
-    $('#modalAdesao').modal('show');
+    try {
+        const el = document.getElementById('modalAdesao');
+        const modal = bootstrap.Modal.getOrCreateInstance(el);
+        modal.show();
+    } catch (e) {
+        const el = document.getElementById('modalAdesao');
+        el.classList.add('show');
+        el.style.display = 'block';
+        el.setAttribute('aria-hidden', 'false');
+    }
 }
 
 /**
  * Fecha o modal de adesão
  */
 function fecharModalAdesao() {
-    $('#modalAdesao').modal('hide');
+    try {
+        const el = document.getElementById('modalAdesao');
+        const modal = bootstrap.Modal.getOrCreateInstance(el);
+        modal.hide();
+    } catch (e) {
+        const el = document.getElementById('modalAdesao');
+        el.classList.remove('show');
+        el.style.display = 'none';
+        el.setAttribute('aria-hidden', 'true');
+    }
     resetModal();
 }
 

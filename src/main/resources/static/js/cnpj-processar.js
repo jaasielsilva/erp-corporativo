@@ -3,6 +3,7 @@
   const btnPause = document.getElementById('btn-pause');
   const btnResume = document.getElementById('btn-resume');
   const btnCancel = document.getElementById('btn-cancel');
+  const btnExportar = document.getElementById('btn-exportar');
   const statusLabel = document.getElementById('status-label');
   const toastEl = document.getElementById('toast');
   const toastBody = document.getElementById('toast-body');
@@ -17,6 +18,8 @@
   const concurrencyLabel = document.getElementById('concurrency-label');
   const btnSanitizarDry = document.getElementById('btn-sanitizar-dry');
   const btnSanitizarApply = document.getElementById('btn-sanitizar-apply');
+  let lastInvalidSamples = [];
+  let lastErrorSamples = [];
 
   function showToast(msg) {
     toastBody.textContent = msg;
@@ -26,6 +29,9 @@
   async function iniciar() {
     try {
       const concurrency = Number(concurrencyRange.value || 4);
+      btn.disabled = true; btn.classList.add('disabled');
+      statusLabel.textContent = 'Iniciando...';
+      statusLabel.className = 'badge bg-info';
       const resp = await fetch(`/utilidades/processar?concurrency=${concurrency}`, { method: 'POST' });
       if (resp.status === 202) {
         const body = await resp.json().catch(() => ({ message: 'Processamento iniciado', protocol: null }));
@@ -40,6 +46,7 @@
     } catch (e) {
       showToast('Erro ao iniciar processamento');
     }
+    finally { btn.disabled = false; btn.classList.remove('disabled'); }
   }
 
   async function consultarStatus() {
@@ -64,8 +71,10 @@
       if (!data.running) showToast(`Processamento concluído — Sucessos: ${data.processed} | Inválidos: ${data.invalidCount} | Erros: ${data.errorCount}`);
       if (Array.isArray(data.invalidSamples) || Array.isArray(data.errorSamples)) {
         reportPanel.style.display = 'block';
-        invalidList.innerHTML = (data.invalidSamples || []).map(x => `<li class="list-group-item">${x || ''}</li>`).join('');
-        errorList.innerHTML = (data.errorSamples || []).map(x => `<li class="list-group-item">${x || ''}</li>`).join('');
+        lastInvalidSamples = Array.isArray(data.invalidSamples) ? data.invalidSamples : [];
+        lastErrorSamples = Array.isArray(data.errorSamples) ? data.errorSamples : [];
+        invalidList.innerHTML = lastInvalidSamples.map(x => `<li class="list-group-item">${x || ''}</li>`).join('');
+        errorList.innerHTML = lastErrorSamples.map(x => `<li class="list-group-item">${x || ''}</li>`).join('');
       }
     } catch (e) {
       // ignora erros de polling
@@ -103,4 +112,22 @@
       showToast(`Aplicado: total ${data.total}, normalizados ${data.normalized}, inválidos ${data.invalid}`);
     } catch { showToast('Falha ao aplicar sanitização'); }
   });
+
+  if (btnExportar) {
+    btnExportar.addEventListener('click', () => {
+      const rows = [];
+      rows.push(['Tipo','Valor']);
+      lastInvalidSamples.forEach(v => rows.push(['invalido', v || '']));
+      lastErrorSamples.forEach(v => rows.push(['erro', v || '']));
+      const csv = rows.map(r => r.map(x => '"' + String(x).replace(/"/g,'""') + '"').join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'pre-relatorio-cnpjs.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => { try { new bootstrap.Tooltip(el); } catch {} });
 })();

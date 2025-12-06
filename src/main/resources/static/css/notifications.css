@@ -514,23 +514,23 @@
 
 /* Toast de Notificação */
 .notification-toast {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    width: 320px;
-    max-width: 60vw;
-    background: #1f2937;
-    color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 9999;
-    opacity: 0;
-    transform: translateX(20px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+  position: fixed;
+  top: var(--toast-top);
+  right: var(--toast-right);
+  width: var(--toast-w);
+  max-width: 90vw;
+  background: #1f2937;
+  color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  padding: var(--toast-pad-y) var(--toast-pad-x);
+  display: flex;
+  align-items: center;
+  gap: var(--toast-gap);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.2s ease, transform 0.2s ease, width 0.2s ease, padding 0.2s ease;
 }
 
 .notification-toast.show { opacity: 1; transform: translateX(0); }
@@ -547,8 +547,8 @@
     border-left: 4px solid #10b981;
 }
 
-.toast-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
-.toast-icon i { font-size: 14px; }
+.toast-icon { width: calc(var(--toast-icon) * 1.6); height: calc(var(--toast-icon) * 1.6); display: flex; align-items: center; justify-content: center; }
+.toast-icon i { font-size: var(--toast-icon); }
 
 .notification-toast.priority-high .toast-icon {
     background: #fef2f2;
@@ -565,11 +565,11 @@
     color: #16a34a;
 }
 
-.toast-content { flex: 1; min-width: 0; }
+.toast-content { flex: 1; min-width: 0; font-size: var(--toast-font); }
 
 .toast-content h4 { display:none; }
 
-.toast-content p { margin: 0; font-size: 14px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.toast-content p { margin: 0; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
 .toast-close { background: none; border: none; padding: 4px; border-radius: 4px; cursor: pointer; color: #fff; font-size: 14px; flex-shrink: 0; }
 
@@ -580,46 +580,25 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
-    .notification-center {
-        width: 100%;
-        right: 0;
-    }
-    
-    .notification-toast {
-        width: calc(100% - 40px);
-        right: 20px;
-        left: 20px;
-    }
-    
-    .notification-filters {
-        flex-wrap: wrap;
-    }
-    
-    .filter-btn {
-        flex: 1;
-        min-width: 0;
-    }
+  .notification-center { width: 100%; right: 0; }
+  .notification-toast { width: clamp(18rem, 92vw, 22rem); right: var(--toast-right); left: auto; -webkit-line-clamp: 3; }
+  .notification-filters { flex-wrap: wrap; }
+  .filter-btn { flex: 1; min-width: 0; }
 }
 
 @media (max-width: 480px) {
-    .notification-header {
-        padding: 16px;
-    }
-    
-    .notification-header h3 {
-        font-size: 16px;
-    }
-    
-    .notification-item {
-        padding: 12px 16px;
-    }
-    
-    .notification-toast {
-        width: calc(100% - 20px);
-        right: 10px;
-        left: 10px;
-        top: 10px;
-    }
+  .notification-header { padding: 16px; }
+  .notification-header h3 { font-size: 1rem; }
+  .notification-item { padding: 12px 16px; }
+  .notification-toast { width: clamp(18rem, 94vw, 22rem); right: var(--toast-right); left: auto; top: var(--toast-top); }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .notification-toast { width: var(--toast-w); }
+}
+
+@media (min-width: 1200px) {
+  .notification-toast { width: clamp(22rem, 22vw, 28rem); max-width: min(30rem, 24vw); }
 }
 
 /* Animações de entrada */
@@ -712,3 +691,13 @@
 /* Garantir que overlay/center não cubram o toast */
 .notification-overlay { z-index: 9000; }
 .notification-center { z-index: 9001; }
+:root {
+  --toast-w: clamp(18rem, 28vw, 32rem);
+  --toast-pad-y: clamp(0.6rem, 1.2vh, 1rem);
+  --toast-pad-x: clamp(0.8rem, 1.6vw, 1.2rem);
+  --toast-gap: clamp(0.5rem, 1.2vw, 0.75rem);
+  --toast-font: clamp(0.875rem, 1.6vw, 1rem);
+  --toast-icon: clamp(0.875rem, 1.4vw, 1rem);
+  --toast-top: clamp(0.75rem, 1.8vh, 1.5rem);
+  --toast-right: clamp(0.75rem, 1.8vw, 1.5rem);
+}

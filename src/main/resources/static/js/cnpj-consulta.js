@@ -69,6 +69,8 @@
     }
     const cnpj = sanitize(masked);
     try {
+      btn.disabled = true; btn.classList.add('disabled');
+      showToast('Consultando Receita...');
       const resp = await fetch(`/cadastros/consultar?cnpj=${cnpj}`);
       if (!resp.ok) {
         const text = await resp.text();
@@ -106,7 +108,7 @@
       showToast('Consulta concluída');
     } catch (err) {
       showToast('Falha ao consultar');
-    }
+    } finally { btn.disabled = false; btn.classList.remove('disabled'); }
   }
 
   btn.addEventListener('click', consultar);
@@ -119,4 +121,5 @@
     const newCaret = caretFromRawIndex(formatted, rawIdx);
     e.target.setSelectionRange(newCaret, newCaret);
   });
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el=>{ try{ new bootstrap.Tooltip(el); }catch{} });
 })();

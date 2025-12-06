@@ -31,8 +31,18 @@
                     <input type="date" id="to-date" class="form-control" />
                 </div>
                 <div class="col-md-3">
-                    <button id="btn-filtrar" class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
+                    <label class="form-label">Situação</label>
+                    <select id="situacao" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="ATIVA">Ativa</option>
+                        <option value="INAPTA">Inapta</option>
+                        <option value="BAIXADA">Baixada</option>
+                    </select>
                 </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <input type="text" id="q-text" class="form-control" placeholder="Filtrar por razão, fantasia ou CNAE" style="max-width:420px;" />
+                <button id="btn-filtrar" class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
             </div>
             <div class="mt-4">
                 <div class="table-responsive">

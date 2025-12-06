@@ -27,12 +27,8 @@ public class CacheConfig {
                 .expireAfterWrite(Duration.ofHours(ttlHours))
                 .maximumSize(maxSize);
 
-        // Registra todos os caches que sua aplicação usa
-        CaffeineCacheManager manager = new CaffeineCacheManager(
-                "cnpjCache",
-                "departamentosAll"   // <-- CACHE QUE ESTAVA FALTANDO
-        );
-
+        // Criação dinâmica de caches: qualquer nome usado em @Cacheable será criado sob este builder
+        CaffeineCacheManager manager = new CaffeineCacheManager();
         manager.setCaffeine(builder);
         return manager;
     }

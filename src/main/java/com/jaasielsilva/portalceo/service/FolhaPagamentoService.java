@@ -102,15 +102,48 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     }
 
     /**
-     * Busca folha de pagamento por mês e ano
+     * Busca folha de pagamento por mês e ano, escolhendo a mais relevante
+     * Prioridade: PROCESSADA > FECHADA > EM_PROCESSAMENTO > CANCELADA
      */
     public Optional<FolhaPagamento> buscarPorMesAno(Integer mes, Integer ano) {
-        return folhaPagamentoRepository.findFolhaByMesAno(mes, ano);
+        List<FolhaPagamento> folhas = folhaPagamentoRepository.findByMesReferenciaAndAnoReferencia(mes, ano);
+        if (folhas == null || folhas.isEmpty()) return Optional.empty();
+        java.util.function.Predicate<FolhaPagamento> isProc = f -> f.getStatus() == FolhaPagamento.StatusFolha.PROCESSADA;
+        java.util.function.Predicate<FolhaPagamento> isFech = f -> f.getStatus() == FolhaPagamento.StatusFolha.FECHADA;
+        java.util.function.Predicate<FolhaPagamento> isProcEm = f -> f.getStatus() == FolhaPagamento.StatusFolha.EM_PROCESSAMENTO;
+        java.util.function.Predicate<FolhaPagamento> isCanc = f -> f.getStatus() == FolhaPagamento.StatusFolha.CANCELADA;
+        FolhaPagamento chosen = folhas.stream().filter(isProc).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        if (chosen == null)
+            chosen = folhas.stream().filter(isFech).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        if (chosen == null)
+            chosen = folhas.stream().filter(isProcEm).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        if (chosen == null)
+            chosen = folhas.stream().filter(isCanc).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        return Optional.ofNullable(chosen);
     }
 
     public Optional<FolhaPagamento> buscarPorMesAnoTipo(Integer mes, Integer ano, String tipoFolha) {
         String tipo = tipoFolha == null || tipoFolha.isBlank() ? "normal" : tipoFolha.toLowerCase();
-        return folhaPagamentoRepository.findFolhaByMesAnoAndTipo(mes, ano, tipo);
+        List<FolhaPagamento> folhas = folhaPagamentoRepository.findByMesReferenciaAndAnoReferencia(mes, ano);
+        if (folhas == null || folhas.isEmpty()) return Optional.empty();
+        List<FolhaPagamento> filtradas = folhas.stream()
+                .filter(f -> {
+                    String tf = f.getTipoFolha() == null || f.getTipoFolha().isBlank() ? "normal" : f.getTipoFolha().toLowerCase();
+                    return tf.equals(tipo);
+                }).toList();
+        if (filtradas.isEmpty()) return Optional.empty();
+        java.util.function.Predicate<FolhaPagamento> isProc = f -> f.getStatus() == FolhaPagamento.StatusFolha.PROCESSADA;
+        java.util.function.Predicate<FolhaPagamento> isFech = f -> f.getStatus() == FolhaPagamento.StatusFolha.FECHADA;
+        java.util.function.Predicate<FolhaPagamento> isProcEm = f -> f.getStatus() == FolhaPagamento.StatusFolha.EM_PROCESSAMENTO;
+        java.util.function.Predicate<FolhaPagamento> isCanc = f -> f.getStatus() == FolhaPagamento.StatusFolha.CANCELADA;
+        FolhaPagamento chosen = filtradas.stream().filter(isProc).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        if (chosen == null)
+            chosen = filtradas.stream().filter(isFech).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        if (chosen == null)
+            chosen = filtradas.stream().filter(isProcEm).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        if (chosen == null)
+            chosen = filtradas.stream().filter(isCanc).max(java.util.Comparator.comparingLong(f -> f.getId() != null ? f.getId() : 0L)).orElse(null);
+        return Optional.ofNullable(chosen);
     }
 
     public String iniciarProcessamentoAsync(Integer mes, Integer ano, Usuario usuarioProcessamento) {
@@ -229,10 +262,17 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     }
 
     /**
-     * Verifica se já existe folha para o mês/ano
+     * Verifica se já existe folha GERADA ou FECHADA para o mês/ano
      */
     public boolean existeFolhaPorMesAno(Integer mes, Integer ano) {
-        return folhaPagamentoRepository.existsByMesReferenciaAndAnoReferencia(mes, ano);
+        boolean existeProcessada = folhaPagamentoRepository
+                .findByMesReferenciaAndAnoReferenciaAndStatus(mes, ano, FolhaPagamento.StatusFolha.PROCESSADA)
+                .isPresent();
+        if (existeProcessada) return true;
+        boolean existeFechada = folhaPagamentoRepository
+                .findByMesReferenciaAndAnoReferenciaAndStatus(mes, ano, FolhaPagamento.StatusFolha.FECHADA)
+                .isPresent();
+        return existeFechada;
     }
 
     /**
@@ -255,12 +295,23 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         Optional<FolhaPagamento> existenteOpt = tipoEspecial ? buscarPorMesAnoTipo(mes, ano, tipoKey) : buscarPorMesAno(mes, ano);
         FolhaPagamento folha;
         if (existenteOpt.isPresent()) {
-            folha = existenteOpt.get();
-            if (folha.getStatus() == FolhaPagamento.StatusFolha.FECHADA || folha.getStatus() == FolhaPagamento.StatusFolha.CANCELADA) {
-                throw new IllegalStateException("Folha " + mes + "/" + ano + " está " + folha.getStatus() + ". Não é possível adicionar holerites.");
+            FolhaPagamento existente = existenteOpt.get();
+            if (existente.getStatus() == FolhaPagamento.StatusFolha.FECHADA || existente.getStatus() == FolhaPagamento.StatusFolha.PROCESSADA) {
+                throw new IllegalStateException("Folha " + mes + "/" + ano + " está " + existente.getStatus() + ". Não é possível gerar nova.");
             }
-            if (tipoEspecial && (folha.getTipoFolha() == null || !folha.getTipoFolha().equalsIgnoreCase(tipoKey))) {
-                folha.setTipoFolha(tipoKey);
+            if (existente.getStatus() == FolhaPagamento.StatusFolha.CANCELADA) {
+                folha = new FolhaPagamento();
+                folha.setMesReferencia(mes);
+                folha.setAnoReferencia(ano);
+                folha.setUsuarioProcessamento(usuarioProcessamento);
+                folha.setDataProcessamento(LocalDate.now());
+                folha.setStatus(FolhaPagamento.StatusFolha.EM_PROCESSAMENTO);
+                folha.setTipoFolha(tipoEspecial ? tipoKey : "normal");
+            } else {
+                folha = existente;
+                if (tipoEspecial && (folha.getTipoFolha() == null || !folha.getTipoFolha().equalsIgnoreCase(tipoKey))) {
+                    folha.setTipoFolha(tipoKey);
+                }
             }
         } else {
             folha = new FolhaPagamento();

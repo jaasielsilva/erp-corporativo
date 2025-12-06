@@ -196,7 +196,7 @@
       </div>
     </div>
   </div>
-  <script>
+  <script th:inline="javascript">
     let etapaAtual = 0;
 
     function calcularFolha() {
@@ -737,10 +737,12 @@
           __statusNotified = false;
           __lastStatus = null;
           scheduleNextPoll();
-          // habilita controles
-          document.getElementById('btnFolhaPause').disabled = false;
-          document.getElementById('btnFolhaResume').disabled = false;
-          document.getElementById('btnFolhaCancel').disabled = false;
+          // habilita controles apenas se não houver folha gerada/fechada para o mês/ano
+          if (!/*[[${existeFolhaAtual}]]*/ false) {
+            document.getElementById('btnFolhaPause').disabled = false;
+            document.getElementById('btnFolhaResume').disabled = false;
+            document.getElementById('btnFolhaCancel').disabled = false;
+          }
           window.globalToast && window.globalToast('Processamento de folha iniciado', 'fas fa-play');
           // Mantém o botão desativado até concluir ou erro
         } else {

@@ -189,6 +189,13 @@ public class FolhaPagamentoController {
                                                                         @RequestParam Integer ano,
                                                                         @RequestParam(name = "departamento", required = false) Long departamentoId,
                                                                         @RequestParam(name = "tipoFolha", defaultValue = "normal") String tipoFolha) {
+        // Bloqueia início se já houver folha gerada/fechada para o mês/ano
+        if (folhaPagamentoService.existeFolhaPorMesAno(mes, ano)) {
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("accepted", false);
+            body.put("error", "Já existe folha gerada ou fechada para " + String.format("%02d/%d", mes, ano));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Usuario usuario = usuarioService.buscarPorEmailLeve(auth.getName()).orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         String jobId = folhaPagamentoService.iniciarProcessamentoAsync(mes, ano, usuario, departamentoId, tipoFolha);

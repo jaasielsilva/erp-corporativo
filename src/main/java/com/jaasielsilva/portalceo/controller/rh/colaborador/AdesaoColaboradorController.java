@@ -20,6 +20,9 @@ import com.jaasielsilva.portalceo.service.BeneficioAdesaoService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 import com.jaasielsilva.portalceo.service.NotificationService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
+import com.jaasielsilva.portalceo.service.AdesaoProgressService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import jakarta.validation.Valid;
 import java.util.ArrayList;
@@ -81,6 +84,9 @@ public class AdesaoColaboradorController {
     
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private AdesaoProgressService progressService;
 
     /**
      * Página inicial do processo de adesão
@@ -173,6 +179,28 @@ public class AdesaoColaboradorController {
         }
     }
 
+    @GetMapping("/api/departamentos")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> carregarDepartamentos() {
+        try {
+            List<Map<String, Object>> departamentosResponse = departamentoService.listarTodos()
+                    .stream()
+                    .map(dep -> {
+                        Map<String, Object> depMap = new HashMap<>();
+                        depMap.put("id", dep.getId());
+                        depMap.put("nome", dep.getNome());
+                        return depMap;
+                    })
+                    .toList();
+
+            logger.info("Carregando {} departamentos via API", departamentosResponse.size());
+            return ResponseEntity.ok(departamentosResponse);
+        } catch (Exception e) {
+            logger.error("Erro ao carregar departamentos via API: {}", e.getMessage());
+            return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
     /**
      * Processar dados pessoais (Etapa 1)
      */
@@ -222,6 +250,11 @@ public class AdesaoColaboradorController {
                 response.put("success", false);
                 response.put("message", "Dados inválidos. Verifique os campos destacados.");
                 response.put("errors", errors);
+
+                try {
+                    Long uid = obterUsuarioLogadoId();
+                    progressService.autosave(uid, sessionId, "DADOS_PESSOAIS", toMap(dadosAdesao));
+                } catch (Exception ignored) {}
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -239,21 +272,30 @@ public class AdesaoColaboradorController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Validar dados únicos (CPF, email)
-            if (adesaoService.existeCpf(dadosAdesao.getCpf())) {
-                response.put("success", false);
-                response.put("message", "CPF já cadastrado no sistema");
-                return ResponseEntity.badRequest().body(response);
+            String providedSessionId = dadosAdesao.getSessionId();
+            boolean temSessao = providedSessionId != null && !providedSessionId.isBlank();
+            if (!temSessao) {
+                if (adesaoService.existeCpf(dadosAdesao.getCpf())) {
+                    response.put("success", false);
+                    response.put("message", "CPF já cadastrado no sistema");
+                    return ResponseEntity.badRequest().body(response);
+                }
+                if (adesaoService.existeEmail(dadosAdesao.getEmail())) {
+                    response.put("success", false);
+                    response.put("message", "Email já cadastrado no sistema");
+                    return ResponseEntity.badRequest().body(response);
+                }
             }
 
-            if (adesaoService.existeEmail(dadosAdesao.getEmail())) {
-                response.put("success", false);
-                response.put("message", "Email já cadastrado no sistema");
-                return ResponseEntity.badRequest().body(response);
+            String tempSessionId = temSessao ? providedSessionId : adesaoService.salvarDadosTemporarios(dadosAdesao);
+            if (temSessao) {
+                adesaoService.atualizarDadosTemporarios(providedSessionId, dadosAdesao);
             }
 
-            // Salvar dados temporários da etapa 1
-            String tempSessionId = adesaoService.salvarDadosTemporarios(dadosAdesao);
+            try {
+                Long uid = obterUsuarioLogadoId();
+                progressService.markStepCompleted(uid, tempSessionId, "DADOS_PESSOAIS", toMap(dadosAdesao));
+            } catch (Exception ignored) {}
 
             // Salvar no workflow de aprovação
             Map<String, Object> dadosPessoaisMap = new HashMap<>();
@@ -268,11 +310,14 @@ public class AdesaoColaboradorController {
             dadosPessoaisMap.put("estadoCivil", dadosAdesao.getEstadoCivil());
             dadosPessoaisMap.put("supervisorId", dadosAdesao.getSupervisorId());
 
-            workflowService.salvarProcesso(tempSessionId, dadosPessoaisMap);
-            workflowService.atualizarEtapa(tempSessionId, "dados-pessoais");
-
-            // Log de auditoria
-            auditService.logDadosPessoaisSalvos(tempSessionId, dadosAdesao.getCpf(), dadosAdesao.getNome(), clientIp);
+            try {
+                workflowService.salvarProcesso(tempSessionId, dadosPessoaisMap);
+                workflowService.atualizarEtapa(tempSessionId, "dados-pessoais");
+                // Log de auditoria
+                auditService.logDadosPessoaisSalvos(tempSessionId, dadosAdesao.getCpf(), dadosAdesao.getNome(), clientIp);
+            } catch (WorkflowAdesaoService.WorkflowException we) {
+                logger.warn("Falha ao registrar processo no workflow: {}. Continuando fluxo.", we.getMessage());
+            }
 
             response.put("success", true);
             response.put("sessionId", tempSessionId);
@@ -286,6 +331,22 @@ public class AdesaoColaboradorController {
             response.put("success", false);
             response.put("message", "Erro na codificação dos dados. Verifique caracteres especiais.");
             return ResponseEntity.badRequest().body(response);
+        } catch (WorkflowAdesaoService.WorkflowException e) {
+            logger.warn("Workflow retornou exceção: {}", e.getMessage());
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("processo de adesão ativo")) {
+                response.put("success", true);
+                response.put("sessionId", sessionId);
+                response.put("proximaEtapa", "documentos");
+                return ResponseEntity.ok(response);
+            }
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (IllegalArgumentException e) {
+            logger.error("Entrada inválida ao processar dados pessoais: {}", e.getMessage(), e);
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             logger.error("Erro ao processar dados pessoais - IP: {}", clientIp, e);
 
@@ -295,6 +356,52 @@ public class AdesaoColaboradorController {
         }
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/progresso/autosave")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> autosave(@RequestBody Map<String, Object> body) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            String sessionId = String.valueOf(body.getOrDefault("sessionId", ""));
+            String step = String.valueOf(body.getOrDefault("step", "DADOS_PESSOAIS"));
+            @SuppressWarnings("unchecked") Map<String, Object> form = (Map<String, Object>) body.getOrDefault("form_data", Map.of());
+            Long uid = obterUsuarioLogadoId();
+            progressService.autosave(uid, sessionId, step, form);
+            resp.put("success", true);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Falha no autosave");
+            return ResponseEntity.badRequest().body(resp);
+        }
+    }
+
+    @GetMapping("/api/progresso/resume")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> resume() {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long uid = obterUsuarioLogadoId();
+            var opt = progressService.resumeFlow(uid);
+            if (opt.isEmpty()) {
+                resp.put("success", false);
+                resp.put("message", "Nenhum progresso encontrado");
+                return ResponseEntity.ok(resp);
+            }
+            var up = opt.get();
+            resp.put("success", true);
+            resp.put("flowId", up.getFlowId());
+            resp.put("currentStep", up.getCurrentStep());
+            resp.put("completedSteps", up.getCompletedSteps());
+            resp.put("lastUpdated", up.getLastUpdated());
+            resp.put("formData", up.getFormData());
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao recuperar progresso");
+            return ResponseEntity.badRequest().body(resp);
+        }
     }
 
     /**
@@ -505,6 +612,13 @@ public class AdesaoColaboradorController {
             response.put("message", "Documentos processados com sucesso!");
             response.put("totalDocumentos", documentosEnviados.size());
 
+            try {
+                Long uid = obterUsuarioLogadoId();
+                Map<String, Object> pack = new HashMap<>();
+                pack.put("totalDocumentos", documentosEnviados.size());
+                progressService.markStepCompleted(uid, sessionId, "DOCUMENTOS", pack);
+            } catch (Exception ignored) {}
+
             logger.info("Documentos processados com sucesso para sessão: {} - Total: {}", 
                        sessionId, documentosEnviados.size());
 
@@ -556,9 +670,14 @@ public class AdesaoColaboradorController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Calcular custos dos benefícios
-            BeneficioAdesaoService.CalculoBeneficio calculo = beneficioAdesaoService
-                    .calcularCustoBeneficios(beneficiosSelecionados);
+            // Calcular custos dos benefícios com tolerância a falhas
+            BeneficioAdesaoService.CalculoBeneficio calculo;
+            try {
+                calculo = beneficioAdesaoService.calcularCustoBeneficios(beneficiosSelecionados);
+            } catch (Exception ex) {
+                logger.warn("Falha ao calcular benefícios (continuando com fallback): {}", ex.getMessage());
+                calculo = new BeneficioAdesaoService.CalculoBeneficio();
+            }
 
             // Atualizar workflow
             workflowService.salvarBeneficios(sessionId, beneficiosSelecionados, calculo.getCustoTotal().doubleValue());
@@ -569,6 +688,11 @@ public class AdesaoColaboradorController {
             
             // Marcar etapa como concluída para avançar para revisão
             adesaoService.marcarEtapaConcluida(sessionId, "beneficios");
+
+            try {
+                Long uid = obterUsuarioLogadoId();
+                progressService.markStepCompleted(uid, sessionId, "BENEFICIOS", beneficiosSelecionados);
+            } catch (Exception ignored) {}
             
             // Atualizar processo para permitir finalização na próxima etapa
             try {
@@ -812,6 +936,11 @@ public class AdesaoColaboradorController {
             response.put("protocolo", sessionId); // Usar sessionId como protocolo temporário
             response.put("redirectUrl", "/rh/colaboradores/adesao/status/" + sessionId);
 
+            try {
+                Long uid = obterUsuarioLogadoId();
+                progressService.markStepCompleted(uid, sessionId, "FINALIZADO", Map.of("colaboradorId", colaboradorCriado.getId()));
+            } catch (Exception ignored) {}
+
             logger.info("Adesão finalizada com sucesso. Colaborador criado: ID {}, Nome: {}",
                     colaboradorCriado.getId(), colaboradorCriado.getNome());
 
@@ -828,6 +957,44 @@ public class AdesaoColaboradorController {
         }
 
         return ResponseEntity.ok(response);
+    }
+
+    private Long obterUsuarioLogadoId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getName() != null) {
+            return usuarioService.buscarPorEmail(auth.getName()).map(Usuario::getId).orElse(null);
+        }
+        return null;
+    }
+
+    private Map<String, Object> toMap(AdesaoColaboradorDTO dto) {
+        Map<String, Object> m = new HashMap<>();
+        try {
+            m.put("nome", dto.getNome());
+            m.put("cpf", dto.getCpf());
+            m.put("email", dto.getEmail());
+            m.put("telefone", dto.getTelefone());
+            m.put("sexo", dto.getSexo());
+            m.put("dataNascimento", dto.getDataNascimento() != null ? dto.getDataNascimento().toString() : null);
+            m.put("estadoCivil", dto.getEstadoCivil());
+            m.put("rg", dto.getRg());
+            m.put("orgaoEmissorRg", dto.getOrgaoEmissorRg());
+            m.put("dataEmissaoRg", dto.getDataEmissaoRg() != null ? dto.getDataEmissaoRg().toString() : null);
+            m.put("dataAdmissao", dto.getDataAdmissao() != null ? dto.getDataAdmissao().toString() : null);
+            m.put("cargoId", dto.getCargoId());
+            m.put("departamentoId", dto.getDepartamentoId());
+            m.put("salario", dto.getSalario());
+            m.put("tipoContrato", dto.getTipoContrato());
+            m.put("cargaHoraria", dto.getCargaHoraria());
+            m.put("cep", dto.getCep());
+            m.put("logradouro", dto.getLogradouro());
+            m.put("numero", dto.getNumero());
+            m.put("complemento", dto.getComplemento());
+            m.put("bairro", dto.getBairro());
+            m.put("cidade", dto.getCidade());
+            m.put("estado", dto.getEstado());
+        } catch (Exception ignored) {}
+        return m;
     }
     
     /**
@@ -1121,5 +1288,26 @@ public class AdesaoColaboradorController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-
+    
+    @PostMapping("/api/progresso/reset")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> reset(@RequestBody Map<String, Object> body) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long uid = obterUsuarioLogadoId();
+            String flowId = String.valueOf(body.getOrDefault("flowId", ""));
+            if (flowId != null && !flowId.isBlank()) {
+                try { adesaoService.cancelarAdesao(flowId); } catch (Exception ignored) {}
+                progressService.reset(uid, flowId);
+            } else {
+                progressService.reset(uid, null);
+            }
+            resp.put("success", true);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao resetar progresso");
+            return ResponseEntity.badRequest().body(resp);
+        }
+    }
 }

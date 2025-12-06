@@ -318,17 +318,15 @@ public class AdesaoColaboradorService {
         if (sessionId == null || dadosAtualizados == null) {
             throw new IllegalArgumentException("SessionId e dados não podem ser nulos");
         }
-        
-        // Verificar se a sessão existe
-        if (!adesaoTemporaria.containsKey(sessionId)) {
-            throw new IllegalArgumentException("Sessão não encontrada: " + sessionId);
+        dadosAtualizados.setSessionId(sessionId);
+        if (dadosAtualizados.getEtapaAtual() == null || dadosAtualizados.getEtapaAtual().isBlank()) {
+            dadosAtualizados.setEtapaAtual("DADOS_PESSOAIS");
         }
-        
-        // Atualizar cache temporário
+        if (dadosAtualizados.getStatusProcesso() == null || dadosAtualizados.getStatusProcesso().isBlank()) {
+            dadosAtualizados.setStatusProcesso("EM_ANDAMENTO");
+        }
         adesaoTemporaria.put(sessionId, dadosAtualizados);
-        
-        logger.info("Dados temporários atualizados para sessionId: {} - Etapa: {}", 
-                   sessionId, dadosAtualizados.getEtapaAtual());
+        logger.info("Dados temporários atualizados para sessionId: {} - Etapa: {}", sessionId, dadosAtualizados.getEtapaAtual());
     }
 
     /**
@@ -512,6 +510,8 @@ public class AdesaoColaboradorService {
             logger.info("Processo de adesão cancelado para sessão: {}", sessionId);
         }
     }
+
+    
 
     /**
      * Remove arquivos temporários

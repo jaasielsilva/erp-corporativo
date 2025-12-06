@@ -321,10 +321,32 @@ public class UsuarioController {
         if (usuarioOpt.isPresent() && usuarioOpt.get().getFotoPerfil() != null) {
             byte[] foto = usuarioOpt.get().getFotoPerfil();
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.IMAGE_JPEG);
+            headers.setContentType(detectImageMediaType(foto));
             return new ResponseEntity<>(foto, headers, HttpStatus.OK);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private MediaType detectImageMediaType(byte[] bytes) {
+        if (bytes == null || bytes.length < 4) {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
+        // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+        if ((bytes[0] & 0xFF) == 0x89 && (bytes[1] & 0xFF) == 0x50 && (bytes[2] & 0xFF) == 0x4E && (bytes[3] & 0xFF) == 0x47) {
+            return MediaType.IMAGE_PNG;
+        }
+        // JPEG signature: FF D8
+        if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8) {
+            return MediaType.IMAGE_JPEG;
+        }
+        // GIF signature: GIF87a or GIF89a
+        if (bytes.length >= 6) {
+            String sig = new String(bytes, 0, 6);
+            if (sig.startsWith("GIF87a") || sig.startsWith("GIF89a")) {
+                return MediaType.IMAGE_GIF;
+            }
+        }
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 
     /**

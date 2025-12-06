@@ -145,33 +145,36 @@
 
   const ChatWindow = {
     template: `
-      <div class="teams-chat-pane">
-        <div class="teams-chat-header" v-if="activeRoom">
-          <div class="title">{{ activeRoom.name || ('Sala #' + activeRoom.id) }}</div>
+      <div class="card h-100">
+        <div class="card-header">
+          <strong v-if="activeRoom">{{ activeRoom.name || ('Sala #' + activeRoom.id) }}</strong>
+          <span v-else class="text-muted">{{ ui.chatNoActivePlaceholder }}</span>
         </div>
-        <div class="teams-chat-header" v-else>
-          <div class="title">{{ ui.chatNoActivePlaceholder }}</div>
-        </div>
-        <div class="teams-messages" v-if="activeRoomId || activeConversationId">
-          <div v-if="activeRoomId">
-            <div v-for="m in roomMsgs" :key="m.id" class="message" :class="bubbleClass(m)">
-              <div class="bubble">
-                <div class="sender" v-if="!isMine(m)">{{ m.senderName }}</div>
-                <div class="content">{{ m.content }}</div>
+        <div class="card-body p-2">
+          <div class="chat-messages" v-if="activeRoomId || activeConversationId">
+            <div v-if="activeRoomId">
+              <div v-for="m in roomMsgs" :key="m.id" class="message" :class="bubbleAlign(m)">
+                <div class="chat-bubble" :class="bubbleType(m)">
+                  <div class="sender" v-if="!isMine(m)">{{ m.senderName }}</div>
+                  <div>{{ m.content }}</div>
+                </div>
+              </div>
+            </div>
+            <div v-else>
+              <div v-for="m in msgs" :key="m.id" class="message incoming">
+                <div class="chat-bubble incoming">
+                  <div>{{ decode(m.ciphertext) }}</div>
+                </div>
               </div>
             </div>
           </div>
-          <div v-else>
-            <div v-for="m in msgs" :key="m.id" class="message" :class="bubbleClassEnc(m)">
-              <div class="bubble">
-                <div class="content">{{ decode(m.ciphertext) }}</div>
-              </div>
-            </div>
-          </div>
+          <div v-else class="text-muted">{{ ui.chatNoActivePlaceholder }}</div>
         </div>
-        <div class="teams-composer">
-          <input v-model="text" class="form-control" :placeholder="ui.messageInputPlaceholder" @keydown.enter="send" aria-label="Mensagem" />
-          <button class="btn btn-primary" @click="send" aria-label="Enviar"><i class="fas fa-paper-plane"></i></button>
+        <div class="card-footer">
+          <div class="d-flex gap-2">
+            <input v-model="text" class="form-control" :placeholder="ui.messageInputPlaceholder" @keydown.enter="send" aria-label="Mensagem" />
+            <button class="btn btn-primary" @click="send" aria-label="Enviar"><i class="fas fa-paper-plane"></i></button>
+          </div>
         </div>
       </div>
     `,
@@ -194,9 +197,9 @@
       const errorText = computed(() => store.lastError);
       const ui = UI_TEXT;
       const isMine = m => meId && m && m.senderId && Number(m.senderId) === Number(meId);
-      const bubbleClass = m => isMine(m) ? 'outgoing' : 'incoming';
-      const bubbleClassEnc = m => 'incoming';
-      return { text, send, msgs, roomMsgs, activeConversationId, activeRoomId, decode, errorText, ui, activeRoom, bubbleClass, bubbleClassEnc, isMine };
+      const bubbleAlign = m => isMine(m) ? 'outgoing' : 'incoming';
+      const bubbleType = m => isMine(m) ? 'outgoing' : 'incoming';
+      return { text, send, msgs, roomMsgs, activeConversationId, activeRoomId, decode, errorText, ui, activeRoom, bubbleAlign, bubbleType, isMine };
     }
   };
 
@@ -293,24 +296,20 @@
   const App = {
     components: { ConversationList, ChatWindow, DirectModal },
     template: `
-      <div class="teams-shell">
-        <aside class="teams-rail">
-          <button class="rail-btn" title="Atividade" aria-label="Atividade"><i class="fas fa-bell"></i></button>
-          <button class="rail-btn active" title="Chat" aria-label="Chat"><i class="fas fa-comments"></i></button>
-          <button class="rail-btn" title="Equipes" aria-label="Equipes"><i class="fas fa-users"></i></button>
-        </aside>
-        <div class="teams-main">
-          <aside class="teams-conversations">
-            <div class="panel-header">
-              <div class="title">{{ ui.conversationsTitle }}</div>
-              <button class="btn btn-sm btn-outline-secondary" @click="toggleHelp" aria-label="Ajuda"><i class="fas fa-question"></i></button>
-              <button class="btn btn-sm btn-primary" @click="openDirect" aria-label="Nova"><i class="fas fa-plus"></i></button>
-            </div>
-            <ConversationList />
-          </aside>
-          <section class="teams-chat">
-            <ChatWindow />
-          </section>
+      <div>
+        <div class="d-flex justify-content-end mb-2">
+          <button class="btn btn-sm btn-outline-info" @click="toggleHelp" :aria-expanded="showHelp.toString()" aria-label="Ajuda"><i class="fas fa-question"></i></button>
+          <button class="btn btn-sm btn-primary ms-2" @click="openDirect" aria-label="Nova"><i class="fas fa-plus"></i> Nova</button>
+        </div>
+        <div v-if="showHelp" class="card mb-3" aria-live="polite"><div class="card-body">
+          <strong>{{ ui.helpTitle }}</strong>
+          <ol class="mb-0">
+            <li v-for="s in ui.helpSteps">{{ s }}</li>
+          </ol>
+        </div></div>
+        <div class="row g-3">
+          <div class="col-lg-4"><ConversationList /></div>
+          <div class="col-lg-8"><ChatWindow /></div>
         </div>
         <DirectModal v-if="showDirect" @close="closeDirect" @start="startDirect" />
       </div>

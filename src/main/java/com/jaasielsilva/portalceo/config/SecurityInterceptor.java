@@ -48,13 +48,16 @@ public class SecurityInterceptor implements HandlerInterceptor {
         // Verificar se é uma requisição para APIs de adesão
         String requestURI = request.getRequestURI();
         if (isAdesaoEndpoint(requestURI)) {
-            
-            // Verificar rate limiting para endpoints críticos
             String clientIp = getClientIp(request);
-            if (!securityService.checkRateLimit(clientIp)) {
-                logger.warn("Rate limit excedido para IP: {} na URL: {}", clientIp, requestURI);
-                response.setStatus(429); // Too Many Requests
-                return false;
+            
+            // Endpoints de alta frequência (ex.: autosave) não devem disparar rate limit global
+            if (!isHighFrequencyEndpoint(requestURI)) {
+                // Verificar rate limiting para endpoints críticos
+                if (!securityService.checkRateLimit(clientIp)) {
+                    logger.warn("Rate limit excedido para IP: {} na URL: {}", clientIp, requestURI);
+                    sendJsonError(response, 429, "Muitas requisições. Tente novamente em instantes.");
+                    return false;
+                }
             }
             
             // Verificar se a sessão está bloqueada (para endpoints que usam sessão)
@@ -64,7 +67,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
                     
                 if (sessionId != null && securityService.isSessionBlocked(sessionId)) {
                     logger.warn("Tentativa de acesso com sessão bloqueada: {} - IP: {}", sessionId, clientIp);
-                    response.setStatus(423); // Locked
+                    sendJsonError(response, 423, "Sessão temporariamente bloqueada por segurança.");
                     return false;
                 }
             }
@@ -113,6 +116,27 @@ public class SecurityInterceptor implements HandlerInterceptor {
             requestURI.contains("/api/rh/colaboradores/adesao") ||
             requestURI.contains("/api/rh/processos-adesao")
         );
+    }
+
+    /**
+     * Endpoints de alta frequência que não devem ser contabilizados no rate limit global
+     */
+    private boolean isHighFrequencyEndpoint(String requestURI) {
+        if (requestURI == null) return false;
+        return requestURI.contains("/api/progresso/autosave") ||
+               requestURI.contains("/api/progresso/resume");
+    }
+
+    private void sendJsonError(HttpServletResponse response, int status, String message) {
+        try {
+            response.setStatus(status);
+            response.setContentType("application/json;charset=UTF-8");
+            String payload = String.format("{\"success\":false,\"message\":\"%s\"}",
+                    message.replace("\"", "\\\""));
+            response.getWriter().write(payload);
+            response.getWriter().flush();
+        } catch (Exception ignored) {
+        }
     }
     
     /**

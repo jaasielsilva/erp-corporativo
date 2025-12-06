@@ -333,9 +333,10 @@
 </body>
 
 </html>
-  <script th:inline="javascript">
-    window.podeAcessarRH = [[${podeAcessarRH}?:false]];
-  </script>
+ <script th:inline="javascript">
+    window.podeAcessarRH = /*[[${podeAcessarRH}]]*/ false;
+</script>
+
   <script>
     // Adiciona botão "X" e auto-hide APENAS nos alerts dinâmicos do container direito
     function enhanceAlerts() {

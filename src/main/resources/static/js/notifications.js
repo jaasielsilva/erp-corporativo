@@ -27,6 +27,7 @@ $(document).ready(function () {
     const $badges = $('.notification-badge');
     const $chatBadges = $('.chat-badge');
     let currentFilter = 'all';
+    let chatUnreadCount = 0;
 
     // Abrir/fechar central
     $(document).on('click', '.notification-trigger', function (e) {
@@ -74,61 +75,119 @@ $(document).ready(function () {
         }
 
         const systemPromise = $.getJSON(apiUrl);
-        // Carregar notificações de chat (usando endpoint legacy para compatibilidade)
-        const chatPromise = $.getJSON('/api/notifications/legacy/nao-lidas');
+        // Carregar notificações legacy (compatibilidade)
+        const legacyPromise = $.getJSON('/api/notifications/legacy/nao-lidas');
 
-        Promise.all([systemPromise, chatPromise]).then(([systemData, chatData]) => {
+        Promise.all([systemPromise, legacyPromise]).then(([systemData, legacyData]) => {
             $list.empty();
-            
-            let allNotifications = [];
-            let systemNotifications = systemData.notifications || [];
-            let chatNotifications = chatData || [];
+            const systemRaw = Array.isArray(systemData.notifications) ? systemData.notifications : [];
+            const legacyRaw = Array.isArray(legacyData) ? legacyData : [];
 
-            // Processar notificações do sistema com fallbacks
-            systemNotifications.forEach(n => {
+            const normalizedSystem = systemRaw.map(n => {
                 const ts = new Date(n.timestamp);
                 const safeTs = isNaN(ts.getTime()) ? null : ts;
-                allNotifications.push({
-                    ...n,
+                return {
+                    id: n.id,
                     type: 'system',
+                    title: n.title || 'Notificação',
+                    message: n.message || '',
                     timestamp: safeTs,
                     remetenteNome: n.user && n.user.nome ? n.user.nome : 'Sistema',
-                    actionUrl: n.actionUrl || null
-                });
-            });
+                    actionUrl: n.actionUrl || null,
+                    metadata: n.metadata || null,
+                    read: !!n.isRead || !!n.read,
+                    priority: (n.priority && typeof n.priority === 'string') ? n.priority.toLowerCase() : 'medium',
+                    entityId: n.entityId || null
+                };
+            }).filter(n => n.title && n.message && n.timestamp);
 
-            // Processar notificações de chat
-            chatNotifications.forEach(n => {
-                allNotifications.push({
+            const normalizedLegacy = legacyRaw.map(n => {
+                const ts = n.dataHora ? new Date(n.dataHora) : null;
+                const safeTs = ts && !isNaN(ts.getTime()) ? ts : null;
+                return {
                     id: n.id,
-                    title: n.titulo,
-                    message: n.conteudo,
-                    read: n.lida,
-                    priority: n.prioridade?.toLowerCase() || 'medium',
-                    type: 'chat',
-                    timestamp: new Date(n.dataCriacao),
-                    remetenteNome: n.remetenteNome
-                });
+                    type: 'legacy',
+                    title: n.titulo || 'Notificação',
+                    message: n.mensagem || '',
+                    timestamp: safeTs,
+                    remetenteNome: 'Sistema',
+                    actionUrl: null,
+                    metadata: null,
+                    read: !!n.lida,
+                    priority: 'medium',
+                    entityId: null
+                };
+            }).filter(n => n.title && n.message && n.timestamp);
+
+            const byProtocol = new Map();
+            const byId = new Map();
+            normalizedSystem.forEach(n => {
+                let meta = null;
+                try { meta = n.metadata ? JSON.parse(n.metadata) : null; } catch {}
+                const protocol = meta && meta.protocol ? meta.protocol : null;
+                const jobId = meta && meta.jobId ? meta.jobId : null;
+                const folhaId = meta && meta.folhaId ? meta.folhaId : null;
+                const ref = (meta && meta.mes && meta.ano) ? `${meta.mes}-${meta.ano}` : null;
+                // Preferir chave de payroll
+                let key = null;
+                if (jobId) key = `payroll:job:${jobId}`;
+                else if (folhaId) key = `payroll:folha:${folhaId}`;
+                else if (ref) key = `payroll:ref:${ref}`;
+                else if (protocol) key = `${n.type}:${protocol}`;
+
+                // Colapsar global vs usuário: preferir notificação com remetenteNome diferente de 'Sistema'
+                const chooseNewer = (existing, cand) => {
+                    if (!existing) return cand;
+                    const exTs = existing.timestamp ? existing.timestamp.getTime() : 0;
+                    const cTs = cand.timestamp ? cand.timestamp.getTime() : 0;
+                    if (cTs > exTs) return cand;
+                    // Se timestamps iguais/menores, preferir não-global
+                    const exIsUser = existing.remetenteNome && existing.remetenteNome !== 'Sistema';
+                    const cIsUser = cand.remetenteNome && cand.remetenteNome !== 'Sistema';
+                    if (!exIsUser && cIsUser) return cand;
+                    return existing;
+                };
+
+                if (key) {
+                    const existing = byProtocol.get(key);
+                    byProtocol.set(key, chooseNewer(existing, n));
+                } else if (n.id != null) {
+                    const existing = byId.get(n.id);
+                    byId.set(n.id, chooseNewer(existing, n));
+                } else {
+                    const k = `${n.title}|${n.message}`;
+                    const existing = byId.get(k);
+                    byId.set(k, chooseNewer(existing, n));
+                }
+            });
+            normalizedLegacy.forEach(n => {
+                if (n.id != null) {
+                    if (!byId.has(n.id)) byId.set(n.id, n);
+                } else {
+                    const key = `${n.title}|${n.message}`;
+                    if (!byId.has(key)) byId.set(key, n);
+                }
             });
 
-            // Ordenar por timestamp
-            allNotifications.sort((a, b) => b.timestamp - a.timestamp);
+            const finalNotifications = [];
+            byProtocol.forEach(v => finalNotifications.push(v));
+            byId.forEach(v => finalNotifications.push(v));
+            finalNotifications.sort((a, b) => (b.timestamp ? b.timestamp.getTime() : 0) - (a.timestamp ? a.timestamp.getTime() : 0));
 
-            if (allNotifications.length === 0) {
+            if (finalNotifications.length === 0) {
                 $list.append('<li class="no-notifications"><i class="fas fa-bell-slash"></i><p>Sem notificações</p></li>');
                 updateBadges(0, 0);
                 return;
             }
 
-            allNotifications.forEach(n => {
+            finalNotifications.forEach(n => {
                 const unreadClass = n.read ? '' : 'unread';
-                const priorityClass = n.priority;
+                const priorityClass = n.priority || 'medium';
                 const typeClass = n.type;
                 const icon = n.type === 'chat' ? 'fas fa-comments' : 'fas fa-info-circle';
-                const subtitle = n.type === 'chat' ? `De: ${n.remetenteNome}` : `De: ${n.remetenteNome || 'Sistema'}`;
-                const timeText = n.timestamp ? n.timestamp.toLocaleString('pt-BR') : '';
+                const subtitle = `De: ${n.remetenteNome || 'Sistema'}`;
+                const timeText = (n.timestamp && !isNaN(n.timestamp.getTime())) ? n.timestamp.toLocaleString('pt-BR') : '';
                 const actionLink = n.actionUrl ? `<a href="${n.actionUrl}" class="btn-text">Abrir</a>` : '';
-                
                 const $item = $(`
                     <li class="notification-item ${unreadClass} priority-${priorityClass} type-${typeClass}" data-id="${n.id}" data-type="${n.type}">
                         <div class="notification-icon"><i class="${icon}"></i></div>
@@ -149,8 +208,8 @@ $(document).ready(function () {
                 $list.append($item);
             });
 
-            // Atualizar badges
-            updateBadges(systemData.unreadCount || 0, chatData.filter(n => !n.lida).length);
+            const totalUnread = finalNotifications.filter(n => !n.read).length;
+            updateBadges(totalUnread, chatUnreadCount);
         }).catch(error => {
             console.error('Erro ao carregar notificações:', error);
             $list.html('<div class="notification-error"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar notificações</div>');
@@ -274,6 +333,18 @@ $(document).ready(function () {
                 }
             });
         }
+    });
+
+    window.addEventListener('chat:new-message', function () {
+        chatUnreadCount += 1;
+        const systemCount = parseInt($badges.text()) || 0;
+        updateBadges(systemCount, chatUnreadCount);
+    });
+
+    window.addEventListener('chat:clear-unread', function () {
+        chatUnreadCount = 0;
+        const systemCount = parseInt($badges.text()) || 0;
+        updateBadges(systemCount, chatUnreadCount);
     });
 
 });

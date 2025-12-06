@@ -42,8 +42,12 @@ public class ChatApiController {
 
     @GetMapping("/rooms/{roomId}/messages")
     public ResponseEntity<List<Map<String,Object>>> messages(@PathVariable Long roomId, Authentication auth) {
-        usuarioService.buscarPorEmail(auth.getName()).orElseThrow();
-        return ResponseEntity.ok(chatService.listMessages(roomId));
+        try {
+            usuarioService.buscarPorEmail(auth.getName()).orElseThrow();
+            return ResponseEntity.ok(chatService.listMessages(roomId));
+        } catch (Exception e) {
+            return ResponseEntity.ok(java.util.List.of());
+        }
     }
 
     @PostMapping("/rooms/{roomId}/messages")

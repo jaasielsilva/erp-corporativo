@@ -1089,4 +1089,19 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         Integer anoInicio = LocalDate.now().getYear() - 2;
         return folhaPagamentoRepository.findFolhasRecentes(anoInicio);
     }
+
+    public void pause(String jobId) {
+        // lógica para pausar o job
+        System.out.println("Pausando job: " + jobId);
+    }
+
+    public void resume(String jobId) {
+        // lógica para resumir o job
+        System.out.println("Resumindo job: " + jobId);
+    }
+
+    public void cancel(String jobId) {
+        // lógica para cancelar o job
+        System.out.println("Cancelando job: " + jobId);
+    }
 }

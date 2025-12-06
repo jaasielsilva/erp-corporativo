@@ -72,6 +72,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    private com.jaasielsilva.portalceo.service.NotificationService notificationService;
+    @Autowired
+    private com.jaasielsilva.portalceo.repository.NotificationRepository notificationRepository;
     private static class PageResult {
         int processed;
         int blocks;
@@ -118,9 +122,22 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         Map<String, Object> info = new java.util.HashMap<>();
         info.put("status", "AGENDADO");
         info.put("message", "Processamento agendado");
+        info.put("startedAt", java.time.LocalDateTime.now().toString());
         processamentoJobs.put(jobId, info);
         appendJobLog(jobId, String.format("Agendado processamento para %02d/%d (tipo=%s%s)", mes, ano, String.valueOf(tipoFolha), departamentoId != null ? (", dept=" + departamentoId) : ""));
         pushJobStatus(jobId);
+        try {
+            com.jaasielsilva.portalceo.model.Notification nStart = notificationService.createNotification(
+                    "payroll_processing_start",
+                    "Processamento de Folha",
+                    String.format("Iniciado — Referência: %02d/%d", mes, ano),
+                    com.jaasielsilva.portalceo.model.Notification.Priority.LOW,
+                    usuarioProcessamento
+            );
+            nStart.setActionUrl("/rh/folha-pagamento/gerar");
+            nStart.setMetadata(String.format("{\"jobId\":\"%s\",\"mes\":%d,\"ano\":%d,\"tipoFolha\":\"%s\"}", jobId, mes, ano, String.valueOf(tipoFolha)));
+            notificationRepository.save(nStart);
+        } catch (Exception ignored) {}
         gerarFolhaPagamentoAsync(mes, ano, usuarioProcessamento, departamentoId, tipoFolha, jobId);
         return jobId;
     }
@@ -147,12 +164,57 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             info.put("status", "CONCLUIDO");
             info.put("folhaId", folha.getId());
             info.put("message", "Folha gerada com sucesso");
+            info.put("finishedAt", java.time.LocalDateTime.now().toString());
+            try {
+                long durationMs = -1L;
+                Object started = info.get("startedAt");
+                if (started != null) {
+                    // apenas informativo: durationMs já é reportado via métricas no frontend
+                    durationMs = 0L;
+                }
+                com.jaasielsilva.portalceo.model.Notification nDone = notificationService.createNotification(
+                        "payroll_processing_complete",
+                        "Processamento de Folha",
+                        String.format("Concluído — %02d/%d", mes, ano),
+                        com.jaasielsilva.portalceo.model.Notification.Priority.MEDIUM,
+                        usuarioProcessamento
+                );
+                nDone.setActionUrl("/rh/folha-pagamento/visualizar/" + folha.getId());
+                nDone.setMetadata(String.format("{\"jobId\":\"%s\",\"folhaId\":%d,\"mes\":%d,\"ano\":%d,\"durationMs\":%d}", jobId, folha.getId(), mes, ano, durationMs));
+                notificationRepository.save(nDone);
+                notificationService.createGlobalNotification(
+                        "payroll_processing_complete",
+                        "Processamento de Folha",
+                        String.format("Concluído %02d/%d — folhaId=%d", mes, ano, folha.getId()),
+                        com.jaasielsilva.portalceo.model.Notification.Priority.MEDIUM
+                );
+            } catch (Exception ignored) {}
             appendJobLog(jobId, String.format("Folha gerada com sucesso (folhaId=%d)", folha.getId()));
             pushJobStatus(jobId);
         } catch (Exception e) {
             info.put("status", "ERRO");
             info.put("message", e.getMessage());
+            info.put("finishedAt", java.time.LocalDateTime.now().toString());
+            try {
+                com.jaasielsilva.portalceo.model.Notification nErr = notificationService.createNotification(
+                        "payroll_processing_error",
+                        "Processamento de Folha",
+                        String.format("Erro — %s", e.getMessage()),
+                        com.jaasielsilva.portalceo.model.Notification.Priority.HIGH,
+                        usuarioProcessamento
+                );
+                nErr.setActionUrl("/rh/folha-pagamento");
+                nErr.setMetadata(String.format("{\"jobId\":\"%s\",\"mes\":%d,\"ano\":%d}", jobId, mes, ano));
+                notificationRepository.save(nErr);
+                notificationService.createGlobalNotification(
+                        "payroll_processing_error",
+                        "Processamento de Folha",
+                        String.format("Erro no processamento %02d/%d", mes, ano),
+                        com.jaasielsilva.portalceo.model.Notification.Priority.HIGH
+                );
+            } catch (Exception ignored) {}
             appendJobLog(jobId, String.format("Erro no processamento: %s", e.getMessage()));
+            logger.error("Erro no processamento da folha {}/{}: {}", mes, ano, e.getMessage());
             pushJobStatus(jobId);
         } finally {
             currentJobId.remove();

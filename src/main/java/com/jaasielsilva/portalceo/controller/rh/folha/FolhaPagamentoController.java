@@ -207,6 +207,30 @@ public class FolhaPagamentoController {
     }
 
     @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
+    @PostMapping(value = "/processar/pause")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> pauseJob(@RequestParam String jobId) {
+        folhaPagamentoService.pause(jobId);
+        return ResponseEntity.ok(java.util.Map.of("status", "paused"));
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
+    @PostMapping(value = "/processar/resume")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> resumeJob(@RequestParam String jobId) {
+        folhaPagamentoService.resume(jobId);
+        return ResponseEntity.ok(java.util.Map.of("status", "resumed"));
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
+    @PostMapping(value = "/processar/cancel")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> cancelJob(@RequestParam String jobId) {
+        folhaPagamentoService.cancel(jobId);
+        return ResponseEntity.ok(java.util.Map.of("status", "canceled"));
+    }
+
+    @PreAuthorize("@globalControllerAdvice.podeGerenciarRH()")
     @PostMapping(value = "/metrics/processamento", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<Void> registrarMetricas(@RequestBody java.util.Map<String, Object> body) {

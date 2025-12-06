@@ -107,6 +107,15 @@
                 <button type="submit" class="btn btn-primary" th:disabled="${existeFolhaAtual}">
                   <i class="fas fa-cogs"></i> Processar Folha
                 </button>
+                <button type="button" id="btnFolhaPause" class="btn btn-warning" disabled>
+                  <i class="fas fa-pause"></i> Pausar
+                </button>
+                <button type="button" id="btnFolhaResume" class="btn btn-success" disabled>
+                  <i class="fas fa-play"></i> Retomar
+                </button>
+                <button type="button" id="btnFolhaCancel" class="btn btn-danger" disabled>
+                  <i class="fas fa-stop"></i> Cancelar
+                </button>
                 
               </div>
             </div>
@@ -147,6 +156,7 @@
   </div>
 
   <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/notifications.js}"></script>
   <div id="desligamentoModal" class="modal-overlay" style="display: none;">
     <div class="modal-content-desligamento">
       <div class="modal-header">
@@ -544,6 +554,21 @@
         const r = await fetch('/rh/folha-pagamento/status-processamento?jobId=' + encodeURIComponent(processamentoJobId));
         const data = await r.json();
         atualizarStatusUI(data);
+        if (data.paused === true) {
+          mostrarAlerta('warning', 'Processamento pausado.');
+          window.globalToast && window.globalToast('Folha pausada', 'fas fa-pause');
+        }
+        if (data.canceled === true || data.status === 'CANCELADO') {
+          __stopPolling = true;
+          mostrarAlerta('danger', 'Processamento cancelado.');
+          window.globalToast && window.globalToast('Folha cancelada', 'fas fa-stop');
+          stopFakeProgress();
+          hideInlineLoadingAlert();
+          if (processarBtnEl) processarBtnEl.disabled = false;
+          clearTimeout(processamentoInterval);
+          processamentoInterval = null;
+          return;
+        }
         if (data.status === 'CONCLUIDO') {
           __stopPolling = true;
           // Garante que o card de status permaneça visível no sucesso
@@ -711,6 +736,11 @@
           __statusNotified = false;
           __lastStatus = null;
           scheduleNextPoll();
+          // habilita controles
+          document.getElementById('btnFolhaPause').disabled = false;
+          document.getElementById('btnFolhaResume').disabled = false;
+          document.getElementById('btnFolhaCancel').disabled = false;
+          window.globalToast && window.globalToast('Processamento de folha iniciado', 'fas fa-play');
           // Mantém o botão desativado até concluir ou erro
         } else {
           mostrarAlerta('danger', 'Não foi possível iniciar o processamento.');
@@ -726,4 +756,31 @@
       }
       return false;
     }
+    async function pauseJob(){
+      if (!processamentoJobId) return;
+      try {
+        await fetch('/rh/folha-pagamento/processar/pause?jobId=' + encodeURIComponent(processamentoJobId), { method: 'POST' });
+        mostrarAlerta('warning', 'Pausado');
+        window.globalToast && window.globalToast('Folha pausada', 'fas fa-pause');
+      } catch {}
+    }
+    async function resumeJob(){
+      if (!processamentoJobId) return;
+      try {
+        await fetch('/rh/folha-pagamento/processar/resume?jobId=' + encodeURIComponent(processamentoJobId), { method: 'POST' });
+        mostrarAlerta('success', 'Retomado');
+        window.globalToast && window.globalToast('Folha retomada', 'fas fa-play');
+      } catch {}
+    }
+    async function cancelJob(){
+      if (!processamentoJobId) return;
+      try {
+        await fetch('/rh/folha-pagamento/processar/cancel?jobId=' + encodeURIComponent(processamentoJobId), { method: 'POST' });
+        mostrarAlerta('danger', 'Cancelado');
+        window.globalToast && window.globalToast('Folha cancelada', 'fas fa-stop');
+      } catch {}
+    }
+    document.getElementById('btnFolhaPause').addEventListener('click', pauseJob);
+    document.getElementById('btnFolhaResume').addEventListener('click', resumeJob);
+    document.getElementById('btnFolhaCancel').addEventListener('click', cancelJob);
   </script>

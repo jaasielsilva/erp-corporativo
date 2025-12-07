@@ -482,18 +482,27 @@
         
         function verDetalhes(processoId) {
             fetch(`/rh/workflow/api/processo/${processoId}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Resposta não é JSON válido');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.erro) {
                         mostrarErro('Erro ao carregar detalhes: ' + data.erro);
                         return;
                     }
-                    
                     renderizarDetalhes(data.processo);
                     new bootstrap.Modal(document.getElementById('modalDetalhes')).show();
                 })
                 .catch(error => {
-                    mostrarErro('Erro ao carregar detalhes: ' + error.message);
+                    // Fallback: abrir página de detalhes diretamente
+                    window.location.href = `/rh/workflow/processo/${processoId}`;
                 });
         }
         

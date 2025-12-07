@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do Processo - Portal CEO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detalhes do Processo - ERP Empresarial</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .timeline {
             position: relative;
@@ -96,7 +100,12 @@
     </style>
 </head>
 <body>
-    <div class="container-fluid py-4">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid py-4">
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -118,21 +127,27 @@
                         <button class="btn btn-outline-primary" onclick="window.print()">
                             <i class="fas fa-print me-1"></i>Imprimir
                         </button>
+                        <button class="btn btn-primary" onclick="abrirModalDetalhesProcesso()">
+                            <i class="fas fa-info-circle me-1"></i>Detalhes do Processo
+                        </button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        
+        </main>
+    </div>
 
         <div th:if="${processo}">
             <!-- Status Card -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card status-card" th:classappend="${processo.status.name().toLowerCase()}">
+                    <div class="card status-card" th:classappend="${processo.status != null ? processo.status.name().toLowerCase() : ''}">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col-md-3">
                                     <h5 class="mb-1">Status Atual</h5>
-                                    <span class="badge fs-6" th:classappend="${processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).APROVADO ? 'bg-success' : (processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).REJEITADO ? 'bg-danger' : (processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).AGUARDANDO_APROVACAO ? 'bg-warning text-dark' : 'bg-info'))}" th:text="${#strings.replace(processo.status.name(), '_', ' ')}"></span>
+                                    <span class="badge fs-6" th:classappend="${processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).APROVADO ? 'bg-success' : (processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).REJEITADO ? 'bg-danger' : (processo.status == T(com.jaasielsilva.portalceo.model.ProcessoAdesao.StatusProcesso).AGUARDANDO_APROVACAO ? 'bg-warning text-dark' : 'bg-info'))}" th:text="${processo.status != null ? #strings.replace(processo.status.name(), '_', ' ') : 'Indefinido'}"></span>
                                 </div>
                                 <div class="col-md-3">
                                     <h6 class="mb-1">Etapa Atual</h6>
@@ -328,6 +343,132 @@
             </div>
         </div>
 
+        <div class="modal fade" id="modalDetalhesProcesso" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" style="min-width:600px;">
+                <div class="modal-content" style="border:none; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.15)">
+                    <div class="modal-header" style="background:linear-gradient(135deg,#0d6efd,#0056b3); color:#fff;">
+                        <h5 class="modal-title"><i class="fas fa-file-alt me-2"></i>Detalhes do Processo</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4" style="max-height:70vh; overflow-y:auto;">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card" style="border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+                                    <div class="card-header" style="background:#f8f9fa; border:none; border-radius:12px 12px 0 0;">
+                                        <h6 class="mb-0"><i class="fas fa-user me-2"></i>Dados Pessoais</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="text-muted" style="width:40%">Nome</td>
+                                                    <td id="mdp-nome" class="fw-semibold">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Email</td>
+                                                    <td id="mdp-email" class="fw-semibold">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">CPF</td>
+                                                    <td id="mdp-cpf" class="fw-semibold">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Cargo</td>
+                                                    <td id="mdp-cargo" class="fw-semibold">-</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card" style="border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+                                    <div class="card-header" style="background:#f8f9fa; border:none; border-radius:12px 12px 0 0;">
+                                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Status do Processo</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="text-muted" style="width:40%">Status</td>
+                                                    <td><span id="mdp-status" class="badge bg-warning text-dark">-</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Etapa</td>
+                                                    <td id="mdp-etapa" class="fw-semibold">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Criado em</td>
+                                                    <td id="mdp-criado" class="fw-semibold">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-muted">Custo Mensal</td>
+                                                    <td id="mdp-custo" class="fw-semibold">-</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="card" style="border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+                                <div class="card-header" style="background:#f8f9fa; border:none; border-radius:12px 12px 0 0;">
+                                    <h6 class="mb-0"><i class="fas fa-comment-dots me-2"></i>Observações</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="mdp-observacoes" class="border rounded p-3 text-muted">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function abrirModalDetalhesProcesso() {
+                var nome = "[[${processo != null ? processo.nomeColaborador : 'Teste Colaborador teste'}]]";
+                var email = "[[${processo != null ? processo.emailColaborador : 'ok@example.com.br'}]]";
+                var cpf = "[[${processo != null ? processo.cpfColaborador : '02931407232'}]]";
+                var cargo = "[[${processo != null && processo.cargo != null ? processo.cargo : '5'}]]";
+                var status = "[[${processo != null && processo.status != null ? #strings.replace(processo.status.name(),'_',' ') : 'Aguardando Aprovação'}]]";
+                var etapa = "[[${processo != null && processo.etapaAtual != null ? processo.etapaAtual : 'finalizado'}]]";
+                var criado = "[[${processo != null && processo.dataCriacao != null ? #temporals.format(processo.dataCriacao,'dd/MM/yyyy HH:mm') : '07/12/2025 09:28'}]]";
+                var custo = "[[${processo != null && processo.custoTotalMensal != null ? #numbers.formatCurrency(processo.custoTotalMensal) : 'R$ 1.750,00'}]]";
+                var obs = "[[${processo != null && processo.observacoes != null ? processo.observacoes : 'Processo de adesão finalizado pelo colaborador'}]]";
+
+                document.getElementById('mdp-nome').textContent = nome;
+                document.getElementById('mdp-email').textContent = email;
+                document.getElementById('mdp-cpf').textContent = formatarCPF(cpf);
+                document.getElementById('mdp-cargo').textContent = cargo;
+                document.getElementById('mdp-etapa').textContent = etapa;
+                document.getElementById('mdp-criado').textContent = criado;
+                document.getElementById('mdp-custo').textContent = custo;
+                document.getElementById('mdp-observacoes').textContent = obs;
+
+                var statusEl = document.getElementById('mdp-status');
+                statusEl.textContent = status;
+                statusEl.className = 'badge ' + getStatusBadgeClass(status);
+
+                new bootstrap.Modal(document.getElementById('modalDetalhesProcesso')).show();
+            }
+
+            function getStatusBadgeClass(texto) {
+                var t = String(texto).toUpperCase();
+                if (t.includes('APROVADO')) return 'bg-success';
+                if (t.includes('REJEITADO')) return 'bg-danger';
+                if (t.includes('AGUARDANDO')) return 'bg-warning text-dark';
+                if (t.includes('EM ANDAMENTO')) return 'bg-info';
+                return 'bg-secondary';
+            }
+
+            function formatarCPF(cpf) {
+                var d = String(cpf).replace(/\D/g,'');
+                if (d.length !== 11) return cpf;
+                return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            }
+        </script>
         <!-- Mensagem de erro -->
         <div th:unless="${processo}" class="row">
             <div class="col-12">
@@ -404,6 +545,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
     <script th:if="${processo}">
         const processoId = /*[[${processo.id}]]*/ 0;
         

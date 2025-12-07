@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.config;
 
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -75,5 +77,21 @@ public class GlobalRestExceptionHandler {
         body.put("success", false);
         body.put("message", "Recurso não encontrado");
         return ResponseEntity.status(404).body(body);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("message", "Acesso negado");
+        return ResponseEntity.status(403).body(body);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthentication(AuthenticationException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("message", "Não autenticado");
+        return ResponseEntity.status(401).body(body);
     }
 }

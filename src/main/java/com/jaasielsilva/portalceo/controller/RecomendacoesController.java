@@ -6,11 +6,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/recomendados")
+@RequestMapping("/recomendacoes")
 public class RecomendacoesController {
 
     // Recomendados
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated() and !hasRole('GERENCIAL')")
     public String recomendados(Model model) {
         // Configurações da página
         model.addAttribute("pageTitle", "Recomendados");
@@ -35,20 +36,20 @@ public class RecomendacoesController {
         java.util.List<java.util.Map<String, String>> pageActions = new java.util.ArrayList<>();
         java.util.Map<String, String> preferencias = new java.util.HashMap<>();
         preferencias.put("type", "link");
-        preferencias.put("url", "/recomendados/preferencias");
+        preferencias.put("url", "/recomendacoes/preferencias");
         preferencias.put("label", "Preferências");
         preferencias.put("icon", "fas fa-cog");
         pageActions.add(preferencias);
         
         java.util.Map<String, String> categorias = new java.util.HashMap<>();
         categorias.put("type", "link");
-        categorias.put("url", "/recomendados/categorias");
+        categorias.put("url", "/recomendacoes/categorias");
         categorias.put("label", "Categorias");
         categorias.put("icon", "fas fa-tags");
         pageActions.add(categorias);
         
         model.addAttribute("pageActions", pageActions);
         
-        return "recomendados/index";
+        return "recomendacoes/index";
     }
 }

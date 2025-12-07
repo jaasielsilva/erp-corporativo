@@ -258,9 +258,9 @@
                 <div class="col-md-6">
                     <div class="info-card">
                         <h6><i class="fas fa-user me-2"></i>Dados do Colaborador</h6>
-                        <p class="mb-1"><strong>Nome:</strong> <span th:text="${dadosAdesao.nome}">Nome do Colaborador</span></p>
-                        <p class="mb-1"><strong>Email:</strong> <span th:text="${dadosAdesao.email}">email@exemplo.com</span></p>
-                        <p class="mb-0"><strong>CPF:</strong> <span th:text="${dadosAdesao.cpf}">000.000.000-00</span></p>
+                        <p class="mb-1"><strong>Nome:</strong> <span id="colab-nome" th:text="${dadosAdesao.nome}">Nome do Colaborador</span></p>
+                        <p class="mb-1"><strong>Email:</strong> <span id="colab-email" th:text="${dadosAdesao.email}">email@exemplo.com</span></p>
+                        <p class="mb-0"><strong>CPF:</strong> <span id="colab-cpf" th:text="${dadosAdesao.cpf}">000.000.000-00</span></p>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -363,6 +363,10 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-primary" onclick="abrirModalDetalhes()">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Detalhes do Processo
+                        </button>
                         <button class="btn btn-outline-primary" onclick="atualizarStatus()">
                             <span class="loading-spinner d-none" id="spinner-atualizar"></span>
                             <i class="fas fa-sync-alt me-1" id="icon-atualizar"></i>
@@ -435,6 +439,78 @@
         <i class="fas fa-sync-alt"></i>
     </button>
     
+    <!-- Modal Detalhes do Processo -->
+    <div class="modal fade" id="modalDetalhesProcesso" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border:none; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.15)">
+                <div class="modal-header" style="background:linear-gradient(135deg,#0d6efd,#0056b3); color:#fff;">
+                    <h5 class="modal-title"><i class="fas fa-file-alt me-2"></i>Detalhes do Processo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6 class="mb-3"><i class="fas fa-user me-2"></i>Dados Pessoais</h6>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Nome</span>
+                                        <span id="det-nome" class="fw-semibold">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Email</span>
+                                        <span id="det-email" class="fw-semibold">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">CPF</span>
+                                        <span id="det-cpf" class="fw-semibold">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Cargo</span>
+                                        <span id="det-cargo" class="fw-semibold">-</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Status do Processo</h6>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Status</span>
+                                        <span id="det-status" class="badge bg-primary">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Etapa</span>
+                                        <span id="det-etapa" class="fw-semibold">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Criado em</span>
+                                        <span id="det-criado" class="fw-semibold">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Custo Mensal</span>
+                                        <span id="det-custo" class="fw-semibold">-</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 info-card">
+                        <h6 class="mb-2"><i class="fas fa-comment-dots me-2"></i>Observações</h6>
+                        <p id="det-observacoes" class="mb-0 text-muted">-</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="imprimirComprovante()">
+                        <i class="fas fa-print me-1"></i>Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Aprovação -->
     <div class="modal fade" id="modalAprovacao" tabindex="-1">
         <div class="modal-dialog">
@@ -506,6 +582,9 @@
             document.getElementById('observacoesAprovacao').value = '';
             new bootstrap.Modal(document.getElementById('modalAprovacao')).show();
         }
+        
+        // Modal Detalhes
+        let ultimoStatusDados = null;
         
         function abrirModalRejeicao() {
             // Obter o ID do processo do status atual
@@ -673,6 +752,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        ultimoStatusDados = data;
                         statusAtual = data.status;
                         atualizarInterface(data);
                     } else {
@@ -685,6 +765,36 @@
                 .finally(() => {
                     mostrarCarregamento(false);
                 });
+        }
+        
+        function abrirModalDetalhes() {
+            const nomeEl = document.getElementById('colab-nome');
+            const emailEl = document.getElementById('colab-email');
+            const cpfEl = document.getElementById('colab-cpf');
+            const nome = nomeEl ? nomeEl.textContent : '-';
+            const email = emailEl ? emailEl.textContent : '-';
+            const cpf = cpfEl ? cpfEl.textContent : '-';
+            const cargoTexto = '-';
+
+            document.getElementById('det-nome').textContent = nome;
+            document.getElementById('det-email').textContent = email;
+            document.getElementById('det-cpf').textContent = cpf;
+            document.getElementById('det-cargo').textContent = cargoTexto;
+
+            const status = ultimoStatusDados && ultimoStatusDados.status ? ultimoStatusDados.status : '-';
+            const etapa = ultimoStatusDados && ultimoStatusDados.etapaAtual ? ultimoStatusDados.etapaAtual : '-';
+            const criado = new Date().toLocaleString('pt-BR');
+            const custo = ultimoStatusDados && ultimoStatusDados.custoMensal ?
+                `R$ ${Number(ultimoStatusDados.custoMensal).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : '-';
+            const obs = ultimoStatusDados && ultimoStatusDados.mensagem ? ultimoStatusDados.mensagem : '-';
+
+            document.getElementById('det-status').textContent = String(status).replace('_', ' ');
+            document.getElementById('det-etapa').textContent = etapa;
+            document.getElementById('det-criado').textContent = criado;
+            document.getElementById('det-custo').textContent = custo;
+            document.getElementById('det-observacoes').textContent = obs;
+
+            new bootstrap.Modal(document.getElementById('modalDetalhesProcesso')).show();
         }
         
         function atualizarInterface(dados) {

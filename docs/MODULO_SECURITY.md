@@ -10,3 +10,24 @@ O módulo `security` é responsável por implementar as funcionalidades de segur
 *   **`Permissao.java`**: Entidade que representa uma permissão específica dentro do sistema. Define quais ações ou recursos podem ser acessados por um determinado perfil ou usuário.
 *   **`PermissaoBusinessService.java`**: Camada de serviço que lida com a lógica de negócios relacionada às permissões. Pode incluir métodos para verificar permissões, atribuir permissões a perfis, etc.
 *   **`UsuarioDetailsService.java`**: Implementação da interface `UserDetailsService` do Spring Security. É responsável por carregar os detalhes do usuário (como nome de usuário, senha e autoridades/permissões) a partir de uma fonte de dados (geralmente o banco de dados) durante o processo de autenticação.
+## Padronização de Segurança (Atualizações)
+
+- Ativado controle de acesso por método com `@PreAuthorize` em rotas dos controllers do módulo RH.
+- Regras utilizadas seguem a visibilidade do frontend (variáveis `isGerencial`, `podeAcessarRH`, `podeGerenciarRH`).
+- Tratamento de exceções atualizado:
+  - `AccessDeniedException` retorna HTTP 403 (Acesso negado)
+  - `AuthenticationException` retorna HTTP 401 (Não autenticado)
+- Rotas padronizadas:
+  - `Recomendados` → rota corrigida para `/recomendacoes`.
+  - Template atualizado para `templates/recomendacoes/index.html`.
+- Template `rh/processo-detalhes.html` padronizado com layout comum (`sidebar`, `topbar`, `footer`) e assets.
+
+### Convenções de uso de @PreAuthorize
+
+- Rotas de uso geral RH: `hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')`.
+- Rotas gerenciais: `hasAnyRole('ROLE_GERENCIAL','ROLE_ADMIN','ROLE_MASTER')`.
+- Rotas exclusivas RH: `hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')`.
+
+### Testes
+
+- Adicionados testes unitários para validar restrições de acesso em `RHSecurityControllersTest`.

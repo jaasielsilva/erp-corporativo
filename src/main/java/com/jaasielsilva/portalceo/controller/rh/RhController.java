@@ -79,6 +79,7 @@ public class RhController {
      * Dashboard central com opções de navegação
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     public String moduloRh(Model model) {
         logger.info("Acessando dashboard principal do módulo RH");
         
@@ -113,6 +114,7 @@ public class RhController {
      * Dashboard do módulo RH
      */
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     public String dashboardRh(Model model) {
         logger.info("Acessando dashboard do módulo RH");
         
@@ -141,6 +143,14 @@ public class RhController {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Dashboard - Recursos Humanos");
         return "rh/dashboard";
+    }
+
+    @GetMapping({"/processo-detalhes", "/processo-detalhes.html"})
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public String processoDetalhes(Model model) {
+        model.addAttribute("modulo", "RH");
+        model.addAttribute("titulo", "Detalhes do Processo");
+        return "rh/processo-detalhes";
     }
     
     // ===============================

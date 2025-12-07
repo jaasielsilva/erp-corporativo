@@ -152,20 +152,6 @@
                     Certifique-se de preencher todas as informações corretamente.
                 </div>
 
-                <!-- Banner de Retomada -->
-                <div id="resumeBanner" class="alert alert-warning d-none" role="alert">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-rotate-right me-2"></i>
-                            <strong>Continue de onde parou:</strong>
-                            <span id="resumeInfo"></span>
-                        </div>
-                        <div>
-                            <button type="button" id="btnResume" class="btn btn-sm btn-primary me-2">Retomar</button>
-                            <button type="button" id="btnNewFlow" class="btn btn-sm btn-outline-secondary">Começar novo</button>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Formulário de Dados Pessoais -->
                 <form id="formDadosPessoais" novalidate>
@@ -550,50 +536,6 @@
             }
             carregarDepartamentos();
 
-            // === Recuperação automática ===
-            fetch('/rh/colaboradores/adesao/api/progresso/resume')
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const banner = document.getElementById('resumeBanner');
-                        const info = document.getElementById('resumeInfo');
-                        banner.classList.remove('d-none');
-                        sessionStorage.setItem('adesao_flow_id', data.flowId);
-                        sessionStorage.setItem('adesao_current_step', data.currentStep);
-                        sessionStorage.setItem('adesao_form_data', data.formData || '{}');
-                        info.textContent = `Etapa: ${data.currentStep} | Última atualização: ${data.lastUpdated}`;
-                        document.getElementById('btnResume').onclick = function() {
-                            const next = proximaEtapa(data.currentStep);
-                            const sid = data.flowId;
-                            if (next === 'DOCUMENTOS') {
-                                window.location.href = `/rh/colaboradores/adesao/documentos?sessionId=${sid}`;
-                            } else if (next === 'BENEFICIOS') {
-                                window.location.href = `/rh/colaboradores/adesao/beneficios?sessionId=${sid}`;
-                            } else if (next === 'revisao') {
-                                window.location.href = `/rh/colaboradores/adesao/revisao/${sid}`;
-                            } else {
-                                // Dados Pessoais
-                                preencherFormularioComCache();
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }
-                        };
-                        document.getElementById('btnNewFlow').onclick = function() {
-                            const fid = sessionStorage.getItem('adesao_flow_id') || '';
-                            fetch('/rh/colaboradores/adesao/api/progresso/reset', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ flowId: fid })
-                            }).finally(() => {
-                                sessionStorage.removeItem('adesao_flow_id');
-                                sessionStorage.removeItem('adesao_current_step');
-                                sessionStorage.removeItem('adesao_form_data');
-                                location.reload();
-                            });
-                        };
-                        try { preencherFormularioComCache(); } catch (e) {}
-                    }
-                })
-                .catch(() => {});
 
             // === Validação do formulário ===
             const form = document.getElementById('formDadosPessoais');
@@ -707,7 +649,7 @@
                 headers: {
                     'Content-Type': 'application/json; charset=utf-8'
                 },
-                body: (() => { dadosLimpos.sessionId = sessionStorage.getItem('adesao_flow_id') || ''; return JSON.stringify(dadosLimpos); })()
+                body: JSON.stringify(dadosLimpos)
             })
                 .then(response => {
                     if (!response.ok) {
@@ -717,9 +659,6 @@
                 })
                 .then(data => {
                     if (data.success) {
-                        // sincronizar progresso
-                        sessionStorage.setItem('adesao_flow_id', data.sessionId);
-                        autosaveProgress('DADOS_PESSOAIS', dadosLimpos, data.sessionId);
                         window.location.href = `/rh/colaboradores/adesao/documentos?sessionId=${data.sessionId}`;
                     } else {
                         if (data.errors && typeof data.errors === 'object') {
@@ -785,20 +724,6 @@
             }
         }
 
-        // === Autosave por campo ===
-        (function configurarAutosave() {
-            const form = document.getElementById('formDadosPessoais');
-            if (!form) return;
-            const campos = form.querySelectorAll('input, select, textarea');
-            campos.forEach(c => {
-                c.addEventListener('input', debounce(() => {
-                    const dados = coletarDadosFormulario();
-                    sessionStorage.setItem('adesao_form_data', JSON.stringify(dados));
-                    const sid = sessionStorage.getItem('adesao_flow_id') || '';
-                    autosaveProgress('DADOS_PESSOAIS', dados, sid);
-                }, 500));
-            });
-        })();
 
         function coletarDadosFormulario() {
             const form = document.getElementById('formDadosPessoais');
@@ -808,48 +733,7 @@
             return o;
         }
 
-        function preencherFormularioComCache() {
-            const raw = sessionStorage.getItem('adesao_form_data');
-            if (!raw) return;
-            const dados = JSON.parse(raw);
-            Object.keys(dados).forEach(k => {
-                const el = document.querySelector(`[name="${k}"]`);
-                if (el) el.value = dados[k];
-            });
-        }
-
-        function autosaveProgress(step, formData, sessionId) {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 30000);
-            fetch('/rh/colaboradores/adesao/api/progresso/autosave', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ step: step, form_data: formData, sessionId: sessionId || '' }),
-                signal: controller.signal
-            })
-                .then(r => r.ok ? r.json() : Promise.reject(r))
-                .catch(() => {
-                    // Retry simples
-                    setTimeout(() => {
-                        fetch('/rh/colaboradores/adesao/api/progresso/autosave', {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ step, form_data: formData, sessionId: sessionId || '' })
-                        }).catch(() => {});
-                    }, 1000);
-                })
-                .finally(() => clearTimeout(timeout));
-        }
-
-        function debounce(fn, ms) { let t; return function() { clearTimeout(t); t = setTimeout(() => fn.apply(this, arguments), ms); }; }
-
-        function proximaEtapa(etapaAtual) {
-            switch (etapaAtual) {
-                case 'DADOS_PESSOAIS': return 'DOCUMENTOS';
-                case 'DOCUMENTOS': return 'BENEFICIOS';
-                case 'BENEFICIOS': return 'revisao';
-                default: return 'DADOS_PESSOAIS';
-            }
-        }
+        // Retomada removida
     </script>
                         </div>
                     </div>

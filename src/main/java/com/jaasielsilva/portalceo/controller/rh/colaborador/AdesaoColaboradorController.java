@@ -20,7 +20,6 @@ import com.jaasielsilva.portalceo.service.BeneficioAdesaoService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 import com.jaasielsilva.portalceo.service.NotificationService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
-import com.jaasielsilva.portalceo.service.AdesaoProgressService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -85,8 +84,6 @@ public class AdesaoColaboradorController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @Autowired
-    private AdesaoProgressService progressService;
 
     /**
      * Página inicial do processo de adesão
@@ -251,10 +248,6 @@ public class AdesaoColaboradorController {
                 response.put("message", "Dados inválidos. Verifique os campos destacados.");
                 response.put("errors", errors);
 
-                try {
-                    Long uid = obterUsuarioLogadoId();
-                    progressService.autosave(uid, sessionId, "DADOS_PESSOAIS", toMap(dadosAdesao));
-                } catch (Exception ignored) {}
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -272,30 +265,21 @@ public class AdesaoColaboradorController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            String providedSessionId = dadosAdesao.getSessionId();
-            boolean temSessao = providedSessionId != null && !providedSessionId.isBlank();
-            if (!temSessao) {
-                if (adesaoService.existeCpf(dadosAdesao.getCpf())) {
-                    response.put("success", false);
-                    response.put("message", "CPF já cadastrado no sistema");
-                    return ResponseEntity.badRequest().body(response);
-                }
-                if (adesaoService.existeEmail(dadosAdesao.getEmail())) {
-                    response.put("success", false);
-                    response.put("message", "Email já cadastrado no sistema");
-                    return ResponseEntity.badRequest().body(response);
-                }
+            // Sempre validar duplicidade de CPF/Email, inclusive em retomadas
+            if (adesaoService.existeCpf(dadosAdesao.getCpf())) {
+                response.put("success", false);
+                response.put("message", "CPF já cadastrado no sistema");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (adesaoService.existeEmail(dadosAdesao.getEmail())) {
+                response.put("success", false);
+                response.put("message", "Email já cadastrado no sistema");
+                return ResponseEntity.badRequest().body(response);
             }
 
-            String tempSessionId = temSessao ? providedSessionId : adesaoService.salvarDadosTemporarios(dadosAdesao);
-            if (temSessao) {
-                adesaoService.atualizarDadosTemporarios(providedSessionId, dadosAdesao);
-            }
+            String tempSessionId = adesaoService.salvarDadosTemporarios(dadosAdesao);
 
-            try {
-                Long uid = obterUsuarioLogadoId();
-                progressService.markStepCompleted(uid, tempSessionId, "DADOS_PESSOAIS", toMap(dadosAdesao));
-            } catch (Exception ignored) {}
+            // Removido progresso automático
 
             // Salvar no workflow de aprovação
             Map<String, Object> dadosPessoaisMap = new HashMap<>();
@@ -358,51 +342,9 @@ public class AdesaoColaboradorController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/api/progresso/autosave")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> autosave(@RequestBody Map<String, Object> body) {
-        Map<String, Object> resp = new HashMap<>();
-        try {
-            String sessionId = String.valueOf(body.getOrDefault("sessionId", ""));
-            String step = String.valueOf(body.getOrDefault("step", "DADOS_PESSOAIS"));
-            @SuppressWarnings("unchecked") Map<String, Object> form = (Map<String, Object>) body.getOrDefault("form_data", Map.of());
-            Long uid = obterUsuarioLogadoId();
-            progressService.autosave(uid, sessionId, step, form);
-            resp.put("success", true);
-            return ResponseEntity.ok(resp);
-        } catch (Exception e) {
-            resp.put("success", false);
-            resp.put("message", "Falha no autosave");
-            return ResponseEntity.badRequest().body(resp);
-        }
-    }
+    // Endpoint de autosave removido
 
-    @GetMapping("/api/progresso/resume")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> resume() {
-        Map<String, Object> resp = new HashMap<>();
-        try {
-            Long uid = obterUsuarioLogadoId();
-            var opt = progressService.resumeFlow(uid);
-            if (opt.isEmpty()) {
-                resp.put("success", false);
-                resp.put("message", "Nenhum progresso encontrado");
-                return ResponseEntity.ok(resp);
-            }
-            var up = opt.get();
-            resp.put("success", true);
-            resp.put("flowId", up.getFlowId());
-            resp.put("currentStep", up.getCurrentStep());
-            resp.put("completedSteps", up.getCompletedSteps());
-            resp.put("lastUpdated", up.getLastUpdated());
-            resp.put("formData", up.getFormData());
-            return ResponseEntity.ok(resp);
-        } catch (Exception e) {
-            resp.put("success", false);
-            resp.put("message", "Erro ao recuperar progresso");
-            return ResponseEntity.badRequest().body(resp);
-        }
-    }
+    // Endpoint de retomada removido
 
     /**
      * Obter IP do cliente
@@ -612,12 +554,7 @@ public class AdesaoColaboradorController {
             response.put("message", "Documentos processados com sucesso!");
             response.put("totalDocumentos", documentosEnviados.size());
 
-            try {
-                Long uid = obterUsuarioLogadoId();
-                Map<String, Object> pack = new HashMap<>();
-                pack.put("totalDocumentos", documentosEnviados.size());
-                progressService.markStepCompleted(uid, sessionId, "DOCUMENTOS", pack);
-            } catch (Exception ignored) {}
+            // Removido progresso automático
 
             logger.info("Documentos processados com sucesso para sessão: {} - Total: {}", 
                        sessionId, documentosEnviados.size());
@@ -689,10 +626,7 @@ public class AdesaoColaboradorController {
             // Marcar etapa como concluída para avançar para revisão
             adesaoService.marcarEtapaConcluida(sessionId, "beneficios");
 
-            try {
-                Long uid = obterUsuarioLogadoId();
-                progressService.markStepCompleted(uid, sessionId, "BENEFICIOS", beneficiosSelecionados);
-            } catch (Exception ignored) {}
+            // Progresso automático removido
             
             // Atualizar processo para permitir finalização na próxima etapa
             try {
@@ -936,10 +870,7 @@ public class AdesaoColaboradorController {
             response.put("protocolo", sessionId); // Usar sessionId como protocolo temporário
             response.put("redirectUrl", "/rh/colaboradores/adesao/status/" + sessionId);
 
-            try {
-                Long uid = obterUsuarioLogadoId();
-                progressService.markStepCompleted(uid, sessionId, "FINALIZADO", Map.of("colaboradorId", colaboradorCriado.getId()));
-            } catch (Exception ignored) {}
+            // Progresso automático removido
 
             logger.info("Adesão finalizada com sucesso. Colaborador criado: ID {}, Nome: {}",
                     colaboradorCriado.getId(), colaboradorCriado.getNome());
@@ -1289,25 +1220,5 @@ public class AdesaoColaboradorController {
         }
     }
     
-    @PostMapping("/api/progresso/reset")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> reset(@RequestBody Map<String, Object> body) {
-        Map<String, Object> resp = new HashMap<>();
-        try {
-            Long uid = obterUsuarioLogadoId();
-            String flowId = String.valueOf(body.getOrDefault("flowId", ""));
-            if (flowId != null && !flowId.isBlank()) {
-                try { adesaoService.cancelarAdesao(flowId); } catch (Exception ignored) {}
-                progressService.reset(uid, flowId);
-            } else {
-                progressService.reset(uid, null);
-            }
-            resp.put("success", true);
-            return ResponseEntity.ok(resp);
-        } catch (Exception e) {
-            resp.put("success", false);
-            resp.put("message", "Erro ao resetar progresso");
-            return ResponseEntity.badRequest().body(resp);
-        }
-    }
+    // Endpoint de reset removido para restaurar comportamento anterior
 }

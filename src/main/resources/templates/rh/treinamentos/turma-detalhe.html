@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Treinamentos - Detalhe da Turma</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <div class="container-fluid" th:data-turma-id="${turmaId}" id="turmaContainer">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <h1 class="h4 mb-3">Detalhe da Turma <span id="turmaTitulo"></span></h1>
+                        <div class="card"><div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3"><strong>Curso:</strong> <span id="cursoNome"></span></div>
+                                <div class="col-md-3"><strong>Instrutor:</strong> <span id="instrutorNome"></span></div>
+                                <div class="col-md-3"><strong>Período:</strong> <span id="periodo"></span></div>
+                                <div class="col-md-3"><strong>Status:</strong> <span id="status"></span></div>
+                            </div>
+                        </div></div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card"><div class="card-header">Matrículas</div><div class="card-body">
+                            <form class="mb-3" onsubmit="event.preventDefault(); adicionarMatricula();">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-6"><label class="form-label">Colaborador (ID)</label><input type="number" id="colaboradorId" class="form-control" required></div>
+                                    <div class="col-md-3"><button class="btn btn-primary w-100">Adicionar</button></div>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-striped"><thead><tr><th>ID</th><th>Colaborador</th></tr></thead><tbody id="tbodyMatriculas"></tbody></table>
+                            </div>
+                        </div></div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card"><div class="card-header">Frequências</div><div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped"><thead><tr><th>Matrícula</th><th>Data/Hora</th><th>Presente</th></tr></thead><tbody id="tbodyFrequencias"></tbody></table>
+                            </div>
+                        </div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+}</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script>
+function turmaId(){ return document.getElementById('turmaContainer').getAttribute('data-turma-id'); }
+function carregarTurma(){
+  $.get('/api/rh/treinamentos/turmas/'+turmaId()).done(function(t){
+    document.getElementById('turmaTitulo').textContent = t.id;
+    document.getElementById('cursoNome').textContent = t.curso? t.curso.titulo: '-';
+    document.getElementById('instrutorNome').textContent = t.instrutor? t.instrutor.nome: '-';
+    document.getElementById('periodo').textContent = (t.inicio||'')+' a '+(t.fim||'');
+    document.getElementById('status').textContent = t.status||'-';
+  });
+}
+function carregarMatriculas(){
+  $.get('/api/rh/treinamentos/turmas/'+turmaId()+'/matriculas').done(function(list){ const tbody=document.getElementById('tbodyMatriculas'); tbody.innerHTML=''; (list||[]).forEach(function(m){ const tr=document.createElement('tr'); const col=(m.colaborador&&m.colaborador.nome)? m.colaborador.nome: m.colaboradorId||''; tr.innerHTML=`<td>${m.id}</td><td>${col}</td>`; tbody.appendChild(tr); carregarFrequenciasLinha(m.id); }); });
+}
+function carregarFrequenciasLinha(matriculaId){
+  $.get('/api/rh/treinamentos/matriculas/'+matriculaId+'/frequencias').done(function(list){ const tbody=document.getElementById('tbodyFrequencias'); (list||[]).forEach(function(f){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${matriculaId}</td><td>${f.dataHora}</td><td>${f.presente? 'Sim':'Não'}</td>`; tbody.appendChild(tr); }); });
+}
+function adicionarMatricula(){
+  const colabId=document.getElementById('colaboradorId').value; $.post('/api/rh/treinamentos/turmas/'+turmaId()+'/matriculas',{colaboradorId:colabId}).done(function(r){ if(r.success){ if(typeof showToast==='function'){ showToast({title:'Treinamentos',message:'Matrícula adicionada',priority:'LOW'});} carregarMatriculas(); } });
+}
+$(document).ready(function(){ carregarTurma(); carregarMatriculas(); });
+</script>
+</body>
+</html>

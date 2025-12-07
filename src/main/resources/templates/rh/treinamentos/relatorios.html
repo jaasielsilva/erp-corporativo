@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Treinamentos - Relatórios</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="h4 mb-3"><i class="fas fa-chalkboard-teacher me-2"></i>Treinamentos - Relatórios</h1>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row g-3 align-items-end mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Status da Turma</label>
+                                        <select class="form-select" id="statusTurma">
+                                            <option value="">Todas</option>
+                                            <option value="ABERTA">Aberta</option>
+                                            <option value="ENCERRADA">Encerrada</option>
+                                            <option value="CANCELADA">Cancelada</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Início</label>
+                                        <input type="date" class="form-control" id="inicio" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Fim</label>
+                                        <input type="date" class="form-control" id="fim" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-outline-secondary" onclick="carregarTurmas()"><i class="fas fa-sync"></i> Atualizar</button>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 mb-2">
+                                    <button class="btn btn-outline-primary" onclick="exportCsv()"><i class="fas fa-file-csv me-2"></i>Exportar CSV</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Curso</th>
+                                            <th>Instrutor</th>
+                                            <th>Período</th>
+                                            <th>Status</th>
+                                            <th>Participantes</th>
+                                            <th>Taxa de Presença</th>
+                                            <th>Média Avaliação</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="tbodyTurmas"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+}</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script>
+function carregarTurmas(){
+  const status=document.getElementById('statusTurma').value||null;
+  $.get('/api/rh/treinamentos/relatorios/turmas',{status:status})
+   .done(function(list){ const tbody=document.getElementById('tbodyTurmas'); tbody.innerHTML=''; (list||[]).forEach(function(t){ const tr=document.createElement('tr'); const periodo=(t.inicio||'')+ ' a ' + (t.fim||''); const taxa=(t.taxaPresenca*100).toFixed(0)+'%'; const media=(t.mediaAvaliacao||0).toFixed? t.mediaAvaliacao.toFixed(1): t.mediaAvaliacao; tr.innerHTML=`<td>${t.id}</td><td>${t.curso||'-'}</td><td>${t.instrutor||'-'}</td><td>${periodo}</td><td>${t.status||'-'}</td><td>${t.participantes||0}</td><td>${taxa}</td><td>${media}</td>`; tbody.appendChild(tr); }); })
+   .fail(function(){ if (typeof showToast==='function'){ showToast({ title:'Treinamentos', message:'Falha ao carregar dados', priority:'HIGH' }); } });
+}
+function exportCsv(){ const status=document.getElementById('statusTurma').value||null; window.open('/api/rh/treinamentos/relatorios/export.csv?status='+(status||''),'_blank'); }
+$(document).ready(function(){ carregarTurmas(); });
+</script>
+</body>
+</html>

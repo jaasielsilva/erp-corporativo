@@ -772,3 +772,85 @@ private void sincronizarDocumentosNoDTO(AdesaoColaboradorDTO dadosAdesao, String
 
 - Sidebar unificada com submenus responsivos, `max-height` com scroll e overlay em subníveis
 - Topbar com toggle para mobile
+## Guia do Módulo RH — Manual de Uso
+
+### Mapa do Sidebar (RH)
+- Colaboradores: `listar`, `novo`, `editar`, `ficha`, `fichageral`, `documentos`, `historico`, `relatorios`, `adesao/*`
+- Folha de Pagamento: `index`, `listar`, `gerar`, `visualizar`, `holerite`, `holerite-pdf`, `holerites-colaborador`, `descontos`, `relatorios`
+- Benefícios: `vale-transporte/listar|form`, `vale-refeicao/listar|form`, `plano-de-saude/adesoes|plano-saude`, `adesao`
+- Workflow: `workflow-aprovacao`, `workflow-relatorios`, `detalhes-processo`, `processo-detalhes`
+- Ponto e Escalas: `registros`, `correcoes`, `escalas`, `nova`, `atribuir-massa`, `excecoes`, `vigencias`, `relatorios`, `espelho-ponto-pdf`
+- Férias: `solicitar`, `aprovar`, `planejamento`, `calendario`
+- Avaliação: `periodicidade`, `feedbacks`, `relatorios`
+- Treinamentos: `cadastro`, `inscricao`, `certificado`
+- Recrutamento: `vagas`, `triagem`, `entrevistas`, `historico`
+- Relatórios RH: `dashboard`, `relatorios/*`, `indicadores`, `headcount`, `absenteismo`, `turnover`
+- Configurações RH: `index`, `politicas-ferias`, `ponto`, `integracoes`
+- Auditoria RH: `index`, `acessos`, `alteracoes`, `exportacoes`, `revisoes`
+
+Obs.: Todos os itens acima possuem templates já presentes em `src/main/resources/templates/rh`. Controladores correspondentes principais: `FeriasController`, `FolhaPagamentoController`, `WorkflowAdesaoController`, `RhController`, `RhAuditoriaController`, `RhAuditoriaApiController`, `RhConfiguracoesController`. Itens que requerem complementos de negócio (serviços, repositórios, endpoints específicos) são destacados nos planos abaixo.
+
+### Status de Implementação (Férias e subseções)
+- Férias (templates e controller): implementados (`FeriasController` + `solicitar`, `aprovar`, `planejamento`, `calendario`).
+- Integração com políticas de férias: configurável via `Configurações RH → Políticas de Férias` (entidade `RhPoliticaFerias`).
+- Auditoria de ações: ativa para Configurações e Workflow; recomenda-se ampliar para registrar eventos de Férias (solicitação, aprovação, reprovação).
+
+### Fluxo de Workflow — Férias
+- Papéis:
+  - `COLABORADOR`: solicita férias
+  - `GERENCIAL`/`SUPERVISOR`: aprova ou reprova solicitações
+  - `RH` (`RH_GERENTE`/`RH_ANALISTA`): valida saldo, calendário, períodos de blackout, registra no sistema
+  - `ADMIN/MASTER`: acesso pleno e auditoria
+- Etapas:
+  1) Solicitar (Colaborador): acessar `RH → Férias → Solicitar`, preencher período e enviar.
+  2) Validação RH: verifica saldo, períodos de blackout (`Configurações RH → Políticas de Férias`), conflitos de equipe.
+  3) Aprovação Gerencial: acessar `RH → Férias → Aprovar` ou `RH → Workflow → Aprovação`, aprovar/reprovar com observação.
+  4) Registro: RH confirma e registra; integra com `Folha de Pagamento` (gera folha específica de férias quando aplicável) e com `Ponto` (ajusta espelho).
+  5) Auditoria: gravar logs (`ALTERACAO`), incluindo usuário, recurso e sucesso/falha.
+- Regras de negócio (sugestões):
+  - Saldo mínimo disponível e validade do período aquisitivo
+  - 1/3 constitucional refletido em `holerite` de férias
+  - Bloqueios por `periodosBlackout`; exceção sob autorização de `RH_GERENTE`
+
+### Plano de Implementação — Páginas e Funcionalidades
+- Férias:
+  - Adicionar serviço e repositório de solicitações de férias (pendente): entidade `SolicitacaoFerias` com estados (SOLICITADA, APROVADA, REPROVADA, REGISTRADA).
+  - APIs: `POST /api/rh/ferias/solicitacoes`, `GET /api/rh/ferias/solicitacoes`, `POST /api/rh/ferias/{id}/aprovar`, `POST /api/rh/ferias/{id}/reprovar`.
+  - Auditoria: integrar com `AuditoriaRhLogService` em cada transição de estado.
+- Ponto e Escalas:
+  - Confirmar integração “férias” com espelho e vigências; ajustar espelho da data aprovada.
+- Folha de Pagamento:
+  - Gerar holerite específico de férias (já contemplado no template), verificar cálculo automático.
+- Benefícios:
+  - Suspensão temporária ou ajuste de benefícios quando o período de férias for aprovado (opcional, conforme política).
+- Relatórios RH:
+  - Adicionar relatório de férias por período, departamento e aprovação.
+
+### Perfis de Acesso (RBAC)
+- `ADMIN/MASTER`: acesso total e registro de auditorias
+- `RH_GERENTE`: acesso completo a relatórios e aprovações em RH
+- `RH_ANALISTA/ASSISTENTE`: operações RH conforme política (cadastros, validações)
+- `GERENCIAL/SUPERVISOR`: aprovação de solicitações da equipe
+- `COLABORADOR`: solicitações e consulta de documentos próprios
+
+### Testes e Validação
+- Autorização (MockMvc): cobrir rotas de Férias (solicitar, aprovar) e APIs quando implementadas.
+- Integração: verificar criação de holerite de férias, ajustes no ponto, verificações de saldo.
+- Auditoria: conferir inserções em `rh_auditoria_logs` para cada ação crítica.
+
+### Operação — Passo a Passo (Férias)
+- Colaborador solicita: página `Solicitar` → confirma período → envia
+- RH valida: verifica saldo e blackout → encaminha
+- Gerente aprova: página `Aprovar` → registra observação → aprova
+- RH registra: integra com folha/ponto → notifica colaborador
+- Auditoria: disponível em `Auditoria RH → Alterações` com filtros
+### APIs — Férias
+- `POST /api/rh/ferias/solicitacoes`: cria solicitação de férias (params: `colaboradorId`, `inicio`, `fim`, `observacoes`)
+- `GET /api/rh/ferias/solicitacoes`: lista solicitações com filtros (`status`, `inicio`, `fim`, `page`, `size`)
+- `POST /api/rh/ferias/{id}/aprovar`: aprova solicitação (params: `observacoes`)
+- `POST /api/rh/ferias/{id}/reprovar`: reprova solicitação (params: `observacoes`)
+
+### Entidade — SolicitacaoFerias
+- Campos: `colaborador`, `periodoInicio`, `periodoFim`, `status`, `observacoes`, `dataSolicitacao`, `dataDecisao`, `usuarioAprovacao`
+- Status: `SOLICITADA`, `APROVADA`, `REPROVADA`, `REGISTRADA`
+- Auditoria: integra com `AuditoriaRhLogService` nas ações `SOLICITAR`, `APROVAR`, `REPROVAR`

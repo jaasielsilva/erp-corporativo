@@ -102,8 +102,8 @@ public class SecurityInterceptor implements HandlerInterceptor {
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://ajax.googleapis.com https://code.jquery.com; " +
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
             "img-src 'self' data: https:; " +
-            "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
-            "connect-src 'self' ws: wss: https://viacep.com.br https://cdn.jsdelivr.net; " +
+            "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
+            "connect-src 'self' ws: wss: https://viacep.com.br https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
             "frame-ancestors 'none';");
     }
     

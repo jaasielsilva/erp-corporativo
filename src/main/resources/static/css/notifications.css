@@ -524,12 +524,14 @@
   border-radius: 0.5rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
   padding: var(--toast-pad-y) var(--toast-pad-x);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--toast-gap);
   z-index: 9999;
   opacity: 0;
   transform: translateX(20px);
+  max-height: clamp(2px, 10vh, 1200px);
+  overflow: hidden;
   transition: opacity 0.2s ease, transform 0.2s ease, width 0.2s ease, padding 0.2s ease;
 }
 

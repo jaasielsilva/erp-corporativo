@@ -19,9 +19,48 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Férias - Planejamento</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <h1 class="h4 mb-3"><i class="fas fa-calendar-check me-2"></i>Férias - Planejamento</h1>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row g-3 align-items-end mb-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Início</label>
+                                            <input type="date" class="form-control" id="pInicio" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Fim</label>
+                                            <input type="date" class="form-control" id="pFim" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Status</label>
+                                            <select class="form-select" id="pStatus">
+                                                <option value="">Todos</option>
+                                                <option value="APROVADA">Aprovada</option>
+                                                <option value="SOLICITADA">Solicitada</option>
+                                                <option value="REPROVADA">Reprovada</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-outline-secondary" onclick="carregarPlanejamento()"><i class="fas fa-sync"></i> Atualizar</button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Colaborador</th>
+                                                    <th>Período</th>
+                                                    <th>Status</th>
+                                                    <th>Observações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyPlanejamento"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +71,29 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function carregarPlanejamento(page = 0) {
+            const status = document.getElementById('pStatus').value || null;
+            const inicio = document.getElementById('pInicio').value || null;
+            const fim = document.getElementById('pFim').value || null;
+            $.get('/api/rh/ferias/solicitacoes', { status, inicio, fim, page, size: 50 })
+                .done(function (page) {
+                    const tbody = document.getElementById('tbodyPlanejamento');
+                    tbody.innerHTML = '';
+                    (page.content || []).forEach(function (s) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${s.id}</td>
+                            <td>${s.colaboradorNome || (s.colaborador && s.colaborador.nome ? s.colaborador.nome : '-')}</td>
+                            <td>${(s.periodoInicio || '')} a ${(s.periodoFim || '')}</td>
+                            <td><span class="badge bg-${s.status === 'APROVADA' ? 'success' : (s.status === 'REPROVADA' ? 'danger' : 'warning')}">${s.status}</span></td>
+                            <td>${s.observacoes || ''}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .fail(function () { if (typeof showToast === 'function') { showToast({ title: 'Férias', message: 'Falha ao carregar planejamento', priority: 'HIGH' }); } });
+        }
+        $(document).ready(function () { carregarPlanejamento(); });
+    </script>
 </body>
 </html>

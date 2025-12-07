@@ -249,7 +249,7 @@ html, body {
 }
 
 .sidebar nav ul li.open .submenu {
-  max-height: 500px;
+  max-height: 2000px;
   opacity: 1;
 }
 

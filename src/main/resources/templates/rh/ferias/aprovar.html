@@ -19,9 +19,39 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Férias - Aprovar</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <h1 class="h4 mb-3"><i class="fas fa-check-circle me-2"></i>Férias - Aprovar</h1>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <label class="form-label">Filtrar por período</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control" id="filtroInicio" />
+                                                <input type="date" class="form-control" id="filtroFim" />
+                                                <button class="btn btn-outline-secondary" onclick="carregarSolicitacoes()"><i class="fas fa-sync"></i></button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-warning text-dark" id="badgeQtd">0 pendentes</span>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Colaborador</th>
+                                                    <th>Período</th>
+                                                    <th>Observações</th>
+                                                    <th>Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodySolicitacoes"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +62,54 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function carregarSolicitacoes(page = 0) {
+            const inicio = document.getElementById('filtroInicio').value || null;
+            const fim = document.getElementById('filtroFim').value || null;
+            $.get('/api/rh/ferias/solicitacoes', { status: 'SOLICITADA', inicio, fim, page, size: 50 })
+                .done(function (page) {
+                    const lista = page.content || [];
+                    const tbody = document.getElementById('tbodySolicitacoes');
+                    tbody.innerHTML = '';
+                    lista.forEach(function (s) {
+                        const tr = document.createElement('tr');
+                        const periodo = (s.periodoInicio || '') + ' a ' + (s.periodoFim || '');
+                        tr.innerHTML = `
+                            <td>${s.id}</td>
+                            <td>${s.colaboradorNome || (s.colaborador && s.colaborador.nome ? s.colaborador.nome : '-')}</td>
+                            <td>${periodo}</td>
+                            <td>${s.observacoes || ''}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" onclick="aprovar(${s.id})"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-danger btn-sm" onclick="reprovar(${s.id})"><i class="fas fa-times"></i></button>
+                            </td>`;
+                        tbody.appendChild(tr);
+                    });
+                    document.getElementById('badgeQtd').textContent = (page.totalElements || 0) + ' pendentes';
+                })
+                .fail(function () { if (typeof showToast === 'function') { showToast({ title: 'Férias', message: 'Falha ao carregar solicitações', priority: 'HIGH' }); } });
+        }
+        function aprovar(id) {
+            $.post('/api/rh/ferias/' + id + '/aprovar', { observacoes: '' })
+                .done(function (resp) {
+                    if (resp.success) {
+                        if (typeof showToast === 'function') { showToast({ title: 'Férias', message: 'Solicitação ' + id + ' aprovada', priority: 'LOW' }); }
+                        carregarSolicitacoes();
+                    } else { if (typeof showToast === 'function') { showToast({ title: 'Férias', message: (resp.message || 'Falha ao aprovar'), priority: 'HIGH' }); } }
+                })
+                .fail(function (xhr) { const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Erro ao aprovar'; if (typeof showToast === 'function') { showToast({ title: 'Férias', message: msg, priority: 'HIGH' }); } });
+        }
+        function reprovar(id) {
+            $.post('/api/rh/ferias/' + id + '/reprovar', { observacoes: '' })
+                .done(function (resp) {
+                    if (resp.success) {
+                        if (typeof showToast === 'function') { showToast({ title: 'Férias', message: 'Solicitação ' + id + ' reprovada', priority: 'MEDIUM' }); }
+                        carregarSolicitacoes();
+                    } else { if (typeof showToast === 'function') { showToast({ title: 'Férias', message: (resp.message || 'Falha ao reprovar'), priority: 'HIGH' }); } }
+                })
+                .fail(function (xhr) { const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Erro ao reprovar'; if (typeof showToast === 'function') { showToast({ title: 'Férias', message: msg, priority: 'HIGH' }); } });
+        }
+        $(document).ready(function () { carregarSolicitacoes(); });
+    </script>
 </body>
 </html>

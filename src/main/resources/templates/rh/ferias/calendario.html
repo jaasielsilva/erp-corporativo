@@ -19,9 +19,13 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Férias - Calendário</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <h1 class="h4 mb-3"><i class="fas fa-calendar-alt me-2"></i>Férias - Calendário</h1>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div id="calendar"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +36,57 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function carregarRecursosFullCalendar(cb){
+            if(window.FullCalendar){ cb(); return; }
+            var css=document.createElement('link');
+            css.rel='stylesheet';
+            css.href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css';
+            var js=document.createElement('script');
+            js.src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js';
+            js.onload=function(){ cb(); };
+            document.head.appendChild(css);
+            document.head.appendChild(js);
+        }
+    </script>
+    <script>
+        function carregarEventos(callback) {
+            $.get('/api/rh/ferias/solicitacoes', { status: 'APROVADA', size: 200 })
+                .done(function (page) {
+                    const eventos = (page.content || []).map(function (s) {
+                        return {
+                            id: s.id,
+                            title: (s.colaboradorNome || (s.colaborador && s.colaborador.nome ? s.colaborador.nome : 'Férias')),
+                            start: s.periodoInicio,
+                            end: s.periodoFim,
+                        };
+                    });
+                    callback(eventos);
+                })
+                .fail(function () { if (typeof showToast === 'function') { showToast({ title: 'Férias', message: 'Falha ao carregar calendário', priority: 'HIGH' }); } callback([]); });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            function init(){
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    height: 'auto',
+                    locale: 'pt-br',
+                    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+                    events: function(info, successCallback, failureCallback){ carregarEventos(successCallback); }
+                });
+                calendar.render();
+            }
+            if('IntersectionObserver' in window){
+                const io=new IntersectionObserver(function(entries){
+                    entries.forEach(function(e){ if(e.isIntersecting){ io.disconnect(); carregarRecursosFullCalendar(init); } });
+                });
+                io.observe(calendarEl);
+            } else {
+                if(window.requestIdleCallback){ requestIdleCallback(function(){ carregarRecursosFullCalendar(init); }); }
+                else { setTimeout(function(){ carregarRecursosFullCalendar(init); },300); }
+            }
+        });
+    </script>
 </body>
 </html>

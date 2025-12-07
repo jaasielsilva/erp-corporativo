@@ -19,9 +19,50 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Avaliação - Relatórios</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <h1 class="h4 mb-3"><i class="fas fa-chart-pie me-2"></i>Avaliação - Relatórios</h1>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row g-3 align-items-end mb-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Status</label>
+                                            <select class="form-select" id="statusRel">
+                                                <option value="">Todos</option>
+                                                <option value="ABERTA">Aberta</option>
+                                                <option value="SUBMETIDA">Submetida</option>
+                                                <option value="APROVADA">Aprovada</option>
+                                                <option value="REPROVADA">Reprovada</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Início</label>
+                                            <input type="date" class="form-control" id="relInicio" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Fim</label>
+                                            <input type="date" class="form-control" id="relFim" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-outline-secondary" onclick="carregarRelatorios()"><i class="fas fa-sync"></i> Atualizar</button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Colaborador</th>
+                                                    <th>Período</th>
+                                                    <th>Status</th>
+                                                    <th>Nota</th>
+                                                    <th>Aprovação</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyRel"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +73,16 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function carregarRelatorios(page=0){
+            const status=document.getElementById('statusRel').value||null; const inicio=document.getElementById('relInicio').value||null; const fim=document.getElementById('relFim').value||null;
+            $.get('/api/rh/avaliacao/ciclos', { status, inicio, fim, page, size: 50 })
+                .done(function(page){ const tbody=document.getElementById('tbodyRel'); tbody.innerHTML=''; (page.content||[]).forEach(function(a){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${a.id}</td><td>${a.colaboradorNome||'-'}</td><td>${(a.periodoInicio||'')} a ${(a.periodoFim||'')}</td><td>${a.status||'-'}</td><td>${a.nota||''}</td><td>${a.status==='SUBMETIDA' ? '<button class=\'btn btn-success btn-sm\' onclick=\'aprovar('+a.id+')\'><i class=\'fas fa-check\'></i></button> <button class=\'btn btn-danger btn-sm\' onclick=\'reprovar('+a.id+')\'><i class=\'fas fa-times\'></i></button>' : ''}</td>`; tbody.appendChild(tr); }); })
+                .fail(function(){ showToast({ title:'Avaliações', message:'Falha ao carregar relatórios', priority:'HIGH' }); });
+        }
+        function aprovar(id){ $.post('/api/rh/avaliacao/' + id + '/aprovar').done(function(resp){ if(resp.success){ showToast({ title:'Avaliações', message:'Aprovação realizada', priority:'LOW' }); carregarRelatorios(); } else { showToast({ title:'Avaliações', message:(resp.message||'Falha na aprovação'), priority:'HIGH' }); } }).fail(function(xhr){ const msg=(xhr.responseJSON&&xhr.responseJSON.message)?xhr.responseJSON.message:'Erro na aprovação'; showToast({ title:'Avaliações', message:msg, priority:'HIGH' }); }); }
+        function reprovar(id){ $.post('/api/rh/avaliacao/' + id + '/reprovar').done(function(resp){ if(resp.success){ showToast({ title:'Avaliações', message:'Reprovação realizada', priority:'MEDIUM' }); carregarRelatorios(); } else { showToast({ title:'Avaliações', message:(resp.message||'Falha na reprovação'), priority:'HIGH' }); } }).fail(function(xhr){ const msg=(xhr.responseJSON&&xhr.responseJSON.message)?xhr.responseJSON.message:'Erro na reprovação'; showToast({ title:'Avaliações', message:msg, priority:'HIGH' }); }); }
+        $(document).ready(function(){ carregarRelatorios(); });
+    </script>
 </body>
 </html>

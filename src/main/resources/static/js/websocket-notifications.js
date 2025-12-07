@@ -1,3 +1,4 @@
+if (typeof window.RealtimeNotifications === 'undefined') {
 class RealtimeNotifications {
     constructor() {
         this.socket = null;
@@ -144,8 +145,10 @@ class RealtimeNotifications {
         }
     }
 }
+window.RealtimeNotifications = RealtimeNotifications;
 
 // Função de toast com som embutido
+if (typeof window.showToast === 'undefined') {
 function showToast(notification) {
     const priorityClass = notification.priority ? `priority-${notification.priority.toLowerCase()}` : "priority-medium";
     const iconClass = notification.type === "chat" ? "fas fa-comments" : "fas fa-info-circle";
@@ -186,7 +189,7 @@ function showToast(notification) {
 
     setTimeout(() => {
         toast.classList.add('show');
-        playNotificationSound();
+        if (window.__notifSoundEnabled) { playNotificationSound(); }
     }, 10);
 
     const baseDurations = { low: 4000, medium: 5000, high: 7000 };
@@ -204,6 +207,8 @@ function showToast(notification) {
             }, 300);
         }, durationMs);
     }
+}
+window.showToast = showToast;
 }
 
 // Função de som nativo
@@ -228,8 +233,15 @@ function playNotificationSound() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    window.__notifSoundEnabled = false;
+    const enable = () => { window.__notifSoundEnabled = true; document.removeEventListener('click', enable); document.removeEventListener('keydown', enable); document.removeEventListener('touchstart', enable); };
+    document.addEventListener('click', enable);
+    document.addEventListener('keydown', enable);
+    document.addEventListener('touchstart', enable);
     if (typeof SockJS !== 'undefined' && typeof Stomp !== 'undefined') {
-        window.realtimeNotifications = new RealtimeNotifications();
+        if (!window.realtimeNotifications) {
+            window.realtimeNotifications = new RealtimeNotifications();
+        }
     } else {
         const sockjsScript = document.createElement('script');
         sockjsScript.src = 'https://cdn.jsdelivr.net/npm/sockjs-client@1.5.2/dist/sockjs.min.js';
@@ -252,8 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 altStomp.onload = () => { window.realtimeNotifications = new RealtimeNotifications(); };
                 document.head.appendChild(altStomp);
             };
-            stompScript.onload = () => { window.realtimeNotifications = new RealtimeNotifications(); };
+            stompScript.onload = () => { if (!window.realtimeNotifications) { window.realtimeNotifications = new RealtimeNotifications(); } };
             document.head.appendChild(stompScript);
         }
     }
-});
+})}

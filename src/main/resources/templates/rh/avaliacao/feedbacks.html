@@ -19,9 +19,32 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Avaliação - Feedbacks</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <h1 class="h4 mb-3"><i class="fas fa-comments me-2"></i>Avaliação - Feedbacks</h1>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Selecione uma avaliação ABERTA</label>
+                                        <select class="form-select" id="avaliacaoSelect"></select>
+                                    </div>
+                                    <form onsubmit="event.preventDefault(); submeterFeedback();">
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Nota (0 a 10)</label>
+                                                <input type="number" min="0" max="10" step="0.1" class="form-control" id="notaAva" required />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label">Feedback</label>
+                                                <textarea class="form-control" id="feedbackAva" rows="4" placeholder="Comentários"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 d-flex gap-2">
+                                            <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane me-2"></i>Submeter</button>
+                                            <button class="btn btn-secondary" type="button" onclick="resetFeedbackForm()"><i class="fas fa-undo me-2"></i>Limpar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +55,21 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function carregarAvaliacoesAbertas(){
+            $.get('/api/rh/avaliacao/ciclos', { status: 'ABERTA', page: 0, size: 50 })
+                .done(function(page){ const sel=document.getElementById('avaliacaoSelect'); sel.innerHTML=''; (page.content||[]).forEach(function(a){ const o=document.createElement('option'); o.value=a.id; o.textContent='#' + a.id + ' - ' + (a.colaboradorNome||'-') + ' (' + (a.periodoInicio||'') + ' a ' + (a.periodoFim||'') + ')'; sel.appendChild(o); }); if((page.content||[]).length===0){ showToast({ title: 'Avaliações', message: 'Nenhuma avaliação ABERTA.', priority: 'MEDIUM' }); } })
+                .fail(function(){ showToast({ title: 'Avaliações', message: 'Falha ao carregar avaliações.', priority: 'HIGH' }); });
+        }
+        function submeterFeedback(){
+            const id=document.getElementById('avaliacaoSelect').value; const nota=document.getElementById('notaAva').value; const feedback=document.getElementById('feedbackAva').value;
+            if(!id){ showToast({ title:'Avaliações', message:'Selecione uma avaliação.', priority:'MEDIUM' }); return; }
+            $.post('/api/rh/avaliacao/' + id + '/submeter', { nota, feedback })
+                .done(function(resp){ if(resp.success){ showToast({ title:'Avaliações', message:'Feedback submetido', priority:'LOW' }); carregarAvaliacoesAbertas(); resetFeedbackForm(); } else { showToast({ title:'Avaliações', message:(resp.message||'Falha na submissão'), priority:'HIGH' }); } })
+                .fail(function(xhr){ const msg=(xhr.responseJSON&&xhr.responseJSON.message)?xhr.responseJSON.message:'Erro na submissão'; showToast({ title:'Avaliações', message:msg, priority:'HIGH' }); });
+        }
+        function resetFeedbackForm(){ document.getElementById('notaAva').value=''; document.getElementById('feedbackAva').value=''; }
+        $(document).ready(function(){ carregarAvaliacoesAbertas(); });
+    </script>
 </body>
 </html>

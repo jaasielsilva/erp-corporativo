@@ -19,9 +19,28 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Recrutamento - Triagem</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <h1 class="h4 mb-3"><i class="fas fa-list-check me-2"></i>Recrutamento - Triagem</h1>
+                            <div class="card"><div class="card-body">
+                                <div class="row g-3 align-items-end mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Vaga</label>
+                                        <select class="form-select" id="filtroVaga"><option value="">Todas</option></select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-secondary w-100" id="btnFiltrar"><i class="fas fa-filter me-1"></i>Filtrar</button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="/rh/recrutamento/pipeline" class="btn btn-outline-primary w-100"><i class="fas fa-diagram-project me-1"></i>Pipeline</a>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead><tr><th>ID</th><th>Candidato</th><th>Vaga</th><th>Etapa</th><th>Ações</th></tr></thead>
+                                        <tbody id="tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div></div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +51,13 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+    let vagas=[];
+    function carregarVagas(){ $.get('/api/rh/recrutamento/vagas',{status:'ABERTA',page:0,size:100}).done(function(page){ vagas=(page&&page.content)||[]; const sel=document.getElementById('filtroVaga'); sel.innerHTML='<option value="">Todas</option>'+vagas.map(v=>`<option value="${v.id}">${v.titulo}</option>`).join(''); }); }
+    function carregar(){ const vagaId=$('#filtroVaga').val()||null; const params={etapa:'TRIAGEM'}; if(vagaId) params.vagaId=vagaId; $.get('/api/rh/recrutamento/candidaturas',params).done(function(list){ const tbody=document.getElementById('tbody'); tbody.innerHTML=''; (list||[]).forEach(function(c){ const tr=document.createElement('tr'); const vagaTitulo=c.vaga&&c.vaga.titulo?c.vaga.titulo:'-'; const candNome=c.candidato&&c.candidato.nome?c.candidato.nome:'-'; const btnEntrevista=`<button class="btn btn-sm btn-outline-primary me-1" onclick="promover(${c.id},'ENTREVISTA')"><i class="fas fa-arrow-up"></i> Entrevista</button>`; const btnReprovar=`<button class="btn btn-sm btn-outline-danger me-1" onclick="promover(${c.id},'REPROVADO')"><i class="fas fa-times"></i> Reprovar</button>`; const btnAgendar=`<button class="btn btn-sm btn-outline-secondary" onclick="agendar(${c.id})"><i class="fas fa-calendar-alt"></i> Agendar</button>`; tr.innerHTML=`<td>${c.id}</td><td>${candNome}</td><td>${vagaTitulo}</td><td><span class="badge bg-warning">${c.etapa}</span></td><td>${btnEntrevista}${btnReprovar}${btnAgendar}</td>`; tbody.appendChild(tr); }); }); }
+    function promover(id,etapa){ $.post(`/api/rh/recrutamento/candidaturas/${id}/etapa`,{etapa}).done(function(r){ if(r&&r.success){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Etapa atualizada',priority:'LOW'});} carregar(); } }); }
+    function agendar(id){ const inicio=prompt('Início (YYYY-MM-DDTHH:mm)'); if(!inicio) return; const fim=prompt('Fim (YYYY-MM-DDTHH:mm)'); if(!fim) return; const local=prompt('Local'); const tipo=prompt('Tipo'); $.post(`/api/rh/recrutamento/candidaturas/${id}/entrevistas`,{inicio,fim,local,tipo}).done(function(r){ if(r&&r.success){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Entrevista agendada',priority:'LOW'});} } }); }
+    $(document).ready(function(){ carregarVagas(); carregar(); $('#btnFiltrar').on('click', carregar); $('#filtroVaga').on('change', carregar); });
+    </script>
 </body>
 </html>

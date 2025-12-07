@@ -19,9 +19,29 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Recrutamento - Histórico</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12">
+                            <h1 class="h4 mb-3"><i class="fas fa-clock-rotate-left me-2"></i>Recrutamento - Histórico</h1>
+                            <div class="card"><div class="card-body">
+                                <div class="row g-3 align-items-end mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Vaga</label>
+                                        <select class="form-select" id="filtroVaga"><option value="">Todas</option></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Etapa Final</label>
+                                        <select class="form-select" id="filtroEtapa"><option value="">Todos</option><option>CONTRATADO</option><option>REPROVADO</option></select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-secondary w-100" id="btnFiltrar"><i class="fas fa-filter me-1"></i>Filtrar</button>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead><tr><th>ID</th><th>Candidato</th><th>Vaga</th><th>Etapa</th><th>Conclusão</th></tr></thead>
+                                        <tbody id="tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div></div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +52,11 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+    let vagas=[];
+    function carregarVagas(){ $.get('/api/rh/recrutamento/vagas',{page:0,size:100}).done(function(page){ vagas=(page&&page.content)||[]; const sel=document.getElementById('filtroVaga'); sel.innerHTML='<option value="">Todas</option>'+vagas.map(v=>`<option value="${v.id}">${v.titulo}</option>`).join(''); }); }
+    function carregar(){ const vagaId=$('#filtroVaga').val()||null; const etapa=$('#filtroEtapa').val()||null; const params={}; if(vagaId) params.vagaId=vagaId; if(etapa) params.etapa=etapa; $.get('/api/rh/recrutamento/candidaturas',params).done(function(list){ const tbody=document.getElementById('tbody'); tbody.innerHTML=''; (list||[]).filter(c=>!$('#filtroEtapa').val()||c.etapa===$('#filtroEtapa').val()).filter(c=>c.etapa==='CONTRATADO' || c.etapa==='REPROVADO').forEach(function(c){ const tr=document.createElement('tr'); const vagaTitulo=c.vaga&&c.vaga.titulo?c.vaga.titulo:'-'; const candNome=c.candidato&&c.candidato.nome?c.candidato.nome:'-'; const concl=c.conclusao?c.conclusao:'-'; tr.innerHTML=`<td>${c.id}</td><td>${candNome}</td><td>${vagaTitulo}</td><td><span class="badge ${c.etapa==='CONTRATADO'?'bg-success':'bg-danger'}">${c.etapa}</span></td><td>${concl}</td>`; tbody.appendChild(tr); }); }); }
+    $(document).ready(function(){ carregarVagas(); carregar(); $('#btnFiltrar').on('click', carregar); $('#filtroVaga,#filtroEtapa').on('change', carregar); });
+    </script>
 </body>
 </html>

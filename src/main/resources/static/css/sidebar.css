@@ -2,15 +2,8 @@
 
 /* Container do sidebar */
 .sidebar {
-    width: 250px;
     background-color: #1e293b;
     color: #ffffff;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    overflow-y: auto;
-    transition: width 0.3s ease;
 }
 
 /* Logo ou topo do sidebar */

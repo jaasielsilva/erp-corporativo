@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configurações RH - Políticas de Férias</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="row mb-4">
+                        <div class="col-12 text-center py-3">
+                            <h1 class="h4 text-muted"><i class="fas fa-umbrella-beach me-2"></i>Políticas de Férias</h1>
+                            <p class="text-muted">Defina regras de saldo, períodos de blackout e aprovação.</p>
+                        </div>
+                    </div>
+
+                    <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+
+                    <form th:action="@{/rh/configuracoes/politicas-ferias}" th:object="${politica}" method="post" class="row g-3" novalidate>
+                        <div class="col-md-4">
+                            <label class="form-label">Dias por Ano</label>
+                            <input type="number" min="1" max="40" class="form-control" th:field="*{diasPorAno}" required aria-required="true" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Permitir Venda de Férias</label>
+                            <select class="form-select" th:field="*{permitirVenda}">
+                                <option th:value="true">Sim</option>
+                                <option th:value="false">Não</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Exige Aprovação do Gerente</label>
+                            <select class="form-select" th:field="*{exigeAprovacaoGerente}">
+                                <option th:value="true">Sim</option>
+                                <option th:value="false">Não</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Períodos de Blackout (mes-dia;mes-dia)</label>
+                            <input type="text" class="form-control" th:field="*{periodosBlackout}" placeholder="Ex.: 12-20;01-05" />
+                            <small class="text-muted">Use pontos e vírgulas para múltiplos períodos. Ex.: 12-20;01-05</small>
+                        </div>
+
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Salvar</button>
+                            <a href="/rh/configuracoes" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Voltar</a>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

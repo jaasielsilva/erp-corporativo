@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auditoria RH - Log de Acessos</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h1 class="h5 text-muted mb-1"><i class="fas fa-sign-in-alt me-2"></i>Log de Acessos RH</h1>
+                            <small class="text-muted">Autenticações e autorizações no módulo RH</small>
+                        </div>
+                        <a href="/rh/auditoria" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Voltar</a>
+                    </div>
+
+                    <form id="filtroLogs" class="row g-2 mb-3" onsubmit="event.preventDefault(); carregarLogs();">
+                        <input type="hidden" id="categoriaPadrao" th:value="${categoria}" />
+                        <div class="col-md-3">
+                            <label class="form-label">Usuário</label>
+                            <input type="text" class="form-control" id="filtroUsuario" placeholder="email ou usuário" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Recurso</label>
+                            <input type="text" class="form-control" id="filtroRecurso" placeholder="/rota" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Início</label>
+                            <input type="datetime-local" class="form-control" id="filtroInicio" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fim</label>
+                            <input type="datetime-local" class="form-control" id="filtroFim" />
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i>Filtrar</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="resetarFiltro()"><i class="fas fa-undo me-1"></i>Limpar</button>
+                        </div>
+                    </form>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Usuário</th>
+                                        <th>Ação</th>
+                                        <th>Recurso</th>
+                                        <th>IP</th>
+                                        <th>Sucesso</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Carregando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function resetarFiltro(){
+            document.getElementById('filtroUsuario').value = '';
+            document.getElementById('filtroRecurso').value = '';
+            document.getElementById('filtroInicio').value = '';
+            document.getElementById('filtroFim').value = '';
+            carregarLogs();
+        }
+        function carregarLogs(page=0){
+            page = Number(page) || 0;
+            const categoria = document.getElementById('categoriaPadrao')?.value || 'ACESSO';
+            const usuario = document.getElementById('filtroUsuario').value.trim();
+            const recurso = document.getElementById('filtroRecurso').value.trim();
+            const inicio = document.getElementById('filtroInicio').value;
+            const fim = document.getElementById('filtroFim').value;
+            const params = new URLSearchParams({categoria, usuario, recurso, page, size: 20});
+            if(inicio) params.append('inicio', inicio);
+            if(fim) params.append('fim', fim);
+            fetch('/api/rh/auditoria/logs?' + params.toString())
+                .then(r => {
+                    if(!r.ok){
+                        const tbody = document.getElementById('logsTableBody');
+                        if(r.status === 403){
+                            if(window.globalToast){ window.globalToast('Acesso negado', 'fas fa-shield-alt', 'danger'); }
+                            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Acesso negado</td></tr>';
+                        } else {
+                            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar</td></tr>';
+                        }
+                        return null;
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    if(!data) return;
+                    const tbody = document.getElementById('logsTableBody');
+                    tbody.innerHTML = '';
+                    const content = data.content || [];
+                    if(content.length === 0){
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sem registros</td></tr>';
+                        return;
+                    }
+                    for(const item of content){
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>
+                                <span class="text-muted">${(item.criadoEm||'').replace('T',' ')}</span>
+                            </td>
+                            <td>${item.usuario||'-'}</td>
+                            <td><span class="badge bg-info">${item.acao||'-'}</span></td>
+                            <td><code>${item.recurso||'-'}</code></td>
+                            <td>${item.ipOrigem||'-'}</td>
+                            <td>${item.sucesso ? '<span class="badge bg-success">OK</span>' : '<span class="badge bg-danger">Falha</span>'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                })
+                .catch(() => {
+                    const tbody = document.getElementById('logsTableBody');
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar</td></tr>';
+                });
+        }
+        document.addEventListener('DOMContentLoaded', () => carregarLogs(0));
+    </script>
+</body>
+</html>

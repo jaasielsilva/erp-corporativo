@@ -716,3 +716,59 @@ private void sincronizarDocumentosNoDTO(AdesaoColaboradorDTO dadosAdesao, String
 **Desenvolvimento**: Jasiel Silva  
 **Última Atualização**: Setembro 2025  
 **Status**: ✅ PRODUÇÃO - TOTALMENTE FUNCIONAL
+## Auditoria RH
+
+- Endpoints: `GET /api/rh/auditoria/logs`, `POST /api/rh/auditoria/logs`
+- Tabela: `rh_auditoria_logs` com campos `id`, `categoria`, `acao`, `recurso`, `usuario`, `ipOrigem`, `detalhes`, `sucesso`, `criadoEm`
+- RBAC:
+  - `ADMIN/MASTER`: listar e registrar
+  - `RH_GERENTE`: listar
+- Filtros: `categoria`, `usuario`, `recurso`, `inicio`, `fim`, `page`, `size`
+- Páginas: `rh/auditoria/acessos`, `alteracoes`, `exportacoes`, `revisoes` com tabelas dinâmicas e filtros
+
+### Manual de Usuário — Auditoria RH (Log de Acessos)
+
+- Finalidade: Monitorar autenticações e autorizações no módulo RH.
+- Acesso: Sidebar → Recursos Humanos → Auditoria RH → Log de Acessos.
+- Perfis: `ADMIN`, `MASTER`, `RH_GERENTE` (RBAC aplicado nas páginas e APIs).
+- Elementos da página (`src/main/resources/templates/rh/auditoria/acessos.html`):
+  - Filtros: `Usuário`, `Recurso`, `Início`, `Fim` e ações `Filtrar`/`Limpar`.
+  - Tabela dinâmica: colunas `Data`, `Usuário`, `Ação`, `Recurso`, `IP`, `Sucesso`.
+  - Estado de carregamento: mostra “Carregando...”, “Sem registros” ou erro.
+- Como usar:
+  - Abra a página e use os filtros conforme necessário; clique em `Filtrar`.
+  - Clique em `Limpar` para resetar os filtros e recarregar a listagem.
+  - Em caso de acesso negado (403), a tabela exibirá “Acesso negado” e será mostrado um alerta.
+- Seed de dados (somente `ADMIN/MASTER`):
+  - Registrar log via API: `POST /api/rh/auditoria/logs` com parâmetros `categoria=ACESSO`, `acao=LOGIN_SUCESSO`, `usuario`, `recurso`.
+  - Exemplo: `curl -X POST "http://localhost:8080/api/rh/auditoria/logs" -d "categoria=ACESSO" -d "acao=LOGIN_SUCESSO" -d "usuario=master" -d "recurso=/login"`
+- Comportamento em erros:
+  - `403`: alerta “Acesso negado” e linha na tabela em vermelho.
+  - `500`: alerta “Erro ao carregar” na tabela.
+- Responsividade:
+  - Filtros e tabela adaptam-se a diferentes resoluções; submenus de Sidebar com overlay/scroll.
+
+## Configurações RH
+
+- Página: `rh/configuracoes/politicas-ferias` com formulário funcional (`diasPorAno`, `permitirVenda`, `exigeAprovacaoGerente`, `periodosBlackout`)
+- Persistência: `rh_politicas_ferias`
+- Auditoria automática ao salvar políticas de férias
+
+### Manual de Usuário — Configurações RH
+
+- Finalidade: Manter regras de férias e integrações do módulo RH.
+- Acesso: Sidebar → Recursos Humanos → Configurações RH.
+- Páginas:
+  - Início: `/rh/configuracoes` (registra log de acesso `ACESSO_PAGINA`).
+  - Políticas de Férias: `/rh/configuracoes/politicas-ferias`.
+  - Parâmetros de Ponto: `/rh/configuracoes/ponto`.
+  - Integrações: `/rh/configuracoes/integracoes`.
+- Formulário de Férias (`politicas-ferias`):
+  - Campos: `Dias por Ano`, `Permitir Venda`, `Exige Aprovação do Gerente`, `Períodos de Blackout`.
+  - Ação: `Salvar` persiste e registra auditoria `CONFIGURACAO/SALVAR_POLITICAS_FERIAS`.
+  - Validações: limites numéricos e seleção de opções; mensagem de sucesso exibida na própria página.
+
+## Acessibilidade e Responsividade
+
+- Sidebar unificada com submenus responsivos, `max-height` com scroll e overlay em subníveis
+- Topbar com toggle para mobile

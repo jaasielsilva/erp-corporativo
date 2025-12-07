@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.jaasielsilva.portalceo.service.AuditoriaRhLogService;
 
 @Controller
 @RequestMapping("/rh/workflow")
@@ -20,6 +21,8 @@ public class WorkflowAdesaoController {
     
     @Autowired
     private WorkflowAdesaoService workflowService;
+    @Autowired
+    private AuditoriaRhLogService auditoriaRhLogService;
     
     /**
      * Página principal do workflow de aprovação
@@ -187,6 +190,16 @@ public class WorkflowAdesaoController {
             }
             
             workflowService.aprovarProcesso(id, aprovadoPor, observacoes);
+            try {
+                auditoriaRhLogService.registrar(
+                        "ALTERACAO",
+                        "APROVAR_PROCESSO",
+                        "/rh/workflow/api/processo/" + id + "/aprovar",
+                        aprovadoPor,
+                        null,
+                        observacoes,
+                        true);
+            } catch (Exception ignore) {}
             
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);
@@ -255,6 +268,16 @@ public class WorkflowAdesaoController {
             }
             
             workflowService.rejeitarProcesso(id, motivoRejeicao, usuarioResponsavel);
+            try {
+                auditoriaRhLogService.registrar(
+                        "ALTERACAO",
+                        "REJEITAR_PROCESSO",
+                        "/rh/workflow/api/processo/" + id + "/rejeitar",
+                        usuarioResponsavel,
+                        null,
+                        motivoRejeicao,
+                        true);
+            } catch (Exception ignore) {}
             
             Map<String, Object> response = new HashMap<>();
             response.put("sucesso", true);

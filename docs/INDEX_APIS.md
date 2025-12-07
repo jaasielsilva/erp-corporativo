@@ -30,3 +30,6 @@
 
 ## Geral
 - `DashboardController`, `SolicitacoesController`, `DocumentosController`, `ConfiguracoesController`
+- RH Auditoria
+  - GET `/api/rh/auditoria/logs`
+  - POST `/api/rh/auditoria/logs`

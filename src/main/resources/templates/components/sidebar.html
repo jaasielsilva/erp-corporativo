@@ -1,4 +1,4 @@
-<div class="sidebar" th:fragment="sidebar">
+<div class="sidebar" th:fragment="sidebar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
   <div>
     <div class="user-panel">
       <img th:if="${usuarioLogado != null}" th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}"
@@ -142,7 +142,7 @@
         </li>
 
         <!-- Módulo RH - Apenas área de RH e níveis gerenciais -->
-        <li class="has-submenu" th:if="${podeAcessarRH}">
+        <li class="has-submenu" th:if="${podeAcessarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-users"></i> Recursos Humanos
           </a>
@@ -152,10 +152,10 @@
                 <i class="fas fa-user-tie"></i> Colaboradores
               </a>
               <ul class="submenu">
-                <li><a href="/rh/colaboradores/listar"><i class="fas fa-list"></i> Listar</a></li>
-                <li th:if="${podeGerenciarRH}"><a href="/rh/colaboradores/novo"><i class="fas fa-plus"></i> Novo</a>
+                <li sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE')"><a href="/rh/colaboradores/listar"><i class="fas fa-list"></i> Listar</a></li>
+                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA')"><a href="/rh/colaboradores/novo"><i class="fas fa-plus"></i> Novo</a>
                 </li>
-                <li th:if="${podeGerenciarRH}"><a href="/rh/colaboradores/adesao"><i class="fas fa-user-plus"></i>
+                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a href="/rh/colaboradores/adesao"><i class="fas fa-user-plus"></i>
                     Adesão de Colaboradores</a></li>
                 <!--<li><a href="/rh/colaboradores/ficha"><i class="fas fa-id-card"></i> Ficha</a></li>-->
                 <!-- <li><a href="/rh/colaboradores/documentos"><i class="fas fa-file-alt"></i> Documentos</a></li> -->
@@ -165,7 +165,7 @@
             </li>
 
             <!-- Folha de Pagamento - Apenas RH e níveis superiores -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}">
+            <li class="has-submenu" th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-money-bill-wave"></i> Folha de Pagamento
               </a>
@@ -180,7 +180,7 @@
             </li>
 
             <!-- Benefícios - Todos os níveis gerenciais -->
-            <li class="has-submenu" th:if="${isGerencial}">
+            <li class="has-submenu" th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','RH_GERENTE')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-gift"></i> Benefícios
               </a>
@@ -193,7 +193,7 @@
             </li>
 
             <!-- Workflow de Aprovação - Apenas níveis gerenciais -->
-            <li class="has-submenu" th:if="${isGerencial}">
+            <li class="has-submenu" th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','SUPERVISOR')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-tasks"></i> Workflow
               </a>
@@ -205,63 +205,63 @@
             </li>
 
             <!-- Ponto e Escalas -->
-            <li class="has-submenu">
+            <li class="has-submenu" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-clock"></i> Ponto e Escalas
               </a>
               <ul class="submenu">
                 <li><a href="/rh/ponto-escalas/registros"><i class="fas fa-fingerprint"></i> Registros</a></li>
-                <li th:if="${isGerencial}"><a href="/rh/ponto-escalas/correcoes"><i class="fas fa-edit"></i>
+                <li th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','SUPERVISOR')"><a href="/rh/ponto-escalas/correcoes"><i class="fas fa-edit"></i>
                     Correções</a></li>
-                <li th:if="${isGerencial}"><a href="/rh/ponto-escalas/escalas"><i class="fas fa-calendar-alt"></i>
+                <li th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','SUPERVISOR')"><a href="/rh/ponto-escalas/escalas"><i class="fas fa-calendar-alt"></i>
                     Escalas</a></li>
-                <li th:if="${podeGerenciarRH}"><a href="/rh/ponto-escalas/relatorios"><i class="fas fa-chart-line"></i>
+                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a href="/rh/ponto-escalas/relatorios"><i class="fas fa-chart-line"></i>
                     Relatórios</a></li>
               </ul>
             </li>
 
             <!-- Férias -->
-            <li class="has-submenu">
+            <li class="has-submenu" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-umbrella-beach"></i> Férias
               </a>
               <ul class="submenu">
-                <li><a href="/rh/ferias/solicitar"><i class="fas fa-paper-plane"></i> Solicitar</a></li>
-                <li th:if="${isGerencial}"><a href="/rh/ferias/aprovar"><i class="fas fa-check"></i> Aprovar</a></li>
-                <li th:if="${podeGerenciarRH}"><a href="/rh/ferias/planejamento"><i class="fas fa-calendar-check"></i>
+                <li sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')"><a href="/rh/ferias/solicitar"><i class="fas fa-paper-plane"></i> Solicitar</a></li>
+                <li th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','RH_GERENTE','SUPERVISOR')"><a href="/rh/ferias/aprovar"><i class="fas fa-check"></i> Aprovar</a></li>
+                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a href="/rh/ferias/planejamento"><i class="fas fa-calendar-check"></i>
                     Planejamento</a></li>
-                <li><a href="/rh/ferias/calendario"><i class="fas fa-calendar"></i> Calendário</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')"><a href="/rh/ferias/calendario"><i class="fas fa-calendar"></i> Calendário</a></li>
               </ul>
             </li>
 
             <!-- Avaliação -->
-            <li class="has-submenu" th:if="${isGerencial}">
+            <li class="has-submenu" th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','RH_GERENTE')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-star"></i> Avaliação
               </a>
               <ul class="submenu">
                 <li><a href="/rh/avaliacao/periodicidade"><i class="fas fa-calendar-week"></i> Periodicidade</a></li>
                 <li><a href="/rh/avaliacao/feedbacks"><i class="fas fa-comments"></i> Feedbacks</a></li>
-                <li th:if="${podeGerenciarRH}"><a href="/rh/avaliacao/relatorios"><i class="fas fa-chart-pie"></i>
+                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a href="/rh/avaliacao/relatorios"><i class="fas fa-chart-pie"></i>
                     Relatórios</a></li>
               </ul>
             </li>
 
             <!-- Treinamentos -->
-            <li class="has-submenu">
+            <li class="has-submenu" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-graduation-cap"></i> Treinamentos
               </a>
               <ul class="submenu">
-                <li th:if="${podeGerenciarRH}"><a href="/rh/treinamentos/cadastro"><i class="fas fa-plus-square"></i>
+                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a href="/rh/treinamentos/cadastro"><i class="fas fa-plus-square"></i>
                     Cadastro</a></li>
-                <li><a href="/rh/treinamentos/inscricao"><i class="fas fa-user-plus"></i> Inscrição</a></li>
-                <li><a href="/rh/treinamentos/certificado"><i class="fas fa-certificate"></i> Certificado</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','COLABORADOR')"><a href="/rh/treinamentos/inscricao"><i class="fas fa-user-plus"></i> Inscrição</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','COLABORADOR')"><a href="/rh/treinamentos/certificado"><i class="fas fa-certificate"></i> Certificado</a></li>
               </ul>
             </li>
 
             <!-- Recrutamento - Apenas RH -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}">
+            <li class="has-submenu" th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-search"></i> Recrutamento
               </a>
@@ -274,17 +274,44 @@
             </li>
 
             <!-- Relatórios RH - Apenas RH -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}">
-              <a href="javascript:void(0);" class="submenu-toggle">
-                <i class="fas fa-chart-bar"></i> Relatórios RH
-              </a>
-              <ul class="submenu">
-                <li><a href="/rh/relatorios/turnover"><i class="fas fa-exchange-alt"></i> Turnover</a></li>
-                <li><a href="/rh/relatorios/absenteismo"><i class="fas fa-user-times"></i> Absenteísmo</a></li>
-                <li><a href="/rh/relatorios/headcount"><i class="fas fa-users"></i> Headcount</a></li>
-                <li><a href="/rh/relatorios/indicadores"><i class="fas fa-tachometer-alt"></i> Indicadores</a></li>
-              </ul>
-            </li>
+        <li class="has-submenu" th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-chart-bar"></i> Relatórios RH
+          </a>
+          <ul class="submenu">
+            <li><a href="/rh/relatorios/turnover"><i class="fas fa-exchange-alt"></i> Turnover</a></li>
+            <li><a href="/rh/relatorios/absenteismo"><i class="fas fa-user-times"></i> Absenteísmo</a></li>
+            <li><a href="/rh/relatorios/headcount"><i class="fas fa-users"></i> Headcount</a></li>
+            <li><a href="/rh/relatorios/indicadores"><i class="fas fa-tachometer-alt"></i> Indicadores</a></li>
+          </ul>
+        </li>
+
+        <!-- Configurações RH -->
+        <li class="has-submenu" th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-cogs"></i> Configurações RH
+          </a>
+          <ul class="submenu">
+            <li><a href="/rh/configuracoes"><i class="fas fa-home"></i> Início</a></li>
+            <li><a href="/rh/configuracoes/politicas-ferias"><i class="fas fa-umbrella-beach"></i> Políticas de Férias</a></li>
+            <li><a href="/rh/configuracoes/ponto"><i class="fas fa-fingerprint"></i> Parâmetros de Ponto</a></li>
+            <li><a href="/rh/configuracoes/integracoes"><i class="fas fa-plug"></i> Integrações</a></li>
+          </ul>
+        </li>
+
+        <!-- Auditoria RH -->
+        <li class="has-submenu" th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+          <a href="javascript:void(0);" class="submenu-toggle">
+            <i class="fas fa-shield-alt"></i> Auditoria RH
+          </a>
+          <ul class="submenu">
+            <li><a href="/rh/auditoria"><i class="fas fa-home"></i> Início</a></li>
+            <li><a href="/rh/auditoria/acessos"><i class="fas fa-user-check"></i> Log de Acessos</a></li>
+            <li><a href="/rh/auditoria/alteracoes"><i class="fas fa-edit"></i> Alterações de Dados</a></li>
+            <li><a href="/rh/auditoria/exportacoes"><i class="fas fa-file-export"></i> Exportações</a></li>
+            <li><a href="/rh/auditoria/revisoes"><i class="fas fa-search"></i> Revisões Periódicas</a></li>
+          </ul>
+        </li>
           </ul>
         </li>
 

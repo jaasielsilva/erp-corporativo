@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.support.CompositeCacheManager;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,14 +25,21 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
+        SimpleCacheManager specific = new SimpleCacheManager();
+        Caffeine<Object, Object> recrutamentoSpec = Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofSeconds(60))
+                .maximumSize(10000);
+        CaffeineCache candidatosPage = new CaffeineCache("recrutamentoCandidatosPage", recrutamentoSpec.build());
+        specific.setCaches(java.util.List.of(candidatosPage));
 
-        Caffeine<Object, Object> builder = Caffeine.newBuilder()
+        Caffeine<Object, Object> defaultSpec = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(ttlHours))
                 .maximumSize(maxSize);
+        CaffeineCacheManager dynamic = new CaffeineCacheManager();
+        dynamic.setCaffeine(defaultSpec);
 
-        // Criação dinâmica de caches: qualquer nome usado em @Cacheable será criado sob este builder
-        CaffeineCacheManager manager = new CaffeineCacheManager();
-        manager.setCaffeine(builder);
-        return manager;
+        CompositeCacheManager composite = new CompositeCacheManager(specific, dynamic);
+        composite.setFallbackToNoOpCache(false);
+        return composite;
     }
 }

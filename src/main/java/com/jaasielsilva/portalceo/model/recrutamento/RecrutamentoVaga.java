@@ -4,11 +4,13 @@ import com.jaasielsilva.portalceo.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "rh_recrutamento_vagas")
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class RecrutamentoVaga extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,5 +29,12 @@ public class RecrutamentoVaga extends BaseEntity {
     private String tipoContrato;
     @Column(length = 20)
     private String status;
+    @Column(columnDefinition = "TEXT")
+    private String responsabilidades;
+    @Column(columnDefinition = "TEXT")
+    private String requisitos;
+    @Column(columnDefinition = "TEXT")
+    private String diferenciais;
+    @Column(columnDefinition = "TEXT")
+    private String beneficios;
 }
-

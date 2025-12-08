@@ -4,6 +4,7 @@ import com.jaasielsilva.portalceo.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "rh_recrutamento_candidaturas")
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class RecrutamentoCandidatura extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,4 +30,3 @@ public class RecrutamentoCandidatura extends BaseEntity {
     @Column(length = 120)
     private String origem;
 }
-

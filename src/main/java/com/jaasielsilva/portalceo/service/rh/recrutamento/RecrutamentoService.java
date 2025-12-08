@@ -64,14 +64,22 @@ public class RecrutamentoService {
     }
 
     @Transactional
-    public RecrutamentoVaga criarVaga(String titulo, String descricao, String departamento, String senioridade, String localidade, String tipoContrato) {
+    public RecrutamentoVaga criarVaga(String titulo, String descricao, String departamento, String senioridade, String localidade, String tipoContrato,
+                                      String responsabilidades, String requisitos, String diferenciais, String beneficios) {
         RecrutamentoVaga v = new RecrutamentoVaga();
         v.setTitulo(titulo); v.setDescricao(descricao); v.setDepartamento(departamento); v.setSenioridade(senioridade); v.setLocalidade(localidade); v.setTipoContrato(tipoContrato); v.setStatus("ABERTA");
+        v.setResponsabilidades(responsabilidades);
+        v.setRequisitos(requisitos);
+        v.setDiferenciais(diferenciais);
+        v.setBeneficios(beneficios);
         return vagaRepo.save(v);
     }
 
     @Transactional
     public RecrutamentoCandidatura candidatar(Long candidatoId, Long vagaId, String origem) {
+        if (candRepo.existsByCandidatoIdAndVagaId(candidatoId, vagaId)) {
+            throw new IllegalArgumentException("Candidato já possui candidatura nesta vaga");
+        }
         RecrutamentoCandidato candidato = candidatoRepo.findById(candidatoId).orElseThrow();
         RecrutamentoVaga vaga = vagaRepo.findById(vagaId).orElseThrow();
         RecrutamentoCandidatura c = new RecrutamentoCandidatura();
@@ -125,9 +133,15 @@ public class RecrutamentoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<RecrutamentoCandidato> listarCandidatos(String q, int page, int size) {
+    public Page<RecrutamentoCandidato> listarCandidatos(String q, String nome, String email, String telefone, String genero, LocalDate nasc, int page, int size) {
         Pageable p = PageRequest.of(Math.max(page,0), Math.min(Math.max(size,1), 100));
-        return candidatoRepo.findAll(p);
+        return candidatoRepo.buscarComFiltros(q!=null && !q.isBlank()? q.trim(): null,
+                nome!=null && !nome.isBlank()? nome.trim(): null,
+                email!=null && !email.isBlank()? email.trim(): null,
+                telefone!=null && !telefone.isBlank()? telefone.trim(): null,
+                genero!=null && !genero.isBlank()? genero.trim(): null,
+                nasc,
+                p);
     }
 
     @Transactional(readOnly = true)

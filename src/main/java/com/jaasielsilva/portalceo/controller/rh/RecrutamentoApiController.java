@@ -1,6 +1,12 @@
 package com.jaasielsilva.portalceo.controller.rh;
 
 import com.jaasielsilva.portalceo.model.recrutamento.*;
+import com.jaasielsilva.portalceo.model.Cargo;
+import com.jaasielsilva.portalceo.model.Departamento;
+import com.jaasielsilva.portalceo.service.CargoService;
+import com.jaasielsilva.portalceo.service.DepartamentoService;
+import com.jaasielsilva.portalceo.service.BeneficioService;
+import com.jaasielsilva.portalceo.repository.CargoDepartamentoAssociacaoRepository;
 import com.jaasielsilva.portalceo.service.rh.recrutamento.RecrutamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,6 +24,10 @@ import java.util.Map;
 @RequestMapping("/api/rh/recrutamento")
 public class RecrutamentoApiController {
     @Autowired private RecrutamentoService service;
+    @Autowired private CargoService cargoService;
+    @Autowired private DepartamentoService departamentoService;
+    @Autowired private BeneficioService beneficioService;
+    @Autowired private CargoDepartamentoAssociacaoRepository cargoDepartamentoAssociacaoRepository;
 
     @PostMapping("/candidatos")
     @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
@@ -26,6 +36,12 @@ public class RecrutamentoApiController {
                                                              @RequestParam(required = false) String telefone,
                                                              @RequestParam(required = false) String genero,
                                                              @RequestParam(required = false) String dataNascimento) {
+        if (nome == null || nome.isBlank()) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Nome é obrigatório"));
+        }
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "Email é obrigatório e deve ser válido"));
+        }
         RecrutamentoCandidato c = service.criarCandidato(nome, email, telefone, genero, dataNascimento!=null? LocalDate.parse(dataNascimento): null);
         return ResponseEntity.ok(Map.of("success", true, "id", c.getId()));
     }
@@ -70,8 +86,13 @@ public class RecrutamentoApiController {
                                                         @RequestParam(required = false) String departamento,
                                                         @RequestParam(required = false) String senioridade,
                                                         @RequestParam(required = false) String localidade,
-                                                        @RequestParam(required = false) String tipoContrato) {
-        var v = service.criarVaga(titulo, descricao, departamento, senioridade, localidade, tipoContrato);
+                                                        @RequestParam(required = false) String tipoContrato,
+                                                        @RequestParam(required = false) String responsabilidades,
+                                                        @RequestParam(required = false) String requisitos,
+                                                        @RequestParam(required = false) String diferenciais,
+                                                        @RequestParam(required = false) String beneficios) {
+        var v = service.criarVaga(titulo, descricao, departamento, senioridade, localidade, tipoContrato,
+                responsabilidades, requisitos, diferenciais, beneficios);
         return ResponseEntity.ok(Map.of("success", true, "id", v.getId()));
     }
 
@@ -83,12 +104,62 @@ public class RecrutamentoApiController {
         return ResponseEntity.ok(service.listarVagas(status, page, size));
     }
 
+    @GetMapping("/cargos")
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL')")
+    public ResponseEntity<java.util.List<java.util.Map<String,Object>>> listarCargosPrefill() {
+        java.util.List<Cargo> cargos = cargoService.listarAtivos();
+        java.util.List<com.jaasielsilva.portalceo.model.Beneficio> beneficios = beneficioService.listarTodos();
+        String beneficiosTexto = beneficios.stream()
+                .map(b -> "- " + (b.getNome()!=null? b.getNome():"Benefício"))
+                .reduce("", (a,b) -> a.isEmpty()? b : a + "\n" + b);
+        java.util.List<java.util.Map<String,Object>> out = new java.util.ArrayList<>();
+        for (Cargo cargo : cargos) {
+            java.util.List<Departamento> deps = cargoDepartamentoAssociacaoRepository.findDepartamentosByCargoAndAtivoTrue(cargo);
+            String senioridade = cargo.getNome()!=null && cargo.getNome().toLowerCase().contains("senior") ? "Senior" : (cargo.getNome()!=null && cargo.getNome().toLowerCase().contains("pleno") ? "Pleno" : "Junior");
+            String localidade = "Híbrido";
+            String tipoContrato = "CLT";
+            String descricao = "Vaga de " + cargo.getNome() + ": atuação em equipe, foco em resultados e qualidade.";
+            String responsabilidades = "- Executar atividades de " + cargo.getNome() + "\n- Colaborar com o time em projetos\n- Garantir cumprimento de prazos";
+            String requisitos = "- Experiência na função\n- Boa comunicação\n- Conhecimentos técnicos relevantes";
+            String diferenciais = "- Certificações na área\n- Experiência com metodologias ágeis\n- Projetos de destaque";
+            java.util.Map<String,Object> m = new java.util.LinkedHashMap<>();
+            m.put("id", cargo.getId());
+            m.put("nome", cargo.getNome());
+            m.put("departamentos", deps.stream().map(Departamento::getNome).toList());
+            m.put("senioridade", senioridade);
+            m.put("localidade", localidade);
+            m.put("tipoContrato", tipoContrato);
+            m.put("descricao", descricao);
+            m.put("responsabilidades", responsabilidades);
+            m.put("requisitos", requisitos);
+            m.put("diferenciais", diferenciais);
+            m.put("beneficios", beneficiosTexto);
+            out.add(m);
+        }
+        return ResponseEntity.ok(out);
+    }
+
+    @GetMapping("/departamentos")
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL')")
+    public ResponseEntity<java.util.List<Departamento>> listarDepartamentos() {
+        return ResponseEntity.ok(departamentoService.listarTodos());
+    }
+
     @GetMapping("/candidatos")
     @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL')")
     public ResponseEntity<Page<RecrutamentoCandidato>> listarCandidatos(@RequestParam(required = false) String q,
+                                                                        @RequestParam(required = false) String nome,
+                                                                        @RequestParam(required = false) String email,
+                                                                        @RequestParam(required = false) String telefone,
+                                                                        @RequestParam(required = false) String genero,
+                                                                        @RequestParam(required = false) String nasc,
                                                                         @RequestParam(defaultValue = "0") int page,
                                                                         @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(service.listarCandidatos(q, page, size));
+        LocalDate nascDate = null;
+        if (nasc != null && !nasc.isBlank()) {
+            try { nascDate = LocalDate.parse(nasc); } catch (Exception ignored) { }
+        }
+        return ResponseEntity.ok(service.listarCandidatos(q, nome, email, telefone, genero, nascDate, page, size));
     }
 
     @PostMapping("/candidaturas")
@@ -96,8 +167,12 @@ public class RecrutamentoApiController {
     public ResponseEntity<Map<String,Object>> candidatar(@RequestParam Long candidatoId,
                                                          @RequestParam Long vagaId,
                                                          @RequestParam(required = false) String origem) {
-        var c = service.candidatar(candidatoId, vagaId, origem);
-        return ResponseEntity.ok(Map.of("success", true, "id", c.getId()));
+        try {
+            var c = service.candidatar(candidatoId, vagaId, origem);
+            return ResponseEntity.ok(Map.of("success", true, "id", c.getId()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     @GetMapping("/candidaturas")

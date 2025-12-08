@@ -10,6 +10,8 @@ import com.jaasielsilva.portalceo.repository.CargoDepartamentoAssociacaoReposito
 import com.jaasielsilva.portalceo.service.rh.recrutamento.RecrutamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -159,7 +161,14 @@ public class RecrutamentoApiController {
         if (nasc != null && !nasc.isBlank()) {
             try { nascDate = LocalDate.parse(nasc); } catch (Exception ignored) { }
         }
-        return ResponseEntity.ok(service.listarCandidatos(q, nome, email, telefone, genero, nascDate, page, size));
+        try {
+            Page<RecrutamentoCandidato> resp = service.listarCandidatos(q, nome, email, telefone, genero, nascDate, page, size);
+            return ResponseEntity.ok().header("Cache-Control", "private, max-age=30").body(resp);
+        } catch (Exception e) {
+            Pageable p = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+            Page<RecrutamentoCandidato> empty = Page.empty(p);
+            return ResponseEntity.ok().header("Cache-Control", "private, max-age=10").body(empty);
+        }
     }
 
     @PostMapping("/candidaturas")

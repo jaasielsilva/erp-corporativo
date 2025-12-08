@@ -6,43 +6,99 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/style.css" rel="stylesheet"><link href="/css/sidebar.css" rel="stylesheet"><link href="/css/notifications.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="app-container"><aside th:replace="~{components/sidebar :: sidebar}"></aside><main class="main-content"><header th:replace="~{components/topbar :: topbar}"></header><section class="content-area"><div class="container-fluid"><div class="row"><div class="col-12"><h1 class="h4 mb-3"><i class="fas fa-user-plus me-2"></i>Recrutamento - Candidatos</h1><div class="card"><div class="card-body">
-<form class="mb-3" onsubmit="event.preventDefault(); criar();"><div class="row g-3"><div class="col-md-3"><label class="form-label">Nome</label><input type="text" id="nome" class="form-control" required></div><div class="col-md-3"><label class="form-label">Email</label><input type="email" id="email" class="form-control" required></div><div class="col-md-2"><label class="form-label">Telefone</label><input type="text" id="telefone" class="form-control"></div><div class="col-md-2"><label class="form-label">Gênero</label><select id="genero" class="form-select"><option value="">Selecione</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div><div class="col-md-2"><label class="form-label">Nascimento</label><input type="date" id="nasc" class="form-control"></div></div><div class="mt-3"><button class="btn btn-primary"><i class="fas fa-plus me-2"></i>Criar</button></div></form>
-<div class="row g-3 align-items-end mb-3">
-  <div class="col-md-4"><label class="form-label">Buscar</label><input type="text" id="buscar" class="form-control" placeholder="Nome, email..."></div>
-  <div class="col-md-2"><button class="btn btn-secondary w-100" id="btnBuscar" aria-label="Buscar candidatos"><i class="fas fa-search me-1"></i>Buscar</button></div>
-  <div class="col-md-2"><label class="form-label">Itens por página</label><select id="pageSize" class="form-select"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option></select></div>
-  <div class="col-md-4 d-flex gap-2 justify-content-end align-items-center">
-    <button class="btn btn-outline-secondary" id="prevPage" aria-label="Página anterior"><i class="fas fa-chevron-left"></i></button>
-    <span id="pageInfo" class="text-muted" aria-live="polite">Página 1 de 1</span>
-    <button class="btn btn-outline-secondary" id="nextPage" aria-label="Próxima página"><i class="fas fa-chevron-right"></i></button>
-  </div>
-  <div class="col-12">
-    <div class="row g-3">
-      <div class="col-md-3"><label class="form-label">Nome</label><input type="text" id="fNome" class="form-control" placeholder="Filtrar por nome"></div>
-      <div class="col-md-3"><label class="form-label">Email</label><input type="email" id="fEmail" class="form-control" placeholder="Filtrar por email"></div>
-      <div class="col-md-2"><label class="form-label">Telefone</label><input type="text" id="fTelefone" class="form-control" placeholder="Filtrar por telefone"></div>
-      <div class="col-md-2"><label class="form-label">Gênero</label><select id="fGenero" class="form-select"><option value="">Todos</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
-      <div class="col-md-2"><label class="form-label">Nascimento</label><input type="date" id="fNasc" class="form-control"></div>
-    </div>
-  </div>
+<div class="app-container">
+  <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+  <main class="main-content">
+    <header th:replace="~{components/topbar :: topbar}"></header>
+    <section class="content-area">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <h1 class="h4 mb-3 d-flex align-items-center"><i class="fas fa-user-plus me-2"></i>Recrutamento - Candidatos</h1>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-5">
+            <div class="card h-100">
+              <div class="card-header fw-semibold">Novo Candidato</div>
+              <div class="card-body">
+                <form onsubmit="event.preventDefault(); criar();">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6"><label class="form-label">Nome</label><input type="text" id="nome" class="form-control" required></div>
+                    <div class="col-12 col-md-6"><label class="form-label">Email</label><input type="email" id="email" class="form-control" required></div>
+                    <div class="col-12 col-md-6"><label class="form-label">Telefone</label><input type="text" id="telefone" class="form-control"></div>
+                    <div class="col-6 col-md-3"><label class="form-label">Gênero</label><select id="genero" class="form-select"><option value="">Selecione</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
+                    <div class="col-6 col-md-3"><label class="form-label">Nascimento</label><input type="date" id="nasc" class="form-control"></div>
+                  </div>
+                  <div class="mt-3 d-flex justify-content-end"><button class="btn btn-primary"><i class="fas fa-plus me-2"></i>Criar</button></div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-7">
+            <div class="card h-100">
+              <div class="card-header fw-semibold">Busca e Filtros</div>
+              <div class="card-body">
+                <div class="row g-3 align-items-end">
+                  <div class="col-12 col-md-6"><label class="form-label">Buscar</label><input type="text" id="buscar" class="form-control" placeholder="Nome, email..."></div>
+                  <div class="col-6 col-md-3"><label class="form-label">Itens por página</label><select id="pageSize" class="form-select"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option></select></div>
+                  <div class="col-6 col-md-3 d-flex gap-2 justify-content-end align-items-center">
+                    <button class="btn btn-secondary" id="btnBuscar" aria-label="Buscar candidatos"><i class="fas fa-search me-1"></i>Buscar</button>
+                    <button class="btn btn-outline-secondary" id="prevPage" aria-label="Página anterior"><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn btn-outline-secondary" id="nextPage" aria-label="Próxima página"><i class="fas fa-chevron-right"></i></button>
+                  </div>
+                </div>
+                <div class="mt-2"><span id="pageInfo" class="text-muted" aria-live="polite">Página 1 de 1</span></div>
+
+                <div class="row g-3 mt-3">
+                  <div class="col-12 col-md-4"><label class="form-label">Nome</label><input type="text" id="fNome" class="form-control" placeholder="Filtrar por nome"></div>
+                  <div class="col-12 col-md-4"><label class="form-label">Email</label><input type="email" id="fEmail" class="form-control" placeholder="Filtrar por email"></div>
+                  <div class="col-12 col-md-4"><label class="form-label">Telefone</label><input type="text" id="fTelefone" class="form-control" placeholder="Filtrar por telefone"></div>
+                  <div class="col-6 col-md-4"><label class="form-label">Gênero</label><select id="fGenero" class="form-select"><option value="">Todos</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
+                  <div class="col-6 col-md-4"><label class="form-label">Nascimento</label><input type="date" id="fNasc" class="form-control"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header fw-semibold">Lista de Candidatos</div>
+              <div class="card-body">
+                <div class="table-responsive position-relative">
+                  <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 align-items-center justify-content-center d-none" style="background:rgba(255,255,255,0.6); z-index:2"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>
+                  <table class="table table-striped align-middle">
+                    <thead>
+                      <tr><th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th><th>Gênero</th><th class="text-end">Ações</th></tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                  </table>
+                  <div id="listSentinel" style="height:1px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer th:replace="~{components/footer :: footer}"></footer>
+  </main>
 </div>
-<div class="table-responsive position-relative">
-  <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background:rgba(255,255,255,0.6); display:none; z-index:2"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>
-  <table class="table table-striped"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th><th>Gênero</th><th>Ações</th></tr></thead><tbody id="tbody"></tbody></table>
-</div>
-</div></div></div></div></div></section><footer th:replace="~{components/footer :: footer}"></footer></main></div>
 <script src="/js/sidebar.js" defer></script><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script><script th:src="@{/js/notifications.js}"></script>
 <script>
 function criar(){ const btn = $('.btn.btn-primary'); btn.prop('disabled', true); const nome=$('#nome').val(), email=$('#email').val(), telefone=$('#telefone').val(), genero=$('#genero').val(), dataNascimento=$('#nasc').val(); $.post('/api/rh/recrutamento/candidatos',{nome,email,telefone,genero,dataNascimento}).done(function(r){ if(r&&r.success){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Candidato criado',priority:'LOW'});} $('#nome').val(''); $('#email').val(''); $('#telefone').val(''); $('#genero').val(''); $('#nasc').val(''); resetAndLoad(); } else { if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:(r&&r.message)||'Falha ao criar candidato',priority:'HIGH'});} } }).fail(function(){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Erro de comunicação com o servidor',priority:'HIGH'});} }).always(function(){ btn.prop('disabled', false); }); }
 let vagasAbertas=[];
-function carregarVagasAbertas(){ $.get('/api/rh/recrutamento/vagas',{status:'ABERTA',page:0,size:100}).done(function(page){ vagasAbertas=(page&&page.content)||[]; }); }
-let currentPage = 0; let totalPages = 1; let pageSize = 20; let infinite = true; let observer;
-function setLoading(on){ $('#loadingOverlay').css('display', on? 'flex':'none'); }
+function carregarVagasAbertas(){ $.ajax({url:'/api/rh/recrutamento/vagas', method:'GET', data:{status:'ABERTA',page:0,size:100}, timeout:6000}).done(function(page){ vagasAbertas=(page&&page.content)||[]; }); }
+let currentPage = 0; let totalPages = 1; let pageSize = 20; let infinite = true; let observer; let isLoading=false;
+function setLoading(on){ const el = $('#loadingOverlay'); if(on){ el.removeClass('d-none').addClass('d-flex'); } else { el.addClass('d-none').removeClass('d-flex'); } }
 function renderPageInfo(){ $('#pageInfo').text(`Página ${currentPage+1} de ${Math.max(totalPages,1)}`); $('#prevPage').prop('disabled', currentPage<=0); $('#nextPage').prop('disabled', currentPage>=totalPages-1); }
 function rowHtml(c){ const vagaSel = `<select class="form-select form-select-sm me-2">` + [`<option value="">Selecionar vaga...</option>`].concat(vagasAbertas.map(v=>`<option value="${v.id}">${v.titulo}</option>`)).join('') + `</select>`; const btn = `<button class="btn btn-sm btn-outline-primary">Candidatar</button>`; const tr = document.createElement('tr'); tr.innerHTML = `<td>${c.id}</td><td>${c.nome||'-'}</td><td>${c.email||'-'}</td><td>${c.telefone||'-'}</td><td>${c.genero||'-'}</td><td class="d-flex">${vagaSel}${btn}</td>`; const btnEl = $(tr).find('button'); const selEl = $(tr).find('select'); btnEl.on('click', function(){ const vagaId = selEl.val(); if(!vagaId){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Selecione uma vaga',priority:'MEDIUM'});} return; } $.post('/api/rh/recrutamento/candidaturas', {candidatoId: c.id, vagaId: vagaId, origem: 'SITE'}).done(function(r){ if(r&&r.success){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Candidatura criada',priority:'LOW'});} selEl.val(''); } else { if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:(r&&r.message)||'Falha ao criar candidatura',priority:'MEDIUM'});} } }).fail(function(){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Erro de comunicação com o servidor',priority:'HIGH'});} }); }); return tr; }
-function carregar(pageOverride, append){ const q = $('#buscar').val()||null; if(typeof pageOverride==='number'){ currentPage = Math.max(0, pageOverride);} const params = { q, page: currentPage, size: pageSize, nome: $('#fNome').val()||null, email: $('#fEmail').val()||null, telefone: $('#fTelefone').val()||null, genero: $('#fGenero').val()||null, nasc: $('#fNasc').val()||null }; setLoading(true); $.get('/api/rh/recrutamento/candidatos', params).done(function(page){ const list = (page&&page.content)||[]; currentPage = (page&&typeof page.number==='number')? page.number : currentPage; totalPages = (page&&typeof page.totalPages==='number')? page.totalPages : totalPages; const tbody = document.getElementById('tbody'); if(!append){ tbody.innerHTML = ''; } const frag = document.createDocumentFragment(); list.forEach(function(c){ frag.appendChild(rowHtml(c)); }); tbody.appendChild(frag); renderPageInfo(); setupInfiniteObserver(); }).fail(function(){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Falha ao carregar candidatos',priority:'HIGH'});} }).always(function(){ setLoading(false); }); }
-function setupInfiniteObserver(){ if(!infinite) return; if(observer){ observer.disconnect(); } const sentinel = document.querySelector('#nextPage'); observer = new IntersectionObserver(function(entries){ entries.forEach(function(entry){ if(entry.isIntersecting){ if(currentPage < totalPages-1){ carregar(currentPage+1, true); } } }); },{root: null, threshold: 0}); observer.observe(sentinel); }
+function carregar(pageOverride, append){ if(isLoading) return; isLoading=true; const q = $('#buscar').val()||null; if(typeof pageOverride==='number'){ currentPage = Math.max(0, pageOverride);} const params = { q, page: currentPage, size: pageSize, nome: $('#fNome').val()||null, email: $('#fEmail').val()||null, telefone: $('#fTelefone').val()||null, genero: $('#fGenero').val()||null, nasc: $('#fNasc').val()||null }; setLoading(true); $.ajax({url:'/api/rh/recrutamento/candidatos', method:'GET', data: params, timeout:6000}).done(function(page){ const list = (page&&page.content)||[]; currentPage = (page&&typeof page.number==='number')? page.number : currentPage; totalPages = (page&&typeof page.totalPages==='number')? page.totalPages : totalPages; infinite = totalPages>1; const tbody = document.getElementById('tbody'); if(!append){ tbody.innerHTML = ''; } if(list.length === 0){ tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum candidato encontrado</td></tr>'; } else { const frag = document.createDocumentFragment(); list.forEach(function(c){ frag.appendChild(rowHtml(c)); }); tbody.appendChild(frag); } renderPageInfo(); setupInfiniteObserver(); }).fail(function(){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Falha ao carregar candidatos',priority:'HIGH'});} const tbody = document.getElementById('tbody'); tbody.innerHTML = '<tr><td colspan="6" class="text-center">Erro ao carregar candidatos</td></tr>'; }).always(function(){ setLoading(false); isLoading=false; }); }
+function setupInfiniteObserver(){ if(observer){ observer.disconnect(); observer = null; } if(!infinite) return; const sentinel = document.querySelector('#listSentinel'); if(!sentinel) return; observer = new IntersectionObserver(function(entries){ entries.forEach(function(entry){ if(entry.isIntersecting){ if(currentPage < totalPages-1){ carregar(currentPage+1, true); } } }); },{root: null, threshold: 0}); observer.observe(sentinel); }
 function debounce(fn, delay){ let t; return function(){ const args=arguments; clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), delay); }; }
 function resetAndLoad(){ currentPage=0; carregar(0,false); }
 $(document).ready(function(){ carregarVagasAbertas(); resetAndLoad(); $('#btnBuscar').on('click', function(){ resetAndLoad(); }); $('#buscar').on('keyup', debounce(function(e){ if(e.key==='Enter'){ resetAndLoad(); } else { resetAndLoad(); } }, 300)); $('#pageSize').on('change', function(){ pageSize = parseInt($(this).val(), 10)||20; resetAndLoad(); }); $('#prevPage').on('click', function(){ carregar(currentPage-1,false); }); $('#nextPage').on('click', function(){ carregar(currentPage+1,true); }); $('#fNome,#fEmail,#fTelefone,#fGenero,#fNasc').on('change keyup', debounce(function(e){ if(e.type==='change' || e.key==='Enter'){ resetAndLoad(); } }, 300)); renderPageInfo(); });

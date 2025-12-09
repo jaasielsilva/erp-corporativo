@@ -123,6 +123,7 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/ajuda/**").authenticated()
                                                 // Endpoints que DEVEM ser autenticados
                                                 .requestMatchers("/api/rh/**").authenticated()
+                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                                                 .requestMatchers("/api/chamados/**").authenticated()
                                                 .requestMatchers("/api/beneficios/**").authenticated()
                                                 .requestMatchers("/api/suporte/**").authenticated()

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Relatórios RH - Férias e Benefícios</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <section class="content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 py-3">
+                        <h1 class="display-6 text-muted"><i class="fas fa-umbrella-beach"></i> Férias e Benefícios</h1>
+                        <p class="text-muted">Resumo de solicitações de férias e custos de benefícios.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="inicio" class="form-label">Início</label>
+                        <input type="date" id="inicio" class="form-control" aria-label="Data inicial">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="fim" class="form-label">Fim</label>
+                        <input type="date" id="fim" class="form-control" aria-label="Data final">
+                    </div>
+                    <div class="col-md-3">
+                        <button id="btn-aplicar" class="btn btn-primary"><i class="fas fa-filter"></i> Aplicar</button>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-paper-plane"></i> Solicitações</h5>
+                                <div id="solicitadas" class="display-6 text-muted">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-check-circle"></i> Aprovadas</h5>
+                                <div id="aprovadas" class="display-6 text-muted">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-hourglass-half"></i> Pendentes</h5>
+                                <div id="pendentes" class="display-6 text-muted">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-gift"></i> Custos por Benefício</h5>
+                                <canvas id="chartBeneficios" height="140"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h5 class="card-title"><i class="fas fa-wallet"></i> Orçamento Trimestral</h5>
+                                    <div class="d-flex gap-2">
+                                        <input type="number" id="metaOrcamento" class="form-control" placeholder="Meta trimestral (R$)" aria-label="Meta orçamentária">
+                                        <button id="btn-orcamento" class="btn btn-outline-primary">Atualizar</button>
+                                    </div>
+                                </div>
+                                <canvas id="chartOrcamento" height="140" aria-label="Gráfico de orçamento trimestral" role="img"></canvas>
+                                <div id="alertaOrcamento" class="mt-2 text-danger" aria-live="polite"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+</div>
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script>
+    let chart;
+    function defaultDates(){
+        const today = new Date();
+        const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        document.getElementById('inicio').value = start.toISOString().slice(0,10);
+        document.getElementById('fim').value = today.toISOString().slice(0,10);
+    }
+    async function carregar(){
+        const inicio = document.getElementById('inicio').value;
+        const fim = document.getElementById('fim').value;
+        const res = await fetch(`/api/rh/relatorios/ferias-beneficios?inicio=${inicio}&fim=${fim}`);
+        if (!res.ok) { return; }
+        const d = await res.json();
+        document.getElementById('solicitadas').textContent = d.solicitadas;
+        document.getElementById('aprovadas').textContent = d.aprovadas;
+        document.getElementById('pendentes').textContent = d.pendentes;
+
+        const map = d.beneficios.beneficiosPorTipo || {};
+        const labels = Object.keys(map);
+        const valores = labels.map(k => (map[k]?.custoTotal) || 0);
+        const ctx = document.getElementById('chartBeneficios');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Custo Total',
+                    data: valores,
+                    backgroundColor: '#3b82f6'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+    async function carregarOrcamento(){
+        const inicio = document.getElementById('inicio').value;
+        const fim = document.getElementById('fim').value;
+        const res = await fetch(`/api/rh/relatorios/ferias-beneficios/orcamento?inicio=${inicio}&fim=${fim}`);
+        if (!res.ok) { return; }
+        const d = await res.json();
+        const labels = Object.keys(d.custosPorTrimestre);
+        const custos = labels.map(l => d.custosPorTrimestre[l] || 0);
+        const proj = labels.map(l => d.projCustos[l] || 0);
+        const meta = parseFloat(document.getElementById('metaOrcamento').value || '0');
+        const metaLine = meta > 0 ? labels.map(_ => meta) : [];
+        const excedente = meta > 0 && proj.some(v => v > meta);
+        const msg = excedente ? 'Projeções superam a meta orçamentária em pelo menos um trimestre.' : '';
+        document.getElementById('alertaOrcamento').textContent = msg;
+        const ctx = document.getElementById('chartOrcamento');
+        if (window.orcChart) window.orcChart.destroy();
+        window.orcChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Custos (R$)', data: custos, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)' },
+                    { label: 'Projeção (R$)', data: proj, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)' },
+                    ...(metaLine.length ? [{ label: 'Meta (R$)', data: metaLine, borderColor: '#10b981', borderDash: [6,4] }] : [])
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+    document.getElementById('btn-orcamento').addEventListener('click', carregarOrcamento);
+    document.getElementById('btn-aplicar').addEventListener('click', carregar);
+    defaultDates();
+    carregar();
+    carregarOrcamento();
+</script>
+</body>
+</html>

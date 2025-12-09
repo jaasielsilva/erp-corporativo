@@ -24,6 +24,8 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
 
     boolean existsByEmail(String email);
 
+    @EntityGraph(attributePaths = {"cargo","departamento"})
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
     List<Colaborador> findByAtivoTrue();
 
     // Paginação de colaboradores ativos
@@ -64,6 +66,9 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true AND c.status = 'ATIVO' ORDER BY c.nome")
     List<Colaborador> findPotentialSupervisorsBasic();
 
+    @Query("SELECT new Colaborador(c.id, c.nome, c.email, c.cpf) FROM Colaborador c WHERE c.ativo = true AND c.status = 'ATIVO' AND c.id != :excludeId ORDER BY c.nome")
+    List<Colaborador> findPotentialSupervisorsBasicExcluding(@Param("excludeId") Long excludeId);
+
     @Query(value = "SELECT new com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO(c.id, c.nome, c.email, c.cpf, cg.nome, d.nome, c.dataAdmissao) " +
            "FROM Colaborador c " +
            "LEFT JOIN c.cargo cg " +
@@ -98,5 +103,47 @@ public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> 
     long countByAtivoTrueAndTipoContratoIgnoreCase(String tipoContrato);
 
     long countByAtivoTrueAndTipoContratoContainingIgnoreCase(String tipoContrato);
+
+    @Query("SELECT DISTINCT c.tipoContrato FROM Colaborador c WHERE c.ativo = true AND c.tipoContrato IS NOT NULL")
+    List<String> findDistinctTipoContratoAtivo();
+
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    @Query("SELECT c.id, c.sexo, c.dataNascimento, d.nome, cg.nome, c.tipoContrato " +
+           "FROM Colaborador c " +
+           "LEFT JOIN c.cargo cg " +
+           "LEFT JOIN c.departamento d " +
+           "WHERE c.ativo = true " +
+           "AND (:departamentoNome IS NULL OR (d IS NOT NULL AND LOWER(d.nome) = LOWER(:departamentoNome))) " +
+           "AND (:tipoContrato IS NULL OR (c.tipoContrato IS NOT NULL AND LOWER(c.tipoContrato) = LOWER(:tipoContrato)))")
+    List<Object[]> findAtivosMinimalForHeadcount(@Param("departamentoNome") String departamentoNome,
+                                                 @Param("tipoContrato") String tipoContrato);
+
+    @Query("SELECT YEAR(c.dataAdmissao) as ano, MONTH(c.dataAdmissao) as mes, COUNT(c) as qtd " +
+           "FROM Colaborador c " +
+           "WHERE c.ativo = true AND c.dataAdmissao BETWEEN :inicio AND :fim " +
+           "AND (:departamentoNome IS NULL OR (c.departamento IS NOT NULL AND LOWER(c.departamento.nome) = LOWER(:departamentoNome))) " +
+           "AND (:cargoNome IS NULL OR (c.cargo IS NOT NULL AND LOWER(c.cargo.nome) = LOWER(:cargoNome))) " +
+           "GROUP BY YEAR(c.dataAdmissao), MONTH(c.dataAdmissao) " +
+           "ORDER BY YEAR(c.dataAdmissao), MONTH(c.dataAdmissao)")
+    List<Object[]> contarAdmissoesPorMes(@Param("inicio") java.time.LocalDate inicio,
+                                         @Param("fim") java.time.LocalDate fim,
+                                         @Param("departamentoNome") String departamentoNome,
+                                         @Param("cargoNome") String cargoNome);
+
+    @Query("SELECT COALESCE(c.departamento.nome, 'Sem departamento') as nome, COUNT(c) as qtd " +
+           "FROM Colaborador c " +
+           "WHERE c.ativo = true AND c.dataAdmissao BETWEEN :inicio AND :fim " +
+           "GROUP BY c.departamento.nome " +
+           "ORDER BY nome")
+    List<Object[]> contarAdmissoesPorDepartamento(@Param("inicio") java.time.LocalDate inicio,
+                                                 @Param("fim") java.time.LocalDate fim);
+
+    @Query("SELECT COALESCE(c.cargo.nome, 'Sem cargo') as nome, COUNT(c) as qtd " +
+           "FROM Colaborador c " +
+           "WHERE c.ativo = true AND c.dataAdmissao BETWEEN :inicio AND :fim " +
+           "GROUP BY c.cargo.nome " +
+           "ORDER BY nome")
+    List<Object[]> contarAdmissoesPorCargo(@Param("inicio") java.time.LocalDate inicio,
+                                          @Param("fim") java.time.LocalDate fim);
 
 }

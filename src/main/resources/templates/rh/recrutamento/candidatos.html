@@ -46,8 +46,9 @@
                   <div class="col-6 col-md-3"><label class="form-label">Itens por página</label><select id="pageSize" class="form-select"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option></select></div>
                   <div class="col-6 col-md-3 d-flex gap-2 justify-content-end align-items-center">
                     <button class="btn btn-secondary" id="btnBuscar" aria-label="Buscar candidatos"><i class="fas fa-search me-1"></i>Buscar</button>
-                    <button class="btn btn-outline-secondary" id="prevPage" aria-label="Página anterior"><i class="fas fa-chevron-left"></i></button>
-                    <button class="btn btn-outline-secondary" id="nextPage" aria-label="Próxima página"><i class="fas fa-chevron-right"></i></button>
+                    <button class="btn btn-outline-primary" id="btnImportar" aria-label="Importar colaboradores"><i class="fas fa-download me-1"></i>Importar</button>
+                  <button class="btn btn-outline-secondary" id="prevPage" aria-label="Página anterior"><i class="fas fa-chevron-left"></i></button>
+                  <button class="btn btn-outline-secondary" id="nextPage" aria-label="Próxima página"><i class="fas fa-chevron-right"></i></button>
                   </div>
                 </div>
                 <div class="mt-2"><span id="pageInfo" class="text-muted" aria-live="polite">Página 1 de 1</span></div>
@@ -101,7 +102,7 @@ function carregar(pageOverride, append){ if(isLoading) return; isLoading=true; c
 function setupInfiniteObserver(){ if(observer){ observer.disconnect(); observer = null; } if(!infinite) return; const sentinel = document.querySelector('#listSentinel'); if(!sentinel) return; observer = new IntersectionObserver(function(entries){ entries.forEach(function(entry){ if(entry.isIntersecting){ if(currentPage < totalPages-1){ carregar(currentPage+1, true); } } }); },{root: null, threshold: 0}); observer.observe(sentinel); }
 function debounce(fn, delay){ let t; return function(){ const args=arguments; clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), delay); }; }
 function resetAndLoad(){ currentPage=0; carregar(0,false); }
-$(document).ready(function(){ carregarVagasAbertas(); resetAndLoad(); $('#btnBuscar').on('click', function(){ resetAndLoad(); }); $('#buscar').on('keyup', debounce(function(e){ if(e.key==='Enter'){ resetAndLoad(); } else { resetAndLoad(); } }, 300)); $('#pageSize').on('change', function(){ pageSize = parseInt($(this).val(), 10)||20; resetAndLoad(); }); $('#prevPage').on('click', function(){ carregar(currentPage-1,false); }); $('#nextPage').on('click', function(){ carregar(currentPage+1,true); }); $('#fNome,#fEmail,#fTelefone,#fGenero,#fNasc').on('change keyup', debounce(function(e){ if(e.type==='change' || e.key==='Enter'){ resetAndLoad(); } }, 300)); renderPageInfo(); });
+$(document).ready(function(){ carregarVagasAbertas(); resetAndLoad(); $('#btnBuscar').on('click', function(){ resetAndLoad(); }); $('#buscar').on('keyup', debounce(function(e){ if(e.key==='Enter'){ resetAndLoad(); } else { resetAndLoad(); } }, 300)); $('#pageSize').on('change', function(){ pageSize = parseInt($(this).val(), 10)||20; resetAndLoad(); }); $('#prevPage').on('click', function(){ carregar(currentPage-1,false); }); $('#nextPage').on('click', function(){ carregar(currentPage+1,true); }); $('#fNome,#fEmail,#fTelefone,#fGenero,#fNasc').on('change keyup', debounce(function(e){ if(e.type==='change' || e.key==='Enter'){ resetAndLoad(); } }, 300)); $('#btnImportar').on('click', function(){ const btn=$(this); btn.prop('disabled',true); $.post('/api/rh/recrutamento/candidatos/importar-colaboradores',{apenasAtivos:true}).done(function(r){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:`Importados: ${(r&&r.criados)||0} • Ignorados: ${(r&&r.ignorados)||0}`,priority:'LOW'});} resetAndLoad(); }).fail(function(){ if(typeof showToast==='function'){ showToast({title:'Recrutamento',message:'Falha ao importar colaboradores',priority:'HIGH'});} }).always(function(){ btn.prop('disabled',false); }); }); renderPageInfo(); });
 </script>
 </body>
 </html>

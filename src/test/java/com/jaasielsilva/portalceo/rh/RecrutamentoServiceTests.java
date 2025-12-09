@@ -20,7 +20,10 @@ public class RecrutamentoServiceTests {
     void fluxoBasico() {
         RecrutamentoCandidato c = service.criarCandidato("Candidato Teste","candidato@example.com","(11)99999-9999","Masculino", LocalDate.of(1990,1,1));
         Assertions.assertNotNull(c.getId());
-        RecrutamentoVaga v = service.criarVaga("Dev Java","Back-end","TI","Pleno","Remoto","CLT");
+        RecrutamentoVaga v = service.criarVaga(
+                "Dev Java","Back-end","TI","Pleno","Remoto","CLT",
+                "Desenvolver APIs","Spring Boot","Docker diferencial","Plano de saúde"
+        );
         Assertions.assertNotNull(v.getId());
         RecrutamentoCandidatura cad = service.candidatar(c.getId(), v.getId(), "Interno");
         Assertions.assertEquals("TRIAGEM", cad.getEtapa());
@@ -30,4 +33,3 @@ public class RecrutamentoServiceTests {
         Assertions.assertEquals("ENTREVISTA", alt.getEtapa());
     }
 }
-

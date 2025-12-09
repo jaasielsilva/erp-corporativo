@@ -19,9 +19,132 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Relatórios RH - Absenteísmo</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12 py-3">
+                            <h1 class="display-6 text-muted"><i class="fas fa-user-times"></i> Absenteísmo</h1>
+                            <p class="text-muted">Acompanhe faltas, atrasos, horas trabalhadas e taxa de absenteísmo por mês.</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 align-items-end" role="form" aria-label="Filtros Absenteísmo">
+                        <div class="col-md-3">
+                            <label for="inicio" class="form-label">Início</label>
+                            <input type="date" id="inicio" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fim" class="form-label">Fim</label>
+                            <input type="date" id="fim" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="departamento" class="form-label">Departamento</label>
+                            <input type="text" id="departamento" class="form-control" placeholder="Ex.: TI" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="cargo" class="form-label">Cargo</label>
+                            <input type="text" id="cargo" class="form-control" placeholder="Ex.: Desenvolvedor" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tipoAusencia" class="form-label">Tipo de ausência</label>
+                            <select id="tipoAusencia" class="form-select" aria-label="Tipo de ausência">
+                                <option value="">Falta + Atestado</option>
+                                <option value="FALTA">Falta</option>
+                                <option value="ATESTADO">Atestado</option>
+                                <option value="FERIAS">Férias</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="meta" class="form-label">Meta de absenteísmo (%)</label>
+                            <input type="number" step="0.1" id="meta" class="form-control" placeholder="Ex.: 2" />
+                        </div>
+                        <div class="col-md-2 form-check mt-4">
+                            <input type="checkbox" class="form-check-input" id="comparar" />
+                            <label class="form-check-label" for="comparar">Comparar período anterior</label>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button id="btn-aplicar" class="btn btn-primary" aria-label="Aplicar filtros"><i class="fas fa-filter"></i> Aplicar</button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                        <h2 class="h6 text-muted mb-0">Resumo</h2>
+                        <div class="text-muted small">Taxa baseada em dias úteis e headcount</div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="card shadow-sm" aria-live="polite">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 text-danger"><i class="fas fa-user-slash fa-lg"></i></div>
+                                        <div>
+                                            <div class="small text-muted">Faltas</div>
+                                            <div id="kpiFaltas" class="h5 mb-0">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm" aria-live="polite">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 text-warning"><i class="fas fa-clock fa-lg"></i></div>
+                                        <div>
+                                            <div class="small text-muted">Atrasos</div>
+                                            <div id="kpiAtrasos" class="h5 mb-0">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm" aria-live="polite">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 text-info"><i class="fas fa-hourglass-half fa-lg"></i></div>
+                                        <div>
+                                            <div class="small text-muted">Horas trabalhadas</div>
+                                            <div id="kpiHoras" class="h5 mb-0">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm" aria-live="polite">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 text-primary"><i class="fas fa-chart-area fa-lg"></i></div>
+                                        <div>
+                                            <div class="small text-muted">Taxa média (%)</div>
+                                            <div id="kpiTaxa" class="h5 mb-0">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-table"></i> Detalhe por mês</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Mês</th>
+                                                    <th scope="col">Faltas</th>
+                                                    <th scope="col">Atrasos</th>
+                                                    <th scope="col">Horas trabalhadas</th>
+                                                    <th scope="col">Taxa absenteísmo (%)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyDetalhe"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +155,81 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function defaultDates() {
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+            document.getElementById('inicio').value = start.toISOString().slice(0,10);
+            document.getElementById('fim').value = today.toISOString().slice(0,10);
+        }
+
+        function fmtHoras(totalMin) {
+            const h = Math.floor((totalMin||0)/60);
+            const m = Math.abs((totalMin||0)%60);
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+        }
+
+        async function carregarDados() {
+            const inicio = document.getElementById('inicio').value;
+            const fim = document.getElementById('fim').value;
+            const departamento = encodeURIComponent(document.getElementById('departamento').value);
+            const cargo = encodeURIComponent(document.getElementById('cargo').value);
+            const tipoAusencia = encodeURIComponent(document.getElementById('tipoAusencia').value);
+            const meta = encodeURIComponent(document.getElementById('meta').value);
+            const comparar = document.getElementById('comparar').checked;
+
+            const res = await fetch(`/api/rh/relatorios/absenteismo/detalhado?inicio=${inicio}&fim=${fim}&departamento=${departamento}&cargo=${cargo}&tipoAusencia=${tipoAusencia}&meta=${meta}&comparar=${comparar}`);
+            if (!res.ok) return;
+            const d = await res.json();
+
+            let labels = Object.keys(d.taxaAbsenteismoPorMes || {});
+            labels = labels.sort();
+            const faltas = labels.map(l => Number(d.faltasPorMes?.[l] ?? 0));
+            const atrasos = labels.map(l => Number(d.atrasosPorMes?.[l] ?? 0));
+            const minutos = labels.map(l => Number(d.minutosTrabPorMes?.[l] ?? 0));
+            let taxas = labels.map(l => Number(d.taxaAbsenteismoPorMes?.[l] ?? 0));
+
+            taxas = taxas.map(v => !isFinite(v) || isNaN(v) ? null : Math.max(0, Math.min(v, 100)));
+
+            const sum = arr => arr.reduce((a,b)=>a+(Number(b)||0),0);
+            const avg = arr => {
+                const vals = arr.filter(v => v !== null && !isNaN(v));
+                return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+            };
+
+            document.getElementById('kpiFaltas').textContent = sum(faltas);
+            document.getElementById('kpiAtrasos').textContent = sum(atrasos);
+            document.getElementById('kpiHoras').textContent = fmtHoras(sum(minutos));
+            document.getElementById('kpiTaxa').textContent = avg(taxas).toFixed(2);
+
+            const tbody = document.getElementById('tbodyDetalhe');
+            tbody.innerHTML = '';
+            labels.forEach((l,i)=>{
+                const tr = document.createElement('tr');
+                const tdMes = document.createElement('td');
+                const tdF = document.createElement('td');
+                const tdA = document.createElement('td');
+                const tdH = document.createElement('td');
+                const tdT = document.createElement('td');
+                tdMes.textContent = l;
+                tdF.textContent = faltas[i];
+                tdA.textContent = atrasos[i];
+                tdH.textContent = fmtHoras(minutos[i]);
+                tdT.textContent = taxas[i] ?? '-';
+                tr.appendChild(tdMes);
+                tr.appendChild(tdF);
+                tr.appendChild(tdA);
+                tr.appendChild(tdH);
+                tr.appendChild(tdT);
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            defaultDates();
+            await carregarDados();
+            document.getElementById('btn-aplicar').addEventListener('click', carregarDados);
+        });
+    </script>
 </body>
 </html>

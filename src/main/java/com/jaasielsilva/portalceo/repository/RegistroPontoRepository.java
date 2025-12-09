@@ -160,4 +160,31 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
             @Param("dataFim") LocalDate dataFim
     );
 
+    public static interface PontoMensalAggregationProjection {
+        Integer getAno();
+        Integer getMes();
+        Long getFaltas();
+        Long getAtrasos();
+        Long getMinutos();
+    }
+
+    @QueryHints(@QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    @Query("SELECT YEAR(r.data) as ano, MONTH(r.data) as mes, " +
+           "SUM(CASE WHEN (r.falta = true OR r.status IN :statuses) THEN 1 ELSE 0 END) as faltas, " +
+           "SUM(CASE WHEN r.minutosAtraso > 0 THEN 1 ELSE 0 END) as atrasos, " +
+           "SUM(r.totalMinutosTrabalhados) as minutos " +
+           "FROM RegistroPonto r " +
+           "WHERE r.data BETWEEN :dataInicio AND :dataFim " +
+           "AND (:departamentoNome IS NULL OR (r.colaborador.departamento IS NOT NULL AND LOWER(r.colaborador.departamento.nome) = LOWER(:departamentoNome))) " +
+           "AND (:cargoNome IS NULL OR (r.colaborador.cargo IS NOT NULL AND LOWER(r.colaborador.cargo.nome) = LOWER(:cargoNome))) " +
+           "GROUP BY YEAR(r.data), MONTH(r.data) " +
+           "ORDER BY YEAR(r.data), MONTH(r.data)")
+    List<PontoMensalAggregationProjection> aggregateMensal(
+            @Param("dataInicio") LocalDate dataInicio,
+            @Param("dataFim") LocalDate dataFim,
+            @Param("departamentoNome") String departamentoNome,
+            @Param("cargoNome") String cargoNome,
+            @Param("statuses") java.util.List<com.jaasielsilva.portalceo.model.RegistroPonto.StatusPonto> statuses
+    );
+
 }

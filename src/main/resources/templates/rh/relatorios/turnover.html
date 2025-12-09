@@ -19,11 +19,134 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Relatórios RH - Turnover</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12 py-3">
+                            <h1 class="display-6 text-muted"><i class="fas fa-exchange-alt"></i> Turnover</h1>
+                            <p class="text-muted">Acompanhe contratações, desligamentos e taxa de turnover por mês.</p>
                         </div>
                     </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="fas fa-building"></i> Departamento: Contratações vs Desligamentos</h6>
+                                    <div style="position:relative; height:180px; width:100%; overflow-x:auto; overflow-y:hidden">
+                                        <canvas id="chartDept" style="width:100% !important; height:100% !important;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="fas fa-id-badge"></i> Cargo: Contratações vs Desligamentos</h6>
+                                    <div style="position:relative; height:180px; width:100%; overflow-x:auto; overflow-y:hidden">
+                                        <canvas id="chartCargo" style="width:100% !important; height:100% !important;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 align-items-end" role="form" aria-label="Filtros Turnover">
+                        <div class="col-md-3">
+                            <label for="inicio" class="form-label">Início</label>
+                            <input type="date" id="inicio" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fim" class="form-label">Fim</label>
+                            <input type="date" id="fim" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="tipoMov" class="form-label">Tipo de movimento</label>
+                            <select id="tipoMov" class="form-select" aria-label="Tipo de movimento">
+                                <option value="">Todos</option>
+                                <option value="VOLUNTARIO">Voluntário</option>
+                                <option value="INVOLUNTARIO">Involuntário</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 form-check mt-4">
+                            <input type="checkbox" class="form-check-input" id="comparar" />
+                            <label class="form-check-label" for="comparar">Comparar período anterior</label>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button id="btn-aplicar" class="btn btn-primary" aria-label="Aplicar filtros"><i class="fas fa-filter"></i> Aplicar</button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                        <h2 class="h6 text-muted mb-0">Resumo</h2>
+                        <a href="/rh/relatorios/turnover-analytics" class="btn btn-outline-primary btn-sm" aria-label="Abrir página analítica de Turnover">
+                            <i class="fas fa-chart-line"></i> Abrir Analytics
+                        </a>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="card shadow-sm" aria-live="polite">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 text-primary"><i class="fas fa-user-plus fa-lg"></i></div>
+                                        <div>
+                                            <div class="small text-muted">Contratações</div>
+                                            <div id="kpiHires" class="h5 mb-0">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm" aria-live="polite">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 text-danger"><i class="fas fa-user-minus fa-lg"></i></div>
+                                        <div>
+                                            <div class="small text-muted">Desligamentos</div>
+                                            <div id="kpiTerms" class="h5 mb-0">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm" aria-live="polite">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2 text-info"><i class="fas fa-percentage fa-lg"></i></div>
+                                        <div>
+                                            <div class="small text-muted">Turnover médio (%)</div>
+                                            <div id="kpiRate" class="h5 mb-0">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-table"></i> Detalhe por mês</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Mês</th>
+                                                    <th scope="col">Contratações</th>
+                                                    <th scope="col">Desligamentos</th>
+                                                    <th scope="col">Turnover (%)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyDetalhe"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>
@@ -32,5 +155,112 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        window.chartDept = null;
+        window.chartCargo = null;
+        function defaultDates() {
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth() - 4, 1);
+            document.getElementById('inicio').value = start.toISOString().slice(0,10);
+            document.getElementById('fim').value = today.toISOString().slice(0,10);
+        }
+
+        async function carregarDados() {
+            const inicio = document.getElementById('inicio').value;
+            const fim = document.getElementById('fim').value;
+            let tipoMov = document.getElementById('tipoMov').value.trim();
+            const comparar = document.getElementById('comparar').checked;
+
+            if (tipoMov.toLowerCase() === 'todos') tipoMov = '';
+
+            const params = new URLSearchParams();
+            if (inicio) params.set('inicio', inicio);
+            if (fim) params.set('fim', fim);
+            if (tipoMov) params.set('tipoMovimento', tipoMov);
+            params.set('comparar', String(comparar));
+
+            const res = await fetch(`/api/rh/relatorios/turnover/detalhado?${params.toString()}`);
+            const ct = res.headers.get('content-type') || '';
+            if (!res.ok || !ct.includes('application/json')) { return; }
+            const d = await res.json();
+
+            const mk = (dt) => dt.getFullYear().toString().padStart(4,'0') + '-' + (dt.getMonth()+1).toString().padStart(2,'0');
+            const lastMonths = (() => { const t = new Date(); const arr = []; for (let i=4;i>=0;i--) { const d = new Date(t.getFullYear(), t.getMonth()-i, 1); arr.push(mk(d)); } return arr; })();
+            const labels = lastMonths;
+            const hires = labels.map(l => Number(d.contrataçõesPorMes?.[l] ?? 0));
+            const terms = labels.map(l => Number(d.desligamentosPorMes?.[l] ?? 0));
+            let rates = labels.map(l => Number(d.turnoverPorMes?.[l] ?? 0));
+            let metaLine = [];
+
+            rates = rates.map(v => !isFinite(v) || isNaN(v) ? null : Math.max(0, Math.min(v, 200)));
+            metaLine = metaLine.map(v => !isFinite(v) || isNaN(v) ? null : Math.max(0, Math.min(v, 200)));
+
+            const sum = arr => arr.reduce((a,b)=>a+(Number(b)||0),0);
+            const avg = arr => {
+                const vals = arr.filter(v => v !== null && !isNaN(v));
+                return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+            };
+
+            document.getElementById('kpiHires').textContent = sum(hires);
+            document.getElementById('kpiTerms').textContent = sum(terms);
+            const fmtPct = (v) => v === null || isNaN(v) ? '-' : (v.toFixed(1)).replace('.', ',') + '%';
+            const kpiAvg = Number(d.turnoverMedio ?? avg(rates));
+            document.getElementById('kpiRate').textContent = fmtPct(kpiAvg);
+
+
+            const tbody = document.getElementById('tbodyDetalhe');
+            tbody.innerHTML = '';
+            labels.forEach((l,i)=>{
+                const tr = document.createElement('tr');
+                const tdMes = document.createElement('td');
+                const tdH = document.createElement('td');
+                const tdT = document.createElement('td');
+                const tdR = document.createElement('td');
+                tdMes.textContent = l;
+                tdH.textContent = hires[i];
+                tdT.textContent = terms[i];
+                tdR.textContent = fmtPct(rates[i]);
+                tr.appendChild(tdMes);
+                tr.appendChild(tdH);
+                tr.appendChild(tdT);
+                tr.appendChild(tdR);
+                tbody.appendChild(tr);
+            });
+
+            const deptLabels = Array.from(new Set([...Object.keys(d.contratacoesPorDepartamento||{}), ...Object.keys(d.desligamentosPorDepartamento||{})])).sort();
+            const deptHires = deptLabels.map(l => Number(d.contratacoesPorDepartamento?.[l] ?? 0));
+            const deptTerms = deptLabels.map(l => Number(d.desligamentosPorDepartamento?.[l] ?? 0));
+            const ctxD = document.getElementById('chartDept');
+            if (window.chartDept && typeof window.chartDept.destroy === 'function') { window.chartDept.destroy(); }
+            window.chartDept = new Chart(ctxD.getContext('2d'), {
+                type: 'line',
+                data: { labels: deptLabels, datasets: [
+                    { label: 'Contratações', data: deptHires, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.2)', fill: false, tension: 0.3, pointRadius: 2 },
+                    { label: 'Desligamentos', data: deptTerms, borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.2)', fill: false, tension: 0.3, pointRadius: 2 }
+                ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            const cargoLabels = Array.from(new Set([...Object.keys(d.contratacoesPorCargo||{}), ...Object.keys(d.desligamentosPorCargo||{})])).sort();
+            const cargoHires = cargoLabels.map(l => Number(d.contratacoesPorCargo?.[l] ?? 0));
+            const cargoTerms = cargoLabels.map(l => Number(d.desligamentosPorCargo?.[l] ?? 0));
+            const ctxC = document.getElementById('chartCargo');
+            if (window.chartCargo && typeof window.chartCargo.destroy === 'function') { window.chartCargo.destroy(); }
+            window.chartCargo = new Chart(ctxC.getContext('2d'), {
+                type: 'line',
+                data: { labels: cargoLabels, datasets: [
+                    { label: 'Contratações', data: cargoHires, borderColor: '#198754', backgroundColor: 'rgba(25,135,84,0.2)', fill: false, tension: 0.3, pointRadius: 2 },
+                    { label: 'Desligamentos', data: cargoTerms, borderColor: '#fd7e14', backgroundColor: 'rgba(253,126,20,0.2)', fill: false, tension: 0.3, pointRadius: 2 }
+                ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            defaultDates();
+            await carregarDados();
+            document.getElementById('btn-aplicar').addEventListener('click', carregarDados);
+        });
+    </script>
 </body>
 </html>

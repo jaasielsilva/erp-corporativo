@@ -54,6 +54,9 @@ public class ColaboradorService {
     @Autowired
     private HistoricoColaboradorRepository historicoRepository;
 
+    @Autowired
+    private RhRelatorioService rhRelatorioService;
+
     public List<Colaborador> listarAtivos() {
         return colaboradorRepository.findByAtivoTrue();
     }
@@ -115,7 +118,7 @@ public class ColaboradorService {
         if (excludeId == null) {
             return buscarSupervisoresPotenciais();
         }
-        return colaboradorRepository.findPotentialSupervisorsExcluding(excludeId);
+        return colaboradorRepository.findPotentialSupervisorsBasicExcluding(excludeId);
     }
 
     @Transactional
@@ -215,6 +218,10 @@ public class ColaboradorService {
         }
     }
 
+    @org.springframework.cache.annotation.Cacheable(
+            value = "colaboradoresAjaxPaged",
+            key = "T(String).valueOf(#q == null || #q.isBlank() ? 'NULL' : #q) + '-' + #pageable.pageNumber + '-' + #pageable.pageSize",
+            condition = "#q == null || #q.isBlank()")
     public org.springframework.data.domain.Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> buscarParaAjax(
             String q,
             org.springframework.data.domain.Pageable pageable) {
@@ -329,6 +336,7 @@ public class ColaboradorService {
         historico.setDepartamentoNovo(null);
         historico.setDataRegistro(LocalDateTime.now());
         historicoRepository.save(historico);
+        try { rhRelatorioService.invalidateTurnoverCache(); } catch (Exception ignore) {}
     }
 
     public Optional<Colaborador> buscarPorUsuario(Usuario usuario) {
@@ -353,4 +361,8 @@ public class ColaboradorService {
         return colaboradorRepository.existsByEmail(email);
     }
 
+    @Cacheable(value = "rhHeadcountTiposContrato")
+    public java.util.List<String> listarTiposContratoAtivosDistinct() {
+        return colaboradorRepository.findDistinctTipoContratoAtivo();
+    }
 }

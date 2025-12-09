@@ -19,9 +19,79 @@
             <section class="content-area">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Relatórios RH - Indicadores</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                        <div class="col-12 py-3">
+                            <h1 class="display-6 text-muted"><i class="fas fa-tachometer-alt"></i> Indicadores de Desempenho</h1>
+                            <p class="text-muted">Resumo das avaliações de desempenho por período.</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="inicio" class="form-label">Início</label>
+                            <input type="date" id="inicio" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fim" class="form-label">Fim</label>
+                            <input type="date" id="fim" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <button id="btn-aplicar" class="btn btn-primary"><i class="fas fa-filter"></i> Aplicar</button>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-4 mb-3">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-list"></i> Total de Avaliações</h5>
+                                    <div id="totalAvaliacoes" class="display-6 text-muted">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-paper-plane"></i> Submetidas</h5>
+                                    <div id="submetidas" class="display-6 text-muted">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-check-circle"></i> Aprovadas</h5>
+                                    <div id="aprovadas" class="display-6 text-muted">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-star-half-alt"></i> Média de Notas</h5>
+                                    <div id="mediaNotas" class="display-6 text-muted">0.0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5 class="card-title"><i class="fas fa-chart-line"></i> Série 12 meses</h5>
+                                        <div>
+                                            <label for="serieFim" class="form-label">Fim</label>
+                                            <input type="date" id="serieFim" class="form-control" aria-label="Fim da série">
+                                        </div>
+                                    </div>
+                                    <canvas id="chartSerie" height="140" aria-label="Série histórica de indicadores" role="img"></canvas>
+                                    <div id="metodologia" class="mt-2 text-muted"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -32,5 +102,58 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        function defaultDates() {
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            document.getElementById('inicio').value = start.toISOString().slice(0,10);
+            document.getElementById('fim').value = today.toISOString().slice(0,10);
+        }
+
+        async function carregarDados() {
+            const inicio = document.getElementById('inicio').value;
+            const fim = document.getElementById('fim').value;
+            const res = await fetch(`/api/rh/relatorios/indicadores?inicio=${inicio}&fim=${fim}`);
+            if (!res.ok) { return; }
+            const data = await res.json();
+            document.getElementById('totalAvaliacoes').textContent = data.totalAvaliacoes;
+            document.getElementById('submetidas').textContent = data.submetidas;
+            document.getElementById('aprovadas').textContent = data.aprovadas;
+            document.getElementById('mediaNotas').textContent = Number(data.mediaNotas).toFixed(2);
+        }
+
+        async function carregarSerie() {
+            const fim = document.getElementById('serieFim').value || document.getElementById('fim').value;
+            const res = await fetch(`/api/rh/relatorios/indicadores/serie-12m?fim=${fim}`);
+            if (!res.ok) { return; }
+            const d = await res.json();
+            let labels = Object.keys(d.serie || {});
+            labels = labels.sort();
+            const total = labels.map(l => d.serie[l]?.total ?? 0);
+            const sub = labels.map(l => d.serie[l]?.submetidas ?? 0);
+            const apr = labels.map(l => d.serie[l]?.aprovadas ?? 0);
+            const med = labels.map(l => d.serie[l]?.media ?? 0);
+            const ctx = document.getElementById('chartSerie');
+            if (window.serieChart) window.serieChart.destroy();
+            window.serieChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [
+                        { label: 'Total', data: total, borderColor: '#3b82f6', tension: 0.2 },
+                        { label: 'Submetidas', data: sub, borderColor: '#6366f1', tension: 0.2 },
+                        { label: 'Aprovadas', data: apr, borderColor: '#10b981', tension: 0.2 },
+                        { label: 'Média', data: med, borderColor: '#f59e0b', tension: 0.2, yAxisID: 'y2' }
+                    ] },
+                options: { responsive: true, maintainAspectRatio: true, interaction: { mode: 'index', intersect: false },
+                    scales: { y: { beginAtZero: true }, y2: { beginAtZero: true, position: 'right' } } }
+            });
+            document.getElementById('metodologia').textContent = `Metodologia: ${d.metodologia}. Fontes: ${d.fontes}.`;
+        }
+        document.getElementById('serieFim').addEventListener('change', carregarSerie);
+        document.getElementById('btn-aplicar').addEventListener('click', carregarDados);
+        defaultDates();
+        carregarDados();
+        document.getElementById('serieFim').value = document.getElementById('fim').value;
+        carregarSerie();
+    </script>
 </body>
 </html>

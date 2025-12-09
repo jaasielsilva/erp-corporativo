@@ -24,4 +24,6 @@ public interface RecrutamentoCandidatoRepository extends JpaRepository<Recrutame
                                                  @Param("genero") String genero,
                                                  @Param("nasc") LocalDate nasc,
                                                  Pageable pageable);
+
+    boolean existsByEmailIgnoreCase(String email);
 }

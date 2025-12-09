@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.service.rh.recrutamento;
 import com.jaasielsilva.portalceo.model.agenda.Evento;
 import com.jaasielsilva.portalceo.model.recrutamento.*;
 import com.jaasielsilva.portalceo.repository.agenda.EventoRepository;
+import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.recrutamento.*;
 import com.jaasielsilva.portalceo.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class RecrutamentoService {
     @Autowired private RecrutamentoDivulgacaoRepository divulgacaoRepo;
     @Autowired private EventoRepository eventoRepo;
     @Autowired private EmailService emailService;
+    @Autowired private ColaboradorRepository colaboradorRepository;
 
     @Transactional
     public RecrutamentoCandidato criarCandidato(String nome, String email, String telefone, String genero, LocalDate dataNascimento) {
@@ -142,6 +144,39 @@ public class RecrutamentoService {
                 genero!=null && !genero.isBlank()? genero.trim(): null,
                 nasc,
                 p);
+    }
+
+    @Transactional
+    public Map<String,Object> importarColaboradoresComoCandidatos(boolean apenasAtivos) {
+        List<com.jaasielsilva.portalceo.model.Colaborador> colaboradores = colaboradorRepository.findAll();
+        int criados = 0;
+        int ignorados = 0;
+        java.util.List<RecrutamentoCandidato> novos = new java.util.ArrayList<>();
+        for (var col : colaboradores) {
+            if (apenasAtivos && (col.getAtivo() == null || !col.getAtivo())) { ignorados++; continue; }
+            String email = col.getEmail();
+            if (email != null && candidatoRepo.existsByEmailIgnoreCase(email)) { ignorados++; continue; }
+            RecrutamentoCandidato c = new RecrutamentoCandidato();
+            c.setNome(col.getNome());
+            c.setEmail(email);
+            c.setTelefone(col.getTelefone());
+            String genero = null;
+            if (col.getSexo() != null) {
+                switch (col.getSexo()) {
+                    case FEMININO -> genero = "Feminino";
+                    case MASCULINO -> genero = "Masculino";
+                    default -> genero = "Outro";
+                }
+            }
+            c.setGenero(genero);
+            c.setDataNascimento(col.getDataNascimento());
+            novos.add(c);
+        }
+        if (!novos.isEmpty()) {
+            candidatoRepo.saveAll(novos);
+            criados = novos.size();
+        }
+        return java.util.Map.of("success", true, "criados", criados, "ignorados", ignorados);
     }
 
     @Transactional(readOnly = true)

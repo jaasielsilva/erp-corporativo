@@ -42,6 +42,8 @@ public class RhController {
     
     @Autowired
     private RhRelatorioService rhRelatorioService;
+    @Autowired
+    private jakarta.persistence.EntityManagerFactory emf;
     
     /**
      * API REST: Obter estatísticas dos processos de adesão
@@ -256,6 +258,43 @@ public class RhController {
             logger.error("Erro ao gerar relatório comparativo", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("erro", "Erro ao gerar relatório"));
+        }
+    }
+
+    @GetMapping("/api/relatorios/headcount")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('RH')")
+    @ResponseBody
+    public ResponseEntity<?> gerarRelatorioHeadcount(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
+            @RequestParam(required = false) String departamentoNome,
+            @RequestParam(required = false) String tipoContrato,
+            @RequestParam(required = false) String periodo) {
+        try {
+            long start = System.nanoTime();
+            org.hibernate.SessionFactory sf = emf.unwrap(org.hibernate.SessionFactory.class);
+            org.hibernate.stat.Statistics stats = sf.getStatistics();
+            long qBefore = stats.getQueryExecutionCount();
+            long stmtBefore = stats.getPrepareStatementCount();
+
+            RhRelatorioService.RelatorioHeadcount relatorio =
+                    rhRelatorioService.gerarRelatorioHeadcount(inicio, fim,
+                            departamentoNome != null && !departamentoNome.isBlank() ? departamentoNome.trim() : null,
+                            tipoContrato != null && !tipoContrato.isBlank() ? tipoContrato.trim() : null,
+                            periodo);
+
+            long elapsedMs = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+            long qCount = stats.getQueryExecutionCount() - qBefore;
+            long stmtCount = stats.getPrepareStatementCount() - stmtBefore;
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Elapsed-ms", String.valueOf(elapsedMs));
+            headers.add("X-Queries", String.valueOf(qCount));
+            headers.add("X-Statements", String.valueOf(stmtCount));
+            return ResponseEntity.ok().headers(headers).body(relatorio);
+        } catch (Exception e) {
+            logger.error("Erro ao gerar relatório de headcount", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("erro", "Erro ao gerar relatório"));
         }
     }
     

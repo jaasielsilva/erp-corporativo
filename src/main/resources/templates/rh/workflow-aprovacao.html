@@ -686,13 +686,21 @@
         }
         
         function mostrarSucesso(mensagem) {
-            // Implementar notificação de sucesso
-            alert(mensagem);
+            const el = document.createElement('div');
+            el.className = 'alert alert-success position-fixed top-0 end-0 m-3 shadow';
+            el.style.zIndex = '1080';
+            el.textContent = mensagem;
+            document.body.appendChild(el);
+            setTimeout(() => { el.remove(); }, 2500);
         }
-        
+
         function mostrarErro(mensagem) {
-            // Implementar notificação de erro
-            alert(mensagem);
+            const el = document.createElement('div');
+            el.className = 'alert alert-danger position-fixed top-0 end-0 m-3 shadow';
+            el.style.zIndex = '1080';
+            el.textContent = mensagem;
+            document.body.appendChild(el);
+            setTimeout(() => { el.remove(); }, 4000);
         }
     </script>
                 </div>

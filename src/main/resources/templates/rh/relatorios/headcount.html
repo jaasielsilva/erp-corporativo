@@ -18,19 +18,234 @@
             <header th:replace="~{components/topbar :: topbar}"></header>
             <section class="content-area">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Relatórios RH - Headcount</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <h1 class="h4">Relatórios RH - Headcount</h1>
                         </div>
                     </div>
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-sm-3">
+                                    <label class="form-label">Início</label>
+                                    <input type="date" class="form-control" id="inicio">
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="form-label">Fim</label>
+                                    <input type="date" class="form-control" id="fim">
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="form-label">Departamento</label>
+                                    <select id="departamento" class="form-select">
+                                        <option value="">Todos</option>
+                                        <option th:each="d : ${departamentos}" th:value="${d.nome}" th:text="${d.nome}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3">
+                                    <label class="form-label">Tipo de Contrato</label>
+                                    <select id="tipoContrato" class="form-select">
+                                        <option value="">Todos</option>
+                                        <option th:each="t : ${tiposContrato}" th:value="${t}" th:text="${t}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3 d-flex gap-2">
+                                <button class="btn btn-primary" id="btn-aplicar">Aplicar</button>
+                                <button class="btn btn-outline-secondary" id="btn-hoje">Hoje</button>
+                                <button class="btn btn-outline-secondary" id="btn-mes">Mês atual</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="text-muted">Ativos</div>
+                                    <div class="fs-3" id="totalAtivos">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="text-muted">Turnover (%)</div>
+                                    <div class="fs-3" id="turnover">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="text-muted">Projeção</div>
+                                    <div class="fs-3" id="projecao">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="text-muted">Mês anterior</div>
+                                    <div class="fs-3" id="mesAnterior">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">Por Departamento</div>
+                                <div class="card-body">
+                                    <canvas id="chartDepartamentos" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">Distribuição por Sexo</div>
+                                <div class="card-body">
+                                    <canvas id="chartSexo" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-3">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">Admissões x Desligamentos</div>
+                                <div class="card-body">
+                                    <canvas id="chartContratacoes" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">Por Cargo</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Cargo</th>
+                                                    <th class="text-end">Qtde</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyCargos"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
     <script src="/js/sidebar.js" defer></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js" defer></script>
+    <script th:src="@{/js/notifications.js}" defer></script>
+    <script>
+        const fmt = (n) => new Intl.NumberFormat('pt-BR').format(n || 0);
+        let chartDept, chartSexo, chartContr;
+        function buildCharts(data) {
+            const depLabels = Object.keys(data.porDepartamento || {});
+            const depValues = Object.values(data.porDepartamento || {});
+            const sexoLabels = Object.keys(data.distribuicaoDemograficaSexo || {});
+            const sexoValues = Object.values(data.distribuicaoDemograficaSexo || {});
+            const cvd = data.charts && data.charts.contratacoesVsDesligamentos ? data.charts.contratacoesVsDesligamentos : null;
+            const cLabels = cvd ? cvd.labels : [];
+            const adm = cvd ? cvd.admissoes : [];
+            const des = cvd ? cvd.desligamentos : [];
+
+            if (chartDept) chartDept.destroy();
+            chartDept = new Chart(document.getElementById('chartDepartamentos'), {
+                type: 'bar',
+                data: { labels: depLabels, datasets: [{ label: 'Colaboradores', data: depValues, backgroundColor: '#0d6efd' }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            if (chartSexo) chartSexo.destroy();
+            chartSexo = new Chart(document.getElementById('chartSexo'), {
+                type: 'doughnut',
+                data: { labels: sexoLabels, datasets: [{ data: sexoValues, backgroundColor: ['#198754','#dc3545','#0d6efd'] }] },
+                options: { responsive: true }
+            });
+
+            if (chartContr) chartContr.destroy();
+            chartContr = new Chart(document.getElementById('chartContratacoes'), {
+                type: 'bar',
+                data: { labels: cLabels, datasets: [
+                    { label: 'Admissões', data: adm, backgroundColor: '#198754' },
+                    { label: 'Desligamentos', data: des, backgroundColor: '#dc3545' }
+                ] },
+                options: { responsive: true }
+            });
+        }
+
+        function fillTables(data) {
+            const tbody = document.getElementById('tbodyCargos');
+            tbody.innerHTML = '';
+            const map = data.porCargo || {};
+            Object.keys(map).forEach(k => {
+                const tr = document.createElement('tr');
+                const td1 = document.createElement('td'); td1.textContent = k;
+                const td2 = document.createElement('td'); td2.className = 'text-end'; td2.textContent = fmt(map[k]);
+                tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
+            });
+        }
+
+        function applyCounters(data) {
+            document.getElementById('totalAtivos').textContent = fmt(data.totalAtivos);
+            document.getElementById('turnover').textContent = (data.taxaTurnover || 0).toFixed(2);
+            document.getElementById('projecao').textContent = fmt(data.projecaoCrescimento);
+            const comp = data.comparativos || {};
+            const ma = comp.mesAnterior || 0;
+            document.getElementById('mesAnterior').textContent = fmt(ma);
+        }
+
+        async function loadReport() {
+            const inicio = document.getElementById('inicio').value;
+            const fim = document.getElementById('fim').value;
+            const departamento = document.getElementById('departamento').value;
+            const tipoContrato = document.getElementById('tipoContrato').value;
+            const params = new URLSearchParams();
+            if (inicio) params.set('inicio', inicio);
+            if (fim) params.set('fim', fim);
+            if (departamento) params.set('departamentoNome', departamento);
+            if (tipoContrato) params.set('tipoContrato', tipoContrato);
+            const url = '/rh/api/relatorios/headcount?' + params.toString();
+            const resp = await fetch(url);
+            const json = await resp.json();
+            applyCounters(json);
+            buildCharts(json);
+            fillTables(json);
+        }
+
+        function setPeriodToToday() {
+            const now = new Date();
+            const iso = now.toISOString().slice(0,10);
+            document.getElementById('inicio').value = iso;
+            document.getElementById('fim').value = iso;
+        }
+        function setPeriodToMonth() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth(), 1);
+            const end = new Date(now.getFullYear(), now.getMonth()+1, 0);
+            document.getElementById('inicio').value = start.toISOString().slice(0,10);
+            document.getElementById('fim').value = end.toISOString().slice(0,10);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            setPeriodToMonth();
+            document.getElementById('btn-hoje').addEventListener('click', () => { setPeriodToToday(); loadReport(); });
+            document.getElementById('btn-mes').addEventListener('click', () => { setPeriodToMonth(); loadReport(); });
+            document.getElementById('btn-aplicar').addEventListener('click', () => loadReport());
+            loadReport();
+        });
+    </script>
 </body>
 </html>

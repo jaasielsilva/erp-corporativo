@@ -48,6 +48,13 @@ public class RecrutamentoApiController {
         return ResponseEntity.ok(Map.of("success", true, "id", c.getId()));
     }
 
+    @PostMapping("/candidatos/importar-colaboradores")
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
+    public ResponseEntity<Map<String,Object>> importarColaboradores(@RequestParam(defaultValue = "true") boolean apenasAtivos) {
+        Map<String,Object> r = service.importarColaboradoresComoCandidatos(apenasAtivos);
+        return ResponseEntity.ok(r);
+    }
+
     @PostMapping("/candidatos/{id}/experiencias")
     @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
     public ResponseEntity<Map<String,Object>> adicionarExperiencia(@PathVariable Long id,

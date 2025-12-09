@@ -84,7 +84,7 @@ public class ColaboradorController {
         try {
             org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
                     Math.max(page, 0), Math.min(Math.max(size, 1), 100), org.springframework.data.domain.Sort.by("nome").ascending());
-            org.springframework.data.domain.Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> pagina = colaboradorRepository.findColaboradoresForAjax(q != null && !q.isBlank() ? q.trim() : null, pageable);
+            org.springframework.data.domain.Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> pagina = colaboradorService.buscarParaAjax(q != null && !q.isBlank() ? q.trim() : null, pageable);
 
             Map<String, Object> resp = new HashMap<>();
             resp.put("content", pagina.getContent());

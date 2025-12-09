@@ -9,12 +9,11 @@ import java.util.Map;
 public class HibernateBatchConfig implements HibernatePropertiesCustomizer {
     @Override
     public void customize(Map<String, Object> hibernateProperties) {
-        // Enable JDBC batching and ordered operations
         hibernateProperties.put("hibernate.jdbc.batch_size", 200);
         hibernateProperties.put("hibernate.order_inserts", true);
         hibernateProperties.put("hibernate.order_updates", true);
         hibernateProperties.put("hibernate.jdbc.fetch_size", 100);
-        // Allow batching for versioned entities (correct property name)
         hibernateProperties.put("hibernate.jdbc.batch_versioned_data", true);
+        hibernateProperties.put("hibernate.generate_statistics", true);
     }
 }

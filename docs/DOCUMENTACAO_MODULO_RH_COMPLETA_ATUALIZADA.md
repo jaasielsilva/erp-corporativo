@@ -854,3 +854,31 @@ Obs.: Todos os itens acima possuem templates já presentes em `src/main/resource
 - Campos: `colaborador`, `periodoInicio`, `periodoFim`, `status`, `observacoes`, `dataSolicitacao`, `dataDecisao`, `usuarioAprovacao`
 - Status: `SOLICITADA`, `APROVADA`, `REPROVADA`, `REGISTRADA`
 - Auditoria: integra com `AuditoriaRhLogService` nas ações `SOLICITAR`, `APROVAR`, `REPROVAR`
+## 🏖️ Férias — Aprovação/Reprovação
+
+### Templates
+- `src/main/resources/templates/rh/ferias/solicitar.html`
+- `src/main/resources/templates/rh/ferias/aprovar.html`
+- `src/main/resources/templates/rh/ferias/planejamento.html`
+- `src/main/resources/templates/rh/ferias/calendario.html`
+
+### Campos
+- Solicitar: Colaborador, Início (`YYYY-MM-DD`), Fim (`YYYY-MM-DD`), Observações.
+- Aprovar/Reprovar: ID da solicitação (listagem), Observações, ações `Aprovar`/`Reprovar`.
+
+### Endpoints
+- `POST /api/rh/ferias/solicitacoes` (`colaboradorId`, `inicio`, `fim`, `observacoes`)
+- `POST /api/rh/ferias/{id}/aprovar` (`observacoes`)
+- `POST /api/rh/ferias/{id}/reprovar` (`observacoes`)
+- `GET /api/rh/ferias/solicitacoes?status&inicio&fim&page&size`
+
+### Regras
+- Conflito de período: bloqueia sobreposição (`SolicitacaoFeriasService.java:53`).
+- Blackout: usa `periodosBlackout` em `Configurações RH → Políticas de Férias` (`SolicitacaoFeriasService.java:65`).
+- Limite anual: valida `diasPorAno` (`SolicitacaoFeriasService.java:60`).
+- Aprovação automática: quando `exigeAprovacaoGerente=false`.
+
+### Dados de Teste
+- Login: `master@sistema.com` / `master123`.
+- MySQL: `root` / `12345`, banco `painelceo`.
+- Consulta: `SELECT id, status, periodo_inicio, periodo_fim FROM rh_solicitacoes_ferias ORDER BY id DESC LIMIT 5;`.

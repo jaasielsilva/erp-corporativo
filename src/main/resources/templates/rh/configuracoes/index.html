@@ -18,10 +18,40 @@
             <header th:replace="~{components/topbar :: topbar}"></header>
             <section class="content-area">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Configurações RH</h1>
+                    <div class="row mb-4">
+                        <div class="col-12 text-center py-3">
+                            <h1 class="h4 text-muted"><i class="fas fa-cogs me-2"></i>Configurações RH</h1>
                             <p class="text-muted">Central de políticas e parâmetros do módulo RH.</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-umbrella-beach me-2"></i>Políticas de Férias</h5>
+                                    <p class="card-text">Defina dias por ano, venda, aprovação e períodos de blackout.</p>
+                                    <a href="/rh/configuracoes/politicas-ferias" class="btn btn-primary">Abrir</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-fingerprint me-2"></i>Parâmetros de Ponto</h5>
+                                    <p class="card-text">Configure tolerância, arredondamento, limite de hora extra e regras de correção.</p>
+                                    <a href="/rh/configuracoes/ponto" class="btn btn-primary">Abrir</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="fas fa-plug me-2"></i>Integrações</h5>
+                                    <p class="card-text">Defina provedores, endpoints e notificações de Folha e Benefícios.</p>
+                                    <a href="/rh/configuracoes/integracoes" class="btn btn-primary">Abrir</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

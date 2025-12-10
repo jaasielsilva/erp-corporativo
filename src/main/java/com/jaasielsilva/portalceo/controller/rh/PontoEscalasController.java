@@ -7,6 +7,8 @@ import com.jaasielsilva.portalceo.model.EscalaTrabalho;
 import com.jaasielsilva.portalceo.repository.ColaboradorEscalaRepository;
 import com.jaasielsilva.portalceo.repository.RegistroPontoRepository;
 import com.jaasielsilva.portalceo.repository.EscalaTrabalhoRepository;
+import com.jaasielsilva.portalceo.repository.RhParametroPontoRepository;
+import com.jaasielsilva.portalceo.model.RhParametroPonto;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
@@ -57,6 +59,8 @@ public class PontoEscalasController {
     private ColaboradorEscalaRepository colaboradorEscalaRepository;
     @Autowired
     private UsuarioService usuarioService;
+    @Autowired
+    private RhParametroPontoRepository pontoRepository;
 
     @GetMapping("/registros")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
@@ -516,8 +520,16 @@ public class PontoEscalasController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     public Map<String, Object> solicitarCorrecao(@RequestBody Map<String, Object> payload) {
         Map<String, Object> resp = new HashMap<>();
+        RhParametroPonto config = pontoRepository.findAll().stream().findFirst().orElse(null);
+        if (config != null && Boolean.FALSE.equals(config.getPermitirCorrecaoManual())) {
+            resp.put("success", false);
+            resp.put("message", "Correção manual desabilitada pela configuração de ponto");
+            return resp;
+        }
+
+        boolean exigeAprovacao = config == null || Boolean.TRUE.equals(config.getExigeAprovacaoGerente());
         resp.put("success", true);
-        resp.put("message", "Solicitação registrada e enviada para aprovação");
+        resp.put("message", exigeAprovacao ? "Solicitação registrada e enviada para aprovação" : "Correção registrada automaticamente");
         return resp;
     }
 

@@ -18,12 +18,51 @@
             <header th:replace="~{components/topbar :: topbar}"></header>
             <section class="content-area">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Integrações RH</h1>
-                            <p class="text-muted">Configuração de integrações com folha e benefícios.</p>
+                    <div class="row mb-4">
+                        <div class="col-12 text-center py-3">
+                            <h1 class="h4 text-muted"><i class="fas fa-plug me-2"></i>Integrações RH</h1>
+                            <p class="text-muted">Defina provedores e endpoints de folha e benefícios, e notificações.</p>
                         </div>
                     </div>
+
+                    <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+
+                    <form th:action="@{/rh/configuracoes/integracoes}" th:object="${integracao}" method="post" class="row g-3" novalidate>
+                        <div class="col-md-6">
+                            <label class="form-label">Provedor de Folha</label>
+                            <input type="text" class="form-control" th:field="*{folhaProvider}" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Endpoint API Folha</label>
+                            <input type="url" class="form-control" th:field="*{apiEndpointFolha}" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Provedor de Benefícios</label>
+                            <input type="text" class="form-control" th:field="*{beneficiosProvider}" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Endpoint API Benefícios</label>
+                            <input type="url" class="form-control" th:field="*{apiEndpointBeneficios}" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Email de Notificações</label>
+                            <input type="email" class="form-control" th:field="*{emailNotificacoes}" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Habilitar Notificações</label>
+                            <select class="form-select" th:field="*{habilitarNotificacoes}">
+                                <option th:value="true">Sim</option>
+                                <option th:value="false">Não</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Salvar</button>
+                            <a href="/rh/configuracoes" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Voltar</a>
+                        </div>
+                    </form>
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>

@@ -133,6 +133,7 @@ Referências de código:
 1. Informar a matrícula e validar (exibe nome e libera o botão de gerar). 
 2. Selecionar `Mês` e `Ano` e clicar `Gerar e Baixar PDF`.
 3. Abrir o PDF e conferir por dia: entradas/saídas, total e status.
+   - Observa que o espelho aplica: tolerância diária, arredondamento ao múltiplo configurado e limite de hora extra por dia.
 
 Referências de código:
 - `src/main/resources/templates/rh/ponto-escalas/relatorios.html`

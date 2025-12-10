@@ -18,12 +18,49 @@
             <header th:replace="~{components/topbar :: topbar}"></header>
             <section class="content-area">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">Parâmetros de Ponto</h1>
-                            <p class="text-muted">Configure regras de registro e correção.</p>
+                    <div class="row mb-4">
+                        <div class="col-12 text-center py-3">
+                            <h1 class="h4 text-muted"><i class="fas fa-fingerprint me-2"></i>Parâmetros de Ponto</h1>
+                            <p class="text-muted">Defina tolerâncias, arredondamentos e regras de aprovação/correção.</p>
                         </div>
                     </div>
+
+                    <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+
+                    <form th:action="@{/rh/configuracoes/ponto}" th:object="${parametros}" method="post" class="row g-3" novalidate>
+                        <div class="col-md-4">
+                            <label class="form-label">Tolerância (minutos)</label>
+                            <input type="number" min="0" max="120" class="form-control" th:field="*{toleranciaMinutos}" required aria-required="true" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Arredondamento (minutos)</label>
+                            <input type="number" min="0" max="120" class="form-control" th:field="*{arredondamentoMinutos}" required aria-required="true" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Limite Hora Extra/dia</label>
+                            <input type="number" min="0" max="600" class="form-control" th:field="*{limiteHoraExtraDia}" required aria-required="true" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Exige Aprovação do Gerente</label>
+                            <select class="form-select" th:field="*{exigeAprovacaoGerente}">
+                                <option th:value="true">Sim</option>
+                                <option th:value="false">Não</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Permitir Correção Manual</label>
+                            <select class="form-select" th:field="*{permitirCorrecaoManual}">
+                                <option th:value="true">Sim</option>
+                                <option th:value="false">Não</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Salvar</button>
+                            <a href="/rh/configuracoes" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Voltar</a>
+                        </div>
+                    </form>
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>

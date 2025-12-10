@@ -5,6 +5,8 @@ import com.jaasielsilva.portalceo.model.SolicitacaoFerias;
 import com.jaasielsilva.portalceo.model.SolicitacaoFerias.StatusSolicitacao;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
+import com.jaasielsilva.portalceo.repository.RhPoliticaFeriasRepository;
+import com.jaasielsilva.portalceo.model.RhPoliticaFerias;
 import com.jaasielsilva.portalceo.repository.SolicitacaoFeriasRepository;
 import com.jaasielsilva.portalceo.service.AuditoriaRhLogService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.MonthDay;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class SolicitacaoFeriasService {
@@ -28,6 +34,9 @@ public class SolicitacaoFeriasService {
 
     @Autowired
     private AuditoriaRhLogService auditoriaRhLogService;
+
+    @Autowired
+    private RhPoliticaFeriasRepository feriasRepository;
 
     @Transactional
     public SolicitacaoFerias solicitar(Long colaboradorId, LocalDate inicio, LocalDate fim, String observacoes,
@@ -45,12 +54,33 @@ public class SolicitacaoFeriasService {
             throw new IllegalArgumentException("Já existe solicitação/aprovação em conflito para o período informado");
         }
 
+        RhPoliticaFerias politica = feriasRepository.findAll().stream().findFirst().orElse(null);
+        if (politica != null) {
+            long diasSolicitados = java.time.temporal.ChronoUnit.DAYS.between(inicio, fim) + 1;
+            Integer limite = politica.getDiasPorAno();
+            if (limite != null && limite > 0 && diasSolicitados > limite) {
+                throw new IllegalArgumentException("Quantidade de dias solicitados excede o limite anual configurado");
+            }
+
+            String blackout = politica.getPeriodosBlackout();
+            if (blackout != null && !blackout.isBlank()) {
+                List<MonthDay[]> periodos = parsePeriodosBlackout(blackout);
+                if (existeIntersecaoComBlackout(inicio, fim, periodos)) {
+                    throw new IllegalArgumentException("Período solicitado coincide com período de blackout definido nas políticas");
+                }
+            }
+        }
+
         SolicitacaoFerias s = new SolicitacaoFerias();
         s.setColaborador(colaborador);
         s.setPeriodoInicio(inicio);
         s.setPeriodoFim(fim);
         s.setObservacoes(observacoes);
-        s.setStatus(StatusSolicitacao.SOLICITADA);
+        if (politica != null && Boolean.FALSE.equals(politica.getExigeAprovacaoGerente())) {
+            s.setStatus(StatusSolicitacao.APROVADA);
+        } else {
+            s.setStatus(StatusSolicitacao.SOLICITADA);
+        }
         s.setDataSolicitacao(LocalDateTime.now());
         s.setUsuarioCriacao(usuarioLogado);
 
@@ -62,6 +92,51 @@ public class SolicitacaoFeriasService {
                 usuarioLogado != null ? usuarioLogado.getEmail() : null, ip, detalhes, true);
 
         return saved;
+    }
+
+    private List<MonthDay[]> parsePeriodosBlackout(String value) {
+        List<MonthDay[]> lista = new ArrayList<>();
+        String[] tokens = value.split(";\s*");
+        for (int i = 0; i + 1 < tokens.length; i += 2) {
+            MonthDay inicio = parseMonthDay(tokens[i]);
+            MonthDay fim = parseMonthDay(tokens[i + 1]);
+            if (inicio != null && fim != null) {
+                lista.add(new MonthDay[] { inicio, fim });
+            }
+        }
+        return lista;
+    }
+
+    private MonthDay parseMonthDay(String s) {
+        try {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM-dd");
+            java.time.LocalDate d = java.time.LocalDate.parse(s, fmt);
+            return MonthDay.of(d.getMonthValue(), d.getDayOfMonth());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean existeIntersecaoComBlackout(LocalDate inicio, LocalDate fim, List<MonthDay[]> periodos) {
+        if (periodos == null || periodos.isEmpty()) return false;
+        LocalDate cursor = inicio;
+        while (!cursor.isAfter(fim)) {
+            MonthDay md = MonthDay.of(cursor.getMonthValue(), cursor.getDayOfMonth());
+            for (MonthDay[] p : periodos) {
+                MonthDay pInicio = p[0];
+                MonthDay pFim = p[1];
+                boolean wrap = pFim.isBefore(pInicio);
+                boolean dentro;
+                if (!wrap) {
+                    dentro = (md.equals(pInicio) || md.equals(pFim) || (md.isAfter(pInicio) && md.isBefore(pFim)));
+                } else {
+                    dentro = md.isAfter(pInicio) || md.isBefore(pFim) || md.equals(pInicio) || md.equals(pFim);
+                }
+                if (dentro) return true;
+            }
+            cursor = cursor.plusDays(1);
+        }
+        return false;
     }
 
     @Transactional(readOnly = true)

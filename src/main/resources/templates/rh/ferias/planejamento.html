@@ -59,6 +59,7 @@
                                             <tbody id="tbodyPlanejamento"></tbody>
                                         </table>
                                     </div>
+                                    <div id="pagination" class="pagination"></div>
                                 </div>
                             </div>
                         </div>
@@ -72,28 +73,66 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
     <script>
-        function carregarPlanejamento(page = 0) {
+        let currentPage = 0;
+
+        function formatDateRange(inicio, fim) {
+            const i = inicio || '';
+            const f = fim || '';
+            return `${i} a ${f}`;
+        }
+
+        function renderRows(items) {
+            const tbody = document.getElementById('tbodyPlanejamento');
+            tbody.innerHTML = '';
+            if (!items || items.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="5" class="text-center">Nenhuma solicitação encontrada</td>';
+                tbody.appendChild(tr);
+                return;
+            }
+            items.forEach(function (s) {
+                const tr = document.createElement('tr');
+                const badge = s.status === 'APROVADA' ? 'success' : (s.status === 'REPROVADA' ? 'danger' : 'warning');
+                tr.innerHTML = `
+                    <td>${s.id}</td>
+                    <td>${s.colaboradorNome || '-'}</td>
+                    <td>${formatDateRange(s.periodoInicio, s.periodoFim)}</td>
+                    <td><span class="badge bg-${badge}">${s.status || '-'}</span></td>
+                    <td>${s.observacoes || ''}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPagination(page) {
+            const el = document.getElementById('pagination');
+            const totalPages = page.totalPages || 0;
+            const totalElements = page.totalElements || 0;
+            const number = page.number || 0;
+            const hasPrev = !page.first;
+            const hasNext = !page.last;
+            let html = '';
+            html += `<span class="pagination-info">Página ${number + 1} de ${Math.max(totalPages, 1)} (${totalElements} solicitações)</span>`;
+            html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${number - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+            html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${number + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+            el.innerHTML = html;
+        }
+
+        function carregarPlanejamento(pageIndex = 0) {
+            currentPage = pageIndex;
             const status = document.getElementById('pStatus').value || null;
             const inicio = document.getElementById('pInicio').value || null;
             const fim = document.getElementById('pFim').value || null;
-            $.get('/api/rh/ferias/solicitacoes', { status, inicio, fim, page, size: 50 })
-                .done(function (page) {
-                    const tbody = document.getElementById('tbodyPlanejamento');
-                    tbody.innerHTML = '';
-                    (page.content || []).forEach(function (s) {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${s.id}</td>
-                            <td>${s.colaboradorNome || (s.colaborador && s.colaborador.nome ? s.colaborador.nome : '-')}</td>
-                            <td>${(s.periodoInicio || '')} a ${(s.periodoFim || '')}</td>
-                            <td><span class="badge bg-${s.status === 'APROVADA' ? 'success' : (s.status === 'REPROVADA' ? 'danger' : 'warning')}">${s.status}</span></td>
-                            <td>${s.observacoes || ''}</td>`;
-                        tbody.appendChild(tr);
-                    });
+            $.get('/api/rh/ferias/solicitacoes', { status, inicio, fim, page: pageIndex, size: 20 })
+                .done(function (resp) {
+                    renderRows(resp.content || []);
+                    renderPagination(resp || {});
                 })
                 .fail(function () { if (typeof showToast === 'function') { showToast({ title: 'Férias', message: 'Falha ao carregar planejamento', priority: 'HIGH' }); } });
         }
-        $(document).ready(function () { carregarPlanejamento(); });
+
+        function goToPage(p) { carregarPlanejamento(Math.max(0, p)); }
+
+        $(document).ready(function () { carregarPlanejamento(0); });
     </script>
 </body>
 </html>

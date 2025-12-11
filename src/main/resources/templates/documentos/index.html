@@ -1,51 +1,1205 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Documentos - ERP Empresarial</title>
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/sidebar.css" rel="stylesheet">
-    <link href="/css/notifications.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Documentos - Acesso Colaborativo</title>
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
+  <meta name="description" content="Portal centralizado para visualização e download de documentos corporativos.">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --background: hsl(210, 20%, 98%);
+      --foreground: hsl(222, 47%, 11%);
+      --card: hsl(0, 0%, 100%);
+      --card-foreground: hsl(222, 47%, 11%);
+      --primary: hsl(217, 91%, 60%);
+      --primary-foreground: hsl(0, 0%, 100%);
+      --secondary: hsl(210, 40%, 96%);
+      --secondary-foreground: hsl(222, 47%, 11%);
+      --muted: hsl(210, 40%, 96%);
+      --muted-foreground: hsl(215, 16%, 47%);
+      --border: hsl(214, 32%, 91%);
+      --radius: 0.75rem;
+      --doc-pdf: hsl(0, 72%, 51%);
+      --doc-word: hsl(217, 91%, 60%);
+      --doc-excel: hsl(142, 71%, 45%);
+      --doc-ppt: hsl(25, 95%, 53%);
+      --doc-default: hsl(215, 16%, 47%);
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+
+    .header-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .header-subtitle {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+    }
+
+    /* Notification Button */
+    .notification-btn {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .notification-btn:hover {
+      background: var(--secondary);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 20px;
+      height: 20px;
+      background: hsl(0, 84%, 60%);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Notification Dropdown */
+    .notification-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 320px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      display: none;
+      z-index: 200;
+    }
+
+    .notification-dropdown.open {
+      display: block;
+    }
+
+    .notification-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .notification-header h4 {
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .notification-header p {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+    }
+
+    .notification-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .notification-item:hover {
+      background: var(--muted);
+    }
+
+    .notification-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .notification-item-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .notification-item-time {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+      margin-top: 2px;
+    }
+
+    /* Main Content */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+    }
+
+    /* Search and Filters */
+    .filters-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .filters-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-container {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted-foreground);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.625rem 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      background: var(--card);
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      color: var(--muted-foreground);
+    }
+
+    .search-clear:hover {
+      background: var(--secondary);
+    }
+
+    .search-clear.visible {
+      display: flex;
+    }
+
+    /* Select */
+    .select-container {
+      position: relative;
+    }
+
+    .select {
+      appearance: none;
+      padding: 0.625rem 2.5rem 0.625rem 2.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      background: var(--card);
+      cursor: pointer;
+      font-family: inherit;
+      min-width: 160px;
+    }
+
+    .select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .select-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted-foreground);
+      pointer-events: none;
+    }
+
+    .select-arrow {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted-foreground);
+      pointer-events: none;
+    }
+
+    /* Sort Button */
+    .sort-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .sort-btn:hover {
+      background: var(--secondary);
+    }
+
+    /* Category Filters */
+    .category-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .category-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .category-btn:hover {
+      background: var(--secondary);
+    }
+
+    .category-btn.active {
+      background: var(--primary);
+      color: var(--primary-foreground);
+      border-color: var(--primary);
+    }
+
+    .category-count {
+      opacity: 0.7;
+      font-size: 0.75rem;
+    }
+
+    /* Results Count */
+    .results-count {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      margin-bottom: 1rem;
+    }
+
+    /* Document Grid */
+    .document-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+
+    /* Document Card */
+    .document-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      transition: all 0.2s;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .document-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .doc-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .doc-icon.pdf { background: rgba(239, 68, 68, 0.1); color: var(--doc-pdf); }
+    .doc-icon.docx { background: rgba(59, 130, 246, 0.1); color: var(--doc-word); }
+    .doc-icon.xlsx { background: rgba(34, 197, 94, 0.1); color: var(--doc-excel); }
+    .doc-icon.pptx { background: rgba(249, 115, 22, 0.1); color: var(--doc-ppt); }
+    .doc-icon.other { background: rgba(107, 114, 128, 0.1); color: var(--doc-default); }
+
+    .card-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 0.9375rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .file-type {
+      display: inline-flex;
+      padding: 0.125rem 0.5rem;
+      background: var(--secondary);
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .file-size {
+      font-size: 0.8125rem;
+      color: var(--muted-foreground);
+    }
+
+    .card-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+    }
+
+    .card-info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      font-family: inherit;
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--secondary-foreground);
+      flex: 1;
+    }
+
+    .btn-secondary:hover {
+      background: var(--muted);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border);
+    }
+
+    .btn-outline:hover {
+      background: var(--secondary);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1rem;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--muted);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      color: var(--muted-foreground);
+    }
+
+    .empty-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-description {
+      color: var(--muted-foreground);
+      margin-bottom: 1rem;
+    }
+
+    /* Loading Skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--muted) 25%, var(--secondary) 50%, var(--muted) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .skeleton-icon {
+      width: 56px;
+      height: 56px;
+    }
+
+    .skeleton-title {
+      height: 20px;
+      width: 75%;
+      margin-bottom: 0.5rem;
+    }
+
+    .skeleton-meta {
+      height: 16px;
+      width: 40%;
+    }
+
+    .skeleton-btn {
+      height: 36px;
+      flex: 1;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 900px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      animation: modalIn 0.2s ease-out;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .modal-title h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      max-width: 400px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .modal-body {
+      flex: 1;
+      overflow: hidden;
+      background: var(--muted);
+    }
+
+    .modal-body iframe {
+      width: 100%;
+      height: 70vh;
+      border: none;
+    }
+
+    .modal-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      gap: 1rem;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 2000;
+    }
+
+    .toast {
+      background: var(--foreground);
+      color: var(--background);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      box-shadow: var(--shadow-lg);
+      animation: toastIn 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .filters-row {
+        flex-direction: column;
+      }
+
+      .document-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .notification-dropdown {
+        right: -60px;
+        width: 280px;
+      }
+    }
+
+    /* Icon SVGs (inline) */
+    .icon {
+      width: 1em;
+      height: 1em;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .icon-lg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    .icon-xl {
+      width: 2rem;
+      height: 2rem;
+    }
+  </style>
 </head>
-
 <body>
-    <div class="app-container">
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+      <section class="content-area">
+  <!-- Header (local da página) -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="header-icon">
+          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
+        </div>
+        <div>
+          <h1 class="header-title">Portal de Documentos</h1>
+          <p class="header-subtitle" id="totalCount">Carregando...</p>
+        </div>
+      </div>
+      
+    </div>
+  </header>
 
-        <!-- Sidebar -->
-        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-
-            <!-- Topbar -->
-            <header th:replace="~{components/topbar :: topbar}"></header>
-
-            <!-- Página em branco para Documentos -->
-            <section class="content-area">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">📄 Página de Documentos</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Footer -->
-            <footer th:replace="~{components/footer :: footer}"></footer>
-
-        </main>
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filters-row">
+        <div class="search-container">
+          <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, categoria ou autor...">
+          <button class="search-clear" id="searchClear">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="select-container">
+          <svg class="icon select-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <select class="select" id="typeFilter">
+            <option value="">Todos os tipos</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">Word</option>
+            <option value="xlsx">Excel</option>
+            <option value="pptx">PowerPoint</option>
+          </select>
+          <svg class="icon select-arrow" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="select-container">
+          <svg class="icon select-icon" viewBox="0 0 24 24"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+          <select class="select" id="sortBy">
+            <option value="dataModificacao">Data de modificação</option>
+            <option value="nome">Nome</option>
+            <option value="tamanho">Tamanho</option>
+          </select>
+          <svg class="icon select-arrow" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <button class="sort-btn" id="sortOrderBtn" title="Alternar ordem">
+          <svg class="icon" id="sortOrderIcon" viewBox="0 0 24 24"><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/><path d="M11 12h4"/><path d="M11 16h7"/><path d="M11 20h10"/></svg>
+        </button>
+      </div>
+      <div class="category-filters" id="categoryFilters"></div>
     </div>
 
-    <script src="/js/sidebar.js" defer></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
-</body>
+    <!-- Results Count -->
+    <p class="results-count" id="resultsCount"></p>
 
+    <!-- Document Grid -->
+    <div class="document-grid" id="documentGrid"></div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <div class="doc-icon" id="modalIcon"></div>
+          <h3 id="modalTitle"></h3>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" id="modalDownload">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Baixar
+          </button>
+          <button class="btn btn-outline" id="modalClose">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // Integração com APIs reais
+
+    // State
+    let documents = [];
+    let searchTerm = '';
+    let selectedCategory = null;
+    let selectedType = '';
+    let sortBy = 'criadoEm';
+    let sortOrder = 'desc';
+    let currentPreviewDoc = null;
+    let pageIndex = 0;
+    let pageSize = 12;
+
+    // DOM Elements
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    const typeFilter = document.getElementById('typeFilter');
+    const sortBySelect = document.getElementById('sortBy');
+    const sortOrderBtn = document.getElementById('sortOrderBtn');
+    const sortOrderIcon = document.getElementById('sortOrderIcon');
+    const categoryFilters = document.getElementById('categoryFilters');
+    const documentGrid = document.getElementById('documentGrid');
+    const resultsCount = document.getElementById('resultsCount');
+    const totalCount = document.getElementById('totalCount');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalIcon = document.getElementById('modalIcon');
+    const modalBody = document.getElementById('modalBody');
+    const modalClose = document.getElementById('modalClose');
+    const modalDownload = document.getElementById('modalDownload');
+    const toastContainer = document.getElementById('toastContainer');
+
+    // Utils
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function timeAgo(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const seconds = Math.floor((now - date) / 1000);
+      
+      const intervals = [
+        { label: 'ano', seconds: 31536000 },
+        { label: 'mês', seconds: 2592000, plural: 'meses' },
+        { label: 'dia', seconds: 86400 },
+        { label: 'hora', seconds: 3600 },
+        { label: 'minuto', seconds: 60 },
+      ];
+
+      for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+        if (count >= 1) {
+          const plural = interval.plural || interval.label + 's';
+          return `há ${count} ${count === 1 ? interval.label : plural}`;
+        }
+      }
+      return 'agora mesmo';
+    }
+
+    function getDocIcon(tipo) {
+      const icons = {
+        pdf: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+        docx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+        xlsx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>',
+        pptx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      };
+      return icons[tipo] || icons.pdf;
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${message}`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Get categories
+    async function fetchMetrics() {
+      try {
+        const r = await fetch('/juridico/api/documentos/metrics');
+        const m = await r.json();
+        const total = m.total || 0;
+        const cats = m.categorias || [];
+        totalCount.textContent = `${total} documento${total !== 1 ? 's' : ''} disponível${total !== 1 ? 'is' : ''}`;
+        renderCategoriesFromMetrics(cats);
+      } catch {}
+    }
+
+    // Filter and sort documents
+    async function fetchDocuments(page=0) {
+      const params = new URLSearchParams();
+      if (selectedCategory) params.set('categoria', selectedCategory);
+      if (searchTerm) params.set('search', searchTerm);
+      params.set('page', page);
+      params.set('size', pageSize);
+      const r = await fetch(`/juridico/api/documentos?${params.toString()}`);
+      const payload = await r.json();
+      documents = (payload.content || []).map(d => ({
+        id: d.id,
+        nome: d.titulo || 'Documento',
+        categoria: d.categoria || 'Documentos',
+        descricao: d.descricao || '',
+        caminhoArquivo: d.caminhoArquivo || '',
+        criadoEm: d.criadoEm || null,
+        tipo: inferTipo(d)
+      }));
+      renderDocuments(documents);
+      renderPagination(payload);
+    }
+
+    function inferTipo(d) {
+      const c = (d.caminhoArquivo || '').toLowerCase();
+      if (c.endsWith('.pdf')) return 'pdf';
+      if (c.endsWith('.doc') || c.endsWith('.docx')) return 'docx';
+      if (c.endsWith('.xls') || c.endsWith('.xlsx')) return 'xlsx';
+      if (c.endsWith('.ppt') || c.endsWith('.pptx')) return 'pptx';
+      return 'pdf';
+    }
+
+    // Get recent documents
+    function getRecentDocuments() {
+      return [...documents]
+        .sort((a, b) => new Date(b.dataModificacao) - new Date(a.dataModificacao))
+        .slice(0, 3);
+    }
+
+    // Render functions
+    function renderCategoriesFromMetrics(categories) {
+      categoryFilters.innerHTML = `
+        <button class="category-btn ${!selectedCategory ? 'active' : ''}" data-category="">
+          <svg class="icon" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          Todos
+        </button>
+        ${categories.map(cat => `
+          <button class="category-btn ${selectedCategory === cat.nome ? 'active' : ''}" data-category="${cat.nome}">
+            ${cat.nome}
+            <span class="category-count">(${cat.quantidade})</span>
+          </button>
+        `).join('')}
+      `;
+      categoryFilters.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const category = btn.dataset.category;
+          selectedCategory = category || null;
+          fetchDocuments(0);
+          fetchMetrics();
+        });
+      });
+    }
+
+    function renderDocuments(list) {
+      const filtered = list;
+      const hasFilters = searchTerm || selectedCategory || selectedType;
+      resultsCount.textContent = `${filtered.length} documento${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}${hasFilters ? ' com os filtros aplicados' : ''}`;
+      if (filtered.length === 0) {
+        documentGrid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon">
+              <svg class="icon icon-xl" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+            </div>
+            <h3 class="empty-title">Nenhum documento encontrado</h3>
+            <p class="empty-description">
+              ${hasFilters ? 'Não encontramos documentos com os filtros aplicados. Tente ajustar sua busca.' : 'Não há documentos disponíveis no momento.'}
+            </p>
+            ${hasFilters ? '<button class="btn btn-outline" onclick="clearFilters()"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Limpar filtros</button>' : ''}
+          </div>
+        `;
+        return;
+      }
+
+      documentGrid.innerHTML = filtered.map(doc => `
+        <div class="document-card" data-id="${doc.id}">
+          <div class="card-header">
+            <div class="doc-icon ${doc.tipo}">
+              ${getDocIcon(doc.tipo)}
+            </div>
+            <div class="card-content">
+              <h3 class="card-title" title="${doc.nome}">${doc.nome}</h3>
+              <div class="card-meta">
+                <span class="file-type">${doc.tipo}</span>
+                <span class="file-size">${doc.criadoEm ? timeAgo(doc.criadoEm) : ''}</span>
+              </div>
+              <div class="card-info">
+                <span class="card-info-item"><svg class="icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>${doc.criadoEm ? new Date(doc.criadoEm).toLocaleDateString() : ''}</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn ${doc.tipo === 'pdf' ? 'btn-outline' : 'btn-secondary'}" onclick="downloadDoc('${doc.id}')" ${doc.tipo !== 'pdf' ? 'style="flex:1"' : ''}>
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              Baixar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPagination(payload) {
+      const containerId = 'resultsCount';
+      const totalPages = payload.totalPages || 0;
+      const totalElements = payload.totalElements || 0;
+      const number = payload.page || 0;
+      const hasPrev = number > 0;
+      const hasNext = number + 1 < totalPages;
+      const el = document.getElementById('resultsCount');
+      let html = `<span class="pagination-info">Página ${number + 1} de ${Math.max(totalPages, 1)} (${totalElements} documentos)</span> `;
+      html += hasPrev ? `<a class="btn btn-outline" href="#" onclick="goToPage(${number - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-outline disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? ` <a class="btn btn-outline" href="#" onclick="goToPage(${number + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : ` <span class="btn btn-outline disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
+
+    function renderLoading() {
+      documentGrid.innerHTML = Array(4).fill('').map(() => `
+        <div class="skeleton-card">
+          <div class="card-header">
+            <div class="skeleton skeleton-icon"></div>
+            <div class="card-content" style="flex:1">
+              <div class="skeleton skeleton-title"></div>
+              <div class="skeleton skeleton-meta"></div>
+            </div>
+          </div>
+          <div class="card-actions" style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border)">
+            <div class="skeleton skeleton-btn"></div>
+            <div class="skeleton skeleton-btn"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Actions
+    function previewDoc(id) {
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      currentPreviewDoc = doc;
+      modalTitle.textContent = doc.nome;
+      modalIcon.className = `doc-icon ${doc.tipo}`;
+      modalIcon.innerHTML = getDocIcon(doc.tipo);
+      modalBody.innerHTML = `
+          <div class="modal-placeholder">
+            <div class="doc-icon ${doc.tipo}" style="width:80px;height:80px;">
+              ${getDocIcon(doc.tipo).replace('icon-lg', 'icon-xl')}
+            </div>
+            <h3>Preview não disponível</h3>
+            <p style="color:var(--muted-foreground)">Integração de visualização será habilitada quando disponível no backend.</p>
+            <button class="btn btn-secondary" onclick="downloadDoc('${doc.id}')">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              Baixar documento
+            </button>
+          </div>
+        `;
+      modalOverlay.classList.add('open');
+    }
+
+    function downloadDoc(id) {
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      showToast(`Download: ${doc.nome}`);
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('open');
+      currentPreviewDoc = null;
+    }
+
+    function clearFilters() {
+      searchInput.value = '';
+      searchTerm = '';
+      selectedCategory = null;
+      selectedType = '';
+      typeFilter.value = '';
+      searchClear.classList.remove('visible');
+      fetchMetrics();
+      fetchDocuments(0);
+    }
+
+    // Event Listeners
+    searchInput.addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      searchClear.classList.toggle('visible', searchTerm.length > 0);
+      renderDocuments();
+    });
+
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchTerm = '';
+      searchClear.classList.remove('visible');
+      renderDocuments();
+    });
+
+    typeFilter.addEventListener('change', (e) => {
+      selectedType = e.target.value;
+      renderDocuments();
+    });
+
+    sortBySelect.addEventListener('change', (e) => {
+      sortBy = e.target.value;
+      documents.sort((a, b) => {
+        let comparison = 0;
+        if (sortBy === 'nome') comparison = a.nome.localeCompare(b.nome);
+        else if (sortBy === 'criadoEm') comparison = new Date(a.criadoEm) - new Date(b.criadoEm);
+        else comparison = 0;
+        return sortOrder === 'asc' ? comparison : -comparison;
+      });
+      renderDocuments(documents);
+    });
+
+    sortOrderBtn.addEventListener('click', () => {
+      sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      sortOrderIcon.innerHTML = sortOrder === 'asc' 
+        ? '<path d="m3 8 4-4 4 4"/><path d="M7 4v16"/><path d="M11 12h4"/><path d="M11 16h7"/><path d="M11 20h10"/>'
+        : '<path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/>';
+      documents.reverse();
+      renderDocuments(documents);
+    });
+
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    modalClose.addEventListener('click', closeModal);
+
+    modalDownload.addEventListener('click', () => {
+      if (currentPreviewDoc) downloadDoc(currentPreviewDoc.id);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Initialize
+    async function init() {
+      renderLoading();
+      await fetchMetrics();
+      await fetchDocuments(0);
+    }
+
+    function goToPage(p) { pageIndex = Math.max(0, p); fetchDocuments(pageIndex); }
+
+    init();
+  </script>
+      </section>
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+  <script th:src="@{/js/sidebar.js}"></script>
+</body>
 </html>

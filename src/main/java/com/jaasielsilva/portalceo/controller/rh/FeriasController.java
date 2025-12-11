@@ -9,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @Controller
 @RequestMapping("/rh/ferias")
 public class FeriasController {
-    @GetMapping("/solicitar")
+    @GetMapping({"/solicitar", "/solicitar.html"})
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     public String solicitar(Model model) {
         model.addAttribute("modulo", "RH");
@@ -17,7 +17,7 @@ public class FeriasController {
         return "rh/ferias/solicitar";
     }
 
-    @GetMapping("/aprovar")
+    @GetMapping({"/aprovar", "/aprovar.html"})
     @PreAuthorize("hasAnyRole('ROLE_GERENCIAL','ROLE_ADMIN','ROLE_MASTER')")
     public String aprovar(Model model) {
         model.addAttribute("modulo", "RH");
@@ -25,7 +25,7 @@ public class FeriasController {
         return "rh/ferias/aprovar";
     }
 
-    @GetMapping("/planejamento")
+    @GetMapping({"/planejamento", "/planejamento.html"})
     @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
     public String planejamento(Model model) {
         model.addAttribute("modulo", "RH");
@@ -33,7 +33,7 @@ public class FeriasController {
         return "rh/ferias/planejamento";
     }
 
-    @GetMapping("/calendario")
+    @GetMapping({"/calendario", "/calendario.html"})
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     public String calendario(Model model) {
         model.addAttribute("modulo", "RH");

@@ -1,0 +1,45 @@
+Fluxo de Sucesso — Auditoria RH (Acessos)
+1) Acessar página inicial: /rh/auditoria (index.html)
+2) Navegar para “Log de Acessos” via Sidebar
+3) Preencher Usuário: master@sistema.com
+4) Preencher Recurso: /login
+5) Preencher Início: AAAA-MM-DDTHH:MM
+6) Preencher Fim: AAAA-MM-DDTHH:MM
+7) Clicar no botão “Filtrar”
+8) Verificar tabela com registros de acesso e badge “OK”
+Resultado esperado: Operação realizada com sucesso (dados carregados na tabela)
+
+Fluxo de Erro — Auditoria RH (Acessos)
+1) Acessar página inicial: /rh/auditoria (index.html)
+2) Navegar para “Log de Acessos” via Sidebar
+3) Deixar todos os campos em branco (ou usar usuário sem permissão)
+4) Clicar no botão “Filtrar”
+5) Observar resposta 403 (sem permissão) ou erro de backend
+Resultado esperado: Mensagem de erro “Acesso negado” ou “Erro ao carregar” (na tabela)
+
+Fluxo de Sucesso — Alterações de Dados
+1) Acessar /rh/auditoria
+2) Navegar para “Alterações de Dados”
+3) Usuário: julia@empresa.com
+4) Recurso: /rh/colaboradores/editar
+5) Início/Fim: intervalo válido
+6) Filtrar
+7) Tabela preenchida com registros
+Resultado esperado: Operação realizada com sucesso (dados carregados na tabela)
+
+Fluxo de Sucesso — Exportações
+1) Acessar /rh/auditoria
+2) Navegar para “Exportações”
+3) Usuário: auditor@empresa.com
+4) Recurso: /export/csv
+5) Início/Fim: intervalo válido
+6) Filtrar
+7) Tabela preenchida com registros de exportação
+Resultado esperado: Operação realizada com sucesso (dados carregados na tabela)
+
+Fluxo de Erro — Revisões
+1) Acessar /rh/auditoria
+2) Navegar para “Revisões Periódicas”
+3) Informar Início maior que Fim (intervalo inválido)
+4) Filtrar
+Resultado esperado: Erro de carregamento exibido (se validado no backend)

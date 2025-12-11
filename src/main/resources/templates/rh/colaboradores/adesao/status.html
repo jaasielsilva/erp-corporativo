@@ -254,7 +254,7 @@
             </div>
             
             <!-- Informações do Processo -->
-            <div class="row mb-4">
+            <div class="row mb-4" th:if="${#authentication?.authenticated}">
                 <div class="col-md-6">
                     <div class="info-card">
                         <h6><i class="fas fa-user me-2"></i>Dados do Colaborador</h6>
@@ -269,6 +269,14 @@
                         <p class="mb-1"><strong>ID da Sessão:</strong> <code th:text="${sessionId}">session-id</code></p>
                         <p class="mb-1"><strong>Data de Envio:</strong> <span id="data-envio">-</span></p>
                         <p class="mb-0"><strong>Última Atualização:</strong> <span id="ultima-atualizacao">-</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4" th:if="${!#authentication?.authenticated}">
+                <div class="col-12">
+                    <div class="info-card">
+                        <h6><i class="fas fa-shield-alt me-2"></i>Informações Protegidas</h6>
+                        <p class="mb-0">Para visualizar detalhes do colaborador, faça login no sistema. Você pode acompanhar o andamento geral do processo nesta página.</p>
                     </div>
                 </div>
             </div>

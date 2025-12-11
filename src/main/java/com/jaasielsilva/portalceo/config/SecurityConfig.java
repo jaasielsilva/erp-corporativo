@@ -120,6 +120,9 @@ public class SecurityConfig {
                                                 .requestMatchers("/ws/**", "/ws-chat/**", "/ws-notifications/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/api/ajuda/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/ajuda/**").permitAll()
+                                                // Liberar acesso público somente para GET de status de adesão
+                                                .requestMatchers(HttpMethod.GET, "/rh/colaboradores/adesao/status/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/rh/colaboradores/adesao/api/status/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/api/ajuda/**").authenticated()
                                                 // Endpoints que DEVEM ser autenticados
                                                 .requestMatchers("/api/rh/**").authenticated()

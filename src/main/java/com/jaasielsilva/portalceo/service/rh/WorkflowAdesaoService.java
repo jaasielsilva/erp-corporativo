@@ -260,7 +260,7 @@ public class WorkflowAdesaoService {
             String destinatario = processo.getEmailColaborador();
             if (destinatario != null && !destinatario.trim().isEmpty()) {
                 emailService.enviarNotificacaoProcessoAprovado(destinatario,
-                        processo.getNomeColaborador(), aprovadoPor);
+                        processo.getNomeColaborador(), aprovadoPor, processo.getSessionId());
             }
         } catch (Exception e) {
             logger.warn("Falha ao enviar email de aprovação para {}: {}",

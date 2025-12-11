@@ -271,7 +271,7 @@ public class EmailService {
      * Envia email de notificação de processo aprovado
      */
     @Async
-    public void enviarNotificacaoProcessoAprovado(String destinatario, String nomeColaborador, String aprovadoPor) {
+    public void enviarNotificacaoProcessoAprovado(String destinatario, String nomeColaborador, String aprovadoPor, String sessionId) {
         String template = """
                 <html>
                 <body>
@@ -280,7 +280,7 @@ public class EmailService {
                     <p>Seu processo de adesão foi <strong>aprovado</strong> com sucesso!</p>
                     <p><strong>Aprovado por:</strong> %s</p>
                     <p>Seus benefícios serão ativados em breve e você receberá mais informações sobre os próximos passos.</p>
-                    <p><a href="http://localhost:8080/rh/colaboradores/adesao/status">Acompanhar Status</a></p>
+                    <p><a href="http://localhost:8080/rh/colaboradores/adesao/status/%s">Acompanhar Status</a></p>
                     <br>
                     <p>Parabéns e bem-vindo(a) aos nossos benefícios!</p>
                     <p><em>Este é um email automático. Não responda.</em></p>
@@ -290,7 +290,7 @@ public class EmailService {
 
         enviarEmailComTemplate(destinatario,
                 "Processo de Adesão Aprovado",
-                template, nomeColaborador, aprovadoPor);
+                template, nomeColaborador, aprovadoPor, sessionId);
 
         logger.info("Email de processo aprovado enviado para {} - Colaborador: {}", destinatario, nomeColaborador);
     }

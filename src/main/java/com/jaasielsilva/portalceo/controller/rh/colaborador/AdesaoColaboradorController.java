@@ -369,18 +369,33 @@ public class AdesaoColaboradorController {
     @GetMapping("/status/{sessionId}")
     public String paginaStatus(@PathVariable String sessionId, Model model) {
         try {
-            // Buscar processo no workflow
-            // Por enquanto, vamos usar dados da sessão temporária
-            AdesaoColaboradorDTO dadosCompletos = adesaoService.obterDadosCompletos(sessionId);
-            model.addAttribute("dadosAdesao", dadosCompletos);
-            model.addAttribute("sessionId", sessionId);
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            boolean autenticado = auth != null && auth.isAuthenticated() && auth.getName() != null && !"anonymousUser".equals(auth.getName());
 
+            if (autenticado) {
+                AdesaoColaboradorDTO dadosCompletos = adesaoService.obterDadosCompletos(sessionId);
+                model.addAttribute("dadosAdesao", dadosCompletos);
+            } else {
+                AdesaoColaboradorDTO dadosPublicos = new AdesaoColaboradorDTO();
+                model.addAttribute("dadosAdesao", dadosPublicos);
+            }
+
+            model.addAttribute("sessionId", sessionId);
             return "rh/colaboradores/adesao/status";
 
         } catch (Exception e) {
             logger.error("Erro ao carregar status do processo: ", e);
             return "redirect:/rh/colaboradores/adesao?erro=sessao-invalida";
         }
+    }
+
+    /**
+     * Página de status sem sessionId: tratar de forma amigável
+     */
+    @GetMapping("/status")
+    public String paginaStatusSemSessao(org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttrs) {
+        redirectAttrs.addFlashAttribute("erro", "Para acompanhar o status, use o link enviado com seu protocolo.");
+        return "redirect:/rh/colaboradores/adesao";
     }
 
     /**

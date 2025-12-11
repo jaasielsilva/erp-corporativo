@@ -94,7 +94,9 @@ public class ColaboradorController {
             resp.put("hasPrevious", pagina.hasPrevious());
             resp.put("hasNext", pagina.hasNext());
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.add("Cache-Control", "public, max-age=90");
+            headers.add("Cache-Control", "no-store, no-cache, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
             return new org.springframework.http.ResponseEntity<>(resp, headers, org.springframework.http.HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("erro", "Falha ao carregar colaboradores: " + e.getMessage()));

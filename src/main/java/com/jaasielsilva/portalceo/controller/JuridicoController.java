@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +43,7 @@ public class JuridicoController {
     private final AuditoriaComplianceRepository auditoriaComplianceRepository;
     private final DocumentoJuridicoRepository documentoJuridicoRepository;
     private final com.jaasielsilva.portalceo.repository.juridico.DocumentoModeloRepository documentoModeloRepository;
+    private final com.jaasielsilva.portalceo.service.DocumentTemplateService documentTemplateService;
 
     // Página principal do Jurídico
     @GetMapping
@@ -1051,6 +1053,8 @@ public class JuridicoController {
             m.put("descricao", d.getDescricao());
             m.put("caminhoArquivo", d.getCaminhoArquivo());
             m.put("criadoEm", d.getCriadoEm());
+            m.put("contentType", d.getContentType());
+            m.put("originalFilename", d.getOriginalFilename());
             content.add(m);
         }
         Map<String, Object> payload = new HashMap<>();
@@ -1287,6 +1291,97 @@ public class JuridicoController {
                 .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Modelo não encontrado")));
     }
 
+    @PostMapping("/api/documentos/{id}/personalizar")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    public ResponseEntity<?> personalizarDocumento(@PathVariable Long id,
+                                                   @RequestBody java.util.Map<String, Object> body,
+                                                   @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        return documentoJuridicoRepository.findById(id)
+                .map(d -> {
+                    try {
+                        Object phObj = body.get("placeholders");
+                        java.util.Map<String, String> placeholders = new java.util.HashMap<>();
+                        if (phObj instanceof java.util.Map<?, ?> map) {
+                            for (java.lang.Object k : map.keySet()) {
+                                placeholders.put(String.valueOf(k), String.valueOf(map.get(k)));
+                            }
+                        }
+                        boolean persist = java.util.Optional.ofNullable(body.get("persist")).map(v -> Boolean.parseBoolean(String.valueOf(v))).orElse(true);
+                        String nomeArquivo = java.util.Optional.ofNullable(body.get("nomeArquivo")).map(String::valueOf).orElse(null);
+
+                        byte[] result;
+                        if (d.getConteudo() != null && d.getConteudo().length > 0) {
+                            result = documentTemplateService.personalizeDocx(d.getConteudo(), placeholders);
+                        } else if (d.getCaminhoArquivo() != null) {
+                            java.nio.file.Path path = java.nio.file.Paths.get(d.getCaminhoArquivo());
+                            result = documentTemplateService.personalizeDocx(path, placeholders);
+                        } else {
+                            return ResponseEntity.status(400).body(java.util.Map.of("erro", "Documento sem conteúdo ou caminho para personalização"));
+                        }
+
+                        if (persist) {
+                            d.setConteudo(result);
+                            d.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                            String baseName = nomeArquivo != null && !nomeArquivo.isBlank() ? nomeArquivo : (d.getOriginalFilename() != null ? d.getOriginalFilename() : (d.getTitulo() != null ? d.getTitulo() : "documento"));
+                            if (!baseName.toLowerCase().endsWith(".docx")) baseName = baseName + ".docx";
+                            d.setOriginalFilename(baseName);
+                            d.setTamanho((long) result.length);
+                            d.setCaminhoArquivo(null);
+                            d.setCriadoEm(d.getCriadoEm() != null ? d.getCriadoEm() : java.time.LocalDateTime.now());
+                            d.setAutor(userDetails != null ? userDetails.getUsername() : d.getAutor());
+                            documentoJuridicoRepository.save(d);
+                            return ResponseEntity.ok(java.util.Map.of("id", d.getId(), "personalizado", true));
+                        } else {
+                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(result);
+                            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                            headers.setContentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+                            String fname = nomeArquivo != null ? nomeArquivo : (d.getTitulo() != null ? d.getTitulo() : "documento") + "_personalizado.docx";
+                            headers.setContentDispositionFormData("attachment", fname);
+                            headers.setContentLength(result.length);
+                            return ResponseEntity.ok().headers(headers).body(resource);
+                        }
+                    } catch (Exception e) {
+                        return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao personalizar", "detalhes", e.getMessage()));
+                    }
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Documento não encontrado")));
+    }
+
+    @PostMapping("/api/documentos/gerar-pdf")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    public ResponseEntity<?> gerarDocumentoPdf(@RequestParam String titulo,
+                                               @RequestBody java.util.Map<String, Object> body,
+                                               @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        try {
+            String html = java.util.Optional.ofNullable(body.get("html")).map(String::valueOf).orElse("");
+            Object phObj = body.get("placeholders");
+            java.util.Map<String, String> placeholders = new java.util.HashMap<>();
+            if (phObj instanceof java.util.Map<?, ?> map) {
+                for (java.lang.Object k : map.keySet()) {
+                    placeholders.put(String.valueOf(k), String.valueOf(map.get(k)));
+                }
+            }
+            byte[] pdf = documentTemplateService.generatePdfFromHtml(html, placeholders);
+            com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
+            d.setTitulo(titulo);
+            d.setCategoria(String.valueOf(java.util.Optional.ofNullable(body.get("categoria")).orElse("Contrato")));
+            d.setDescricao(String.valueOf(java.util.Optional.ofNullable(body.get("descricao")).orElse("Documento PDF personalizado a partir de HTML")));
+            d.setConteudo(pdf);
+            d.setContentType(org.springframework.http.MediaType.APPLICATION_PDF_VALUE);
+            d.setOriginalFilename(titulo.endsWith(".pdf") ? titulo : titulo + ".pdf");
+            d.setTamanho((long) pdf.length);
+            d.setCaminhoArquivo(null);
+            d.setCriadoEm(java.time.LocalDateTime.now());
+            d.setAutor(userDetails != null ? userDetails.getUsername() : null);
+            documentoJuridicoRepository.save(d);
+            return ResponseEntity.ok(java.util.Map.of("id", d.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao gerar PDF", "detalhes", e.getMessage()));
+        }
+    }
+
     @PostMapping("/api/documentos/upload")
     @ResponseBody
     public ResponseEntity<?> uploadDocumentoApi(@RequestBody Map<String, Object> body,
@@ -1310,26 +1405,19 @@ public class JuridicoController {
                                                       @RequestParam(value = "descricao", required = false) String descricao,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "documentos";
-            java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
-            java.nio.file.Files.createDirectories(dir);
-            String sanitized = java.util.UUID.randomUUID() + "_" + (
-                    file.getOriginalFilename() == null
-                            ? "arquivo"
-                            : file.getOriginalFilename().replaceAll("[^a-zA-Z0-9_\\.\\-]", "_")
-            );
-            java.nio.file.Path target = dir.resolve(sanitized);
-            file.transferTo(target.toFile());
-
             com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
             d.setTitulo(titulo);
             d.setCategoria(categoria);
             d.setDescricao(descricao != null ? descricao : "");
-            d.setCaminhoArquivo(target.toString());
+            d.setConteudo(file.getBytes());
+            d.setContentType(file.getContentType());
+            d.setOriginalFilename(file.getOriginalFilename());
+            d.setTamanho(file.getSize());
+            d.setCaminhoArquivo(null);
             d.setCriadoEm(java.time.LocalDateTime.now());
             d.setAutor(userDetails != null ? userDetails.getUsername() : null);
             documentoJuridicoRepository.save(d);
-            return ResponseEntity.ok(Map.of("id", d.getId(), "caminhoArquivo", d.getCaminhoArquivo()));
+            return ResponseEntity.ok(Map.of("id", d.getId()));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("erro", "Falha no upload do arquivo", "detalhes", e.getMessage()));
         }
@@ -1347,6 +1435,8 @@ public class JuridicoController {
                     m.put("descricao", d.getDescricao());
                     m.put("caminhoArquivo", d.getCaminhoArquivo());
                     m.put("criadoEm", d.getCriadoEm());
+                    m.put("contentType", d.getContentType());
+                    m.put("originalFilename", d.getOriginalFilename());
                     return ResponseEntity.ok(m);
                 })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado")));
@@ -1363,10 +1453,20 @@ public class JuridicoController {
     }
 
     @GetMapping("/documentos/download/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<org.springframework.core.io.Resource> downloadDocumento(@PathVariable Long id) {
         return documentoJuridicoRepository.findById(id)
                 .map(d -> {
                     try {
+                        if (d.getConteudo() != null && d.getConteudo().length > 0) {
+                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(d.getConteudo());
+                            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                            headers.setContentType(d.getContentType() != null ? org.springframework.http.MediaType.parseMediaType(d.getContentType()) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                            String fname = d.getOriginalFilename() != null ? d.getOriginalFilename() : "documento";
+                            headers.setContentDispositionFormData("attachment", fname);
+                            headers.setContentLength(d.getTamanho() != null ? d.getTamanho() : d.getConteudo().length);
+                            return ResponseEntity.ok().headers(headers).body(resource);
+                        }
                         java.nio.file.Path path = java.nio.file.Paths.get(d.getCaminhoArquivo());
                         if (!java.nio.file.Files.exists(path)) {
                             return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
@@ -1376,6 +1476,44 @@ public class JuridicoController {
                         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
                         headers.setContentType(contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
                         headers.setContentDispositionFormData("attachment", path.getFileName().toString());
+                        return ResponseEntity.ok().headers(headers).body(resource);
+                    } catch (Exception e) {
+                        return ResponseEntity.status(500).body((org.springframework.core.io.Resource) null);
+                    }
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body((org.springframework.core.io.Resource) null));
+    }
+
+    @GetMapping("/documentos/preview/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    public ResponseEntity<org.springframework.core.io.Resource> previewDocumento(@PathVariable Long id) {
+        return documentoJuridicoRepository.findById(id)
+                .map(d -> {
+                    try {
+                        if (d.getConteudo() != null && d.getConteudo().length > 0) {
+                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(d.getConteudo());
+                            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                            headers.setContentType(d.getContentType() != null ? org.springframework.http.MediaType.parseMediaType(d.getContentType()) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                            String fname = d.getOriginalFilename() != null ? d.getOriginalFilename() : "documento";
+                            headers.set("Content-Disposition", "inline; filename=\"" + fname + "\"");
+                            headers.setCacheControl("no-cache, no-store, must-revalidate");
+                            headers.setPragma("no-cache");
+                            headers.setExpires(0);
+                            headers.setContentLength(d.getTamanho() != null ? d.getTamanho() : d.getConteudo().length);
+                            return ResponseEntity.ok().headers(headers).body(resource);
+                        }
+                        java.nio.file.Path path = java.nio.file.Paths.get(d.getCaminhoArquivo());
+                        if (!java.nio.file.Files.exists(path)) {
+                            return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
+                        }
+                        String contentType = java.nio.file.Files.probeContentType(path);
+                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(path);
+                        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                        headers.setContentType(contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                        headers.set("Content-Disposition", "inline; filename=\"" + path.getFileName().toString() + "\"");
+                        headers.setCacheControl("no-cache, no-store, must-revalidate");
+                        headers.setPragma("no-cache");
+                        headers.setExpires(0);
                         return ResponseEntity.ok().headers(headers).body(resource);
                     } catch (Exception e) {
                         return ResponseEntity.status(500).body((org.springframework.core.io.Resource) null);

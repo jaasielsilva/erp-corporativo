@@ -454,9 +454,9 @@ public class AdesaoColaboradorService {
         // Observações
         colaborador.setObservacoes(dto.getObservacoes());
 
-        // Status
-        colaborador.setStatus(Colaborador.StatusColaborador.ATIVO);
-        colaborador.setAtivo(true);
+        // Status inicial: aguardando aprovação do RH
+        colaborador.setStatus(Colaborador.StatusColaborador.INATIVO);
+        colaborador.setAtivo(false);
 
         return colaborador;
     }

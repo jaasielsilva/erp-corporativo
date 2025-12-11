@@ -100,7 +100,7 @@ stateDiagram-v2
     - Detalhes: `GET /juridico/api/documentos/{id}`.
     - Download: `GET /juridico/documentos/download/{id}`.
 - Troca de dados e eventos
-  - JSON payload com `content`, `page`, `size`, `totalPages`, `totalElements` para listagem.
+  - JSON payload com `content`, `page`, `size`, `totalPages`, `totalElements` para listagem, incluindo `contentType` e `originalFilename`.
   - Multipart para upload com `file`, `titulo`, `categoria`, `descricao`.
 
 ## 4. Padrões de Projeto
@@ -108,6 +108,7 @@ stateDiagram-v2
 - Arquitetura
   - MVC com Spring Boot + Thymeleaf na UI.
   - Camadas: Controller → Service (quando aplicável) → Repository → DB.
+  - Armazenamento de documentos: metadados + BLOB no banco (`DocumentoJuridico.conteudo`), com `contentType`, `originalFilename`, `tamanho`.
 - Princípios SOLID
   - Responsabilidade única: Controllers por domínio (ex.: `JuridicoController`).
   - Inversão de dependência: Repositórios injetados via Spring.
@@ -130,6 +131,7 @@ stateDiagram-v2
   - Centralizar endpoints no `JuridicoController` facilita evolução.
   - Reutilizar UI padrão (sidebar/topbar/footer) garante consistência.
   - Isolar lógica de transformação no cliente (inferência de tipo por extensão).
+  - Controles de autorização por perfil (preview/download) aplicados via `@PreAuthorize` e refletidos na UI.
 
 ## 6. Diagramas de Sequência
 
@@ -177,6 +179,61 @@ sequenceDiagram
   JDOC->>JDOC: Notifica sucesso e recarrega listagem
 ```
 
+Preview integrado (inline):
+
+```mermaid
+sequenceDiagram
+  participant U as Usuário
+  participant DOC as /documentos (index.html)
+  participant JC as JuridicoController
+  participant FS as FileSystem
+
+  U->>DOC: Clica Visualizar
+  DOC->>JC: GET /juridico/documentos/preview/{id}
+  JC->>FS: Localiza arquivo por caminho
+  JC-->>DOC: Resource com Content-Type e Content-Disposition inline
+  DOC->>U: Exibe em iframe (PDF) ou <img> (imagens)
+```
+
+Persistência e download/preview do BLOB:
+
+```mermaid
+sequenceDiagram
+  participant U as Usuário
+  participant JC as JuridicoController
+  participant REP as DocumentoJuridicoRepository
+  participant DB as Database
+
+  U->>JC: POST /juridico/api/documentos/upload-multipart (file)
+  JC->>REP: save(DocumentoJuridico: titulo,categoria,descricao,conteudo,contentType,originalFilename,tamanho)
+  REP->>DB: INSERT metadados + BLOB
+  U->>JC: GET /juridico/documentos/download/{id}
+  JC->>REP: findById(id)
+  REP-->>JC: DocumentoJuridico
+  JC-->>U: ByteArrayResource com cabeçalhos (Content-Type, Content-Length, Disposition)
+```
+
+Endpoints adicionados para preview:
+
+- `GET /juridico/documentos/preview/{id}`: retorna o arquivo com `Content-Disposition: inline` e `Content-Type` detectado. Referência: src/main/java/com/jaasielsilva/portalceo/controller/JuridicoController.java:1390
+- Integração na UI:
+  - `documentos/index.html` usa `<iframe src="/juridico/documentos/preview/{id}#toolbar=0">` para PDFs e `<img src="...">` para imagens. Referência: src/main/resources/templates/documentos/index.html:1089
+  - `juridico/documentos.html` adiciona botão “Visualizar” → abre nova aba com preview. Referência: src/main/resources/templates/juridico/documentos.html:386
+
+Considerações:
+
+- Tipos suportados para preview direto: PDF e imagens (PNG, JPG, JPEG).
+- Demais tipos (DOC/DOCX/XLS/XLSX/PPT/PPTX): exibem mensagem e orientam download.
+- Cabeçalhos de cache desabilitados para evitar exibição obsoleta.
+ - Autorização:
+   - Backend: `@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER')")` em preview e download.
+     - Referências: `src/main/java/com/jaasielsilva/portalceo/controller/JuridicoController.java:1387`, `src/main/java/com/jaasielsilva/portalceo/controller/JuridicoController.java:1365`.
+   - Frontend:
+     - `documentos/index.html` define `window.PODE_PREVIEW` via Thymeleaf e oculta botões quando não permitido.
+       - Referência: `src/main/resources/templates/documentos/index.html:898`.
+     - `juridico/documentos.html` define `CAN_PREVIEW/CAN_DOWNLOAD` e condiciona botões.
+       - Referência: `src/main/resources/templates/juridico/documentos.html:261`, `src/main/resources/templates/juridico/documentos.html:386`.
+
 ## 7. Referências no Código
 
 - Páginas e controladores
@@ -196,4 +253,3 @@ sequenceDiagram
 flowchart LR
   DEV[Este arquivo é versionado em docs/ e acompanha o código]
 ```
-

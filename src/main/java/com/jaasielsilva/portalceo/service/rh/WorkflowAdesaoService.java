@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.service.rh;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.HistoricoProcessoAdesao;
 import com.jaasielsilva.portalceo.model.ProcessoAdesao;
@@ -48,6 +50,9 @@ public class WorkflowAdesaoService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private com.jaasielsilva.portalceo.service.EmailService emailService;
 
     /**
      * Salva processo de adesão no banco de dados
@@ -208,11 +213,23 @@ public class WorkflowAdesaoService {
 
         // Enviar notificação
         notificacaoService.notificarNovoProcessoAdesao(processo);
+
+        try {
+            String destinatario = processo.getEmailColaborador();
+            if (destinatario != null && !destinatario.trim().isEmpty()) {
+                emailService.enviarNotificacaoNovoProcessoAdesao(destinatario,
+                        processo.getNomeColaborador(), String.valueOf(processo.getId()));
+            }
+        } catch (Exception e) {
+            logger.warn("Falha ao enviar email de novo processo para {}: {}",
+                    processo.getEmailColaborador(), e.getMessage());
+        }
     }
 
     /**
      * Aprova processo de adesão
      */
+    @CacheEvict(value = {"colaboradoresAjax", "colaboradoresAjaxPaged"}, allEntries = true)
     public void aprovarProcesso(Long processoId, String aprovadoPor, String observacoes) {
         ProcessoAdesao processo = processoRepository.findById(processoId)
                 .orElseThrow(() -> new WorkflowException("Processo não encontrado"));
@@ -238,6 +255,17 @@ public class WorkflowAdesaoService {
 
         // Enviar notificação
         notificacaoService.notificarProcessoAprovado(processo);
+
+        try {
+            String destinatario = processo.getEmailColaborador();
+            if (destinatario != null && !destinatario.trim().isEmpty()) {
+                emailService.enviarNotificacaoProcessoAprovado(destinatario,
+                        processo.getNomeColaborador(), aprovadoPor);
+            }
+        } catch (Exception e) {
+            logger.warn("Falha ao enviar email de aprovação para {}: {}",
+                    processo.getEmailColaborador(), e.getMessage());
+        }
     }
 
     /**
@@ -261,6 +289,17 @@ public class WorkflowAdesaoService {
 
         // Enviar notificação
         notificacaoService.notificarProcessoRejeitado(processo);
+
+        try {
+            String destinatario = processo.getEmailColaborador();
+            if (destinatario != null && !destinatario.trim().isEmpty()) {
+                emailService.enviarNotificacaoProcessoRejeitado(destinatario,
+                        processo.getNomeColaborador(), motivoRejeicao);
+            }
+        } catch (Exception e) {
+            logger.warn("Falha ao enviar email de rejeição para {}: {}",
+                    processo.getEmailColaborador(), e.getMessage());
+        }
     }
 
     /**

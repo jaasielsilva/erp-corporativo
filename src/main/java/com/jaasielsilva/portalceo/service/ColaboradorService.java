@@ -204,7 +204,6 @@ public class ColaboradorService {
     /**
      * Lista colaboradores otimizado para AJAX (apenas dados essenciais) com cache
      */
-    @Cacheable(value = "colaboradoresAjax", unless = "#result.size() == 0")
     public List<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> listarParaAjax() {
         logger.debug("Buscando colaboradores para AJAX (com cache)");
         try {
@@ -218,10 +217,6 @@ public class ColaboradorService {
         }
     }
 
-    @org.springframework.cache.annotation.Cacheable(
-            value = "colaboradoresAjaxPaged",
-            key = "T(String).valueOf(#q == null || #q.isBlank() ? 'NULL' : #q) + '-' + #pageable.pageNumber + '-' + #pageable.pageSize",
-            condition = "#q == null || #q.isBlank()")
     public org.springframework.data.domain.Page<com.jaasielsilva.portalceo.dto.ColaboradorSimpleDTO> buscarParaAjax(
             String q,
             org.springframework.data.domain.Pageable pageable) {

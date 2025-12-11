@@ -14,6 +14,12 @@ public class DocumentoJuridico {
     private String caminhoArquivo;
     private LocalDateTime criadoEm;
     private String autor;
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    private byte[] conteudo;
+    private String contentType;
+    private String originalFilename;
+    private Long tamanho;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -29,4 +35,12 @@ public class DocumentoJuridico {
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
     public String getAutor() { return autor; }
     public void setAutor(String autor) { this.autor = autor; }
+    public byte[] getConteudo() { return conteudo; }
+    public void setConteudo(byte[] conteudo) { this.conteudo = conteudo; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public String getOriginalFilename() { return originalFilename; }
+    public void setOriginalFilename(String originalFilename) { this.originalFilename = originalFilename; }
+    public Long getTamanho() { return tamanho; }
+    public void setTamanho(Long tamanho) { this.tamanho = tamanho; }
 }

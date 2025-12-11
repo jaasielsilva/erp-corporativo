@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.*;
 
@@ -20,6 +21,7 @@ public class AjudaRestController {
     @Autowired private HelpService helpService;
     @Autowired private AiAssistantService aiService;
     @Autowired private UsuarioService usuarioService;
+    @Autowired private com.jaasielsilva.portalceo.service.ajuda.RagService ragService;
 
     @GetMapping("/categorias")
     public List<AjudaCategoria> categorias() { return helpService.listarCategorias(); }
@@ -78,5 +80,17 @@ public class AjudaRestController {
     @PostMapping("/handoff")
     public ResponseEntity<?> handoff(@RequestParam Long conversaId) {
         return ResponseEntity.ok(aiService.marcarEscalonado(conversaId));
+    }
+
+    @PostMapping("/admin/reindex")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER')")
+    public ResponseEntity<Map<String,Object>> reindex(AdminReindexRequest request) {
+        boolean force = request != null && Boolean.TRUE.equals(request.force);
+        Map<String,Object> stats = ragService.reindexAllowed(force);
+        return ResponseEntity.ok(stats);
+    }
+
+    public static class AdminReindexRequest {
+        public Boolean force;
     }
 }

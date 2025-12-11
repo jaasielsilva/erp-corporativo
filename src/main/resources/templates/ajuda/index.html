@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ajuda - ERP Corporativo</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
   <link rel="stylesheet" th:href="@{/css/notifications.css}" />
@@ -24,39 +24,30 @@
           </div>
         </div>
 
-        <div class="card mb-3">
-          <div class="card-body">
-            <form id="helpSearchForm" class="row g-2" onsubmit="event.preventDefault(); doSearch();">
-              <div class="col-md-6">
-                <input type="text" id="q" class="form-control" placeholder="Digite sua dúvida" />
-              </div>
-              <div class="col-md-3">
-                <select id="categoria" class="form-select"></select>
-              </div>
-              <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
-                <button type="button" class="btn btn-info" onclick="askIA()"><i class="fas fa-robot"></i> IA</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
         <div class="row g-3">
-          <div class="col-md-3">
+          
+        </div>
+        <div class="row g-3 mt-3">
+          <div class="col-md-12">
             <div class="card">
-              <div class="card-header">Categorias</div>
-              <ul id="cats" class="list-group list-group-flush"></ul>
-            </div>
-          </div>
-          <div class="col-md-9">
-            <div class="card">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Resultados</span>
-                <div id="actions" class="d-none">
-                  <button class="btn btn-outline-secondary btn-sm" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>
+              <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-robot text-info"></i>
+                <strong>Assistente Inteligente</strong>
+                <span class="ms-2 text-muted small">Conversa contextual com RAG</span>
+              </div>
+              <div class="card-body">
+                <div id="chatHistory" class="mb-3" style="min-height:160px;"></div>
+                <div class="d-flex gap-2">
+                  <input id="chatInput" class="form-control" placeholder="Pergunte em linguagem natural" />
+                  <button class="btn btn-primary" id="chatSend"><i class="fas fa-paper-plane"></i> Enviar</button>
+                </div>
+                <div class="mt-2 d-flex flex-wrap gap-2">
+                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('impressora travando')">Impressora travando</button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('como abrir um chamado')">Abrir chamado</button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('pagar salário')">Pagar salário</button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('registrar venda no pdv')">Registrar venda</button>
                 </div>
               </div>
-              <div id="results" class="card-body"></div>
             </div>
           </div>
         </div>
@@ -73,7 +64,9 @@
       const select = document.getElementById('categoria');
       select.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c.slug}">${c.nome}</option>`).join('');
       const list = document.getElementById('cats');
-      list.innerHTML = cats.map(c => `<li><a href="#" onclick="filterBy('${c.slug}')"><i class="fas fa-folder"></i> ${c.nome}</a></li>`).join('');
+      if (list) {
+        list.innerHTML = cats.map(c => `<li><a href="#" onclick="filterBy('${c.slug}')"><i class="fas fa-folder"></i> ${c.nome}</a></li>`).join('');
+      }
     }
 
     function filterBy(slug) {
@@ -157,19 +150,50 @@
       if (res.status === 401) { alert('Faça login para usar a IA.'); return; }
       const json = await res.json();
       const results = document.getElementById('results');
-      if (json.sugestoes && json.sugestoes.length) {
-        const cards = json.sugestoes.map(s => `
+      if (json.sections) {
+        const s = json.sections;
+        const resumo = s.resumo || json.resposta || '';
+        const caminho = s.caminho || '';
+        const passos = (s.passo_a_passo && s.passo_a_passo.items) ? s.passo_a_passo.items : [];
+        const observacoes = (s.observacoes && s.observacoes.items) ? s.observacoes.items : [];
+        const perguntaFinal = s.pergunta_final || '';
+
+        const passosHtml = passos.length ? `<ol class="mb-0">${passos.map(p => `<li>${p}</li>`).join('')}</ol>` : '<span class="text-muted">Sem passos disponíveis</span>';
+        const obsHtml = observacoes.length ? `<ul class="mb-0">${observacoes.map(o => `<li>${o}</li>`).join('')}</ul>` : '<span class="text-muted">Sem observações</span>';
+
+        const sugestoesCards = (json.sugestoes && json.sugestoes.length) ? json.sugestoes.map(sg => `
           <div class="card mb-2"><div class="card-body p-2">
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-lightbulb text-info"></i>
-              <strong>${s.titulo}</strong>
-              <span class="ms-auto text-muted small">${s.categoria}</span>
+              <strong>${sg.titulo}</strong>
+              <span class="ms-auto text-muted small">${sg.categoria}</span>
             </div>
-          </div></div>`).join('');
-        results.innerHTML = `<div class="alert alert-info"><i class="fas fa-robot"></i> ${json.resposta}</div>` + cards;
+          </div></div>`).join('') : '';
+
+        results.innerHTML = `
+          <div class="card mb-3"><div class="card-body">
+            <div class="mb-2"><strong>🔹 Resumo rápido</strong><div>${resumo}</div></div>
+            <div class="mb-2"><strong>🔹 Caminho de navegação</strong><div>${caminho || '<span class="text-muted">Não especificado</span>'}</div></div>
+            <div class="mb-2"><strong>🔹 Passo a passo</strong><div>${passosHtml}</div></div>
+            <div class="mb-2"><strong>🔹 Observações úteis</strong><div>${obsHtml}</div></div>
+            <div class="mb-2"><strong>🔹 Pergunta final</strong><div>${perguntaFinal}</div></div>
+          </div></div>
+        ` + sugestoesCards + (json.abrirChamadoSugerido ? `<button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>` : '');
       } else {
-        results.innerHTML = `<div class="alert alert-warning"><i class="fas fa-info-circle"></i> ${json.resposta}</div>
-          <button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>`;
+        if (json.sugestoes && json.sugestoes.length) {
+          const cards = json.sugestoes.map(s => `
+            <div class="card mb-2"><div class="card-body p-2">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-lightbulb text-info"></i>
+                <strong>${s.titulo}</strong>
+                <span class="ms-auto text-muted small">${s.categoria}</span>
+              </div>
+            </div></div>`).join('');
+          results.innerHTML = `<div class="alert alert-info"><i class="fas fa-robot"></i> ${json.resposta}</div>` + cards;
+        } else {
+          results.innerHTML = `<div class="alert alert-warning"><i class="fas fa-info-circle"></i> ${json.resposta}</div>
+            <button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>`;
+        }
       }
     }
 
@@ -196,6 +220,47 @@
         results.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Erro ao abrir chamado: ${json.erro || json.mensagem}</div>`;
       }
     }
+    function chatQuick(q){ const i=document.getElementById('chatInput'); if(i){ i.value=q; chatSend(); } }
+    async function chatSend(){
+      const q = document.getElementById('chatInput') ? document.getElementById('chatInput').value.trim() : ''; if (!q) return;
+      chatAdd('Você', `<div>${q}</div>`);
+      const token = getXsrfToken();
+      const typing = document.createElement('div'); typing.className='text-muted small'; typing.textContent='Assistente está pensando…';
+      document.getElementById('chatHistory').appendChild(typing);
+      try {
+        const res = await fetch('/api/ajuda/ia/generate?query=' + encodeURIComponent(q), { method: 'POST', headers: token ? { 'X-XSRF-TOKEN': token } : {} });
+        typing.remove(); if (res.status === 401) { chatAdd('Assistente','<div>Faça login para usar a IA.</div>'); return; }
+        const json = await res.json(); const s = json.sections || {};
+        const resumo = s.resumo || json.resposta || ''; const caminho = s.caminho || '';
+        const passos = (s.passo_a_passo && s.passo_a_passo.items) ? s.passo_a_passo.items : [];
+        const observacoes = (s.observacoes && s.observacoes.items) ? s.observacoes.items : [];
+        const perguntaFinal = s.pergunta_final || '';
+        const passosHtml = passos.length ? `<ol class="mb-0">${passos.map(p => `<li>${p}</li>`).join('')}</ol>` : '<span class="text-muted">Sem passos disponíveis</span>';
+        const obsHtml = observacoes.length ? `<ul class="mb-0">${observacoes.map(o => `<li>${o}</li>`).join('')}</ul>` : '<span class="text-muted">Sem observações</span>';
+        const sugCards = (json.sugestoes && json.sugestoes.length) ? json.sugestoes.map(sg => `<div class="card mb-2"><div class="card-body p-2"><div class="d-flex align-items-center gap-2"><i class="fas fa-lightbulb text-info"></i><strong>${sg.titulo}</strong><span class="ms-auto text-muted small">${sg.categoria}</span></div></div></div>`).join('') : '';
+        const actions = `<div class=\"mt-2 d-flex flex-wrap gap-2\">` +
+          `<a class=\"btn btn-sm btn-outline-primary\" href=\"/ajuda\"><i class=\"fas fa-book\"></i> Ver FAQs</a>` +
+          `<a class=\"btn btn-sm btn-outline-secondary\" href=\"/ti/suporte\"><i class=\"fas fa-headset\"></i> Suporte TI</a>` +
+          `<button class=\"btn btn-sm btn-outline-success\" onclick=\"openTicket()\"><i class=\"fas fa-ticket-alt\"></i> Abrir Chamado</button>` +
+        `</div>`;
+        const html = `<div class=\"mb-2\"><strong>Resumo</strong><div>${resumo}</div></div>`+
+          `<div class=\"mb-2\"><strong>Navegação</strong><div>${caminho || '<span class=\"text-muted\">Não especificado</span>'}</div></div>`+
+          `<div class=\"mb-2\"><strong>Passos</strong><div>${passosHtml}</div></div>`+
+          `<div class=\"mb-2\"><strong>Observações</strong><div>${obsHtml}</div></div>`+
+          (perguntaFinal ? `<div class=\"mb-2\"><strong>Pergunta</strong><div>${perguntaFinal}</div></div>` : '')+
+          sugCards + actions;
+        chatAdd('Assistente', html);
+        try {
+          const ir = await fetch('/api/navigation/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q }) });
+          if (ir.ok) { const r = await ir.json(); if (r.suggestions && r.suggestions.length) {
+            const top = r.suggestions.slice(0,3).map(s => `<a href=\"${s.routes[0]}\" class=\"btn btn-xs btn-outline-dark\">${s.intent}</a>`).join(' ');
+            chatAdd('Assistente', `<div class=\"small text-muted\">Sugestões de navegação:</div><div class=\"d-flex flex-wrap gap-1\">${top}</div>`);
+          } }
+        } catch (_) {}
+      } catch (e) { typing.remove(); chatAdd('Assistente', '<div>Falha na comunicação com a IA.</div>'); }
+    }
+    function chatAdd(who, html){ const box=document.getElementById('chatHistory'); if(!box) return; const bubble=document.createElement('div'); bubble.className='p-2 rounded mb-2 ' + (who==='Você'?'bg-light':'bg-white border'); bubble.innerHTML = `<div class=\"small text-muted\">${who}</div>` + html; box.appendChild(bubble); box.scrollTop=box.scrollHeight; }
+    document.addEventListener('DOMContentLoaded', function(){ const btn=document.getElementById('chatSend'); if(btn) btn.addEventListener('click', chatSend); const input=document.getElementById('chatInput'); if(input) input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') chatSend(); }); });
     loadCategories();
     doSearch();
   </script>

@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.HttpServletRequest;
 import com.jaasielsilva.portalceo.service.AuditoriaRhLogService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Controller
 @RequestMapping("/rh/treinamentos")
@@ -18,7 +20,11 @@ public class TreinamentosController {
     @GetMapping({"", "/"})
     @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL')")
     public String index(HttpServletRequest request) {
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos", usuario, ip, "Acesso ao índice de Treinamentos", true); } catch (Exception ignore) {}
+        try {
+            String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); }
+            String ip = request != null ? request.getRemoteAddr() : null;
+            auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos", usuario, ip, "Acesso ao índice de Treinamentos", true);
+        } catch (Exception ignore) {}
         return "redirect:/rh/treinamentos/relatorios";
     }
 
@@ -27,7 +33,7 @@ public class TreinamentosController {
     public String cadastro(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Cadastro");
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/cadastro", usuario, ip, "Acesso ao cadastro de Treinamentos", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/cadastro", usuario, ip, "Acesso ao cadastro de Treinamentos", true); } catch (Exception ignore) {}
         return "rh/treinamentos/cadastro";
     }
 
@@ -36,7 +42,7 @@ public class TreinamentosController {
     public String certificado(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Certificado");
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/certificado", usuario, ip, "Acesso à emissão de certificado", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/certificado", usuario, ip, "Acesso à emissão de certificado", true); } catch (Exception ignore) {}
         return "rh/treinamentos/certificado";
     }
 
@@ -45,7 +51,7 @@ public class TreinamentosController {
     public String inscricao(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Inscrição");
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/inscricao", usuario, ip, "Acesso à inscrição em Treinamentos", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/inscricao", usuario, ip, "Acesso à inscrição em Treinamentos", true); } catch (Exception ignore) {}
         return "rh/treinamentos/inscricao";
     }
 
@@ -55,7 +61,7 @@ public class TreinamentosController {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Detalhe da Turma");
         model.addAttribute("turmaId", id);
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/turmas/"+id, usuario, ip, "Acesso ao detalhe da turma", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/turmas/"+id, usuario, ip, "Acesso ao detalhe da turma", true); } catch (Exception ignore) {}
         return "rh/treinamentos/turma-detalhe";
     }
     @GetMapping("/cursos")
@@ -63,7 +69,7 @@ public class TreinamentosController {
     public String cursos(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Cursos");
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/cursos", usuario, ip, "Acesso à listagem de cursos", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/cursos", usuario, ip, "Acesso à listagem de cursos", true); } catch (Exception ignore) {}
         return "rh/treinamentos/cursos";
     }
 
@@ -72,7 +78,7 @@ public class TreinamentosController {
     public String instrutores(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Instrutores");
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/instrutores", usuario, ip, "Acesso à listagem de instrutores", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/instrutores", usuario, ip, "Acesso à listagem de instrutores", true); } catch (Exception ignore) {}
         return "rh/treinamentos/instrutores";
     }
 
@@ -81,7 +87,7 @@ public class TreinamentosController {
     public String turmas(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Turmas");
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/turmas", usuario, ip, "Acesso à listagem de turmas", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/turmas", usuario, ip, "Acesso à listagem de turmas", true); } catch (Exception ignore) {}
         return "rh/treinamentos/turmas";
     }
     @GetMapping("/relatorios")
@@ -89,7 +95,7 @@ public class TreinamentosController {
     public String relatorios(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Treinamentos - Relatórios");
-        try { String usuario = null; String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/relatorios", usuario, ip, "Acesso aos relatórios de Treinamentos", true); } catch (Exception ignore) {}
+        try { String usuario = null; Authentication auth = SecurityContextHolder.getContext().getAuthentication(); if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); } String ip = request != null ? request.getRemoteAddr() : null; auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/treinamentos/relatorios", usuario, ip, "Acesso aos relatórios de Treinamentos", true); } catch (Exception ignore) {}
         return "rh/treinamentos/relatorios";
     }
 }

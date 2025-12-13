@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.jaasielsilva.portalceo.model.RhPoliticaFerias;
 import com.jaasielsilva.portalceo.model.RhParametroPonto;
@@ -41,6 +43,8 @@ public class RhConfiguracoesController {
         model.addAttribute("titulo", "Configurações RH - Início");
         try {
             String usuario = null;
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); }
             String ip = request != null ? request.getRemoteAddr() : null;
             auditoriaService.registrar("ACESSO", "ACESSO_PAGINA", "/rh/configuracoes", usuario, ip, "Visualização da página de Configurações RH", true);
         } catch (Exception ignore) {}
@@ -79,9 +83,13 @@ public class RhConfiguracoesController {
 
     @PostMapping("/politicas-ferias")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH_GERENTE')")
-    public String salvarPoliticasFerias(@ModelAttribute("politica") RhPoliticaFerias politica, Model model) {
+    public String salvarPoliticasFerias(@ModelAttribute("politica") RhPoliticaFerias politica, Model model, HttpServletRequest request) {
         RhPoliticaFerias salvo = feriasRepository.save(politica);
-        auditoriaService.registrar("CONFIGURACAO", "SALVAR_POLITICAS_FERIAS", "/rh/configuracoes/politicas-ferias", null, null,
+        String usuario = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); }
+        String ip = request != null ? request.getRemoteAddr() : null;
+        auditoriaService.registrar("CONFIGURACAO", "SALVAR_POLITICAS_FERIAS", "/rh/configuracoes/politicas-ferias", usuario, ip,
                 "Atualizado id=" + salvo.getId(), true);
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Configurações RH - Políticas de Férias");
@@ -92,9 +100,13 @@ public class RhConfiguracoesController {
 
     @PostMapping("/ponto")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH_GERENTE')")
-    public String salvarParametrosPonto(@ModelAttribute("parametros") RhParametroPonto parametros, Model model) {
+    public String salvarParametrosPonto(@ModelAttribute("parametros") RhParametroPonto parametros, Model model, HttpServletRequest request) {
         RhParametroPonto salvo = pontoRepository.save(parametros);
-        auditoriaService.registrar("CONFIGURACAO", "SALVAR_PARAMETROS_PONTO", "/rh/configuracoes/ponto", null, null,
+        String usuario = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); }
+        String ip = request != null ? request.getRemoteAddr() : null;
+        auditoriaService.registrar("CONFIGURACAO", "SALVAR_PARAMETROS_PONTO", "/rh/configuracoes/ponto", usuario, ip,
                 "Atualizado id=" + salvo.getId(), true);
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Configurações RH - Parâmetros de Ponto");
@@ -105,9 +117,13 @@ public class RhConfiguracoesController {
 
     @PostMapping("/integracoes")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH_GERENTE')")
-    public String salvarIntegracoes(@ModelAttribute("integracao") RhIntegracaoConfig integracao, Model model) {
+    public String salvarIntegracoes(@ModelAttribute("integracao") RhIntegracaoConfig integracao, Model model, HttpServletRequest request) {
         RhIntegracaoConfig salvo = integracaoRepository.save(integracao);
-        auditoriaService.registrar("CONFIGURACAO", "SALVAR_INTEGRACOES", "/rh/configuracoes/integracoes", null, null,
+        String usuario = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) { usuario = auth.getName(); }
+        String ip = request != null ? request.getRemoteAddr() : null;
+        auditoriaService.registrar("CONFIGURACAO", "SALVAR_INTEGRACOES", "/rh/configuracoes/integracoes", usuario, ip,
                 "Atualizado id=" + salvo.getId(), true);
         model.addAttribute("modulo", "RH");
         model.addAttribute("titulo", "Configurações RH - Integrações");

@@ -137,7 +137,7 @@
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar</td></tr>';
                 });
         }
-        document.addEventListener('DOMContentLoaded', () => carregarLogs(0));
+        document.addEventListener('DOMContentLoaded', () => { carregarLogs(0); window.__auditAuto = setInterval(() => carregarLogs(0), 60000); });
     </script>
 </body>
 </html>

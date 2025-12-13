@@ -24,6 +24,62 @@
                             <p class="text-muted">Logs de atividades e revisões periódicas.</p>
                         </div>
                     </div>
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/rh/auditoria/acessos" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-user-check fa-2x text-primary"></i>
+                                        <h5 class="mt-3">Log de Acessos</h5>
+                                        <p class="text-muted">Autenticações e autorizações</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/rh/auditoria/alteracoes" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-edit fa-2x text-warning"></i>
+                                        <h5 class="mt-3">Alterações de Dados</h5>
+                                        <p class="text-muted">Edições realizadas no RH</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/rh/auditoria/exportacoes" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-file-export fa-2x text-success"></i>
+                                        <h5 class="mt-3">Exportações</h5>
+                                        <p class="text-muted">Relatórios e arquivos gerados</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/rh/auditoria/revisoes" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-search fa-2x text-danger"></i>
+                                        <h5 class="mt-3">Revisões Periódicas</h5>
+                                        <p class="text-muted">Revisões e conformidade</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12 col-xl-8 mx-auto">
+                            <div class="alert alert-secondary d-flex align-items-center" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <div>
+                                    Use os filtros nas páginas para refinar por período, usuário e recurso. Primeiro aplique apenas o período e, se necessário, adicione usuário e recurso.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>

@@ -564,8 +564,39 @@ function adicionarTooltips() {
 
 // Função para confirmar desligamento
 function confirmarDesligamento() {
-    if (confirm('Tem certeza que deseja desligar este colaborador? Esta ação não pode ser desfeita.')) {
-        // Aqui seria feita a requisição para desligar o colaborador
-        alert('Funcionalidade de desligamento será implementada.');
+    const idInput = document.querySelector('input[name="id"]') || document.getElementById('id');
+    const colaboradorId = idInput ? idInput.value : null;
+
+    if (!colaboradorId) {
+        alert('ID do colaborador não encontrado.');
+        return;
     }
+
+    const confirmou = confirm('Tem certeza que deseja desligar este colaborador? Esta ação não pode ser desfeita.');
+    if (!confirmou) return;
+
+    const texto = prompt('Digite DESLIGAR para confirmar:');
+    if (!texto || texto.trim().toUpperCase() !== 'DESLIGAR') {
+        alert('Confirmação inválida. Digite exatamente DESLIGAR.');
+        return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/rh/colaboradores/desativar/${colaboradorId}`;
+
+    const inputConfirm = document.createElement('input');
+    inputConfirm.type = 'hidden';
+    inputConfirm.name = 'confirmarDesligamento';
+    inputConfirm.value = 'true';
+    form.appendChild(inputConfirm);
+
+    const inputTexto = document.createElement('input');
+    inputTexto.type = 'hidden';
+    inputTexto.name = 'confirmarTexto';
+    inputTexto.value = 'DESLIGAR';
+    form.appendChild(inputTexto);
+
+    document.body.appendChild(form);
+    form.submit();
 }

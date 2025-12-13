@@ -7,8 +7,10 @@
   <title>Novo Colaborador - ERP Corporativo</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
   <link rel="stylesheet" th:href="@{/css/colaborador-form.css}" />
+  <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 
 <body>
@@ -34,12 +36,26 @@
           <span th:text="${mensagem}"></span>
         </div>
 
-        <div th:if="${erro}" class="alert alert-danger">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span th:text="${erro}"></span>
-        </div>
 
-        <form id="colaboradorForm" class="form-container" method="post" action="/rh/colaboradores/salvar" onsubmit="return validarFormularioAntesDaSubmissao()">
+
+        <form id="colaboradorForm" class="form-container" method="post" th:action="@{/rh/colaboradores/salvar}" th:object="${colaborador}" onsubmit="return validarFormularioAntesDaSubmissao()">
+          <!-- Erros de validação amigáveis (agora dentro do th:object) -->
+          <div th:if="${erro}" id="erros-validacao" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-start">
+              <div class="me-2" aria-hidden="true" style="font-size:1.2rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <div>
+                <strong th:text="${erro}"></strong>
+                <div class="text-muted">Por favor, corrija os campos destacados abaixo.</div>
+                <ul class="mb-2 mt-2" th:if="${#fields.hasErrors()}">
+                  <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+                </ul>
+                <button type="button" class="btn btn-sm btn-outline-dark" onclick="irParaPrimeiroErro()">Ir para o primeiro erro</button>
+              </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+          </div>
           <div class="form-grid">
             <!-- Dados Pessoais -->
             <div class="form-section">
@@ -111,12 +127,14 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="email">E-mail *</label>
-                  <input type="email" id="email" name="email" required class="form-control" data-validate="email">
+                  <input type="email" id="email" th:field="*{email}" required class="form-control" data-validate="email" th:classappend="${#fields.hasErrors('email')} ? ' is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{email}"></div>
                 </div>
                 <div class="form-group">
                   <label for="telefone">Telefone</label>
-                  <input type="text" id="telefone" name="telefone" class="form-control" placeholder="(11) 99999-9999"
-                    data-mask="phone">
+                  <input type="text" id="telefone" th:field="*{telefone}" class="form-control" placeholder="(11) 91234-5678" data-mask="phone" th:classappend="${#fields.hasErrors('telefone')} ? ' is-invalid'">
+                  <small class="form-text text-muted">Celular: (DD) 9XXXX-XXXX • Fixo: (DD) XXXX-XXXX</small>
+                  <div class="invalid-feedback" th:errors="*{telefone}"></div>
                 </div>
               </div>
 
@@ -208,6 +226,8 @@
                     <option value="">Selecione...</option>
                     <option th:each="cargo : ${cargos}" th:value="${cargo.id}" th:text="${cargo.nome}"></option>
                   </select>
+                  <div class="invalid-feedback" th:errors="*{cargo}"></div>
+                  <div class="invalid-feedback" th:errors="*{cargo.id}"></div>
                 </div>
                 <div class="form-group">
                   <label for="departamento">Departamento *</label>
@@ -216,6 +236,8 @@
                     <option th:each="departamento : ${departamentos}" th:value="${departamento.id}"
                       th:text="${departamento.nome}"></option>
                   </select>
+                  <div class="invalid-feedback" th:errors="*{departamento}"></div>
+                  <div class="invalid-feedback" th:errors="*{departamento.id}"></div>
                 </div>
               </div>
 
@@ -226,8 +248,8 @@
                 </div>
                 <div class="form-group">
                   <label for="salario">Salário</label>
-                  <input type="text" id="salario" name="salario" class="form-control" placeholder="0,00"
-                    data-mask="currency">
+                  <input type="text" id="salario" th:field="*{salario}" class="form-control" placeholder="0,00" data-mask="currency" th:classappend="${#fields.hasErrors('salario')} ? ' is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{salario}"></div>
                 </div>
               </div>
 
@@ -395,6 +417,20 @@
       
       return true;
     }
+  </script>
+
+  <script>
+    function irParaPrimeiroErro() {
+      var primeiro = document.querySelector('.is-invalid');
+      if (primeiro) {
+        primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof primeiro.focus === 'function') { primeiro.focus(); }
+      }
+    }
+  </script>
+
+  <script th:if="${erro}">
+    document.addEventListener('DOMContentLoaded', function(){ irParaPrimeiroErro(); });
   </script>
 
 </body>

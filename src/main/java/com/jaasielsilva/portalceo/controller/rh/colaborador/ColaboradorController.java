@@ -237,9 +237,39 @@ public class ColaboradorController {
             return "rh/colaboradores/editar";
         }
 
-        colaboradorService.salvar(colaborador);
-        redirectAttributes.addFlashAttribute("mensagem", "Colaborador atualizado com sucesso!");
-        return "redirect:/rh/colaboradores/listar";
+        try {
+            if (colaborador.getId() == null) {
+                model.addAttribute("colaborador", colaborador);
+                model.addAttribute("departamentos", departamentoService.listarTodos());
+                model.addAttribute("cargos", cargoService.listarTodos());
+                model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(null));
+                model.addAttribute("erro", "ID do colaborador ausente no envio do formulário");
+                return "rh/colaboradores/editar";
+            }
+
+            Colaborador original = colaboradorService.findById(colaborador.getId());
+
+            // Garantir que CPF não seja alterado durante edição
+            colaborador.setCpf(original.getCpf());
+
+            colaboradorService.salvar(colaborador);
+            redirectAttributes.addFlashAttribute("mensagem", "Colaborador atualizado com sucesso!");
+            return "redirect:/rh/colaboradores/listar";
+        } catch (com.jaasielsilva.portalceo.exception.BusinessValidationException e) {
+            model.addAttribute("colaborador", colaborador);
+            model.addAttribute("departamentos", departamentoService.listarTodos());
+            model.addAttribute("cargos", cargoService.listarTodos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
+            model.addAttribute("erro", e.getMessage());
+            return "rh/colaboradores/editar";
+        } catch (Exception e) {
+            model.addAttribute("colaborador", colaborador);
+            model.addAttribute("departamentos", departamentoService.listarTodos());
+            model.addAttribute("cargos", cargoService.listarTodos());
+            model.addAttribute("colaboradores", colaboradorService.buscarSupervisoresPotenciais(colaborador.getId()));
+            model.addAttribute("erro", "Erro interno ao atualizar colaborador");
+            return "rh/colaboradores/editar";
+        }
     }
 
     @PostMapping("/desativar/{id}")

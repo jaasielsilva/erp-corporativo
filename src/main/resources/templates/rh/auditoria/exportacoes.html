@@ -43,9 +43,22 @@
                             <label class="form-label">Fim</label>
                             <input type="datetime-local" class="form-control" id="filtroFim" />
                         </div>
-                        <div class="col-12 d-flex gap-2">
+                        <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
                             <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i>Filtrar</button>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="resetarFiltro()"><i class="fas fa-undo me-1"></i>Limpar</button>
+                            <div class="vr d-none d-md-block"></div>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Períodos">
+                                <button type="button" class="btn btn-outline-secondary" onclick="setPeriodoHoras(1)">Últimas 1h</button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="setPeriodoHoras(24)">Últimas 24h</button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="setPeriodoDias(7)">Últimos 7 dias</button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="setPeriodoMesAtual()">Mês atual</button>
+                            </div>
+                            <div class="vr d-none d-md-block"></div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh(this.checked)">
+                                <label class="form-check-label" for="autoRefreshToggle">Atualização automática</label>
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="exportarCsv()"><i class="fas fa-file-csv me-1"></i>Exportar CSV</button>
                         </div>
                     </form>
                     <div class="card">
@@ -68,6 +81,9 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="d-flex justify-content-end align-items-center p-2">
+                            <div id="pagination" class="d-flex align-items-center gap-2"></div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -85,14 +101,51 @@
             document.getElementById('filtroFim').value = '';
             carregarLogs();
         }
+        function setPeriodoHoras(h){
+            const fim = new Date();
+            const inicio = new Date(fim.getTime() - h*60*60*1000);
+            document.getElementById('filtroInicio').value = inicio.toISOString().slice(0,16);
+            document.getElementById('filtroFim').value = fim.toISOString().slice(0,16);
+            carregarLogs();
+        }
+        function setPeriodoDias(d){
+            const fim = new Date();
+            const inicio = new Date(fim.getTime() - d*24*60*60*1000);
+            document.getElementById('filtroInicio').value = inicio.toISOString().slice(0,16);
+            document.getElementById('filtroFim').value = fim.toISOString().slice(0,16);
+            carregarLogs();
+        }
+        function setPeriodoMesAtual(){
+            const fim = new Date();
+            const inicio = new Date(fim.getFullYear(), fim.getMonth(), 1, 0, 0, 0);
+            document.getElementById('filtroInicio').value = inicio.toISOString().slice(0,16);
+            document.getElementById('filtroFim').value = fim.toISOString().slice(0,16);
+            carregarLogs();
+        }
+        function getPageSize(){ const el = document.getElementById('pageSize'); return el ? (Number(el.value)||20) : 20; }
+        function renderPagination(data){
+            const el = document.getElementById('pagination');
+            if(!el) return;
+            const page = Number(data.currentPage ?? data.number ?? 0);
+            const totalPages = Number(data.totalPages ?? 1);
+            const totalElements = Number(data.totalElements ?? 0);
+            const hasPrev = Boolean(data.hasPrevious ?? (page > 0));
+            const hasNext = Boolean(data.hasNext ?? (page < Math.max(totalPages-1,0)));
+            let html = '';
+            html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</span>`;
+            html += hasPrev ? `<a class="btn btn-secondary btn-sm" href="#" onclick="goToPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary btn-sm disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+            html += hasNext ? `<a class="btn btn-secondary btn-sm" href="#" onclick="goToPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary btn-sm disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+            el.innerHTML = html;
+        }
+        function goToPage(p){ carregarLogs(Math.max(0, Number(p)||0)); }
         function carregarLogs(page=0){
-            page = Number(page) || 0;
+            page = Number(page) || 0; window.__auditCurrentPage = page;
             const categoria = document.getElementById('categoriaPadrao')?.value || 'EXPORTACAO';
             const usuario = document.getElementById('filtroUsuario').value.trim();
             const recurso = document.getElementById('filtroRecurso').value.trim();
             const inicio = document.getElementById('filtroInicio').value;
             const fim = document.getElementById('filtroFim').value;
-            const params = new URLSearchParams({categoria, usuario, recurso, page, size: 20});
+            const params = new URLSearchParams({categoria, usuario, recurso, page, size: getPageSize()});
             if(inicio) params.append('inicio', inicio);
             if(fim) params.append('fim', fim);
             fetch('/api/rh/auditoria/logs?' + params.toString())
@@ -116,7 +169,7 @@
                     const content = data.content || [];
                     if(content.length === 0){
                         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sem registros</td></tr>';
-                        return;
+                        renderPagination(data); return;
                     }
                     for(const item of content){
                         const tr = document.createElement('tr');
@@ -130,13 +183,29 @@
                         `;
                         tbody.appendChild(tr);
                     }
+                    renderPagination(data);
                 })
                 .catch(() => {
                     const tbody = document.getElementById('logsTableBody');
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar</td></tr>';
                 });
         }
-        document.addEventListener('DOMContentLoaded', () => { carregarLogs(0); window.__auditAuto = setInterval(() => carregarLogs(0), 60000); });
+        function toggleAutoRefresh(on){
+            if(window.__auditAuto){ clearInterval(window.__auditAuto); window.__auditAuto = null; }
+            if(on){ window.__auditAuto = setInterval(() => carregarLogs(window.__auditCurrentPage||0), 60000); }
+        }
+        function exportarCsv(){
+            const categoria = document.getElementById('categoriaPadrao')?.value || 'EXPORTACAO';
+            const usuario = document.getElementById('filtroUsuario').value.trim();
+            const recurso = document.getElementById('filtroRecurso').value.trim();
+            const inicio = document.getElementById('filtroInicio').value;
+            const fim = document.getElementById('filtroFim').value;
+            const params = new URLSearchParams({categoria, usuario, recurso, page: 0, size: 1000});
+            if(inicio) params.append('inicio', inicio);
+            if(fim) params.append('fim', fim);
+            window.location.href = '/api/rh/auditoria/logs/csv?' + params.toString();
+        }
+        document.addEventListener('DOMContentLoaded', () => { carregarLogs(0); toggleAutoRefresh(true); });
     </script>
 </body>
 </html>

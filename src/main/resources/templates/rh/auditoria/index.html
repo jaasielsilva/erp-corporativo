@@ -80,6 +80,19 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row mt-4">
+                        <div class="col-12 col-xl-8 mx-auto">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0">Tendência de Acessos (24h)</h6>
+                                        <div class="text-muted small">Atualiza a cada 60s</div>
+                                    </div>
+                                    <canvas id="chartAcessos24h" height="110"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>
@@ -88,5 +101,23 @@
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        let __acessosTimer;
+        function carregarAcessos24h(){
+            fetch('/api/rh/auditoria/metrics/acessos-24h')
+                .then(r => r.json())
+                .then(data => {
+                    const ctx = document.getElementById('chartAcessos24h').getContext('2d');
+                    if(window.__acessosChart){ window.__acessosChart.data.labels = data.labels; window.__acessosChart.data.datasets[0].data = data.series; window.__acessosChart.update(); return; }
+                    window.__acessosChart = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: data.labels, datasets: [{ label: 'Acessos', data: data.series, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.2)', tension: 0.25, fill: true }] },
+                        options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
+                    });
+                })
+                .catch(()=>{});
+        }
+        document.addEventListener('DOMContentLoaded', () => { carregarAcessos24h(); __acessosTimer = setInterval(carregarAcessos24h, 60000); });
+    </script>
 </body>
 </html>

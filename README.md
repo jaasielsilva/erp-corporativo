@@ -634,6 +634,10 @@ public void addAttributes(Model model, Authentication authentication) {
 git clone https://github.com/seu-usuario/erp-corporativo.git
 ```
 
+## Documentação de Mapeamento
+
+- Referência completa de controladores e páginas HTML: `docs/MAPEAMENTO_CONTROLLERS_PAGINAS.md`
+
 2. Acesse a pasta do projeto  
 ```bash
 cd erp-corporativo

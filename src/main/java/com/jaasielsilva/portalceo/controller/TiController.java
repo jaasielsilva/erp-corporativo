@@ -448,6 +448,14 @@ public class TiController {
         return politicas;
     }
 
+    // =============== AUDITORIA TI ===============
+    @GetMapping("/auditoria")
+    public String auditoriaTi(Model model) {
+        model.addAttribute("pageTitle", "Auditoria TI");
+        model.addAttribute("moduleCSS", "ti");
+        return "ti/auditoria";
+    }
+
     private List<Map<String, Object>> getUltimosEventos() {
         // Exibir somente os 3 alertas de exemplo solicitados
         List<Map<String, Object>> eventos = new ArrayList<>();

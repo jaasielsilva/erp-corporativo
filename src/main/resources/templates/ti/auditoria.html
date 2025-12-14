@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auditoria TI - ERP Corporativo</title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+      <section class="content-area">
+        <div class="container-fluid">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h1 class="h5 text-muted mb-1"><i class="fas fa-shield-halved me-2"></i>Auditoria TI</h1>
+              <small class="text-muted">Logs e atividades do módulo de Tecnologia</small>
+            </div>
+            <div class="btn-group" role="group" aria-label="Exportações">
+              <button id="btnExportCsv" class="btn btn-outline-primary btn-sm" title="Exportar CSV" data-bs-toggle="tooltip"><i class="fas fa-file-csv"></i></button>
+              <button id="btnExportPdf" class="btn btn-outline-danger btn-sm" title="Exportar PDF" data-bs-toggle="tooltip"><i class="fas fa-file-pdf"></i></button>
+            </div>
+          </div>
+
+          <div class="card p-3 mb-3 shadow-sm">
+            <h5 class="mb-2"><i class="fas fa-filter me-2"></i>Filtros</h5>
+            <div class="row g-2 align-items-end">
+              <div class="col-12 col-md-3">
+                <label for="filtroUsuario" class="form-label">Usuário</label>
+                <input id="filtroUsuario" class="form-control" type="text" placeholder="email ou usuário" aria-label="Filtro por usuário" />
+              </div>
+              <div class="col-12 col-md-3">
+                <label for="filtroAcao" class="form-label">Categoria</label>
+                <input id="filtroAcao" class="form-control" type="text" placeholder="ex: ACESSO, ALTERACAO" aria-label="Filtro por categoria" />
+              </div>
+              <div class="col-12 col-md-3">
+                <label for="filtroRecurso" class="form-label">Recurso</label>
+                <input id="filtroRecurso" class="form-control" type="text" placeholder="/ti/..." aria-label="Filtro por recurso" />
+              </div>
+              <div class="col-6 col-md-1">
+                <label for="filtroInicio" class="form-label">Início</label>
+                <input id="filtroInicio" class="form-control" type="datetime-local" aria-label="Início do período" />
+              </div>
+              <div class="col-6 col-md-1">
+                <label for="filtroFim" class="form-label">Fim</label>
+                <input id="filtroFim" class="form-control" type="datetime-local" aria-label="Fim do período" />
+              </div>
+              <div class="col-12 col-md-1">
+                <button id="btnAplicarFiltros" class="btn btn-primary w-100" aria-label="Aplicar filtros"><i class="fas fa-search me-1"></i>Buscar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                  <thead>
+                    <tr>
+                      <th><i class="fas fa-clock" title="Data e hora" data-bs-toggle="tooltip"></i> Data/Hora</th>
+                      <th><i class="fas fa-user" title="Usuário" data-bs-toggle="tooltip"></i> Usuário</th>
+                      <th><i class="fas fa-bolt" title="Ação" data-bs-toggle="tooltip"></i> Ação</th>
+                      <th><i class="fas fa-info-circle" title="Detalhes" data-bs-toggle="tooltip"></i> Detalhes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyLogs">
+                    <tr>
+                      <td colspan="4" class="text-muted">Carregando...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                  <small id="auditSummary" class="text-muted"></small>
+                </div>
+                <nav aria-label="Paginação">
+                  <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item"><a id="btnPrev" class="page-link" href="#" aria-label="Página anterior"><i class="fas fa-chevron-left"></i></a></li>
+                    <li class="page-item"><span id="pageIndicator" class="page-link">1/1</span></li>
+                    <li class="page-item"><a id="btnNext" class="page-link" href="#" aria-label="Próxima página"><i class="fas fa-chevron-right"></i></a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-3 shadow-sm">
+            <div class="card-body">
+              <h6 class="mb-2"><i class="fas fa-chart-line me-2"></i>Tendência de Ações (amostra)</h6>
+              <canvas id="auditChart" height="120" aria-label="Gráfico de tendências"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/notifications.js}"></script>
+  <script src="/js/sidebar.js" defer></script>
+  <script>
+    (function(){
+      let currentPage = 0;
+      let totalPages = 1;
+      const size = 20;
+      const tbody = document.getElementById('tbodyLogs');
+      const pageIndicator = document.getElementById('pageIndicator');
+      const btnPrev = document.getElementById('btnPrev');
+      const btnNext = document.getElementById('btnNext');
+      const summary = document.getElementById('auditSummary');
+
+      function initTooltips(){
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) { new bootstrap.Tooltip(tooltipTriggerEl); });
+      }
+
+      function qs(){
+        const usuario = document.getElementById('filtroUsuario').value.trim();
+        const acao = document.getElementById('filtroAcao').value.trim();
+        const recurso = document.getElementById('filtroRecurso').value.trim();
+        const inicio = document.getElementById('filtroInicio').value;
+        const fim = document.getElementById('filtroFim').value;
+        const params = new URLSearchParams({ modulo: 'ti', page: currentPage, size });
+        if(usuario) params.append('usuario', usuario);
+        if(acao) params.append('categoria', acao); // compatível: usamos campo categoria para tipo de ação
+        if(recurso) params.append('recurso', recurso);
+        if(inicio) params.append('inicio', inicio);
+        if(fim) params.append('fim', fim);
+        return params.toString();
+      }
+
+      function renderRows(items){
+        if(!items || items.length === 0){
+          tbody.innerHTML = '<tr><td colspan="4" class="text-muted">Nenhum registro encontrado</td></tr>';
+          return;
+        }
+        const fmt = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'medium' });
+        tbody.innerHTML = items.map(a => {
+          const dh = a.criadoEm ? fmt.format(new Date(a.criadoEm)) : '';
+          const u = a.usuario || '';
+          const ac = a.acao || '';
+          const det = a.detalhes || '';
+          const detShort = det.length > 180 ? det.slice(0, 180) + '…' : det;
+          return `<tr>
+            <td>${dh}</td>
+            <td><i class="fas fa-user-circle text-secondary me-1" title="Usuário" data-bs-toggle="tooltip"></i>${u}</td>
+            <td><span class="badge bg-light text-dark"><i class="fas fa-bolt me-1"></i>${ac}</span></td>
+            <td><span title="${det.replace(/"/g, '&quot;')}" data-bs-toggle="tooltip">${detShort || '<span class=\"text-muted\">sem detalhes</span>'}</span></td>
+          </tr>`;
+        }).join('');
+      }
+
+      function updatePagination(page, total){
+        currentPage = page; totalPages = Math.max(total, 1);
+        pageIndicator.textContent = `${page + 1}/${totalPages}`;
+        btnPrev.classList.toggle('disabled', page <= 0);
+        btnNext.classList.toggle('disabled', page >= totalPages - 1);
+      }
+
+      function updateSummary(data){
+        const total = data.totalElements || 0;
+        summary.textContent = `Total de registros: ${total}`;
+      }
+
+      function atualizarGrafico(items){
+        const porAcao = {};
+        (items || []).forEach(a => { const k = (a.acao || 'N/D'); porAcao[k] = (porAcao[k]||0)+1; });
+        const labels = Object.keys(porAcao).slice(0, 8);
+        const values = labels.map(k => porAcao[k]);
+        const ctx = document.getElementById('auditChart').getContext('2d');
+        if(window.__auditChart){ window.__auditChart.destroy(); }
+        window.__auditChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'Ocorrências', data: values, backgroundColor: '#0d6efd55', borderColor: '#0d6efd' }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
+      }
+
+      function carregar(){
+        if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-muted">Carregando...</td></tr>';
+        fetch('/api/auditoria/logs?' + qs())
+          .then(r => r.json())
+          .then(data => { renderRows(data.content || []); updatePagination(data.number||0, (data.totalPages||1)); updateSummary(data); atualizarGrafico(data.content || []); initTooltips(); })
+          .catch(() => { tbody.innerHTML = '<tr><td colspan="4" class="text-danger">Falha ao carregar</td></tr>'; });
+      }
+
+      document.getElementById('btnAplicarFiltros').addEventListener('click', function(){ currentPage = 0; carregar(); });
+      btnPrev.addEventListener('click', function(e){ e.preventDefault(); if(currentPage>0){ currentPage--; carregar(); } });
+      btnNext.addEventListener('click', function(e){ e.preventDefault(); if(currentPage<totalPages-1){ currentPage++; carregar(); } });
+
+      document.getElementById('btnExportCsv').addEventListener('click', function(){ window.open('/api/auditoria/logs/csv?' + qs(), '_blank'); });
+      document.getElementById('btnExportPdf').addEventListener('click', function(){ window.open('/api/auditoria/logs/pdf?' + qs(), '_blank'); });
+
+      document.addEventListener('DOMContentLoaded', function(){ initTooltips(); carregar(); });
+    })();
+  </script>
+</body>
+</html>

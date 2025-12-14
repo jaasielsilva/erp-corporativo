@@ -17,6 +17,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,8 +42,40 @@ public class ValeTransporteService {
 
     public ValeTransporte salvar(ValeTransporte vt) {
         logger.info("Salvando vale transporte para colaborador: {}", 
-                    vt.getColaborador() != null ? vt.getColaborador().getNome() : "N/A");
+                    vt.getColaborador() != null ? vt.getColaborador().getNome() : "<sem colaborador>");
         return repository.save(vt);
+    }
+
+    public boolean existeValeAtivoNoPeriodo(Colaborador colaborador, Integer mes, Integer ano) {
+        if (colaborador == null || mes == null || ano == null) return false;
+        try {
+            return repository.existsByColaboradorAndMesReferenciaAndAnoReferenciaAndStatus(colaborador, mes, ano, ValeTransporte.StatusValeTransporte.ATIVO);
+        } catch (Exception e) {
+            logger.warn("Falha ao verificar existência de VT ativo para {} {}/{}: {}", colaborador.getNome(), mes, ano, e.getMessage());
+            return false;
+        }
+    }
+
+    @Transactional
+    public int suspenderDuplicadosAtivos(Integer mes, Integer ano, String motivo) {
+        List<ValeTransporte> ativos = repository.findByMesReferenciaAndAnoReferenciaAndStatus(mes, ano, ValeTransporte.StatusValeTransporte.ATIVO);
+        java.util.Map<Long, List<ValeTransporte>> porColaborador = ativos.stream().collect(java.util.stream.Collectors.groupingBy(v -> v.getColaborador().getId()));
+        int suspensos = 0;
+        for (var entry : porColaborador.entrySet()) {
+            List<ValeTransporte> lista = entry.getValue();
+            if (lista.size() <= 1) continue;
+            lista.sort(java.util.Comparator.<ValeTransporte>comparingLong(v -> v.getId()).reversed());
+            ValeTransporte manter = lista.get(0);
+            for (int i = 1; i < lista.size(); i++) {
+                ValeTransporte v = lista.get(i);
+                v.setStatus(ValeTransporte.StatusValeTransporte.SUSPENSO);
+                v.setObservacoes((v.getObservacoes() != null ? v.getObservacoes() + "; " : "") + "Suspenso por limpeza de duplicados" + (motivo != null && !motivo.isBlank() ? (" - " + motivo) : ""));
+                repository.save(v);
+                suspensos++;
+            }
+            logger.info("Mantido VT ativo ID {} para colaborador {} e suspensos {} duplicados", manter.getId(), manter.getColaborador().getNome(), lista.size()-1);
+        }
+        return suspensos;
     }
 
     public ValeTransporte buscarPorId(Long id) {
@@ -83,9 +118,20 @@ public class ValeTransporteService {
         return vales.stream().map(this::convertToListDTO).collect(Collectors.toList());
     }
 
+    public Page<ValeTransporteListDTO> listarPaginado(Integer mes, Integer ano, String status,
+                                                      Long colaboradorId, Long departamentoId, String q, int page, int size, org.springframework.data.domain.Sort sort) {
+        ValeTransporte.StatusValeTransporte statusEnum = null;
+        if (status != null && !status.isBlank()) {
+            try { statusEnum = ValeTransporte.StatusValeTransporte.valueOf(status.toUpperCase()); } catch (Exception ignore) {}
+        }
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(size, 1), 100), sort == null ? org.springframework.data.domain.Sort.by("id").descending() : sort);
+        return repository.listarPaginado(mes, ano, statusEnum, colaboradorId, departamentoId, q, pageable);
+    }
+
     /**
      * Gera resumo estatístico mensal
      */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResumoValeTransporteDTO gerarResumoMensal(Integer mes, Integer ano) {
         logger.debug("Gerando resumo mensal para {}/{}", mes, ano);
         
@@ -108,15 +154,13 @@ public class ValeTransporteService {
         resumo.setTotalDescontoColaboradores(totalDesconto != null ? BigDecimal.valueOf(totalDesconto) : BigDecimal.ZERO);
         resumo.setTotalSubsidioEmpresa(resumo.getCustoTotalMes().subtract(resumo.getTotalDescontoColaboradores()));
         
-        // Estatísticas de vales por status
-        List<ValeTransporte> valesDoMes = repository.findByMesReferenciaAndAnoReferenciaOrderByColaborador_Nome(mes, ano);
-        
-        resumo.setTotalValesAtivos((int) valesDoMes.stream()
-                .filter(v -> v.getStatus() == ValeTransporte.StatusValeTransporte.ATIVO).count());
-        resumo.setTotalValesSuspensos((int) valesDoMes.stream()
-                .filter(v -> v.getStatus() == ValeTransporte.StatusValeTransporte.SUSPENSO).count());
-        resumo.setTotalValesCancelados((int) valesDoMes.stream()
-                .filter(v -> v.getStatus() == ValeTransporte.StatusValeTransporte.CANCELADO).count());
+        // Estatísticas de vales por status (sem carregar todos os registros)
+        Long cntAtivos = repository.countByMesAnoAndStatus(mes, ano, ValeTransporte.StatusValeTransporte.ATIVO);
+        Long cntSuspensos = repository.countByMesAnoAndStatus(mes, ano, ValeTransporte.StatusValeTransporte.SUSPENSO);
+        Long cntCancelados = repository.countByMesAnoAndStatus(mes, ano, ValeTransporte.StatusValeTransporte.CANCELADO);
+        resumo.setTotalValesAtivos(cntAtivos != null ? cntAtivos.intValue() : 0);
+        resumo.setTotalValesSuspensos(cntSuspensos != null ? cntSuspensos.intValue() : 0);
+        resumo.setTotalValesCancelados(cntCancelados != null ? cntCancelados.intValue() : 0);
         
         return resumo;
     }
@@ -133,7 +177,7 @@ public class ValeTransporteService {
      * Processa cálculo mensal em lote para todos os colaboradores ativos
      */
     @Transactional
-    public int calcularValesMensais(Integer mes, Integer ano, ConfiguracaoValeTransporteDTO config) {
+    public int calcularValesMensais(Integer mes, Integer ano, ConfiguracaoValeTransporteDTO config, com.jaasielsilva.portalceo.model.Usuario usuarioCriacao) {
         logger.info("Iniciando cálculo mensal para {}/{} com {} dias úteis", 
                     mes, ano, config.getDiasUteisPadrao());
         
@@ -152,6 +196,7 @@ public class ValeTransporteService {
                 vale.setViagensDia(2); // Padrão ida e volta
                 vale.setStatus(ValeTransporte.StatusValeTransporte.ATIVO);
                 vale.setDataAdesao(LocalDate.now());
+                if (usuarioCriacao != null) { vale.setUsuarioCriacao(usuarioCriacao); }
                 
                 repository.save(vale);
                 processados++;

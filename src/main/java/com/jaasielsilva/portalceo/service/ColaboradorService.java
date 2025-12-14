@@ -58,6 +58,7 @@ public class ColaboradorService {
     @Autowired
     private RhRelatorioService rhRelatorioService;
 
+    @org.springframework.cache.annotation.Cacheable(value = "colaboradoresAtivosList", unless = "#result == null || #result.isEmpty()")
     public List<Colaborador> listarAtivos() {
         return colaboradorRepository.findByAtivoTrue();
     }
@@ -66,6 +67,7 @@ public class ColaboradorService {
         return colaboradorRepository.findByAtivoTrue(pageable);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "colaboradoresAtivosCount")
     public long contarAtivos() {
         return colaboradorRepository.countByAtivoTrue();
     }

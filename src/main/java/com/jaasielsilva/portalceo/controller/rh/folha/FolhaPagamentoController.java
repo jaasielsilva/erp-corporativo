@@ -340,6 +340,7 @@ public class FolhaPagamentoController {
             m.put("totalProventos", h.getTotalProventos());
             m.put("totalDescontos", h.getTotalDescontos());
             m.put("salarioLiquido", h.getSalarioLiquido());
+            m.put("descontoValeTransporte", h.getDescontoValeTransporte());
             return m;
         }).collect(java.util.stream.Collectors.toList());
         java.util.Map<String, Object> resp = new java.util.HashMap<>();
@@ -482,8 +483,8 @@ public class FolhaPagamentoController {
      */
     @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
     @GetMapping("/descontos")
+    @io.micrometer.core.annotation.Timed(value = "rh.folha.descontos.page", histogram = true, percentiles = {0.5, 0.95})
     public String descontos(Model model) {
-        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         return "rh/folha-pagamento/descontos";
     }
 

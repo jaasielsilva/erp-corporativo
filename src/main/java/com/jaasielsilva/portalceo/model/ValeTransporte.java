@@ -118,16 +118,9 @@ public class ValeTransporte {
                 .multiply(BigDecimal.valueOf(viagensDia));
 
             // Calcular desconto baseado no salário do colaborador (máximo 6%)
-            if (colaborador != null && colaborador.getCargo() != null) {
-                // Aqui seria necessário ter o salário no modelo Colaborador ou Cargo
-                // Por enquanto, vamos usar um valor fixo para demonstração
-                BigDecimal salarioBase = BigDecimal.valueOf(1500); // Valor exemplo
-                BigDecimal descontoMaximo = salarioBase.multiply(percentualDesconto).divide(BigDecimal.valueOf(100));
-                
-                valorDesconto = valorTotalMes.min(descontoMaximo);
-            } else {
-                valorDesconto = BigDecimal.ZERO;
-            }
+            BigDecimal salarioBase = (colaborador != null && colaborador.getSalario() != null) ? colaborador.getSalario() : BigDecimal.ZERO;
+            BigDecimal descontoMaximo = salarioBase.multiply(percentualDesconto).divide(BigDecimal.valueOf(100));
+            valorDesconto = valorTotalMes.min(descontoMaximo);
 
             // Subsídio da empresa = valor total - desconto do colaborador
             valorSubsidioEmpresa = valorTotalMes.subtract(valorDesconto);

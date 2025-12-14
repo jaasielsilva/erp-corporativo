@@ -270,7 +270,10 @@
                             <div th:if="${solicitacao.dataAprovacao != null}" class="timeline-item">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <h6 class="mb-1" th:text="${solicitacao.status.name() == 'APROVADO' ? 'Solicitação Aprovada' : 'Solicitação Rejeitada'}"></h6>
+                                        <h6 class="mb-1" th:text="${
+                                          (solicitacao.status.name() == 'APROVADO' or solicitacao.status.name() == 'USUARIO_CRIADO' or solicitacao.status.name() == 'APROVADO_PARCIAL') ? 'Solicitação Aprovada' :
+                                          (solicitacao.status.name() == 'REJEITADO' ? 'Solicitação Rejeitada' : 'Decisão Registrada')
+                                        }"></h6>
                                         <p class="text-muted mb-0" th:text="${solicitacao.aprovadorNome}"></p>
                                     </div>
                                     <small class="text-muted" th:text="${#temporals.format(solicitacao.dataAprovacao, 'dd/MM HH:mm')}"></small>
@@ -305,8 +308,12 @@
                             <span class="badge"
                                   th:classappend="${
                                     solicitacao.status.name() == 'PENDENTE' ? 'bg-warning' :
+                                    solicitacao.status.name() == 'EM_ANALISE' ? 'bg-primary' :
                                     solicitacao.status.name() == 'APROVADO' ? 'bg-success' :
+                                    solicitacao.status.name() == 'APROVADO_PARCIAL' ? 'bg-info' :
+                                    solicitacao.status.name() == 'USUARIO_CRIADO' ? 'bg-success' :
                                     solicitacao.status.name() == 'REJEITADO' ? 'bg-danger' :
+                                    solicitacao.status.name() == 'CANCELADO' ? 'bg-secondary' :
                                     'bg-secondary'
                                   }"
                                   th:text="${solicitacao.status.descricao}"></span>

@@ -32,9 +32,10 @@
           <button onclick="calcularVales()" class="btn btn-info">
             <i class="fas fa-calculator"></i> Calcular Mês
           </button>
-          <button onclick="exportarRelatorio()" class="btn btn-success">
-            <i class="fas fa-download"></i> Exportar
-          </button>
+          <div class="btn-group" role="group" aria-label="Exportações">
+            <button onclick="exportarExcel()" class="btn btn-success"><i class="fas fa-file-excel"></i> Excel</button>
+            <button onclick="exportarPdf()" class="btn btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
+          </div>
         </div>
 
         <!-- Resumo do Vale Transporte -->
@@ -80,7 +81,7 @@
                   <i class="fas fa-building"></i>
                 </div>
                 <div class="resumo-info">
-                  <h4>Custo Empresa</h4>
+                  <h4>SubsíDio Empresa</h4>
                   <div class="resumo-valor" th:text="${#numbers.formatCurrency(resumo.totalSubsidioEmpresa != null ? resumo.totalSubsidioEmpresa : 0)}">R$ 0,00</div>
                   <div class="resumo-detalhes" th:text="${#numbers.formatDecimal(resumo.percentualSubsidio != null ? resumo.percentualSubsidio : 0, 1, 1)} + '% do total'">0% do total</div>
                 </div>
@@ -141,20 +142,26 @@
                   <option value="CANCELADO" th:selected="${statusFiltro == 'CANCELADO'}">Cancelado</option>
                 </select>
               </div>
+              <div class="form-group" style="position:relative">
+                <label for="filtroColabNome">Colaborador</label>
+                <input type="text" id="filtroColabNome" class="form-control" placeholder="Digite para buscar">
+                <input type="hidden" id="filtroColabId" />
+                <div id="colabSugestoes" class="list-group" style="position:absolute; top:100%; left:0; right:0; z-index:10; max-height:200px; overflow:auto; display:none"></div>
+              </div>
               <div class="form-group">
                 <label for="departamentoVT">Departamento</label>
-                <select id="departamentoVT" name="departamento" class="form-control">
-                  <option value="" th:selected="${departamentoFiltro == null or departamentoFiltro == ''}">Todos os departamentos</option>
-                  <!-- Aqui poderiam ser carregados os departamentos dinamicamente -->
-                  <option value="ti" th:selected="${departamentoFiltro == 'ti'}">TI</option>
-                  <option value="vendas" th:selected="${departamentoFiltro == 'vendas'}">Vendas</option>
-                  <option value="financeiro" th:selected="${departamentoFiltro == 'financeiro'}">Financeiro</option>
-                  <option value="rh" th:selected="${departamentoFiltro == 'rh'}">RH</option>
+                <select id="departamentoVT" class="form-control">
+                  <option value="">Todos os departamentos</option>
                 </select>
               </div>
               <div class="form-group">
-                <button type="submit" class="btn btn-primary">
+                <button type="button" id="btnFiltrar" class="btn btn-primary">
                   <i class="fas fa-search"></i> Filtrar
+                </button>
+              </div>
+              <div class="form-group">
+                <button type="button" id="btnSuspenderDuplicados" class="btn btn-warning">
+                  <i class="fas fa-ban"></i> Suspender Duplicados
                 </button>
               </div>
             </div>
@@ -164,78 +171,41 @@
         <!-- Lista de Colaboradores -->
         <article class="card">
           <h3><i class="fas fa-list"></i> Vale Transporte por Colaborador</h3>
-          <div th:if="${vales != null and !vales.isEmpty()}">
+          <div>
             <table class="table-list">
               <thead>
                 <tr>
-                  <th>Colaborador</th>
-                  <th>Departamento</th>
+                  <th class="sortable" data-sort="nome">Colaborador</th>
+                  <th class="sortable" data-sort="departamento">Departamento</th>
                   <th>Trajeto</th>
-                  <th>Viagens/Dia</th>
-                  <th>Dias Úteis</th>
-                  <th>Valor Total</th>
-                  <th>Desconto (6%)</th>
-                  <th>Valor Líquido</th>
-                  <th>Status</th>
+                  <th class="text-center sortable" data-sort="viagens">Viagens/Dia</th>
+                  <th class="text-center sortable" data-sort="dias">Dias Úteis</th>
+                  <th class="sortable" data-sort="valorTotal">Valor Total</th>
+                  <th>Desconto do Colaborador (até 6% do salário)</th>
+                  <th>SubsíDio Empresa</th>
+                  <th class="sortable" data-sort="status">Status</th>
                   <th>Ações</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="vale : ${vales}">
-                  <td>
-                    <div class="colaborador-info">
-                      <strong th:text="${vale.nomeColaborador}">Nome do Colaborador</strong><br>
-                      <small th:text="'Matrícula: ' + ${vale.matriculaColaborador}">Matrícula: 000</small>
-                    </div>
-                  </td>
-                  <td th:text="${vale.departamento}">Departamento</td>
-                  <td>
-                    <div class="trajeto-info">
-                      <strong th:text="${vale.trajetoFormatado}">Casa → Trabalho</strong><br>
-                      <small th:text="${vale.linhaOnibus != null ? vale.linhaOnibus : 'Linha não informada'}">Linha de ônibus</small>
-                    </div>
-                  </td>
-                  <td class="text-center" th:text="${vale.viagensDia}">0</td>
-                  <td class="text-center" th:text="${vale.diasUteis}">0</td>
-                  <td><strong th:text="${#numbers.formatCurrency(vale.valorTotalMes != null ? vale.valorTotalMes : 0)}">R$ 0,00</strong></td>
-                  <td th:text="${#numbers.formatCurrency(vale.valorDesconto != null ? vale.valorDesconto : 0)}">R$ 0,00</td>
-                  <td th:text="${#numbers.formatCurrency(vale.valorSubsidioEmpresa != null ? vale.valorSubsidioEmpresa : 0)}">R$ 0,00</td>
-                  <td>
-                    <span class="status-badge" th:classappend="${vale.statusCssClass}" th:text="${vale.statusDescricao}">Status</span>
-                  </td>
-                  <td>
-                    <button th:onclick="'editarVT(' + ${vale.id} + ')'" class="btn-icon" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button th:onclick="'verDetalhes(' + ${vale.id} + ')'" class="btn-icon" title="Ver Detalhes">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button th:if="${vale.status.name() == 'ATIVO'}" th:onclick="'suspenderVT(' + ${vale.id} + ')'" class="btn-icon btn-warning" title="Suspender">
-                      <i class="fas fa-pause"></i>
-                    </button>
-                    <button th:if="${vale.status.name() == 'SUSPENSO'}" th:onclick="'reativarVT(' + ${vale.id} + ')'" class="btn-icon btn-success" title="Reativar">
-                      <i class="fas fa-play"></i>
-                    </button>
-                    <button th:if="${vale.status.name() == 'CANCELADO'}" th:onclick="'ativarVT(' + ${vale.id} + ')'" class="btn-icon btn-success" title="Ativar">
-                      <i class="fas fa-play"></i>
-                    </button>
-                  </td>
-                </tr>
+              <tbody id="vtTableBody">
+                <tr><td colspan="10" class="text-muted">Carregando...</td></tr>
               </tbody>
-              <tfoot th:if="${vales != null and !vales.isEmpty()}">
+              <tfoot>
                 <tr class="total-row">
                   <td colspan="5"><strong>TOTAIS</strong></td>
-                  <td><strong th:text="${#numbers.formatCurrency(vales.stream().mapToDouble(v -> v.valorTotalMes != null ? v.valorTotalMes.doubleValue() : 0).sum())}">R$ 0,00</strong></td>
-                  <td><strong th:text="${#numbers.formatCurrency(vales.stream().mapToDouble(v -> v.valorDesconto != null ? v.valorDesconto.doubleValue() : 0).sum())}">R$ 0,00</strong></td>
-                  <td><strong th:text="${#numbers.formatCurrency(vales.stream().mapToDouble(v -> v.valorSubsidioEmpresa != null ? v.valorSubsidioEmpresa.doubleValue() : 0).sum())}">R$ 0,00</strong></td>
+                  <td><strong id="totalValor">R$ 0,00</strong></td>
+                  <td><strong id="totalDesconto">R$ 0,00</strong></td>
+                  <td><strong id="totalSubsidio">R$ 0,00</strong></td>
                   <td colspan="2"></td>
                 </tr>
               </tfoot>
             </table>
+            <div id="vtPagination" class="pagination mt-2" tabindex="0" aria-label="Paginação"></div>
+            <div id="vtLive" aria-live="polite" class="visually-hidden"></div>
           </div>
           
           <!-- Mensagem quando não há dados -->
-          <div th:if="${vales == null or vales.isEmpty()}" class="empty-state">
+          <div class="empty-state d-none" id="vtEmpty">
             <div class="empty-icon">
               <i class="fas fa-bus"></i>
             </div>
@@ -245,9 +215,9 @@
               <i class="fas fa-plus"></i> Cadastrar Primeiro Vale
             </button>
           </div>
-        </article>
+    </article>
 
-        <!-- Histórico de Alterações -->
+    <!-- Histórico de Alterações -->
         <article class="card">
           <h3><i class="fas fa-history"></i> Histórico de Alterações</h3>
           <table class="table-list">
@@ -298,44 +268,64 @@
     </main>
   </div>
 
-  <!-- Modal Nova Solicitação -->
-  <div id="modalSolicitacao" class="modal" style="display: none;">
-    <div class="modal-content">
+  <div id="modalSolicitacao" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="vtModalTitle">
+    <div class="modal-content modal-modern" tabindex="-1">
       <div class="modal-header">
-        <h3><i class="fas fa-plus"></i> Nova Solicitação de Vale Transporte</h3>
-        <button onclick="fecharModalSolicitacao()" class="btn-close">
-          <i class="fas fa-times"></i>
-        </button>
+        <h3 class="modal-title" id="vtModalTitle">Cadastro de Transporte</h3>
+        <button type="button" class="btn-close" aria-label="Close" onclick="fecharModalSolicitacao()"></button>
       </div>
-      
-      <form class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="colaboradorVT">Colaborador *</label>
-            <select id="colaboradorVT" name="colaborador" required class="form-control">
-              <option value="">Selecione um colaborador...</option>
-              <option value="5">Pedro Lima - Analista Marketing</option>
-              <option value="6">Lucia Fernandes - Assistente RH</option>
-              <option value="7">Roberto Santos - Estagiário</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="dataInicioVT">Data de Início *</label>
-            <input type="date" id="dataInicioVT" name="dataInicio" required class="form-control">
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="enderecoResidencia">Endereço de Residência *</label>
-          <textarea id="enderecoResidencia" name="enderecoResidencia" required class="form-control" rows="2" placeholder="Rua, número, bairro, cidade..."></textarea>
-        </div>
-        
-        <h4><i class="fas fa-route"></i> Trajeto</h4>
-        <div class="trajeto-section">
-          <div class="form-row">
+      <form class="modal-body" id="vtForm">
+        <div class="section">
+          <div class="section-title"><i class="fas fa-user"></i> Dados do Colaborador</div>
+          <div class="grid-2">
+            <div class="form-group" style="position:relative">
+              <label for="colabNome">Colaborador <span class="req">*</span></label>
+              <input type="text" id="colabNome" class="form-control" placeholder="Digite para buscar">
+              <input type="hidden" id="colabId" required>
+              <div id="colabDropdown" class="list-group dropdown" style="display:none"></div>
+              <div class="invalid-feedback" id="colabErr">Selecione um colaborador</div>
+            </div>
             <div class="form-group">
-              <label for="tipoTransporte1">Tipo de Transporte 1 *</label>
-              <select id="tipoTransporte1" name="tipoTransporte1" required class="form-control">
+              <label for="dataInicio">Data de Início <span class="req">*</span></label>
+              <input type="text" id="dataInicio" class="form-control" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" autocomplete="off">
+              <div class="invalid-feedback" id="dataErr">Informe a data no formato dd/mm/aaaa</div>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title"><i class="fas fa-map-marker-alt"></i> Endereço</div>
+          <div class="form-group">
+            <label for="endereco">Endereço de Residência <span class="req">*</span></label>
+            <textarea id="endereco" class="form-control" rows="2" placeholder="Rua, número, bairro, cidade..."></textarea>
+            <div class="invalid-feedback" id="enderecoErr">Informe o endereço</div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title"><i class="fas fa-bus"></i> Detalhes do Transporte</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="tipoTransporte1">Tipo de Transporte 1 <span class="req">*</span></label>
+              <select id="tipoTransporte1" class="form-control">
+                <option value="">Selecione...</option>
+                <option value="onibus">Ônibus</option>
+                <option value="metro">Metrô</option>
+                <option value="trem">Trem</option>
+                <option value="van">Van</option>
+              </select>
+              <div class="invalid-feedback" id="tipoErr">Selecione o tipo de transporte</div>
+            </div>
+            <div class="form-group">
+              <label for="linha1">Linha/Número</label>
+              <input type="text" id="linha1" class="form-control" placeholder="Ex: 123, Linha Azul">
+            </div>
+          </div>
+          <div class="form-group checkbox-modern">
+            <label><input type="checkbox" id="temIntegracao" onchange="toggleIntegracao()"> Possui integração/baldeação</label>
+          </div>
+          <div id="integracaoSection" style="display:none;" class="grid-2">
+            <div class="form-group">
+              <label for="tipoTransporte2">Tipo de Transporte 2</label>
+              <select id="tipoTransporte2" class="form-control">
                 <option value="">Selecione...</option>
                 <option value="onibus">Ônibus</option>
                 <option value="metro">Metrô</option>
@@ -344,78 +334,79 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="linha1">Linha/Número</label>
-              <input type="text" id="linha1" name="linha1" class="form-control" placeholder="Ex: 123, Linha Azul">
+              <label for="linha2">Linha/Número</label>
+              <input type="text" id="linha2" class="form-control" placeholder="Ex: 456, Linha Verde">
             </div>
           </div>
-          
-          <div class="form-group">
-            <label>
-              <input type="checkbox" id="temIntegracao" name="temIntegracao" onchange="toggleIntegracao()">
-              Possui integração/baldeação
-            </label>
-          </div>
-          
-          <div id="integracaoSection" style="display: none;">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="tipoTransporte2">Tipo de Transporte 2</label>
-                <select id="tipoTransporte2" name="tipoTransporte2" class="form-control">
-                  <option value="">Selecione...</option>
-                  <option value="onibus">Ônibus</option>
-                  <option value="metro">Metrô</option>
-                  <option value="trem">Trem</option>
-                  <option value="van">Van</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="linha2">Linha/Número</label>
-                <input type="text" id="linha2" name="linha2" class="form-control" placeholder="Ex: 456, Linha Verde">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="viagensDia">Viagens por Dia <span class="req">*</span></label>
+              <select id="viagensDia" class="form-control">
+                <option value="">Selecione...</option>
+                <option value="2">2 viagens (ida e volta)</option>
+                <option value="4">4 viagens (ida, volta + integração)</option>
+                <option value="6">6 viagens (ida, volta + 2 integrações)</option>
+              </select>
+              <div class="invalid-feedback" id="viagensErr">Selecione a quantidade</div>
+            </div>
+            <div class="form-group">
+              <label for="valorDiario">Valor Diário Calculado</label>
+              <div class="input-group">
+                <span class="input-group-text">R$</span>
+                <input type="text" id="valorDiario" class="form-control" readonly>
               </div>
             </div>
           </div>
         </div>
-        
-        <div class="form-row">
+        <div class="section">
+          <div class="section-title"><i class="fas fa-comment"></i> Observações</div>
           <div class="form-group">
-            <label for="viagensDia">Viagens por Dia *</label>
-            <select id="viagensDia" name="viagensDia" required class="form-control">
-              <option value="">Selecione...</option>
-              <option value="2">2 viagens (ida e volta)</option>
-              <option value="4">4 viagens (ida, volta + integração)</option>
-              <option value="6">6 viagens (ida, volta + 2 integrações)</option>
-            </select>
+            <label for="observacoes">Observações</label>
+            <textarea id="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre o trajeto..."></textarea>
           </div>
-          <div class="form-group">
-            <label for="valorDiario">Valor Diário Calculado</label>
-            <div class="input-group">
-              <span class="input-group-text">R$</span>
-              <input type="text" id="valorDiario" name="valorDiario" class="form-control" readonly>
-            </div>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="observacoesVT">Observações</label>
-          <textarea id="observacoesVT" name="observacoes" class="form-control" rows="3" placeholder="Informações adicionais sobre o trajeto..."></textarea>
         </div>
       </form>
-      
       <div class="modal-footer">
-        <button type="button" onclick="fecharModalSolicitacao()" class="btn btn-secondary">
-          <i class="fas fa-times"></i> Cancelar
-        </button>
-        <button type="button" onclick="salvarSolicitacao()" class="btn btn-primary">
-          <i class="fas fa-save"></i> Salvar Solicitação
-        </button>
+        <button type="button" onclick="fecharModalSolicitacao()" class="btn btn-secondary">Cancelar</button>
+        <button type="button" onclick="vtSalvarTransporte()" class="btn btn-primary">Salvar</button>
       </div>
     </div>
   </div>
 
   <script th:src="@{/js/script.js}"></script>
-  <script>
+  <script th:inline="none">
+    try { if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } } catch(e) {}
+    function notify(type, title, message, priority = 'medium', options = {}) {
+      if (typeof showToast === 'function') {
+        showToast({ type, title, message, priority, ...options });
+      } else {
+        const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+        alert(icon + ' ' + title + ': ' + message);
+      }
+    }
+    function showConfirm(title, message, okText = 'Confirmar', cancelText = 'Cancelar') {
+      return new Promise(function(resolve){
+        var modalEl = document.getElementById('vtConfirmModal');
+        var t = modalEl.querySelector('.modal-title');
+        var b = modalEl.querySelector('.modal-body');
+        var okBtn = modalEl.querySelector('#vtConfirmOk');
+        var cancelBtn = modalEl.querySelector('#vtConfirmCancel');
+        t.textContent = title || '';
+        b.textContent = message || '';
+        okBtn.textContent = okText || 'Confirmar';
+        cancelBtn.textContent = cancelText || 'Cancelar';
+        var modal = new bootstrap.Modal(modalEl);
+        var done = false;
+        function cleanup(){ okBtn.onclick = null; cancelBtn.onclick = null; }
+        okBtn.onclick = function(){ if(!done){ done = true; cleanup(); modal.hide(); resolve(true); } };
+        cancelBtn.onclick = function(){ if(!done){ done = true; cleanup(); modal.hide(); resolve(false); } };
+        modal.show();
+      });
+    }
     function abrirModalSolicitacao() {
-      document.getElementById('modalSolicitacao').style.display = 'flex';
+      const m = document.getElementById('modalSolicitacao');
+      m.style.display = 'flex';
+      setTimeout(function(){ const f = document.getElementById('colabNome'); if(f){ f.focus(); } }, 50);
     }
     
     function fecharModalSolicitacao() {
@@ -433,22 +424,80 @@
     
     function calcularValorDiario() {
       const viagens = document.getElementById('viagensDia').value;
-      const valorPassagem = parseFloat(document.getElementById('valorPassagem').value) || 4.40;
-      
+      const valorPassagemInput = document.getElementById('valorPassagem');
+      const valorPassagem = valorPassagemInput ? parseFloat(valorPassagemInput.value) : 4.4;
       if (viagens) {
-        const valorDiario = viagens * valorPassagem;
-        document.getElementById('valorDiario').value = valorDiario.toFixed(2);
+        const valorDiario = Number(viagens) * (isNaN(valorPassagem) ? 4.4 : valorPassagem);
+        document.getElementById('valorDiario').value = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valorDiario);
+      } else {
+        document.getElementById('valorDiario').value = '';
       }
     }
     
-    function salvarSolicitacao() {
-      const form = document.querySelector('#modalSolicitacao form');
-      if (form.checkValidity()) {
-        // Redirecionar para o formulário de cadastro real
-        window.location.href = '/rh/beneficios/vale-transporte/novo';
-      } else {
-        alert('Por favor, preencha todos os campos obrigatórios.');
+    function vtSalvarTransporte() {
+      const colabId = document.getElementById('colabId').value;
+      const dataInicio = document.getElementById('dataInicio').value.trim();
+      const endereco = document.getElementById('endereco').value.trim();
+      const tipo1 = document.getElementById('tipoTransporte1').value;
+      const linha1 = document.getElementById('linha1').value.trim();
+      const viagens = document.getElementById('viagensDia').value;
+      const obs = document.getElementById('observacoes').value.trim();
+      let ok = true;
+      function setInvalid(el, errId, cond){
+        if(cond){ el.classList.add('is-invalid'); document.getElementById(errId).style.display='block'; ok=false; }
+        else { el.classList.remove('is-invalid'); document.getElementById(errId).style.display='none'; }
       }
+      function parseBRDate(str){
+        const m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if(!m) return null;
+        const d = Number(m[1]), mo = Number(m[2])-1, y = Number(m[3]);
+        const dt = new Date(y, mo, d);
+        return dt && dt.getFullYear()===y && dt.getMonth()===mo && dt.getDate()===d ? dt : null;
+      }
+      setInvalid(document.getElementById('colabNome'), 'colabErr', !colabId);
+      const dt = parseBRDate(dataInicio);
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      setInvalid(document.getElementById('dataInicio'), 'dataErr', !dt || dt < hoje);
+      setInvalid(document.getElementById('endereco'), 'enderecoErr', !endereco);
+      setInvalid(document.getElementById('tipoTransporte1'), 'tipoErr', !tipo1);
+      const viagensNum = Number(viagens);
+      setInvalid(document.getElementById('viagensDia'), 'viagensErr', !viagens || !(viagensNum>=1 && viagensNum<=8));
+      if(tipo1){
+        const linhaEl = document.getElementById('linha1');
+        if(!linha1){ linhaEl.classList.add('is-invalid'); ok=false; } else { linhaEl.classList.remove('is-invalid'); }
+      }
+      if(!ok) return;
+      const mes = new Date().getMonth()+1; const ano = new Date().getFullYear();
+      fetch(`/rh/beneficios/vale-transporte/api/listar?status=ATIVO&colaboradorId=${Number(colabId)}&mes=${mes}&ano=${ano}&page=0&size=1`)
+        .then(function(r){ return r.json(); })
+        .then(function(chk){
+          if (chk && chk.totalElements && Number(chk.totalElements) > 0) {
+            notify('error', 'Cadastro de Transporte', 'Colaborador já possui vale transporte ativo neste período');
+            return;
+          }
+          const payload = {
+            colaboradorId: Number(colabId),
+            dataInicio,
+            enderecoResidencia: endereco,
+            tipoTransporte1: tipo1,
+            linha1,
+            temIntegracao: document.getElementById('temIntegracao').checked,
+            viagensDia: viagensNum,
+            observacoes: obs
+          };
+          fetch('/rh/beneficios/vale-transporte/api/solicitacao', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+          }).then(function(r){ return r.json(); }).then(function(d){
+            if(d && d.success){
+              notify('success', 'Cadastro de Transporte', 'Solicitação criada com sucesso');
+              fecharModalSolicitacao();
+              setTimeout(function(){ location.reload(); }, 600);
+            } else {
+              notify('error', 'Erro ao salvar', (d && d.message) ? String(d.message) : 'Falha ao salvar solicitação');
+            }
+          }).catch(function(){ notify('error', 'Erro de comunicação', 'Não foi possível contatar o servidor'); });
+        })
+        .catch(function(){ notify('error', 'Erro de comunicação', 'Não foi possível verificar situação do colaborador'); });
     }
     
     function salvarConfiguracoes() {
@@ -457,47 +506,40 @@
       const diasUteis = document.getElementById('diasUteis').value;
       
       if (percentual && valorPassagem && diasUteis) {
-        alert('Configurações salvas com sucesso!');
+        notify('success', 'Configurações', 'Configurações salvas com sucesso!');
       } else {
-        alert('Por favor, preencha todos os campos de configuração.');
+        notify('error', 'Configurações', 'Por favor, preencha todos os campos de configuração.');
       }
     }
     
     function calcularVales() {
-      if (confirm('Deseja calcular os vales transporte para o mês atual? Esta ação irá processar todos os colaboradores ativos.')) {
-        const mes = new Date().getMonth() + 1;
-        const ano = new Date().getFullYear();
-        const diasUteis = document.getElementById('diasUteis').value || 22;
-        const valorPassagem = parseFloat(document.getElementById('valorPassagem').value) || 4.40;
-        const percentualDesconto = parseFloat(document.getElementById('percentualDesconto').value) || 6.0;
-        
-        const config = {
-          diasUteisPadrao: parseInt(diasUteis),
-          valorPassagem: valorPassagem,
-          percentualDesconto: percentualDesconto
-        };
-        
-        fetch(`/rh/beneficios/vale-transporte/api/calcular-mes?mes=${mes}&ano=${ano}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(config)
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.sucesso) {
-            alert(data.mensagem);
-            location.reload();
-          } else {
-            alert('Erro: ' + data.erro);
-          }
-        })
-        .catch(error => {
-          console.error('Erro:', error);
-          alert('Erro ao processar cálculo mensal.');
+      showConfirm('Cálculo Mensal', 'Deseja calcular os vales transporte para o mês atual? Esta ação irá processar todos os colaboradores ativos.', 'Processar', 'Cancelar')
+        .then(function(accepted){
+          if(!accepted) return;
+          const mes = new Date().getMonth() + 1;
+          const ano = new Date().getFullYear();
+          const diasUteis = document.getElementById('diasUteis').value || 22;
+          const valorPassagem = parseFloat(document.getElementById('valorPassagem').value) || 4.40;
+          const percentualDesconto = parseFloat(document.getElementById('percentualDesconto').value) || 6.0;
+          const config = {
+            diasUteisPadrao: parseInt(diasUteis),
+            valorPassagem: valorPassagem,
+            percentualDesconto: percentualDesconto
+          };
+          fetch(`/rh/beneficios/vale-transporte/api/calcular-mes?mes=${mes}&ano=${ano}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(config)
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (data.sucesso) {
+              notify('success', 'Cálculo Mensal', String(data.mensagem || 'Cálculo concluído com sucesso'));
+              location.reload();
+            } else {
+              notify('error', 'Erro ao Calcular', String(data.erro || 'Falha no processamento'));
+            }
+          })
+          .catch(function(){ notify('error', 'Erro de Comunicação', 'Não foi possível contatar o servidor'); });
         });
-      }
     }
     
     function editarVT(id) {
@@ -532,33 +574,28 @@
     }
     
     function reativarVT(id) {
-      if (confirm('Tem certeza que deseja reativar este vale transporte?')) {
-        fetch(`/rh/beneficios/vale-transporte/api/reativar/${id}`, {
-          method: 'POST'
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.sucesso) {
-            alert(data.mensagem);
-            location.reload();
-          } else {
-            alert('Erro: ' + data.erro);
-          }
-        })
-        .catch(error => {
-          console.error('Erro:', error);
-          alert('Erro ao reativar vale transporte.');
+      showConfirm('Reativar Vale Transporte', 'Tem certeza que deseja reativar este vale transporte?', 'Reativar', 'Cancelar')
+        .then(function(accepted){
+          if(!accepted) return;
+          fetch(`/rh/beneficios/vale-transporte/api/reativar/${id}`, { method: 'POST' })
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+              if (data.sucesso) {
+                notify('success', 'Vale Transporte', String(data.mensagem||'Reativado com sucesso'));
+                location.reload();
+              } else {
+                notify('error', 'Vale Transporte', String(data.erro||'Falha ao reativar'));
+              }
+            })
+            .catch(function(){ notify('error', 'Erro de Comunicação', 'Não foi possível contatar o servidor'); });
         });
-      }
     }
     
     function ativarVT(id) {
-      if (confirm('Deseja ativar o vale transporte para este colaborador?')) {
-        // Redirecionar para novo vale com colaborador pré-selecionado
-        window.location.href = `/rh/beneficios/vale-transporte/novo?colaboradorId=${id}`;
-      }
+      showConfirm('Ativar Vale Transporte', 'Deseja ativar o vale transporte para este colaborador?', 'Ativar', 'Cancelar')
+        .then(function(accepted){ if(accepted){ window.location.href = `/rh/beneficios/vale-transporte/novo?colaboradorId=${id}`; } });
     }
-    
+  
     function exportarRelatorio() {
       const mes = document.getElementById('mesReferencia').value;
       const status = document.getElementById('statusVT').value;
@@ -585,10 +622,320 @@
       if (valorPassagemInput) {
         valorPassagemInput.addEventListener('change', calcularValorDiario);
       }
+      const colabNome = document.getElementById('colabNome');
+      const colabId = document.getElementById('colabId');
+      const colabDropdown = document.getElementById('colabDropdown');
+      function debounce(fn, ms){ let t; return function(){ clearTimeout(t); t = setTimeout(()=>fn.apply(this, arguments), ms); }; }
+      function vtSelectColab(item){ colabNome.value = item.nome; colabId.value = item.id; colabDropdown.style.display='none'; }
+      function vtBuscarColab(term){
+        if(!term || term.length<2){ colabDropdown.style.display='none'; colabId.value=''; return; }
+        fetch(`/rh/colaboradores/api/listar?q=${encodeURIComponent(term)}&page=0&size=5`)
+          .then(r=>r.json())
+          .then(d=>{ const arr = d.content || []; if(arr.length===0){ colabDropdown.style.display='none'; return; }
+            colabDropdown.innerHTML = arr.map(it=>`<a href="#" class="list-group-item list-group-item-action" data-id="${it.id}" data-nome="${it.nome}">${it.nome}</a>`).join('');
+            colabDropdown.style.display='block';
+            Array.from(colabDropdown.querySelectorAll('a')).forEach(a=>{
+              a.addEventListener('click', function(e){ e.preventDefault(); vtSelectColab({id: this.getAttribute('data-id'), nome: this.getAttribute('data-nome')}); });
+            });
+          }).catch(()=>{ colabDropdown.style.display='none'; });
+      }
+      if(colabNome){
+        colabNome.addEventListener('input', debounce(function(){ vtBuscarColab(colabNome.value.trim()); }, 250));
+        colabNome.addEventListener('blur', function(){ setTimeout(function(){ colabDropdown.style.display='none'; }, 200); });
+      }
+      const data = document.getElementById('dataInicio');
+      if(data){
+        data.addEventListener('input', function(e){
+          const prev = data.value;
+          let v = prev.replace(/\D/g,'').slice(0,8);
+          let out = v;
+          if(v.length>=5){ out = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4); }
+          else if(v.length>=3){ out = v.slice(0,2) + '/' + v.slice(2); }
+          data.value = out;
+        }, { passive: true });
+      }
     });
+    </script>
+  
+  <div class="modal" id="vtDetalheModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-eye"></i> Detalhes do Vale Transporte</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="vtDetalheBody">Carregando...</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="vtConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmação</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">Tem certeza?</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="vtConfirmCancel" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="vtConfirmOk">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="none">
+    (function(){
+      let page = 0, totalPages = 1, size = 20, sort = 'id', dir = 'desc';
+      const tbody = document.getElementById('vtTableBody');
+      const empty = document.getElementById('vtEmpty');
+      const btnFiltrar = document.getElementById('btnFiltrar');
+      const ths = document.querySelectorAll('.table-list thead th.sortable');
+      const paginationEl = document.getElementById('vtPagination');
+
+      function parseMesAno(){
+        const mm = document.getElementById('mesReferencia').value;
+        if(!mm) return { mes: null, ano: null };
+        const [y,m] = mm.split('-');
+        return { mes: parseInt(m), ano: parseInt(y) };
+      }
+
+      function qs(){
+        const { mes, ano } = parseMesAno();
+        const status = document.getElementById('statusVT').value;
+        const q = document.getElementById('filtroColabNome').value.trim();
+        const colaboradorId = document.getElementById('filtroColabId').value;
+        const departamentoId = document.getElementById('departamentoVT').value;
+        const params = new URLSearchParams({ page, size, sort, dir });
+        if(mes) params.append('mes', mes);
+        if(ano) params.append('ano', ano);
+        if(status) params.append('status', status);
+        if(q) params.append('q', q);
+        if(colaboradorId) params.append('colaboradorId', colaboradorId);
+        if(departamentoId) params.append('departamentoId', departamentoId);
+        return params.toString();
+      }
+
+      function fmtCurrency(v){
+        try { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v||0); } catch(e){ return v; }
+      }
+
+      function renderRows(items){
+        if(!items || !items.length){ tbody.innerHTML = '<tr><td colspan="10" class="text-muted">Nenhum registro encontrado</td></tr>'; empty.classList.remove('d-none'); return; }
+        empty.classList.add('d-none');
+        let totVal = 0, totDesc = 0, totSubs = 0;
+        tbody.innerHTML = items.map(v => {
+          const val = v.valorTotalMes ? Number(v.valorTotalMes) : 0;
+          const des = v.valorDesconto ? Number(v.valorDesconto) : 0;
+          const sub = v.valorSubsidioEmpresa ? Number(v.valorSubsidioEmpresa) : 0;
+          totVal += val; totDesc += des; totSubs += sub;
+          const traj = v.enderecoOrigem && v.enderecoDestino ? `${v.enderecoOrigem} → ${v.enderecoDestino}` : (v.linhaOnibus || 'Casa → Trabalho');
+          const stBadge = `<span class="status-badge ${v.status ? ('status-' + v.status.toLowerCase()) : ''}">${v.status || ''}</span>`;
+          return `<tr>
+            <td><div class="colaborador-info"><strong>${v.nomeColaborador||''}</strong><br><small>Matrícula: ${v.matriculaColaborador||''}</small></div></td>
+            <td>${v.departamento||''}</td>
+            <td><div class="trajeto-info"><strong>${traj}</strong><br><small>${v.linhaOnibus||''}</small></div></td>
+            <td class="text-center">${v.viagensDia||0}</td>
+            <td class="text-center">${v.diasUteis||0}</td>
+            <td><strong>${fmtCurrency(val)}</strong></td>
+            <td>${fmtCurrency(des)}</td>
+            <td>${fmtCurrency(sub)}</td>
+            <td>${stBadge}</td>
+            <td>
+              <button class="btn-icon" title="Editar" onclick="editarVT(${v.id})"><i class="fas fa-edit"></i></button>
+              <button class="btn-icon" title="Ver Detalhes" onclick="verDetalhes(${v.id})"><i class="fas fa-eye"></i></button>
+            </td>
+          </tr>`;
+        }).join('');
+        document.getElementById('totalValor').textContent = fmtCurrency(totVal);
+        document.getElementById('totalDesconto').textContent = fmtCurrency(totDesc);
+        document.getElementById('totalSubsidio').textContent = fmtCurrency(totSubs);
+      }
+
+      function renderPagination(data){
+        const totalPages = data.totalPages || 0;
+        const totalElements = data.totalElements || 0;
+        const pageNum = data.currentPage || 0;
+        const hasPrev = !!data.hasPrevious;
+        const hasNext = !!data.hasNext;
+        let html = '';
+        html += `<span class="pagination-info">Página ${pageNum + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</span>`;
+        html += hasPrev ? `<button type="button" class="btn btn-secondary" onclick="goToPage(${pageNum - 1})"><i class="fas fa-chevron-left"></i> Anterior</button>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+        html += hasNext ? `<button type="button" class="btn btn-secondary" onclick="goToPage(${pageNum + 1})">Próxima <i class="fas fa-chevron-right"></i></button>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+        paginationEl.innerHTML = html;
+      }
+
+      function carregar(){
+        const activeEl = document.activeElement;
+        const prevHeight = tbody.offsetHeight;
+        tbody.style.minHeight = prevHeight ? (prevHeight + 'px') : '';
+        tbody.setAttribute('aria-busy','true');
+        tbody.classList.remove('fade-enter');
+        tbody.classList.add('fade-exit');
+        tbody.innerHTML = '<tr><td colspan="10" class="text-muted">Carregando...</td></tr>';
+        fetch(`/rh/beneficios/vale-transporte/api/listar?` + qs())
+          .then(r => r.json())
+          .then(data => {
+            renderRows(data.content||[]);
+            renderPagination(data);
+            const live = document.getElementById('vtLive');
+            if (live) { live.textContent = 'Página ' + ((data.currentPage||0)+1) + ' carregada'; }
+            tbody.classList.remove('fade-exit');
+            tbody.classList.add('fade-enter');
+            tbody.removeAttribute('aria-busy');
+            tbody.style.minHeight = '';
+            try { if (activeEl && typeof activeEl.focus === 'function') { activeEl.focus({ preventScroll: true }); } } catch(_) { try { activeEl && activeEl.focus && activeEl.focus(); } catch(__) {} }
+          })
+          .catch(() => {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-danger">Falha ao carregar</td></tr>';
+            tbody.classList.remove('fade-exit');
+            tbody.classList.add('fade-enter');
+            tbody.removeAttribute('aria-busy');
+            tbody.style.minHeight = '';
+          });
+      }
+
+      function ordenarPor(field){ if(sort===field){ dir = dir==='asc'?'desc':'asc'; } else { sort = field; dir='asc'; } carregar(); }
+
+      ths.forEach(th => th.addEventListener('click', () => ordenarPor(th.getAttribute('data-sort'))));
+      btnFiltrar.addEventListener('click', function(){ page = 0; carregar(); });
+      const btnSuspenderDuplicados = document.getElementById('btnSuspenderDuplicados');
+      if(btnSuspenderDuplicados){
+        btnSuspenderDuplicados.addEventListener('click', function(){
+          const mmVal = document.getElementById('mesReferencia').value || '';
+          const parts = mmVal.split('-');
+          const ano = parts.length===2 ? Number(parts[0]) : new Date().getFullYear();
+          const mes = parts.length===2 ? Number(parts[1]) : (new Date().getMonth()+1);
+          showConfirm('Suspender Duplicados', `Suspender duplicados ativos de ${(''+mes).padStart(2,'0')}/${ano}?`, 'Suspender', 'Cancelar')
+            .then(function(accepted){
+              if(!accepted) return;
+              fetch(`/rh/beneficios/vale-transporte/api/duplicados/suspender?mes=${mes}&ano=${ano}`, { method: 'POST' })
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                  if(d && d.suspensos != null){
+                    notify('success', 'Duplicados Suspensos', String(d.mensagem || (`Suspensos ${d.suspensos}`)));
+                    carregar();
+                  } else {
+                    notify('error', 'Duplicados', String(d && d.erro ? d.erro : 'Falha ao suspender duplicados'));
+                  }
+                })
+                .catch(function(){ notify('error', 'Erro de Comunicação', 'Não foi possível contatar o servidor'); });
+            });
+        });
+      }
+
+      window.goToPage = function(p){ page = Math.max(0, p); carregar(); };
+      paginationEl.addEventListener('keydown', function(e){ if(e.key==='ArrowRight'){ e.preventDefault(); if(page<totalPages-1){ window.goToPage(page+1); } } else if(e.key==='ArrowLeft'){ e.preventDefault(); if(page>0){ window.goToPage(page-1); } } });
+
+      window.verDetalhes = function(id){
+        const modalEl = document.getElementById('vtDetalheModal');
+        const body = document.getElementById('vtDetalheBody');
+        body.textContent = 'Carregando...';
+        fetch(`/rh/beneficios/vale-transporte/api/detalhe/${id}`)
+          .then(r => r.json())
+          .then(d => {
+            body.innerHTML = `<div class="row g-2">
+              <div class="col-12"><strong>Colaborador:</strong> ${d.colaborador||''}</div>
+              <div class="col-6"><strong>Mês/Ano:</strong> ${d.mes||''}/${d.ano||''}</div>
+              <div class="col-6"><strong>Status:</strong> ${d.status||''}</div>
+              <div class="col-12"><strong>Trajeto:</strong> ${d.enderecoOrigem||''} → ${d.enderecoDestino||''}</div>
+              <div class="col-6"><strong>Valor Total:</strong> ${fmtCurrency(Number(d.valorTotalMes||0))}</div>
+              <div class="col-6"><strong>Desconto:</strong> ${fmtCurrency(Number(d.valorDesconto||0))}</div>
+            </div>`;
+          }).catch(()=>{ body.textContent = 'Falha ao carregar detalhes'; });
+        const m = new bootstrap.Modal(modalEl); m.show();
+      };
+
+      window.editarVT = function(id){ window.location.href = `/rh/beneficios/vale-transporte/editar/${id}`; };
+
+      window.exportarExcel = function(){ window.open('/rh/beneficios/vale-transporte/api/export/excel?' + qs(), '_blank'); };
+      window.exportarPdf = function(){ window.open('/rh/beneficios/vale-transporte/api/export/pdf?' + qs(), '_blank'); };
+
+      document.addEventListener('DOMContentLoaded', carregar);
+
+      const colabInput = document.getElementById('filtroColabNome');
+      const colabIdInput = document.getElementById('filtroColabId');
+      const sug = document.getElementById('colabSugestoes');
+      let colabTimer;
+      function buscarColaboradores(q){
+        if(!q || q.length < 2){ sug.style.display='none'; sug.innerHTML=''; return; }
+        fetch(`/rh/colaboradores/api/listar?q=${encodeURIComponent(q)}&size=10`)
+          .then(r=>r.json())
+          .then(d=>{
+            const items = d.content||[];
+            if(!items.length){ sug.style.display='none'; sug.innerHTML=''; return; }
+            sug.innerHTML = items.map(function(it){ return '<button type="button" class="list-group-item list-group-item-action" data-id="'+it.id+'" data-nome="'+it.nome+'">'+it.nome+'</button>'; }).join('');
+            sug.style.display='block';
+          }).catch(()=>{ sug.style.display='none'; });
+      }
+      colabInput.addEventListener('input', function(){
+        colabIdInput.value='';
+        clearTimeout(colabTimer);
+        colabTimer = setTimeout(()=>buscarColaboradores(colabInput.value.trim()), 250);
+      });
+      sug.addEventListener('click', function(e){
+        const btn = e.target.closest('.list-group-item') || e.target;
+        const id = btn.getAttribute('data-id');
+        const nome = btn.getAttribute('data-nome');
+        if(id){ colabIdInput.value = id; colabInput.value = nome; sug.style.display='none'; page = 0; carregar(); }
+      });
+
+      function carregarDepartamentos(){
+        fetch('/rh/beneficios/vale-transporte/api/departamentos')
+          .then(r=>r.json())
+          .then(list=>{
+            const sel = document.getElementById('departamentoVT');
+            sel.innerHTML = '<option value="">Todos os departamentos</option>' + (list||[]).map(function(d){ return '<option value="'+d.id+'">'+d.nome+'</option>'; }).join('');
+          }).catch(()=>{});
+      }
+      document.addEventListener('DOMContentLoaded', carregarDepartamentos);
+
+      const mColabInput = document.getElementById('colabNome');
+      const mColabId = document.getElementById('colabId');
+      const mSug = document.getElementById('colabDropdown');
+      let mTimer; const cache = new Map();
+      function mBuscar(q){
+        if(!q || q.length<2){ mSug.style.display='none'; mSug.innerHTML=''; return; }
+        if(cache.has(q)){ render(cache.get(q)); return; }
+        fetch(`/rh/colaboradores/api/listar?q=${encodeURIComponent(q)}&size=10`)
+          .then(r=>r.json()).then(d=>{ const items=d.content||[]; cache.set(q,items); render(items); });
+      }
+      function render(items){
+        if(!items.length){ mSug.style.display='none'; mSug.innerHTML=''; return; }
+        mSug.innerHTML = items.map(function(it){ return '<button type="button" class="list-group-item list-group-item-action" data-id="'+it.id+'" data-nome="'+it.nome+'">'+it.nome+'</button>'; }).join('');
+        mSug.style.display='block';
+      }
+      if(mColabInput){
+        mColabInput.addEventListener('input', function(){ mColabId.value=''; clearTimeout(mTimer); mTimer=setTimeout(function(){ mBuscar(mColabInput.value.trim()); }, 250); });
+        mSug.addEventListener('click', function(e){ const btn=e.target.closest('.list-group-item')||e.target; const id=btn.getAttribute('data-id'); const nome=btn.getAttribute('data-nome'); if(id){ mColabId.value=id; mColabInput.value=nome; mSug.style.display='none'; } });
+      }
+      
+      
+    })();
+      
   </script>
   
   <style>
+    #modalSolicitacao.modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); }
+    #modalSolicitacao .modal-modern { width: 1200px; height: 1000px; max-width: 100vw; max-height: 95vh; overflow: auto; scroll-behavior: smooth; }
+    .modal-modern { border-radius: 8px; padding: clamp(16px, 2.5vw, 24px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: #fff; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; }
+    .modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: 12px; border-top: 1px solid #eee; padding-top: 12px; }
+    .modal-title { text-align: center; width: 100%; }
+    .section { margin-bottom: 16px; }
+    .section-title { font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .req { color: #dc3545; }
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 768px){ .grid-2 { grid-template-columns: 1fr 1fr; } }
+    .checkbox-modern input { margin-right: 8px; }
+    .dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 220px; overflow: auto; }
+    .invalid-feedback { display: none; color: #dc3545; font-size: 12px; margin-top: 4px; }
     .resumo-vt {
       margin: 20px 0;
     }
@@ -742,14 +1089,17 @@
       margin-bottom: 30px;
       font-size: 16px;
     }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    #vtTableBody.fade-exit { opacity: 0.6; transition: opacity 120ms ease-out; }
+    #vtTableBody.fade-enter { opacity: 1; transition: opacity 120ms ease-in; }
   </style>
   <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 
   <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
-
 </body>
 
 </html>

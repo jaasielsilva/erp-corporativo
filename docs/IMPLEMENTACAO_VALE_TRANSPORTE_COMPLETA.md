@@ -57,6 +57,19 @@ A funcionalidade de **Vale Transporte** foi totalmente implementada e integrada 
 - `POST /api/reativar/{id}` - Reativar vale transporte
 - `POST /api/cancelar/{id}` - Cancelar vale transporte
 - `GET /api/relatorio` - Exportar relatórios
+ - `GET /rh/beneficios/vale-transporte/api/listar` - Listagem paginada com filtros e ordenação
+ - `GET /rh/beneficios/vale-transporte/api/detalhe/{id}` - Detalhes para modal
+ - `GET /rh/beneficios/vale-transporte/api/export/excel` - Exportação Excel com filtros
+- `GET /rh/beneficios/vale-transporte/api/export/pdf` - Exportação PDF com filtros
+
+### Rotina de Suspensão de Duplicados
+- `POST /rh/beneficios/vale-transporte/api/duplicados/suspender?mes=&ano=&motivo=`
+  - Suspende automaticamente registros duplicados ATIVOS no período informado, mantendo apenas um por colaborador.
+  - Auditoria registrada em `AuditoriaRhLogService` com quantidade suspensa e filtros aplicados.
+  - Implementação:
+    - Controller: `src/main/java/com/jaasielsilva/portalceo/controller/rh/beneficios/ValeTransporteController.java:610–632`
+    - Service: `src/main/java/com/jaasielsilva/portalceo/service/ValeTransporteService.java:61–82`
+    - Repository: `src/main/java/com/jaasielsilva/portalceo/repository/ValeTransporteRepository.java:67–72`
 
 ## 📈 Funcionalidades Principais
 
@@ -64,6 +77,7 @@ A funcionalidade de **Vale Transporte** foi totalmente implementada e integrada 
 - **Cadastro**: Formulário completo com seleção de colaboradores
 - **Edição**: Atualização de dados com validações
 - **Status**: Controle de ativo/suspenso/cancelado
+- **Duplicados**: Bloqueio na criação e rotina de suspensão para reconciliação
 - **Cálculos**: Automáticos com base em dias úteis, viagens e valor da passagem
 
 ### 📊 **Estatísticas em Tempo Real**
@@ -83,6 +97,7 @@ A funcionalidade de **Vale Transporte** foi totalmente implementada e integrada 
 - **Desconto Legal**: Máximo 6% do salário do colaborador
 - **Subsídio Empresa**: Valor total - desconto do colaborador
 - **Processamento em Lote**: Para todos colaboradores ativos
+- **Rotina de Reconciliação**: Suspensão de duplicados mantendo uma entrada ativa por colaborador
 
 ### 📋 **Relatórios e Exportação**
 - **JSON**: Dados estruturados para integração
@@ -103,6 +118,7 @@ A funcionalidade de **Vale Transporte** foi totalmente implementada e integrada 
 - Tratamento de erros centralizado
 - Logs detalhados para auditoria
 - Sanitização de entradas do usuário
+- Bloqueio de duplicados: verificação de VT ativo por colaborador/mês/ano na criação
 
 ### 🎨 **Interface de Usuário**
 - Design responsivo e moderno
@@ -117,6 +133,29 @@ A funcionalidade de **Vale Transporte** foi totalmente implementada e integrada 
 - Preparado para futuras extensões
 
 ## 📁 Arquivos Criados/Modificados
+Front-end
+- `src/main/resources/templates/rh/beneficios/vale-transporte/listar.html`
+
+Back-end
+- `src/main/java/com/jaasielsilva/portalceo/controller/rh/beneficios/ValeTransporteController.java`
+- `src/main/java/com/jaasielsilva/portalceo/service/ValeTransporteService.java`
+- `src/main/java/com/jaasielsilva/portalceo/repository/ValeTransporteRepository.java`
+
+### UI e Acessibilidade
+- Paginação padronizada com navegação por teclado e ARIA live
+- Confirmações modais (`showConfirm`) em ações sensíveis
+- Preservação de posição de scroll e transições suaves na listagem
+
+### Cadastro de Transporte
+- Busca por colaborador: `GET /rh/colaboradores/api/listar?q=` com dropdown de seleção
+- Campo Data de Início: máscara leve `dd/mm/aaaa` e validação “não anterior a hoje”
+- Bloqueio de criação quando já existir VT ATIVO no período vigente
+
+Instruções de uso para administradores
+- Use os filtros de período, status e colaborador na página para refinar resultados.
+- Clique nos cabeçalhos da tabela para ordenar por nome, departamento, valor ou status.
+- Use os botões Excel/PDF para exportar o conjunto atual conforme filtros aplicados.
+- Abra detalhes em modal pelo ícone de visualização.
 
 ### Novos Arquivos
 ```
@@ -167,6 +206,7 @@ A funcionalidade de **Vale Transporte** foi totalmente implementada e integrada 
 - Cálculos precisos conforme legislação
 - Auditoria completa de operações
 - Relatórios detalhados para compliance
+- Integridade de dados mantida com unicidade por colaborador/mês/ano
 
 ## 🔄 Próximos Passos Sugeridos
 

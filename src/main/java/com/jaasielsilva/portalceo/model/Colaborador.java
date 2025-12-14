@@ -20,7 +20,9 @@ import java.util.List;
 @Entity
 @Table(name = "colaboradores", indexes = {
     @Index(name = "idx_colaboradores_nome", columnList = "nome"),
-    @Index(name = "idx_colaboradores_departamento", columnList = "departamento_id")
+    @Index(name = "idx_colaboradores_departamento", columnList = "departamento_id"),
+    @Index(name = "idx_colaboradores_cargo", columnList = "cargo_id"),
+    @Index(name = "idx_colaboradores_ativo_nome", columnList = "ativo, nome")
 })
 @Getter
 @Setter

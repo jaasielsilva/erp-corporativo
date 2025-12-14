@@ -306,13 +306,9 @@
                   <span>Vale Refeição</span>
                   <span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span>
                 </div>
-                <div class="valor-item">
-                  <span>Vale Transporte</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span>
-                </div>
                 <div class="valor-item total">
                   <span>TOTAL PROVENTOS</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.totalProventos)}"></span>
+                  <span th:text="${#numbers.formatCurrency(holerite.totalProventos.subtract(holerite.valeTransporte))}"></span>
                 </div>
               </div>
 
@@ -353,7 +349,7 @@
               <div class="resumo-grid">
                 <div class="resumo-item">
                   <div class="resumo-label">Total Proventos</div>
-                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalProventos)}"></div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalProventos.subtract(holerite.valeTransporte))}"></div>
                 </div>
                 <div class="resumo-item">
                   <div class="resumo-label">Total Descontos</div>
@@ -387,6 +383,9 @@
                   <strong>Dependentes IR:</strong> 0<br>
                   <strong>Salário Família:</strong> R$ 0,00<br>
                   <strong>13º Proporcional:</strong> R$ 708,33
+                  <br>
+                  <strong>Benefícios não remuneratórios:</strong><br>
+                  Subsídio VT (empresa): <span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span>
                 </div>
               </div>
             </div>

@@ -101,7 +101,7 @@
                   <input type="number" id="percentualDesconto" th:field="*{percentualDesconto}" class="form-control" min="0" max="100" step="0.1">
                   <span class="input-group-text">%</span>
                 </div>
-                <small class="form-text">Máximo legal: 6% do salário base</small>
+                <small class="form-text" id="vtMaxLegal">Máximo legal: 6% do salário base</small>
               </div>
               <div class="form-group">
                 <label for="valorPassagem">Valor da Passagem</label>
@@ -113,6 +113,13 @@
               <div class="form-group">
                 <label for="diasUteis">Dias Úteis do Mês</label>
                 <input type="number" id="diasUteis" th:field="*{diasUteisPadrao}" class="form-control" min="1" max="31">
+              </div>
+              <div class="form-group">
+                <label for="refSalarioBase">Salário base de referência (opcional)</label>
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input type="number" id="refSalarioBase" class="form-control" step="0.01" placeholder="Exibir máximo legal calculado">
+                </div>
               </div>
             </div>
             <div class="form-actions">
@@ -501,15 +508,23 @@
     }
     
     function salvarConfiguracoes() {
-      const percentual = document.getElementById('percentualDesconto').value;
-      const valorPassagem = document.getElementById('valorPassagem').value;
-      const diasUteis = document.getElementById('diasUteis').value;
-      
-      if (percentual && valorPassagem && diasUteis) {
-        notify('success', 'Configurações', 'Configurações salvas com sucesso!');
-      } else {
-        notify('error', 'Configurações', 'Por favor, preencha todos os campos de configuração.');
-      }
+      const percentual = parseFloat(document.getElementById('percentualDesconto').value);
+      const valorPassagem = parseFloat(document.getElementById('valorPassagem').value);
+      const diasUteis = parseInt(document.getElementById('diasUteis').value);
+      let ok = true;
+      if (!(percentual>=0 && percentual<=6)) { ok=false; notify('error','Configurações','Percentual inválido: máximo 6%'); }
+      if (!(valorPassagem>0)) { ok=false; notify('error','Configurações','Valor da passagem deve ser maior que 0'); }
+      if (!(diasUteis>=1 && diasUteis<=31)) { ok=false; notify('error','Configurações','Dias úteis deve estar entre 1 e 31'); }
+      if(!ok) return;
+      showConfirm('Salvar Configurações','Confirmar atualização das configurações de Vale Transporte?','Salvar','Cancelar')
+        .then(function(accepted){
+          if(!accepted) return;
+          const payload = { percentualDesconto: percentual, valorPassagem: valorPassagem, diasUteisPadrao: diasUteis };
+          fetch('/rh/beneficios/vale-transporte/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+            .then(function(r){ return r.json(); })
+            .then(function(d){ if(d && d.sucesso){ notify('success','Configurações', String(d.mensagem||'Atualizado com sucesso')); location.reload(); } else { notify('error','Configurações', String((d&&d.mensagem)||'Falha ao atualizar')); } })
+            .catch(function(){ notify('error','Erro de Comunicação','Não foi possível contatar o servidor'); });
+        });
     }
     
     function calcularVales() {
@@ -622,6 +637,10 @@
       if (valorPassagemInput) {
         valorPassagemInput.addEventListener('change', calcularValorDiario);
       }
+      const refSalario = document.getElementById('refSalarioBase');
+      const vtMaxLegal = document.getElementById('vtMaxLegal');
+      function updateMaxLegal(){ const s = parseFloat(refSalario.value); if(!isNaN(s) && s>0){ const max = (s*0.06).toFixed(2); vtMaxLegal.textContent = 'Máximo legal: 6% do salário base (R$ '+max+')'; } else { vtMaxLegal.textContent = 'Máximo legal: 6% do salário base'; } }
+      if(refSalario && vtMaxLegal){ refSalario.addEventListener('input', updateMaxLegal); }
       const colabNome = document.getElementById('colabNome');
       const colabId = document.getElementById('colabId');
       const colabDropdown = document.getElementById('colabDropdown');

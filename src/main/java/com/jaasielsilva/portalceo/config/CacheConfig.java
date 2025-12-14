@@ -45,8 +45,12 @@ public class CacheConfig {
                 .expireAfterWrite(Duration.ofSeconds(60))
                 .maximumSize(100);
         CaffeineCache colaboradoresAtivosCount = new CaffeineCache("colaboradoresAtivosCount", colaboradoresCountSpec.build());
+        Caffeine<Object, Object> vtConfigSpec = Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofHours(12))
+                .maximumSize(5);
+        CaffeineCache vtConfigCache = new CaffeineCache("vtConfig", vtConfigSpec.build());
 
-        specific.setCaches(java.util.List.of(candidatosPage, headcountTipos, colaboradoresAtivosList, colaboradoresAtivosCount));
+        specific.setCaches(java.util.List.of(candidatosPage, headcountTipos, colaboradoresAtivosList, colaboradoresAtivosCount, vtConfigCache));
 
         Caffeine<Object, Object> defaultSpec = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(ttlHours))

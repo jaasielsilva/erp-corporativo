@@ -53,6 +53,8 @@ public class ValeTransporteController {
     private AuditoriaRhLogService auditoriaService;
     @Autowired
     private UsuarioService usuarioService;
+    @Autowired
+    private com.jaasielsilva.portalceo.service.RhValeTransporteConfigService vtConfigService;
 
     public ValeTransporteController(ValeTransporteService service) {
         this.service = service;
@@ -85,8 +87,7 @@ public class ValeTransporteController {
             model.addAttribute("statusFiltro", status);
             model.addAttribute("departamentoFiltro", departamento);
             
-            // Configuracao para formularios
-            ConfiguracaoValeTransporteDTO config = new ConfiguracaoValeTransporteDTO();
+            ConfiguracaoValeTransporteDTO config = vtConfigService.obterConfiguracaoAtual();
             model.addAttribute("configuracao", config);
             
             return "rh/beneficios/vale-transporte/listar";
@@ -96,6 +97,26 @@ public class ValeTransporteController {
             model.addAttribute("erro", "Erro ao carregar dados: " + e.getMessage());
             return "rh/beneficios/vale-transporte/listar";
         }
+    }
+
+    @GetMapping("/api/config")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH_GERENTE')")
+    public org.springframework.http.ResponseEntity<ConfiguracaoValeTransporteDTO> obterConfig() {
+        return org.springframework.http.ResponseEntity.ok(vtConfigService.obterConfiguracaoAtual());
+    }
+
+    @PostMapping("/api/config")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH_GERENTE')")
+    public org.springframework.http.ResponseEntity<java.util.Map<String,Object>> salvarConfig(@RequestBody ConfiguracaoValeTransporteDTO body,
+                                                                                             org.springframework.security.core.Authentication auth,
+                                                                                             jakarta.servlet.http.HttpServletRequest request) {
+        String usuario = auth != null ? auth.getName() : "sistema";
+        if (body == null || !body.isPercentualValido() || !body.isValorPassagemValido() || !body.isDiasUteisValido()) {
+            return org.springframework.http.ResponseEntity.badRequest().body(java.util.Map.of("sucesso", false, "mensagem", "Dados inválidos"));
+        }
+        java.util.Map<String,Object> result = vtConfigService.salvarConfiguracao(body, usuario);
+        try { auditoriaService.registrar("CONFIGURACAO", "SALVAR_VT_CONFIG", "/rh/beneficios/vale-transporte/api/config", usuario, request!=null?request.getRemoteAddr():null, "Atualizacao de configuração VT", Boolean.TRUE.equals(result.get("sucesso"))); } catch (Exception ignore) {}
+        return org.springframework.http.ResponseEntity.ok(result);
     }
 
     // FORM NOVO - COM COLABORADORES

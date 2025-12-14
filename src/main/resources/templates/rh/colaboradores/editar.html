@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
   <meta charset="UTF-8" />
@@ -81,6 +81,11 @@
                   <label for="cpf" class="form-label">CPF <span class="text-danger">*</span></label>
                   <input type="text" id="cpf" th:field="*{cpf}" readonly class="form-control" th:classappend="${#fields.hasErrors('cpf')} ? ' is-invalid'">
                   <small>CPF não pode ser alterado</small>
+                  <div sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE')">
+                    <a th:href="@{/rh/colaboradores/cpf/corrigir/{id}(id=${colaborador.id})}" class="btn btn-warning mt-2">
+                      <i class="fas fa-pencil-alt"></i> Corrigir CPF
+                    </a>
+                  </div>
                   <div class="invalid-feedback" th:errors="*{cpf}"></div>
                 </div>
               </div>
@@ -296,15 +301,22 @@
                 </div>
                 <div class="form-group form-group-quarter">
                   <label for="supervisor" class="form-label">Supervisor:</label>
-                  <select id="supervisor" th:field="*{supervisor.id}" class="form-control" th:classappend="${#fields.hasErrors('supervisor.id')} ? ' is-invalid'">
-                    <option value="">Nenhum supervisor</option>
-                    <option th:each="colaboradorSupervisor : ${colaboradores}" 
-                            th:value="${colaboradorSupervisor.id}" 
-                            th:text="${colaboradorSupervisor.nome}"
-                            th:if="${colaboradorSupervisor.id != colaborador.id}">
-                    </option>
-                  </select>
-                  <div class="invalid-feedback" th:errors="*{supervisor.id}"></div>
+                  <div th:if="${podeAcessarRH} or ${isGerencial} or ${isAdmin} or ${isMaster}">
+                    <select id="supervisor" th:field="*{supervisor.id}" class="form-control" th:classappend="${#fields.hasErrors('supervisor.id')} ? ' is-invalid'">
+                      <option value="">Nenhum supervisor</option>
+                      <option th:each="colaboradorSupervisor : ${colaboradores}" 
+                              th:value="${colaboradorSupervisor.id}" 
+                              th:text="${colaboradorSupervisor.nome}"
+                              th:if="${colaboradorSupervisor.id != colaborador.id}">
+                      </option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{supervisor.id}"></div>
+                  </div>
+                  <div th:if="${!(podeAcessarRH or isGerencial or isAdmin or isMaster)}">
+                    <input type="hidden" th:field="*{supervisor.id}" />
+                    <input type="text" class="form-control" th:value="${colaborador.supervisor != null ? colaborador.supervisor.nome : 'Nenhum supervisor'}" readonly>
+                    <small class="form-text text-muted">Apenas RH/Gerencial podem alterar supervisor.</small>
+                  </div>
                 </div>
               </div>
             </div>

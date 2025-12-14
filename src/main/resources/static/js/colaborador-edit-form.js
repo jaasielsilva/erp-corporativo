@@ -387,13 +387,13 @@ function validarCPF(cpf, inputElement = null) {
     cpf = cpf.replace(/[^\d]/g, '');
     
     if (cpf.length !== 11) {
-        if (inputElement) marcarCampoInvalido(inputElement, 'CPF deve ter 11 dígitos');
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF deve conter 11 dígitos (com ou sem pontuação)');
         return false;
     }
     
     // Verificar se todos os dígitos são iguais
     if (/^(\d)\1{10}$/.test(cpf)) {
-        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido');
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido: todos os dígitos iguais');
         return false;
     }
     
@@ -402,11 +402,11 @@ function validarCPF(cpf, inputElement = null) {
     for (let i = 0; i < 9; i++) {
         soma += parseInt(cpf.charAt(i)) * (10 - i);
     }
-    let resto = 11 - (soma % 11);
-    let dv1 = resto < 2 ? 0 : resto;
+    let dv1 = 11 - (soma % 11);
+    dv1 = dv1 >= 10 ? 0 : dv1;
     
     if (parseInt(cpf.charAt(9)) !== dv1) {
-        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido');
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido: primeiro dígito verificador não confere');
         return false;
     }
     
@@ -414,11 +414,11 @@ function validarCPF(cpf, inputElement = null) {
     for (let i = 0; i < 10; i++) {
         soma += parseInt(cpf.charAt(i)) * (11 - i);
     }
-    resto = 11 - (soma % 11);
-    let dv2 = resto < 2 ? 0 : resto;
+    let dv2 = 11 - (soma % 11);
+    dv2 = dv2 >= 10 ? 0 : dv2;
     
     if (parseInt(cpf.charAt(10)) !== dv2) {
-        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido');
+        if (inputElement) marcarCampoInvalido(inputElement, 'CPF inválido: segundo dígito verificador não confere');
         return false;
     }
     

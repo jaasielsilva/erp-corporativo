@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import com.jaasielsilva.portalceo.model.Usuario;
 
@@ -123,10 +125,12 @@ public class ColaboradorController {
     }
 
     @PostMapping("/salvar")
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
     public String salvar(@Valid @ModelAttribute Colaborador colaborador,
             BindingResult result,
             RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            HttpServletRequest request) {
 
         if (result.hasErrors()) {
             model.addAttribute("colaborador", colaborador);
@@ -138,11 +142,31 @@ public class ColaboradorController {
             return "rh/colaboradores/novo";
         }
 
-        // Salva o colaborador
-        colaboradorService.salvar(colaborador);
+        Colaborador salvo = colaboradorService.salvar(colaborador);
 
-        // Salva os benefícios do colaborador
-        beneficioService.salvarBeneficiosDoColaborador(colaborador);
+        beneficioService.salvarBeneficiosDoColaborador(salvo);
+
+        Colaborador salvoComBeneficios = colaboradorService.findByIdComBeneficios(salvo.getId());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Usuario usuarioResponsavel = null;
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+            java.util.Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(auth.getName());
+            if (usuarioOpt.isPresent()) {
+                usuarioResponsavel = usuarioOpt.get();
+            }
+        }
+
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        String endpoint = request.getRequestURI();
+
+        colaboradorService.registrarCriacao(salvoComBeneficios, usuarioResponsavel, ip, endpoint);
 
         // 🔹 Removido: criação automática de usuário vinculada ao colaborador
         // Caso necessário, a criação de usuário deverá ser feita manualmente em outro
@@ -158,7 +182,9 @@ public class ColaboradorController {
      */
     @PostMapping(value = "/novo", produces = "application/json")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> criarNovoColaborador(@Valid @RequestBody Colaborador colaborador) {
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
+    public ResponseEntity<Map<String, Object>> criarNovoColaborador(@Valid @RequestBody Colaborador colaborador,
+            HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -183,6 +209,26 @@ public class ColaboradorController {
             if (colaborador.getBeneficios() != null && !colaborador.getBeneficios().isEmpty()) {
                 beneficioService.salvarBeneficiosDoColaborador(colaboradorSalvo);
             }
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuarioResponsavel = null;
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+                java.util.Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(auth.getName());
+                if (usuarioOpt.isPresent()) {
+                    usuarioResponsavel = usuarioOpt.get();
+                }
+            }
+
+            Colaborador colaboradorParaHistorico = colaboradorService.findByIdComBeneficios(colaboradorSalvo.getId());
+            String ip = request.getHeader("X-Forwarded-For");
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getHeader("X-Real-IP");
+            }
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getRemoteAddr();
+            }
+            String endpoint = request.getRequestURI();
+            colaboradorService.registrarCriacao(colaboradorParaHistorico, usuarioResponsavel, ip, endpoint);
 
             // Removido: criação e vínculo automático de usuário ao colaborador
             // A criação de usuário deve ocorrer por fluxo específico separado
@@ -223,10 +269,12 @@ public class ColaboradorController {
     }
 
     @PostMapping("/atualizar")
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
     public String atualizar(@Valid @ModelAttribute Colaborador colaborador,
             BindingResult result,
             RedirectAttributes redirectAttributes,
-            Model model) {
+            Model model,
+            HttpServletRequest request) {
 
         if (result.hasErrors()) {
             model.addAttribute("colaborador", colaborador);
@@ -247,12 +295,43 @@ public class ColaboradorController {
                 return "rh/colaboradores/editar";
             }
 
-            Colaborador original = colaboradorService.findById(colaborador.getId());
+            Colaborador original = colaboradorService.findByIdComBeneficios(colaborador.getId());
 
             // Garantir que CPF não seja alterado durante edição
             colaborador.setCpf(original.getCpf());
 
-            colaboradorService.salvar(colaborador);
+            // Controle: somente RH/Gerencial/Admin/Master pode alterar supervisor
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean podeAlterarSupervisor = false;
+            Usuario usuarioResponsavel = null;
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+                java.util.Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(auth.getName());
+                if (usuarioOpt.isPresent()) {
+                    usuarioResponsavel = usuarioOpt.get();
+                    if (usuarioResponsavel.getNivelAcesso() != null) {
+                        var nivel = usuarioResponsavel.getNivelAcesso();
+                        podeAlterarSupervisor = nivel.ehGerencial() || nivel.ehAdministrativo() || nivel.podeGerenciarRH();
+                    }
+                }
+            }
+
+            if (!podeAlterarSupervisor) {
+                colaborador.setSupervisor(original.getSupervisor());
+            }
+
+            Colaborador salvo = colaboradorService.salvar(colaborador);
+            Colaborador salvoComBeneficios = colaboradorService.findByIdComBeneficios(salvo.getId());
+
+            String ip = request.getHeader("X-Forwarded-For");
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getHeader("X-Real-IP");
+            }
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getRemoteAddr();
+            }
+            String endpoint = request.getRequestURI();
+
+            colaboradorService.registrarAlteracoes(original, salvoComBeneficios, usuarioResponsavel, ip, endpoint);
             redirectAttributes.addFlashAttribute("mensagem", "Colaborador atualizado com sucesso!");
             return "redirect:/rh/colaboradores/listar";
         } catch (com.jaasielsilva.portalceo.exception.BusinessValidationException e) {
@@ -447,4 +526,56 @@ public class ColaboradorController {
         return "rh/colaboradores/relatorios";
     }
 
+    @GetMapping("/cpf/corrigir/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
+    public String telaCorrigirCpf(@PathVariable Long id, Model model) {
+        Colaborador colaborador = colaboradorService.findById(id);
+        model.addAttribute("colaborador", colaborador);
+        return "rh/colaboradores/corrigir-cpf";
+    }
+
+    @PostMapping("/cpf/corrigir")
+    @PreAuthorize("hasAnyRole('ROLE_RH','ROLE_ADMIN','ROLE_MASTER')")
+    public String corrigirCpf(@RequestParam Long id,
+                              @RequestParam String novoCpf,
+                              @RequestParam(required = false) String confirmar,
+                              @RequestParam(required = false) String confirmarTexto,
+                              HttpServletRequest request,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            if (confirmar == null || confirmarTexto == null || !"CORRIGIRCPF".equalsIgnoreCase(confirmarTexto.trim())) {
+                redirectAttributes.addFlashAttribute("erro", "Confirmação obrigatória: marque o aceite e digite CORRIGIRCPF.");
+                return "redirect:/rh/colaboradores/cpf/corrigir/" + id;
+            }
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuarioResponsavel = null;
+            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+                java.util.Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(auth.getName());
+                if (usuarioOpt.isPresent()) {
+                    usuarioResponsavel = usuarioOpt.get();
+                }
+            }
+
+            String ip = request.getHeader("X-Forwarded-For");
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getHeader("X-Real-IP");
+            }
+            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+                ip = request.getRemoteAddr();
+            }
+            String endpoint = request.getRequestURI();
+
+            colaboradorService.corrigirCpf(id, novoCpf, usuarioResponsavel, ip, endpoint);
+
+            redirectAttributes.addFlashAttribute("mensagem", "CPF corrigido com sucesso.");
+            return "redirect:/rh/colaboradores/editar/" + id;
+        } catch (com.jaasielsilva.portalceo.exception.BusinessValidationException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/rh/colaboradores/cpf/corrigir/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao corrigir CPF");
+            return "redirect:/rh/colaboradores/cpf/corrigir/" + id;
+        }
+    }
 }

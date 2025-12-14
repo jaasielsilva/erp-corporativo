@@ -235,7 +235,7 @@ public class AdesaoColaboradorController {
                     if ("telefone".equals(fieldName)) {
                         errorMessage = "Telefone deve estar no formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX";
                     } else if ("cpf".equals(fieldName)) {
-                        errorMessage = "CPF deve estar no formato XXX.XXX.XXX-XX e ser válido";
+                        errorMessage = "CPF deve conter 11 dígitos e ser válido (com ou sem pontuação)";
                     } else if ("email".equals(fieldName)) {
                         errorMessage = "Email deve ter um formato válido (exemplo@dominio.com)";
                     }

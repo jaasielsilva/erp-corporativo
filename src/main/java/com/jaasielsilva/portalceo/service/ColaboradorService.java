@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -334,6 +335,211 @@ public class ColaboradorService {
         try { rhRelatorioService.invalidateTurnoverCache(); } catch (Exception ignore) {}
     }
 
+    /**
+     * Registra entradas de histórico para cada campo alterado do colaborador.
+     */
+    public void registrarAlteracoes(Colaborador original, Colaborador atualizado, Usuario responsavel, String ipOrigem, String endpoint) {
+        LocalDateTime agora = LocalDateTime.now();
+        List<HistoricoColaborador> entradas = new ArrayList<>();
+
+        // Campos simples
+        registrarEntradaSeAlterado("Nome", original.getNome(), atualizado.getNome(), original, responsavel, ipOrigem, endpoint, agora, entradas);
+        registrarEntradaSeAlterado("Email", original.getEmail(), atualizado.getEmail(), original, responsavel, ipOrigem, endpoint, agora, entradas);
+        registrarEntradaSeAlterado("Tipo de Contrato", original.getTipoContrato(), atualizado.getTipoContrato(), original, responsavel, ipOrigem, endpoint, agora, entradas);
+        registrarEntradaSeAlterado("Carga Horária", original.getCargaHoraria(), atualizado.getCargaHoraria(), original, responsavel, ipOrigem, endpoint, agora, entradas);
+        registrarEntradaSeAlterado("Ativo", original.getAtivo(), atualizado.getAtivo(), original, responsavel, ipOrigem, endpoint, agora, entradas);
+
+        // Enum de status
+        registrarEntradaSeAlterado("Status", original.getStatus() != null ? original.getStatus().name() : null,
+                atualizado.getStatus() != null ? atualizado.getStatus().name() : null,
+                original, responsavel, ipOrigem, endpoint, agora, entradas);
+
+        // Cargo
+        String cargoAnterior = original.getCargo() != null ? original.getCargo().getNome() : null;
+        String cargoNovo = atualizado.getCargo() != null ? atualizado.getCargo().getNome() : null;
+        registrarEntradaSeAlterado("Cargo", cargoAnterior, cargoNovo, original, responsavel, ipOrigem, endpoint, agora, entradas);
+
+        // Departamento
+        String deptAnterior = original.getDepartamento() != null ? original.getDepartamento().getNome() : null;
+        String deptNovo = atualizado.getDepartamento() != null ? atualizado.getDepartamento().getNome() : null;
+        registrarEntradaSeAlterado("Departamento", deptAnterior, deptNovo, original, responsavel, ipOrigem, endpoint, agora, entradas);
+
+        // Supervisor
+        String supervisorAnterior = original.getSupervisor() != null ? original.getSupervisor().getNome() : null;
+        String supervisorNovo = atualizado.getSupervisor() != null ? atualizado.getSupervisor().getNome() : null;
+        registrarEntradaSeAlterado("Supervisor", supervisorAnterior, supervisorNovo, original, responsavel, ipOrigem, endpoint, agora, entradas);
+
+        // Salário (comparação por valor)
+        String salarioAnteriorStr = original.getSalario() != null ? original.getSalario().toPlainString() : null;
+        String salarioNovoStr = atualizado.getSalario() != null ? atualizado.getSalario().toPlainString() : null;
+        boolean salarioAlterado = (original.getSalario() == null && atualizado.getSalario() != null)
+                || (original.getSalario() != null && atualizado.getSalario() == null)
+                || (original.getSalario() != null && atualizado.getSalario() != null
+                    && original.getSalario().compareTo(atualizado.getSalario()) != 0);
+        if (salarioAlterado) {
+            HistoricoColaborador h = criarEntradaBase("Salário", salarioAnteriorStr, salarioNovoStr, original, responsavel, ipOrigem, endpoint, agora);
+            entradas.add(h);
+        }
+
+        // Benefícios (adicionado/removido/alterado)
+        List<ColaboradorBeneficio> origBenefs = original.getBeneficios() != null ? original.getBeneficios() : java.util.Collections.emptyList();
+        List<ColaboradorBeneficio> novoBenefs = atualizado.getBeneficios() != null ? atualizado.getBeneficios() : java.util.Collections.emptyList();
+
+        java.util.Map<Long, ColaboradorBeneficio> mapOrig = new java.util.HashMap<>();
+        for (ColaboradorBeneficio cb : origBenefs) {
+            if (cb.getBeneficio() != null && cb.getBeneficio().getId() != null) {
+                mapOrig.put(cb.getBeneficio().getId(), cb);
+            }
+        }
+
+        java.util.Map<Long, ColaboradorBeneficio> mapNovo = new java.util.HashMap<>();
+        for (ColaboradorBeneficio cb : novoBenefs) {
+            if (cb.getBeneficio() != null && cb.getBeneficio().getId() != null) {
+                mapNovo.put(cb.getBeneficio().getId(), cb);
+            }
+        }
+
+        for (java.util.Map.Entry<Long, ColaboradorBeneficio> e : mapNovo.entrySet()) {
+            Long benId = e.getKey();
+            ColaboradorBeneficio novo = e.getValue();
+            ColaboradorBeneficio orig = mapOrig.get(benId);
+            String nome = novo.getBeneficio() != null ? novo.getBeneficio().getNome() : String.valueOf(benId);
+            if (orig == null) {
+                HistoricoColaborador h = new HistoricoColaborador();
+                h.setColaborador(original);
+                h.setEvento("Alteração de Benefício");
+                h.setDescricao("Benefício adicionado: " + nome);
+                h.setCampoAlterado("Benefício");
+                h.setValorAnterior(null);
+                h.setValorNovo(resumoBeneficio(novo));
+                h.setUsuarioResponsavel(responsavel);
+                h.setIpOrigem(ipOrigem);
+                h.setEndpoint(endpoint);
+                h.setDataRegistro(agora);
+                entradas.add(h);
+            } else {
+                boolean valorMudou = (orig.getValor() == null && novo.getValor() != null)
+                        || (orig.getValor() != null && novo.getValor() == null)
+                        || (orig.getValor() != null && novo.getValor() != null && orig.getValor().compareTo(novo.getValor()) != 0);
+                boolean statusMudou = (orig.getStatus() == null && novo.getStatus() != null)
+                        || (orig.getStatus() != null && novo.getStatus() == null)
+                        || (orig.getStatus() != null && novo.getStatus() != null && !orig.getStatus().equals(novo.getStatus()));
+                if (valorMudou || statusMudou) {
+                    HistoricoColaborador h = new HistoricoColaborador();
+                    h.setColaborador(original);
+                    h.setEvento("Alteração de Benefício");
+                    h.setDescricao("Benefício alterado: " + nome);
+                    h.setCampoAlterado("Benefício");
+                    h.setValorAnterior(resumoBeneficio(orig));
+                    h.setValorNovo(resumoBeneficio(novo));
+                    h.setUsuarioResponsavel(responsavel);
+                    h.setIpOrigem(ipOrigem);
+                    h.setEndpoint(endpoint);
+                    h.setDataRegistro(agora);
+                    entradas.add(h);
+                }
+            }
+        }
+
+        for (java.util.Map.Entry<Long, ColaboradorBeneficio> e : mapOrig.entrySet()) {
+            Long benId = e.getKey();
+            if (!mapNovo.containsKey(benId)) {
+                ColaboradorBeneficio orig = e.getValue();
+                String nome = orig.getBeneficio() != null ? orig.getBeneficio().getNome() : String.valueOf(benId);
+                HistoricoColaborador h = new HistoricoColaborador();
+                h.setColaborador(original);
+                h.setEvento("Alteração de Benefício");
+                h.setDescricao("Benefício removido: " + nome);
+                h.setCampoAlterado("Benefício");
+                h.setValorAnterior(resumoBeneficio(orig));
+                h.setValorNovo(null);
+                h.setUsuarioResponsavel(responsavel);
+                h.setIpOrigem(ipOrigem);
+                h.setEndpoint(endpoint);
+                h.setDataRegistro(agora);
+                entradas.add(h);
+            }
+        }
+
+        // Persistir todas entradas
+        for (HistoricoColaborador h : entradas) {
+            historicoRepository.save(h);
+        }
+    }
+
+    private void registrarEntradaSeAlterado(String campo, Object anterior, Object novo,
+                                             Colaborador colaborador, Usuario responsavel,
+                                             String ipOrigem, String endpoint, LocalDateTime data,
+                                             List<HistoricoColaborador> entradas) {
+        String antStr = anterior != null ? String.valueOf(anterior) : null;
+        String novoStr = novo != null ? String.valueOf(novo) : null;
+        boolean mudou = (antStr == null && novoStr != null) || (antStr != null && novoStr == null)
+                || (antStr != null && !antStr.equals(novoStr));
+        if (mudou) {
+            HistoricoColaborador h = criarEntradaBase(campo, antStr, novoStr, colaborador, responsavel, ipOrigem, endpoint, data);
+            entradas.add(h);
+        }
+    }
+
+    private HistoricoColaborador criarEntradaBase(String campo, String anterior, String novo,
+                                                  Colaborador colaborador, Usuario responsavel,
+                                                  String ipOrigem, String endpoint, LocalDateTime data) {
+        HistoricoColaborador h = new HistoricoColaborador();
+        h.setColaborador(colaborador);
+        h.setEvento("Alteração de Cadastro");
+        h.setDescricao("Alteração de " + campo);
+        h.setCampoAlterado(campo);
+        h.setValorAnterior(anterior);
+        h.setValorNovo(novo);
+        h.setUsuarioResponsavel(responsavel);
+        h.setIpOrigem(ipOrigem);
+        h.setEndpoint(endpoint);
+        h.setDataRegistro(data);
+        return h;
+    }
+
+    private String resumoBeneficio(ColaboradorBeneficio cb) {
+        String nome = cb.getBeneficio() != null ? cb.getBeneficio().getNome() : "-";
+        String valor = cb.getValor() != null ? cb.getValor().toPlainString() : "-";
+        String status = cb.getStatus() != null ? cb.getStatus().name() : "-";
+        return "nome=" + nome + ", valor=" + valor + ", status=" + status;
+    }
+
+    public void registrarCriacao(Colaborador colaborador, Usuario responsavel, String ipOrigem, String endpoint) {
+        LocalDateTime agora = LocalDateTime.now();
+        HistoricoColaborador h = new HistoricoColaborador();
+        h.setColaborador(colaborador);
+        h.setEvento("Criação de Cadastro");
+        h.setDescricao("Cadastro inicial do colaborador");
+        h.setCampoAlterado("Cadastro");
+        h.setValorAnterior(null);
+        h.setValorNovo(null);
+        h.setUsuarioResponsavel(responsavel);
+        h.setIpOrigem(ipOrigem);
+        h.setEndpoint(endpoint);
+        h.setDataRegistro(agora);
+        historicoRepository.save(h);
+
+        if (colaborador.getBeneficios() != null) {
+            for (ColaboradorBeneficio cb : colaborador.getBeneficios()) {
+                if (cb.getBeneficio() != null) {
+                    HistoricoColaborador hb = new HistoricoColaborador();
+                    hb.setColaborador(colaborador);
+                    hb.setEvento("Alteração de Benefício");
+                    hb.setDescricao("Benefício adicionado: " + cb.getBeneficio().getNome());
+                    hb.setCampoAlterado("Benefício");
+                    hb.setValorAnterior(null);
+                    hb.setValorNovo(resumoBeneficio(cb));
+                    hb.setUsuarioResponsavel(responsavel);
+                    hb.setIpOrigem(ipOrigem);
+                    hb.setEndpoint(endpoint);
+                    hb.setDataRegistro(agora);
+                    historicoRepository.save(hb);
+                }
+            }
+        }
+    }
+
     public Optional<Colaborador> buscarPorUsuario(Usuario usuario) {
         return colaboradorRepository.findByUsuario(usuario);
     }
@@ -359,5 +565,67 @@ public class ColaboradorService {
     @Cacheable(value = "rhHeadcountTiposContrato")
     public java.util.List<String> listarTiposContratoAtivosDistinct() {
         return colaboradorRepository.findDistinctTipoContratoAtivo();
+    }
+
+    @Transactional
+    public Colaborador corrigirCpf(Long colaboradorId, String novoCpf, Usuario responsavel, String ipOrigem, String endpoint) {
+        Colaborador col = findById(colaboradorId);
+        String atual = col.getCpf();
+        String digits = novoCpf != null ? novoCpf.replaceAll("[^0-9]", "") : null;
+        if (digits == null || digits.length() != 11) {
+            throw new com.jaasielsilva.portalceo.exception.BusinessValidationException("CPF inválido");
+        }
+        if (!isValidCPF(digits)) {
+            throw new com.jaasielsilva.portalceo.exception.BusinessValidationException("CPF inválido");
+        }
+        String formatted = formatCPF(digits);
+        if (existeByCpf(formatted) && !formatted.equals(atual)) {
+            throw new com.jaasielsilva.portalceo.exception.BusinessValidationException("CPF já cadastrado no sistema");
+        }
+
+        col.setCpf(formatted);
+        Colaborador salvo = colaboradorRepository.save(col);
+
+        HistoricoColaborador h = new HistoricoColaborador();
+        h.setColaborador(salvo);
+        h.setEvento("Correção de CPF");
+        h.setDescricao("Correção de CPF iniciada por usuário autorizado");
+        h.setCampoAlterado("CPF");
+        h.setValorAnterior(atual);
+        h.setValorNovo(formatted);
+        h.setUsuarioResponsavel(responsavel);
+        h.setIpOrigem(ipOrigem);
+        h.setEndpoint(endpoint);
+        h.setDataRegistro(LocalDateTime.now());
+        historicoRepository.save(h);
+
+        return salvo;
+    }
+
+    private boolean isValidCPF(String cpf) {
+        if (cpf == null || cpf.length() != 11) return false;
+        if (cpf.matches("(\\d)\\1{10}")) return false;
+        try {
+            int sum = 0;
+            for (int i = 0; i < 9; i++) {
+                sum += Character.getNumericValue(cpf.charAt(i)) * (10 - i);
+            }
+            int firstDigit = 11 - (sum % 11);
+            if (firstDigit >= 10) firstDigit = 0;
+            sum = 0;
+            for (int i = 0; i < 10; i++) {
+                sum += Character.getNumericValue(cpf.charAt(i)) * (11 - i);
+            }
+            int secondDigit = 11 - (sum % 11);
+            if (secondDigit >= 10) secondDigit = 0;
+            return Character.getNumericValue(cpf.charAt(9)) == firstDigit &&
+                   Character.getNumericValue(cpf.charAt(10)) == secondDigit;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private String formatCPF(String digits) {
+        return digits.substring(0,3) + "." + digits.substring(3,6) + "." + digits.substring(6,9) + "-" + digits.substring(9);
     }
 }

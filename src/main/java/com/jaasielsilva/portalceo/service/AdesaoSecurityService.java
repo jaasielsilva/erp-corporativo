@@ -31,7 +31,7 @@ public class AdesaoSecurityService {
     private final Map<String, LocalDateTime> blockedSessions = new ConcurrentHashMap<>();
     
     // Padrões de validação
-    private static final Pattern CPF_PATTERN = Pattern.compile("^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$");
+    private static final Pattern CPF_PATTERN = Pattern.compile("^(\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}|\\d{11})$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^\\(\\d{2}\\)\\s\\d{4,5}-\\d{4}$");
     private static final Pattern NAME_PATTERN = Pattern.compile("^[A-Za-zÀ-ÿ\\s]{2,100}$");
@@ -100,13 +100,21 @@ public class AdesaoSecurityService {
             result.addError("nome", "Nome deve conter apenas letras e espaços (2-100 caracteres)");
         }
         
-        // Validar CPF
+        // Validar CPF (aceita com ou sem pontuação)
         if (dados.getCpf() == null || dados.getCpf().trim().isEmpty()) {
             result.addError("cpf", "CPF é obrigatório");
-        } else if (!CPF_PATTERN.matcher(dados.getCpf().trim()).matches()) {
-            result.addError("cpf", "CPF deve estar no formato 000.000.000-00");
-        } else if (!isValidCPF(dados.getCpf().replaceAll("[^0-9]", ""))) {
-            result.addError("cpf", "CPF inválido");
+        } else {
+            String rawCpf = dados.getCpf().trim();
+            String digits = rawCpf.replaceAll("[^0-9]", "");
+            if (!CPF_PATTERN.matcher(rawCpf).matches() && digits.length() != 11) {
+                result.addError("cpf", "CPF deve conter 11 dígitos (com ou sem pontuação)");
+            } else if (digits.length() != 11) {
+                result.addError("cpf", "CPF deve conter 11 dígitos (com ou sem pontuação)");
+            } else if (digits.matches("(\\d)\\1{10}")) {
+                result.addError("cpf", "CPF inválido: todos os dígitos iguais");
+            } else if (!isValidCPF(digits)) {
+                result.addError("cpf", "CPF inválido: dígitos verificadores não conferem");
+            }
         }
         
         // Validar email
@@ -142,7 +150,11 @@ public class AdesaoSecurityService {
         if (result.isValid()) {
             dados.setNome(sanitizeString(dados.getNome()));
             dados.setEmail(sanitizeString(dados.getEmail()).toLowerCase());
-            dados.setCpf(sanitizeString(dados.getCpf()));
+            // Padroniza apresentação do CPF para o formato 000.000.000-00
+            String digits = dados.getCpf() != null ? dados.getCpf().replaceAll("[^0-9]", "") : null;
+            dados.setCpf(digits != null && digits.length() == 11 ?
+                    digits.substring(0,3) + "." + digits.substring(3,6) + "." + digits.substring(6,9) + "-" + digits.substring(9)
+                    : sanitizeString(dados.getCpf()));
             dados.setTelefone(sanitizeString(dados.getTelefone()));
         }
         

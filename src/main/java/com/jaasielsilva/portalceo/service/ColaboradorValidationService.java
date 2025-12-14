@@ -63,10 +63,23 @@ public class ColaboradorValidationService {
      */
     private void validarSupervisor(Colaborador colaborador) {
         if (colaborador.getSupervisor() != null &&
-                colaborador.getSupervisor().getId() != null &&
-                colaborador.getId() != null &&
-                colaborador.getId().equals(colaborador.getSupervisor().getId())) {
-            throw new BusinessValidationException("Colaborador não pode ser supervisor de si mesmo");
+                colaborador.getSupervisor().getId() != null) {
+            // Não permitir supervisor ser o próprio colaborador
+            if (colaborador.getId() != null &&
+                    colaborador.getId().equals(colaborador.getSupervisor().getId())) {
+                throw new BusinessValidationException("Colaborador não pode ser supervisor de si mesmo");
+            }
+
+            // Validar se supervisor existe e está ativo
+            Optional<Colaborador> supervisorOpt = colaboradorRepository.findById(colaborador.getSupervisor().getId());
+            if (supervisorOpt.isEmpty()) {
+                throw new BusinessValidationException("Supervisor não encontrado");
+            }
+
+            Colaborador supervisor = supervisorOpt.get();
+            if (Boolean.FALSE.equals(supervisor.getAtivo()) || supervisor.getStatus() != Colaborador.StatusColaborador.ATIVO) {
+                throw new BusinessValidationException("Supervisor deve estar ATIVO");
+            }
         }
     }
 

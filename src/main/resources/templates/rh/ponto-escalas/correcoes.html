@@ -51,7 +51,7 @@
                   <div class="resumo-detalhes">Aguardando aprovação</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item aprovadas">
                 <div class="resumo-icon">
                   <i class="fas fa-check-circle"></i>
@@ -62,7 +62,7 @@
                   <div class="resumo-detalhes">Período selecionado</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item rejeitadas">
                 <div class="resumo-icon">
                   <i class="fas fa-times-circle"></i>
@@ -73,7 +73,7 @@
                   <div class="resumo-detalhes">Período selecionado</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item tempo-medio">
                 <div class="resumo-icon">
                   <i class="fas fa-stopwatch"></i>
@@ -105,15 +105,19 @@
               </div>
               <div class="form-group" style="min-width:280px;">
                 <label for="colaboradorFiltroSearch">Colaborador</label>
-                <input id="colaboradorFiltroSearch" type="search" class="form-control" placeholder="Digite para buscar" autocomplete="off" />
+                <input id="colaboradorFiltroSearch" type="search" class="form-control" placeholder="Digite para buscar"
+                  autocomplete="off" />
                 <select id="colaboradorFiltro" name="colaborador" class="form-control" style="margin-top:6px;">
                   <option value="">Todos os colaboradores</option>
                 </select>
                 <div class="d-flex justify-content-between align-items-center" style="gap:8px; margin-top:6px;">
-                  <div id="colabCorrLoading" class="text-muted" style="display:none; font-size:.9em;"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+                  <div id="colabCorrLoading" class="text-muted" style="display:none; font-size:.9em;"><i
+                      class="fas fa-spinner fa-spin"></i> Carregando...</div>
                   <div class="btn-group" role="group">
-                    <button type="button" id="colabCorrPrev" class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-chevron-left"></i></button>
-                    <button type="button" id="colabCorrNext" class="btn btn-outline-secondary btn-sm" disabled><i class="fas fa-chevron-right"></i></button>
+                    <button type="button" id="colabCorrPrev" class="btn btn-outline-secondary btn-sm" disabled><i
+                        class="fas fa-chevron-left"></i></button>
+                    <button type="button" id="colabCorrNext" class="btn btn-outline-secondary btn-sm" disabled><i
+                        class="fas fa-chevron-right"></i></button>
                   </div>
                 </div>
               </div>
@@ -170,7 +174,7 @@
                 <th>Solicitado em</th>
                 <th>Ações</th>
               </tr>
-                </thead>
+            </thead>
             <tbody id="correcoesBody">
               <!-- Linhas dinâmicas serão inseridas via JS -->
             </tbody>
@@ -250,14 +254,15 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form class="modal-body">
         <div class="form-row">
           <div class="form-group">
             <label for="colaboradorCorrecao">Colaborador *</label>
             <select id="colaboradorCorrecao" name="colaborador" required class="form-control">
               <option value="">Selecione um colaborador...</option>
-              <option th:each="c : ${colaboradores}" th:value="${c.id}" th:text="${c.nome + ' - ' + (c.departamento != null ? c.departamento.nome : 'Sem depto')} "></option>
+              <option th:each="c : ${colaboradores}" th:value="${c.id}"
+                th:text="${c.nome + ' - ' + (c.departamento != null ? c.departamento.nome : 'Sem depto')} "></option>
             </select>
           </div>
           <div class="form-group">
@@ -266,7 +271,8 @@
           </div>
           <div class="form-group">
             <label for="tipoCorrecaoModal">Tipo de Correção *</label>
-            <select id="tipoCorrecaoModal" name="tipoCorrecao" required class="form-control" onchange="ajustarCamposCorrecao()">
+            <select id="tipoCorrecaoModal" name="tipoCorrecao" required class="form-control"
+              onchange="ajustarCamposCorrecao()">
               <option value="">Selecione...</option>
               <option value="atraso">Atraso</option>
               <option value="falta">Falta</option>
@@ -276,7 +282,7 @@
             </select>
           </div>
         </div>
-        
+
         <div id="camposHorarios" style="display: none;">
           <h4>Horários</h4>
           <div class="form-row">
@@ -299,18 +305,20 @@
             </div>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label for="justificativaCorrecao">Justificativa *</label>
-          <textarea id="justificativaCorrecao" name="justificativa" required class="form-control" rows="4" placeholder="Descreva detalhadamente o motivo da solicitação de correção..."></textarea>
+          <textarea id="justificativaCorrecao" name="justificativa" required class="form-control" rows="4"
+            placeholder="Descreva detalhadamente o motivo da solicitação de correção..."></textarea>
         </div>
-        
+
         <div class="form-group">
           <label for="anexosCorrecao">Anexos (Comprovantes)</label>
-          <input type="file" id="anexosCorrecao" name="anexos" class="form-control" multiple accept=".pdf,.jpg,.jpeg,.png">
+          <input type="file" id="anexosCorrecao" name="anexos" class="form-control" multiple
+            accept=".pdf,.jpg,.jpeg,.png">
           <small class="form-text">Formatos aceitos: PDF, JPG, PNG. Máximo 5MB por arquivo.</small>
         </div>
-        
+
         <div class="form-group">
           <label>
             <input type="checkbox" id="urgente" name="urgente">
@@ -318,7 +326,7 @@
           </label>
         </div>
       </form>
-      
+
       <div class="modal-footer">
         <button type="button" onclick="fecharModalCorrecao()" class="btn btn-secondary">
           <i class="fas fa-times"></i> Cancelar
@@ -335,24 +343,24 @@
     function abrirModalCorrecao() {
       document.getElementById('modalCorrecao').style.display = 'flex';
     }
-    
+
     function fecharModalCorrecao() {
       document.getElementById('modalCorrecao').style.display = 'none';
       document.querySelector('#modalCorrecao form').reset();
       document.getElementById('camposHorarios').style.display = 'none';
     }
-    
+
     function ajustarCamposCorrecao() {
       const tipo = document.getElementById('tipoCorrecaoModal').value;
       const camposHorarios = document.getElementById('camposHorarios');
-      
+
       if (tipo && tipo !== 'falta') {
         camposHorarios.style.display = 'block';
       } else {
         camposHorarios.style.display = 'none';
       }
     }
-    
+
     async function salvarCorrecao() {
       const form = document.querySelector('#modalCorrecao form');
       if (!form.checkValidity()) {
@@ -362,13 +370,12 @@
 
       const colaboradorId = parseInt(document.getElementById('colaboradorCorrecao').value);
       const data = document.getElementById('dataCorrecao').value;
-      const tipoModal = document.getElementById('tipoCorrecaoModal').value; // atraso, falta, hora-extra, ajuste-horario, registro-perdido
+      const tipoModal = document.getElementById('tipoCorrecaoModal').value;
       const tipoRegistro = document.getElementById('tipoRegistroCorrecao')?.value || null;
       const horarioAnterior = document.getElementById('horarioOriginal').value || null;
       const horarioNovo = document.getElementById('horarioSolicitado').value || null;
       const justificativa = document.getElementById('justificativaCorrecao').value;
 
-      // Mapear tipo do modal para enum TipoCorrecao usado no backend
       let tipoCorrecaoEnum;
       switch (tipoModal) {
         case 'atraso':
@@ -380,7 +387,6 @@
         case 'ajuste-horario':
         case 'hora-extra':
         case 'registro-perdido':
-          // Usar tipoRegistro para decidir entrada/saída específica
           const mapa = {
             'entrada': 'ENTRADA_1',
             'saida-almoco': 'SAIDA_1',
@@ -396,7 +402,7 @@
 
       const payload = {
         colaboradorId,
-        data,
+        data,                  // ajuste para o nome esperado no CorrecaoPontoCreateDTO (ex: dataCorrecao)
         tipoRegistro,
         tipoCorrecao: tipoCorrecaoEnum,
         horarioAnterior,
@@ -405,7 +411,7 @@
       };
 
       try {
-        const resp = await fetch('/rh/ponto-escalas/correcoes/solicitar', {
+        const resp = await fetch('/api/rh/ponto-escalas/correcoes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -416,278 +422,261 @@
         }
         alert('Solicitação de correção enviada com sucesso!');
         fecharModalCorrecao();
-        location.reload();
+        carregarResumo();
+        carregarCorrecoes(0);
       } catch (e) {
         alert('Erro ao enviar correção: ' + e.message);
       }
     }
-    
+
     function selecionarTodas() {
       const selectAll = document.getElementById('selectAll');
       const checkboxes = document.querySelectorAll('input[name="correcaoSelecionada"]');
-      
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll.checked;
-      });
+      checkboxes.forEach(checkbox => checkbox.checked = selectAll.checked);
     }
-    
+
+    // Aqui você ainda tem aprovar/rejeitar apenas no front.
+    // Depois pode trocar por chamadas POST/PUT na API.
     function aprovarSelecionadas() {
       const selecionadas = document.querySelectorAll('input[name="correcaoSelecionada"]:checked');
       if (selecionadas.length === 0) {
         alert('Selecione pelo menos uma correção para aprovar.');
         return;
       }
-      
       if (confirm(`Aprovar ${selecionadas.length} correção(ões) selecionada(s)?`)) {
         alert(`${selecionadas.length} correção(ões) aprovada(s) com sucesso!`);
-        location.reload();
+        carregarResumo();
+        carregarCorrecoes(0);
       }
     }
-    
+
     function rejeitarSelecionadas() {
       const selecionadas = document.querySelectorAll('input[name="correcaoSelecionada"]:checked');
       if (selecionadas.length === 0) {
         alert('Selecione pelo menos uma correção para rejeitar.');
         return;
       }
-      
       const motivo = prompt('Digite o motivo da rejeição:');
       if (motivo) {
         alert(`${selecionadas.length} correção(ões) rejeitada(s) com sucesso!`);
-        location.reload();
+        carregarResumo();
+        carregarCorrecoes(0);
       }
     }
-    
+
     function aprovarCorrecao(id) {
       if (confirm('Aprovar esta correção?')) {
         alert(`Correção ${id} aprovada com sucesso!`);
-        location.reload();
+        carregarResumo();
+        carregarCorrecoes(0);
       }
     }
-    
+
     function rejeitarCorrecao(id) {
       const motivo = prompt('Digite o motivo da rejeição:');
       if (motivo) {
         alert(`Correção ${id} rejeitada: ${motivo}`);
-        location.reload();
+        carregarResumo();
+        carregarCorrecoes(0);
       }
     }
-    
+
     function editarCorrecao(id) {
       alert(`Editando correção ${id}`);
     }
-    
+
     function verDetalhes(id) {
       alert(`Visualizando detalhes da correção ${id}`);
     }
-    
+
     function verJustificativaCompleta(id) {
       alert(`Visualizando justificativa completa da correção ${id}`);
     }
-    
+
     function verAprovacao(id) {
       alert(`Visualizando detalhes da aprovação da correção ${id}`);
     }
-    
+
     function verRejeicao(id) {
       alert(`Visualizando motivo da rejeição da correção ${id}`);
     }
-    
-    function filtrarCorrecoes() {
-      alert('Aplicando filtros...');
+
+    // NOVO: integração com API para resumo e listagem
+    let paginaAtual = 0;
+    let totalPaginas = 0;
+
+    async function carregarResumo() {
+      const inicio = document.getElementById('dataInicio').value;
+      const fim = document.getElementById('dataFim').value;
+
+      const params = new URLSearchParams();
+      if (inicio) params.append('inicio', inicio);
+      if (fim) params.append('fim', fim);
+
+      try {
+        const resp = await fetch('/api/rh/ponto-escalas/correcoes/resumo?' + params.toString());
+        if (!resp.ok) return;
+        const resumo = await resp.json();
+
+        document.getElementById('resumoPendentes').innerText = resumo.pendentes ?? 0;
+        document.getElementById('resumoAprovadas').innerText = resumo.aprovadas ?? 0;
+        document.getElementById('resumoRejeitadas').innerText = resumo.rejeitadas ?? 0;
+        document.getElementById('resumoTempoMedio').innerText = resumo.tempoMedioAprovacao || '-';
+      } catch (e) {
+        console.error(e);
+      }
     }
-    
+
+    async function carregarCorrecoes(page = 0) {
+      paginaAtual = page;
+
+      const status = document.getElementById('statusFiltro').value;
+      const tipo = document.getElementById('tipoCorrecao').value;
+      const colaboradorId = document.getElementById('colaboradorFiltro').value;
+      const inicio = document.getElementById('dataInicio').value;
+      const fim = document.getElementById('dataFim').value;
+
+      const params = new URLSearchParams();
+      if (inicio) params.append('inicio', inicio);
+      if (fim) params.append('fim', fim);
+      if (colaboradorId) params.append('colaboradorId', colaboradorId);
+      if (status) params.append('status', status);
+      if (tipo) params.append('tipo', tipo);
+      params.append('page', page);
+      params.append('size', 10);
+
+      try {
+        const resp = await fetch('/api/rh/ponto-escalas/correcoes?' + params.toString());
+        if (!resp.ok) {
+          alert('Erro ao carregar correções.');
+          return;
+        }
+        const data = await resp.json(); // Page<CorrecaoPontoListDTO>
+        totalPaginas = data.totalPages || 0;
+        preencherTabelaCorrecoes(data.content || []);
+        montarPaginacao();
+      } catch (e) {
+        alert('Erro ao carregar correções: ' + e.message);
+      }
+    }
+
+    function preencherTabelaCorrecoes(lista) {
+      const tbody = document.getElementById('correcoesBody');
+      tbody.innerHTML = '';
+
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="11">Nenhuma correção encontrada.</td></tr>';
+        return;
+      }
+
+      lista.forEach(item => {
+        const tr = document.createElement('tr');
+
+        // formatar solicitadoEm (ex: 2025-12-17T16:47:33.783051)
+        let dataSolic = '';
+        let horaSolic = '';
+        if (item.solicitadoEm) {
+          const [dataParte, horaParte] = item.solicitadoEm.split('T');
+          if (dataParte) {
+            const [ano, mes, dia] = dataParte.split('-');
+            dataSolic = `${dia}/${mes}/${ano}`;
+          }
+          if (horaParte) {
+            horaSolic = horaParte.substring(0, 5); // HH:mm
+          }
+        }
+
+        tr.innerHTML = `
+      <td><input type="checkbox" name="correcaoSelecionada" value="${item.id}"></td>
+      <td><strong>${item.protocolo}</strong></td>
+      <td>${item.colaboradorNome}</td>
+      <td>${item.data}</td>
+      <td><span class="tipo-badge">${item.tipo}</span></td>
+      <td>
+        <div class="horario-original">
+          <strong>${item.horarioAnterior || '-'}</strong>
+        </div>
+      </td>
+      <td>
+        <div class="horario-solicitado">
+          <strong>${item.horarioNovo || '-'}</strong>
+        </div>
+      </td>
+      <td>
+        <div class="justificativa-resumo">
+          ${(item.justificativaResumo || '').substring(0, 60)}${(item.justificativaResumo || '').length > 60 ? '...' : ''}
+        </div>
+      </td>
+      <td>
+        <span class="status-badge status-${(item.status || '').toLowerCase()}">
+          ${item.status}
+        </span>
+      </td>
+      <td>
+        <div class="data-solicitacao">
+          <strong>${dataSolic}</strong>
+          <small>${horaSolic}</small>
+        </div>
+      </td>
+      <td>
+        <div class="acoes-correcao">
+          <button type="button" class="btn btn-sm btn-success" onclick="aprovarCorrecao(${item.id})">
+            <i class="fas fa-check"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="rejeitarCorrecao(${item.id})">
+            <i class="fas fa-times"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="verDetalhes(${item.id})">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </td>
+    `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+
+    function montarPaginacao() {
+      const pag = document.getElementById('paginacao');
+      pag.innerHTML = '';
+
+      if (totalPaginas <= 1) return;
+
+      const prev = document.createElement('button');
+      prev.innerText = '«';
+      prev.disabled = paginaAtual === 0;
+      prev.onclick = () => carregarCorrecoes(paginaAtual - 1);
+      pag.appendChild(prev);
+
+      for (let i = 0; i < totalPaginas; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = (i + 1);
+        if (i === paginaAtual) btn.classList.add('active');
+        btn.onclick = () => carregarCorrecoes(i);
+        pag.appendChild(btn);
+      }
+
+      const next = document.createElement('button');
+      next.innerText = '»';
+      next.disabled = paginaAtual >= totalPaginas - 1;
+      next.onclick = () => carregarCorrecoes(paginaAtual + 1);
+      pag.appendChild(next);
+    }
+
+    function filtrarCorrecoes() {
+      carregarResumo();
+      carregarCorrecoes(0);
+    }
+
     function exportarRelatorio() {
       alert('Exportando relatório de correções...');
     }
   </script>
-  
-  <style>
-    .resumo-correcoes {
-      margin: 20px 0;
-    }
-    
-    .resumo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-    }
-    
-    .resumo-item {
-      display: flex;
-      align-items: center;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .resumo-item.pendentes {
-      background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
-      color: white;
-    }
-    
-    .resumo-item.aprovadas {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    
-    .resumo-item.rejeitadas {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-    }
-    
-    .resumo-item.tempo-medio {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      color: white;
-    }
-    
-    .resumo-icon {
-      font-size: 32px;
-      margin-right: 20px;
-      opacity: 0.9;
-    }
-    
-    .resumo-valor {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-    
-    .resumo-detalhes {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-    
-    .colaborador-info strong {
-      display: block;
-      margin-bottom: 2px;
-    }
-    
-    .horario-original, .horario-solicitado {
-      font-size: 13px;
-    }
-    
-    .horario-original strong, .horario-solicitado strong {
-      display: block;
-      margin-bottom: 2px;
-    }
-    
-    .justificativa-horario {
-      color: #007bff;
-      font-style: italic;
-    }
-    
-    .justificativa-resumo {
-      max-width: 200px;
-      font-size: 13px;
-    }
-    
-    .btn-link {
-      background: none;
-      border: none;
-      color: #007bff;
-      text-decoration: underline;
-      cursor: pointer;
-      font-size: 12px;
-      padding: 0;
-      margin-top: 5px;
-    }
-    
-    .btn-link:hover {
-      color: #0056b3;
-    }
-    
-    .data-solicitacao strong {
-      display: block;
-      margin-bottom: 2px;
-    }
-    
-    .data-aprovacao strong {
-      display: block;
-      margin-bottom: 2px;
-    }
-    
-    .aprovador-info strong {
-      display: block;
-      margin-bottom: 2px;
-    }
-    
-    .acoes-correcao {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-    
-    .tipo-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    
-    .tipo-badge.atraso {
-      background: #ffc107;
-      color: #333;
-    }
-    
-    .tipo-badge.falta {
-      background: #dc3545;
-      color: white;
-    }
-    
-    .tipo-badge.hora-extra {
-      background: #007bff;
-      color: white;
-    }
-    
-    .tipo-badge.ajuste-horario {
-      background: #17a2b8;
-      color: white;
-    }
-    
-    .tipo-badge.registro-perdido {
-      background: #6c757d;
-      color: white;
-    }
-    
-    .status-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    
-    .status-badge.status-pendente {
-      background: #ffc107;
-      color: #333;
-    }
-    
-    .status-badge.status-aprovada {
-      background: #28a745;
-      color: white;
-    }
-    
-    .status-badge.status-rejeitada {
-      background: #dc3545;
-      color: white;
-    }
-    
-    .modal-large {
-      max-width: 800px;
-    }
-    
-    .form-text {
-      font-size: 12px;
-      color: #6c757d;
-      margin-top: 5px;
-    }
-  </style>
-
 
   <script>
-    (function() {
+    (function () {
       let page = 0;
       let totalPages = 0;
       let debounceTimer;
@@ -720,22 +709,33 @@
             }
             updateButtons();
           })
-          .catch(() => { if (sel) sel.innerHTML = '<option value="">Falha ao carregar</option>'; totalPages = 0; updateButtons(); })
+          .catch(() => {
+            if (sel) sel.innerHTML = '<option value="">Falha ao carregar</option>';
+            totalPages = 0;
+            updateButtons();
+          })
           .finally(() => { if (loading) loading.style.display = 'none'; });
       }
 
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function () {
         carregar('');
+        carregarResumo();
+        carregarCorrecoes(0);
+
         if (input) {
-          input.addEventListener('input', function(e) {
+          input.addEventListener('input', function (e) {
             clearTimeout(debounceTimer);
             page = 0;
             const q = e.target.value || '';
             debounceTimer = setTimeout(() => carregar(q), 250);
           });
         }
-        if (btnPrev) btnPrev.addEventListener('click', function() { if (page > 0) { page--; carregar(input && input.value || ''); } });
-        if (btnNext) btnNext.addEventListener('click', function() { page++; carregar(input && input.value || ''); });
+        if (btnPrev) btnPrev.addEventListener('click', function () {
+          if (page > 0) { page--; carregar(input && input.value || ''); }
+        });
+        if (btnNext) btnNext.addEventListener('click', function () {
+          page++; carregar(input && input.value || '');
+        });
       });
     })();
   </script>

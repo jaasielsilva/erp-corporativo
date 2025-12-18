@@ -68,6 +68,28 @@
                                             <h4 class="text-success"
                                                 th:text="${resumoAtual != null && resumoAtual.totalLiquido != null ? #numbers.formatCurrency(resumoAtual.totalLiquido) : (folhaAtual != null && folhaAtual.totalLiquido != null ? #numbers.formatCurrency(folhaAtual.totalLiquido) : 'R$ 0,00')}">
                                             </h4>
+                                            <div class="stat-pills">
+                                                <div class="stat-pill bruto">
+                                                    <i class="fas fa-coins"></i>
+                                                    <span class="label">Bruto</span>
+                                                    <span class="value" th:text="${resumoAtual != null && resumoAtual.totalProventos != null ? #numbers.formatCurrency(resumoAtual.totalProventos) : 'R$ 0,00'}"></span>
+                                                </div>
+                                                <div class="stat-pill descontos">
+                                                    <i class="fas fa-minus-circle"></i>
+                                                    <span class="label">Descontos</span>
+                                                    <span class="value" th:text="${resumoAtual != null && resumoAtual.totalDescontos != null ? #numbers.formatCurrency(resumoAtual.totalDescontos) : 'R$ 0,00'}"></span>
+                                                </div>
+                                                <div class="stat-pill fgts" th:if="${folhaAtual != null}">
+                                                    <i class="fas fa-piggy-bank"></i>
+                                                    <span class="label">FGTS Patronal</span>
+                                                    <span class="value" th:text="${folhaAtual.totalFgts != null ? #numbers.formatCurrency(folhaAtual.totalFgts) : 'R$ 0,00'}"></span>
+                                                </div>
+                                                <div class="stat-meta" th:if="${resumoAtual != null}">
+                                                    <i class="fas fa-file-invoice-dollar"></i>
+                                                    <span>Holerites</span>
+                                                    <strong th:text="${resumoAtual.quantidadeHolerites}"></strong>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="mt-2" th:if="${resumoAtual != null && resumoAtual.quantidadeHolerites == 0}">

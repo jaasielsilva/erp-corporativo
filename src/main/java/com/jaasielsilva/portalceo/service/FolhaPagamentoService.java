@@ -488,6 +488,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             }
         } else {
             long totalAtivos = colaboradorRepository.countByAtivoTrue();
+            logger.info("Folha {}: colaboradores ativos={}", folhaId, totalAtivos);
             List<Holerite> existentesFolha = holeriteRepository.findByFolhaPagamento(folha);
             java.util.Set<Long> colabsJaProcessados = existentesFolha.stream()
                     .map(h -> h.getColaborador() != null ? h.getColaborador().getId() : null)
@@ -526,6 +527,22 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                     ));
             final int CHUNK_SIZE = 500;
             final int PAGE_SIZE = 800;
+            if (totalRestantes <= PAGE_SIZE) {
+                List<Colaborador> colaboradores = colaboradorRepository.findByAtivoTrue();
+                colaboradores = colaboradores.stream()
+                        .filter(c -> c.getId() != null && !colabsJaProcessados.contains(c.getId()))
+                        .collect(Collectors.toList());
+                Map<Long, BeneficiosInfo> beneficiosPorColaborador = carregarBeneficiosEmLote(colaboradores, mes, ano);
+                FolhaPagamento folhaRef = new FolhaPagamento();
+                folhaRef.setId(folhaId);
+                List<Holerite> holerites = colaboradores.stream().map(col -> {
+                    RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo = resumoPorColaborador.get(col.getId());
+                    BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(col.getId(), new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()));
+                    return gerarHoleriteComBeneficios(col, folhaRef, mes, ano, resumo, beneficios, tipoFolha);
+                }).collect(Collectors.toList());
+                holeriteRepository.saveAll(holerites);
+                holeriteRepository.flush();
+            }
             int totalProcessados = 0;
             int blocosProcessados = 0;
             int totalPages = (int) Math.ceil((double) totalAtivos / (double) PAGE_SIZE);
@@ -535,6 +552,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                 java.util.concurrent.Future<PageResult> f2 = pageIndex + 1 < totalPages ? taskExecutor.submit(pageTaskFactory.apply(pageIndex + 1)) : null;
                 try {
                     PageResult r1 = f1.get();
+                    logger.info("Processamento folha {} página {}: processed={}, blocks={}", folhaId, pageIndex, r1.processed, r1.blocks);
                     totalProcessados += r1.processed;
                     blocosProcessados += r1.blocks;
                     totalBruto = totalBruto.add(r1.bruto);
@@ -561,6 +579,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                     }
                     if (f2 != null) {
                         PageResult r2 = f2.get();
+                        logger.info("Processamento folha {} página {}: processed={}, blocks={}", folhaId, pageIndex + 1, r2.processed, r2.blocks);
                         totalProcessados += r2.processed;
                         blocosProcessados += r2.blocks;
                         totalBruto = totalBruto.add(r2.bruto);
@@ -626,6 +645,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         PageResult r = new PageResult();
         org.springframework.data.domain.Page<Colaborador> page = colaboradorRepository.findByAtivoTrue(org.springframework.data.domain.PageRequest.of(pageIndex, PAGE_SIZE, org.springframework.data.domain.Sort.by("nome").ascending()));
         List<Colaborador> colaboradores = page.getContent();
+        logger.info("Folha {} página {}: colaboradores carregados={}", folhaId, pageIndex, colaboradores != null ? colaboradores.size() : 0);
         if (colabsJaProcessados != null && !colabsJaProcessados.isEmpty()) {
             colaboradores = colaboradores.stream()
                     .filter(c -> c.getId() != null && !colabsJaProcessados.contains(c.getId()))
@@ -702,6 +722,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                 long tPersistFim = System.nanoTime();
                 r.lastFlushMs = (tPersistFim - tPersistIni) / 1_000_000;
                 r.processed += holeritesChunk.size();
+                logger.info("Persistidos {} holerites em bloco para folha {}", holeritesChunk.size(), folhaId);
                 holeritesChunk.clear();
                 r.blocks++;
             }
@@ -713,6 +734,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             long tPersistFim = System.nanoTime();
             r.lastFlushMs = (tPersistFim - tPersistIni) / 1_000_000;
             r.processed += holeritesChunk.size();
+            logger.info("Persistidos {} holerites (final) para folha {}", holeritesChunk.size(), folhaId);
             holeritesChunk.clear();
             r.blocks++;
         }

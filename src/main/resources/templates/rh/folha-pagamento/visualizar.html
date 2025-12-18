@@ -39,6 +39,11 @@
           </div>
         </div>
 
+        <div class="alert alert-warning" role="alert" th:if="${resumo.quantidadeHolerites == 0}">
+          Nenhum holerite foi gerado para esta folha. Verifique colaboradores ativos e gere novamente em
+          <a class="alert-link" th:href="@{/rh/folha-pagamento/gerar}">Gerar Folha</a>.
+        </div>
+
         <div class="row mb-3">
           <div class="col-md-3">
             <div class="card text-center">

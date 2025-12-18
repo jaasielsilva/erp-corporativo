@@ -371,6 +371,19 @@ public class FolhaPagamentoController {
         return ResponseEntity.ok(java.util.Map.of("id", colab.getId(), "nome", colab.getNome()));
     }
 
+    @PreAuthorize("@globalControllerAdvice.podeAcessarRH()")
+    @GetMapping(value = "/api/folha/{id}/debug", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> debugFolha(@PathVariable Long id) {
+        com.jaasielsilva.portalceo.service.ResumoFolhaDTO r = holeriteService.calcularResumoFolha(id);
+        java.util.Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("totalLiquido", r.getTotalLiquido());
+        resp.put("totalProventos", r.getTotalProventos());
+        resp.put("totalDescontos", r.getTotalDescontos());
+        resp.put("quantidadeHolerites", r.getQuantidadeHolerites());
+        return ResponseEntity.ok(resp);
+    }
+
     /**
      * Lista todas as folhas de pagamento
      */

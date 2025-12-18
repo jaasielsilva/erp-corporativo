@@ -87,6 +87,10 @@ public class FolhaPagamentoController {
         LocalDate hoje = LocalDate.now();
         Optional<FolhaPagamento> folhaAtual = folhaPagamentoService.buscarPorMesAno(hoje.getMonthValue(), hoje.getYear());
         model.addAttribute("folhaAtual", folhaAtual.orElse(null));
+        if (folhaAtual.isPresent()) {
+            com.jaasielsilva.portalceo.service.HoleriteService.ResumoFolhaDTO resumoAtual = holeriteService.calcularResumoFolha(folhaAtual.get().getId());
+            model.addAttribute("resumoAtual", resumoAtual);
+        }
         model.addAttribute("mesAtual", hoje.getMonthValue());
         model.addAttribute("anoAtual", hoje.getYear());
         

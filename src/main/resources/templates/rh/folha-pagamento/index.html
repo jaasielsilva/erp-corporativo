@@ -66,9 +66,12 @@
                                         <div class="col-md-6">
                                             <strong>Total Líquido:</strong><br>
                                             <h4 class="text-success"
-                                                th:text="${folhaAtual != null && folhaAtual.totalLiquido != null ? #numbers.formatCurrency(folhaAtual.totalLiquido) : 'R$ 0,00'}">
+                                                th:text="${resumoAtual != null && resumoAtual.totalLiquido != null ? #numbers.formatCurrency(resumoAtual.totalLiquido) : (folhaAtual != null && folhaAtual.totalLiquido != null ? #numbers.formatCurrency(folhaAtual.totalLiquido) : 'R$ 0,00')}">
                                             </h4>
                                         </div>
+                                    </div>
+                                    <div class="mt-2" th:if="${resumoAtual != null && resumoAtual.quantidadeHolerites == 0}">
+                                        <span class="badge bg-warning text-dark">Nenhum holerite gerado para esta folha</span>
                                     </div>
                                     <div class="mt-3">
                                         <a th:href="@{/rh/folha-pagamento/visualizar/{id}(id=${folhaAtual.id})}"

@@ -1,5 +1,10 @@
 package com.jaasielsilva.portalceo.service.rh;
 
+import com.jaasielsilva.portalceo.model.AdesaoPlanoSaude;
+import com.jaasielsilva.portalceo.model.DependentePlanoSaude;
+import com.jaasielsilva.portalceo.model.PlanoSaude;
+import com.jaasielsilva.portalceo.repository.AdesaoPlanoSaudeRepository;
+import com.jaasielsilva.portalceo.repository.PlanoSaudeRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.cache.annotation.CacheEvict;
@@ -12,6 +17,7 @@ import com.jaasielsilva.portalceo.repository.HistoricoProcessoAdesaoRepository;
 import com.jaasielsilva.portalceo.repository.ProcessoAdesaoRepository;
 
 import com.jaasielsilva.portalceo.service.NotificationService;
+import com.jaasielsilva.portalceo.service.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -49,14 +56,17 @@ public class WorkflowAdesaoService {
     private ColaboradorRepository colaboradorRepository;
 
     @Autowired
+    private AdesaoPlanoSaudeRepository adesaoPlanoSaudeRepository;
+
+    @Autowired
+    private PlanoSaudeRepository planoSaudeRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
-    private com.jaasielsilva.portalceo.service.EmailService emailService;
+    private EmailService emailService;
 
-    /**
-     * Salva processo de adesão no banco de dados
-     */
     /**
      * Salva processo de adesão no banco de dados
      */
@@ -245,6 +255,9 @@ public class WorkflowAdesaoService {
 
         // ATIVAR COLABORADOR APÓS APROVAÇÃO
         ativarColaboradorAprovado(processo);
+
+        // PROCESSAR BENEFÍCIOS (Criação de registros em tabelas definitivas)
+        processarBeneficiosAprovados(processo);
 
         // Registrar aprovação no histórico
         HistoricoProcessoAdesao historico = HistoricoProcessoAdesao.criarEventoAprovacao(processo, aprovadoPor);
@@ -855,6 +868,217 @@ public class WorkflowAdesaoService {
             logger.error("Erro ao ativar colaborador após aprovação - Processo ID: {}, CPF: {}", 
                         processo.getId(), processo.getCpfColaborador(), e);
             // Não propagar erro para não interromper o fluxo de aprovação
+        }
+    }
+
+    /**
+     * Processa os benefícios do processo aprovado, criando os registros nas tabelas definitivas
+     */
+    private void processarBeneficiosAprovados(ProcessoAdesao processo) {
+        try {
+            if (processo.getBeneficiosJson() == null || processo.getBeneficiosJson().trim().isEmpty()) {
+                return;
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> beneficios = objectMapper.readValue(processo.getBeneficiosJson(), Map.class);
+
+            // Processar Plano de Saúde
+            if (beneficios.containsKey("PLANO_SAUDE")) {
+                processarAdesaoPlanoSaude(processo, beneficios.get("PLANO_SAUDE"));
+            }
+
+            // Futuro: Processar outros benefícios (Vale Refeição, Vale Transporte, etc)
+            
+        } catch (Exception e) {
+            logger.error("Erro ao processar benefícios do processo {}: {}", processo.getId(), e.getMessage(), e);
+            // Não lançamos exceção para não impedir a aprovação, mas logamos o erro
+        }
+    }
+
+    private void processarAdesaoPlanoSaude(ProcessoAdesao processo, Object dadosPlanoObj) {
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> dadosPlano = (Map<String, Object>) dadosPlanoObj;
+            
+            // Buscar colaborador
+            Optional<Colaborador> colaboradorOpt = colaboradorRepository.findByCpf(processo.getCpfColaborador());
+            if (colaboradorOpt.isEmpty()) {
+                logger.error("Colaborador não encontrado para adesão ao plano de saúde. CPF: {}", processo.getCpfColaborador());
+                return;
+            }
+            Colaborador colaborador = colaboradorOpt.get();
+
+            // Verificar se já existe adesão ativa
+            Optional<AdesaoPlanoSaude> adesaoExistente = adesaoPlanoSaudeRepository.findAdesaoAtivaByColaborador(colaborador.getId());
+            if (adesaoExistente.isPresent()) {
+                logger.warn("Colaborador já possui adesão ativa ao plano de saúde. Ignorando nova adesão.");
+                return;
+            }
+
+            // Buscar Plano de Saúde
+            Object planoIdObj = dadosPlano.get("planoId");
+            PlanoSaude planoSaude = null;
+            
+            if (planoIdObj instanceof Number) {
+                Long planoId = ((Number) planoIdObj).longValue();
+                planoSaude = planoSaudeRepository.findById(planoId).orElse(null);
+            } else if (planoIdObj instanceof String) {
+                String planoIdStr = (String) planoIdObj;
+                // Tenta buscar por código primeiro
+                Optional<PlanoSaude> planoPorCodigo = planoSaudeRepository.findByCodigo(planoIdStr);
+                if (planoPorCodigo.isPresent()) {
+                    planoSaude = planoPorCodigo.get();
+                } else {
+                    // Tenta converter para Long se for número em string
+                    try {
+                        planoSaude = planoSaudeRepository.findById(Long.parseLong(planoIdStr)).orElse(null);
+                    } catch (NumberFormatException e) {
+                        // Ignora
+                    }
+                }
+            }
+
+            if (planoSaude == null) {
+                logger.error("Plano de saúde não encontrado. ID/Código: {}", planoIdObj);
+                return;
+            }
+
+            // Validar dados do plano para evitar NPE
+            if (planoSaude.getPercentualColaborador() == null) {
+                planoSaude.setPercentualColaborador(BigDecimal.valueOf(100));
+            }
+            if (planoSaude.getPercentualEmpresa() == null) {
+                planoSaude.setPercentualEmpresa(BigDecimal.ZERO);
+            }
+            if (planoSaude.getValorTitular() == null) {
+                planoSaude.setValorTitular(BigDecimal.ZERO);
+            }
+            if (planoSaude.getValorDependente() == null) {
+                planoSaude.setValorDependente(BigDecimal.ZERO);
+            }
+
+            // Criar nova adesão
+            AdesaoPlanoSaude adesao = new AdesaoPlanoSaude();
+            adesao.setColaborador(colaborador);
+            adesao.setPlanoSaude(planoSaude);
+            adesao.setDataAdesao(LocalDate.now());
+            
+            // Data de vigência
+            if (dadosPlano.containsKey("dataVigencia")) {
+                try {
+                    String dataVigenciaStr = (String) dadosPlano.get("dataVigencia");
+                    if (dataVigenciaStr != null && !dataVigenciaStr.isEmpty()) {
+                        adesao.setDataVigenciaInicio(LocalDate.parse(dataVigenciaStr));
+                    } else {
+                        adesao.setDataVigenciaInicio(LocalDate.now());
+                    }
+                } catch (Exception e) {
+                    adesao.setDataVigenciaInicio(LocalDate.now());
+                }
+            } else {
+                adesao.setDataVigenciaInicio(LocalDate.now());
+            }
+            
+            adesao.setStatus(AdesaoPlanoSaude.StatusAdesao.ATIVA);
+            
+            // Dependentes
+            List<DependentePlanoSaude> listaDependentes = new ArrayList<>();
+            if (dadosPlano.containsKey("dependentes")) {
+                Object dependentesObj = dadosPlano.get("dependentes");
+                if (dependentesObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> dependentesList = (List<Map<String, Object>>) dependentesObj;
+                    
+                    for (Map<String, Object> depMap : dependentesList) {
+                        try {
+                            DependentePlanoSaude dependente = new DependentePlanoSaude();
+                            dependente.setAdesaoPlanoSaude(adesao);
+                            
+                            // Nome (Obrigatório)
+                            String nome = (String) depMap.get("nome");
+                            dependente.setNome(nome != null && !nome.trim().isEmpty() ? nome : "Dependente sem nome");
+                            
+                            // CPF (Obrigatório)
+                            String cpf = (String) depMap.get("cpf");
+                            dependente.setCpf(cpf != null ? cpf : "00000000000");
+                            
+                            // Data Nascimento (Obrigatório)
+                            if (depMap.containsKey("dataNascimento")) {
+                                try {
+                                    dependente.setDataNascimento(LocalDate.parse((String) depMap.get("dataNascimento")));
+                                } catch (Exception e) {
+                                    dependente.setDataNascimento(LocalDate.now());
+                                }
+                            } else {
+                                dependente.setDataNascimento(LocalDate.now());
+                            }
+                            
+                            // Parentesco (Obrigatório) - Fallback para OUTROS
+                            dependente.setParentesco(DependentePlanoSaude.TipoParentesco.OUTROS);
+                            if (depMap.containsKey("parentesco")) {
+                                try {
+                                    String parentescoStr = (String) depMap.get("parentesco");
+                                    if (parentescoStr != null) {
+                                        dependente.setParentesco(DependentePlanoSaude.TipoParentesco.valueOf(parentescoStr));
+                                    }
+                                } catch (Exception e) {
+                                    // Mantém o padrão OUTROS
+                                }
+                            }
+                            
+                            // Genero (Obrigatório) - Fallback para OUTRO
+                            dependente.setGenero(DependentePlanoSaude.Genero.OUTRO);
+                            if (depMap.containsKey("genero")) {
+                                try {
+                                    String generoStr = (String) depMap.get("genero");
+                                    if (generoStr != null) {
+                                        dependente.setGenero(DependentePlanoSaude.Genero.valueOf(generoStr));
+                                    }
+                                } catch (Exception e) {
+                                    // Mantém o padrão OUTRO
+                                }
+                            }
+                            
+                            dependente.setAtivo(true);
+                            dependente.setDataInclusao(LocalDate.now());
+                            
+                            listaDependentes.add(dependente);
+                        } catch (Exception ex) {
+                            logger.error("Erro ao processar dependente: " + ex.getMessage());
+                            // Continua para o próximo dependente
+                        }
+                    }
+                }
+            }
+            
+            adesao.setDependentes(listaDependentes);
+            adesao.setQuantidadeDependentes(listaDependentes.size());
+            
+            // Calcular valores
+            try {
+                adesao.calcularValores();
+            } catch (Exception e) {
+                logger.error("Erro ao calcular valores da adesão: " + e.getMessage());
+                // Definir valores zerados em caso de erro para permitir salvar
+                adesao.setValorMensalTitular(BigDecimal.ZERO);
+                adesao.setValorMensalDependentes(BigDecimal.ZERO);
+                adesao.setValorTotalMensal(BigDecimal.ZERO);
+            }
+            
+            // Garantir que valores não sejam nulos (redundância)
+            if (adesao.getValorMensalTitular() == null) adesao.setValorMensalTitular(BigDecimal.ZERO);
+            if (adesao.getValorMensalDependentes() == null) adesao.setValorMensalDependentes(BigDecimal.ZERO);
+            if (adesao.getValorTotalMensal() == null) adesao.setValorTotalMensal(BigDecimal.ZERO);
+            
+            // Salvar
+            adesaoPlanoSaudeRepository.save(adesao);
+            logger.info("Adesão ao plano de saúde criada com sucesso para o colaborador: {}", colaborador.getNome());
+            
+        } catch (Exception e) {
+            String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
+            logger.error("Erro ao criar registro de adesão ao plano de saúde: " + errorMsg, e);
+            throw new RuntimeException("Erro ao criar adesão plano saúde: " + errorMsg, e);
         }
     }
 

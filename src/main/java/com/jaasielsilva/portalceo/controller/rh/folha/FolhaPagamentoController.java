@@ -375,7 +375,7 @@ public class FolhaPagamentoController {
     @GetMapping(value = "/api/folha/{id}/debug", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<java.util.Map<String, Object>> debugFolha(@PathVariable Long id) {
-        com.jaasielsilva.portalceo.service.ResumoFolhaDTO r = holeriteService.calcularResumoFolha(id);
+        com.jaasielsilva.portalceo.service.HoleriteService.ResumoFolhaDTO r = holeriteService.calcularResumoFolha(id);
         java.util.Map<String, Object> resp = new java.util.HashMap<>();
         resp.put("totalLiquido", r.getTotalLiquido());
         resp.put("totalProventos", r.getTotalProventos());

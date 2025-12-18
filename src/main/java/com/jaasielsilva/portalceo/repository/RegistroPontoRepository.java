@@ -130,11 +130,11 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
     @Query("SELECT " +
            "SUM(CASE WHEN r.falta = true THEN 1 ELSE 0 END) AS faltas, " +
            "SUM(CASE WHEN r.minutosAtraso > 0 THEN 1 ELSE 0 END) AS atrasos, " +
-           "SUM(r.totalMinutosTrabalhados) AS minutosTrabalhados, " +
-           "SUM(r.minutosHoraExtra) AS minutosExtras, " +
+           "SUM(COALESCE(r.totalMinutosTrabalhados, 0)) AS minutosTrabalhados, " +
+           "SUM(COALESCE(r.minutosHoraExtra, 0)) AS minutosExtras, " +
            "COUNT(DISTINCT r.data) AS diasComRegistro " +
            "FROM RegistroPonto r WHERE r.colaborador.id = :colaboradorId " +
-           "AND r.data BETWEEN :dataInicio AND :dataFim")
+           "AND r.data >= :dataInicio AND r.data <= :dataFim")
     PontoResumoProjection aggregateResumoByColaboradorAndPeriodo(
             @Param("colaboradorId") Long colaboradorId,
             @Param("dataInicio") LocalDate dataInicio,
@@ -149,11 +149,11 @@ public interface RegistroPontoRepository extends JpaRepository<RegistroPonto, Lo
            "r.colaborador.id AS colaboradorId, " +
            "SUM(CASE WHEN r.falta = true THEN 1 ELSE 0 END) AS faltas, " +
            "SUM(CASE WHEN r.minutosAtraso > 0 THEN 1 ELSE 0 END) AS atrasos, " +
-           "SUM(r.totalMinutosTrabalhados) AS minutosTrabalhados, " +
-           "SUM(r.minutosHoraExtra) AS minutosExtras, " +
+           "SUM(COALESCE(r.totalMinutosTrabalhados, 0)) AS minutosTrabalhados, " +
+           "SUM(COALESCE(r.minutosHoraExtra, 0)) AS minutosExtras, " +
            "COUNT(DISTINCT r.data) AS diasComRegistro " +
            "FROM RegistroPonto r " +
-           "WHERE r.data BETWEEN :dataInicio AND :dataFim " +
+           "WHERE r.data >= :dataInicio AND r.data <= :dataFim " +
            "GROUP BY r.colaborador.id")
     List<PontoResumoPorColaboradorProjection> aggregateResumoPorPeriodoGroupByColaborador(
             @Param("dataInicio") LocalDate dataInicio,

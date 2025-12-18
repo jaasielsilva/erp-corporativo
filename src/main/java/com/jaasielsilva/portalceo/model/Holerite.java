@@ -96,6 +96,9 @@ public class Holerite {
     @Column(nullable = false)
     private Integer horasTrabalhadas;
 
+    @Column(nullable = false)
+    private Integer dependentes = 0;
+
     @Column
     private Integer faltas = 0;
 
@@ -123,27 +126,141 @@ public class Holerite {
         calcularTotais();
     }
 
+    public BigDecimal getSalarioBase() {
+        return salarioBase != null ? salarioBase : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getHorasExtras() {
+        return horasExtras != null ? horasExtras : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getAdicionalNoturno() {
+        return adicionalNoturno != null ? adicionalNoturno : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getAdicionalPericulosidade() {
+        return adicionalPericulosidade != null ? adicionalPericulosidade : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getAdicionalInsalubridade() {
+        return adicionalInsalubridade != null ? adicionalInsalubridade : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getComissoes() {
+        return comissoes != null ? comissoes : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getBonificacoes() {
+        return bonificacoes != null ? bonificacoes : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getValeTransporte() {
+        return valeTransporte != null ? valeTransporte : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getValeRefeicao() {
+        return valeRefeicao != null ? valeRefeicao : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getAuxilioSaude() {
+        return auxilioSaude != null ? auxilioSaude : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getDescontoInss() {
+        return descontoInss != null ? descontoInss : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getDescontoIrrf() {
+        return descontoIrrf != null ? descontoIrrf : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getDescontoFgts() {
+        return descontoFgts != null ? descontoFgts : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getDescontoValeTransporte() {
+        return descontoValeTransporte != null ? descontoValeTransporte : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getDescontoValeRefeicao() {
+        return descontoValeRefeicao != null ? descontoValeRefeicao : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getDescontoPlanoSaude() {
+        return descontoPlanoSaude != null ? descontoPlanoSaude : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getOutrosDescontos() {
+        return outrosDescontos != null ? outrosDescontos : BigDecimal.ZERO;
+    }
+
+    public String getTipoFolha() {
+        return tipoFolha != null ? tipoFolha : "normal";
+    }
+
+    public Integer getDependentes() {
+        return dependentes != null ? dependentes : 0;
+    }
+
+    public BigDecimal getBaseInss() {
+        return getSalarioBase().add(getHorasExtras());
+    }
+
+    public BigDecimal getBaseIrrf() {
+        BigDecimal base = getSalarioBase().add(getHorasExtras()).subtract(getDescontoInss());
+        if ("ferias".equalsIgnoreCase(getTipoFolha())) {
+            base = base.add(getBonificacoes());
+        }
+        return base.max(BigDecimal.ZERO);
+    }
+
+    public BigDecimal getValorFgts() {
+        BigDecimal base = getSalarioBase().add(getHorasExtras());
+        if ("ferias".equalsIgnoreCase(getTipoFolha())) {
+            base = base.add(getBonificacoes());
+        }
+        return base.multiply(new java.math.BigDecimal("0.08"));
+    }
+
+    public boolean hasHorasExtras() { return getHorasExtras().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasAdicionalNoturno() { return getAdicionalNoturno().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasComissoes() { return getComissoes().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasAdicionalPericulosidade() { return getAdicionalPericulosidade().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasAdicionalInsalubridade() { return getAdicionalInsalubridade().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasBonificacoes() { return getBonificacoes().compareTo(java.math.BigDecimal.ZERO) > 0; }
+
+    public boolean hasDescontoInss() { return getDescontoInss().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasDescontoIrrf() { return getDescontoIrrf().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasDescontoPlanoSaude() { return getDescontoPlanoSaude().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasDescontoValeRefeicao() { return getDescontoValeRefeicao().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasDescontoValeTransporte() { return getDescontoValeTransporte().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasOutrosDescontos() { return getOutrosDescontos().compareTo(java.math.BigDecimal.ZERO) > 0; }
+
+    public boolean isFerias() {
+        return "ferias".equalsIgnoreCase(getTipoFolha());
+    }
+
     private void calcularTotais() {
         // Calcular total de proventos
         totalProventos = salarioBase
-            .add(horasExtras)
-            .add(adicionalNoturno)
-            .add(adicionalPericulosidade)
-            .add(adicionalInsalubridade)
-            .add(comissoes)
-            .add(bonificacoes)
-            .add(valeTransporte)
-            .add(valeRefeicao)
-            .add(auxilioSaude);
+            .add(getHorasExtras())
+            .add(getAdicionalNoturno())
+            .add(getAdicionalPericulosidade())
+            .add(getAdicionalInsalubridade())
+            .add(getComissoes())
+            .add(getBonificacoes())
+            .add(getValeTransporte())
+            .add(getValeRefeicao());
+            // auxilioSaude removido dos proventos pois é apenas informativo/subsídio
 
         // Calcular total de descontos
-        totalDescontos = descontoInss
-            .add(descontoIrrf)
-            .add(descontoFgts)
-            .add(descontoValeTransporte)
-            .add(descontoValeRefeicao)
-            .add(descontoPlanoSaude)
-            .add(outrosDescontos);
+        totalDescontos = getDescontoInss()
+            .add(getDescontoIrrf())
+            .add(getDescontoFgts())
+            .add(getDescontoValeTransporte())
+            .add(getDescontoValeRefeicao())
+            .add(getDescontoPlanoSaude())
+            .add(getOutrosDescontos());
 
         // Calcular salário líquido
         salarioLiquido = totalProventos.subtract(totalDescontos);

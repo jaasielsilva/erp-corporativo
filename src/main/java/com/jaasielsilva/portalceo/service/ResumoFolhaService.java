@@ -15,19 +15,21 @@ public class ResumoFolhaService {
     @Autowired
     private ColaboradorEscalaRepository colaboradorEscalaRepository;
 
+    @Autowired
+    private com.jaasielsilva.portalceo.repository.RegistroPontoRepository registroPontoRepository;
+
     public ColaboradorResumoFolhaDTO criarResumo(Colaborador c, YearMonth ym) {
         int diasMes = ym.lengthOfMonth();
-        int diasTrabalhados;
         int diasUteisMes = contarDiasUteisNoMes(ym);
-        if (c.getStatus() != null && c.getStatus() == Colaborador.StatusColaborador.INATIVO) {
-            diasTrabalhados = 0;
-        } else {
-            if (YearMonth.from(LocalDate.now()).equals(ym)) {
-                diasTrabalhados = contarDiasUteisAte(LocalDate.now().withDayOfMonth(LocalDate.now().getDayOfMonth()));
-            } else {
-                diasTrabalhados = contarDiasUteisNoMes(ym);
-            }
-        }
+        
+        LocalDate dataInicio = ym.atDay(1);
+        LocalDate dataFim = ym.atEndOfMonth();
+        com.jaasielsilva.portalceo.repository.RegistroPontoRepository.PontoResumoProjection projection = 
+            registroPontoRepository.aggregateResumoByColaboradorAndPeriodo(c.getId(), dataInicio, dataFim);
+            
+        int diasTrabalhados = projection != null && projection.getDiasComRegistro() != null 
+            ? projection.getDiasComRegistro().intValue() 
+            : 0;
 
         String cargoNome = c.getCargo() != null ? c.getCargo().getNome() : "—";
         String departamentoNome = c.getDepartamento() != null ? c.getDepartamento().getNome() : "—";
@@ -56,8 +58,21 @@ public class ResumoFolhaService {
         java.time.LocalDate dataCheck = java.time.YearMonth.from(java.time.LocalDate.now()).equals(ym) ? java.time.LocalDate.now() : ym.atEndOfMonth();
         java.util.List<com.jaasielsilva.portalceo.model.ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigentesByData(dataCheck);
         java.util.Set<Long> idsComEscala = vigentes.stream().map(e -> e.getColaborador().getId()).collect(java.util.stream.Collectors.toSet());
+        
+        LocalDate dataInicio = ym.atDay(1);
+        LocalDate dataFim = ym.atEndOfMonth();
+        
+        java.util.List<com.jaasielsilva.portalceo.repository.RegistroPontoRepository.PontoResumoPorColaboradorProjection> projections = 
+            registroPontoRepository.aggregateResumoPorPeriodoGroupByColaborador(dataInicio, dataFim);
+            
+        java.util.Map<Long, Long> diasPorColaborador = projections.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                com.jaasielsilva.portalceo.repository.RegistroPontoRepository.PontoResumoPorColaboradorProjection::getColaboradorId,
+                p -> p.getDiasComRegistro() != null ? p.getDiasComRegistro() : 0L
+            ));
+
         return colaboradores.stream().map(c -> {
-            int diasTrabalhados = (c.getStatus() != null && c.getStatus() == com.jaasielsilva.portalceo.model.Colaborador.StatusColaborador.INATIVO) ? 0 : (java.time.YearMonth.from(java.time.LocalDate.now()).equals(ym) ? contarDiasUteisAte(java.time.LocalDate.now().withDayOfMonth(java.time.LocalDate.now().getDayOfMonth())) : diasUteisMes);
+            int diasTrabalhados = diasPorColaborador.getOrDefault(c.getId(), 0L).intValue();
             String cargoNome = c.getCargo() != null ? c.getCargo().getNome() : "—";
             String departamentoNome = c.getDepartamento() != null ? c.getDepartamento().getNome() : "—";
             String status = c.getStatus() != null ? c.getStatus().name() : "";

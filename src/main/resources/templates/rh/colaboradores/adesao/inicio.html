@@ -183,25 +183,30 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="cpf" class="form-label required-field">CPF</label>
                                 <input type="text" class="form-control" id="cpf" name="cpf" required
                                     placeholder="000.000.000-00" maxlength="14">
                                 <div class="invalid-feedback">CPF é obrigatório e deve ser válido</div>
                             </div>
 
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="rg" class="form-label required-field">RG</label>
                                 <input type="text" class="form-control" id="rg" name="rg" required
                                     placeholder="00.000.000-0">
                                 <div class="invalid-feedback">RG é obrigatório</div>
                             </div>
 
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="dataNascimento" class="form-label required-field">Data de Nascimento</label>
                                 <input type="date" class="form-control" id="dataNascimento" name="dataNascimento"
                                     required>
                                 <div class="invalid-feedback">Data de nascimento é obrigatória</div>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label for="dependentes" class="form-label">Dependentes (IRRF)</label>
+                                <input type="number" class="form-control" id="dependentes" name="dependentes" min="0" value="0">
                             </div>
                         </div>
 
@@ -631,7 +636,7 @@
             }
 
             // === Conversão de números (Long, Integer) ===
-            ['cargoId', 'departamentoId', 'supervisorId', 'cargaHoraria'].forEach(campo => {
+            ['cargoId', 'departamentoId', 'supervisorId', 'cargaHoraria', 'dependentes'].forEach(campo => {
                 if (dadosLimpos[campo]) {
                     const num = Number(dadosLimpos[campo]);
                     if (!isNaN(num)) {

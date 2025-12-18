@@ -45,6 +45,9 @@ public class AdesaoColaboradorDTO {
     @NotNull(message = "Estado civil é obrigatório")
     private String estadoCivil; // SOLTEIRO, CASADO, DIVORCIADO, VIUVO
 
+    @Min(value = 0, message = "Número de dependentes não pode ser negativo")
+    private Integer dependentes = 0;
+
     @NotBlank(message = "RG é obrigatório")
     private String rg;
     
@@ -144,7 +147,7 @@ public class AdesaoColaboradorDTO {
     private Boolean gymPassOpcional = false;
     
     // Lista de dependentes para benefícios
-    private List<DependenteBeneficioDTO> dependentes;
+    private List<DependenteBeneficioDTO> dependentesBeneficios;
 
     // === CONTROLE DO PROCESSO ===
     private String sessionId;
@@ -327,7 +330,7 @@ public class AdesaoColaboradorDTO {
         this.statusDocumentos = new java.util.HashMap<>();
         this.observacoesDocumentos = new java.util.HashMap<>();
         this.beneficiosSelecionados = new java.util.HashMap<>();
-        this.dependentes = new ArrayList<>();
+        this.dependentesBeneficios = new ArrayList<>();
         
         // Inicializar status dos documentos obrigatórios
         for (String doc : documentosObrigatorios) {

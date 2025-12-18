@@ -292,6 +292,7 @@ public class AdesaoColaboradorController {
             dadosPessoaisMap.put("telefone", dadosAdesao.getTelefone());
             dadosPessoaisMap.put("sexo", dadosAdesao.getSexo());
             dadosPessoaisMap.put("estadoCivil", dadosAdesao.getEstadoCivil());
+            dadosPessoaisMap.put("dependentes", dadosAdesao.getDependentes());
             dadosPessoaisMap.put("supervisorId", dadosAdesao.getSupervisorId());
 
             try {
@@ -754,6 +755,7 @@ public class AdesaoColaboradorController {
             dadosPessoaisMap.put("departamento", dadosCompletos.getDepartamentoId() != null ? dadosCompletos.getDepartamentoId().toString() : "");
             dadosPessoaisMap.put("dataAdmissao", dadosCompletos.getDataAdmissao() != null ? dadosCompletos.getDataAdmissao().toString() : "");
             dadosPessoaisMap.put("salario", dadosCompletos.getSalario() != null ? dadosCompletos.getSalario().doubleValue() : 0.0);
+            dadosPessoaisMap.put("dependentes", dadosCompletos.getDependentes() != null ? dadosCompletos.getDependentes() : 0);
             
             // Construir endereço completo de forma segura
             StringBuilder endereco = new StringBuilder();
@@ -930,6 +932,7 @@ public class AdesaoColaboradorController {
             m.put("cargoId", dto.getCargoId());
             m.put("departamentoId", dto.getDepartamentoId());
             m.put("salario", dto.getSalario());
+            m.put("dependentes", dto.getDependentes());
             m.put("tipoContrato", dto.getTipoContrato());
             m.put("cargaHoraria", dto.getCargaHoraria());
             m.put("cep", dto.getCep());

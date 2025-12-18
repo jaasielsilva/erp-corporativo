@@ -867,6 +867,12 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
      * Calcula proventos do holerite
      */
     private void calcularProventos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios, String tipoFolha) {
+        // Garantir que tipoFolha não seja nulo
+        if (tipoFolha == null) {
+            tipoFolha = "normal";
+        }
+        holerite.setTipoFolha(tipoFolha);
+
         // Proventos básicos já definidos
         // Adicionar outros proventos conforme necessário
         holerite.setAdicionalNoturno(BigDecimal.ZERO);
@@ -947,7 +953,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             BigDecimal bonif = holerite.getBonificacoes() != null ? holerite.getBonificacoes() : BigDecimal.ZERO;
             baseIrrf = baseIrrf.add(bonif);
         }
-        holerite.setDescontoIrrf(holeriteCalculoService.calcularIrrf(baseIrrf, 0));
+        int dependentes = colaborador.getDependentes() != null ? colaborador.getDependentes() : 0;
+        holerite.setDependentes(dependentes);
+        holerite.setDescontoIrrf(holeriteCalculoService.calcularIrrf(baseIrrf, dependentes));
         holerite.setDescontoFgts(BigDecimal.ZERO);
 
         // Descontos de benefícios com dados já carregados
@@ -983,8 +991,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         // Desconto Plano de Saúde
         if (!"decimo_terceiro".equalsIgnoreCase(tipoFolha) && !"ferias".equalsIgnoreCase(tipoFolha) && !"complementar".equalsIgnoreCase(tipoFolha)
                 && beneficios.planoSaude.isPresent()) {
-            BigDecimal desconto = beneficios.planoSaude.get().getValorDesconto();
-            holerite.setDescontoPlanoSaude(desconto);
+            BigDecimal valorTotal = beneficios.planoSaude.get().getValorDesconto();
+            BigDecimal subsidio = beneficios.planoSaude.get().getValorSubsidioEmpresa();
+            // Deduz o subsídio para cobrar apenas a parte do colaborador
+            holerite.setDescontoPlanoSaude(valorTotal.subtract(subsidio).max(BigDecimal.ZERO));
         } else {
             holerite.setDescontoPlanoSaude(BigDecimal.ZERO);
         }

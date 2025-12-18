@@ -128,6 +128,12 @@
                   </select>
                   <div class="invalid-feedback" th:errors="*{sexo}"></div>
                 </div>
+
+                <div class="form-group">
+                  <label for="dependentes" class="form-label">Dependentes (IRRF)</label>
+                  <input type="number" id="dependentes" th:field="*{dependentes}" class="form-control" min="0" th:classappend="${#fields.hasErrors('dependentes')} ? ' is-invalid'">
+                  <div class="invalid-feedback" th:errors="*{dependentes}"></div>
+                </div>
               </div>
             </div>
 

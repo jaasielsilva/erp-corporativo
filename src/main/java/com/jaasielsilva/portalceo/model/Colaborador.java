@@ -64,6 +64,9 @@ public class Colaborador {
     @Enumerated(EnumType.STRING)
     private Sexo sexo;
 
+    @Min(value = 0, message = "Número de dependentes não pode ser negativo")
+    private Integer dependentes = 0;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataNascimento;
 

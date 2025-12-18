@@ -414,6 +414,7 @@ public class AdesaoColaboradorService {
         colaborador.setSexo(Colaborador.Sexo.valueOf(dto.getSexo()));
         colaborador.setDataNascimento(dto.getDataNascimento());
         colaborador.setEstadoCivil(Colaborador.EstadoCivil.valueOf(dto.getEstadoCivil()));
+        colaborador.setDependentes(dto.getDependentes());
         colaborador.setRg(dto.getRg());
 
         // Dados profissionais

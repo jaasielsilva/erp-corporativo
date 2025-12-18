@@ -694,6 +694,10 @@
                                 <span class="info-label">Data de Nascimento:</span>
                                 <span class="info-value">${formatarData(dados.dataNascimento) || '-'}</span>
                             </div>
+                            <div class="info-row">
+                                <span class="info-label">Dependentes (IRRF):</span>
+                                <span class="info-value">${dados.dependentes !== undefined ? dados.dependentes : '0'}</span>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-row">

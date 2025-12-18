@@ -55,91 +55,51 @@
       padding: 20px;
     }
     
-    .valores-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
+    .tabela-holerite {
+      width: 100%;
+      border-collapse: collapse;
       margin-bottom: 20px;
+      font-size: 14px;
     }
     
-    .valores-section {
-      border: 1px solid #e9ecef;
-      border-radius: 6px;
-      overflow: hidden;
+    .tabela-holerite th, .tabela-holerite td {
+      border: 1px solid #dee2e6;
+      padding: 8px 12px;
     }
     
-    .valores-header {
-      background: #f8f9fa;
-      padding: 10px 15px;
-      font-weight: bold;
-      border-bottom: 1px solid #e9ecef;
-    }
-    
-    .valores-header.proventos {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .valores-header.descontos {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .valor-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 15px;
-      border-bottom: 1px solid #f8f9fa;
-    }
-    
-    .valor-item:last-child {
-      border-bottom: none;
-    }
-    
-    .valor-item.total {
+    .tabela-holerite th {
       background: #f8f9fa;
       font-weight: bold;
-      border-top: 2px solid #dee2e6;
-    }
-    
-    .resumo-final {
-      background: #e3f2fd;
-      border: 2px solid #2196f3;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-    }
-    
-    .resumo-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      text-align: center;
-    }
-    
-    .resumo-item {
-      padding: 15px;
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .resumo-label {
+      text-transform: uppercase;
       font-size: 12px;
       color: #666;
-      text-transform: uppercase;
-      margin-bottom: 5px;
     }
     
-    .resumo-valor {
-      font-size: 18px;
+    .tabela-holerite .col-ref {
+      text-align: center;
+      width: 80px;
+    }
+    
+    .tabela-holerite .col-valor {
+      text-align: right;
+      width: 130px;
+    }
+    
+    .tabela-holerite .total-row {
+      background: #e9ecef;
       font-weight: bold;
-      color: #333;
     }
     
-    .resumo-valor.liquido {
-      color: #2196f3;
-      font-size: 24px;
+    .liquido-box {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      padding: 15px;
+      border-radius: 4px;
+      text-align: right;
+      font-size: 16px;
+      font-weight: bold;
+      color: #0d47a1;
+      margin-top: 20px;
     }
     
     .holerite-footer {

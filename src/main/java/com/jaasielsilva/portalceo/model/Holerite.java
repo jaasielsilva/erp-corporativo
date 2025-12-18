@@ -82,6 +82,9 @@ public class Holerite {
     private BigDecimal descontoPlanoSaude = BigDecimal.ZERO;
 
     @Column(precision = 10, scale = 2)
+    private BigDecimal descontoFaltas = BigDecimal.ZERO;
+
+    @Column(precision = 10, scale = 2)
     private BigDecimal outrosDescontos = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -190,6 +193,10 @@ public class Holerite {
         return descontoPlanoSaude != null ? descontoPlanoSaude : BigDecimal.ZERO;
     }
 
+    public BigDecimal getDescontoFaltas() {
+        return descontoFaltas != null ? descontoFaltas : BigDecimal.ZERO;
+    }
+
     public BigDecimal getOutrosDescontos() {
         return outrosDescontos != null ? outrosDescontos : BigDecimal.ZERO;
     }
@@ -232,6 +239,7 @@ public class Holerite {
     public boolean hasDescontoInss() { return getDescontoInss().compareTo(java.math.BigDecimal.ZERO) > 0; }
     public boolean hasDescontoIrrf() { return getDescontoIrrf().compareTo(java.math.BigDecimal.ZERO) > 0; }
     public boolean hasDescontoPlanoSaude() { return getDescontoPlanoSaude().compareTo(java.math.BigDecimal.ZERO) > 0; }
+    public boolean hasDescontoFaltas() { return getDescontoFaltas().compareTo(java.math.BigDecimal.ZERO) > 0; }
     public boolean hasDescontoValeRefeicao() { return getDescontoValeRefeicao().compareTo(java.math.BigDecimal.ZERO) > 0; }
     public boolean hasDescontoValeTransporte() { return getDescontoValeTransporte().compareTo(java.math.BigDecimal.ZERO) > 0; }
     public boolean hasOutrosDescontos() { return getOutrosDescontos().compareTo(java.math.BigDecimal.ZERO) > 0; }
@@ -260,6 +268,7 @@ public class Holerite {
             .add(getDescontoValeTransporte())
             .add(getDescontoValeRefeicao())
             .add(getDescontoPlanoSaude())
+            .add(getDescontoFaltas())
             .add(getOutrosDescontos());
 
         // Calcular salário líquido

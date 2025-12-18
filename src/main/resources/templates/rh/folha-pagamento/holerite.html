@@ -55,91 +55,52 @@
       padding: 20px;
     }
     
-    .valores-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
+    .tabela-holerite {
+      width: 100%;
+      border-collapse: collapse;
       margin-bottom: 20px;
+      font-size: 14px;
     }
     
-    .valores-section {
-      border: 1px solid #e9ecef;
-      border-radius: 6px;
-      overflow: hidden;
+    .tabela-holerite th, .tabela-holerite td {
+      border: 1px solid #dee2e6;
+      padding: 8px 12px;
     }
     
-    .valores-header {
-      background: #f8f9fa;
-      padding: 10px 15px;
-      font-weight: bold;
-      border-bottom: 1px solid #e9ecef;
-    }
-    
-    .valores-header.proventos {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .valores-header.descontos {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .valor-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 15px;
-      border-bottom: 1px solid #f8f9fa;
-    }
-    
-    .valor-item:last-child {
-      border-bottom: none;
-    }
-    
-    .valor-item.total {
+    .tabela-holerite th {
       background: #f8f9fa;
       font-weight: bold;
-      border-top: 2px solid #dee2e6;
-    }
-    
-    .resumo-final {
-      background: #e3f2fd;
-      border: 2px solid #2196f3;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-    }
-    
-    .resumo-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      text-align: center;
-    }
-    
-    .resumo-item {
-      padding: 15px;
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .resumo-label {
+      text-transform: uppercase;
       font-size: 12px;
       color: #666;
-      text-transform: uppercase;
-      margin-bottom: 5px;
+      text-align: left;
     }
     
-    .resumo-valor {
-      font-size: 18px;
+    .tabela-holerite .col-ref {
+      text-align: center;
+      width: 80px;
+    }
+    
+    .tabela-holerite .col-valor {
+      text-align: right;
+      width: 130px;
+    }
+    
+    .tabela-holerite .total-row {
+      background: #e9ecef;
       font-weight: bold;
-      color: #333;
     }
     
-    .resumo-valor.liquido {
-      color: #2196f3;
-      font-size: 24px;
+    .liquido-box {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      padding: 15px;
+      border-radius: 4px;
+      text-align: right;
+      font-size: 16px;
+      font-weight: bold;
+      color: #0d47a1;
+      margin-top: 20px;
     }
     
     .holerite-footer {
@@ -199,37 +160,10 @@
           </a>
         </div>
 
-        <!-- Filtros -->
-        <article class="card">
-          <h3><i class="fas fa-filter"></i> Filtros</h3>
-          <form class="form-container">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="colaboradorSelect">Colaborador</label>
-                <select id="colaboradorSelect" name="colaborador" class="form-control" onchange="carregarHolerite()">
-                  <option value="">Selecione um colaborador...</option>
-                  <option value="1" selected>João Silva - Desenvolvedor Senior</option>
-                  <option value="2">Maria Santos - Analista de Vendas</option>
-                  <option value="3">Carlos Oliveira - Gerente Financeiro</option>
-                  <option value="4">Ana Costa - Designer</option>
-                  <option value="5">Pedro Lima - Analista de Marketing</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="mesAno">Mês/Ano</label>
-                <select id="mesAno" name="mesAno" class="form-control" onchange="carregarHolerite()">
-                  <option value="11/2023" selected>Novembro/2023</option>
-                  <option value="10/2023">Outubro/2023</option>
-                  <option value="09/2023">Setembro/2023</option>
-                  <option value="08/2023">Agosto/2023</option>
-                </select>
-              </div>
-            </div>
-          </form>
-        </article>
+        <!-- Filtros removidos -->
 
         <!-- Ações de Impressão -->
-        <div class="print-actions">
+        <div class="print-actions" th:if="${pdf == null}">
           <button id="btn-print" onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Imprimir Holerite
           </button>
@@ -274,41 +208,117 @@
 
           <!-- Corpo do Holerite -->
           <div class="holerite-body">
-            <div class="valores-grid">
-              <!-- Proventos -->
-              <div class="valores-section">
-                <div class="valores-header proventos">
-                  <i class="fas fa-plus-circle"></i> PROVENTOS
-                </div>
-                <div class="valor-item">
-                  <span>Salário Base</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span>
-                </div>
-                <div class="valor-item">
-                  <span>Horas Extras</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></span>
-                </div>
-                <th:block th:if="${#strings.toLowerCase(holerite.tipoFolha) == 'ferias'}">
-                  <div class="valor-item">
-                    <span>1/3 Constitucional (Férias)</span>
-                    <span th:text="${#numbers.formatCurrency(holerite.bonificacoes)}"></span>
-                  </div>
-                </th:block>
-                <div class="valor-item">
-                  <span>Adicional Noturno</span>
-                  <span>R$ 0,00</span>
-                </div>
-                <div class="valor-item">
-                  <span>Comissões</span>
-                  <span>R$ 0,00</span>
-                </div>
-                <div class="valor-item">
-                  <span>Adicional Noturno</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.adicionalNoturno)}"></span>
-                </div>
-                <div class="valor-item total">
-                  <span>TOTAL PROVENTOS</span>
-                  <span th:text="${#numbers.formatCurrency(
+            <table class="tabela-holerite">
+              <thead>
+                <tr>
+                  <th>Descrição</th>
+                  <th class="col-ref">Ref.</th>
+                  <th class="col-valor">Vencimentos</th>
+                  <th class="col-valor">Descontos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Salário Base -->
+                <tr>
+                  <td>Salário Base</td>
+                  <td class="col-ref" th:text="${#numbers.formatDecimal(holerite.diasTrabalhados, 1, 'POINT', 2, 'COMMA')}">30,00</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                <!-- Horas Extras -->
+                <tr th:if="${holerite.hasHorasExtras()}">
+                  <td>Horas Extras</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                <!-- Férias -->
+                <tr th:if="${holerite.isFerias()}">
+                  <td>1/3 Constitucional (Férias)</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.bonificacoes)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                <!-- Outros Proventos -->
+                <tr th:if="${holerite.hasAdicionalNoturno()}">
+                  <td>Adicional Noturno</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.adicionalNoturno)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                <tr th:if="${holerite.hasComissoes()}">
+                  <td>Comissões</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.comissoes)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                <tr th:if="${holerite.hasAdicionalPericulosidade()}">
+                  <td>Adicional Periculosidade</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.adicionalPericulosidade)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                <tr th:if="${holerite.hasAdicionalInsalubridade()}">
+                  <td>Adicional Insalubridade</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.adicionalInsalubridade)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                <tr th:if="${holerite.hasBonificacoes() && !holerite.isFerias()}">
+                  <td>Bonificações</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.bonificacoes)}"></td>
+                  <td class="col-valor"></td>
+                </tr>
+                
+                <!-- Descontos -->
+                <tr>
+                  <td>INSS</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor"></td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.descontoInss)}"></td>
+                </tr>
+                <tr>
+                  <td>IRRF</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor"></td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.descontoIrrf)}"></td>
+                </tr>
+                <tr>
+                  <td>Plano de Saúde</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor"></td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.descontoPlanoSaude)}"></td>
+                </tr>
+                <tr>
+                  <td>Desconto VR</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor"></td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.descontoValeRefeicao)}"></td>
+                </tr>
+                <tr>
+                  <td>Desconto VT</td>
+                  <td class="col-ref">-</td>
+                  <td class="col-valor"></td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.descontoValeTransporte)}"></td>
+                </tr>
+                <tr th:if="${holerite.hasDescontoFaltas()}">
+                   <td>Faltas</td>
+                   <td class="col-ref" th:text="${holerite.faltas}"></td>
+                   <td class="col-valor"></td>
+                   <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.descontoFaltas)}"></td>
+                </tr>
+                <tr th:if="${holerite.hasOutrosDescontos()}">
+                   <td>Outros Descontos</td>
+                   <td class="col-ref">-</td>
+                   <td class="col-valor"></td>
+                   <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.outrosDescontos)}"></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="2" style="text-align: right">TOTAIS</td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(
                     holerite.salarioBase
                       .add(holerite.horasExtras)
                       .add(holerite.adicionalNoturno)
@@ -316,48 +326,16 @@
                       .add(holerite.adicionalInsalubridade)
                       .add(holerite.comissoes)
                       .add(#strings.toLowerCase(holerite.tipoFolha) == 'ferias' ? holerite.bonificacoes : 0)
-                  )}"></span>
-                </div>
-              </div>
+                  )}"></td>
+                  <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.totalDescontos)}"></td>
+                </tr>
+              </tfoot>
+            </table>
 
-              <!-- Descontos -->
-              <div class="valores-section">
-                <div class="valores-header descontos">
-                  <i class="fas fa-minus-circle"></i> DESCONTOS
-                </div>
-                <div class="valor-item">
-                  <span>INSS</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.descontoInss)}"></span>
-                </div>
-                <div class="valor-item">
-                  <span>IRRF</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.descontoIrrf)}"></span>
-                </div>
-                <div class="valor-item">
-                  <span>Plano de Saúde</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.descontoPlanoSaude)}"></span>
-                </div>
-                <div class="valor-item">
-                  <span>Desconto VR</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.descontoValeRefeicao)}"></span>
-                </div>
-                <div class="valor-item">
-                  <span>Desconto VT</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.descontoValeTransporte)}"></span>
-                </div>
-                <div class="valor-item total">
-                  <span>TOTAL DESCONTOS</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.totalDescontos)}"></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Resumo Final -->
-            <div class="resumo-final">
-              <div class="resumo-grid">
-                <div class="resumo-item">
-                  <div class="resumo-label">Total Proventos</div>
-                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(
+            <div class="liquido-box">
+              Salário Líquido: <span th:text="${#numbers.formatCurrency(holerite.salarioLiquido)}"></span>
+              <span style="font-size: 0.9em; font-weight: normal; color: #666; margin-left: 10px;">
+                (<span th:text="${#numbers.formatDecimal(
                     holerite.salarioBase
                       .add(holerite.horasExtras)
                       .add(holerite.adicionalNoturno)
@@ -365,17 +343,9 @@
                       .add(holerite.adicionalInsalubridade)
                       .add(holerite.comissoes)
                       .add(#strings.toLowerCase(holerite.tipoFolha) == 'ferias' ? holerite.bonificacoes : 0)
-                  )}"></div>
-                </div>
-                <div class="resumo-item">
-                  <div class="resumo-label">Total Descontos</div>
-                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalDescontos)}"></div>
-                </div>
-                <div class="resumo-item">
-                  <div class="resumo-label">Salário Líquido</div>
-                  <div class="resumo-valor liquido" th:text="${#numbers.formatCurrency(holerite.salarioLiquido)}"></div>
-                </div>
-              </div>
+                , 1, 'POINT', 2, 'COMMA')}"></span> - 
+                 <span th:text="${#numbers.formatDecimal(holerite.totalDescontos, 1, 'POINT', 2, 'COMMA')}"></span>)
+              </span>
             </div>
 
             <!-- Informações Adicionais -->
@@ -383,20 +353,20 @@
               <h4 style="margin-bottom: 10px;"><i class="fas fa-info-circle"></i> Informações Adicionais</h4>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
                 <div>
-                  <strong>Base INSS:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras))}"></span><br>
+                  <strong>Base INSS:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoFaltas))}"></span><br>
                   <strong>Base IRRF:</strong>
                   <span th:switch="${#strings.toLowerCase(holerite.tipoFolha)}">
-                    <span th:case="'ferias'" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoInss).add(holerite.bonificacoes))}"></span>
-                    <span th:case="*" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoInss))}"></span>
+                    <span th:case="'ferias'" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoFaltas).subtract(holerite.descontoInss).add(holerite.bonificacoes))}"></span>
+                    <span th:case="*" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoFaltas).subtract(holerite.descontoInss))}"></span>
                   </span><br>
                   <strong>Depósito FGTS (8%):</strong>
                   <span th:switch="${#strings.toLowerCase(holerite.tipoFolha)}">
-                    <span th:case="'ferias'" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).add(holerite.bonificacoes).multiply(0.08))}"></span>
-                    <span th:case="*" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).multiply(0.08))}"></span>
+                    <span th:case="'ferias'" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoFaltas).add(holerite.bonificacoes).multiply(0.08))}"></span>
+                    <span th:case="*" th:text="${#numbers.formatCurrency(holerite.salarioBase.add(holerite.horasExtras).subtract(holerite.descontoFaltas).multiply(0.08))}"></span>
                   </span>
                 </div>
                 <div>
-                  <strong>Dependentes IR:</strong> 0<br>
+                  <strong>Dependentes IR:</strong> <span th:text="${holerite.dependentes}">0</span><br>
                   <strong>Salário Família:</strong> R$ 0,00<br>
                   <strong>13º Proporcional:</strong> R$ 708,33
                   <br>
@@ -417,7 +387,7 @@
           </div>
         </div>
 
-        <article class="card" style="margin-top: 30px;" th:attr="data-folha-id=${holerite.folhaPagamento != null ? holerite.folhaPagamento.id : 0}">
+        <article class="card" style="margin-top: 30px;" th:attr="data-folha-id=${holerite.folhaPagamento != null ? holerite.folhaPagamento.id : 0}" th:if="${pdf == null}">
           <h3><i class="fas fa-list"></i> Holerites Disponíveis</h3>
           <div class="action-buttons">
             <div class="search-box">
@@ -442,7 +412,7 @@
         </article>
       </section>
 
-      <footer th:replace="~{components/footer :: footer}"></footer>
+      <footer th:replace="~{components/footer :: footer}" th:if="${pdf == null}"></footer>
     </main>
   </div>
 
@@ -517,6 +487,7 @@
         }
       });
     }
+    
     let currentHoleritesPage = 0;
     let queryHolerites = '';
     let debounceHolerites;
@@ -545,18 +516,20 @@
         return `<tr>
           <td>${nome}</td>
           <td>${salBase}</td>
-          <td>${prov}</td>
-          <td>${desc}</td>
-          <td>${liq}</td>
-          <td class="actions">
-            <a href="/rh/folha-pagamento/holerite/${id}" class="btn btn-sm btn-info" title="Ver"><i class="fas fa-eye"></i></a>
-            <a href="/rh/folha-pagamento/holerite/${id}/pdf" class="btn btn-sm btn-success" title="PDF"><i class="fas fa-file-pdf"></i></a>
+          <td style="color:green">${prov}</td>
+          <td style="color:red">${desc}</td>
+          <td style="font-weight:bold">${liq}</td>
+          <td>
+            <a href="/rh/folha-pagamento/holerite/${id}" class="btn btn-sm btn-info" title="Visualizar"><i class="fas fa-eye"></i></a>
+            <button onclick="baixarPDF(${id})" class="btn btn-sm btn-success" title="PDF"><i class="fas fa-file-pdf"></i></button>
+            <button onclick="enviarEmail(${id})" class="btn btn-sm btn-primary" title="Email"><i class="fas fa-envelope"></i></button>
           </td>
         </tr>`;
-      }).join('');
-      tbody.innerHTML = rows;
+      });
+      tbody.innerHTML = rows.join('');
     }
-    function renderHoleritesPagination(data){
+    
+    function renderHoleritesPagination(data) {
       const el = document.getElementById('holeritesPagination');
       if (!el) return;
       const totalPages = data.totalPages || 0;
@@ -565,40 +538,54 @@
       const hasPrev = data.hasPrevious;
       const hasNext = data.hasNext;
       let html = '';
-      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} holerites)</span>`;
-      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goHoleritesPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
-      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goHoleritesPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</span>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
       el.innerHTML = html;
     }
-    function loadHolerites(page=0){
+
+    function goToPage(p) { 
+        carregarHoleritesDaFolha(Math.max(0, p), queryHolerites); 
+    }
+
+    function carregarHoleritesDaFolha(page = 0, q = '') {
+      const folhaId = document.querySelector('[data-folha-id]')?.getAttribute('data-folha-id');
+      if (!folhaId || folhaId == '0') return;
+      
       currentHoleritesPage = page;
       showHoleritesLoading(true);
-      const card = document.querySelector('article.card[data-folha-id]');
-      const folhaId = card ? card.getAttribute('data-folha-id') : (document.querySelector('[data-holerite-id]')?.getAttribute('data-holerite-id'));
-      const q = encodeURIComponent(queryHolerites||'');
-      fetch(`/rh/folha-pagamento/api/folha/${folhaId}/holerites?page=${page}&size=20&q=${q}`)
+      
+      const url = `/rh/folha-pagamento/api/folha/${folhaId}/holerites?page=${page}&size=10&q=${encodeURIComponent(q)}`;
+      
+      fetch(url)
         .then(r => r.json())
-        .then(data => { renderHoleritesRows(data.content); renderHoleritesPagination(data); })
-        .catch(() => { renderHoleritesRows([]); renderHoleritesPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); })
+        .then(data => {
+          renderHoleritesRows(data.content);
+          renderHoleritesPagination(data);
+        })
+        .catch(err => {
+            console.error(err);
+            renderHoleritesRows([]);
+        })
         .finally(() => showHoleritesLoading(false));
     }
-    function goHoleritesPage(p){ loadHolerites(Math.max(0,p)); }
-    document.addEventListener('DOMContentLoaded', function(){
-      const input = document.getElementById('buscarHoleriteFolha');
-      if (input){
-        input.addEventListener('input', function(e){
+    
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('buscarHoleriteFolha');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
           clearTimeout(debounceHolerites);
-          queryHolerites = e.target.value || '';
-          debounceHolerites = setTimeout(() => loadHolerites(0), 250);
+          queryHolerites = e.target.value;
+          debounceHolerites = setTimeout(() => {
+            currentHoleritesPage = 0;
+            carregarHoleritesDaFolha(currentHoleritesPage, queryHolerites);
+          }, 500);
         });
       }
-      loadHolerites(0);
+      // Carregar lista inicial
+      carregarHoleritesDaFolha(0);
     });
   </script>
-  
-  <script th:if="${pdf == null}" src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script th:if="${pdf == null}" th:src="@{/js/sidebar.js}"></script>
-
 </body>
-
 </html>

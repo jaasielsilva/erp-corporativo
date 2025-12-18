@@ -55,16 +55,30 @@
     </div>
     <div class="holerite-body">
       <div class="valores-grid">
-        <div class="valores-section">
-          <div class="valores-header">PROVENTOS</div>
-          <div class="valor-item"><span>Salário Base</span><span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span></div>
-          <div class="valor-item"><span>Horas Extras</span><span th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></span></div>
-          <th:block th:if="${#strings.toLowerCase(holerite.tipoFolha) == 'ferias'}">
-            <div class="valor-item"><span>1/3 Constitucional (Férias)</span><span th:text="${#numbers.formatCurrency(holerite.bonificacoes)}"></span></div>
-          </th:block>
-          <div class="valor-item"><span>Vale Refeição</span><span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span></div>
-          <div class="valor-item total"><span>TOTAL PROVENTOS</span><span th:text="${#numbers.formatCurrency(holerite.totalProventos.subtract(holerite.valeTransporte))}"></span></div>
-        </div>
+          <div class="valores-section">
+            <div class="valores-header">PROVENTOS</div>
+            <div class="valor-item"><span>Salário Base</span><span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span></div>
+            <div class="valor-item"><span>Horas Extras</span><span th:text="${#numbers.formatCurrency(holerite.horasExtras)}"></span></div>
+            <div class="valor-item"><span>Adicional Noturno</span><span th:text="${#numbers.formatCurrency(holerite.adicionalNoturno)}"></span></div>
+            <div class="valor-item"><span>Adicional Periculosidade</span><span th:text="${#numbers.formatCurrency(holerite.adicionalPericulosidade)}"></span></div>
+            <div class="valor-item"><span>Adicional Insalubridade</span><span th:text="${#numbers.formatCurrency(holerite.adicionalInsalubridade)}"></span></div>
+            <div class="valor-item"><span>Comissões</span><span th:text="${#numbers.formatCurrency(holerite.comissoes)}"></span></div>
+            <th:block th:if="${#strings.toLowerCase(holerite.tipoFolha) == 'ferias'}">
+              <div class="valor-item"><span>1/3 Constitucional (Férias)</span><span th:text="${#numbers.formatCurrency(holerite.bonificacoes)}"></span></div>
+            </th:block>
+            <div class="valor-item total">
+              <span>TOTAL PROVENTOS</span>
+              <span th:text="${#numbers.formatCurrency(
+                holerite.salarioBase
+                  .add(holerite.horasExtras)
+                  .add(holerite.adicionalNoturno)
+                  .add(holerite.adicionalPericulosidade)
+                  .add(holerite.adicionalInsalubridade)
+                  .add(holerite.comissoes)
+                  .add(#strings.toLowerCase(holerite.tipoFolha) == 'ferias' ? holerite.bonificacoes : 0)
+              )}"></span>
+            </div>
+          </div>
         <div class="valores-section">
           <div class="valores-header">DESCONTOS</div>
           <div class="valor-item"><span>INSS</span><span th:text="${#numbers.formatCurrency(holerite.descontoInss)}"></span></div>
@@ -79,7 +93,15 @@
         <div class="resumo-grid">
           <div class="resumo-item">
             <div class="resumo-label">Total Proventos</div>
-            <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalProventos.subtract(holerite.valeTransporte))}"></div>
+            <div class="resumo-valor" th:text="${#numbers.formatCurrency(
+              holerite.salarioBase
+                .add(holerite.horasExtras)
+                .add(holerite.adicionalNoturno)
+                .add(holerite.adicionalPericulosidade)
+                .add(holerite.adicionalInsalubridade)
+                .add(holerite.comissoes)
+                .add(#strings.toLowerCase(holerite.tipoFolha) == 'ferias' ? holerite.bonificacoes : 0)
+            )}"></div>
           </div>
           <div class="resumo-item">
             <div class="resumo-label">Total Descontos</div>
@@ -104,7 +126,11 @@
           </div>
           <div class="resumo-item">
             <div class="resumo-label">Benefícios não remuneratórios</div>
-            <div class="resumo-valor">Subsídio VT (empresa): <span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span></div>
+            <div class="resumo-valor">
+              Subsídio VT (empresa): <span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span><br/>
+              Subsídio VR (empresa): <span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span><br/>
+              Auxílio Saúde (subsídio empresa): <span th:text="${#numbers.formatCurrency(holerite.auxilioSaude)}"></span>
+            </div>
           </div>
         </div>
       </div>

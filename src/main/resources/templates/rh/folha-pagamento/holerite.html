@@ -303,12 +303,20 @@
                   <span>R$ 0,00</span>
                 </div>
                 <div class="valor-item">
-                  <span>Vale Refeição</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span>
+                  <span>Adicional Noturno</span>
+                  <span th:text="${#numbers.formatCurrency(holerite.adicionalNoturno)}"></span>
                 </div>
                 <div class="valor-item total">
                   <span>TOTAL PROVENTOS</span>
-                  <span th:text="${#numbers.formatCurrency(holerite.totalProventos.subtract(holerite.valeTransporte))}"></span>
+                  <span th:text="${#numbers.formatCurrency(
+                    holerite.salarioBase
+                      .add(holerite.horasExtras)
+                      .add(holerite.adicionalNoturno)
+                      .add(holerite.adicionalPericulosidade)
+                      .add(holerite.adicionalInsalubridade)
+                      .add(holerite.comissoes)
+                      .add(#strings.toLowerCase(holerite.tipoFolha) == 'ferias' ? holerite.bonificacoes : 0)
+                  )}"></span>
                 </div>
               </div>
 
@@ -349,7 +357,15 @@
               <div class="resumo-grid">
                 <div class="resumo-item">
                   <div class="resumo-label">Total Proventos</div>
-                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(holerite.totalProventos.subtract(holerite.valeTransporte))}"></div>
+                  <div class="resumo-valor" th:text="${#numbers.formatCurrency(
+                    holerite.salarioBase
+                      .add(holerite.horasExtras)
+                      .add(holerite.adicionalNoturno)
+                      .add(holerite.adicionalPericulosidade)
+                      .add(holerite.adicionalInsalubridade)
+                      .add(holerite.comissoes)
+                      .add(#strings.toLowerCase(holerite.tipoFolha) == 'ferias' ? holerite.bonificacoes : 0)
+                  )}"></div>
                 </div>
                 <div class="resumo-item">
                   <div class="resumo-label">Total Descontos</div>
@@ -385,7 +401,9 @@
                   <strong>13º Proporcional:</strong> R$ 708,33
                   <br>
                   <strong>Benefícios não remuneratórios:</strong><br>
-                  Subsídio VT (empresa): <span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span>
+                  Subsídio VT (empresa): <span th:text="${#numbers.formatCurrency(holerite.valeTransporte)}"></span><br>
+                  Subsídio VR (empresa): <span th:text="${#numbers.formatCurrency(holerite.valeRefeicao)}"></span><br>
+                  Auxílio Saúde (subsídio empresa): <span th:text="${#numbers.formatCurrency(holerite.auxilioSaude)}"></span>
                 </div>
               </div>
             </div>

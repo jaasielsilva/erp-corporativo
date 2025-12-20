@@ -113,7 +113,7 @@ public class ContaPagarController {
             BindingResult result,
             RedirectAttributes redirectAttributes,
             Model model,
-            @ModelAttribute("usuarioLogado") Usuario usuario) {
+            @RequestAttribute("usuarioLogado") Usuario usuario) {
 
         if (result.hasErrors()) {
             model.addAttribute("fornecedores", fornecedorService.listarAtivos());
@@ -180,7 +180,7 @@ public class ContaPagarController {
     // ================= EXCLUIR =================
     @PostMapping("/excluir/{id}")
     public String excluir(@PathVariable Long id,
-                          @ModelAttribute("usuarioLogado") Usuario usuario,
+                          @RequestAttribute("usuarioLogado") Usuario usuario,
                           RedirectAttributes redirectAttributes) {
         try {
             contaPagarService.excluir(id, usuario);
@@ -225,7 +225,7 @@ public class ContaPagarController {
     @PostMapping("/cancelar/{id}")
     public String cancelar(@PathVariable Long id,
             @RequestParam("motivo") String motivo,
-            @ModelAttribute("usuarioLogado") Usuario usuario,
+            @RequestAttribute("usuarioLogado") Usuario usuario,
             RedirectAttributes redirectAttributes) {
         try {
             contaPagarService.cancelar(id, motivo, usuario);

@@ -12,6 +12,9 @@ import com.jaasielsilva.portalceo.service.*;
 import lombok.RequiredArgsConstructor;
 
 import org.hibernate.Hibernate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,18 +58,19 @@ public class FinanceiroController {
 
             LocalDate hoje = LocalDate.now();
 
-            List<FluxoCaixa> recentTransactions = List.of();
+            Page<FluxoCaixa> recentTransactionsPage = Page.empty();
             try {
                 LocalDate trintaDiasAtras = hoje.minusDays(30);
-                List<FluxoCaixa> ultimas30Dias = fluxoCaixaService.findByPeriodo(trintaDiasAtras, hoje);
-                if (ultimas30Dias != null) {
-                    recentTransactions = ultimas30Dias.stream()
-                            .sorted((a, b) -> b.getData().compareTo(a.getData()))
-                            .limit(10)
-                            .toList();
-
+                
+                recentTransactionsPage = fluxoCaixaService.findByPeriodoPaginated(
+                    trintaDiasAtras, 
+                    hoje, 
+                    PageRequest.of(page, 5, Sort.by("data").descending())
+                );
+                
+                if (recentTransactionsPage.hasContent()) {
                     // Inicializar proxies para evitar LazyInitializationException
-                    recentTransactions.forEach(t -> {
+                    recentTransactionsPage.getContent().forEach(t -> {
                         if (t.getContaPagar() != null) {
                             Hibernate.initialize(t.getContaPagar());
                             if (t.getContaPagar().getFornecedor() != null) {
@@ -89,11 +93,13 @@ public class FinanceiroController {
                         if (t.getTransferencia() != null) Hibernate.initialize(t.getTransferencia());
                     });
                 }
-                model.addAttribute("recentTransactions", recentTransactions);
-                model.addAttribute("totalRecentTransactions", recentTransactions.size());
+                model.addAttribute("recentTransactions", recentTransactionsPage.getContent());
+                model.addAttribute("recentTransactionsPage", recentTransactionsPage);
+                model.addAttribute("totalRecentTransactions", recentTransactionsPage.getTotalElements());
             } catch (Exception e) {
                 System.err.println("Erro ao buscar transações recentes: " + e.getMessage());
                 model.addAttribute("recentTransactions", List.of());
+                model.addAttribute("recentTransactionsPage", Page.empty());
                 model.addAttribute("totalRecentTransactions", 0);
             }
 
@@ -329,7 +335,7 @@ public class FinanceiroController {
 
     @PostMapping("/transferencias/nova")
     public String realizarTransferencia(@ModelAttribute TransferenciaDTO dto, 
-                                        @ModelAttribute("usuarioLogado") Usuario usuario,
+                                        @RequestAttribute("usuarioLogado") Usuario usuario,
                                         RedirectAttributes redirectAttributes) {
         try {
             transferenciaService.realizarTransferencia(dto, usuario);
@@ -422,7 +428,7 @@ public class FinanceiroController {
     public ResponseEntity<Map<String, Object>> receberConta(@PathVariable Long id,
             @RequestParam BigDecimal valor,
             @RequestParam(required = false) String observacoes,
-            @ModelAttribute("usuarioLogado") Usuario usuario) {
+            @RequestAttribute("usuarioLogado") Usuario usuario) {
         Map<String, Object> response = new HashMap<>();
         try {
             ContaReceber conta = contaReceberService.receberConta(id, valor, observacoes, usuario);
@@ -444,7 +450,7 @@ public class FinanceiroController {
     @ResponseBody
     public ResponseEntity<ContaReceber> cancelarConta(@PathVariable Long id,
                                                       @RequestParam String motivo,
-                                                      @ModelAttribute("usuarioLogado") Usuario usuario) {
+                                                      @RequestAttribute("usuarioLogado") Usuario usuario) {
         try {
             return ResponseEntity.ok(contaReceberService.cancelarConta(id, motivo, usuario));
         } catch (Exception e) {

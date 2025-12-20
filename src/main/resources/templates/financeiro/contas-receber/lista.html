@@ -164,28 +164,99 @@
     <script src="/js/sidebar.js" defer></script>
     <script th:src="@{/js/notifications.js}"></script>
 
-    <!-- Função registrar pagamento (Mantendo lógica original) -->
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Função registrar pagamento com SweetAlert2 -->
     <script>
         function registrarPagamento(contaId) {
-            // Em uma versão futura, substituir prompt por um modal Bootstrap bonito
-            let valorPago = prompt("Informe o valor pago:");
-            if (valorPago) {
-                // Remove R$ e formata numero se necessário, assumindo entrada simples por enquanto
-                valorPago = valorPago.replace(',', '.');
-                
-                fetch(`/financeiro/api/contas-receber/${contaId}/receber?valor=${valorPago}&usuarioId=1`, {
-                    method: 'PUT'
-                })
-                    .then(res => {
-                        if (!res.ok) throw new Error('Erro ao registrar pagamento');
-                        return res.json();
+            Swal.fire({
+                title: 'Registrar Recebimento',
+                html: `
+                    <div class="text-start">
+                        <label class="form-label fw-bold">Valor Pago (R$)</label>
+                        <input type="number" step="0.01" id="valorPagoInput" class="form-control mb-3" placeholder="0.00">
+                        
+                        <label class="form-label fw-bold">Observações</label>
+                        <textarea id="observacoesInput" class="form-control" rows="2" placeholder="Detalhes do recebimento"></textarea>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Confirmar Recebimento',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                preConfirm: () => {
+                    const valor = document.getElementById('valorPagoInput').value;
+                    const observacoes = document.getElementById('observacoesInput').value;
+                    if (!valor) {
+                        Swal.showValidationMessage('Por favor, informe o valor pago');
+                    }
+                    return { valor: valor, observacoes: observacoes };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const { valor, observacoes } = result.value;
+                    
+                    Swal.fire({
+                        title: 'Processando...',
+                        text: 'Registrando pagamento.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Format valor (replace comma if user typed it, though type=number handles dots usually)
+                    const valorFormatado = valor.replace(',', '.');
+
+                    fetch(`/financeiro/api/contas-receber/${contaId}/receber?valor=${valorFormatado}&observacoes=${encodeURIComponent(observacoes)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
                     })
-                    .then(data => {
-                        alert('Pagamento registrado com sucesso.');
-                        location.reload();
+                    .then(async res => {
+                        if (res.ok) {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Sucesso!',
+                                text: 'Pagamento registrado com sucesso.',
+                                confirmButtonColor: '#198754'
+                            });
+                            location.reload();
+                        } else {
+                            let errorMsg = 'Erro desconhecido';
+                            try {
+                                const data = await res.json();
+                                errorMsg = data.mensagem || data.error || JSON.stringify(data);
+                            } catch (e) {
+                                errorMsg = await res.text();
+                                if (errorMsg.includes('<!DOCTYPE html>')) {
+                                    errorMsg = 'Erro interno do servidor. Verifique os logs.';
+                                }
+                            }
+                            
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: errorMsg,
+                                confirmButtonColor: '#d33'
+                            });
+                        }
                     })
-                    .catch(err => alert(err.message));
-            }
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro de Conexão',
+                            text: 'Não foi possível conectar ao servidor: ' + err,
+                            confirmButtonColor: '#d33'
+                        });
+                    });
+                }
+            });
         }
     </script>
 </body>

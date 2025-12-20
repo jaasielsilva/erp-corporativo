@@ -27,66 +27,60 @@ public class UsuarioLogadoInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         
-        // Verificar se é uma requisição para endpoints financeiros críticos
+        // Verificar se é uma requisição para endpoints financeiros
+        // A configuração de quais URLs são interceptadas está em WebSecurityConfig
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
         
-        if (isFinancialCriticalEndpoint(requestURI, method)) {
-            
-            // Validar se existe usuário logado
-            Usuario usuarioLogado = getCurrentUser();
-            
-            if (usuarioLogado == null) {
-                logger.warn("Tentativa de acesso a endpoint crítico sem usuário logado - URI: {}, Method: {}, IP: {}", 
+        // Ignorar recursos estáticos se passarem pelo filtro (embora WebConfig deva excluir)
+        if (isStaticResource(requestURI)) {
+            return true;
+        }
+
+        // Validar se existe usuário logado
+        Usuario usuarioLogado = getCurrentUser();
+        
+        if (usuarioLogado == null) {
+            // Se for endpoint crítico (POST/PUT/DELETE), bloquear
+            if (isModifyingOperation(method)) {
+                logger.warn("Tentativa de modificação sem usuário logado - URI: {}, Method: {}, IP: {}", 
                     requestURI, method, getClientIp(request));
                 
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\":\"Usuário não autenticado para operação crítica\"}");
+                response.getWriter().write("{\"error\":\"Usuário não autenticado\"}");
                 response.setContentType("application/json");
                 return false;
             }
-            
-            // Validar se o usuário está ativo
-            if (usuarioLogado.getStatus() != Usuario.Status.ATIVO) {
-                logger.warn("Tentativa de acesso com usuário inativo - ID: {}, Status: {}, URI: {}", 
-                    usuarioLogado.getId(), usuarioLogado.getStatus(), requestURI);
-                
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.getWriter().write("{\"error\":\"Usuário não está ativo no sistema\"}");
-                response.setContentType("application/json");
-                return false;
-            }
-            
-            // Adicionar usuário ao request para uso posterior
-            request.setAttribute("usuarioLogado", usuarioLogado);
-            
-            // Log de auditoria para operações críticas
-            logger.info("Acesso autorizado a endpoint crítico - Usuário: {} (ID: {}), URI: {}, Method: {}", 
-                usuarioLogado.getNome(), usuarioLogado.getId(), requestURI, method);
+            // Para GET, apenas não injeta o usuário (ou poderia redirecionar login)
+            // Mas como Spring Security cuida do login, assumimos que pode ser acesso anônimo permitido ou erro de config
+            return true; 
         }
+        
+        // Validar se o usuário está ativo
+        if (usuarioLogado.getStatus() != Usuario.Status.ATIVO) {
+            logger.warn("Tentativa de acesso com usuário inativo - ID: {}, Status: {}, URI: {}", 
+                usuarioLogado.getId(), usuarioLogado.getStatus(), requestURI);
+            
+            if (isModifyingOperation(method)) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.getWriter().write("{\"error\":\"Usuário inativo\"}");
+                response.setContentType("application/json");
+                return false;
+            }
+        }
+        
+        // Adicionar usuário ao request para uso em Controllers e Views (Thymeleaf)
+        request.setAttribute("usuarioLogado", usuarioLogado);
         
         return true;
     }
 
-    /**
-     * Verifica se o endpoint é crítico para operações financeiras
-     */
-    private boolean isFinancialCriticalEndpoint(String uri, String method) {
-        // Endpoints de criação, edição, exclusão e aprovação
-        if ("POST".equals(method) || "PUT".equals(method) || "DELETE".equals(method)) {
-            return uri.contains("/financeiro/") || 
-                   uri.contains("/conta-pagar/") || 
-                   uri.contains("/conta-receber/") ||
-                   uri.contains("/fluxo-caixa/") ||
-                   uri.contains("/vendas/");
-        }
-        
-        // Endpoints específicos de aprovação e operações críticas
-        return uri.contains("/aprovar") || 
-               uri.contains("/excluir") || 
-               uri.contains("/pagar") ||
-               uri.contains("/receber") ||
-               uri.matches(".*/(editar|salvar|criar).*");
+    private boolean isModifyingOperation(String method) {
+        return "POST".equals(method) || "PUT".equals(method) || "DELETE".equals(method);
+    }
+
+    private boolean isStaticResource(String uri) {
+        return uri.contains("/css/") || uri.contains("/js/") || uri.contains("/images/") || uri.contains("/fonts/");
     }
 
     /**

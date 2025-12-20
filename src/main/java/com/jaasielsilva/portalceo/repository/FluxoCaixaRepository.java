@@ -15,6 +15,8 @@ public interface FluxoCaixaRepository extends JpaRepository<FluxoCaixa, Long> {
 
     List<FluxoCaixa> findByDataBetweenOrderByData(LocalDate dataInicio, LocalDate dataFim);
 
+    org.springframework.data.domain.Page<FluxoCaixa> findByDataBetween(LocalDate dataInicio, LocalDate dataFim, org.springframework.data.domain.Pageable pageable);
+
     List<FluxoCaixa> findByTipoMovimentoAndDataBetweenOrderByData(FluxoCaixa.TipoMovimento tipoMovimento, LocalDate dataInicio, LocalDate dataFim);
 
     List<FluxoCaixa> findByCategoriaAndDataBetweenOrderByData(FluxoCaixa.CategoriaFluxo categoria, LocalDate dataInicio, LocalDate dataFim);

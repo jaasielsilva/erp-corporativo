@@ -51,6 +51,11 @@ public class FluxoCaixaService {
         return fluxoCaixaRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<FluxoCaixa> findByPeriodoPaginated(LocalDate inicio, LocalDate fim, org.springframework.data.domain.Pageable pageable) {
+        return fluxoCaixaRepository.findByDataBetween(inicio, fim, pageable);
+    }
+
     public void deleteById(Long id) {
         fluxoCaixaRepository.findById(id).ifPresent(fluxo -> {
             if (fluxo.getStatus() == FluxoCaixa.StatusFluxo.REALIZADO) {

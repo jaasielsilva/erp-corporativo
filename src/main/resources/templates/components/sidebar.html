@@ -2,6 +2,7 @@
   <div>
     <div class="user-panel">
       <img th:if="${usuarioLogado != null}" th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}"
+        onerror="this.onerror=null;this.src='/img/gerente.png';"
         alt="Foto do usuário" class="user-avatar" />
       <div class="user-info">
         <div class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Nome do Usuário</div>

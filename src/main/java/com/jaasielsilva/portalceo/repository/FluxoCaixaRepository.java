@@ -36,7 +36,7 @@ public interface FluxoCaixaRepository extends JpaRepository<FluxoCaixa, Long> {
     @Query("SELECT f.categoria, SUM(f.valor) FROM FluxoCaixa f WHERE f.tipoMovimento = :tipoMovimento AND f.data BETWEEN :inicio AND :fim AND f.status = 'REALIZADO' GROUP BY f.categoria ORDER BY SUM(f.valor) DESC")
     List<Object[]> sumValorByCategoriaAndTipoMovimento(@Param("tipoMovimento") FluxoCaixa.TipoMovimento tipoMovimento, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
-    @Query("SELECT DATE(f.data), SUM(CASE WHEN f.tipoMovimento = 'ENTRADA' THEN f.valor ELSE 0 END), SUM(CASE WHEN f.tipoMovimento = 'SAIDA' THEN f.valor ELSE 0 END) FROM FluxoCaixa f WHERE f.data BETWEEN :inicio AND :fim AND f.status = 'REALIZADO' GROUP BY DATE(f.data) ORDER BY DATE(f.data)")
+    @Query("SELECT f.data, SUM(CASE WHEN f.tipoMovimento = 'ENTRADA' THEN f.valor ELSE 0 END), SUM(CASE WHEN f.tipoMovimento = 'SAIDA' THEN f.valor ELSE 0 END) FROM FluxoCaixa f WHERE f.data BETWEEN :inicio AND :fim AND f.status = 'REALIZADO' GROUP BY f.data ORDER BY f.data")
     List<Object[]> getFluxoDiario(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 
     @Query("SELECT YEAR(f.data), MONTH(f.data), SUM(CASE WHEN f.tipoMovimento = 'ENTRADA' THEN f.valor ELSE 0 END), SUM(CASE WHEN f.tipoMovimento = 'SAIDA' THEN f.valor ELSE 0 END) FROM FluxoCaixa f WHERE f.data BETWEEN :inicio AND :fim AND f.status = 'REALIZADO' GROUP BY YEAR(f.data), MONTH(f.data) ORDER BY YEAR(f.data), MONTH(f.data)")

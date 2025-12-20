@@ -91,6 +91,11 @@ public class RelatorioFinanceiroService {
      * Gera o Relatório de Fluxo de Caixa (Diário)
      */
     public RelatorioFluxoCaixaDTO gerarFluxoCaixa(LocalDate inicio, LocalDate fim) {
+        if (inicio != null && fim != null && fim.isBefore(inicio)) {
+            LocalDate tmp = inicio;
+            inicio = fim;
+            fim = tmp;
+        }
         RelatorioFluxoCaixaDTO relatorio = new RelatorioFluxoCaixaDTO();
         
         // 1. Calcular Saldo Inicial (acumulado até o dia anterior ao inicio)

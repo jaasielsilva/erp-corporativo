@@ -527,22 +527,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                     ));
             final int CHUNK_SIZE = 500;
             final int PAGE_SIZE = 800;
-            if (totalRestantes <= PAGE_SIZE) {
-                List<Colaborador> colaboradores = colaboradorRepository.findByAtivoTrue();
-                colaboradores = colaboradores.stream()
-                        .filter(c -> c.getId() != null && !colabsJaProcessados.contains(c.getId()))
-                        .collect(Collectors.toList());
-                Map<Long, BeneficiosInfo> beneficiosPorColaborador = carregarBeneficiosEmLote(colaboradores, mes, ano);
-                FolhaPagamento folhaRef = new FolhaPagamento();
-                folhaRef.setId(folhaId);
-                List<Holerite> holerites = colaboradores.stream().map(col -> {
-                    RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo = resumoPorColaborador.get(col.getId());
-                    BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(col.getId(), new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()));
-                    return gerarHoleriteComBeneficios(col, folhaRef, mes, ano, resumo, beneficios, tipoFolha);
-                }).collect(Collectors.toList());
-                holeriteRepository.saveAll(holerites);
-                holeriteRepository.flush();
-            }
+            // Otimização anterior removida para evitar duplicação (executava aqui E na paginação abaixo)
             int totalProcessados = 0;
             int blocosProcessados = 0;
             int totalPages = (int) Math.ceil((double) totalAtivos / (double) PAGE_SIZE);

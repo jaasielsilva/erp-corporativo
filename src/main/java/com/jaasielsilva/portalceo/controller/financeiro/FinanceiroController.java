@@ -330,6 +330,7 @@ public class FinanceiroController {
         model.addAttribute("moduleCSS", "financeiro");
         model.addAttribute("contas", contaBancariaService.listarContasAtivas());
         model.addAttribute("transferenciaDTO", new TransferenciaDTO());
+        model.addAttribute("historicoTransferencias", transferenciaService.listarTodas());
         return "financeiro/transferencias";
     }
 

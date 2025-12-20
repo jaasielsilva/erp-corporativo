@@ -25,6 +25,11 @@ public class TransferenciaService {
     @Autowired
     private FluxoCaixaRepository fluxoCaixaRepository;
 
+    @Transactional(readOnly = true)
+    public java.util.List<Transferencia> listarTodas() {
+        return transferenciaRepository.findAll(org.springframework.data.domain.Sort.by("dataTransferencia").descending());
+    }
+
     @Transactional
     public void realizarTransferencia(TransferenciaDTO dto, Usuario usuario) {
         // 1. Validar Contas

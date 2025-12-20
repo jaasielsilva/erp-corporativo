@@ -13,264 +13,308 @@
     <link href="/css/financeiro.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 </head>
 
 <body>
-<!-- Verificação de permissão para acessar o módulo financeiro -->
-<div th:if="${!podeAcessarFinanceiro}" class="container mt-5">
-    <div class="alert alert-danger text-center">
-        <h4><i class="fas fa-exclamation-triangle"></i> Acesso Negado</h4>
-        <p>Você não tem permissão para acessar o módulo financeiro.</p>
-        <a href="/" class="btn btn-primary">Voltar ao Dashboard</a>
+    <!-- Verificação de permissão para acessar o módulo financeiro -->
+    <div th:if="${!podeAcessarFinanceiro}" class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="fas fa-exclamation-triangle"></i> Acesso Negado</h4>
+            <p>Você não tem permissão para acessar o módulo financeiro.</p>
+            <a href="/" class="btn btn-primary">Voltar ao Dashboard</a>
+        </div>
     </div>
-</div>
 
-<div th:if="${podeAcessarFinanceiro}" class="app-container">
+    <div th:if="${podeAcessarFinanceiro}" class="app-container">
 
-    <!-- Sidebar -->
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
+        <!-- Main Content -->
+        <main class="main-content">
 
-        <!-- Topbar -->
-        <header th:replace="~{components/topbar :: topbar}"></header>
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-        <!-- Conteúdo da página -->
-        <section class="content-area px-4 py-4">
+            <!-- Conteúdo da página -->
+            <section class="content-area px-4 py-4">
 
-            <!-- Cabeçalho e Navegação do Módulo -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h4 mb-1">
-                        <i class="fas fa-exchange-alt me-2 text-primary"></i>Transferências
-                    </h1>
-                    <p class="text-muted mb-0">Gerenciamento de transferências internas</p>
+                <!-- Cabeçalho e Navegação do Módulo -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h4 mb-1">
+                            <i class="fas fa-exchange-alt me-2 text-primary"></i>Transferências
+                        </h1>
+                        <p class="text-muted mb-0">Gerenciamento de transferências entre contas</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/financeiro" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Voltar
+                        </a>
+                        <button class="btn btn-primary" onclick="novaTransferencia()">
+                            <i class="fas fa-plus me-1"></i> Nova Transferência
+                        </button>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <a href="/financeiro" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i> Voltar
+
+                <!-- Navegação Rápida -->
+                <div class="module-nav">
+                    <a href="/financeiro" class="module-nav-link">
+                        <i class="fas fa-chart-line"></i> Dashboard
                     </a>
-                    <button class="btn btn-primary" onclick="novaTransferencia()">
-                        <i class="fas fa-plus me-1"></i> Nova Transferência
-                    </button>
+                    <a href="/financeiro/contas-pagar" class="module-nav-link">
+                        <i class="fas fa-file-invoice-dollar"></i> Contas a Pagar
+                    </a>
+                    <a href="/financeiro/contas-receber" class="module-nav-link">
+                        <i class="fas fa-hand-holding-usd"></i> Contas a Receber
+                    </a>
+                    <a href="/financeiro/fluxo-caixa" class="module-nav-link">
+                        <i class="fas fa-cash-register"></i> Fluxo de Caixa
+                    </a>
                 </div>
-            </div>
 
-            <!-- Navegação Rápida -->
-            <div class="module-nav">
-                <a href="/financeiro" class="module-nav-link">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-                <a href="/financeiro/contas-pagar" class="module-nav-link">
-                    <i class="fas fa-file-invoice-dollar"></i> Contas a Pagar
-                </a>
-                <a href="/financeiro/contas-receber" class="module-nav-link">
-                    <i class="fas fa-hand-holding-usd"></i> Contas a Receber
-                </a>
-                <a href="/financeiro/fluxo-caixa" class="module-nav-link">
-                    <i class="fas fa-cash-register"></i> Fluxo de Caixa
-                </a>
-            </div>
+                <!-- Mensagens de Feedback -->
+                <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> <span th:text="${sucesso}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${erro}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
 
-            <!-- Mensagens de Feedback -->
-            <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i> <span th:text="${sucesso}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${erro}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-
-            <!-- Resumo das Contas -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-4" th:each="conta : ${contas}">
-                    <div class="kpi-card">
-                        <div class="card-body">
-                            <i class="fas fa-university kpi-icon text-info"></i>
-                            <div class="kpi-title" th:text="${conta.nome}">Banco</div>
-                            <div class="kpi-value" th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
-                            <div class="kpi-trend text-muted small mt-2">
-                                <span th:text="${conta.banco != null ? conta.banco : 'Interno'}"></span>
+                <!-- Resumo das Contas -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3" th:each="conta : ${contas}">
+                        <div class="kpi-card">
+                            <div class="card-body">
+                                <i class="fas fa-university kpi-icon text-info"></i>
+                                <div class="kpi-title" th:text="${conta.nome}">Banco</div>
+                                <div class="kpi-value"
+                                    th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">
+                                    R$ 0,00</div>
+                                <div class="kpi-trend text-muted small mt-2">
+                                    <span th:text="${conta.banco != null ? conta.banco : 'Interno'}"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Histórico de Transferências -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0"><i class="fas fa-history me-2 text-muted"></i>Histórico de Transferências</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Data</th>
+                                        <th>Origem</th>
+                                        <th>Destino</th>
+                                        <th>Descrição</th>
+                                        <th class="text-end pe-4">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${#lists.isEmpty(historicoTransferencias)}">
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
+                                            Nenhuma transferência registrada.
+                                        </td>
+                                    </tr>
+                                    <tr th:each="transf : ${historicoTransferencias}">
+                                        <td class="ps-4" th:text="${#temporals.format(transf.dataTransferencia, 'dd/MM/yyyy')}">
+                                            01/01/2024
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="fas fa-arrow-up text-danger me-1"></i>
+                                                <span th:text="${transf.contaOrigem.nome}">Conta A</span>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="fas fa-arrow-down text-success me-1"></i>
+                                                <span th:text="${transf.contaDestino.nome}">Conta B</span>
+                                            </span>
+                                        </td>
+                                        <td th:text="${transf.descricao}">Transferência ref. X</td>
+                                        <td class="text-end pe-4 fw-bold text-primary"
+                                            th:text="'R$ ' + ${#numbers.formatDecimal(transf.valor, 1, 'POINT', 2, 'COMMA')}">
+                                            R$ 1.000,00
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Nova Transferência -->
+    <div class="modal fade" id="modalNovaTransferencia" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Nova Transferência</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formTransferencia">
+                        <div class="mb-3">
+                            <label class="form-label">Conta de Origem (Sai Dinheiro)</label>
+                            <select class="form-select" id="contaOrigem" name="contaOrigemId" required>
+                                <option value="" selected disabled>Selecione a conta de origem</option>
+                                <option th:each="conta : ${contas}" th:value="${conta.id}"
+                                    th:text="${conta.nome} + ' (Saldo: R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')} + ')'">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Conta de Destino (Entra Dinheiro)</label>
+                            <select class="form-select" id="contaDestino" name="contaDestinoId" required>
+                                <option value="" selected disabled>Selecione a conta de destino</option>
+                                <option th:each="conta : ${contas}" th:value="${conta.id}" th:text="${conta.nome}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Valor (R$)</label>
+                                <input type="text" class="form-control money" id="valor" name="valor" required placeholder="0,00">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data</label>
+                                <input type="date" class="form-control" id="dataTransferencia" name="dataTransferencia" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="descricao" name="descricao" required
+                                placeholder="Ex: Aporte para capital de giro">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="salvarTransferencia()">
+                        <i class="fas fa-check me-1"></i> Confirmar Transferência
+                    </button>
+                </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Placeholder se não houver transferências recentes (futuro: tabela de histórico) -->
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0">Histórico de Transferências</h5>
-                </div>
-                <div class="card-body text-center py-5">
-                    <p class="text-muted mb-0">O histórico de transferências pode ser consultado no Fluxo de Caixa.</p>
-                </div>
-            </div>
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        </section>
+    <script>
+        $(document).ready(function () {
+            // Inicializar máscara de dinheiro
+            $('.money').mask('#.##0,00', { reverse: true });
 
-        <!-- Footer -->
-        <footer th:replace="~{components/footer :: footer}"></footer>
-
-    </main>
-</div>
-<!-- Fim da verificação de permissão -->
-
-<!-- Scripts -->
-<script src="/js/sidebar.js" defer></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script th:src="@{/js/notifications.js}"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    const contas = [
-        /*[# th:each="c : ${contas}"]*/
-        {
-            id: /*[[${c.id}]]*/ 0,
-            nome: /*[[${c.nome}]]*/ '',
-            saldo: /*[[${c.saldo}]]*/ 0,
-            banco: /*[[${c.banco}]]*/ '',
-            saldoFmt: /*[[${#numbers.formatDecimal(c.saldo, 1, 'POINT', 2, 'COMMA')}]]*/ '0,00'
-        },
-        /*[/]*/
-    ];
-    
-    const csrfToken = /*[[${_csrf != null ? _csrf.token : ''}]]*/ '';
-    const csrfHeader = /*[[${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}]]*/ 'X-CSRF-TOKEN';
-    /*]]>*/
-
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    };
-    if (csrfToken) {
-        headers[csrfHeader] = csrfToken;
-    }
-
-    function novaTransferencia() {
-        const hoje = new Date().toISOString().split('T')[0];
-        
-        let optionsOrigem = '<option value="">Selecione...</option>';
-        contas.forEach(c => {
-            optionsOrigem += `<option value="${c.id}">${c.nome} (R$ ${c.saldoFmt})</option>`;
-        });
-        
-        let optionsDestino = '<option value="">Selecione...</option>';
-        contas.forEach(c => {
-            optionsDestino += `<option value="${c.id}">${c.nome}</option>`;
+            // Definir data de hoje como padrão
+            document.getElementById('dataTransferencia').valueAsDate = new Date();
         });
 
-        Swal.fire({
-            title: 'Nova Transferência',
-            html: `
-                <div class="text-start">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Conta de Origem</label>
-                        <select class="form-select" id="swalOrigem">
-                            ${optionsOrigem}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Conta de Destino</label>
-                        <select class="form-select" id="swalDestino">
-                            ${optionsDestino}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Valor (R$)</label>
-                        <input type="text" class="form-control money" id="swalValor" placeholder="0,00">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Data</label>
-                        <input type="date" class="form-control" id="swalData" value="${hoje}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Descrição</label>
-                        <input type="text" class="form-control" id="swalDescricao" placeholder="Ex: Transferência para cobrir saldo">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Observações</label>
-                        <textarea class="form-control" id="swalObs" rows="2"></textarea>
-                    </div>
-                </div>
-            `,
-            width: '600px',
-            showCancelButton: true,
-            confirmButtonText: 'Confirmar Transferência',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#0d6efd',
-            didOpen: () => {
-                $('.money').mask('#.##0,00', {reverse: true});
-                
-                const origem = document.getElementById('swalOrigem');
-                const destino = document.getElementById('swalDestino');
-                
-                origem.addEventListener('change', function() {
-                    for(let opt of destino.options) opt.disabled = false;
-                    if(this.value) {
-                         const opt = destino.querySelector(`option[value="${this.value}"]`);
-                         if(opt) opt.disabled = true;
-                    }
-                });
-            },
-            preConfirm: () => {
-                const origemId = document.getElementById('swalOrigem').value;
-                const destinoId = document.getElementById('swalDestino').value;
-                const valorStr = document.getElementById('swalValor').value;
-                const data = document.getElementById('swalData').value;
-                const descricao = document.getElementById('swalDescricao').value;
-                const obs = document.getElementById('swalObs').value;
+        function novaTransferencia() {
+            var myModal = new bootstrap.Modal(document.getElementById('modalNovaTransferencia'));
+            myModal.show();
+        }
 
-                if (!origemId) return Swal.showValidationMessage('Selecione a conta de origem');
-                if (!destinoId) return Swal.showValidationMessage('Selecione a conta de destino');
-                if (!valorStr) return Swal.showValidationMessage('Informe o valor');
-                if (!data) return Swal.showValidationMessage('Informe a data');
-                if (!descricao) return Swal.showValidationMessage('Informe uma descrição');
+        function salvarTransferencia() {
+            // Validação básica
+            const origem = $('#contaOrigem').val();
+            const destino = $('#contaDestino').val();
+            const valorStr = $('#valor').val();
+            const data = $('#dataTransferencia').val();
+            const descricao = $('#descricao').val();
 
-                if (origemId === destinoId) return Swal.showValidationMessage('Origem e destino devem ser diferentes');
-
-                const valor = valorStr.replace(/\./g, '').replace(',', '.');
-                
-                return {
-                    contaOrigemId: origemId,
-                    contaDestinoId: destinoId,
-                    valor: parseFloat(valor),
-                    dataTransferencia: data,
-                    descricao: descricao,
-                    observacoes: obs
-                };
+            if (!origem || !destino || !valorStr || !data || !descricao) {
+                Swal.fire('Atenção', 'Preencha todos os campos obrigatórios.', 'warning');
+                return;
             }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
 
-                fetch('/financeiro/api/transferencias', {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(result.value)
-                })
-                .then(async res => {
-                    if (res.ok) {
-                        await Swal.fire('Sucesso!', 'Transferência realizada.', 'success');
+            if (origem === destino) {
+                Swal.fire('Erro', 'A conta de origem e destino não podem ser iguais.', 'error');
+                return;
+            }
+
+            // Converter valor (R$ 1.000,00 -> 1000.00)
+            const valor = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+
+            if (isNaN(valor) || valor <= 0) {
+                Swal.fire('Erro', 'Valor inválido.', 'error');
+                return;
+            }
+
+            const payload = {
+                contaOrigemId: parseInt(origem),
+                contaDestinoId: parseInt(destino),
+                valor: valor,
+                dataTransferencia: data,
+                descricao: descricao,
+                observacoes: $('#observacoes').val()
+            };
+            
+            // Obter token CSRF
+            const csrfToken = document.cookie.replace(/(?:(?:^|.*;\s*)XSRF-TOKEN\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+
+            Swal.fire({
+                title: 'Confirmar Transferência?',
+                text: `Valor: R$ ${valorStr} de Conta Origem para Conta Destino`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, transferir',
+                cancelButtonText: 'Cancelar',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return fetch('/financeiro/api/transferencias', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-XSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(json => { throw new Error(json.message || 'Erro ao realizar transferência') });
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Falha: ${error.message}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Sucesso!',
+                        text: 'Transferência realizada com sucesso.',
+                        icon: 'success'
+                    }).then(() => {
                         location.reload();
-                    } else {
-                        let errorMsg = 'Erro ao processar';
-                        try {
-                            const json = await res.json();
-                            errorMsg = json.message || json.mensagem || JSON.stringify(json);
-                        } catch(e) { errorMsg = await res.text(); }
-                        Swal.fire('Erro', errorMsg, 'error');
-                    }
-                })
-                .catch(err => Swal.fire('Erro', err.toString(), 'error'));
-            }
-        });
-    }
-</script>
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>

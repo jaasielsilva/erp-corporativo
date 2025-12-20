@@ -5,6 +5,8 @@ import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ContaPagarService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
 import jakarta.validation.Valid;
+
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -95,7 +97,7 @@ public class ContaPagarController {
     }
 
     // ================= CRIAR =================
-    @GetMapping("/novo")
+    @GetMapping({"/novo", "/nova"})
     public String novoForm(Model model) {
         model.addAttribute("contaPagar", new ContaPagar());
         model.addAttribute("fornecedores", fornecedorService.listarTodos());
@@ -154,7 +156,24 @@ public class ContaPagarController {
             redirectAttributes.addFlashAttribute("erro", "Conta não encontrada");
             return "redirect:/financeiro/contas-pagar";
         }
-        model.addAttribute("conta", contaOpt.get());
+
+        ContaPagar conta = contaOpt.get();
+
+        // Inicializar proxies para evitar LazyInitializationException na view
+        if (conta.getFornecedor() != null) {
+            Hibernate.initialize(conta.getFornecedor());
+        }
+        if (conta.getUsuarioCriacao() != null) {
+            Hibernate.initialize(conta.getUsuarioCriacao());
+        }
+        if (conta.getUsuarioUltimaEdicao() != null) {
+            Hibernate.initialize(conta.getUsuarioUltimaEdicao());
+        }
+        if (conta.getUsuarioAprovacao() != null) {
+            Hibernate.initialize(conta.getUsuarioAprovacao());
+        }
+
+        model.addAttribute("conta", conta);
         return "financeiro/contas-pagar/detalhes";
     }
 

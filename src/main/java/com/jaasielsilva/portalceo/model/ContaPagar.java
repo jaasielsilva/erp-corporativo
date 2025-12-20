@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -33,7 +34,7 @@ public class ContaPagar extends BaseEntity {
     private Fornecedor fornecedor;
 
     @NotNull(message = "O valor é obrigatório")
-    @Positive(message = "O valor deve ser positivo")
+    @PositiveOrZero(message = "O valor deve ser positivo ou zero")
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal valorOriginal;
 
@@ -99,6 +100,10 @@ public class ContaPagar extends BaseEntity {
     public void setComprovantePath(String comprovantePath) {
         this.comprovantePath = comprovantePath;
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "folha_pagamento_id")
+    private FolhaPagamento folhaPagamento;
 
     public enum StatusContaPagar {
         PENDENTE("Pendente"),

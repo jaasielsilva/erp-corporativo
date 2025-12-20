@@ -46,7 +46,7 @@ public class FolhaPagamento {
     private BigDecimal totalFgts;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private StatusFolha status = StatusFolha.EM_PROCESSAMENTO;
 
     @Column(nullable = false)
@@ -68,9 +68,17 @@ public class FolhaPagamento {
     @Column(name = "tipo_folha", length = 32)
     private String tipoFolha;
 
+    @Column(name = "hash_integridade", length = 64)
+    private String hashIntegridade;
+
+    @Column(name = "caminho_arquivo_cnab")
+    private String caminhoArquivoCnab;
+
     public enum StatusFolha {
         EM_PROCESSAMENTO,
         PROCESSADA,
+        ENVIADA_FINANCEIRO,
+        PAGA,
         FECHADA,
         CANCELADA
     }

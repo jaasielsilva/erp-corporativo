@@ -10,6 +10,7 @@
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
+    <link href="/css/financeiro.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -35,66 +36,198 @@
         <!-- Topbar -->
         <header th:replace="~{components/topbar :: topbar}"></header>
 
-        <!-- Conteúdo da página Relatórios -->
-        <section class="content-area">
-            <div class="container py-4">
+        <!-- Conteúdo da página -->
+        <section class="content-area px-4 py-4">
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h1 class="h4 text-muted mb-1"><i class="fas fa-chart-bar me-2"></i>Relatórios Financeiros</h1>
-                        <p class="text-muted mb-0">Análises e demonstrativos financeiros (DRE, Balanço, Aging, etc.).</p>
-                    </div>
-                    <a href="/financeiro" class="btn btn-outline-secondary btn-sm">
+            <!-- Cabeçalho e Navegação do Módulo -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h4 mb-1">
+                        <i class="fas fa-chart-bar me-2 text-primary"></i>Relatórios Financeiros
+                    </h1>
+                    <p class="text-muted mb-0">Análises e demonstrativos financeiros (DRE, Fluxo de Caixa)</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/financeiro" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Voltar
                     </a>
                 </div>
+            </div>
 
-                <!-- Filtros de relatório -->
-                <form class="row g-3 mb-4" method="get" th:action="@{/financeiro/relatorios}">
+            <!-- Navegação Rápida -->
+            <div class="module-nav">
+                <a href="/financeiro" class="module-nav-link">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="/financeiro/contas-pagar" class="module-nav-link">
+                    <i class="fas fa-file-invoice-dollar"></i> Contas a Pagar
+                </a>
+                <a href="/financeiro/contas-receber" class="module-nav-link">
+                    <i class="fas fa-hand-holding-usd"></i> Contas a Receber
+                </a>
+                <a href="/financeiro/fluxo-caixa" class="module-nav-link">
+                    <i class="fas fa-cash-register"></i> Fluxo de Caixa
+                </a>
+            </div>
+
+            <!-- Filtros de relatório -->
+            <div class="filter-bar">
+                <form class="row g-3 align-items-end" method="get" th:action="@{/financeiro/relatorios}">
                     <div class="col-md-3">
-                        <label class="form-label">Período</label>
-                        <input type="month" name="periodo" class="form-control" th:value="${periodo}" placeholder="AAAA-MM" title="Período (YYYY-MM)">
+                        <label class="form-label text-muted small fw-bold">Data Início</label>
+                        <input type="date" name="inicio" class="form-control" th:value="${inicio}">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Tipo de Relatório</label>
-                        <select name="tipo" class="form-select" aria-label="Tipo de relatório">
-                            <option value="DRE" th:selected="${param.tipo == 'DRE'}">DRE</option>
-                            <option value="BALANCO" th:selected="${param.tipo == 'BALANCO'}">Balanço</option>
-                            <option value="AGING" th:selected="${param.tipo == 'AGING'}">Aging (Recebíveis)</option>
+                        <label class="form-label text-muted small fw-bold">Data Fim</label>
+                        <input type="date" name="fim" class="form-control" th:value="${fim}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-bold">Tipo de Relatório</label>
+                        <select name="tipo" class="form-select" id="tipoRelatorio">
+                            <option value="DRE" th:selected="${tipo == 'DRE'}">DRE (Regime de Caixa)</option>
+                            <option value="FLUXO" th:selected="${tipo == 'FLUXO'}">Fluxo de Caixa (Diário)</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Formato</label>
-                        <select name="formato" class="form-select" aria-label="Formato do relatório">
-                            <option value="HTML" th:selected="${param.formato == 'HTML'}">HTML</option>
-                            <option value="CSV" th:selected="${param.formato == 'CSV'}">CSV</option>
-                            <option value="PDF" th:selected="${param.formato == 'PDF'}">PDF</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search me-1"></i> Gerar
+                            <i class="fas fa-filter me-1"></i> Gerar Relatório
                         </button>
                     </div>
                 </form>
+            </div>
 
-                <!-- Área de resultados -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="fas fa-file-alt me-1"></i> Resultado</h6>
-                    </div>
-                    <div class="card-body">
-                        <!-- Placeholder de conteúdo do relatório -->
-                        <div th:if="${relatorio != null}">
-                            <div th:utext="${relatorio}"></div>
+            <!-- Resultados -->
+            <div class="row" th:if="${relatorio != null}">
+                
+                <!-- Gráfico -->
+                <div class="col-md-12 mb-4">
+                    <div class="card border-0 shadow-sm rounded-3">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="card-title mb-0">Visualização Gráfica</h5>
                         </div>
-                        <div th:if="${relatorio == null}" class="text-muted">
-                            Nenhum relatório gerado ainda. Selecione filtros e clique em Gerar.
+                        <div class="card-body">
+                            <canvas id="graficoRelatorio" height="100"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela DRE -->
+                <div class="col-md-12" th:if="${tipo == 'DRE'}">
+                    <div class="card border-0 shadow-sm rounded-3">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">DRE - Demonstrativo do Resultado do Exercício</h5>
+                            <span class="badge bg-info text-dark">Regime de Caixa</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Descrição</th>
+                                            <th class="text-end">Valor</th>
+                                            <th class="text-end">%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="fw-bold bg-light-success">
+                                            <td>Receita Bruta</td>
+                                            <td class="text-end text-success" th:text="${#numbers.formatCurrency(relatorio.receitaBruta)}"></td>
+                                            <td class="text-end">100%</td>
+                                        </tr>
+                                        <!-- Detalhe Receitas -->
+                                        <tr th:each="entry : ${relatorio.detalheReceitas}">
+                                            <td class="ps-4 text-muted" th:text="${entry.key}"></td>
+                                            <td class="text-end text-muted" th:text="${#numbers.formatCurrency(entry.value)}"></td>
+                                            <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(entry.value.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td>(-) Impostos</td>
+                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(relatorio.impostos)}"></td>
+                                            <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.impostos.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                        
+                                        <tr class="fw-bold bg-light">
+                                            <td>= Receita Líquida</td>
+                                            <td class="text-end" th:text="${#numbers.formatCurrency(relatorio.receitaLiquida)}"></td>
+                                            <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.receitaLiquida.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td>(-) Custos Variáveis</td>
+                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(relatorio.custosVariaveis)}"></td>
+                                            <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.custosVariaveis.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                        
+                                        <tr class="fw-bold bg-light">
+                                            <td>= Margem de Contribuição</td>
+                                            <td class="text-end" th:text="${#numbers.formatCurrency(relatorio.margemContribuicao)}"></td>
+                                            <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.margemContribuicao.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td>(-) Despesas Fixas</td>
+                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(relatorio.despesasFixas)}"></td>
+                                            <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.despesasFixas.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                        <!-- Detalhe Despesas -->
+                                        <tr th:each="entry : ${relatorio.detalheDespesas}">
+                                            <td class="ps-4 text-muted" th:text="${entry.key}"></td>
+                                            <td class="text-end text-muted" th:text="${#numbers.formatCurrency(entry.value)}"></td>
+                                            <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(entry.value.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                        
+                                        <tr class="fw-bold fs-5 bg-light-primary">
+                                            <td>= Resultado Operacional (EBITDA)</td>
+                                            <td class="text-end" th:classappend="${relatorio.resultadoOperacional >= 0 ? 'text-success' : 'text-danger'}" th:text="${#numbers.formatCurrency(relatorio.resultadoOperacional)}"></td>
+                                            <td class="text-end" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.resultadoOperacional.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela Fluxo de Caixa -->
+                <div class="col-md-12" th:if="${tipo == 'FLUXO'}">
+                    <div class="card border-0 shadow-sm rounded-3">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Fluxo de Caixa Diário</h5>
+                            <div>
+                                <span class="badge bg-secondary me-2">Saldo Inicial: <span th:text="${#numbers.formatCurrency(relatorio.saldoInicial)}"></span></span>
+                                <span class="badge bg-primary">Saldo Final: <span th:text="${#numbers.formatCurrency(relatorio.saldoFinal)}"></span></span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Data</th>
+                                            <th class="text-end text-success">Entradas</th>
+                                            <th class="text-end text-danger">Saídas</th>
+                                            <th class="text-end">Saldo do Dia</th>
+                                            <th class="text-end fw-bold">Saldo Acumulado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="item : ${relatorio.fluxoDiario}">
+                                            <td th:text="${#temporals.format(item.data, 'dd/MM/yyyy')}"></td>
+                                            <td class="text-end text-success" th:text="${#numbers.formatCurrency(item.entradas)}"></td>
+                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(item.saidas)}"></td>
+                                            <td class="text-end" th:classappend="${item.entradas.subtract(item.saidas) >= 0 ? 'text-success' : 'text-danger'}" th:text="${#numbers.formatCurrency(item.entradas.subtract(item.saidas))}"></td>
+                                            <td class="text-end fw-bold" th:classappend="${item.saldoAcumulado >= 0 ? 'text-success' : 'text-danger'}" th:text="${#numbers.formatCurrency(item.saldoAcumulado)}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
             </div>
+
         </section>
 
         <!-- Footer -->
@@ -109,5 +242,84 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script th:src="@{/js/notifications.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipo = /*[[${tipo}]]*/ 'DRE';
+        const ctx = document.getElementById('graficoRelatorio').getContext('2d');
+        
+        if (tipo === 'DRE') {
+            const relatorio = /*[[${relatorio}]]*/ {};
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Receita Bruta', 'Receita Líquida', 'Margem Contrib.', 'Resultado Op.'],
+                    datasets: [{
+                        label: 'Valores (R$)',
+                        data: [
+                            relatorio.receitaBruta,
+                            relatorio.receitaLiquida,
+                            relatorio.margemContribuicao,
+                            relatorio.resultadoOperacional
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            relatorio.resultadoOperacional >= 0 ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            relatorio.resultadoOperacional >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        } else if (tipo === 'FLUXO') {
+            const relatorio = /*[[${relatorio}]]*/ {};
+            const labels = relatorio.fluxoDiario.map(item => item.data);
+            const saldos = relatorio.fluxoDiario.map(item => item.saldoAcumulado);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Saldo Acumulado (R$)',
+                        data: saldos,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+    /*]]>*/
+</script>
+
 </body>
 </html>

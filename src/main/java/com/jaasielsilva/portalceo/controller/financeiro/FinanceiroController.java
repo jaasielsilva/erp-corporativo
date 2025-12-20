@@ -1,8 +1,17 @@
 package com.jaasielsilva.portalceo.controller.financeiro;
 
+import com.jaasielsilva.portalceo.dto.financeiro.RelatorioDREDTO;
+import com.jaasielsilva.portalceo.dto.financeiro.RelatorioFluxoCaixaDTO;
+import com.jaasielsilva.portalceo.dto.financeiro.TransferenciaDTO;
 import com.jaasielsilva.portalceo.model.*;
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.jaasielsilva.portalceo.service.*;
 import lombok.RequiredArgsConstructor;
+
+import org.hibernate.Hibernate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +38,10 @@ public class FinanceiroController {
     private final ClienteService clienteService;
     private final FornecedorService fornecedorService;
     private final UsuarioService usuarioService;
+    private final ContaBancariaService contaBancariaService;
+    private final TransferenciaService transferenciaService;
+    private final RelatorioFinanceiroService relatorioService;
+    private final ContaPagarService contaPagarService;
 
     // -------------------- DASHBOARD --------------------
     @GetMapping
@@ -51,6 +64,30 @@ public class FinanceiroController {
                             .sorted((a, b) -> b.getData().compareTo(a.getData()))
                             .limit(10)
                             .toList();
+
+                    // Inicializar proxies para evitar LazyInitializationException
+                    recentTransactions.forEach(t -> {
+                        if (t.getContaPagar() != null) {
+                            Hibernate.initialize(t.getContaPagar());
+                            if (t.getContaPagar().getFornecedor() != null) {
+                                Hibernate.initialize(t.getContaPagar().getFornecedor());
+                            }
+                            if (t.getContaPagar().getUsuarioCriacao() != null) {
+                                Hibernate.initialize(t.getContaPagar().getUsuarioCriacao());
+                            }
+                        }
+                        if (t.getContaReceber() != null) {
+                            Hibernate.initialize(t.getContaReceber());
+                            if (t.getContaReceber().getCliente() != null) {
+                                Hibernate.initialize(t.getContaReceber().getCliente());
+                            }
+                            if (t.getContaReceber().getUsuarioCriacao() != null) {
+                                Hibernate.initialize(t.getContaReceber().getUsuarioCriacao());
+                            }
+                        }
+                        if (t.getContaBancaria() != null) Hibernate.initialize(t.getContaBancaria());
+                        if (t.getTransferencia() != null) Hibernate.initialize(t.getTransferencia());
+                    });
                 }
                 model.addAttribute("recentTransactions", recentTransactions);
                 model.addAttribute("totalRecentTransactions", recentTransactions.size());
@@ -61,14 +98,28 @@ public class FinanceiroController {
             }
 
             List<ContaReceber> contasReceberVencidas = contaReceberService.findVencidas();
-            if (contasReceberVencidas != null)
+            if (contasReceberVencidas != null) {
                 contasReceberVencidas = contasReceberVencidas.stream().limit(5).toList();
-            else
+                // Inicializar proxies
+                contasReceberVencidas.forEach(c -> {
+                    if (c.getCliente() != null) Hibernate.initialize(c.getCliente());
+                    if (c.getUsuarioCriacao() != null) Hibernate.initialize(c.getUsuarioCriacao());
+                });
+            } else {
                 contasReceberVencidas = List.of();
+            }
             model.addAttribute("contasReceberVencidas", contasReceberVencidas);
 
             BigDecimal totalReceber = contaReceberService.calcularTotalReceber();
             model.addAttribute("totalReceber", totalReceber != null ? totalReceber : BigDecimal.ZERO);
+
+            BigDecimal totalPagar = BigDecimal.ZERO;
+            try {
+                totalPagar = contaPagarService.calcularValorTotalAPagar();
+            } catch (Exception e) {
+                System.err.println("Erro ao calcular total a pagar: " + e.getMessage());
+            }
+            model.addAttribute("totalPagar", totalPagar != null ? totalPagar : BigDecimal.ZERO);
 
             BigDecimal saldoAtual = fluxoCaixaService.calcularSaldoAtual();
             model.addAttribute("saldoAtual", saldoAtual != null ? saldoAtual : BigDecimal.ZERO);
@@ -158,6 +209,53 @@ public class FinanceiroController {
         return "financeiro/contas-receber/lista";
     }
 
+    // ================= NOVA CONTA A RECEBER =================
+    @GetMapping({"/contas-receber/novo", "/contas-receber/nova"})
+    public String novoForm(Model model, RedirectAttributes redirectAttributes) {
+        try {
+            ContaReceber contaReceber = new ContaReceber();
+            contaReceber.setCliente(new Cliente()); // Inicializa cliente para evitar erro no Thymeleaf
+            
+            model.addAttribute("contaReceber", contaReceber);
+            model.addAttribute("clientes", clienteService.listarTodos());
+            model.addAttribute("categorias", ContaReceber.CategoriaContaReceber.values());
+            model.addAttribute("statusOptions", ContaReceber.StatusContaReceber.values());
+            model.addAttribute("pageTitle", "Nova Conta a Receber");
+            model.addAttribute("moduleCSS", "financeiro");
+            return "financeiro/contas-receber/conta-receber-form";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("erro", "Erro ao carregar formulário: " + e.getMessage());
+            return "redirect:/financeiro/contas-receber";
+        }
+    }
+
+    @PostMapping("/contas-receber/salvar")
+    public String salvarContaReceber(
+            @Valid @ModelAttribute("contaReceber") ContaReceber contaReceber,
+            BindingResult result,
+            RedirectAttributes redirectAttributes,
+            Model model,
+            @ModelAttribute("usuarioLogado") Usuario usuario) {
+
+        if (result.hasErrors()) {
+            model.addAttribute("clientes", clienteService.listarTodos());
+            model.addAttribute("categorias", ContaReceber.CategoriaContaReceber.values());
+            model.addAttribute("statusOptions", ContaReceber.StatusContaReceber.values());
+            model.addAttribute("moduleCSS", "financeiro");
+            return "financeiro/contas-receber/conta-receber-form";
+        }
+
+        try {
+            contaReceberService.save(contaReceber, usuario);
+            redirectAttributes.addFlashAttribute("sucesso", "Conta a receber salva com sucesso!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao salvar: " + e.getMessage());
+        }
+
+        return "redirect:/financeiro/contas-receber";
+    }
+
     @GetMapping("/contas-receber/{id}")
     public String detalhesContaReceber(@PathVariable Long id, Model model) {
         try {
@@ -224,14 +322,49 @@ public class FinanceiroController {
     public String transferencias(Model model) {
         model.addAttribute("pageTitle", "Transferências");
         model.addAttribute("moduleCSS", "financeiro");
+        model.addAttribute("contas", contaBancariaService.listarContasAtivas());
+        model.addAttribute("transferenciaDTO", new TransferenciaDTO());
         return "financeiro/transferencias";
+    }
+
+    @PostMapping("/transferencias/nova")
+    public String realizarTransferencia(@ModelAttribute TransferenciaDTO dto, 
+                                        @ModelAttribute("usuarioLogado") Usuario usuario,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            transferenciaService.realizarTransferencia(dto, usuario);
+            redirectAttributes.addFlashAttribute("sucesso", "Transferência realizada com sucesso!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao realizar transferência: " + e.getMessage());
+        }
+        return "redirect:/financeiro/transferencias";
     }
 
     // -------------------- RELATÓRIOS --------------------
     @GetMapping("/relatorios")
-    public String relatorios(Model model) {
+    public String relatorios(Model model,
+                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
+                             @RequestParam(defaultValue = "DRE") String tipo) {
+        
         model.addAttribute("pageTitle", "Relatórios Financeiros");
         model.addAttribute("moduleCSS", "financeiro");
+        
+        if (inicio == null) inicio = LocalDate.now().withDayOfMonth(1);
+        if (fim == null) fim = LocalDate.now();
+        
+        model.addAttribute("inicio", inicio);
+        model.addAttribute("fim", fim);
+        model.addAttribute("tipo", tipo);
+        
+        if ("DRE".equals(tipo)) {
+            RelatorioDREDTO dre = relatorioService.gerarDRE(inicio, fim);
+            model.addAttribute("relatorio", dre);
+        } else if ("FLUXO".equals(tipo)) {
+            RelatorioFluxoCaixaDTO fluxo = relatorioService.gerarFluxoCaixa(inicio, fim);
+            model.addAttribute("relatorio", fluxo);
+        }
+        
         return "financeiro/relatorios";
     }
 

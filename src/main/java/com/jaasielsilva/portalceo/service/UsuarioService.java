@@ -47,6 +47,11 @@ public class UsuarioService {
     @Autowired
     private ColaboradorRepository colaboradorRepository;
 
+    public Usuario findByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + email));
+    }
+
     // ===============================
     // MÉTODOS DE CADASTRO E ATUALIZAÇÃO
     // ===============================

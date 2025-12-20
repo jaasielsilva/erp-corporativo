@@ -59,6 +59,14 @@ public class FluxoCaixa {
     @JoinColumn(name = "conta_receber_id")
     private ContaReceber contaReceber;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conta_bancaria_id")
+    private ContaBancaria contaBancaria;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transferencia_id")
+    private Transferencia transferencia;
+
     @ManyToOne
     @JoinColumn(name = "usuario_criacao_id")
     private Usuario usuarioCriacao;
@@ -97,6 +105,7 @@ public class FluxoCaixa {
         MARKETING("Marketing"),
         FINANCIAMENTO("Financiamento"),
         INVESTIMENTO("Investimento"),
+        TRANSFERENCIA("Transferência"),
         OUTRAS_DESPESAS("Outras Despesas");
 
         private final String descricao;

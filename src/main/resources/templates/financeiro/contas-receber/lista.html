@@ -80,7 +80,7 @@
                             <div class="card-body">
                                 <i class="fas fa-wallet kpi-icon"></i>
                                 <div class="kpi-title">Total a Receber</div>
-                                <div class="kpi-value" th:text="'R$ ' + ${#numbers.formatDecimal(totalReceber, 1, 'COMMA', 2, 'POINT')}">R$ 0,00</div>
+                                <div class="kpi-value" th:text="'R$ ' + ${#numbers.formatDecimal(totalReceber, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
                             </div>
                         </div>
                     </div>
@@ -166,6 +166,7 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
     <!-- Função registrar pagamento com SweetAlert2 -->
     <script>
@@ -175,7 +176,7 @@
                 html: `
                     <div class="text-start">
                         <label class="form-label fw-bold">Valor Pago (R$)</label>
-                        <input type="number" step="0.01" id="valorPagoInput" class="form-control mb-3" placeholder="0.00">
+                        <input type="text" id="valorPagoInput" class="form-control mb-3 money" placeholder="0,00">
                         
                         <label class="form-label fw-bold">Observações</label>
                         <textarea id="observacoesInput" class="form-control" rows="2" placeholder="Detalhes do recebimento"></textarea>
@@ -188,16 +189,25 @@
                 confirmButtonText: 'Confirmar Recebimento',
                 cancelButtonText: 'Cancelar',
                 reverseButtons: true,
+                didOpen: () => {
+                    $('.money').mask('#.##0,00', {reverse: true});
+                },
                 preConfirm: () => {
-                    const valor = document.getElementById('valorPagoInput').value;
+                    const valorStr = document.getElementById('valorPagoInput').value;
                     const observacoes = document.getElementById('observacoesInput').value;
-                    if (!valor) {
+                    
+                    if (!valorStr) {
                         Swal.showValidationMessage('Por favor, informe o valor pago');
+                        return false;
                     }
+
+                    const valor = valorStr.replace(/\./g, '').replace(',', '.');
+                    
                     return { valor: valor, observacoes: observacoes };
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Valor já formatado no preConfirm
                     const { valor, observacoes } = result.value;
                     
                     Swal.fire({
@@ -209,10 +219,7 @@
                         }
                     });
 
-                    // Format valor (replace comma if user typed it, though type=number handles dots usually)
-                    const valorFormatado = valor.replace(',', '.');
-
-                    fetch(`/financeiro/api/contas-receber/${contaId}/receber?valor=${valorFormatado}&observacoes=${encodeURIComponent(observacoes)}`, {
+                    fetch(`/financeiro/api/contas-receber/${contaId}/receber?valor=${valor}&observacoes=${encodeURIComponent(observacoes)}`, {
                         method: 'PUT',
                         headers: {
                             'Accept': 'application/json'

@@ -333,17 +333,21 @@ public class FinanceiroController {
         return "financeiro/transferencias";
     }
 
-    @PostMapping("/transferencias/nova")
-    public String realizarTransferencia(@ModelAttribute TransferenciaDTO dto, 
-                                        @RequestAttribute("usuarioLogado") Usuario usuario,
-                                        RedirectAttributes redirectAttributes) {
+    @PostMapping("/api/transferencias")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> realizarTransferenciaApi(@RequestBody TransferenciaDTO dto, 
+                                        @RequestAttribute("usuarioLogado") Usuario usuario) {
+        Map<String, Object> response = new HashMap<>();
         try {
             transferenciaService.realizarTransferencia(dto, usuario);
-            redirectAttributes.addFlashAttribute("sucesso", "Transferência realizada com sucesso!");
+            response.put("success", true);
+            response.put("message", "Transferência realizada com sucesso!");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao realizar transferência: " + e.getMessage());
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
-        return "redirect:/financeiro/transferencias";
     }
 
     // -------------------- RELATÓRIOS --------------------

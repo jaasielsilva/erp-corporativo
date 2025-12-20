@@ -146,26 +146,28 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Descrição</th>
                                 <th>Fornecedor</th>
-                                <th>Categoria</th>
                                 <th>Vencimento</th>
-                                <th class="text-end">Valor (R$)</th>
+                                <th class="col-valor">Valor Original</th>
+                                <th class="col-valor">Valor Pago</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-end">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="conta : ${contas}">
-                                <td th:text="${conta.descricao != null ? conta.descricao : '-'}">Aluguel</td>
-                                <td th:text="${conta.fornecedor != null ? conta.fornecedor.nomeFantasia : '-'}">
-                                    Fornecedor ABC</td>
-                                <td th:text="${conta.categoria != null ? conta.categoria.descricao : '-'}">ALUGUEL</td>
+                                <td>
+                                    <div class="fw-bold" th:text="${conta.fornecedor != null ? conta.fornecedor.nomeFantasia : conta.descricao}">Fornecedor</div>
+                                    <div th:if="${conta.fornecedor != null}" class="small text-muted" th:text="${conta.descricao}">Descrição</div>
+                                </td>
                                 <td th:text="${conta.dataVencimento != null ? #temporals.format(conta.dataVencimento, 'dd/MM/yyyy') : '-'}">
                                     30/10/2025</td>
                                 <td class="col-valor"
-                                    th:text="${conta.valorOriginal != null ? #numbers.formatDecimal(conta.valorOriginal, 2, 'COMMA', 2, 'POINT') : '0,00'}">
+                                    th:text="${conta.valorOriginal != null ? #numbers.formatDecimal(conta.valorOriginal, 2, 'POINT', 2, 'COMMA') : '0,00'}">
                                     4.500,00</td>
+                                <td class="col-valor text-success"
+                                    th:text="${conta.valorPago != null ? #numbers.formatDecimal(conta.valorPago, 2, 'POINT', 2, 'COMMA') : '0,00'}">
+                                    0,00</td>
                                 <td class="text-center">
                                     <span th:class="${conta.status != null ? 
                                 (conta.status.name() == 'PAGA' ? 'badge-status badge-pago' : 
@@ -233,178 +235,255 @@
         </main>
     </div>
 
-    <!-- Modais (Mantidos e Padronizados se necessário, mas a estrutura Bootstrap padrão é suficiente) -->
-    
-    <!-- Modal Aprovar Conta -->
-    <div class="modal fade" id="modalAprovar" tabindex="-1" aria-labelledby="modalAprovarLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalAprovarLabel">
-                        <i class="fas fa-check text-success me-2"></i>Aprovar Conta
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Deseja realmente aprovar a conta:</p>
-                    <p class="fw-bold text-primary" id="contaAprovarNome"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="formAprovar" method="post" class="d-inline">
-                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check me-1"></i>Aprovar
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal Pagar Conta -->
-    <div class="modal fade" id="modalPagar" tabindex="-1" aria-labelledby="modalPagarLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalPagarLabel">
-                        <i class="fas fa-money-bill-wave text-warning me-2"></i>Efetuar Pagamento
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="formPagar" method="post">
-                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                    <div class="modal-body">
-                        <p>Conta: <span class="fw-bold text-primary" id="contaPagarNome"></span></p>
-
-                        <div class="mb-3">
-                            <label for="valorPago" class="form-label">Valor a Pagar (R$)</label>
-                            <input type="number" step="0.01" class="form-control" id="valorPago" name="valorPago"
-                                required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="formaPagamento" class="form-label">Forma de Pagamento</label>
-                            <select class="form-select" id="formaPagamento" name="formaPagamento" required>
-                                <option value="">Selecione...</option>
-                                <option value="PIX">PIX</option>
-                                <option value="BOLETO">Boleto</option>
-                                <option value="TED">TED</option>
-                                <option value="DINHEIRO">Dinheiro</option>
-                                <option value="CARTAO">Cartão</option>
-                                <option value="CHEQUE">Cheque</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="fas fa-money-bill-wave me-1"></i>Efetuar Pagamento
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Cancelar Conta -->
-    <div class="modal fade" id="modalCancelar" tabindex="-1" aria-labelledby="modalCancelarLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalCancelarLabel">
-                        <i class="fas fa-times text-secondary me-2"></i>Cancelar Conta
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="formCancelar" method="post">
-                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                    <div class="modal-body">
-                        <p>Conta: <span class="fw-bold text-primary" id="contaCancelarNome"></span></p>
-
-                        <div class="mb-3">
-                            <label for="motivoCancelamento" class="form-label">Motivo do Cancelamento</label>
-                            <textarea class="form-control" id="motivoCancelamento" name="motivo" rows="3"
-                                placeholder="Informe o motivo do cancelamento..." required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
-                        <button type="submit" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i>Cancelar Conta
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Excluir Conta -->
-    <div class="modal fade" id="modalExcluir" tabindex="-1" aria-labelledby="modalExcluirLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalExcluirLabel">
-                        <i class="fas fa-trash text-danger me-2"></i>Excluir Conta
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Atenção!</strong> Esta ação não pode ser desfeita.
-                    </div>
-                    <p>Deseja realmente excluir a conta:</p>
-                    <p class="fw-bold text-danger" id="contaExcluirNome"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="formExcluir" method="post" class="d-inline">
-                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash me-1"></i>Excluir
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script src="/js/sidebar.js" defer></script>
     <script th:src="@{/js/notifications.js}" defer></script>
-    <script>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const csrfToken = /*[[${_csrf != null ? _csrf.token : ''}]]*/ '';
+        const csrfHeader = /*[[${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}]]*/ 'X-CSRF-TOKEN';
+        /*]]>*/
+
+        const headers = {
+            'Accept': 'application/json'
+        };
+        if (csrfToken) {
+            headers[csrfHeader] = csrfToken;
+        }
+
+        // Função genérica para exibir erros
+        const showError = async (res) => {
+            let errorMsg = 'Erro desconhecido';
+            try {
+                const data = await res.json();
+                errorMsg = data.message || data.mensagem || data.error || JSON.stringify(data);
+            } catch (e) {
+                errorMsg = await res.text();
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: errorMsg,
+                confirmButtonColor: '#d33'
+            });
+        };
+
         // Função para aprovar conta
         function aprovarConta(contaId, contaNome) {
-            document.getElementById('contaAprovarNome').textContent = contaNome;
-            document.getElementById('formAprovar').action = '/financeiro/contas-pagar/aprovar/' + contaId;
-            new bootstrap.Modal(document.getElementById('modalAprovar')).show();
+            Swal.fire({
+                title: 'Aprovar Conta',
+                html: `Deseja realmente aprovar a conta:<br><strong>${contaNome}</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sim, aprovar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
+                    
+                    fetch(`/financeiro/contas-pagar/api/aprovar/${contaId}`, {
+                        method: 'POST',
+                        headers: headers
+                    })
+                    .then(async res => {
+                        if (res.ok) {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Sucesso!',
+                                text: 'Conta aprovada com sucesso.',
+                                confirmButtonColor: '#198754'
+                            });
+                            location.reload();
+                        } else {
+                            showError(res);
+                        }
+                    })
+                    .catch(err => showError({ text: () => Promise.resolve(err.toString()), json: () => Promise.reject() }));
+                }
+            });
         }
 
         // Função para pagar conta
         function pagarConta(contaId, contaNome, valorOriginal) {
-            document.getElementById('contaPagarNome').textContent = contaNome;
-            document.getElementById('valorPago').value = valorOriginal;
-            document.getElementById('formaPagamento').value = '';
-            document.getElementById('formPagar').action = '/financeiro/contas-pagar/pagar/' + contaId;
-            new bootstrap.Modal(document.getElementById('modalPagar')).show();
+            // Formatar valor original para exibição (ex: 1200.50 -> 1.200,50)
+            let valorFormatado = parseFloat(valorOriginal).toFixed(2).replace('.', ',');
+            // Adicionar pontos de milhar se necessário, mas para o value do input o mask fará o trabalho se inicializarmos com valor correto
+            // Melhor estratégia: passar valor vazio ou formatado. Se formatado, o mask deve lidar.
+            // Simplificação: vamos deixar o usuário digitar ou preencher.
+            // Mas para preencher corretamente com mask, precisamos converter 1200.50 para '1.200,50'
+            valorFormatado = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valorOriginal);
+
+            Swal.fire({
+                title: 'Efetuar Pagamento',
+                html: `
+                    <div class="text-start">
+                        <p>Conta: <strong>${contaNome}</strong></p>
+                        <label class="form-label fw-bold">Valor Pago (R$)</label>
+                        <input type="text" id="valorPagoInput" class="form-control mb-3 money" value="${valorFormatado}">
+                        
+                        <label class="form-label fw-bold">Forma de Pagamento</label>
+                        <select id="formaPagamentoInput" class="form-select">
+                            <option value="">Selecione...</option>
+                            <option value="PIX">PIX</option>
+                            <option value="BOLETO">Boleto</option>
+                            <option value="TED">TED</option>
+                            <option value="DINHEIRO">Dinheiro</option>
+                            <option value="CARTAO">Cartão</option>
+                            <option value="CHEQUE">Cheque</option>
+                        </select>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Confirmar Pagamento',
+                cancelButtonText: 'Cancelar',
+                didOpen: () => {
+                    $('.money').mask('#.##0,00', {reverse: true});
+                },
+                preConfirm: () => {
+                    const valorStr = document.getElementById('valorPagoInput').value;
+                    const forma = document.getElementById('formaPagamentoInput').value;
+                    
+                    if (!valorStr) return Swal.showValidationMessage('Informe o valor pago');
+                    if (!forma) return Swal.showValidationMessage('Selecione a forma de pagamento');
+                    
+                    // Converter formato BR (1.000,00) para US (1000.00)
+                    const valor = valorStr.replace(/\./g, '').replace(',', '.');
+
+                    return { valor: valor, forma: forma };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const { valor, forma } = result.value;
+                    Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
+
+                    const formData = new FormData();
+                    formData.append('valorPago', valor);
+                    formData.append('formaPagamento', forma);
+
+                    fetch(`/financeiro/contas-pagar/api/pagar/${contaId}`, {
+                        method: 'POST',
+                        headers: headers, // FormData automatically handles Content-Type
+                        body: formData
+                    })
+                    .then(async res => {
+                        if (res.ok) {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Pago!',
+                                text: 'Pagamento registrado com sucesso.',
+                                confirmButtonColor: '#198754'
+                            });
+                            location.reload();
+                        } else {
+                            showError(res);
+                        }
+                    })
+                    .catch(err => showError({ text: () => Promise.resolve(err.toString()), json: () => Promise.reject() }));
+                }
+            });
         }
 
         // Função para cancelar conta
         function cancelarConta(contaId, contaNome) {
-            document.getElementById('contaCancelarNome').textContent = contaNome;
-            document.getElementById('motivoCancelamento').value = '';
-            document.getElementById('formCancelar').action = '/financeiro/contas-pagar/cancelar/' + contaId;
-            new bootstrap.Modal(document.getElementById('modalCancelar')).show();
+            Swal.fire({
+                title: 'Cancelar Conta',
+                html: `
+                    <p>Conta: <strong>${contaNome}</strong></p>
+                    <label class="form-label fw-bold text-start w-100">Motivo do Cancelamento</label>
+                    <textarea id="motivoInput" class="form-control" rows="3" placeholder="Informe o motivo..."></textarea>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#6c757d',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Confirmar Cancelamento',
+                cancelButtonText: 'Voltar',
+                preConfirm: () => {
+                    const motivo = document.getElementById('motivoInput').value;
+                    if (!motivo) return Swal.showValidationMessage('Informe o motivo do cancelamento');
+                    return motivo;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const motivo = result.value;
+                    Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
+
+                    const formData = new FormData();
+                    formData.append('motivo', motivo);
+
+                    fetch(`/financeiro/contas-pagar/api/cancelar/${contaId}`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: formData
+                    })
+                    .then(async res => {
+                        if (res.ok) {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Cancelada!',
+                                text: 'Conta cancelada com sucesso.',
+                                confirmButtonColor: '#198754'
+                            });
+                            location.reload();
+                        } else {
+                            showError(res);
+                        }
+                    })
+                    .catch(err => showError({ text: () => Promise.resolve(err.toString()), json: () => Promise.reject() }));
+                }
+            });
         }
 
         // Função para excluir conta
         function excluirConta(contaId, contaNome) {
-            document.getElementById('contaExcluirNome').textContent = contaNome;
-            document.getElementById('formExcluir').action = '/financeiro/contas-pagar/excluir/' + contaId;
-            new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+            Swal.fire({
+                title: 'Excluir Conta',
+                html: `
+                    <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Esta ação não pode ser desfeita.</div>
+                    <p>Deseja realmente excluir a conta:<br><strong>${contaNome}</strong>?</p>
+                `,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sim, excluir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
+                    
+                    fetch(`/financeiro/contas-pagar/api/excluir/${contaId}`, {
+                        method: 'POST',
+                        headers: headers
+                    })
+                    .then(async res => {
+                        if (res.ok) {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Excluída!',
+                                text: 'Conta excluída com sucesso.',
+                                confirmButtonColor: '#198754'
+                            });
+                            location.reload();
+                        } else {
+                            showError(res);
+                        }
+                    })
+                    .catch(err => showError({ text: () => Promise.resolve(err.toString()), json: () => Promise.reject() }));
+                }
+            });
         }
     </script>
 </body>

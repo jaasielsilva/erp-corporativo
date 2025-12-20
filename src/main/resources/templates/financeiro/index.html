@@ -70,7 +70,7 @@
                                 <i class="fas fa-arrow-down kpi-icon"></i>
                                 <div class="kpi-title">A Receber</div>
                                 <div class="kpi-value"
-                                    th:text="${totalReceber != null ? #numbers.formatCurrency(totalReceber) : 'R$ 0,00'}">
+                                    th:text="${totalReceber != null ? 'R$ ' + #numbers.formatDecimal(totalReceber, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}">
                                     R$ 0,00</div>
                             </div>
                         </div>
@@ -81,7 +81,7 @@
                                 <i class="fas fa-arrow-up kpi-icon"></i>
                                 <div class="kpi-title">A Pagar</div>
                                 <div class="kpi-value"
-                                    th:text="${totalPagar != null ? #numbers.formatCurrency(totalPagar) : 'R$ 0,00'}">R$
+                                    th:text="${totalPagar != null ? 'R$ ' + #numbers.formatDecimal(totalPagar, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}">R$
                                     0,00</div>
                             </div>
                         </div>
@@ -92,7 +92,7 @@
                                 <i class="fas fa-wallet kpi-icon"></i>
                                 <div class="kpi-title">Saldo Atual</div>
                                 <div class="kpi-value"
-                                    th:text="${saldoAtual != null ? #numbers.formatCurrency(saldoAtual) : 'R$ 0,00'}">R$
+                                    th:text="${saldoAtual != null ? 'R$ ' + #numbers.formatDecimal(saldoAtual, 1, 'POINT', 2, 'COMMA') : 'R$ 0,00'}">R$
                                     0,00</div>
                             </div>
                         </div>
@@ -161,7 +161,7 @@
                                         </div>
                                         <span class="badge rounded-pill"
                                             th:classappend="${#strings.equals(t.tipoMovimento?.name(), 'ENTRADA') ? 'bg-success' : 'bg-danger'}"
-                                            th:text="${#strings.equals(t.tipoMovimento?.name(), 'ENTRADA') ? '+' : '-'} + ' ' + ${#numbers.formatCurrency(t.valor)}">
+                                            th:text="${#strings.equals(t.tipoMovimento?.name(), 'ENTRADA') ? '+' : '-'} + ' ' + 'R$ ' + ${#numbers.formatDecimal(t.valor, 1, 'POINT', 2, 'COMMA')}">
                                             Valor
                                         </span>
 

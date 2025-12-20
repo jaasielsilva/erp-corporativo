@@ -131,55 +131,55 @@
                                     <tbody>
                                         <tr class="fw-bold bg-light-success">
                                             <td>Receita Bruta</td>
-                                            <td class="text-end text-success" th:text="${#numbers.formatCurrency(relatorio.receitaBruta)}"></td>
+                                            <td class="text-end text-success" th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.receitaBruta, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end">100%</td>
                                         </tr>
                                         <!-- Detalhe Receitas -->
                                         <tr th:each="entry : ${relatorio.detalheReceitas}">
                                             <td class="ps-4 text-muted" th:text="${entry.key}"></td>
-                                            <td class="text-end text-muted" th:text="${#numbers.formatCurrency(entry.value)}"></td>
+                                            <td class="text-end text-muted" th:text="'R$ ' + ${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(entry.value.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                         
                                         <tr>
                                             <td>(-) Impostos</td>
-                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(relatorio.impostos)}"></td>
+                                            <td class="text-end text-danger" th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.impostos, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.impostos.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                         
                                         <tr class="fw-bold bg-light">
                                             <td>= Receita Líquida</td>
-                                            <td class="text-end" th:text="${#numbers.formatCurrency(relatorio.receitaLiquida)}"></td>
+                                            <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.receitaLiquida, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.receitaLiquida.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                         
                                         <tr>
                                             <td>(-) Custos Variáveis</td>
-                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(relatorio.custosVariaveis)}"></td>
+                                            <td class="text-end text-danger" th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.custosVariaveis, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.custosVariaveis.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                         
                                         <tr class="fw-bold bg-light">
                                             <td>= Margem de Contribuição</td>
-                                            <td class="text-end" th:text="${#numbers.formatCurrency(relatorio.margemContribuicao)}"></td>
+                                            <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.margemContribuicao, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.margemContribuicao.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                         
                                         <tr>
                                             <td>(-) Despesas Fixas</td>
-                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(relatorio.despesasFixas)}"></td>
+                                            <td class="text-end text-danger" th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.despesasFixas, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.despesasFixas.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                         <!-- Detalhe Despesas -->
                                         <tr th:each="entry : ${relatorio.detalheDespesas}">
                                             <td class="ps-4 text-muted" th:text="${entry.key}"></td>
-                                            <td class="text-end text-muted" th:text="${#numbers.formatCurrency(entry.value)}"></td>
+                                            <td class="text-end text-muted" th:text="'R$ ' + ${#numbers.formatDecimal(entry.value, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end text-muted small" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(entry.value.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                         
                                         <tr class="fw-bold fs-5 bg-light-primary">
                                             <td>= Resultado Operacional (EBITDA)</td>
-                                            <td class="text-end" th:classappend="${relatorio.resultadoOperacional >= 0 ? 'text-success' : 'text-danger'}" th:text="${#numbers.formatCurrency(relatorio.resultadoOperacional)}"></td>
+                                            <td class="text-end" th:classappend="${relatorio.resultadoOperacional >= 0 ? 'text-success' : 'text-danger'}" th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.resultadoOperacional, 1, 'POINT', 2, 'COMMA')}"></td>
                                             <td class="text-end" th:text="${relatorio.receitaBruta.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatPercent(relatorio.resultadoOperacional.divide(relatorio.receitaBruta, 4, T(java.math.RoundingMode).HALF_UP), 1, 1) : '-'}"></td>
                                         </tr>
                                     </tbody>
@@ -195,8 +195,8 @@
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Fluxo de Caixa Diário</h5>
                             <div>
-                                <span class="badge bg-secondary me-2">Saldo Inicial: <span th:text="${#numbers.formatCurrency(relatorio.saldoInicial)}"></span></span>
-                                <span class="badge bg-primary">Saldo Final: <span th:text="${#numbers.formatCurrency(relatorio.saldoFinal)}"></span></span>
+                                <span class="badge bg-secondary me-2">Saldo Inicial: <span th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.saldoInicial, 1, 'POINT', 2, 'COMMA')}"></span></span>
+                                <span class="badge bg-primary">Saldo Final: <span th:text="'R$ ' + ${#numbers.formatDecimal(relatorio.saldoFinal, 1, 'POINT', 2, 'COMMA')}"></span></span>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -214,10 +214,10 @@
                                     <tbody>
                                         <tr th:each="item : ${relatorio.fluxoDiario}">
                                             <td th:text="${#temporals.format(item.data, 'dd/MM/yyyy')}"></td>
-                                            <td class="text-end text-success" th:text="${#numbers.formatCurrency(item.entradas)}"></td>
-                                            <td class="text-end text-danger" th:text="${#numbers.formatCurrency(item.saidas)}"></td>
-                                            <td class="text-end" th:classappend="${item.entradas.subtract(item.saidas) >= 0 ? 'text-success' : 'text-danger'}" th:text="${#numbers.formatCurrency(item.entradas.subtract(item.saidas))}"></td>
-                                            <td class="text-end fw-bold" th:classappend="${item.saldoAcumulado >= 0 ? 'text-success' : 'text-danger'}" th:text="${#numbers.formatCurrency(item.saldoAcumulado)}"></td>
+                                            <td class="text-end text-success" th:text="'R$ ' + ${#numbers.formatDecimal(item.entradas, 1, 'POINT', 2, 'COMMA')}"></td>
+                                            <td class="text-end text-danger" th:text="'R$ ' + ${#numbers.formatDecimal(item.saidas, 1, 'POINT', 2, 'COMMA')}"></td>
+                                            <td class="text-end" th:classappend="${item.entradas.subtract(item.saidas) >= 0 ? 'text-success' : 'text-danger'}" th:text="'R$ ' + ${#numbers.formatDecimal(item.entradas.subtract(item.saidas), 1, 'POINT', 2, 'COMMA')}"></td>
+                                            <td class="text-end fw-bold" th:classappend="${item.saldoAcumulado >= 0 ? 'text-success' : 'text-danger'}" th:text="'R$ ' + ${#numbers.formatDecimal(item.saldoAcumulado, 1, 'POINT', 2, 'COMMA')}"></td>
                                         </tr>
                                     </tbody>
                                 </table>

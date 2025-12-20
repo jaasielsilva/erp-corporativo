@@ -15,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ public class ContaPagarController {
                             && c.getDescricao().toLowerCase().contains(texto.toLowerCase()))
                     .toList();
         }
+
 
         if (status != null && !status.isEmpty()) {
             try {
@@ -248,5 +250,78 @@ public class ContaPagarController {
         model.addAttribute("conta", contaOpt.get());
         model.addAttribute("historico", contaPagarService.listarHistorico(id));
         return "financeiro/contas-pagar/historico";
+    }
+
+    // ================= API ENDPOINTS =================
+
+    @PostMapping("/api/aprovar/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> aprovarApi(@PathVariable Long id,
+            @RequestAttribute("usuarioLogado") Usuario usuario) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            contaPagarService.aprovar(id, usuario);
+            response.put("success", true);
+            response.put("message", "Conta aprovada com sucesso!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/api/pagar/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> pagarApi(@PathVariable Long id,
+            @RequestParam("valorPago") BigDecimal valorPago,
+            @RequestParam(value = "formaPagamento", required = false) String formaPagamento,
+            @RequestAttribute("usuarioLogado") Usuario usuario) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null);
+            response.put("success", true);
+            response.put("message", "Conta paga com sucesso!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/api/cancelar/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> cancelarApi(@PathVariable Long id,
+            @RequestParam("motivo") String motivo,
+            @RequestAttribute("usuarioLogado") Usuario usuario) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            contaPagarService.cancelar(id, motivo, usuario);
+            response.put("success", true);
+            response.put("message", "Conta cancelada com sucesso!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/api/excluir/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> excluirApi(@PathVariable Long id,
+            @RequestAttribute("usuarioLogado") Usuario usuario) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            contaPagarService.excluir(id, usuario);
+            response.put("success", true);
+            response.put("message", "Conta excluída com sucesso!");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

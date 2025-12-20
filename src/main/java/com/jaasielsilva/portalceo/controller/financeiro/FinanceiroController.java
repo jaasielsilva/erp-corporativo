@@ -236,7 +236,7 @@ public class FinanceiroController {
             BindingResult result,
             RedirectAttributes redirectAttributes,
             Model model,
-            @ModelAttribute("usuarioLogado") Usuario usuario) {
+            @RequestAttribute("usuarioLogado") Usuario usuario) {
 
         if (result.hasErrors()) {
             model.addAttribute("clientes", clienteService.listarTodos());

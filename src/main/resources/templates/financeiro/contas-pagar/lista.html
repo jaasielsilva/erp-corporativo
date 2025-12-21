@@ -200,7 +200,9 @@
 
                                         <!-- Pagar (apenas para contas APROVADAS) -->
                                         <button type="button" class="btn btn-sm btn-outline-warning"
-                                            title="Efetuar Pagamento" th:if="${conta.status != null && conta.status.name() == 'APROVADA'}"
+                                            title="Efetuar Pagamento" 
+                                            th:if="${conta.status != null && conta.status.name() == 'APROVADA'}"
+                                            sec:authorize="hasAuthority('FINANCEIRO_PAGAR')"
                                             th:attr="onclick=|pagarConta(${conta.id}, '${#strings.escapeJavaScript(conta.descricao)}', ${conta.valorOriginal})|">
                                             <i class="fas fa-money-bill-wave"></i>
                                         </button>
@@ -249,6 +251,9 @@
         /*<![CDATA[*/
         const csrfToken = /*[[${_csrf != null ? _csrf.token : ''}]]*/ '';
         const csrfHeader = /*[[${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}]]*/ 'X-CSRF-TOKEN';
+        
+        // Lista de contas bancárias disponíveis
+        const contasBancarias = /*[[${contasBancarias}]]*/ [];
         /*]]>*/
 
         const headers = {
@@ -316,11 +321,18 @@
         function pagarConta(contaId, contaNome, valorOriginal) {
             // Formatar valor original para exibição (ex: 1200.50 -> 1.200,50)
             let valorFormatado = parseFloat(valorOriginal).toFixed(2).replace('.', ',');
-            // Adicionar pontos de milhar se necessário, mas para o value do input o mask fará o trabalho se inicializarmos com valor correto
-            // Melhor estratégia: passar valor vazio ou formatado. Se formatado, o mask deve lidar.
-            // Simplificação: vamos deixar o usuário digitar ou preencher.
-            // Mas para preencher corretamente com mask, precisamos converter 1200.50 para '1.200,50'
             valorFormatado = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valorOriginal);
+
+            // Gerar opções de conta bancária
+            let contasOptions = '<option value="">Selecione a conta...</option>';
+            if (contasBancarias && contasBancarias.length > 0) {
+                contasBancarias.forEach(conta => {
+                    const saldoFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(conta.saldo);
+                    contasOptions += `<option value="${conta.id}">${conta.nome} (${saldoFmt})</option>`;
+                });
+            } else {
+                contasOptions += '<option value="" disabled>Nenhuma conta cadastrada</option>';
+            }
 
             Swal.fire({
                 title: 'Efetuar Pagamento',
@@ -330,6 +342,11 @@
                         <label class="form-label fw-bold">Valor Pago (R$)</label>
                         <input type="text" id="valorPagoInput" class="form-control mb-3 money" value="${valorFormatado}">
                         
+                        <label class="form-label fw-bold">Conta de Saída (Débito)</label>
+                        <select id="contaBancariaInput" class="form-select mb-3">
+                            ${contasOptions}
+                        </select>
+
                         <label class="form-label fw-bold">Forma de Pagamento</label>
                         <select id="formaPagamentoInput" class="form-select">
                             <option value="">Selecione...</option>
@@ -354,28 +371,31 @@
                 preConfirm: () => {
                     const valorStr = document.getElementById('valorPagoInput').value;
                     const forma = document.getElementById('formaPagamentoInput').value;
+                    const contaBancariaId = document.getElementById('contaBancariaInput').value;
                     
                     if (!valorStr) return Swal.showValidationMessage('Informe o valor pago');
+                    if (!contaBancariaId) return Swal.showValidationMessage('Selecione a conta de saída');
                     if (!forma) return Swal.showValidationMessage('Selecione a forma de pagamento');
                     
                     // Converter formato BR (1.000,00) para US (1000.00)
                     const valor = valorStr.replace(/\./g, '').replace(',', '.');
 
-                    return { valor: valor, forma: forma };
+                    return { valor: valor, forma: forma, contaBancariaId: contaBancariaId };
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const { valor, forma } = result.value;
+                    const { valor, forma, contaBancariaId } = result.value;
                     Swal.fire({ title: 'Processando...', didOpen: () => Swal.showLoading() });
 
                     const formData = new FormData();
                     formData.append('valorPago', valor);
                     formData.append('formaPagamento', forma);
-
+                    formData.append('contaBancariaId', contaBancariaId);
+                    
                     fetch(`/financeiro/contas-pagar/api/pagar/${contaId}`, {
                         method: 'POST',
-                        headers: headers, // FormData automatically handles Content-Type
-                        body: formData
+                        headers: headers,
+                        body: formData 
                     })
                     .then(async res => {
                         if (res.ok) {

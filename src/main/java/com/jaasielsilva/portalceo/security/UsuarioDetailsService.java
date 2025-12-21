@@ -64,6 +64,11 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
         authorities.add(new SimpleGrantedAuthority("TECNICO_ATENDER_CHAMADOS"));
         authorities.add(new SimpleGrantedAuthority("TECNICO_GERENCIAR_PROPRIOS_CHAMADOS"));
         authorities.add(new SimpleGrantedAuthority("ADMIN_GERENCIAR_USUARIOS"));
+        // Permissões Financeiras para Master
+        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_VER_SALDO"));
+        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_VER_EXTRATO"));
+        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_PAGAR"));
+        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_CONFIGURAR"));
     } else {
         // 🔹 Caso não seja MASTER, pegar as permissões normais dos perfis
         authorities.addAll(

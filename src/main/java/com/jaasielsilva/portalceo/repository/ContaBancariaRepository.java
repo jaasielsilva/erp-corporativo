@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ContaBancariaRepository extends JpaRepository<ContaBancaria, Long> {
     List<ContaBancaria> findByAtivoTrue();
+    boolean existsByNome(String nome);
 }

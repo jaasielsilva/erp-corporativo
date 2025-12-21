@@ -43,6 +43,9 @@ public class DatabaseInitializer implements CommandLineRunner {
     
     @Autowired
     private ChamadoRepository chamadoRepository;
+    
+    @Autowired
+    private com.jaasielsilva.portalceo.service.ContaBancariaService contaBancariaService;
 
     // Aqui você já deve ter injeções de UserRepository, RoleRepository etc.
     // @Autowired
@@ -69,5 +72,9 @@ public class DatabaseInitializer implements CommandLineRunner {
         }
         
         System.out.println("DatabaseInitializer: Benefícios genéricos criados. Planos de Saúde são gerenciados pelo SecurityConfig.");
+        
+        // ===== Populando Contas Bancárias =====
+        contaBancariaService.inicializarContasSeNecessario();
+        System.out.println("DatabaseInitializer: Contas bancárias verificadas/criadas.");
     }
 }

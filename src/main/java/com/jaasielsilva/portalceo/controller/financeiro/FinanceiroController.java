@@ -133,6 +133,9 @@ public class FinanceiroController {
             Map<String, BigDecimal> projecao30dias = fluxoCaixaService.getProjecaoFinanceira(30);
             model.addAttribute("projecao30dias", projecao30dias != null ? projecao30dias : Map.of());
 
+            // Carregar contas bancárias para os cards (filtragem de visualização será na view)
+            model.addAttribute("contasBancarias", contaBancariaService.listarContasAtivas());
+
         } catch (Exception e) {
             System.err.println("Erro ao carregar dashboard financeiro: " + e.getMessage());
             e.printStackTrace();

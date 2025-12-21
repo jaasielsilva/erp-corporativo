@@ -55,6 +55,9 @@ public class FolhaPagamento {
     @Column
     private LocalDate dataFechamento;
 
+    @Column
+    private LocalDate dataPagamento;
+
     @ManyToOne
     @JoinColumn(name = "usuario_processamento_id")
     private Usuario usuarioProcessamento;

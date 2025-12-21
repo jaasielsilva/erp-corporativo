@@ -308,6 +308,39 @@ public class SecurityConfig {
                                                 return permissaoRepository.save(p);
                                         });
 
+                        // Permissões Financeiras
+                        Permissao finVerSaldo = permissaoRepository.findByNome("FINANCEIRO_VER_SALDO")
+                                .orElseGet(() -> {
+                                    Permissao p = new Permissao();
+                                    p.setNome("FINANCEIRO_VER_SALDO");
+                                    p.setCategoria("Financeiro");
+                                    return permissaoRepository.save(p);
+                                });
+
+                        Permissao finVerExtrato = permissaoRepository.findByNome("FINANCEIRO_VER_EXTRATO")
+                                .orElseGet(() -> {
+                                    Permissao p = new Permissao();
+                                    p.setNome("FINANCEIRO_VER_EXTRATO");
+                                    p.setCategoria("Financeiro");
+                                    return permissaoRepository.save(p);
+                                });
+
+                        Permissao finPagar = permissaoRepository.findByNome("FINANCEIRO_PAGAR")
+                                .orElseGet(() -> {
+                                    Permissao p = new Permissao();
+                                    p.setNome("FINANCEIRO_PAGAR");
+                                    p.setCategoria("Financeiro");
+                                    return permissaoRepository.save(p);
+                                });
+
+                        Permissao finConfigurar = permissaoRepository.findByNome("FINANCEIRO_CONFIGURAR")
+                                .orElseGet(() -> {
+                                    Permissao p = new Permissao();
+                                    p.setNome("FINANCEIRO_CONFIGURAR");
+                                    p.setCategoria("Financeiro");
+                                    return permissaoRepository.save(p);
+                                });
+
                         // Perfis básicos (mantidos para compatibilidade)
                         Perfil adminPerfil = perfilRepository.findByNome("ADMIN")
                                         .orElseGet(() -> {
@@ -315,8 +348,46 @@ public class SecurityConfig {
                                                 p.setNome("ADMIN");
                                                 p.setPermissoes(new HashSet<>());
                                                 p.getPermissoes().add(roleAdmin);
+                                                // Admin não tem acesso financeiro por padrão, apenas MASTER
                                                 return perfilRepository.save(p);
                                         });
+
+                        // Perfil FINANCEIRO (Tesouraria/Contas a Pagar)
+                        Perfil financeiroPerfil = perfilRepository.findByNome("FINANCEIRO")
+                                .orElseGet(() -> {
+                                    Perfil p = new Perfil();
+                                    p.setNome("FINANCEIRO");
+                                    p.setPermissoes(new HashSet<>());
+                                    p.getPermissoes().add(roleUser);
+                                    p.getPermissoes().add(finVerSaldo);
+                                    p.getPermissoes().add(finVerExtrato);
+                                    p.getPermissoes().add(finPagar);
+                                    return perfilRepository.save(p);
+                                });
+
+                        // Perfil DIRETOR_FINANCEIRO (CFO)
+                        Perfil diretorFinPerfil = perfilRepository.findByNome("DIRETOR_FINANCEIRO")
+                                .orElseGet(() -> {
+                                    Perfil p = new Perfil();
+                                    p.setNome("DIRETOR_FINANCEIRO");
+                                    p.setPermissoes(new HashSet<>());
+                                    p.getPermissoes().add(roleUser);
+                                    p.getPermissoes().add(finVerSaldo);
+                                    p.getPermissoes().add(finVerExtrato);
+                                    // Não paga, não configura
+                                    return perfilRepository.save(p);
+                                });
+
+                        // Perfil CEO/DIRETORIA (Visão Macro)
+                        Perfil ceoPerfil = perfilRepository.findByNome("CEO")
+                                .orElseGet(() -> {
+                                    Perfil p = new Perfil();
+                                    p.setNome("CEO");
+                                    p.setPermissoes(new HashSet<>());
+                                    p.getPermissoes().add(roleUser);
+                                    p.getPermissoes().add(finVerSaldo); // Pode ver saldo consolidado (ou detalhado se preferir)
+                                    return perfilRepository.save(p);
+                                });
 
                         Perfil userPerfil = perfilRepository.findByNome("USER")
                                         .orElseGet(() -> {

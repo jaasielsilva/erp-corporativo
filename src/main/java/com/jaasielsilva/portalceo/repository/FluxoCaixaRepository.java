@@ -23,6 +23,9 @@ public interface FluxoCaixaRepository extends JpaRepository<FluxoCaixa, Long> {
 
     List<FluxoCaixa> findByStatusAndDataBetweenOrderByData(FluxoCaixa.StatusFluxo status, LocalDate dataInicio, LocalDate dataFim);
 
+    @Query("SELECT f FROM FluxoCaixa f LEFT JOIN FETCH f.contaBancaria LEFT JOIN FETCH f.usuarioCriacao WHERE f.status = :status AND f.data BETWEEN :inicio AND :fim ORDER BY f.data")
+    List<FluxoCaixa> findByStatusAndDataBetweenWithRelations(@Param("status") FluxoCaixa.StatusFluxo status, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
     @Query("SELECT SUM(f.valor) FROM FluxoCaixa f WHERE f.tipoMovimento = 'ENTRADA' AND f.data BETWEEN :inicio AND :fim AND f.status = 'REALIZADO'")
     BigDecimal sumEntradasByPeriodo(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 

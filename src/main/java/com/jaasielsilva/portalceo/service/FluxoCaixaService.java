@@ -4,10 +4,13 @@ import com.jaasielsilva.portalceo.model.FluxoCaixa;
 import com.jaasielsilva.portalceo.model.ContaPagar;
 import com.jaasielsilva.portalceo.model.ContaReceber;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.NivelAcesso;
 import com.jaasielsilva.portalceo.repository.FluxoCaixaRepository;
 import com.jaasielsilva.portalceo.repository.ContaPagarRepository;
 import com.jaasielsilva.portalceo.repository.ContaReceberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class FluxoCaixaService {
     private final FluxoCaixaRepository fluxoCaixaRepository;
     private final ContaPagarRepository contaPagarRepository;
     private final ContaReceberRepository contaReceberRepository;
+    private final ContaBancariaService contaBancariaService;
 
     // CRUD Operations
     public FluxoCaixa save(FluxoCaixa fluxoCaixa) {
@@ -146,6 +150,75 @@ public class FluxoCaixaService {
                 fluxoCaixaRepository.save(fluxo);
             }
         }
+    }
+
+    // Workflow de Aprovação de Ajustes
+
+    @Transactional
+    public FluxoCaixa solicitarAjuste(FluxoCaixa fluxo, Usuario usuario) {
+        validarFluxoCaixa(fluxo);
+        fluxo.setStatus(FluxoCaixa.StatusFluxo.PENDENTE_APROVACAO);
+        fluxo.setUsuarioCriacao(usuario);
+        fluxo.setDataCriacao(LocalDateTime.now());
+        return fluxoCaixaRepository.save(fluxo);
+    }
+
+    @Transactional
+    public FluxoCaixa aprovarAjuste(Long id, Usuario usuarioAprovador) {
+        FluxoCaixa fluxo = fluxoCaixaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Transação não encontrada"));
+
+        if (fluxo.getStatus() != FluxoCaixa.StatusFluxo.PENDENTE_APROVACAO) {
+            throw new IllegalStateException("Apenas transações pendentes podem ser aprovadas");
+        }
+
+        // Segregação de Funções: Quem criou não pode aprovar (exceto MASTER)
+        if (fluxo.getUsuarioCriacao() != null && 
+            fluxo.getUsuarioCriacao().getId().equals(usuarioAprovador.getId())) {
+            
+            if (usuarioAprovador.getNivelAcesso() != NivelAcesso.MASTER) {
+                throw new SecurityException("Segregação de Funções: Você não pode aprovar sua própria solicitação. Solicite a outro gestor.");
+            }
+        }
+
+        // Executa a movimentação bancária
+        if (fluxo.getTipoMovimento() == FluxoCaixa.TipoMovimento.ENTRADA) {
+            contaBancariaService.creditar(fluxo.getContaBancaria().getId(), fluxo.getValor());
+        } else {
+            contaBancariaService.debitar(fluxo.getContaBancaria().getId(), fluxo.getValor());
+        }
+
+        fluxo.setStatus(FluxoCaixa.StatusFluxo.REALIZADO);
+        fluxo.setObservacoes(fluxo.getObservacoes() + " | Aprovado por: " + usuarioAprovador.getNome());
+        fluxo.setDataUltimaEdicao(LocalDateTime.now());
+
+        return fluxoCaixaRepository.save(fluxo);
+    }
+
+    @Transactional
+    public FluxoCaixa rejeitarAjuste(Long id, Usuario usuarioRejeicao) {
+        FluxoCaixa fluxo = fluxoCaixaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Transação não encontrada"));
+
+        if (fluxo.getStatus() != FluxoCaixa.StatusFluxo.PENDENTE_APROVACAO) {
+            throw new IllegalStateException("Apenas transações pendentes podem ser rejeitadas");
+        }
+
+        fluxo.setStatus(FluxoCaixa.StatusFluxo.CANCELADO);
+        fluxo.setObservacoes(fluxo.getObservacoes() + " | Rejeitado por: " + usuarioRejeicao.getNome());
+        fluxo.setDataUltimaEdicao(LocalDateTime.now());
+
+        return fluxoCaixaRepository.save(fluxo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FluxoCaixa> listarPendentesAprovacao() {
+        // Assume que queremos ver pendentes de qualquer data, ou filtro recente
+        // Usando um range amplo ou criando método específico no repo
+        // Vamos usar o método findByStatus existente com um range grande
+        LocalDate inicio = LocalDate.now().minusYears(1);
+        LocalDate fim = LocalDate.now().plusYears(1);
+        return fluxoCaixaRepository.findByStatusAndDataBetweenWithRelations(FluxoCaixa.StatusFluxo.PENDENTE_APROVACAO, inicio, fim);
     }
 
     // Query Operations

@@ -75,6 +75,9 @@ public class FolhaPagamentoController {
 
     
 
+    @Autowired
+    private com.jaasielsilva.portalceo.service.ContaBancariaService contaBancariaService;
+
     /**
      * Página principal da folha de pagamento
      */
@@ -291,6 +294,7 @@ public class FolhaPagamentoController {
         model.addAttribute("folha", folha);
         model.addAttribute("holerites", java.util.Collections.emptyList());
         model.addAttribute("resumo", holeriteService.calcularResumoFolha(id));
+        model.addAttribute("contasBancarias", contaBancariaService.listarContasAtivas());
         
         return "rh/folha-pagamento/visualizar";
     }
@@ -423,6 +427,29 @@ public class FolhaPagamentoController {
         }
         
         return "redirect:/rh/folha-pagamento/visualizar/" + id;
+    }
+
+    /**
+     * Realiza o pagamento da folha
+     */
+    @PreAuthorize("@globalControllerAdvice.podeAcessarFinanceiro()")
+    @PostMapping("/pagar")
+    public String pagar(@RequestParam Long folhaId,
+                        @RequestParam Long contaBancariaId,
+                        RedirectAttributes redirectAttributes) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuario = usuarioService.buscarPorEmailLeve(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+            folhaPagamentoService.pagarFolha(folhaId, contaBancariaId, usuario);
+            redirectAttributes.addFlashAttribute("mensagem", "Pagamento da folha realizado com sucesso!");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao pagar folha: " + e.getMessage());
+        }
+
+        return "redirect:/rh/folha-pagamento/visualizar/" + folhaId;
     }
 
     /**

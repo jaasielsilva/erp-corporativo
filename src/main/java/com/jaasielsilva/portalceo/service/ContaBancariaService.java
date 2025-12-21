@@ -28,10 +28,49 @@ public class ContaBancariaService {
     }
 
     public void inicializarContasSeNecessario() {
-        if (repository.count() == 0) {
-            repository.save(new ContaBancaria("Caixa Principal", BigDecimal.ZERO));
-            repository.save(new ContaBancaria("Banco Itaú", BigDecimal.ZERO));
-            repository.save(new ContaBancaria("Banco Santander", BigDecimal.ZERO));
+        criarContaSeNaoExistir("Caixa Principal");
+        criarContaSeNaoExistir("Banco Itaú");
+        criarContaSeNaoExistir("Banco Santander");
+        criarContaSeNaoExistir("Nubank");
+    }
+
+    private void criarContaSeNaoExistir(String nome) {
+        if (!repository.existsByNome(nome)) {
+            repository.save(new ContaBancaria(nome, BigDecimal.ZERO));
         }
+    }
+
+    /**
+     * Adiciona saldo a uma conta bancária.
+     * Utilizado para aportes e entradas manuais.
+     * 
+     * @param contaId ID da conta a receber o valor
+     * @param valor Valor a ser creditado
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void creditar(Long contaId, BigDecimal valor) {
+        ContaBancaria conta = repository.findById(contaId)
+                .orElseThrow(() -> new IllegalArgumentException("Conta bancária não encontrada"));
+        conta.setSaldo(conta.getSaldo().add(valor));
+        repository.save(conta);
+    }
+
+    /**
+     * Deduz saldo de uma conta bancária.
+     * Utilizado para pagamentos de folha, contas a pagar e retiradas.
+     * 
+     * Nota: Atualmente permite saldo negativo (cheque especial/limite), 
+     * mas poderia ser restringido com validação extra.
+     * 
+     * @param contaId ID da conta a ser debitada
+     * @param valor Valor a ser debitado
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void debitar(Long contaId, BigDecimal valor) {
+        ContaBancaria conta = repository.findById(contaId)
+                .orElseThrow(() -> new IllegalArgumentException("Conta bancária não encontrada"));
+        // Permite saldo negativo? Por enquanto sim, mas podemos validar
+        conta.setSaldo(conta.getSaldo().subtract(valor));
+        repository.save(conta);
     }
 }

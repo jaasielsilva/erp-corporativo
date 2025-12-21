@@ -76,6 +76,7 @@ Gestão das entradas previstas.
 
 ### 3.4 Transferências (Novo)
 Gerenciamento de movimentações entre contas bancárias internas da empresa.
+> **Para detalhes completos e exemplos, consulte:** [Manual de Uso: Financeiro Transferência](./MANUAL_USUARIO_FINANCEIRO_TRANSFERENCIAS.md)
 
 #### Funcionalidade:
 Permite mover valores entre "Caixa", "Banco Itaú", "Banco Santander", etc., mantendo o saldo conciliado.

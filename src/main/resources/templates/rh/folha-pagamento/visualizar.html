@@ -29,6 +29,11 @@
                     onclick="enviarParaFinanceiro()">
                 <i class="fas fa-paper-plane"></i> Enviar Financeiro
             </button>
+            <button class="btn btn-success" title="Realizar Pagamento" 
+                    th:if="${folha.status.name() == 'ENVIADA_FINANCEIRO'}"
+                    onclick="abrirModalPagamento()">
+                <i class="fas fa-money-bill-wave"></i> Pagar Folha
+            </button>
             <form th:action="@{/rh/folha-pagamento/fechar/{id}(id=${folha.id})}" method="post" th:if="${folha.status.name() == 'PROCESSADA'}">
               <button class="btn btn-success" title="Fechar folha"><i class="fas fa-lock"></i> Fechar</button>
             </form>
@@ -104,12 +109,49 @@
             <div id="holeritesPagination" class="pagination"></div>
           </div>
         </div>
+
+        <!-- Modal de Pagamento -->
+        <div class="modal fade" id="modalPagamento" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form th:action="@{/rh/folha-pagamento/pagar}" method="POST">
+                        <input type="hidden" name="folhaId" th:value="${folha.id}" />
+                        <div class="modal-header">
+                            <h5 class="modal-title">Realizar Pagamento da Folha</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Selecione a conta bancária de onde sairá o pagamento.</p>
+                            <div class="alert alert-info">
+                                Valor Total: <strong th:text="${#numbers.formatCurrency(resumo.totalLiquido)}"></strong>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Conta Bancária</label>
+                                <select name="contaBancariaId" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option th:each="c : ${contasBancarias}" th:value="${c.id}" th:text="${c.nome} + ' (Saldo: ' + ${#numbers.formatCurrency(c.saldo)} + ')'"></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Confirmar Pagamento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
       </section>
     </main>
   </div>
   <script th:inline="javascript">
     window.folhaId = [[${folha.id}]];
     
+    function abrirModalPagamento() {
+        var myModal = new bootstrap.Modal(document.getElementById('modalPagamento'));
+        myModal.show();
+    }
+
     function enviarParaFinanceiro() {
         Swal.fire({
             title: 'Confirmar Envio',

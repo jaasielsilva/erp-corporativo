@@ -59,6 +59,12 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     @Autowired
     private HoleriteCalculoService holeriteCalculoService;
 
+    @Autowired
+    ContaBancariaService contaBancariaService;
+
+    @Autowired
+    FluxoCaixaService fluxoCaixaService;
+
     private final Map<String, Map<String, Object>> processamentoJobs = new ConcurrentHashMap<>();
     private static final int MAX_LOG_ITEMS = 50;
     private static final ThreadLocal<String> currentJobId = new ThreadLocal<>();
@@ -811,6 +817,66 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         calcularDescontos(holerite, colaborador, mes, ano, beneficios, tipoFolha);
         holerite.setTipoFolha(tipoFolha);
         return holerite;
+    }
+
+    /**
+     * Realiza o pagamento de uma folha de pagamento processada.
+     * 
+     * Este método executa as seguintes operações:
+     * 1. Valida se a folha existe e se está em um status que permite pagamento (FECHADA, PROCESSADA, ENVIADA_FINANCEIRO).
+     * 2. Verifica se o valor da folha é válido (maior que zero).
+     * 3. Debita o valor total líquido da conta bancária selecionada.
+     * 4. Registra uma saída no Fluxo de Caixa categorizada como SALARIOS.
+     * 5. Atualiza o status da folha para PAGA e define a data de pagamento.
+     * 
+     * @param folhaId ID da folha de pagamento a ser paga
+     * @param contaBancariaId ID da conta bancária de onde sairá o dinheiro
+     * @param usuario Usuário que está realizando a operação (para auditoria)
+     * @throws IllegalStateException se a folha já estiver paga ou status inválido
+     * @throws IllegalArgumentException se a folha ou conta não forem encontradas
+     */
+    @Transactional
+    public void pagarFolha(Long folhaId, Long contaBancariaId, Usuario usuario) {
+        FolhaPagamento folha = folhaPagamentoRepository.findById(folhaId)
+                .orElseThrow(() -> new IllegalArgumentException("Folha de pagamento não encontrada"));
+
+        if (folha.getStatus() == FolhaPagamento.StatusFolha.PAGA) {
+            throw new IllegalStateException("Esta folha já foi paga.");
+        }
+
+        // Verifica se a folha pode ser paga (deve estar FECHADA, PROCESSADA ou ENVIADA_FINANCEIRO)
+        if (folha.getStatus() != FolhaPagamento.StatusFolha.FECHADA && 
+            folha.getStatus() != FolhaPagamento.StatusFolha.PROCESSADA &&
+            folha.getStatus() != FolhaPagamento.StatusFolha.ENVIADA_FINANCEIRO) {
+            throw new IllegalStateException("A folha deve estar Fechada ou Processada para ser paga.");
+        }
+
+        BigDecimal valorTotal = folha.getTotalLiquido();
+        if (valorTotal.compareTo(BigDecimal.ZERO) <= 0) {
+             throw new IllegalStateException("O valor total da folha deve ser maior que zero.");
+        }
+
+        // Debita da conta bancária
+        contaBancariaService.debitar(contaBancariaId, valorTotal);
+
+        // Registra no Fluxo de Caixa
+        FluxoCaixa fluxo = new FluxoCaixa();
+        fluxo.setTipoMovimento(FluxoCaixa.TipoMovimento.SAIDA);
+        fluxo.setCategoria(FluxoCaixa.CategoriaFluxo.SALARIOS);
+        fluxo.setDescricao("Pagamento Folha " + folha.getMesReferencia() + "/" + folha.getAnoReferencia());
+        fluxo.setValor(valorTotal);
+        fluxo.setData(LocalDate.now());
+        fluxo.setDataCriacao(LocalDateTime.now());
+        fluxo.setStatus(FluxoCaixa.StatusFluxo.REALIZADO);
+        fluxo.setContaBancaria(contaBancariaService.buscarPorId(contaBancariaId).orElse(null));
+        fluxo.setObservacoes("Pagamento realizado por " + usuario.getNome());
+        fluxoCaixaService.save(fluxo);
+
+        // Atualiza status da folha
+        folha.setStatus(FolhaPagamento.StatusFolha.PAGA);
+        folha.setDataPagamento(LocalDate.now());
+        
+        folhaPagamentoRepository.save(folha);
     }
 
     /**

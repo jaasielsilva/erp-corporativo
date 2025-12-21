@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -34,6 +35,9 @@ public class ContaPagarController {
     @Autowired
     private FornecedorService fornecedorService;
 
+    @Autowired
+    private com.jaasielsilva.portalceo.service.ContaBancariaService contaBancariaService;
+
     // ================= LISTAR =================
     @GetMapping
     public String listar(
@@ -43,6 +47,16 @@ public class ContaPagarController {
             Model model) {
 
         List<ContaPagar> contas = contaPagarService.listarTodas();
+
+        // Carregar contas bancárias para o modal de pagamento (Apenas se tiver permissão de PAGAR)
+        boolean podePagar = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("FINANCEIRO_PAGAR"));
+        
+        if (podePagar) {
+            model.addAttribute("contasBancarias", contaBancariaService.listarContasAtivas());
+        } else {
+            model.addAttribute("contasBancarias", List.of());
+        }
 
         if (texto != null && !texto.isEmpty()) {
             contas = contas.stream()
@@ -212,10 +226,11 @@ public class ContaPagarController {
     public String pagar(@PathVariable Long id,
             @RequestParam("valorPago") BigDecimal valorPago,
             @RequestParam(value = "formaPagamento", required = false) String formaPagamento,
+            @RequestParam(value = "contaBancariaId", required = false) Long contaBancariaId,
             @ModelAttribute("usuarioLogado") Usuario usuario,
             RedirectAttributes redirectAttributes) {
         try {
-            contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null);
+            contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null, contaBancariaId);
             redirectAttributes.addFlashAttribute("sucesso", "Conta paga com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao pagar: " + e.getMessage());
@@ -276,10 +291,11 @@ public class ContaPagarController {
     public ResponseEntity<Map<String, Object>> pagarApi(@PathVariable Long id,
             @RequestParam("valorPago") BigDecimal valorPago,
             @RequestParam(value = "formaPagamento", required = false) String formaPagamento,
+            @RequestParam(value = "contaBancariaId", required = false) Long contaBancariaId,
             @RequestAttribute("usuarioLogado") Usuario usuario) {
         Map<String, Object> response = new HashMap<>();
         try {
-            contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null);
+            contaPagarService.efetuarPagamento(id, valorPago, formaPagamento, usuario, null, contaBancariaId);
             response.put("success", true);
             response.put("message", "Conta paga com sucesso!");
             return ResponseEntity.ok(response);

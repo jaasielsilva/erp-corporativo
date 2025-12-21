@@ -4,6 +4,7 @@ import com.jaasielsilva.portalceo.model.ContaPagar;
 import com.jaasielsilva.portalceo.model.FluxoCaixa;
 import com.jaasielsilva.portalceo.model.HistoricoContaPagar;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.repository.ContaBancariaRepository;
 import com.jaasielsilva.portalceo.repository.ContaPagarRepository;
 import com.jaasielsilva.portalceo.repository.FluxoCaixaRepository;
 import com.jaasielsilva.portalceo.repository.HistoricoContaPagarRepository;
@@ -29,6 +30,9 @@ public class ContaPagarService {
 
     @Autowired
     private ContaPagarRepository contaPagarRepository;
+
+    @Autowired
+    private ContaBancariaRepository contaBancariaRepository;
 
     @Autowired
     private FluxoCaixaRepository fluxoCaixaRepository;
@@ -155,7 +159,7 @@ public class ContaPagarService {
     // ================= PAGAR =================
     @Transactional
     public ContaPagar efetuarPagamento(Long id, BigDecimal valorPago, String formaPagamento, Usuario usuario,
-            MultipartFile comprovante) throws IOException {
+            MultipartFile comprovante, Long contaBancariaId) throws IOException {
         ContaPagar conta = contaPagarRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada"));
 
@@ -165,6 +169,22 @@ public class ContaPagarService {
 
         if (valorPago.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Valor do pagamento deve ser maior que zero");
+        }
+
+        // Processar débito em conta bancária se informado
+        com.jaasielsilva.portalceo.model.ContaBancaria contaBancaria = null;
+        if (contaBancariaId != null) {
+            contaBancaria = contaBancariaRepository.findById(contaBancariaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Conta bancária não encontrada"));
+            
+            if (contaBancaria.getSaldo().compareTo(valorPago) < 0) {
+                // Opcional: Bloquear se não tiver saldo. Por enquanto apenas logamos ou permitimos negativo?
+                // Vamos permitir negativo pois pode ser cheque especial, mas ideal avisar.
+                // Decisão: Permitir e debitar.
+            }
+            
+            contaBancaria.setSaldo(contaBancaria.getSaldo().subtract(valorPago));
+            contaBancariaRepository.save(contaBancaria);
         }
 
         conta.setValorPago(valorPago);
@@ -197,10 +217,16 @@ public class ContaPagarService {
         fluxo.setNumeroDocumento(conta.getNumeroDocumento());
         fluxo.setContaPagar(conta);
         fluxo.setUsuarioCriacao(usuario);
+        
+        if (contaBancaria != null) {
+            fluxo.setContaBancaria(contaBancaria);
+        }
+        
         fluxoCaixaRepository.save(fluxo);
 
         registrarHistorico(conta, usuario, "Pagamento efetuado: " + valorPago +
-                (formaPagamento != null ? " via " + formaPagamento : ""));
+                (formaPagamento != null ? " via " + formaPagamento : "") +
+                (contaBancaria != null ? " (Conta: " + contaBancaria.getNome() + ")" : ""));
 
         logger.info("Pagamento efetuado: {} - Valor: {}", conta.getDescricao(), valorPago);
 
@@ -209,8 +235,13 @@ public class ContaPagarService {
 
     // ================= SOBRECARGA PARA API =================
     @Transactional
+    public ContaPagar efetuarPagamento(Long id, BigDecimal valorPago, String formaPagamento, Usuario usuario, MultipartFile comprovante) throws IOException {
+        return efetuarPagamento(id, valorPago, formaPagamento, usuario, comprovante, null);
+    }
+
+    @Transactional
     public ContaPagar efetuarPagamento(Long id, BigDecimal valorPago, String formaPagamento) throws IOException {
-        return efetuarPagamento(id, valorPago, formaPagamento, null, null);
+        return efetuarPagamento(id, valorPago, formaPagamento, null, null, null);
     }
 
     // ================= CANCELAR =================

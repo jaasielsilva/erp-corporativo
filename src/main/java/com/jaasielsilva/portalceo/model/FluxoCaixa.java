@@ -130,7 +130,8 @@ public class FluxoCaixa {
     public enum StatusFluxo {
         PREVISTO("Previsto"),
         REALIZADO("Realizado"),
-        CANCELADO("Cancelado");
+        CANCELADO("Cancelado"),
+        PENDENTE_APROVACAO("Pendente de Aprovação");
 
         private final String descricao;
 

@@ -32,6 +32,7 @@ public class ContaReceberService {
     private final ContaReceberRepository contaReceberRepository;
     private final FluxoCaixaRepository fluxoCaixaRepository;
     private final HistoricoContaReceberRepository historicoReceberRepository;
+    private final ContabilidadeService contabilidadeService;
 
     // ---------------- CRUD ----------------
     public ContaReceber save(ContaReceber contaReceber) {
@@ -68,6 +69,7 @@ public class ContaReceberService {
         ContaReceber savedConta = contaReceberRepository.save(contaReceber);
         criarEntradaFluxoCaixa(savedConta, usuario);
         if (criando) {
+            contabilidadeService.registrarReceitaCompetencia(savedConta);
             registrarHistorico(savedConta, usuario, "CONTA_CRIADA", null);
         }
         return savedConta;
@@ -142,7 +144,9 @@ public class ContaReceberService {
         }
 
         ContaReceber contaSalva = contaReceberRepository.save(conta);
-        criarEntradaFluxoCaixaRecebimento(contaSalva, valorRecebido, usuario);
+        FluxoCaixa fluxoRecebimento = criarEntradaFluxoCaixaRecebimento(contaSalva, valorRecebido, usuario);
+        contabilidadeService.registrarRecebimento(contaSalva, valorRecebido, null, fluxoRecebimento != null ? fluxoRecebimento.getId() : null);
+        registrarHistorico(contaSalva, usuario, "RECEBIMENTO_REGISTRADO", observacoes);
 
         return contaSalva;
     }
@@ -401,7 +405,7 @@ public class ContaReceberService {
         fluxoCaixaRepository.save(fluxo);
     }
 
-    private void criarEntradaFluxoCaixaRecebimento(ContaReceber conta, BigDecimal valorRecebido, Usuario usuario) {
+    private FluxoCaixa criarEntradaFluxoCaixaRecebimento(ContaReceber conta, BigDecimal valorRecebido, Usuario usuario) {
         FluxoCaixa fluxo = new FluxoCaixa();
         fluxo.setData(LocalDate.now());
         fluxo.setTipoMovimento(FluxoCaixa.TipoMovimento.ENTRADA);
@@ -414,7 +418,7 @@ public class ContaReceberService {
         fluxo.setUsuarioCriacao(usuario);
         fluxo.setDataCriacao(LocalDateTime.now());
 
-        fluxoCaixaRepository.save(fluxo);
+        return fluxoCaixaRepository.save(fluxo);
     }
 
     // ================= HISTÓRICO =================

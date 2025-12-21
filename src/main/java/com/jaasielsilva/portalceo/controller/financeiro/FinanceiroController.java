@@ -374,9 +374,14 @@ public class FinanceiroController {
         if ("DRE".equals(tipo)) {
             RelatorioDREDTO dre = relatorioService.gerarDRE(inicio, fim);
             model.addAttribute("relatorio", dre);
+        } else if ("DRE_CONTABIL".equals(tipo)) {
+            RelatorioDREDTO dre = relatorioService.gerarDREContabil(inicio, fim);
+            model.addAttribute("relatorio", dre);
         } else if ("FLUXO".equals(tipo)) {
             RelatorioFluxoCaixaDTO fluxo = relatorioService.gerarFluxoCaixa(inicio, fim);
             model.addAttribute("relatorio", fluxo);
+        } else if ("BALANCO".equals(tipo)) {
+            model.addAttribute("relatorio", relatorioService.gerarBalancoPatrimonial(fim));
         }
         
         return "financeiro/relatorios";

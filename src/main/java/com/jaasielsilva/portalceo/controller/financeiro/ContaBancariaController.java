@@ -38,7 +38,7 @@ public class ContaBancariaController {
 
     @PostMapping("/aprovar/{id}")
     @PreAuthorize("hasAuthority('FINANCEIRO_PAGAR')")
-    public String aprovar(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario, RedirectAttributes redirectAttributes) {
+    public String aprovar(@PathVariable Long id, @RequestAttribute("usuarioLogado") Usuario usuario, RedirectAttributes redirectAttributes) {
         try {
             fluxoCaixaService.aprovarAjuste(id, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Ajuste aprovado com sucesso!");
@@ -50,7 +50,7 @@ public class ContaBancariaController {
 
     @PostMapping("/rejeitar/{id}")
     @PreAuthorize("hasAuthority('FINANCEIRO_PAGAR')")
-    public String rejeitar(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario, RedirectAttributes redirectAttributes) {
+    public String rejeitar(@PathVariable Long id, @RequestAttribute("usuarioLogado") Usuario usuario, RedirectAttributes redirectAttributes) {
         try {
             fluxoCaixaService.rejeitarAjuste(id, usuario);
             redirectAttributes.addFlashAttribute("sucesso", "Solicitação rejeitada.");

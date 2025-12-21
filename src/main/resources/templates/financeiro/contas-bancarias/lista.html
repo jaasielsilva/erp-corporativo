@@ -43,18 +43,21 @@
                                     <span class="badge bg-danger" th:unless="${conta.ativo}">Inativo</span>
                                 </div>
                                 <h3 class="fw-bold text-primary mb-3" 
-                                    th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">
+                                    th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo != null ? conta.saldo : 0, 1, 'POINT', 2, 'COMMA')}">
                                     R$ 0,00
                                 </h3>
                                 <div class="text-muted small">
-                                    <p class="mb-1" th:if="${conta.banco}"><i class="fas fa-building me-1"></i> <span th:text="${conta.banco}"></span></p>
-                                    <p class="mb-1" th:if="${conta.agencia}"><i class="fas fa-code-branch me-1"></i> Ag: <span th:text="${conta.agencia}"></span></p>
-                                    <p class="mb-0" th:if="${conta.numeroConta}"><i class="fas fa-hashtag me-1"></i> CC: <span th:text="${conta.numeroConta}"></span></p>
+                                    <p class="mb-1" th:if="${not #strings.isEmpty(conta.banco)}"><i class="fas fa-building me-1"></i> <span th:text="${conta.banco}"></span></p>
+                                    <p class="mb-1" th:if="${not #strings.isEmpty(conta.agencia)}"><i class="fas fa-code-branch me-1"></i> Ag: <span th:text="${conta.agencia}"></span></p>
+                                    <p class="mb-0" th:if="${not #strings.isEmpty(conta.numeroConta)}"><i class="fas fa-hashtag me-1"></i> CC: <span th:text="${conta.numeroConta}"></span></p>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent border-top-0 pb-3">
                                 <button class="btn btn-outline-primary w-100 btn-sm" 
-                                        th:onclick="'abrirModalMovimentacao(' + ${conta.id} + ', \'' + ${conta.nome} + '\')'">
+                                        type="button"
+                                        th:data-id="${conta.id}"
+                                        th:data-nome="${conta.nome}"
+                                        onclick="abrirModalMovimentacao(this.getAttribute('data-id'), this.getAttribute('data-nome'))">
                                     <i class="fas fa-exchange-alt me-1"></i> Ajustar Saldo
                                 </button>
                             </div>

@@ -32,6 +32,9 @@ public class RelatorioFinanceiroService {
     @Autowired
     private ContaContabilRepository contaContabilRepository;
 
+    @Autowired
+    private ContabilidadeService contabilidadeService;
+
     /**
      * Gera o DRE (Demonstrativo do Resultado do Exercício) baseado no Regime de Caixa (Fluxo Realizado)
      */
@@ -179,6 +182,8 @@ public class RelatorioFinanceiroService {
             fim = tmp;
         }
 
+        contabilidadeService.sincronizarLancamentosAte(fim);
+
         RelatorioDREDTO dre = new RelatorioDREDTO();
 
         Map<String, BigDecimal> detalheReceitas = new LinkedHashMap<>();
@@ -237,6 +242,8 @@ public class RelatorioFinanceiroService {
     }
 
     public Map<String, Object> gerarBalancoPatrimonial(LocalDate ate) {
+        contabilidadeService.sincronizarLancamentosAte(ate);
+
         Map<String, BigDecimal> ativos = new LinkedHashMap<>();
         Map<String, BigDecimal> passivos = new LinkedHashMap<>();
         Map<String, BigDecimal> patrimonioLiquido = new LinkedHashMap<>();

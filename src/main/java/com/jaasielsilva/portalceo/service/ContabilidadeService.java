@@ -24,6 +24,8 @@ public class ContabilidadeService {
     private final LancamentoContabilRepository lancamentoContabilRepository;
     private final ContaBancariaRepository contaBancariaRepository;
     private final FluxoCaixaRepository fluxoCaixaRepository;
+    private final ContaReceberRepository contaReceberRepository;
+    private final ContaPagarRepository contaPagarRepository;
 
     public void seedPlanoContasBaseSeNecessario() {
         criarContaSeNaoExistir("CAIXA", "Caixa", ContaContabil.TipoConta.ATIVO, ContaContabil.GrupoConta.CAIXA_BANCOS);
@@ -298,10 +300,16 @@ public class ContabilidadeService {
     }
 
     public void registrarPagamentoContaPagar(ContaPagar contaPagar, BigDecimal valorPago, ContaBancaria contaBancaria) {
+        registrarPagamentoContaPagar(contaPagar, valorPago, contaBancaria, null);
+    }
+
+    public void registrarPagamentoContaPagar(ContaPagar contaPagar, BigDecimal valorPago, ContaBancaria contaBancaria, Long fluxoCaixaId) {
         if (contaPagar == null || contaPagar.getId() == null) return;
         if (valorPago == null || valorPago.signum() <= 0) return;
         seedPlanoContasBaseSeNecessario();
-        String chave = "CP_PAG_" + contaPagar.getId() + "_" + System.currentTimeMillis();
+        String chave = fluxoCaixaId != null
+                ? "CP_PAG_" + contaPagar.getId() + "_FC_" + fluxoCaixaId
+                : "CP_PAG_" + contaPagar.getId() + "_" + System.currentTimeMillis();
 
         ContaContabil contasPagar = getConta("CONTAS_PAGAR");
         ContaContabil caixa = getOuCriarContaBancaria(contaBancaria);
@@ -317,6 +325,39 @@ public class ContabilidadeService {
                         new ItemLancamento(caixa, BigDecimal.ZERO, valorPago)
                 )
         );
+    }
+
+    public void sincronizarLancamentosAte(LocalDate ate) {
+        if (ate == null) return;
+        seedPlanoContasBaseSeNecessario();
+
+        List<ContaReceber> contasReceber = contaReceberRepository.findByDataEmissaoLessThanEqual(ate);
+        for (ContaReceber conta : contasReceber) {
+            if (conta.getStatus() != ContaReceber.StatusContaReceber.CANCELADA) {
+                registrarReceitaCompetencia(conta);
+            }
+        }
+
+        List<ContaPagar> contasPagar = contaPagarRepository.findByDataEmissaoLessThanEqual(ate);
+        for (ContaPagar conta : contasPagar) {
+            if (conta.getStatus() != ContaPagar.StatusContaPagar.CANCELADA) {
+                registrarDespesaCompetencia(conta);
+            }
+        }
+
+        List<FluxoCaixa> fluxosRealizados = fluxoCaixaRepository.findByStatusAndDataBetweenOrderByData(
+                FluxoCaixa.StatusFluxo.REALIZADO,
+                LocalDate.of(1900, 1, 1),
+                ate
+        );
+
+        for (FluxoCaixa fluxo : fluxosRealizados) {
+            if (fluxo.getContaReceber() != null) {
+                registrarRecebimento(fluxo.getContaReceber(), fluxo.getValor(), fluxo.getContaBancaria(), fluxo.getId());
+            } else if (fluxo.getContaPagar() != null) {
+                registrarPagamentoContaPagar(fluxo.getContaPagar(), fluxo.getValor(), fluxo.getContaBancaria(), fluxo.getId());
+            }
+        }
     }
 
     private void criarContaSeNaoExistir(String codigo, String nome, ContaContabil.TipoConta tipo, ContaContabil.GrupoConta grupo) {

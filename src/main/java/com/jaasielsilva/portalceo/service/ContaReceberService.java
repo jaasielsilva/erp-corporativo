@@ -38,7 +38,8 @@ public class ContaReceberService {
     public ContaReceber save(ContaReceber contaReceber) {
         validarContaReceber(contaReceber);
 
-        if (contaReceber.getId() == null) {
+        boolean criando = contaReceber.getId() == null;
+        if (criando) {
             contaReceber.setDataCriacao(LocalDateTime.now());
             if (contaReceber.getStatus() == null) {
                 contaReceber.setStatus(ContaReceber.StatusContaReceber.PENDENTE);
@@ -47,6 +48,9 @@ public class ContaReceberService {
 
         ContaReceber savedConta = contaReceberRepository.save(contaReceber);
         criarEntradaFluxoCaixa(savedConta);
+        if (criando) {
+            contabilidadeService.registrarReceitaCompetencia(savedConta);
+        }
 
         return savedConta;
     }

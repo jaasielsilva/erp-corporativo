@@ -22,6 +22,8 @@ public interface ContaPagarRepository extends JpaRepository<ContaPagar, Long> {
 
     List<ContaPagar> findByDataVencimentoBeforeAndStatusIn(LocalDate data, List<ContaPagar.StatusContaPagar> statuses);
 
+    List<ContaPagar> findByDataEmissaoLessThanEqual(LocalDate data);
+
     List<ContaPagar> findByCategoriaAndStatusOrderByDataVencimento(ContaPagar.CategoriaContaPagar categoria,
             ContaPagar.StatusContaPagar status);
 

@@ -24,6 +24,8 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
     
     List<ContaReceber> findByDataVencimentoBeforeAndStatusIn(LocalDate data, List<ContaReceber.StatusContaReceber> statuses);
 
+    List<ContaReceber> findByDataEmissaoLessThanEqual(LocalDate data);
+
     List<ContaReceber> findByCategoriaAndStatusOrderByDataVencimento(
             ContaReceber.CategoriaContaReceber categoria, ContaReceber.StatusContaReceber status
     );

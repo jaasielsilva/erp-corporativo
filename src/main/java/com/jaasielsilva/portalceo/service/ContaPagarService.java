@@ -40,6 +40,9 @@ public class ContaPagarService {
     @Autowired
     private HistoricoContaPagarRepository historicoRepository;
 
+    @Autowired
+    private ContabilidadeService contabilidadeService;
+
     private final String pastaComprovantes = "uploads/comprovantes/";
 
     // ================= LISTAR =================
@@ -102,7 +105,12 @@ public class ContaPagarService {
             }
         }
 
-        return contaPagarRepository.save(contaPagar);
+        boolean novo = contaPagar.getId() == null;
+        ContaPagar saved = contaPagarRepository.save(contaPagar);
+        if (novo) {
+            contabilidadeService.registrarDespesaCompetencia(saved);
+        }
+        return saved;
     }
 
     // NOVO: Salvar com usuário logado para auditoria de criação
@@ -130,6 +138,7 @@ public class ContaPagarService {
 
         if (novo) {
             criarEntradaFluxoCaixaPrevisto(saved, usuario);
+            contabilidadeService.registrarDespesaCompetencia(saved);
         }
 
         return saved;
@@ -176,13 +185,7 @@ public class ContaPagarService {
         if (contaBancariaId != null) {
             contaBancaria = contaBancariaRepository.findById(contaBancariaId)
                     .orElseThrow(() -> new IllegalArgumentException("Conta bancária não encontrada"));
-            
-            if (contaBancaria.getSaldo().compareTo(valorPago) < 0) {
-                // Opcional: Bloquear se não tiver saldo. Por enquanto apenas logamos ou permitimos negativo?
-                // Vamos permitir negativo pois pode ser cheque especial, mas ideal avisar.
-                // Decisão: Permitir e debitar.
-            }
-            
+
             contaBancaria.setSaldo(contaBancaria.getSaldo().subtract(valorPago));
             contaBancariaRepository.save(contaBancaria);
         }
@@ -222,7 +225,8 @@ public class ContaPagarService {
             fluxo.setContaBancaria(contaBancaria);
         }
         
-        fluxoCaixaRepository.save(fluxo);
+        FluxoCaixa fluxoSalvo = fluxoCaixaRepository.save(fluxo);
+        contabilidadeService.registrarPagamentoContaPagar(conta, valorPago, contaBancaria, fluxoSalvo != null ? fluxoSalvo.getId() : null);
 
         registrarHistorico(conta, usuario, "Pagamento efetuado: " + valorPago +
                 (formaPagamento != null ? " via " + formaPagamento : "") +

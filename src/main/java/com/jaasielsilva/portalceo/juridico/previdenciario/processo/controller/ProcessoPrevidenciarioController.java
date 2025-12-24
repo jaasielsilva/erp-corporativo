@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -142,6 +143,23 @@ public class ProcessoPrevidenciarioController {
             Usuario executor = usuarioLogado(authentication);
             workflowService.avancarEtapa(id, destino, executor, authentication);
             redirectAttributes.addFlashAttribute("sucesso", "Etapa avançada com sucesso");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/juridico/previdenciario/" + id;
+    }
+
+    @PostMapping("/{id}/protocolo-inss")
+    public String salvarProtocoloInss(@PathVariable Long id,
+            @RequestParam(value = "numeroProtocolo", required = false) String numeroProtocolo,
+            @RequestParam(value = "dataProtocolo", required = false) LocalDate dataProtocolo,
+            @RequestParam(value = "urlMeuInss", required = false) String urlMeuInss,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Usuario executor = usuarioLogado(authentication);
+            processoService.atualizarProtocoloInss(id, numeroProtocolo, dataProtocolo, urlMeuInss, executor);
+            redirectAttributes.addFlashAttribute("sucesso", "Dados do protocolo salvos com sucesso");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", e.getMessage());
         }

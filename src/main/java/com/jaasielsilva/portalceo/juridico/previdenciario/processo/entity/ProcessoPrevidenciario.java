@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -53,6 +54,15 @@ public class ProcessoPrevidenciario {
 
     @Column(name = "data_encerramento")
     private LocalDateTime dataEncerramento;
+
+    @Column(name = "numero_protocolo", length = 60)
+    private String numeroProtocolo;
+
+    @Column(name = "data_protocolo")
+    private LocalDate dataProtocolo;
+
+    @Column(name = "url_meu_inss", length = 500)
+    private String urlMeuInss;
 
     @PrePersist
     public void prePersist() {

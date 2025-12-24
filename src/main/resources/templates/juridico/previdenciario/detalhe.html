@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${pageTitle} ?: 'Processo Previdenciário'">Processo Previdenciário</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+    <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <section class="content-area container-fluid py-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h1 class="h4 mb-1">
+                            <i class="fas fa-gavel me-2"></i>
+                            <span th:text="${processoNumeroFmt}">Processo</span>
+                        </h1>
+                        <p class="text-muted mb-0"
+                            th:text="${modoCriacao} ? 'Cadastro inicial do processo' : 'Acompanhe etapas, anexos e histórico'">
+                            —</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary" href="/juridico/previdenciario">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                        <form th:if="${!modoCriacao}"
+                            th:action="@{/juridico/previdenciario/{id}/avancar-etapa(id=${processo.id})}" method="post"
+                            class="d-flex gap-2 align-items-center">
+                            <select class="form-select"
+                                th:if="${destinosPermitidos != null && !destinosPermitidos.isEmpty()}" name="destino">
+                                <option th:each="d : ${destinosPermitidos}" th:value="${d.codigo}"
+                                    th:text="${#strings.replace(d.codigo.name(), '_', ' ')}">ETAPA</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-forward me-2"></i>Mudar etapa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div th:if="${sucesso}" class="alert alert-success" th:text="${sucesso}"></div>
+                <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
+
+                <div class="row g-3">
+                    <div class="col-lg-8">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <div class="text-muted small">Status</div>
+                                        <div class="fw-semibold" th:text="${statusAtualFmt}">—
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Etapa atual</div>
+                                        <div class="fw-semibold" th:text="${etapaAtualFmt}">CADASTRO</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Abertura</div>
+                                        <div class="fw-semibold" th:text="${dataAberturaFmt}">—
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <hr />
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    <div th:each="e : ${etapas}">
+                                        <span class="badge"
+                                            th:classappend="${ordemEtapaAtual != null && e.ordem != null && e.ordem < ordemEtapaAtual} ? ' bg-success' : (${ordemEtapaAtual != null && e.ordem != null && e.ordem == ordemEtapaAtual} ? ' bg-primary' : ' bg-secondary')"
+                                            th:text="${e.codigo}">ETAPA</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card" th:if="${modoCriacao}">
+                            <div class="card-header fw-semibold"><i class="fas fa-pen-to-square me-2"></i>Cadastro</div>
+                            <div class="card-body">
+                                <form action="/juridico/previdenciario/salvar" method="post">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Cliente</label>
+                                            <select class="form-select" name="clienteId" required>
+                                                <option value="" selected disabled>Selecione</option>
+                                                <option th:each="c : ${clientes}" th:value="${c.id}"
+                                                    th:text="${c.nome}">Cliente</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Responsável</label>
+                                            <select class="form-select" name="responsavelId" required>
+                                                <option value="" selected disabled>Selecione</option>
+                                                <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${u.nome}"
+                                                    th:selected="${usuarioPadraoId != null && u.id == usuarioPadraoId}">
+                                                    Usuário</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Salvar
+                                        </button>
+                                        <a class="btn btn-outline-secondary"
+                                            href="/juridico/previdenciario">Cancelar</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div th:if="${!modoCriacao}" class="card mb-3">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-semibold"><i class="fas fa-paperclip me-2"></i>Documentos</div>
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                        th:if="${etapaAtual != null && etapaAtual.name() == 'ANALISE' && documentos != null && !documentos.isEmpty()}"
+                                        th:href="@{/juridico/previdenciario/{id}/documentos.zip(id=${processo.id})}">
+                                        <i class="fas fa-file-zipper me-2"></i>Baixar para análise
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div th:if="${permiteAnexo}" class="mb-3">
+                                    <form
+                                        th:action="@{/juridico/previdenciario/{id}/anexar-documento(id=${processo.id})}"
+                                        method="post" enctype="multipart/form-data">
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Tipo</label>
+                                                <select class="form-select" name="tipoDocumento" required>
+                                                    <option value="" selected disabled>Selecione</option>
+                                                    <option th:each="t : ${tiposDocumento}" th:value="${t}"
+                                                        th:text="${t}">RG</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Arquivo</label>
+                                                <input type="file" class="form-control" name="arquivo" required />
+                                            </div>
+                                            <div class="col-md-2 d-grid">
+                                                <button class="btn btn-outline-primary" type="submit">
+                                                    <i class="fas fa-upload me-2"></i>Anexar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Enviado por</th>
+                                                <th>Data</th>
+                                                <th>Caminho</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:if="${documentos == null || documentos.isEmpty()}">
+                                                <td colspan="4" class="text-center text-muted py-3">Nenhum documento
+                                                    anexado</td>
+                                            </tr>
+                                            <tr th:each="d : ${documentos}">
+                                                <td><span class="badge bg-secondary"
+                                                        th:text="${d.tipoDocumento}">RG</span></td>
+                                                <td th:text="${d.enviadoPor != null ? d.enviadoPor.nome : '—'}">—</td>
+                                                <td
+                                                    th:text="${d.dataUpload != null ? #temporals.format(d.dataUpload, 'dd/MM/yyyy HH:mm') : '—'}">
+                                                    —</td>
+                                                <td class="text-truncate" style="max-width: 320px;"
+                                                    th:text="${d.caminhoArquivo}">—</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4" th:if="${!modoCriacao}">
+                        <div class="card">
+                            <div class="card-header fw-semibold"><i class="fas fa-timeline me-2"></i>Histórico</div>
+                            <div class="card-body">
+                                <div th:if="${historico == null || historico.isEmpty()}" class="text-muted">Sem eventos
+                                </div>
+                                <div th:each="h : ${historico}" class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <div class="fw-semibold" th:text="${h.evento}">EVENTO</div>
+                                        <div class="text-muted small"
+                                            th:text="${h.dataEvento != null ? #temporals.format(h.dataEvento, 'dd/MM/yyyy HH:mm') : '—'}">
+                                            —</div>
+                                    </div>
+                                    <div class="text-muted small" th:text="${h.usuario != null ? h.usuario.nome : '—'}">
+                                        —</div>
+                                    <div th:if="${h.observacao != null && !#strings.isEmpty(h.observacao)}"
+                                        th:text="${h.observacao}">—</div>
+                                    <hr class="my-2" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/sidebar.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+</body>
+
+</html>

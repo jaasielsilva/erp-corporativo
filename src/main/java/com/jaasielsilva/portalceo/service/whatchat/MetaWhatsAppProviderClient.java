@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.service.whatchat;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +23,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "erp.whatsapp.provider", havingValue = "meta", matchIfMissing = true)
 public class MetaWhatsAppProviderClient implements WhatsAppProviderClient {
 
     private final ObjectMapper objectMapper;
@@ -88,9 +90,11 @@ public class MetaWhatsAppProviderClient implements WhatsAppProviderClient {
                 .post()
                 .uri("/{phoneNumberId}/messages", phoneNumberId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
-                        {"messaging_product":"whatsapp","to":"%s","type":"document","document":{"id":"%s","filename":%s}}
-                        """.formatted(waId, mediaId, objectMapper.valueToTree(filename).toString()))
+                .bodyValue(
+                        """
+                                {"messaging_product":"whatsapp","to":"%s","type":"document","document":{"id":"%s","filename":%s}}
+                                """
+                                .formatted(waId, mediaId, objectMapper.valueToTree(filename).toString()))
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .block(Duration.ofMillis(timeoutMs));
@@ -136,7 +140,8 @@ public class MetaWhatsAppProviderClient implements WhatsAppProviderClient {
             throw new IllegalArgumentException("Arquivo é obrigatório");
         }
         String filename = arquivo.getOriginalFilename() != null ? arquivo.getOriginalFilename() : "arquivo";
-        String contentType = arquivo.getContentType() != null ? arquivo.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        String contentType = arquivo.getContentType() != null ? arquivo.getContentType()
+                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
         MultiValueMap<String, Object> data = new LinkedMultiValueMap<>();
         data.add("messaging_product", "whatsapp");
@@ -189,4 +194,3 @@ public class MetaWhatsAppProviderClient implements WhatsAppProviderClient {
                 .build();
     }
 }
-

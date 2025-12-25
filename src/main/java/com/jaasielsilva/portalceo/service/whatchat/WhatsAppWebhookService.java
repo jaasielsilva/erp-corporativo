@@ -22,6 +22,7 @@ public class WhatsAppWebhookService {
     private final WhaTchatConversaService conversaService;
     private final WhaTchatMensagemService mensagemService;
     private final DocumentoProcessoService documentoProcessoService;
+    private final WhaTchatAutomationService automationService;
 
     @Transactional
     public void processarWebhook(String payloadJson) {
@@ -57,13 +58,16 @@ public class WhatsAppWebhookService {
 
                         if ("text".equals(type)) {
                             String body = msg.path("text").path("body").asText(null);
-                            mensagemService.registrarRecebidaTexto(conversa, waMsgId, body, ts, payloadJson);
+                            ChatMensagem salvo = mensagemService.registrarRecebidaTexto(conversa, waMsgId, body, ts,
+                                    payloadJson);
+                            automationService.onMensagemRecebida(conversa, salvo, body);
                         } else if ("image".equals(type)) {
                             String mediaId = msg.path("image").path("id").asText(null);
                             String mime = msg.path("image").path("mime_type").asText(null);
                             ChatMensagem salvo = mensagemService.registrarRecebidaMidia(conversa, waMsgId,
                                     ChatMensagemTipo.IMAGEM, mediaId, mime, null, ts, payloadJson);
                             anexarNoProcessoSeVinculado(conversa, salvo, TipoDocumentoProcesso.OUTROS);
+                            automationService.onMensagemRecebida(conversa, salvo, null);
                         } else if ("document".equals(type)) {
                             String mediaId = msg.path("document").path("id").asText(null);
                             String mime = msg.path("document").path("mime_type").asText(null);
@@ -71,6 +75,7 @@ public class WhatsAppWebhookService {
                             ChatMensagem salvo = mensagemService.registrarRecebidaMidia(conversa, waMsgId,
                                     ChatMensagemTipo.DOCUMENTO, mediaId, mime, filename, ts, payloadJson);
                             anexarNoProcessoSeVinculado(conversa, salvo, TipoDocumentoProcesso.OUTROS);
+                            automationService.onMensagemRecebida(conversa, salvo, null);
                         }
                     }
                 }

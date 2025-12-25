@@ -103,6 +103,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/actuator/**").permitAll()
                                                 .requestMatchers("/integracoes/whatsapp/webhook").permitAll()
                                                 .requestMatchers("/integracoes/whatsapp/webhook/**").permitAll()
+                                                .requestMatchers("/webhooks/whatsapp/evolution").permitAll()
+                                                .requestMatchers("/webhooks/whatsapp/evolution/**").permitAll()
                                                 // Endpoints públicos específicos (apenas os necessários)
                                                 .requestMatchers("/api/processar", "/suporte/api/public/**",
                                                                 "/api/categorias/**")

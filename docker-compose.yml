@@ -8,14 +8,63 @@ services:
       MYSQL_ROOT_PASSWORD: 12345
       MYSQL_DATABASE: painelceo
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - painelceo_db_data:/var/lib/mysql
     networks:
       - painelnet
 
+  evolution-db:
+    image: mysql:8.0
+    container_name: evolution_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: evolution
+    volumes:
+      - evolution_db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p12345" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - painelnet
+
+  evolution-api:
+    image: atendai/evolution-api:v2.2.3
+    container_name: evolution_api
+    restart: unless-stopped
+    sysctls:
+      net.ipv6.conf.all.disable_ipv6: 1
+      net.ipv6.conf.default.disable_ipv6: 1
+    environment:
+      AUTHENTICATION_API_KEY: ${ERP_EVOLUTION_APIKEY:-change-me}
+      NODE_OPTIONS: "--dns-result-order=ipv4first"
+      CONFIG_SESSION_PHONE_VERSION: "2.3000.1028148389"
+      LOG_LEVEL: "ERROR,WARN,DEBUG,INFO,LOG,VERBOSE"
+      LOG_BAILEYS: "debug"
+      WEBSOCKET_ENABLED: "true"
+      WEBSOCKET_GLOBAL_EVENTS: "true"
+      CACHE_REDIS_ENABLED: "false"
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: "mysql"
+      DATABASE_CONNECTION_URI: "mysql://root:12345@evolution-db:3306/evolution"
+    ports:
+      - "8081:8080"
+    volumes:
+      - evolution_store:/evolution/store
+      - evolution_instances:/evolution/instances
+    depends_on:
+      evolution-db:
+        condition: service_healthy
+    networks:
+      - painelnet
+
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile
     container_name: portal_ceo_app
     ports:
       - "8080:8080"
@@ -23,8 +72,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/painelceo
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 12345
+      ERP_WHATSAPP_PROVIDER: evolution
+      ERP_EVOLUTION_BASE_URL: http://evolution-api:8080
+      ERP_EVOLUTION_APIKEY: ${ERP_EVOLUTION_APIKEY:-change-me}
+      ERP_EVOLUTION_INSTANCE: ${ERP_EVOLUTION_INSTANCE:-portalceo}
     depends_on:
       - db
+      - evolution-api
     networks:
       - painelnet
 
@@ -34,7 +88,6 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     depends_on:
       - app
@@ -65,6 +118,10 @@ volumes:
   painelceo_db_data:
   prometheus_data:
   grafana_data:
+  evolution_db_data:
+  evolution_store:
+  evolution_instances:
+
 
 networks:
   painelnet:

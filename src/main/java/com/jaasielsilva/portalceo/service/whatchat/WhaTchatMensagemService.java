@@ -123,6 +123,9 @@ public class WhaTchatMensagemService {
     public ChatMensagem enviarTexto(Long conversaId, String texto, Usuario usuario) {
         ChatConversa conversa = conversaService.buscarPorId(conversaId);
         String waMsgId = whatsAppProviderClient.enviarTexto(conversa.getWaId(), texto);
+        if (waMsgId == null || waMsgId.isBlank()) {
+            throw new IllegalStateException("Falha ao enviar mensagem");
+        }
 
         ChatMensagem m = new ChatMensagem();
         m.setConversa(conversa);
@@ -141,6 +144,28 @@ public class WhaTchatMensagemService {
     }
 
     @Transactional
+    public ChatMensagem enviarTextoSistema(Long conversaId, String texto) {
+        ChatConversa conversa = conversaService.buscarPorId(conversaId);
+        String waMsgId = whatsAppProviderClient.enviarTexto(conversa.getWaId(), texto);
+        if (waMsgId == null || waMsgId.isBlank()) {
+            throw new IllegalStateException("Falha ao enviar mensagem");
+        }
+
+        ChatMensagem m = new ChatMensagem();
+        m.setConversa(conversa);
+        m.setDirecao(ChatMensagemDirecao.ENVIADA);
+        m.setTipo(ChatMensagemTipo.TEXTO);
+        m.setTexto(texto);
+        m.setWhatsappMessageId(waMsgId);
+        m.setDataMensagem(LocalDateTime.now());
+
+        ChatMensagem salvo = mensagemRepository.save(m);
+        conversaService.marcarUltimaMensagem(conversa, salvo.getDataMensagem());
+        publicarAtualizacao(conversaId);
+        return salvo;
+    }
+
+    @Transactional
     public ChatMensagem enviarArquivo(Long conversaId, MultipartFile arquivo, ChatMensagemTipo tipo, Usuario usuario) {
         ChatConversa conversa = conversaService.buscarPorId(conversaId);
         String waMsgId;
@@ -150,6 +175,9 @@ public class WhaTchatMensagemService {
             waMsgId = whatsAppProviderClient.enviarDocumento(conversa.getWaId(), arquivo);
         } else {
             throw new IllegalArgumentException("Tipo inválido para arquivo");
+        }
+        if (waMsgId == null || waMsgId.isBlank()) {
+            throw new IllegalStateException("Falha ao enviar mensagem");
         }
 
         Path dir = Paths.get(uploadDir, "conversas", String.valueOf(conversa.getId()));
@@ -183,7 +211,13 @@ public class WhaTchatMensagemService {
     }
 
     private void publicarAtualizacao(Long conversaId) {
-        messagingTemplate.convertAndSend("/topic/whatchat/conversas", "updated");
-        messagingTemplate.convertAndSend("/topic/whatchat/conversas/" + conversaId, "updated");
+        try {
+            messagingTemplate.convertAndSend("/topic/whatchat/conversas", "updated");
+        } catch (Exception ignored) {
+        }
+        try {
+            messagingTemplate.convertAndSend("/topic/whatchat/conversas/" + conversaId, "updated");
+        } catch (Exception ignored) {
+        }
     }
 }

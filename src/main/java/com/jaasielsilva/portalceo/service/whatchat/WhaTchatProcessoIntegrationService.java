@@ -10,6 +10,7 @@ import com.jaasielsilva.portalceo.repository.ClienteRepository;
 import com.jaasielsilva.portalceo.repository.whatchat.ChatConversaRepository;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,9 @@ public class WhaTchatProcessoIntegrationService {
     private final ClienteRepository clienteRepository;
     private final ProcessoPrevidenciarioService processoPrevidenciarioService;
 
+    @Value("${erp.whatchat.default-country-code:55}")
+    private String defaultCountryCode;
+
     @Transactional
     public ProcessoPrevidenciario criarProcessoPrevidenciario(Long conversaId, Usuario usuarioExecutor) {
         ChatConversa conversa = conversaService.buscarPorId(conversaId);
@@ -39,14 +43,15 @@ public class WhaTchatProcessoIntegrationService {
         if (cliente == null) {
             cliente = new Cliente();
             cliente.setNome(conversa.getNomeContato() != null ? conversa.getNomeContato() : "Cliente WhatsApp");
-            cliente.setCelular(conversa.getWaId());
+            cliente.setCelular(PhoneNormalizer.toE164(conversa.getWaId(), defaultCountryCode));
             cliente.setTipoCliente("PF");
             cliente.setStatus("Ativo");
             cliente.setAtivo(true);
             cliente = clienteService.salvar(cliente);
         }
 
-        ProcessoPrevidenciario processo = processoPrevidenciarioService.criar(cliente.getId(), usuarioExecutor.getId(), usuarioExecutor);
+        ProcessoPrevidenciario processo = processoPrevidenciarioService.criar(cliente.getId(), usuarioExecutor.getId(),
+                usuarioExecutor);
         conversa.setCliente(cliente);
         conversa.setProcessoPrevidenciario(processo);
         conversa.setStatus(ChatConversaStatus.EM_ATENDIMENTO);
@@ -62,13 +67,11 @@ public class WhaTchatProcessoIntegrationService {
         }
         List<Cliente> clientes = clienteRepository.findAll();
         for (Cliente c : clientes) {
-            String cel = PhoneNormalizer.digitsOnly(c.getCelular());
-            String tel = PhoneNormalizer.digitsOnly(c.getTelefone());
-            if (digits.equals(cel) || digits.equals(tel)) {
+            if (PhoneNormalizer.samePhone(digits, c.getCelular())
+                    || PhoneNormalizer.samePhone(digits, c.getTelefone())) {
                 return c;
             }
         }
         return null;
     }
 }
-

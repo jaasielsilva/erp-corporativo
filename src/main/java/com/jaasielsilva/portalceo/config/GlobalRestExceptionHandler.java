@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.config;
 
 import com.jaasielsilva.portalceo.service.DocumentoAdesaoService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalRestExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalRestExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
@@ -65,6 +69,7 @@ public class GlobalRestExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        logger.error("Erro de estado inválido na API: {}", ex.getMessage(), ex);
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());

@@ -34,6 +34,7 @@
     .form-group {
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     .form-group label {
@@ -168,6 +169,41 @@
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 0.5rem;
       font-size: 0.9rem;
+    }
+
+    .autocomplete-results {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+      z-index: 1000;
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    .autocomplete-item,
+    .autocomplete-more {
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid #f3f4f6;
+      color: #111827;
+      background: #ffffff;
+    }
+
+    .autocomplete-item:hover,
+    .autocomplete-more:hover {
+      background: #f0f9ff;
+    }
+
+    .autocomplete-more {
+      font-weight: 600;
+      color: #2563eb;
+      border-bottom: none;
     }
 
     /* Garantir que o footer apareça */

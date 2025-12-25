@@ -281,7 +281,8 @@
           item.dataset.cargo = c.cargo || 'N/A';
           item.dataset.departamento = c.departamento || 'N/A';
           item.textContent = `${c.nome} - ${c.cargo || 'N/A'} (${c.departamento || 'N/A'})`;
-          item.addEventListener('click', function () {
+          item.addEventListener('mousedown', function (e) {
+            e.preventDefault();
             input.value = this.dataset.nome;
             hiddenId.value = this.dataset.id;
             atualizarInfoSelecionado(this.dataset);
@@ -293,7 +294,8 @@
           const more = document.createElement('div');
           more.className = 'autocomplete-more';
           more.textContent = 'Carregar mais...';
-          more.addEventListener('click', function () {
+          more.addEventListener('mousedown', function (e) {
+            e.preventDefault();
             if (carregandoMais) return;
             carregandoMais = true;
             pagina = pagina + 1;
@@ -329,8 +331,10 @@
         }, 250);
       });
 
-      input.addEventListener('blur', function () {
-        setTimeout(function(){ results.innerHTML = ''; }, 200);
+      document.addEventListener('mousedown', function (e) {
+        if (e.target === input) return;
+        if (results.contains(e.target)) return;
+        results.innerHTML = '';
       });
     }
 

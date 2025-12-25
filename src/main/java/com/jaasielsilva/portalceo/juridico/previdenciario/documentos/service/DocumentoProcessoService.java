@@ -86,6 +86,52 @@ public class DocumentoProcessoService {
         return salvo;
     }
 
+    @Transactional
+    public DocumentoProcesso anexarDocumentoBytes(Long processoId,
+            byte[] bytes,
+            String originalFilename,
+            TipoDocumentoProcesso tipoDocumento,
+            Usuario usuarioExecutor) throws IOException {
+        if (bytes == null || bytes.length == 0) {
+            throw new IllegalArgumentException("Arquivo é obrigatório");
+        }
+        if (tipoDocumento == null) {
+            throw new IllegalArgumentException("Tipo de documento é obrigatório");
+        }
+        if (usuarioExecutor == null) {
+            throw new IllegalArgumentException("Usuário executor é obrigatório");
+        }
+
+        ProcessoPrevidenciario processo = processoRepository.findById(processoId)
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+
+        EtapaWorkflowCodigo etapaAtual = processo.getEtapaAtual();
+        if (!workflowService.permiteAnexo(etapaAtual)) {
+            throw new IllegalStateException("A etapa atual não permite anexos");
+        }
+
+        Path dir = Paths.get(uploadDir, "processos", String.valueOf(processoId));
+        Files.createDirectories(dir);
+
+        String original = (originalFilename == null || originalFilename.isBlank()) ? "arquivo" : originalFilename;
+        String sanitized = original.replaceAll("[^a-zA-Z0-9_\\.\\-]", "_");
+        String nomeUnico = UUID.randomUUID() + "_" + sanitized;
+        Path destino = dir.resolve(nomeUnico);
+        Files.write(destino, bytes);
+
+        DocumentoProcesso doc = new DocumentoProcesso();
+        doc.setProcessoPrevidenciario(processo);
+        doc.setTipoDocumento(tipoDocumento);
+        doc.setCaminhoArquivo(destino.toString());
+        doc.setEnviadoPor(usuarioExecutor);
+        doc.setDataUpload(LocalDateTime.now());
+
+        DocumentoProcesso salvo = documentoRepository.save(doc);
+        historicoProcessoService.registrar(processo, "UPLOAD_DOCUMENTO", usuarioExecutor,
+                tipoDocumento + " na etapa " + etapaAtual);
+        return salvo;
+    }
+
     @Transactional(readOnly = true)
     public byte[] gerarZipDocumentos(Long processoId) throws IOException {
         List<DocumentoProcesso> documentos = listarPorProcesso(processoId);

@@ -63,6 +63,14 @@ public class GlobalRestExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         Map<String, Object> body = new HashMap<>();
@@ -72,7 +80,8 @@ public class GlobalRestExceptionHandler {
     }
 
     @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNoResource(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+    public ResponseEntity<Map<String, Object>> handleNoResource(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", "Recurso não encontrado");

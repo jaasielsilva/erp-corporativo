@@ -74,16 +74,15 @@ public class AdesaoColaboradorController {
 
     @Autowired
     private WorkflowAdesaoService workflowService;
-    
+
     @Autowired
     private ColaboradorService colaboradorService;
-    
+
     @Autowired
     private NotificationService notificationService;
-    
+
     @Autowired
     private UsuarioService usuarioService;
-
 
     /**
      * Página inicial do processo de adesão
@@ -92,7 +91,7 @@ public class AdesaoColaboradorController {
     public String iniciarAdesao(
             @RequestParam(value = "sessionId", required = false) String sessionId,
             Model model) {
-        
+
         // Se sessionId foi fornecido, tentar continuar processo existente
         if (sessionId != null && !sessionId.trim().isEmpty()) {
             try {
@@ -112,7 +111,7 @@ public class AdesaoColaboradorController {
                 // Continua para iniciar novo processo
             }
         }
-        
+
         // Iniciar novo processo
         logger.info("Iniciando novo processo de adesão de colaborador");
         logger.info("Cargos encontrados: {}", cargoService.listarAtivos().size());
@@ -163,7 +162,8 @@ public class AdesaoColaboradorController {
                         Map<String, Object> supervisorMap = new HashMap<>();
                         supervisorMap.put("id", supervisor.getId());
                         supervisorMap.put("nome", supervisor.getNome());
-                        supervisorMap.put("cargo", supervisor.getCargo() != null ? supervisor.getCargo().getNome() : "");
+                        supervisorMap.put("cargo",
+                                supervisor.getCargo() != null ? supervisor.getCargo().getNome() : "");
                         return supervisorMap;
                     })
                     .toList();
@@ -299,7 +299,8 @@ public class AdesaoColaboradorController {
                 workflowService.salvarProcesso(tempSessionId, dadosPessoaisMap);
                 workflowService.atualizarEtapa(tempSessionId, "dados-pessoais");
                 // Log de auditoria
-                auditService.logDadosPessoaisSalvos(tempSessionId, dadosAdesao.getCpf(), dadosAdesao.getNome(), clientIp);
+                auditService.logDadosPessoaisSalvos(tempSessionId, dadosAdesao.getCpf(), dadosAdesao.getNome(),
+                        clientIp);
             } catch (WorkflowAdesaoService.WorkflowException we) {
                 logger.warn("Falha ao registrar processo no workflow: {}. Continuando fluxo.", we.getMessage());
             }
@@ -370,8 +371,10 @@ public class AdesaoColaboradorController {
     @GetMapping("/status/{sessionId}")
     public String paginaStatus(@PathVariable String sessionId, Model model) {
         try {
-            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            boolean autenticado = auth != null && auth.isAuthenticated() && auth.getName() != null && !"anonymousUser".equals(auth.getName());
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().getAuthentication();
+            boolean autenticado = auth != null && auth.isAuthenticated() && auth.getName() != null
+                    && !"anonymousUser".equals(auth.getName());
 
             if (autenticado) {
                 AdesaoColaboradorDTO dadosCompletos = adesaoService.obterDadosCompletos(sessionId);
@@ -410,7 +413,7 @@ public class AdesaoColaboradorController {
         try {
             // Buscar dados do processo no workflow
             ProcessoAdesao processo = workflowService.buscarProcessoPorSessionId(sessionId);
-            
+
             response.put("success", true);
             response.put("status", processo.getStatus().name());
             response.put("etapaAtual", processo.getEtapaAtual());
@@ -508,26 +511,25 @@ public class AdesaoColaboradorController {
 
         try {
             logger.info("Iniciando processamento de documentos para sessionId: {}", sessionId);
-            
+
             // Validar se todos os documentos obrigatórios foram enviados
             boolean documentosCompletos = documentoService.verificarDocumentosObrigatorios(sessionId);
 
             if (!documentosCompletos) {
                 logger.warn("Documentos obrigatórios não foram enviados para sessionId: {}", sessionId);
-                
+
                 // Criar notificação para usuários com permissão de gerenciar RH
                 AdesaoColaboradorDTO dadosAdesao = adesaoService.obterDadosCompletos(sessionId);
                 if (dadosAdesao != null) {
                     List<Usuario> usuariosRH = usuarioService.buscarUsuariosComPermissaoGerenciarRH();
                     for (Usuario usuario : usuariosRH) {
                         notificationService.notifyEmployeeDocumentPending(
-                            dadosAdesao.getNome(), 
-                            dadosAdesao.getEmail(), 
-                            usuario
-                        );
+                                dadosAdesao.getNome(),
+                                dadosAdesao.getEmail(),
+                                usuario);
                     }
                 }
-                
+
                 response.put("success", false);
                 response.put("message", "Todos os documentos obrigatórios devem ser enviados");
                 return ResponseEntity.badRequest().body(response);
@@ -536,7 +538,7 @@ public class AdesaoColaboradorController {
             // ✅ CORREÇÃO: Salvar documentos no workflow antes de atualizar etapa
             List<DocumentoInfo> documentosEnviados = documentoService.listarDocumentos(sessionId);
             Map<String, Object> dadosDocumentos = new HashMap<>();
-            
+
             // Converter lista de documentos para Map
             for (DocumentoInfo doc : documentosEnviados) {
                 Map<String, Object> infoDoc = new HashMap<>();
@@ -547,18 +549,18 @@ public class AdesaoColaboradorController {
                 infoDoc.put("caminhoArquivo", doc.getCaminhoArquivo());
                 infoDoc.put("obrigatorio", doc.isObrigatorio());
                 infoDoc.put("dataUpload", doc.getDataUpload());
-                
+
                 dadosDocumentos.put(doc.getTipoInterno(), infoDoc);
             }
-            
+
             // Adicionar informações de validação
             dadosDocumentos.put("documentosCompletos", documentosCompletos);
             dadosDocumentos.put("totalDocumentos", documentosEnviados.size());
             dadosDocumentos.put("dataProcessamento", java.time.LocalDateTime.now());
-            
-            logger.info("Salvando {} documentos no workflow para sessionId: {}", 
-                       documentosEnviados.size(), sessionId);
-            
+
+            logger.info("Salvando {} documentos no workflow para sessionId: {}",
+                    documentosEnviados.size(), sessionId);
+
             // Salvar documentos no workflow
             workflowService.salvarDocumentos(sessionId, dadosDocumentos);
 
@@ -572,8 +574,8 @@ public class AdesaoColaboradorController {
 
             // Removido progresso automático
 
-            logger.info("Documentos processados com sucesso para sessão: {} - Total: {}", 
-                       sessionId, documentosEnviados.size());
+            logger.info("Documentos processados com sucesso para sessão: {} - Total: {}",
+                    sessionId, documentosEnviados.size());
 
         } catch (Exception e) {
             logger.error("Erro ao processar documentos para sessionId: {}", sessionId, e);
@@ -600,19 +602,19 @@ public class AdesaoColaboradorController {
             String sessionId = (String) request.get("sessionId");
             @SuppressWarnings("unchecked")
             Map<String, Object> beneficiosSelecionados = (Map<String, Object>) request.get("beneficios");
-            
+
             if (sessionId == null || sessionId.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "SessionId é obrigatório");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             if (beneficiosSelecionados == null) {
                 response.put("success", false);
                 response.put("message", "Benefícios são obrigatórios");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             // Validar benefícios selecionados usando o serviço especializado
             List<String> erros = beneficioAdesaoService.validarSelecaoBeneficios(beneficiosSelecionados);
 
@@ -638,12 +640,12 @@ public class AdesaoColaboradorController {
 
             // Processar seleção de benefícios
             adesaoService.processarBeneficios(sessionId, beneficiosSelecionados);
-            
+
             // Marcar etapa como concluída para avançar para revisão
             adesaoService.marcarEtapaConcluida(sessionId, "beneficios");
 
             // Progresso automático removido
-            
+
             // Atualizar processo para permitir finalização na próxima etapa
             try {
                 // Atualizar para etapa de revisão no workflow
@@ -689,23 +691,24 @@ public class AdesaoColaboradorController {
     }
 
     /**
-     * API: Obter dados para revisão - Path Parameter (para compatibilidade com frontend)
+     * API: Obter dados para revisão - Path Parameter (para compatibilidade com
+     * frontend)
      */
     @GetMapping("/revisao/{sessionId}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> obterDadosRevisao(@PathVariable String sessionId) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             logger.info("Obtendo dados para revisão - sessionId: {}", sessionId);
-            
+
             // Verificar se a sessão existe
             if (!adesaoService.existeSessao(sessionId)) {
                 response.put("success", false);
                 response.put("message", "Sessão não encontrada");
                 return ((BodyBuilder) ResponseEntity.notFound()).body(response);
             }
-            
+
             // Obter dados completos
             AdesaoColaboradorDTO dadosCompletos;
             try {
@@ -717,7 +720,7 @@ public class AdesaoColaboradorController {
                 response.put("message", "Erro ao carregar dados da sessão: " + e.getMessage());
                 return ResponseEntity.internalServerError().body(response);
             }
-            
+
             // Obter benefícios selecionados
             Map<String, Object> beneficiosSelecionados;
             try {
@@ -727,68 +730,79 @@ public class AdesaoColaboradorController {
                 logger.warn("Erro ao obter benefícios da sessão {}: {}", sessionId, e.getMessage());
                 beneficiosSelecionados = new HashMap<>();
             }
-            
+
             // Verificar se há cálculo de benefícios
             BeneficioAdesaoService.CalculoBeneficio calculo = null;
             if (beneficiosSelecionados != null && !beneficiosSelecionados.isEmpty()) {
                 try {
                     calculo = beneficioAdesaoService.calcularCustoBeneficios(beneficiosSelecionados);
-                    logger.info("Cálculo de benefícios realizado: {} itens, total: R$ {}", 
-                               calculo.getQuantidadeItens(), calculo.getCustoTotal());
+                    logger.info("Cálculo de benefícios realizado: {} itens, total: R$ {}",
+                            calculo.getQuantidadeItens(), calculo.getCustoTotal());
                 } catch (Exception e) {
                     logger.warn("Erro ao calcular benefícios para revisão sessionId {}: {}", sessionId, e.getMessage());
                     // Continuar sem o cálculo - não é crítico para a exibição
                 }
             }
-            
+
             // Montar dados de resposta
             Map<String, Object> dadosRevisao = new HashMap<>();
-            
+
             // Dados pessoais - usando null-safe accessors
             Map<String, Object> dadosPessoaisMap = new HashMap<>();
             dadosPessoaisMap.put("nome", dadosCompletos.getNome() != null ? dadosCompletos.getNome() : "");
             dadosPessoaisMap.put("cpf", dadosCompletos.getCpf() != null ? dadosCompletos.getCpf() : "");
             dadosPessoaisMap.put("email", dadosCompletos.getEmail() != null ? dadosCompletos.getEmail() : "");
             dadosPessoaisMap.put("telefone", dadosCompletos.getTelefone() != null ? dadosCompletos.getTelefone() : "");
-            dadosPessoaisMap.put("dataNascimento", dadosCompletos.getDataNascimento() != null ? dadosCompletos.getDataNascimento().toString() : "");
-            dadosPessoaisMap.put("cargo", dadosCompletos.getCargoId() != null ? dadosCompletos.getCargoId().toString() : "");
-            dadosPessoaisMap.put("departamento", dadosCompletos.getDepartamentoId() != null ? dadosCompletos.getDepartamentoId().toString() : "");
-            dadosPessoaisMap.put("dataAdmissao", dadosCompletos.getDataAdmissao() != null ? dadosCompletos.getDataAdmissao().toString() : "");
-            dadosPessoaisMap.put("salario", dadosCompletos.getSalario() != null ? dadosCompletos.getSalario().doubleValue() : 0.0);
-            dadosPessoaisMap.put("dependentes", dadosCompletos.getDependentes() != null ? dadosCompletos.getDependentes() : 0);
-            
+            dadosPessoaisMap.put("dataNascimento",
+                    dadosCompletos.getDataNascimento() != null ? dadosCompletos.getDataNascimento().toString() : "");
+            dadosPessoaisMap.put("cargo",
+                    dadosCompletos.getCargoId() != null ? dadosCompletos.getCargoId().toString() : "");
+            dadosPessoaisMap.put("departamento",
+                    dadosCompletos.getDepartamentoId() != null ? dadosCompletos.getDepartamentoId().toString() : "");
+            dadosPessoaisMap.put("dataAdmissao",
+                    dadosCompletos.getDataAdmissao() != null ? dadosCompletos.getDataAdmissao().toString() : "");
+            dadosPessoaisMap.put("salario",
+                    dadosCompletos.getSalario() != null ? dadosCompletos.getSalario().doubleValue() : 0.0);
+            dadosPessoaisMap.put("dependentes",
+                    dadosCompletos.getDependentes() != null ? dadosCompletos.getDependentes() : 0);
+
             // Construir endereço completo de forma segura
             StringBuilder endereco = new StringBuilder();
-            if (dadosCompletos.getLogradouro() != null) endereco.append(dadosCompletos.getLogradouro());
-            if (dadosCompletos.getNumero() != null) endereco.append(", ").append(dadosCompletos.getNumero());
-            if (dadosCompletos.getBairro() != null) endereco.append(" - ").append(dadosCompletos.getBairro());
-            if (dadosCompletos.getCidade() != null) endereco.append(", ").append(dadosCompletos.getCidade());
-            if (dadosCompletos.getEstado() != null) endereco.append("/").append(dadosCompletos.getEstado());
-            if (dadosCompletos.getCep() != null) endereco.append(" - CEP: ").append(dadosCompletos.getCep());
-            
+            if (dadosCompletos.getLogradouro() != null)
+                endereco.append(dadosCompletos.getLogradouro());
+            if (dadosCompletos.getNumero() != null)
+                endereco.append(", ").append(dadosCompletos.getNumero());
+            if (dadosCompletos.getBairro() != null)
+                endereco.append(" - ").append(dadosCompletos.getBairro());
+            if (dadosCompletos.getCidade() != null)
+                endereco.append(", ").append(dadosCompletos.getCidade());
+            if (dadosCompletos.getEstado() != null)
+                endereco.append("/").append(dadosCompletos.getEstado());
+            if (dadosCompletos.getCep() != null)
+                endereco.append(" - CEP: ").append(dadosCompletos.getCep());
+
             dadosPessoaisMap.put("endereco", endereco.toString());
             dadosRevisao.put("dadosPessoais", dadosPessoaisMap);
-            
+
             // Documentos (mock - pode ser implementado depois)
             dadosRevisao.put("documentos", List.of());
-            
+
             // Benefícios e cálculo
             dadosRevisao.put("beneficios", beneficiosSelecionados != null ? beneficiosSelecionados : Map.of());
             if (calculo != null) {
                 dadosRevisao.put("beneficios_calculo", Map.of(
-                    "itens", calculo.getItens(),
-                    "custoTotal", calculo.getCustoTotal(),
-                    "quantidadeItens", calculo.getQuantidadeItens()
-                ));
+                        "itens", calculo.getItens(),
+                        "custoTotal", calculo.getCustoTotal(),
+                        "quantidadeItens", calculo.getQuantidadeItens()));
             }
-            
+
             response.put("success", true);
             response.put("data", dadosRevisao);
-            
+
             logger.info("Dados de revisão carregados com sucesso para sessionId: {}", sessionId);
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             logger.error("Erro ao obter dados para revisão - sessionId: {}", sessionId, e);
             response.put("success", false);
@@ -818,67 +832,68 @@ public class AdesaoColaboradorController {
 
         try {
             logger.info("Iniciando finalização de adesão para sessionId: {}", sessionId);
-            
+
             // Verificar se a sessão existe
             if (!adesaoService.existeSessao(sessionId)) {
                 response.put("success", false);
                 response.put("message", "Sessão não encontrada");
                 return ((BodyBuilder) ResponseEntity.notFound()).body(response);
             }
-            
+
             // ✅ CORREÇÃO: Validar documentos usando o serviço correto ao invés do DTO
             boolean documentosCompletos = documentoService.verificarDocumentosObrigatorios(sessionId);
             if (!documentosCompletos) {
                 logger.warn("Tentativa de finalização sem documentos completos - sessionId: {}", sessionId);
                 response.put("success", false);
-                response.put("message", "Documentos obrigatórios não foram enviados. Volte à etapa de documentos e envie todos os arquivos necessários.");
+                response.put("message",
+                        "Documentos obrigatórios não foram enviados. Volte à etapa de documentos e envie todos os arquivos necessários.");
                 return ResponseEntity.badRequest().body(response);
             }
-            
-            // ✅ CORREÇÃO: Atualizar o DTO com o estado real dos documentos antes de finalizar
+
+            // ✅ CORREÇÃO: Atualizar o DTO com o estado real dos documentos antes de
+            // finalizar
             AdesaoColaboradorDTO dadosAdesao = adesaoService.obterDadosCompletos(sessionId);
             sincronizarDocumentosNoDTO(dadosAdesao, sessionId);
-            
+
             // ✅ CORREÇÃO: Salvar os dados atualizados de volta no cache temporário
             adesaoService.atualizarDadosTemporarios(sessionId, dadosAdesao);
-            
+
             // Tentar garantir que o processo esteja no estado correto antes de finalizar
             try {
                 // Verificar se já está na etapa de revisão, se não, atualizar
                 ProcessoAdesao processo = workflowService.buscarProcessoPorSessionId(sessionId);
-                
+
                 if (!"revisao".equals(processo.getEtapaAtual())) {
-                    logger.info("Processo não está na etapa de revisão (atual: {}), atualizando...", 
-                               processo.getEtapaAtual());
+                    logger.info("Processo não está na etapa de revisão (atual: {}), atualizando...",
+                            processo.getEtapaAtual());
                     workflowService.atualizarEtapa(sessionId, "revisao");
                 }
-                
+
                 // Se o status não for EM_ANDAMENTO, atualizar para permitir finalização
                 if (processo.getStatus() != ProcessoAdesao.StatusProcesso.EM_ANDAMENTO) {
-                    logger.info("Processo não está EM_ANDAMENTO (status atual: {}), corrigindo...", 
-                               processo.getStatus());
+                    logger.info("Processo não está EM_ANDAMENTO (status atual: {}), corrigindo...",
+                            processo.getStatus());
                     processo.setStatus(ProcessoAdesao.StatusProcesso.EM_ANDAMENTO);
                     // Salvar através do repository diretamente se necessário
                 }
-                
+
             } catch (Exception e) {
                 logger.warn("Erro ao verificar/corrigir estado do processo: {}", e.getMessage());
             }
-            
+
             // Finalizar processo no workflow
             workflowService.finalizarProcesso(sessionId, "Processo de adesão finalizado pelo colaborador");
 
             // Criar colaborador definitivamente
             Colaborador colaboradorCriado = adesaoService.finalizarAdesao(sessionId);
-            
+
             // Criar notificação para usuários com permissão de gerenciar RH
             List<Usuario> usuariosRH = usuarioService.buscarUsuariosComPermissaoGerenciarRH();
             for (Usuario usuario : usuariosRH) {
                 notificationService.notifyNewEmployeeAdmission(
-                    colaboradorCriado.getNome(), 
-                    colaboradorCriado.getEmail(), 
-                    usuario
-                );
+                        colaboradorCriado.getNome(),
+                        colaboradorCriado.getEmail(),
+                        usuario);
             }
 
             response.put("success", true);
@@ -942,21 +957,22 @@ public class AdesaoColaboradorController {
             m.put("bairro", dto.getBairro());
             m.put("cidade", dto.getCidade());
             m.put("estado", dto.getEstado());
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return m;
     }
-    
+
     /**
      * Sincroniza o estado dos documentos no DTO com o estado real do sistema
      */
     private void sincronizarDocumentosNoDTO(AdesaoColaboradorDTO dadosAdesao, String sessionId) {
         try {
             List<DocumentoInfo> documentosEnviados = documentoService.listarDocumentos(sessionId);
-            
+
             logger.info("=== SINCRONIZAÇÃO DE DOCUMENTOS ====");
             logger.info("SessionId: {}", sessionId);
             logger.info("Documentos encontrados no sistema: {}", documentosEnviados.size());
-            
+
             // Inicializar mapas se não existirem
             if (dadosAdesao.getDocumentosUpload() == null) {
                 dadosAdesao.setDocumentosUpload(new java.util.HashMap<>());
@@ -964,44 +980,46 @@ public class AdesaoColaboradorController {
             if (dadosAdesao.getStatusDocumentos() == null) {
                 dadosAdesao.setStatusDocumentos(new java.util.HashMap<>());
             }
-            
+
             // Limpar estado anterior
             dadosAdesao.getDocumentosUpload().clear();
             dadosAdesao.getStatusDocumentos().clear();
-            
+
             // Mapear documentos do sistema atual para o formato esperado pelo DTO
             for (DocumentoInfo doc : documentosEnviados) {
                 String tipoDto = mapearTipoDocumentoParaDTO(doc.getTipo());
                 dadosAdesao.getDocumentosUpload().put(tipoDto, doc.getCaminhoArquivo());
                 dadosAdesao.getStatusDocumentos().put(tipoDto, true);
-                
-                logger.info("Documento mapeado: {} -> {} (caminho: {})", 
-                           doc.getTipo(), tipoDto, doc.getCaminhoArquivo());
+
+                logger.info("Documento mapeado: {} -> {} (caminho: {})",
+                        doc.getTipo(), tipoDto, doc.getCaminhoArquivo());
             }
-            
-            // Certificar que todos os documentos obrigatórios estão marcados como falso se não foram enviados
+
+            // Certificar que todos os documentos obrigatórios estão marcados como falso se
+            // não foram enviados
             for (String docObrigatorio : dadosAdesao.getDocumentosObrigatorios()) {
                 if (!dadosAdesao.getStatusDocumentos().containsKey(docObrigatorio)) {
                     dadosAdesao.getStatusDocumentos().put(docObrigatorio, false);
                     logger.info("Documento obrigatório não encontrado, marcado como false: {}", docObrigatorio);
                 }
             }
-            
-            logger.info("DTO sincronizado com {} documentos para sessionId: {}", 
-                       documentosEnviados.size(), sessionId);
+
+            logger.info("DTO sincronizado com {} documentos para sessionId: {}",
+                    documentosEnviados.size(), sessionId);
             logger.info("Documentos obrigatórios no DTO: {}", dadosAdesao.getDocumentosObrigatorios());
             logger.info("Status final dos documentos: {}", dadosAdesao.getStatusDocumentos());
             logger.info("DocumentosUpload final: {}", dadosAdesao.getDocumentosUpload());
             logger.info("Pode finalizar? {}", dadosAdesao.isDocumentosObrigatoriosCompletos());
             logger.info("====================================");
-                       
+
         } catch (Exception e) {
             logger.error("Erro ao sincronizar documentos no DTO para sessionId: {}", sessionId, e);
         }
     }
-    
+
     /**
-     * Mapeia os tipos de documento do sistema atual para o formato esperado pelo DTO
+     * Mapeia os tipos de documento do sistema atual para o formato esperado pelo
+     * DTO
      */
     private String mapearTipoDocumentoParaDTO(String tipoSistema) {
         return switch (tipoSistema.toLowerCase()) {
@@ -1058,21 +1076,21 @@ public class AdesaoColaboradorController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> debugSession(@PathVariable String sessionId) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             logger.info("=== DEBUG SESSION {} ===", sessionId);
-            
+
             // Check 1: Session exists
             boolean sessionExists = adesaoService.existeSessao(sessionId);
             response.put("sessionExists", sessionExists);
             logger.info("Session exists: {}", sessionExists);
-            
+
             if (!sessionExists) {
                 response.put("success", true);
                 response.put("message", "Session does not exist");
                 return ResponseEntity.ok(response);
             }
-            
+
             // Check 2: Get complete data
             try {
                 AdesaoColaboradorDTO dados = adesaoService.obterDadosCompletos(sessionId);
@@ -1082,14 +1100,14 @@ public class AdesaoColaboradorController {
                 response.put("hasName", dados.getNome() != null);
                 response.put("hasEmail", dados.getEmail() != null);
                 response.put("hasCpf", dados.getCpf() != null);
-                logger.info("Complete data - Stage: {}, Status: {}, Name: {}", 
-                           dados.getEtapaAtual(), dados.getStatusProcesso(), dados.getNome());
+                logger.info("Complete data - Stage: {}, Status: {}, Name: {}",
+                        dados.getEtapaAtual(), dados.getStatusProcesso(), dados.getNome());
             } catch (Exception e) {
                 response.put("hasCompleteData", false);
                 response.put("completeDataError", e.getMessage());
                 logger.error("Error getting complete data: {}", e.getMessage(), e);
             }
-            
+
             // Check 3: Benefits data
             try {
                 Map<String, Object> benefits = adesaoService.obterBeneficiosSessao(sessionId);
@@ -1101,7 +1119,7 @@ public class AdesaoColaboradorController {
                 response.put("benefitsError", e.getMessage());
                 logger.error("Error getting benefits: {}", e.getMessage());
             }
-            
+
             // Check 4: Workflow status
             try {
                 ProcessoAdesao processo = workflowService.buscarProcessoPorSessionId(sessionId);
@@ -1109,19 +1127,19 @@ public class AdesaoColaboradorController {
                 response.put("workflowStage", processo.getEtapaAtual());
                 response.put("workflowStatus", processo.getStatus().toString());
                 response.put("isFinalizeable", processo.isFinalizavel());
-                logger.info("Workflow - Stage: {}, Status: {}, Finalizeable: {}", 
-                           processo.getEtapaAtual(), processo.getStatus(), processo.isFinalizavel());
+                logger.info("Workflow - Stage: {}, Status: {}, Finalizeable: {}",
+                        processo.getEtapaAtual(), processo.getStatus(), processo.isFinalizavel());
             } catch (Exception e) {
                 response.put("hasWorkflowProcess", false);
                 response.put("workflowError", e.getMessage());
                 logger.error("Error getting workflow: {}", e.getMessage());
             }
-            
+
             response.put("success", true);
             response.put("message", "Debug completed");
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             logger.error("Error in debug endpoint for sessionId {}: {}", sessionId, e.getMessage(), e);
             response.put("success", false);
@@ -1129,7 +1147,7 @@ public class AdesaoColaboradorController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    
+
     /**
      * API: Aprova processo de adesão
      */
@@ -1137,38 +1155,38 @@ public class AdesaoColaboradorController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> aprovarProcesso(
             @RequestBody Map<String, String> dados) {
-        
+
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             Long processoId = Long.valueOf(dados.get("processoId"));
             String aprovadoPor = dados.get("aprovadoPor");
             String observacoes = dados.get("observacoes");
-            
+
             if (processoId == null) {
                 response.put("success", false);
                 response.put("message", "ID do processo é obrigatório");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             if (aprovadoPor == null || aprovadoPor.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "Campo 'aprovadoPor' é obrigatório");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             // Chamar o método de aprovação no workflow service
             workflowService.aprovarProcesso(processoId, aprovadoPor, observacoes);
-            
+
             // Buscar o processo atualizado
             WorkflowAdesaoService.ProcessoAdesaoInfo processoInfo = workflowService.buscarProcessoPorId(processoId);
-            
+
             response.put("success", true);
             response.put("message", "Processo aprovado com sucesso");
             response.put("processo", processoInfo);
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (NumberFormatException e) {
             response.put("success", false);
             response.put("message", "ID do processo inválido");
@@ -1180,7 +1198,7 @@ public class AdesaoColaboradorController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    
+
     /**
      * API: Rejeita processo de adesão
      */
@@ -1188,44 +1206,44 @@ public class AdesaoColaboradorController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> rejeitarProcesso(
             @RequestBody Map<String, String> dados) {
-        
+
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             Long processoId = Long.valueOf(dados.get("processoId"));
             String motivoRejeicao = dados.get("motivoRejeicao");
             String usuarioResponsavel = dados.get("usuarioResponsavel");
-            
+
             if (processoId == null) {
                 response.put("success", false);
                 response.put("message", "ID do processo é obrigatório");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             if (motivoRejeicao == null || motivoRejeicao.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "Motivo da rejeição é obrigatório");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             if (usuarioResponsavel == null || usuarioResponsavel.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "Usuário responsável é obrigatório");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             // Chamar o método de rejeição no workflow service
             workflowService.rejeitarProcesso(processoId, motivoRejeicao, usuarioResponsavel);
-            
+
             // Buscar o processo atualizado
             WorkflowAdesaoService.ProcessoAdesaoInfo processoInfo = workflowService.buscarProcessoPorId(processoId);
-            
+
             response.put("success", true);
             response.put("message", "Processo rejeitado com sucesso");
             response.put("processo", processoInfo);
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (NumberFormatException e) {
             response.put("success", false);
             response.put("message", "ID do processo inválido");
@@ -1237,6 +1255,6 @@ public class AdesaoColaboradorController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-    
+
     // Endpoint de reset removido para restaurar comportamento anterior
 }

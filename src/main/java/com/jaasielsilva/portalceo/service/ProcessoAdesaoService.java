@@ -2,8 +2,10 @@ package com.jaasielsilva.portalceo.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.model.HistoricoProcessoAdesao;
 import com.jaasielsilva.portalceo.model.ProcessoAdesao;
+import com.jaasielsilva.portalceo.repository.ColaboradorRepository;
 import com.jaasielsilva.portalceo.repository.HistoricoProcessoAdesaoRepository;
 import com.jaasielsilva.portalceo.repository.ProcessoAdesaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,17 @@ public class ProcessoAdesaoService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private ColaboradorRepository colaboradorRepository;
+
+    private String formatCpf(String cpf) {
+        if (cpf == null) return null;
+        String trimmed = cpf.trim();
+        String digits = trimmed.replaceAll("[^0-9]", "");
+        if (digits.length() != 11) return trimmed;
+        return digits.substring(0, 3) + "." + digits.substring(3, 6) + "." + digits.substring(6, 9) + "-" + digits.substring(9, 11);
+    }
+
     /**
      * Cria um novo processo de adesão
      */
@@ -40,12 +53,17 @@ public class ProcessoAdesaoService {
         // Extrai dados pessoais
         String nomeColaborador = (String) dadosPessoais.get("nomeCompleto");
         String email = (String) dadosPessoais.get("email");
-        String cpf = (String) dadosPessoais.get("cpf");
+        String cpfRaw = (String) dadosPessoais.get("cpf");
+        String cpf = formatCpf(cpfRaw);
         String cargo = (String) dadosPessoais.get("cargo");
         String dataAdmissaoStr = (String) dadosPessoais.get("dataAdmissao");
 
         // Verifica se já existe processo ativo para este CPF
-        if (processoRepository.existeProcessoAtivoPorCpf(cpf)) {
+        boolean existeAtivo = processoRepository.existeProcessoAtivoPorCpf(cpf);
+        if (!existeAtivo && cpfRaw != null && cpf != null && !cpfRaw.equals(cpf)) {
+            existeAtivo = processoRepository.existeProcessoAtivoPorCpf(cpfRaw);
+        }
+        if (existeAtivo) {
             throw new IllegalStateException("Já existe um processo de adesão ativo para este CPF");
         }
 
@@ -170,6 +188,21 @@ public class ProcessoAdesaoService {
 
         processo.aprovar(aprovadoPor, observacoes);
         processo = processoRepository.save(processo);
+
+        String cpfProcesso = processo.getCpfColaborador();
+        Optional<Colaborador> colaboradorOpt = colaboradorRepository.findByCpf(cpfProcesso);
+        if (colaboradorOpt.isEmpty()) {
+            String cpfFmt = formatCpf(cpfProcesso);
+            if (cpfFmt != null && cpfProcesso != null && !cpfFmt.equals(cpfProcesso)) {
+                colaboradorOpt = colaboradorRepository.findByCpf(cpfFmt);
+            }
+        }
+        if (colaboradorOpt.isPresent()) {
+            Colaborador colaborador = colaboradorOpt.get();
+            colaborador.setStatus(Colaborador.StatusColaborador.ATIVO);
+            colaborador.setAtivo(true);
+            colaboradorRepository.save(colaborador);
+        }
 
         // Registra histórico
         HistoricoProcessoAdesao historico = HistoricoProcessoAdesao.criarEventoAprovacao(processo, aprovadoPor);

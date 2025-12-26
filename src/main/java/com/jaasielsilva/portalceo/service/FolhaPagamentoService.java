@@ -330,6 +330,25 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         }
 
         // Inicializar totais (se reutilizando folha, partir dos totais atuais)
+        boolean folhaReutilizada = existenteOpt.isPresent()
+                && existenteOpt.get().getId() != null
+                && existenteOpt.get().getStatus() != FolhaPagamento.StatusFolha.CANCELADA;
+
+        if (folhaReutilizada) {
+            List<Holerite> holeritesExistentes = holeriteRepository.findByFolhaPagamento(folha);
+            if (holeritesExistentes != null && !holeritesExistentes.isEmpty()) {
+                holeriteRepository.deleteAll(holeritesExistentes);
+                holeriteRepository.flush();
+                entityManager.clear();
+            }
+            folha.setTotalBruto(BigDecimal.ZERO);
+            folha.setTotalDescontos(BigDecimal.ZERO);
+            folha.setTotalLiquido(BigDecimal.ZERO);
+            folha.setTotalInss(BigDecimal.ZERO);
+            folha.setTotalIrrf(BigDecimal.ZERO);
+            folha.setTotalFgts(BigDecimal.ZERO);
+        }
+
         BigDecimal totalBruto = folha.getTotalBruto() != null ? folha.getTotalBruto() : BigDecimal.ZERO;
         BigDecimal totalDescontos = folha.getTotalDescontos() != null ? folha.getTotalDescontos() : BigDecimal.ZERO;
         BigDecimal totalInss = folha.getTotalInss() != null ? folha.getTotalInss() : BigDecimal.ZERO;
@@ -537,20 +556,19 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
             int totalProcessados = 0;
             int blocosProcessados = 0;
             int totalPages = (int) Math.ceil((double) totalAtivos / (double) PAGE_SIZE);
-            java.util.function.IntFunction<java.util.concurrent.Callable<PageResult>> pageTaskFactory = (int idx) -> () -> processarPaginaFolha(idx, PAGE_SIZE, CHUNK_SIZE, folhaId, mes, ano, resumoPorColaborador, tipoFolha, colabsJaProcessados);
-            for (int pageIndex = 0; pageIndex < totalPages; pageIndex += 2) {
-                java.util.concurrent.Future<PageResult> f1 = taskExecutor.submit(pageTaskFactory.apply(pageIndex));
-                java.util.concurrent.Future<PageResult> f2 = pageIndex + 1 < totalPages ? taskExecutor.submit(pageTaskFactory.apply(pageIndex + 1)) : null;
+            for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 try {
-                    PageResult r1 = f1.get();
-                    logger.info("Processamento folha {} página {}: processed={}, blocks={}", folhaId, pageIndex, r1.processed, r1.blocks);
-                    totalProcessados += r1.processed;
-                    blocosProcessados += r1.blocks;
-                    totalBruto = totalBruto.add(r1.bruto);
-                    totalDescontos = totalDescontos.add(r1.descontos);
-                    totalInss = totalInss.add(r1.inss);
-                    totalIrrf = totalIrrf.add(r1.irrf);
-                    totalFgts = totalFgts.add(r1.fgts);
+                    PageResult r = processarPaginaFolha(pageIndex, PAGE_SIZE, CHUNK_SIZE, folhaId, mes, ano, resumoPorColaborador, tipoFolha, colabsJaProcessados);
+                    logger.info("Processamento folha {} página {}: processed={}, blocks={}", folhaId, pageIndex, r.processed, r.blocks);
+
+                    totalProcessados += r.processed;
+                    blocosProcessados += r.blocks;
+                    totalBruto = totalBruto.add(r.bruto);
+                    totalDescontos = totalDescontos.add(r.descontos);
+                    totalInss = totalInss.add(r.inss);
+                    totalIrrf = totalIrrf.add(r.irrf);
+                    totalFgts = totalFgts.add(r.fgts);
+
                     if (jobId != null) {
                         Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
                         long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
@@ -558,46 +576,31 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                         double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
                         long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
                         int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
-                        info.put("lastFlushMs", r1.lastFlushMs);
+                        info.put("lastFlushMs", r.lastFlushMs);
                         info.put("blocksProcessed", blocosProcessados);
                         info.put("processed", totalProcessados);
                         info.put("progressPct", pct);
                         info.put("elapsedMs", elapsedMs);
                         info.put("etaMs", etaMs);
-                        info.put("message", "Processando cálculos de holerites em paralelo...");
+                        info.put("message", "Processando cálculos de holerites...");
                         appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
                         pushJobStatus(jobId);
                     }
-                    if (f2 != null) {
-                        PageResult r2 = f2.get();
-                        logger.info("Processamento folha {} página {}: processed={}, blocks={}", folhaId, pageIndex + 1, r2.processed, r2.blocks);
-                        totalProcessados += r2.processed;
-                        blocosProcessados += r2.blocks;
-                        totalBruto = totalBruto.add(r2.bruto);
-                        totalDescontos = totalDescontos.add(r2.descontos);
-                        totalInss = totalInss.add(r2.inss);
-                        totalIrrf = totalIrrf.add(r2.irrf);
-                        totalFgts = totalFgts.add(r2.fgts);
-                        if (jobId != null) {
-                            Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
-                            long elapsedMs = (System.nanoTime() - tInicio) / 1_000_000;
-                            long total = totalRestantes;
-                            double rateMsPerItem = totalProcessados > 0 ? (double) elapsedMs / (double) totalProcessados : 0d;
-                            long etaMs = rateMsPerItem > 0 ? (long) ((total - (long) totalProcessados) * rateMsPerItem) : -1;
-                            int pct = total > 0 ? (int) Math.round(100.0 * (double) totalProcessados / (double) total) : 0;
-                            info.put("lastFlushMs", r2.lastFlushMs);
-                            info.put("blocksProcessed", blocosProcessados);
-                            info.put("processed", totalProcessados);
-                            info.put("progressPct", pct);
-                            info.put("elapsedMs", elapsedMs);
-                            info.put("etaMs", etaMs);
-                            info.put("message", "Processando cálculos de holerites em paralelo...");
-                            appendJobLog(jobId, String.format("Processados %d de %d (%d%%)", totalProcessados, total, pct));
-                            pushJobStatus(jobId);
-                        }
-                    }
                 } catch (Exception e) {
-                    logger.error("Erro ao processar páginas em paralelo: {}", e.getMessage());
+                    logger.error("Erro ao processar folha {} página {}", folhaId, pageIndex, e);
+                    if (jobId != null) {
+                        Throwable root = e;
+                        while (root.getCause() != null) root = root.getCause();
+                        String msg = root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
+
+                        Map<String, Object> info = processamentoJobs.computeIfAbsent(jobId, k -> new java.util.HashMap<>());
+                        info.put("status", "ERRO");
+                        info.put("message", "Erro ao processar a folha: " + msg);
+                        info.put("error", msg);
+                        appendJobLog(jobId, "ERRO: " + msg);
+                        pushJobStatus(jobId);
+                    }
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -648,7 +651,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         FolhaPagamento folhaRef = new FolhaPagamento();
         folhaRef.setId(folhaId);
 
-        List<Holerite> holeritesAll = colaboradores.parallelStream()
+        List<Holerite> holeritesAll = colaboradores.stream()
                 .map(col -> {
                     RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo = resumoPorColaborador.get(col.getId());
                     BeneficiosInfo beneficios = beneficiosPorColaborador.getOrDefault(col.getId(), new BeneficiosInfo(java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty()));
@@ -779,6 +782,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         Holerite holerite = new Holerite();
         holerite.setColaborador(colaborador);
         holerite.setFolhaPagamento(folha);
+        holerite.setSalarioContratual(colaborador.getSalario());
         holerite.setSalarioBase(colaborador.getSalario());
 
         // Calcular dados de ponto (dias e horas trabalhadas)
@@ -805,6 +809,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         Holerite holerite = new Holerite();
         holerite.setColaborador(colaborador);
         holerite.setFolhaPagamento(folha);
+        holerite.setSalarioContratual(colaborador.getSalario());
         holerite.setSalarioBase(colaborador.getSalario());
 
         if (resumoAgregado != null) {
@@ -896,126 +901,134 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
      * Aplica dados agregados de ponto no holerite
      */
     private void aplicarResumoPonto(Holerite holerite, RegistroPontoRepository.PontoResumoProjection resumo, Integer mes, Integer ano) {
-        Long faltasExplicitas = resumo != null && resumo.getFaltas() != null ? resumo.getFaltas() : 0L;
-        Long diasComRegistro = resumo != null && resumo.getDiasComRegistro() != null ? resumo.getDiasComRegistro() : 0L;
-        
-        // Calcular faltas implícitas (dias úteis sem registro)
-        // Assumindo 22 dias úteis padrão, ou calcular baseado no mês
-        int diasUteis = calcularDiasUteis(YearMonth.of(
-            ano != null ? ano : LocalDate.now().getYear(),
-            mes != null ? mes : LocalDate.now().getMonthValue()
-        ));
-        
-        long faltasImplicitas = Math.max(0, diasUteis - diasComRegistro);
-        long totalFaltas = faltasExplicitas + faltasImplicitas;
+        long faltasExplicitas = resumo != null && resumo.getFaltas() != null ? resumo.getFaltas() : 0L;
+        long diasComRegistro = resumo != null && resumo.getDiasComRegistro() != null ? resumo.getDiasComRegistro() : 0L;
 
-        Long atrasos = resumo != null && resumo.getAtrasos() != null ? resumo.getAtrasos() : 0L;
-        Long minutosTrabalhados = resumo != null && resumo.getMinutosTrabalhados() != null ? resumo.getMinutosTrabalhados() : 0L;
-        Long minutosExtras = resumo != null && resumo.getMinutosExtras() != null ? resumo.getMinutosExtras() : 0L;
-        
-        // Calcular dias trabalhados com base comercial (30 dias) e admissão
-        int diasPagamento = 30;
+        long atrasos = resumo != null && resumo.getAtrasos() != null ? resumo.getAtrasos() : 0L;
+        long minutosTrabalhados = resumo != null && resumo.getMinutosTrabalhados() != null ? resumo.getMinutosTrabalhados() : 0L;
+        long minutosExtras = resumo != null && resumo.getMinutosExtras() != null ? resumo.getMinutosExtras() : 0L;
+
         Colaborador col = holerite.getColaborador();
-        
-        // Verificar admissão no mês corrente
-        if (col != null && col.getDataAdmissao() != null) {
+        Integer mesRef = mes != null ? mes : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getMesReferencia() : null);
+        Integer anoRef = ano != null ? ano : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getAnoReferencia() : null);
+        YearMonth ym = (mesRef != null && anoRef != null) ? YearMonth.of(anoRef, mesRef) : YearMonth.now();
+        LocalDate fimMes = ym.atEndOfMonth();
+
+        int diasUteisMes = calcularDiasUteis(ym);
+        int diasUteisBase = diasUteisMes;
+        int diasPagamento = 30;
+
+        BigDecimal salarioIntegral = col != null ? col.getSalario() : holerite.getSalarioContratual();
+        if (salarioIntegral != null) holerite.setSalarioContratual(salarioIntegral);
+
+        boolean aplicarProporcional = false;
+        if (col != null && col.getDataAdmissao() != null && mesRef != null && anoRef != null) {
             LocalDate admissao = col.getDataAdmissao();
-            Integer mesRef = mes != null ? mes : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getMesReferencia() : null);
-            Integer anoRef = ano != null ? ano : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getAnoReferencia() : null);
-            // Se folha ainda não persistida, tentar obter de parâmetro
-            if (mesRef != null && anoRef != null) {
-                if (admissao.getYear() == anoRef && admissao.getMonthValue() == mesRef) {
-                    // Cálculo proporcional: 30 - dia_admissão + 1
-                    diasPagamento = Math.max(0, 30 - admissao.getDayOfMonth() + 1);
-                    
-                    // Ajustar salário base proporcional
-                    BigDecimal salarioIntegral = col.getSalario();
-                    if (salarioIntegral != null) {
-                        BigDecimal salarioProporcional = salarioIntegral
-                            .divide(BigDecimal.valueOf(30), 4, RoundingMode.HALF_UP)
-                            .multiply(BigDecimal.valueOf(diasPagamento))
-                            .setScale(2, RoundingMode.HALF_UP);
-                        holerite.setSalarioBase(salarioProporcional);
-                    }
-                    
-                    // Ajustar cálculo de faltas para admissão recente
-                    // Se admitido no meio do mês, dias úteis esperados devem ser menores
-                    // Simplificação: diasUteis proporcional aos diasPagamento
-                    // diasUteisProporcional = (diasPagamento / 30) * 22
-                    int diasUteisProp = Math.round((diasPagamento / 30.0f) * diasUteis);
-                    faltasImplicitas = Math.max(0, diasUteisProp - diasComRegistro);
-                    totalFaltas = faltasExplicitas + faltasImplicitas;
-                }
+            if (admissao.getYear() == anoRef && admissao.getMonthValue() == mesRef) {
+                LocalDate inicioCalculo = admissao.isAfter(ym.atDay(1)) ? admissao : ym.atDay(1);
+                int diasUteisAdmissao = contarDiasUteisEntre(inicioCalculo, fimMes);
+                diasUteisBase = diasUteisAdmissao;
+                diasPagamento = Math.max(0, 30 - admissao.getDayOfMonth() + 1);
+                aplicarProporcional = true;
             }
         }
 
+        long diasComRegistroCapped = Math.min(diasComRegistro, (long) diasUteisBase);
+        long faltasExplicitasCapped = Math.min(faltasExplicitas, (long) diasUteisBase);
+        long atrasosCapped = Math.min(atrasos, (long) diasUteisBase);
+        long faltasImplicitas = Math.max(0, (long) diasUteisBase - diasComRegistroCapped);
+        long totalFaltas = Math.min((long) diasUteisBase, faltasExplicitasCapped + faltasImplicitas);
+
+        int diasTrabalhados = (int) Math.max(0L, diasComRegistroCapped - faltasExplicitasCapped);
         int horasTrabalhadas = (int) Math.floor(minutosTrabalhados / 60.0);
 
-        holerite.setDiasTrabalhados(diasPagamento);
+        holerite.setDiasUteisBase(diasUteisBase);
+        holerite.setDiasPagamento(diasPagamento);
+        holerite.setDiasTrabalhados(diasTrabalhados);
         holerite.setHorasTrabalhadas(horasTrabalhadas);
-        holerite.setFaltas((int) totalFaltas);
-        holerite.setAtrasos(atrasos.intValue());
+        holerite.setFaltas((int) Math.max(0L, totalFaltas));
+        holerite.setAtrasos((int) Math.max(0L, atrasosCapped));
 
-        BigDecimal valorHoraExtra = calcularValorHoraExtra(col != null ? col.getSalario() : holerite.getSalarioBase());
+        if (salarioIntegral != null) {
+            BigDecimal salarioCalculado = salarioIntegral;
+            if (aplicarProporcional) {
+                salarioCalculado = salarioIntegral
+                        .divide(BigDecimal.valueOf(30), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(diasPagamento))
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+            holerite.setSalarioBase(salarioCalculado);
+        }
+
+        BigDecimal valorHoraExtraBase = salarioIntegral != null ? salarioIntegral : holerite.getSalarioBase();
+        BigDecimal valorHoraExtra = calcularValorHoraExtra(valorHoraExtraBase);
         BigDecimal horasExtrasDecimal = BigDecimal.valueOf(minutosExtras)
                 .divide(BigDecimal.valueOf(60), 4, RoundingMode.HALF_UP);
         holerite.setHorasExtras(valorHoraExtra.multiply(horasExtrasDecimal).setScale(2, RoundingMode.HALF_UP));
     }
 
     private void aplicarResumoPonto(Holerite holerite, RegistroPontoRepository.PontoResumoPorColaboradorProjection resumo, Integer mes, Integer ano) {
-        Long faltasExplicitas = resumo != null && resumo.getFaltas() != null ? resumo.getFaltas() : 0L;
-        Long diasComRegistro = resumo != null && resumo.getDiasComRegistro() != null ? resumo.getDiasComRegistro() : 0L;
+        long faltasExplicitas = resumo != null && resumo.getFaltas() != null ? resumo.getFaltas() : 0L;
+        long diasComRegistro = resumo != null && resumo.getDiasComRegistro() != null ? resumo.getDiasComRegistro() : 0L;
 
-        // Calcular faltas implícitas
-        int diasUteis = calcularDiasUteis(YearMonth.of(
-            ano != null ? ano : LocalDate.now().getYear(),
-            mes != null ? mes : LocalDate.now().getMonthValue()
-        ));
-        
-        long faltasImplicitas = Math.max(0, diasUteis - diasComRegistro);
-        long totalFaltas = faltasExplicitas + faltasImplicitas;
+        long atrasos = resumo != null && resumo.getAtrasos() != null ? resumo.getAtrasos() : 0L;
+        long minutosTrabalhados = resumo != null && resumo.getMinutosTrabalhados() != null ? resumo.getMinutosTrabalhados() : 0L;
+        long minutosExtras = resumo != null && resumo.getMinutosExtras() != null ? resumo.getMinutosExtras() : 0L;
 
-        Long atrasos = resumo != null && resumo.getAtrasos() != null ? resumo.getAtrasos() : 0L;
-        Long minutosTrabalhados = resumo != null && resumo.getMinutosTrabalhados() != null ? resumo.getMinutosTrabalhados() : 0L;
-        Long minutosExtras = resumo != null && resumo.getMinutosExtras() != null ? resumo.getMinutosExtras() : 0L;
-        
-        // Calcular dias trabalhados com base comercial (30 dias) e admissão
-        int diasPagamento = 30;
         Colaborador col = holerite.getColaborador();
-        
-        if (col != null && col.getDataAdmissao() != null) {
+        Integer mesRef = mes != null ? mes : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getMesReferencia() : null);
+        Integer anoRef = ano != null ? ano : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getAnoReferencia() : null);
+        YearMonth ym = (mesRef != null && anoRef != null) ? YearMonth.of(anoRef, mesRef) : YearMonth.now();
+        LocalDate fimMes = ym.atEndOfMonth();
+
+        int diasUteisMes = calcularDiasUteis(ym);
+        int diasUteisBase = diasUteisMes;
+        int diasPagamento = 30;
+
+        BigDecimal salarioIntegral = col != null ? col.getSalario() : holerite.getSalarioContratual();
+        if (salarioIntegral != null) holerite.setSalarioContratual(salarioIntegral);
+
+        boolean aplicarProporcional = false;
+        if (col != null && col.getDataAdmissao() != null && mesRef != null && anoRef != null) {
             LocalDate admissao = col.getDataAdmissao();
-            Integer mesRef = mes != null ? mes : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getMesReferencia() : null);
-            Integer anoRef = ano != null ? ano : (holerite.getFolhaPagamento() != null ? holerite.getFolhaPagamento().getAnoReferencia() : null);
-            
-            if (mesRef != null && anoRef != null) {
-                if (admissao.getYear() == anoRef && admissao.getMonthValue() == mesRef) {
-                    diasPagamento = Math.max(0, 30 - admissao.getDayOfMonth() + 1);
-                    
-                    BigDecimal salarioIntegral = col.getSalario();
-                    if (salarioIntegral != null) {
-                        BigDecimal salarioProporcional = salarioIntegral
-                            .divide(BigDecimal.valueOf(30), 4, RoundingMode.HALF_UP)
-                            .multiply(BigDecimal.valueOf(diasPagamento))
-                            .setScale(2, RoundingMode.HALF_UP);
-                        holerite.setSalarioBase(salarioProporcional);
-                    }
-                    
-                    int diasUteisProp = Math.round((diasPagamento / 30.0f) * diasUteis);
-                    faltasImplicitas = Math.max(0, diasUteisProp - diasComRegistro);
-                    totalFaltas = faltasExplicitas + faltasImplicitas;
-                }
+            if (admissao.getYear() == anoRef && admissao.getMonthValue() == mesRef) {
+                LocalDate inicioCalculo = admissao.isAfter(ym.atDay(1)) ? admissao : ym.atDay(1);
+                int diasUteisAdmissao = contarDiasUteisEntre(inicioCalculo, fimMes);
+                diasUteisBase = diasUteisAdmissao;
+                diasPagamento = Math.max(0, 30 - admissao.getDayOfMonth() + 1);
+                aplicarProporcional = true;
             }
         }
 
+        long diasComRegistroCapped = Math.min(diasComRegistro, (long) diasUteisBase);
+        long faltasExplicitasCapped = Math.min(faltasExplicitas, (long) diasUteisBase);
+        long atrasosCapped = Math.min(atrasos, (long) diasUteisBase);
+        long faltasImplicitas = Math.max(0, (long) diasUteisBase - diasComRegistroCapped);
+        long totalFaltas = Math.min((long) diasUteisBase, faltasExplicitasCapped + faltasImplicitas);
+
+        int diasTrabalhados = (int) Math.max(0L, diasComRegistroCapped - faltasExplicitasCapped);
         int horasTrabalhadas = (int) Math.floor(minutosTrabalhados / 60.0);
 
-        holerite.setDiasTrabalhados(diasPagamento);
+        holerite.setDiasUteisBase(diasUteisBase);
+        holerite.setDiasPagamento(diasPagamento);
+        holerite.setDiasTrabalhados(diasTrabalhados);
         holerite.setHorasTrabalhadas(horasTrabalhadas);
-        holerite.setFaltas((int) totalFaltas);
-        holerite.setAtrasos(atrasos.intValue());
+        holerite.setFaltas((int) Math.max(0L, totalFaltas));
+        holerite.setAtrasos((int) Math.max(0L, atrasosCapped));
 
-        BigDecimal valorHoraExtra = calcularValorHoraExtra(col != null ? col.getSalario() : holerite.getSalarioBase());
+        if (salarioIntegral != null) {
+            BigDecimal salarioCalculado = salarioIntegral;
+            if (aplicarProporcional) {
+                salarioCalculado = salarioIntegral
+                        .divide(BigDecimal.valueOf(30), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(diasPagamento))
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+            holerite.setSalarioBase(salarioCalculado);
+        }
+
+        BigDecimal valorHoraExtraBase = salarioIntegral != null ? salarioIntegral : holerite.getSalarioBase();
+        BigDecimal valorHoraExtra = calcularValorHoraExtra(valorHoraExtraBase);
         BigDecimal horasExtrasDecimal = BigDecimal.valueOf(minutosExtras)
                 .divide(BigDecimal.valueOf(60), 4, RoundingMode.HALF_UP);
         holerite.setHorasExtras(valorHoraExtra.multiply(horasExtrasDecimal).setScale(2, RoundingMode.HALF_UP));
@@ -1105,7 +1118,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
     private void calcularDescontos(Holerite holerite, Colaborador colaborador, Integer mes, Integer ano, BeneficiosInfo beneficios, String tipoFolha) {
         // Calcular desconto de faltas primeiro
         if (holerite.getFaltas() != null && holerite.getFaltas() > 0) {
-            BigDecimal salarioDia = holerite.getSalarioBase().divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);
+            BigDecimal baseDia = holerite.getSalarioContratual() != null ? holerite.getSalarioContratual() : holerite.getSalarioBase();
+            BigDecimal salarioDia = baseDia.divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);
             BigDecimal valorFaltas = salarioDia.multiply(BigDecimal.valueOf(holerite.getFaltas()));
             holerite.setDescontoFaltas(valorFaltas);
         } else {
@@ -1288,9 +1302,28 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
      * Calcula dias úteis do mês
      */
     private int calcularDiasUteis(YearMonth yearMonth) {
-        // Implementação simplificada - assumir 22 dias úteis por mês
-        // Futuramente pode ser melhorada para considerar feriados
-        return 22;
+        int diasUteis = 0;
+        for (int dia = 1; dia <= yearMonth.lengthOfMonth(); dia++) {
+            java.time.DayOfWeek dow = yearMonth.atDay(dia).getDayOfWeek();
+            if (dow != java.time.DayOfWeek.SATURDAY && dow != java.time.DayOfWeek.SUNDAY) {
+                diasUteis++;
+            }
+        }
+        return diasUteis;
+    }
+
+    private int contarDiasUteisEntre(LocalDate inicio, LocalDate fim) {
+        if (inicio == null || fim == null || inicio.isAfter(fim)) return 0;
+        int dias = 0;
+        LocalDate d = inicio;
+        while (!d.isAfter(fim)) {
+            java.time.DayOfWeek dow = d.getDayOfWeek();
+            if (dow != java.time.DayOfWeek.SATURDAY && dow != java.time.DayOfWeek.SUNDAY) {
+                dias++;
+            }
+            d = d.plusDays(1);
+        }
+        return dias;
     }
 
     /**

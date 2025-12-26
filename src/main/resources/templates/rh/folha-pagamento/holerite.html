@@ -227,8 +227,9 @@
               <div>
                 <strong>E-mail:</strong> <span th:text="${holerite.colaborador.email != null ? holerite.colaborador.email : '-'}"></span><br>
                 <strong>CPF:</strong> <span th:text="${holerite.colaborador.cpf}"></span><br>
+                <strong>Salário Contratual:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioContratual)}"></span><br>
                 <strong>Salário Base:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span><br>
-                <strong>Dias Trabalhados:</strong> <span th:text="${holerite.diasTrabalhados}"></span>
+                <strong>Dias Pagos:</strong> <span th:text="${holerite.diasPagamento}"></span>
               </div>
             </div>
           </div>
@@ -248,7 +249,7 @@
                 <!-- Salário Base -->
                 <tr>
                   <td>Salário Base</td>
-                  <td class="col-ref" th:text="${#numbers.formatDecimal(holerite.diasTrabalhados, 1, 'POINT', 2, 'COMMA')}">30,00</td>
+                  <td class="col-ref" th:text="${#numbers.formatDecimal(holerite.diasPagamento, 1, 'POINT', 2, 'COMMA')}">30,00</td>
                   <td class="col-valor" th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></td>
                   <td class="col-valor"></td>
                 </tr>

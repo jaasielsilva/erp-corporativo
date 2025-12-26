@@ -67,6 +67,14 @@ public class WorkflowAdesaoService {
     @Autowired
     private EmailService emailService;
 
+    private String formatCpf(String cpf) {
+        if (cpf == null) return null;
+        String trimmed = cpf.trim();
+        String digits = trimmed.replaceAll("[^0-9]", "");
+        if (digits.length() != 11) return trimmed;
+        return digits.substring(0, 3) + "." + digits.substring(3, 6) + "." + digits.substring(6, 9) + "-" + digits.substring(9, 11);
+    }
+
     /**
      * Salva processo de adesão no banco de dados
      */
@@ -83,10 +91,15 @@ public class WorkflowAdesaoService {
                 // Criar novo processo
                 String nome = dadosPessoais.get("nome") != null ? dadosPessoais.get("nome").toString() : null;
                 String email = dadosPessoais.get("email") != null ? dadosPessoais.get("email").toString() : null;
-                String cpf = dadosPessoais.get("cpf") != null ? dadosPessoais.get("cpf").toString() : null;
+                String cpfRaw = dadosPessoais.get("cpf") != null ? dadosPessoais.get("cpf").toString() : null;
+                String cpf = formatCpf(cpfRaw);
 
                 // Verificar se já existe processo ativo para este CPF
-                if (processoRepository.existeProcessoAtivoPorCpf(cpf)) {
+                boolean existeAtivo = processoRepository.existeProcessoAtivoPorCpf(cpf);
+                if (!existeAtivo && cpfRaw != null && cpf != null && !cpfRaw.equals(cpf)) {
+                    existeAtivo = processoRepository.existeProcessoAtivoPorCpf(cpfRaw);
+                }
+                if (existeAtivo) {
                     throw new WorkflowException("Já existe um processo de adesão ativo para este CPF");
                 }
 
@@ -845,7 +858,14 @@ public class WorkflowAdesaoService {
     private void ativarColaboradorAprovado(ProcessoAdesao processo) {
         try {
             // Buscar colaborador pelo CPF do processo
-            Optional<Colaborador> colaboradorOpt = colaboradorRepository.findByCpf(processo.getCpfColaborador());
+            String cpfProcesso = processo.getCpfColaborador();
+            Optional<Colaborador> colaboradorOpt = colaboradorRepository.findByCpf(cpfProcesso);
+            if (colaboradorOpt.isEmpty()) {
+                String cpfFmt = formatCpf(cpfProcesso);
+                if (cpfFmt != null && cpfProcesso != null && !cpfFmt.equals(cpfProcesso)) {
+                    colaboradorOpt = colaboradorRepository.findByCpf(cpfFmt);
+                }
+            }
             
             if (colaboradorOpt.isPresent()) {
                 Colaborador colaborador = colaboradorOpt.get();
@@ -902,7 +922,14 @@ public class WorkflowAdesaoService {
             Map<String, Object> dadosPlano = (Map<String, Object>) dadosPlanoObj;
             
             // Buscar colaborador
-            Optional<Colaborador> colaboradorOpt = colaboradorRepository.findByCpf(processo.getCpfColaborador());
+            String cpfProcesso = processo.getCpfColaborador();
+            Optional<Colaborador> colaboradorOpt = colaboradorRepository.findByCpf(cpfProcesso);
+            if (colaboradorOpt.isEmpty()) {
+                String cpfFmt = formatCpf(cpfProcesso);
+                if (cpfFmt != null && cpfProcesso != null && !cpfFmt.equals(cpfProcesso)) {
+                    colaboradorOpt = colaboradorRepository.findByCpf(cpfFmt);
+                }
+            }
             if (colaboradorOpt.isEmpty()) {
                 logger.error("Colaborador não encontrado para adesão ao plano de saúde. CPF: {}", processo.getCpfColaborador());
                 return;

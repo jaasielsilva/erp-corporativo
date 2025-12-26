@@ -70,7 +70,8 @@ public class AdesaoColaboradorService {
      * Verifica se CPF já existe no sistema
      */
     public boolean existeCpf(String cpf) {
-        return colaboradorRepository.existsByCpf(cpf);
+        String cpfFmt = formatCpf(cpf);
+        return colaboradorRepository.existsByCpf(cpfFmt != null ? cpfFmt : cpf);
     }
 
     /**
@@ -408,7 +409,7 @@ public class AdesaoColaboradorService {
 
         // Dados pessoais
         colaborador.setNome(dto.getNome());
-        colaborador.setCpf(dto.getCpf());
+        colaborador.setCpf(formatCpf(dto.getCpf()));
         colaborador.setEmail(dto.getEmail());
         colaborador.setTelefone(dto.getTelefone());
         colaborador.setSexo(Colaborador.Sexo.valueOf(dto.getSexo()));
@@ -460,6 +461,14 @@ public class AdesaoColaboradorService {
         colaborador.setAtivo(false);
 
         return colaborador;
+    }
+
+    private String formatCpf(String cpf) {
+        if (cpf == null) return null;
+        String trimmed = cpf.trim();
+        String digits = trimmed.replaceAll("[^0-9]", "");
+        if (digits.length() != 11) return trimmed;
+        return digits.substring(0, 3) + "." + digits.substring(3, 6) + "." + digits.substring(6, 9) + "-" + digits.substring(9, 11);
     }
 
     /**

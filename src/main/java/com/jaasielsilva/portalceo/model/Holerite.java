@@ -30,6 +30,9 @@ public class Holerite {
     @JoinColumn(name = "folha_pagamento_id", nullable = false)
     private FolhaPagamento folhaPagamento;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal salarioContratual;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal salarioBase;
 
@@ -96,6 +99,12 @@ public class Holerite {
     @Column(nullable = false)
     private Integer diasTrabalhados;
 
+    @Column
+    private Integer diasUteisBase;
+
+    @Column
+    private Integer diasPagamento;
+
     @Column(nullable = false)
     private Integer horasTrabalhadas;
 
@@ -131,6 +140,12 @@ public class Holerite {
 
     public BigDecimal getSalarioBase() {
         return salarioBase != null ? salarioBase : BigDecimal.ZERO;
+    }
+
+    public BigDecimal getSalarioContratual() {
+        if (salarioContratual != null) return salarioContratual;
+        if (colaborador != null && colaborador.getSalario() != null) return colaborador.getSalario();
+        return getSalarioBase();
     }
 
     public BigDecimal getHorasExtras() {

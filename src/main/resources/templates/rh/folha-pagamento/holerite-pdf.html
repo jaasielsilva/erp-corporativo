@@ -48,8 +48,9 @@
         <div>
           <strong>E-mail:</strong> <span th:text="${holerite.colaborador.email != null ? holerite.colaborador.email : '-'}"></span><br />
           <strong>CPF:</strong> <span th:text="${holerite.colaborador.cpf}"></span><br />
+          <strong>Salário Contratual:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioContratual)}"></span><br />
           <strong>Salário Base:</strong> <span th:text="${#numbers.formatCurrency(holerite.salarioBase)}"></span><br />
-          <strong>Dias Trabalhados:</strong> <span th:text="${holerite.diasTrabalhados}"></span>
+          <strong>Dias Pagos:</strong> <span th:text="${holerite.diasPagamento}"></span>
         </div>
       </div>
     </div>

@@ -27,9 +27,16 @@ public class ResumoFolhaService {
         com.jaasielsilva.portalceo.repository.RegistroPontoRepository.PontoResumoProjection projection = 
             registroPontoRepository.aggregateResumoByColaboradorAndPeriodo(c.getId(), dataInicio, dataFim);
             
-        int diasTrabalhados = projection != null && projection.getDiasComRegistro() != null 
-            ? projection.getDiasComRegistro().intValue() 
-            : 0;
+        int diasTrabalhados = projection != null && projection.getDiasComRegistro() != null
+                ? projection.getDiasComRegistro().intValue()
+                : 0;
+        if (c.getDataAdmissao() != null
+                && c.getDataAdmissao().getYear() == ym.getYear()
+                && c.getDataAdmissao().getMonthValue() == ym.getMonthValue()) {
+            LocalDate inicioCalculo = c.getDataAdmissao().isAfter(ym.atDay(1)) ? c.getDataAdmissao() : ym.atDay(1);
+            int diasUteisBase = contarDiasUteisEntre(inicioCalculo, ym.atEndOfMonth());
+            diasTrabalhados = Math.min(diasTrabalhados, diasUteisBase);
+        }
 
         String cargoNome = c.getCargo() != null ? c.getCargo().getNome() : "—";
         String departamentoNome = c.getDepartamento() != null ? c.getDepartamento().getNome() : "—";
@@ -73,6 +80,13 @@ public class ResumoFolhaService {
 
         return colaboradores.stream().map(c -> {
             int diasTrabalhados = diasPorColaborador.getOrDefault(c.getId(), 0L).intValue();
+            if (c.getDataAdmissao() != null
+                    && c.getDataAdmissao().getYear() == ym.getYear()
+                    && c.getDataAdmissao().getMonthValue() == ym.getMonthValue()) {
+                LocalDate inicioCalculo = c.getDataAdmissao().isAfter(ym.atDay(1)) ? c.getDataAdmissao() : ym.atDay(1);
+                int diasUteisBase = contarDiasUteisEntre(inicioCalculo, ym.atEndOfMonth());
+                diasTrabalhados = Math.min(diasTrabalhados, diasUteisBase);
+            }
             String cargoNome = c.getCargo() != null ? c.getCargo().getNome() : "—";
             String departamentoNome = c.getDepartamento() != null ? c.getDepartamento().getNome() : "—";
             String status = c.getStatus() != null ? c.getStatus().name() : "";
@@ -109,6 +123,17 @@ public class ResumoFolhaService {
             if (isDiaUtil(date)) count++;
         }
         return count;
+    }
+
+    private int contarDiasUteisEntre(LocalDate inicio, LocalDate fim) {
+        if (inicio == null || fim == null || inicio.isAfter(fim)) return 0;
+        int dias = 0;
+        LocalDate d = inicio;
+        while (!d.isAfter(fim)) {
+            if (isDiaUtil(d)) dias++;
+            d = d.plusDays(1);
+        }
+        return dias;
     }
 
     private boolean isDiaUtil(LocalDate date) {

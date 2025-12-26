@@ -65,6 +65,21 @@ public class RegistroPonto {
     @Column
     private Integer minutosHoraExtra = 0;
 
+    @Column
+    private Integer minutosDebitoJornada = 0;
+
+    @Column
+    private Integer minutosJornadaPrevista;
+
+    @Column
+    private LocalTime horarioPrevistoEntrada1;
+
+    @Column
+    private Boolean toleranciaAtrasoAtiva;
+
+    @Column
+    private Integer minutosToleranciaAtraso;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusPonto status = StatusPonto.NORMAL;
@@ -139,6 +154,7 @@ public class RegistroPonto {
             totalMinutosIntervalo = 0;
             minutosAtraso = 0;
             minutosHoraExtra = 0;
+            minutosDebitoJornada = 0;
             return;
         }
 
@@ -179,15 +195,27 @@ public class RegistroPonto {
         totalMinutosTrabalhados = totalMinutos;
         totalMinutosIntervalo = totalIntervalo;
 
-        // Calcular atraso e hora extra (baseado em 8 horas = 480 minutos)
-        int jornadaNormal = 480; // 8 horas
+        int jornadaNormal = minutosJornadaPrevista != null ? Math.max(0, minutosJornadaPrevista) : 480;
+
         if (totalMinutos < jornadaNormal) {
-            minutosAtraso = jornadaNormal - totalMinutos;
+            minutosDebitoJornada = jornadaNormal - totalMinutos;
             minutosHoraExtra = 0;
         } else {
-            minutosAtraso = 0;
+            minutosDebitoJornada = 0;
             minutosHoraExtra = totalMinutos - jornadaNormal;
         }
+
+        int atrasoEntrada = 0;
+        if (entrada1 != null && horarioPrevistoEntrada1 != null) {
+            long diff = Duration.between(horarioPrevistoEntrada1, entrada1).toMinutes();
+            atrasoEntrada = (int) Math.max(0, diff);
+            boolean aplicaTol = Boolean.TRUE.equals(toleranciaAtrasoAtiva);
+            int tol = minutosToleranciaAtraso != null ? Math.max(0, minutosToleranciaAtraso) : 0;
+            if (aplicaTol && tol > 0) {
+                atrasoEntrada = Math.max(0, atrasoEntrada - tol);
+            }
+        }
+        minutosAtraso = atrasoEntrada;
 
         // Definir status baseado nos cálculos
         if (minutosAtraso > 0 && !abono) {

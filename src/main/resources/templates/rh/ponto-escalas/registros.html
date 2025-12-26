@@ -158,7 +158,7 @@
                                                 <label for="password" class="form-label">Senha</label>
                                                 <input type="password" class="form-control" id="password" placeholder="Digite sua senha" required>
                                             </div>
-                                            <button type="submit" class="btn btn-primary w-100">
+                                            <button type="submit" class="btn btn-primary w-100" disabled>
                                                 <i class="fas fa-fingerprint"></i> Registrar Ponto
                                             </button>
                                         </form>
@@ -246,12 +246,16 @@
                 if (response.success && response.valida) {
                     colaboradorValidado = response.colaborador;
                     proximoTipo = response.proximoTipo;
-                    
-                    statusBadge.innerHTML = `<i class="fas fa-check-circle"></i> Colaborador: ${response.colaborador} - Próximo: ${proximoTipo}`;
-                    statusBadge.className = 'status-badge status-out';
-                    
-                    // Habilitar o botão de registrar
-                    document.querySelector('button[type="submit"]').disabled = false;
+
+                    if (proximoTipo) {
+                        statusBadge.innerHTML = `<i class="fas fa-check-circle"></i> Colaborador: ${response.colaborador} - Próximo: ${proximoTipo}`;
+                        statusBadge.className = 'status-badge status-out';
+                        document.querySelector('button[type="submit"]').disabled = false;
+                    } else {
+                        statusBadge.innerHTML = `<i class="fas fa-info-circle"></i> Colaborador: ${response.colaborador} - Todos os registros de hoje já foram efetuados`;
+                        statusBadge.className = 'status-badge status-in';
+                        document.querySelector('button[type="submit"]').disabled = true;
+                    }
                 } else {
                     colaboradorValidado = null;
                     proximoTipo = null;
@@ -287,8 +291,14 @@
         const matricula = document.getElementById('employeeId').value.trim();
         const senha = document.getElementById('password').value;
 
+        if (!matricula) {
+            mostrarAlerta('warning', 'Digite a matrícula do funcionário.');
+            return;
+        }
+
         if (!colaboradorValidado) {
-            showNotification('Por favor, digite uma matrícula válida!', 'warning');
+            validarMatricula(matricula);
+            mostrarAlerta('warning', 'Valide a matrícula antes de registrar o ponto.');
             return;
         }
 
@@ -309,7 +319,8 @@
                 if (response.success) {
                     // Atualizar status
                     const statusBadge = document.getElementById('status-badge');
-                    statusBadge.innerHTML = `<i class="fas fa-check-circle"></i> Ponto registrado às ${response.horario}`;
+                    const horarioExibicao = (response.horarioFormatado || response.horario || '').toString().slice(0, 5);
+                    statusBadge.innerHTML = `<i class="fas fa-check-circle"></i> Ponto registrado às ${horarioExibicao || '--:--'}`;
                     statusBadge.className = 'status-badge status-out';
 
                     // Recarregar lista de registros
@@ -329,7 +340,7 @@
             },
             complete: function() {
                 // Reabilitar o botão
-                submitBtn.disabled = false;
+                submitBtn.disabled = !colaboradorValidado || !proximoTipo;
                 submitBtn.innerHTML = originalText;
             }
         });

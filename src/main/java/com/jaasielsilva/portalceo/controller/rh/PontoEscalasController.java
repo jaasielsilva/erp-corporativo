@@ -601,6 +601,38 @@ public class PontoEscalasController {
                         return r;
                     });
 
+            Usuario usuarioCriacao = usuarioService.buscarPorMatricula(matricula).orElse(null);
+            registro.setUsuarioCriacao(usuarioCriacao);
+            registro.setTipoRegistro(RegistroPonto.TipoRegistro.AUTOMATICO);
+
+            List<ColaboradorEscala> escalasVigentes = colaboradorEscalaRepository
+                    .findVigenteByColaboradorAndData(col.getId(), hoje);
+            EscalaTrabalho escala = escalasVigentes != null && !escalasVigentes.isEmpty()
+                    ? escalasVigentes.get(0).getEscalaTrabalho()
+                    : null;
+
+            if (escala != null) {
+                int minutosPrevistos = escala.getCargaHorariaDiaria() != null
+                        ? Math.max(0, escala.getCargaHorariaDiaria())
+                        : 0;
+                if (minutosPrevistos == 0 && escala.getHorarioEntrada1() != null && escala.getHorarioSaida1() != null) {
+                    minutosPrevistos += (int) java.time.Duration.between(escala.getHorarioEntrada1(), escala.getHorarioSaida1()).toMinutes();
+                }
+                if (escala.getHorarioEntrada2() != null && escala.getHorarioSaida2() != null) {
+                    minutosPrevistos += (int) java.time.Duration.between(escala.getHorarioEntrada2(), escala.getHorarioSaida2()).toMinutes();
+                }
+
+                registro.setMinutosJornadaPrevista(minutosPrevistos > 0 ? minutosPrevistos : null);
+                registro.setHorarioPrevistoEntrada1(escala.getHorarioEntrada1());
+                registro.setToleranciaAtrasoAtiva(escala.getToleranciaAtraso());
+                registro.setMinutosToleranciaAtraso(escala.getMinutosTolerancia());
+            } else {
+                registro.setMinutosJornadaPrevista(null);
+                registro.setHorarioPrevistoEntrada1(null);
+                registro.setToleranciaAtrasoAtiva(null);
+                registro.setMinutosToleranciaAtraso(null);
+            }
+
             String proximoTipo = calcularProximoTipo(registro);
             if (proximoTipo == null) {
                 resp.put("success", false);
@@ -800,7 +832,6 @@ public class PontoEscalasController {
                     java.time.LocalTime rSai1 = (java.time.LocalTime) r[2];
                     java.time.LocalTime rEnt2 = (java.time.LocalTime) r[3];
                     java.time.LocalTime rSai2 = (java.time.LocalTime) r[4];
-                    Integer rAtraso = (Integer) r[6];
                     Integer rMinTrab = (Integer) r[7];
                     if (Boolean.TRUE.equals(falta)) {
                         status = "Falta";
@@ -810,9 +841,12 @@ public class PontoEscalasController {
                         status = "Em andamento";
                         proximoTipo = calcularProximoTipoTimes(rEnt1, rSai1, rEnt2, rSai2);
                     }
-                    if (rAtraso != null && rAtraso > 0) {
-                        atrasoMin = rAtraso;
-                        if (!"Falta".equals(status)) status = "Atrasado";
+                    if (rEnt1 != null && hEnt1 != null) {
+                        long diffMin = java.time.Duration.between(hEnt1, rEnt1).toMinutes();
+                        if (diffMin > 0) {
+                            atrasoMin = (int) diffMin;
+                            if (!"Falta".equals(status)) status = "Atrasado";
+                        }
                     }
                     minutosTrabalhados = rMinTrab;
                 } else {

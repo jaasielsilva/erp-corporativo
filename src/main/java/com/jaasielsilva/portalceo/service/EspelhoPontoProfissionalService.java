@@ -320,7 +320,9 @@ public class EspelhoPontoProfissionalService {
         }
 
         RhParametroPonto cfg = pontoRepository.findAll().stream().findFirst().orElse(null);
-        int jornadaNormal = 480; // 8h
+        int jornadaNormal = registro.getMinutosJornadaPrevista() != null
+                ? Math.max(0, registro.getMinutosJornadaPrevista())
+                : 480;
         int tolerancia = cfg != null && cfg.getToleranciaMinutos() != null ? Math.max(0, cfg.getToleranciaMinutos())
                 : 0;
         int arredondamento = cfg != null && cfg.getArredondamentoMinutos() != null
@@ -353,13 +355,15 @@ public class EspelhoPontoProfissionalService {
         int faltas = 0;
         long totalMinutosNormais = 0;
         long totalMinutosExtras = 0;
-        int jornadaNormal = 480;
 
         for (RegistroPonto registro : registros) {
             HorasCalculadas horas = calcularHorasDetalhado(registro);
             if (horas.getTotalMinutos() > 0) {
                 diasTrabalhados++;
-                totalMinutosNormais += Math.min(horas.getTotalMinutos(), jornadaNormal);
+                int jornadaNormalRegistro = registro.getMinutosJornadaPrevista() != null
+                        ? Math.max(0, registro.getMinutosJornadaPrevista())
+                        : 480;
+                totalMinutosNormais += Math.min(horas.getTotalMinutos(), jornadaNormalRegistro);
                 totalMinutosExtras += horas.getExtrasMinutos();
             } else {
                 faltas++;

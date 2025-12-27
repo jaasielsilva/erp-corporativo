@@ -544,7 +544,9 @@ public class PontoEscalasController {
                                        @RequestParam Integer ano,
                                        @RequestParam(required = false) Long departamentoId,
                                        @RequestParam(required = false) Long escalaId,
-                                       @RequestParam(required = false, defaultValue = "5") Integer minimoPorTurno) {
+                                       @RequestParam(required = false, defaultValue = "5") Integer minimoPorTurno,
+                                       @RequestParam(required = false, defaultValue = "0") Integer page,
+                                       @RequestParam(required = false, defaultValue = "10") Integer size) {
         Map<String, Object> resp = new HashMap<>();
         try {
             YearMonth ym = YearMonth.of(ano, mes);
@@ -659,9 +661,20 @@ public class PontoEscalasController {
                 }
             }
 
+            int total = itens.size();
+            int from = Math.max(0, page * size);
+            int to = Math.min(total, from + size);
+            List<Map<String, Object>> content = from >= to ? java.util.Collections.emptyList() : itens.subList(from, to);
+            int totalPages = (int) Math.ceil(total / (double) size);
+            boolean hasPrevious = page > 0 && totalPages > 0;
+            boolean hasNext = page + 1 < totalPages;
             resp.put("success", true);
-            resp.put("items", itens);
-            resp.put("total", itens.size());
+            resp.put("content", content);
+            resp.put("currentPage", page);
+            resp.put("totalPages", totalPages);
+            resp.put("totalElements", total);
+            resp.put("hasPrevious", hasPrevious);
+            resp.put("hasNext", hasNext);
             return resp;
         } catch (Exception e) {
             resp.put("success", false);

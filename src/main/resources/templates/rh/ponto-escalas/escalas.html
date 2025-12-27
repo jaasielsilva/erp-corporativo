@@ -422,45 +422,9 @@
                 <th>Ações</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><span class="alerta-badge cobertura">Cobertura</span></td>
-                <td>Turno da manhã com apenas 4 colaboradores (mínimo: 5)</td>
-                <td>-</td>
-                <td>30/11/2023</td>
-                <td><span class="prioridade-badge alta">Alta</span></td>
-                <td>
-                  <button onclick="resolverConflito(1)" class="btn-icon btn-warning" title="Resolver">
-                    <i class="fas fa-tools"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td><span class="alerta-badge conflito">Conflito</span></td>
-                <td>João Silva escalado em dois turnos no mesmo dia</td>
-                <td>João Silva</td>
-                <td>02/12/2023</td>
-                <td><span class="prioridade-badge critica">Crítica</span></td>
-                <td>
-                  <button onclick="resolverConflito(2)" class="btn-icon btn-danger" title="Resolver">
-                    <i class="fas fa-tools"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td><span class="alerta-badge ausencia">Ausência</span></td>
-                <td>Ana Costa em férias - substituição necessária</td>
-                <td>Ana Costa</td>
-                <td>15/11 - 30/11</td>
-                <td><span class="prioridade-badge media">Média</span></td>
-                <td>
-                  <button onclick="resolverConflito(3)" class="btn-icon btn-info" title="Resolver">
-                    <i class="fas fa-tools"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="alertasBody"></tbody>
           </table>
+          <div id="paginationAlertas" class="pagination" style="text-align:center"></div>
         </article>
       </section>
 
@@ -744,6 +708,7 @@
           document.getElementById('resHoras').textContent = r.horasMesFormatado;
           document.getElementById('resCobertura').textContent = `${r.coberturaPercent}%`;
         }).catch(() => { mostrarAlerta('danger', 'Falha ao carregar resumo'); });
+      carregarAlertas();
     }
 
     function trocarTurno(colaboradorId) {
@@ -769,6 +734,53 @@
     }
 
     function exportarEscala() { mostrarAlerta('info', 'Exportando escala...'); }
+
+    function carregarAlertas(page = 0) {
+      const dep = filtroDepartamentoId || '';
+      const esc = filtroEscalaId || '';
+      fetch(`/rh/ponto-escalas/api/alertas?mes=${calMes}&ano=${calAno}&page=${page}&size=10${dep ? `&departamentoId=${dep}` : ''}${esc ? `&escalaId=${esc}` : ''}`)
+        .then(r => r.json())
+        .then(d => { renderAlertasRows(d); renderAlertasPagination(d); })
+        .catch(() => { renderAlertasRows({ success: false }); renderAlertasPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); });
+    }
+    function renderAlertasRows(d) {
+      const tbody = document.getElementById('alertasBody');
+      tbody.innerHTML = '';
+      if (!d || !d.success || !d.content || d.content.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum alerta encontrado</td></tr>';
+        return;
+      }
+      const rows = d.content.map(it => {
+        const tipoClass = it.tipo === 'Cobertura' ? 'cobertura' : it.tipo === 'Conflito' ? 'conflito' : 'ausencia';
+        const priClass = (it.prioridade || '').toLowerCase() || 'baixa';
+        return `<tr>
+          <td><span class="alerta-badge ${tipoClass}">${it.tipo}</span></td>
+          <td>${it.descricao || '-'}</td>
+          <td>${it.colaborador || '-'}</td>
+          <td>${it.data || '-'}</td>
+          <td><span class="prioridade-badge ${priClass}">${it.prioridade || '-'}</span></td>
+          <td>
+            <button onclick="resolverConflito('${it.tipo}')" class="btn-icon btn-secondary" title="Resolver">
+              <i class="fas fa-tools"></i>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+      tbody.innerHTML = rows;
+    }
+    function renderAlertasPagination(data) {
+      const el = document.getElementById('paginationAlertas');
+      const totalPages = data.totalPages || 0;
+      const totalElements = data.totalElements || 0;
+      const page = data.currentPage || 0;
+      const hasPrev = data.hasPrevious;
+      const hasNext = data.hasNext;
+      let html = '';
+      html += `<div class="pagination-info" style="display:block;margin-bottom:8px;">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} alertas)</div>`;
+      html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="carregarAlertas(${page - 1});return false;" style="margin-right:8px"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled" style="margin-right:8px"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+      html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="carregarAlertas(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+      el.innerHTML = html;
+    }
   </script>
 
   <style>

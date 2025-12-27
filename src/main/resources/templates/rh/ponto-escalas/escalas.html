@@ -731,77 +731,79 @@
                 <button id="btnRegistrarExcecaoDia" class="btn btn-outline-warning">Registrar exceção</button>
               </div>
             `;
-            const res = await Swal.fire({
+            Swal.fire({
               title: 'Ações do dia',
               html,
               showConfirmButton: false,
               showCancelButton: true,
-              cancelButtonText: 'Fechar'
+              cancelButtonText: 'Fechar',
+              didOpen: () => {
+                const bDet = document.getElementById('btnVerDetalhesDia');
+                const bCob = document.getElementById('btnAtribuirCoberturaDia');
+                const bEsp = document.getElementById('btnEspelhoDia');
+                const bExc = document.getElementById('btnRegistrarExcecaoDia');
+                if (bDet) {
+                  bDet.onclick = async () => {
+                    await Swal.fire({ title: 'Detalhes do dia', html, icon: 'info' });
+                  };
+                }
+                if (bCob) {
+                  bCob.onclick = async () => {
+                    if (!diaSelecionado || !escalaId) {
+                      return Swal.fire({ title: 'Atenção', text: 'Dia ou escala não identificados.', icon: 'warning' });
+                    }
+                    const dep = filtroDepartamentoId || '';
+                    const rMain = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${diaSelecionado}${dep ? `&departamentoId=${dep}` : ''}&escalaId=${escalaId}`).then(x => x.json());
+                    const mainList = (rMain && rMain.success) ? rMain.content.filter(c => !c.escaladoNoDia) : [];
+                    let opts = mainList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+                    let escaladosListHtml = '';
+                    if (mainList.length === 0) {
+                      const rAll = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${diaSelecionado}${dep ? `&departamentoId=${dep}` : ''}&escalaId=${escalaId}&incluirEscalados=true`).then(x => x.json());
+                      const escaladosList = (rAll && rAll.success) ? rAll.content.filter(c => c.escaladoNoDia && String(c.id) !== String(colabId)) : [];
+                      const optsEsc = escaladosList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+                      escaladosListHtml = `<div class="mb-2"><label>Candidatos na mesma escala (escalados)</label><div class="reassign-warning"><i class="fas fa-exclamation-triangle"></i> Reatribuição consciente: pode impactar cobertura do turno original.</div><select id="selColabEscaladoDia" class="form-control"><option value="">Selecione...</option>${optsEsc}</select></div>`;
+                    }
+                    const htmlSel = `<div class="mb-2"><label>Colaborador (não escalado)</label><select id="selColabDispDia" class="form-control"><option value="">Selecione...</option>${opts}</select><div class="form-text">Listando apenas colaboradores não escalados no dia.</div></div>${escaladosListHtml}`;
+                    const cfm = await Swal.fire({ title: 'Confirmar Envio', text: 'Atribuir cobertura para este dia?', html: htmlSel, icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', confirmButtonText: 'Sim, confirmar', cancelButtonText: 'Cancelar' });
+                    if (!cfm.isConfirmed) return;
+                    let novoId = document.getElementById('selColabDispDia').value;
+                    if (!novoId) novoId = document.getElementById('selColabEscaladoDia')?.value || '';
+                    if (!novoId) return Swal.fire({ title: 'Atenção', text: 'Selecione um colaborador.', icon: 'warning' });
+                    Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    const ok = await fetch('/rh/ponto-escalas/api/alertas/atribuir-cobertura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ colaboradorId: novoId, escalaId: escalaId, dia: diaSelecionado }) }).then(x => x.json());
+                    Swal.close();
+                    if (ok && ok.success) {
+                      await Swal.fire({ title: 'Sucesso', text: 'Cobertura atribuída.', icon: 'success' });
+                      loadColaboradoresDia(0);
+                    } else {
+                      const msg = ok && ok.message ? ok.message : 'Falha ao atribuir cobertura.';
+                      await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+                    }
+                  };
+                }
+                if (bEsp) {
+                  bEsp.onclick = () => {
+                    if (!diaSelecionado || !matricula || matricula === '-') {
+                      return Swal.fire({ title: 'Atenção', text: 'Matrícula não disponível para gerar espelho.', icon: 'warning' });
+                    }
+                    const parts = diaSelecionado.split('-');
+                    const ano = parseInt(parts[0],10);
+                    const mes = parseInt(parts[1],10);
+                    const url = `/rh/ponto-escalas/relatorio-mensal/pdf?matricula=${encodeURIComponent(matricula)}&mes=${mes}&ano=${ano}`;
+                    window.open(url, '_blank');
+                  };
+                }
+                if (bExc) {
+                  bExc.onclick = () => {
+                    if (!diaSelecionado || !colabId) {
+                      return Swal.fire({ title: 'Atenção', text: 'Dia ou colaborador não identificado.', icon: 'warning' });
+                    }
+                    const url = `/rh/ponto-escalas/excecoes?colaboradorId=${encodeURIComponent(colabId)}&data=${encodeURIComponent(diaSelecionado)}`;
+                    window.open(url, '_blank');
+                  };
+                }
+              }
             });
-            const bDet = document.getElementById('btnVerDetalhesDia');
-            const bCob = document.getElementById('btnAtribuirCoberturaDia');
-            const bEsp = document.getElementById('btnEspelhoDia');
-            const bExc = document.getElementById('btnRegistrarExcecaoDia');
-            if (bDet) {
-              bDet.onclick = async () => {
-                await Swal.fire({ title: 'Detalhes do dia', html, icon: 'info' });
-              };
-            }
-            if (bCob) {
-              bCob.onclick = async () => {
-                if (!diaSelecionado || !escalaId) {
-                  return Swal.fire({ title: 'Atenção', text: 'Dia ou escala não identificados.', icon: 'warning' });
-                }
-                const dep = filtroDepartamentoId || '';
-                const rMain = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${diaSelecionado}${dep ? `&departamentoId=${dep}` : ''}&escalaId=${escalaId}`).then(x => x.json());
-                const mainList = (rMain && rMain.success) ? rMain.content.filter(c => !c.escaladoNoDia) : [];
-                let opts = mainList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-                let escaladosListHtml = '';
-                if (mainList.length === 0) {
-                  const rAll = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${diaSelecionado}${dep ? `&departamentoId=${dep}` : ''}&escalaId=${escalaId}&incluirEscalados=true`).then(x => x.json());
-                  const escaladosList = (rAll && rAll.success) ? rAll.content.filter(c => c.escaladoNoDia && String(c.id) !== String(colabId)) : [];
-                  const optsEsc = escaladosList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-                  escaladosListHtml = `<div class="mb-2"><label>Candidatos na mesma escala (escalados)</label><div class="reassign-warning"><i class="fas fa-exclamation-triangle"></i> Reatribuição consciente: pode impactar cobertura do turno original.</div><select id="selColabEscaladoDia" class="form-control"><option value="">Selecione...</option>${optsEsc}</select></div>`;
-                }
-                const htmlSel = `<div class="mb-2"><label>Colaborador (não escalado)</label><select id="selColabDispDia" class="form-control"><option value="">Selecione...</option>${opts}</select><div class="form-text">Listando apenas colaboradores não escalados no dia.</div></div>${escaladosListHtml}`;
-                const cfm = await Swal.fire({ title: 'Confirmar Envio', text: 'Atribuir cobertura para este dia?', html: htmlSel, icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', confirmButtonText: 'Sim, confirmar', cancelButtonText: 'Cancelar' });
-                if (!cfm.isConfirmed) return;
-                let novoId = document.getElementById('selColabDispDia').value;
-                if (!novoId) novoId = document.getElementById('selColabEscaladoDia')?.value || '';
-                if (!novoId) return Swal.fire({ title: 'Atenção', text: 'Selecione um colaborador.', icon: 'warning' });
-                Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                const ok = await fetch('/rh/ponto-escalas/api/alertas/atribuir-cobertura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ colaboradorId: novoId, escalaId: escalaId, dia: diaSelecionado }) }).then(x => x.json());
-                Swal.close();
-                if (ok && ok.success) {
-                  await Swal.fire({ title: 'Sucesso', text: 'Cobertura atribuída.', icon: 'success' });
-                  loadColaboradoresDia(0);
-                } else {
-                  const msg = ok && ok.message ? ok.message : 'Falha ao atribuir cobertura.';
-                  await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
-                }
-              };
-            }
-            if (bEsp) {
-              bEsp.onclick = () => {
-                if (!diaSelecionado || !matricula || matricula === '-') {
-                  return Swal.fire({ title: 'Atenção', text: 'Matrícula não disponível para gerar espelho.', icon: 'warning' });
-                }
-                const parts = diaSelecionado.split('-');
-                const ano = parseInt(parts[0],10);
-                const mes = parseInt(parts[1],10);
-                const url = `/rh/ponto-escalas/relatorio-mensal/pdf?matricula=${encodeURIComponent(matricula)}&mes=${mes}&ano=${ano}`;
-                window.open(url, '_blank');
-              };
-            }
-            if (bExc) {
-              bExc.onclick = () => {
-                if (!diaSelecionado || !colabId) {
-                  return Swal.fire({ title: 'Atenção', text: 'Dia ou colaborador não identificado.', icon: 'warning' });
-                }
-                const url = `/rh/ponto-escalas/excecoes?colaboradorId=${encodeURIComponent(colabId)}&data=${encodeURIComponent(diaSelecionado)}`;
-                window.open(url, '_blank');
-              };
-            }
           }
     function renderPaginationDia(data) {
       const el = document.getElementById('paginationDia');

@@ -8,6 +8,7 @@ import com.jaasielsilva.portalceo.repository.ColaboradorEscalaRepository;
 import com.jaasielsilva.portalceo.repository.RegistroPontoRepository;
 import com.jaasielsilva.portalceo.repository.EscalaTrabalhoRepository;
 import com.jaasielsilva.portalceo.repository.RhParametroPontoRepository;
+import com.jaasielsilva.portalceo.repository.SolicitacaoFeriasRepository;
 import com.jaasielsilva.portalceo.model.RhParametroPonto;
 import com.jaasielsilva.portalceo.service.DepartamentoService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
@@ -61,6 +62,8 @@ public class PontoEscalasController {
     private UsuarioService usuarioService;
     @Autowired
     private RhParametroPontoRepository pontoRepository;
+    @Autowired
+    private SolicitacaoFeriasRepository feriasRepository;
 
     @GetMapping("/registros")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
@@ -531,6 +534,140 @@ public class PontoEscalasController {
         resp.put("success", true);
         resp.put("message", exigeAprovacao ? "Solicitação registrada e enviada para aprovação" : "Correção registrada automaticamente");
         return resp;
+    }
+
+    @GetMapping("/api/alertas")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Map<String, Object> alertas(@RequestParam Integer mes,
+                                       @RequestParam Integer ano,
+                                       @RequestParam(required = false) Long departamentoId,
+                                       @RequestParam(required = false) Long escalaId,
+                                       @RequestParam(required = false, defaultValue = "5") Integer minimoPorTurno) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            YearMonth ym = YearMonth.of(ano, mes);
+            LocalDate inicio = ym.atDay(1);
+            LocalDate fim = ym.atEndOfMonth();
+
+            List<Object[]> atribs = colaboradorEscalaRepository.listarAtribuicoesNoPeriodo(inicio, fim, departamentoId, escalaId);
+
+            Map<LocalDate, List<Map<String, Object>>> porDiaEscalados = new HashMap<>();
+            Map<String, Integer> contagemPorColaboradorDia = new HashMap<>(); // key: dia|colabId
+            List<Map<String, Object>> itens = new ArrayList<>();
+
+            for (Object[] arr : atribs) {
+                Long colabId = (Long) arr[1];
+                String colabNome = (String) arr[2];
+                Long escalaIdRow = (Long) arr[4];
+                String escalaNome = (String) arr[5];
+                EscalaTrabalho.TipoEscala tipo = (EscalaTrabalho.TipoEscala) arr[6];
+                Boolean seg = (Boolean) arr[7];
+                Boolean ter = (Boolean) arr[8];
+                Boolean qua = (Boolean) arr[9];
+                Boolean qui = (Boolean) arr[10];
+                Boolean sex = (Boolean) arr[11];
+                Boolean sab = (Boolean) arr[12];
+                Boolean dom = (Boolean) arr[13];
+                Integer cargaDiariaMin = (Integer) arr[14];
+                LocalDate atribInicio = (LocalDate) arr[15];
+                LocalDate atribFim = (LocalDate) arr[16];
+                LocalDate vigEscInicio = (LocalDate) arr[17];
+                LocalDate vigEscFim = (LocalDate) arr[18];
+
+                LocalDate startBound = inicio;
+                if (atribInicio != null && atribInicio.isAfter(startBound)) startBound = atribInicio;
+                if (vigEscInicio != null && vigEscInicio.isAfter(startBound)) startBound = vigEscInicio;
+                LocalDate endBound = fim;
+                if (atribFim != null && atribFim.isBefore(endBound)) endBound = atribFim;
+                if (vigEscFim != null && vigEscFim.isBefore(endBound)) endBound = vigEscFim;
+                if (startBound.isAfter(endBound)) continue;
+
+                LocalDate cursor = startBound;
+                while (!cursor.isAfter(endBound)) {
+                    java.time.DayOfWeek dow = cursor.getDayOfWeek();
+                    boolean trabalhaDia = (dow == java.time.DayOfWeek.MONDAY && Boolean.TRUE.equals(seg)) ||
+                                          (dow == java.time.DayOfWeek.TUESDAY && Boolean.TRUE.equals(ter)) ||
+                                          (dow == java.time.DayOfWeek.WEDNESDAY && Boolean.TRUE.equals(qua)) ||
+                                          (dow == java.time.DayOfWeek.THURSDAY && Boolean.TRUE.equals(qui)) ||
+                                          (dow == java.time.DayOfWeek.FRIDAY && Boolean.TRUE.equals(sex)) ||
+                                          (dow == java.time.DayOfWeek.SATURDAY && Boolean.TRUE.equals(sab)) ||
+                                          (dow == java.time.DayOfWeek.SUNDAY && Boolean.TRUE.equals(dom));
+                    if (!trabalhaDia) {
+                        cursor = cursor.plusDays(1);
+                        continue;
+                    }
+                    porDiaEscalados.computeIfAbsent(cursor, k -> new ArrayList<>()).add(Map.of(
+                            "colaboradorId", colabId,
+                            "colaboradorNome", colabNome,
+                            "escalaId", escalaIdRow,
+                            "escalaNome", escalaNome,
+                            "cargaMinutos", cargaDiariaMin != null ? cargaDiariaMin : 0
+                    ));
+                    String key = cursor.toString() + "|" + colabId;
+                    contagemPorColaboradorDia.put(key, contagemPorColaboradorDia.getOrDefault(key, 0) + 1);
+                    cursor = cursor.plusDays(1);
+                }
+            }
+
+            for (Map.Entry<LocalDate, List<Map<String, Object>>> entry : porDiaEscalados.entrySet()) {
+                LocalDate dia = entry.getKey();
+                List<Map<String, Object>> escalados = entry.getValue();
+
+                int total = escalados.size();
+                if (total < minimoPorTurno) {
+                    Map<String, Object> alerta = new HashMap<>();
+                    alerta.put("tipo", "Cobertura");
+                    alerta.put("descricao", "Cobertura insuficiente: " + total + " escalados (mínimo: " + minimoPorTurno + ")");
+                    alerta.put("colaborador", "-");
+                    alerta.put("data", dia.toString());
+                    alerta.put("prioridade", "Alta");
+                    alerta.put("escala", escalados.isEmpty() ? null : escalados.get(0).get("escalaNome"));
+                    itens.add(alerta);
+                }
+
+                for (Map<String, Object> esc : escalados) {
+                    Long colabId = (Long) esc.get("colaboradorId");
+                    String key = dia.toString() + "|" + colabId;
+                    Integer count = contagemPorColaboradorDia.getOrDefault(key, 0);
+                    if (count != null && count > 1) {
+                        Map<String, Object> confl = new HashMap<>();
+                        confl.put("tipo", "Conflito");
+                        confl.put("descricao", "Colaborador escalado em múltiplos turnos no mesmo dia (" + count + ")");
+                        confl.put("colaborador", esc.get("colaboradorNome"));
+                        confl.put("data", dia.toString());
+                        confl.put("prioridade", "Crítica");
+                        itens.add(confl);
+                        // evitar alertar repetidamente para o mesmo colaborador/dia
+                        contagemPorColaboradorDia.put(key, 1);
+                    }
+
+                    try {
+                        Colaborador c = colaboradorService.findById(colabId);
+                        boolean emFerias = feriasRepository.existeConflitoPeriodo(c, dia, dia);
+                        if (emFerias) {
+                            Map<String, Object> aus = new HashMap<>();
+                            aus.put("tipo", "Ausência");
+                            aus.put("descricao", "Colaborador em férias - substituição necessária");
+                            aus.put("colaborador", esc.get("colaboradorNome"));
+                            aus.put("data", dia.toString());
+                            aus.put("prioridade", "Média");
+                            itens.add(aus);
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            resp.put("success", true);
+            resp.put("items", itens);
+            resp.put("total", itens.size());
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao gerar alertas de escalas");
+            return resp;
+        }
     }
 
     @PostMapping("/registros/validar-matricula")

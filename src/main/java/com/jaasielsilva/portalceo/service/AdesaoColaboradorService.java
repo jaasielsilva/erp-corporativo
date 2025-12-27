@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,6 +54,9 @@ public class AdesaoColaboradorService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private PlanoSaudeRepository planoSaudeRepository;
 
     @Autowired
     private EmailService emailService;
@@ -475,9 +479,193 @@ public class AdesaoColaboradorService {
      * Processa benefícios do colaborador
      */
     private void processarBeneficiosColaborador(Colaborador colaborador, AdesaoColaboradorDTO dto) {
-        // Implementar lógica de criação de benefícios
-        // Esta parte depende da estrutura específica dos benefícios no sistema
-        logger.info("Processando benefícios para colaborador: {}", colaborador.getId());
+        List<ColaboradorBeneficio> lista = new ArrayList<>();
+        List<Beneficio> todos = beneficioService.listarTodos();
+
+        Optional<Beneficio> planoSaudeBeneficio = todos.stream()
+                .filter(b -> b.getNome() != null && b.getNome().equalsIgnoreCase("Plano de Saúde"))
+                .findFirst()
+                .or(() -> todos.stream().filter(b -> b.getNome() != null && b.getNome().equalsIgnoreCase("Plano Saude")).findFirst())
+                .or(() -> todos.stream().filter(b -> b.getNome() != null && b.getNome().toLowerCase().contains("plano")).findFirst());
+
+        Optional<Beneficio> valeRefeicaoBeneficio = todos.stream()
+                .filter(b -> b.getNome() != null && b.getNome().equalsIgnoreCase("Vale Refeição"))
+                .findFirst()
+                .or(() -> todos.stream().filter(b -> b.getNome() != null && b.getNome().toLowerCase().contains("refei")).findFirst());
+
+        Optional<Beneficio> valeTransporteBeneficio = todos.stream()
+                .filter(b -> b.getNome() != null && b.getNome().equalsIgnoreCase("Vale Transporte"))
+                .findFirst()
+                .or(() -> todos.stream().filter(b -> b.getNome() != null && b.getNome().toLowerCase().contains("transp")).findFirst());
+
+        Optional<Beneficio> valeAlimentacaoBeneficio = todos.stream()
+                .filter(b -> b.getNome() != null && b.getNome().equalsIgnoreCase("Vale Alimentação"))
+                .findFirst()
+                .or(() -> todos.stream().filter(b -> b.getNome() != null && b.getNome().toLowerCase().contains("aliment")).findFirst());
+
+        if (planoSaudeBeneficio.isPresent()) {
+            BigDecimal valorPlano = BigDecimal.ZERO;
+            Map<String, Object> selecionados = dto.getBeneficiosSelecionados();
+            Map<String, Object> planoMap = null;
+            if (selecionados != null) {
+                Object psUpper = selecionados.get("PLANO_SAUDE");
+                Object psLower = selecionados.get("planoSaude");
+                if (psUpper instanceof Map) planoMap = (Map<String, Object>) psUpper;
+                else if (psLower instanceof Map) planoMap = (Map<String, Object>) psLower;
+            }
+            String planoId = null;
+            Integer dependentes = dto.getPlanoSaudeDependentes() != null ? dto.getPlanoSaudeDependentes() : 0;
+            if (planoMap != null) {
+                Object planoIdObj = planoMap.get("planoId");
+                planoId = planoIdObj != null ? planoIdObj.toString() : null;
+                Object depObj = planoMap.get("dependentes");
+                if (depObj instanceof Number) {
+                    dependentes = ((Number) depObj).intValue();
+                } else if (depObj instanceof String) {
+                    try {
+                        dependentes = Integer.parseInt((String) depObj);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            } else if (dto.getPlanoSaudeId() != null) {
+                planoId = dto.getPlanoSaudeId().toString();
+            }
+            if (planoId != null) {
+                Optional<PlanoSaude> planoOpt = Optional.empty();
+                Optional<PlanoSaude> porCodigo = planoSaudeRepository.findByCodigo(planoId);
+                if (porCodigo.isPresent()) {
+                    planoOpt = porCodigo;
+                } else {
+                    try {
+                        Long idLong = Long.parseLong(planoId);
+                        planoOpt = planoSaudeRepository.findById(idLong);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                if (planoOpt.isPresent()) {
+                    PlanoSaude plano = planoOpt.get();
+                    BigDecimal titular = plano.calcularValorColaboradorTitular();
+                    BigDecimal dep = plano.calcularValorColaboradorDependente();
+                    BigDecimal dependentesTotal = dep.multiply(BigDecimal.valueOf(dependentes));
+                    valorPlano = titular.add(dependentesTotal);
+                }
+            }
+            if (valorPlano.compareTo(BigDecimal.ZERO) > 0) {
+                Beneficio b = planoSaudeBeneficio.get();
+                ColaboradorBeneficio cb = new ColaboradorBeneficio();
+                cb.setColaborador(colaborador);
+                cb.setBeneficio(b);
+                cb.setValor(valorPlano);
+                lista.add(cb);
+            }
+        }
+
+        {
+            BigDecimal valorVR = null;
+            Map<String, Object> selecionados = dto.getBeneficiosSelecionados();
+            Map<String, Object> vrMap = null;
+            if (selecionados != null) {
+                Object vrUpper = selecionados.get("VALE_REFEICAO");
+                Object vrLower = selecionados.get("valeRefeicao");
+                if (vrUpper instanceof Map) vrMap = (Map<String, Object>) vrUpper;
+                else if (vrLower instanceof Map) vrMap = (Map<String, Object>) vrLower;
+            }
+            if (vrMap != null) {
+                Object val = vrMap.get("valor");
+                if (val instanceof Number) {
+                    valorVR = BigDecimal.valueOf(((Number) val).doubleValue());
+                } else if (val instanceof String) {
+                    String s = (String) val;
+                    String nums = s.replaceAll("[^0-9]", "");
+                    if (!nums.isEmpty()) {
+                        valorVR = new BigDecimal(nums + ".00");
+                    }
+                }
+            } else if (dto.getValeRefeicaoValor() != null) {
+                valorVR = dto.getValeRefeicaoValor();
+            }
+            if (valorVR != null && valeRefeicaoBeneficio.isPresent()) {
+                Beneficio b = valeRefeicaoBeneficio.get();
+                ColaboradorBeneficio cb = new ColaboradorBeneficio();
+                cb.setColaborador(colaborador);
+                cb.setBeneficio(b);
+                cb.setValor(valorVR);
+                lista.add(cb);
+            }
+        }
+
+        {
+            BigDecimal valorVT = null;
+            Map<String, Object> selecionados = dto.getBeneficiosSelecionados();
+            Map<String, Object> vtMap = null;
+            if (selecionados != null) {
+                Object vtUpper = selecionados.get("VALE_TRANSPORTE");
+                Object vtLower = selecionados.get("valeTransporte");
+                if (vtUpper instanceof Map) vtMap = (Map<String, Object>) vtUpper;
+                else if (vtLower instanceof Map) vtMap = (Map<String, Object>) vtLower;
+            }
+            if (vtMap != null) {
+                Object val = vtMap.get("valor");
+                if (val instanceof Number) {
+                    valorVT = BigDecimal.valueOf(((Number) val).doubleValue());
+                } else if (val instanceof String) {
+                    String s = (String) val;
+                    String nums = s.replaceAll("[^0-9]", "");
+                    if (!nums.isEmpty()) {
+                        valorVT = new BigDecimal(nums + ".00");
+                    }
+                }
+            } else if (dto.getValeTransporteValor() != null) {
+                valorVT = dto.getValeTransporteValor();
+            }
+            if (valorVT != null && valeTransporteBeneficio.isPresent()) {
+                Beneficio b = valeTransporteBeneficio.get();
+                ColaboradorBeneficio cb = new ColaboradorBeneficio();
+                cb.setColaborador(colaborador);
+                cb.setBeneficio(b);
+                cb.setValor(valorVT);
+                lista.add(cb);
+            }
+        }
+
+        {
+            BigDecimal valorVA = null;
+            Map<String, Object> selecionados = dto.getBeneficiosSelecionados();
+            Map<String, Object> vaMap = null;
+            if (selecionados != null) {
+                Object vaUpper = selecionados.get("VALE_ALIMENTACAO");
+                Object vaLower = selecionados.get("valeAlimentacao");
+                if (vaUpper instanceof Map) vaMap = (Map<String, Object>) vaUpper;
+                else if (vaLower instanceof Map) vaMap = (Map<String, Object>) vaLower;
+            }
+            if (vaMap != null) {
+                Object val = vaMap.get("valor");
+                if (val instanceof Number) {
+                    valorVA = BigDecimal.valueOf(((Number) val).doubleValue());
+                } else if (val instanceof String) {
+                    String s = (String) val;
+                    String nums = s.replaceAll("[^0-9]", "");
+                    if (!nums.isEmpty()) {
+                        valorVA = new BigDecimal(nums + ".00");
+                    }
+                }
+            } else if (dto.getValeAlimentacaoValor() != null) {
+                valorVA = dto.getValeAlimentacaoValor();
+            }
+            if (valorVA != null && valeAlimentacaoBeneficio.isPresent()) {
+                Beneficio b = valeAlimentacaoBeneficio.get();
+                ColaboradorBeneficio cb = new ColaboradorBeneficio();
+                cb.setColaborador(colaborador);
+                cb.setBeneficio(b);
+                cb.setValor(valorVA);
+                lista.add(cb);
+            }
+        }
+
+        if (!lista.isEmpty()) {
+            colaborador.setBeneficios(lista);
+            beneficioService.salvarBeneficiosDoColaborador(colaborador);
+        }
     }
 
     /**

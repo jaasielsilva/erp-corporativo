@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Escalas de Trabalho - ERP Corporativo</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
 </head>
 
 <body>
@@ -67,9 +68,12 @@
                     <span th:text="${e.ativo} ? 'Sim' : 'Não'"></span>
                   </td>
                   <td>
-                    <button class="btn btn-sm btn-primary" th:attr="data-id=${e.id}" onclick="editarEscala(this)"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" th:attr="data-id=${e.id}" onclick="encerrarVigencia(this)"><i class="fas fa-stop"></i></button>
-                    <button class="btn btn-sm btn-secondary" th:attr="data-id=${e.id}" onclick="clonarEscala(this)"><i class="fas fa-clone"></i></button>
+                    <button class="btn btn-sm btn-primary" th:attr="data-id=${e.id}" onclick="editarEscala(this)"><i
+                        class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger" th:attr="data-id=${e.id}" onclick="encerrarVigencia(this)"><i
+                        class="fas fa-stop"></i></button>
+                    <button class="btn btn-sm btn-secondary" th:attr="data-id=${e.id}" onclick="clonarEscala(this)"><i
+                        class="fas fa-clone"></i></button>
                   </td>
                 </tr>
               </tbody>
@@ -77,7 +81,7 @@
           </div>
         </article>
 
-        
+
 
         <!-- Seletor de Período -->
         <article class="card">
@@ -110,7 +114,8 @@
               <input type="text" id="buscaDia" class="form-control" placeholder="Ex.: Ana ou 1234" />
             </div>
             <div class="col">
-              <button class="btn btn-primary" style="margin-top:24px" onclick="carregarCalendario()"><i class="fas fa-search"></i> Atualizar</button>
+              <button class="btn btn-primary" style="margin-top:24px" onclick="carregarCalendario()"><i
+                  class="fas fa-search"></i> Atualizar</button>
             </div>
           </div>
         </article>
@@ -130,7 +135,7 @@
                   <div class="resumo-detalhes">Escalados</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item turnos">
                 <div class="resumo-icon">
                   <i class="fas fa-clock"></i>
@@ -141,7 +146,7 @@
                   <div class="resumo-detalhes">Ativos</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item horas-mes">
                 <div class="resumo-icon">
                   <i class="fas fa-hourglass-half"></i>
@@ -152,7 +157,7 @@
                   <div class="resumo-detalhes">Total planejado</div>
                 </div>
               </div>
-              
+
               <div class="resumo-item cobertura">
                 <div class="resumo-icon">
                   <i class="fas fa-shield-alt"></i>
@@ -182,7 +187,7 @@
                 <span class="sr-only" style="position:absolute;left:-9999px;">Próximo mês</span>
               </button>
             </div>
-            
+
             <div class="calendario-grid">
               <div class="calendario-dias-semana">
                 <div class="dia-semana">Dom</div>
@@ -193,7 +198,7 @@
                 <div class="dia-semana">Sex</div>
                 <div class="dia-semana">Sáb</div>
               </div>
-              
+
               <div class="calendario-dias" id="calendarioDias"></div>
             </div>
           </div>
@@ -216,7 +221,8 @@
                   <div class="col">
                     <label>Tipo</label>
                     <select name="tipo" id="escalaTipo" class="form-control" th:field="*{tipo}" th:remove="tag">
-                      <option th:each="t : ${T(com.jaasielsilva.portalceo.model.EscalaTrabalho$TipoEscala).values()}" th:value="${t}" th:text="${t}"></option>
+                      <option th:each="t : ${T(com.jaasielsilva.portalceo.model.EscalaTrabalho$TipoEscala).values()}"
+                        th:value="${t}" th:text="${t}"></option>
                     </select>
                   </div>
                 </div>
@@ -325,37 +331,64 @@
               trabalhaSabado: document.getElementById('dSab').checked,
               trabalhaDomingo: document.getElementById('dDom').checked
             };
-            var r = await fetch('/rh/ponto-escalas/api/escalas/salvar', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+            var r = await fetch('/rh/ponto-escalas/api/escalas/salvar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             var j = await r.json();
             if (j.success) { location.reload(); }
           }
           async function encerrarVigencia(btn) {
             var id = btn.getAttribute('data-id');
-            var r = await fetch('/rh/ponto-escalas/api/escalas/encerrar', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id: id})});
+            var r = await fetch('/rh/ponto-escalas/api/escalas/encerrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
             var j = await r.json();
             if (j.success) { location.reload(); }
           }
           async function clonarEscala(btn) {
             var id = btn.getAttribute('data-id');
-            var r = await fetch('/rh/ponto-escalas/api/escalas/clonar', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id: id})});
+            var r = await fetch('/rh/ponto-escalas/api/escalas/clonar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
             var j = await r.json();
             if (j.success) { location.reload(); }
           }
         </script>
 
         <style>
-          .card .table-centered { max-width: 1000px; margin: 0 auto; }
-          .table-centered th, .table-centered td { padding: 10px 14px; text-align: center; vertical-align: middle; }
-          .table-centered thead th { font-weight: 600; }
-          .horarios-cell div { line-height: 1.4; }
-          #paginationDia { text-align: center; margin-top: 14px; }
-          #paginationDia .btn { min-width: 120px; }
-          .card h3 { margin-bottom: 16px; }
+          .card .table-centered {
+            max-width: 1000px;
+            margin: 0 auto;
+          }
+
+          .table-centered th,
+          .table-centered td {
+            padding: 10px 14px;
+            text-align: center;
+            vertical-align: middle;
+          }
+
+          .table-centered thead th {
+            font-weight: 600;
+          }
+
+          .horarios-cell div {
+            line-height: 1.4;
+          }
+
+          #paginationDia {
+            text-align: center;
+            margin-top: 14px;
+          }
+
+          #paginationDia .btn {
+            min-width: 120px;
+          }
+
+          .card h3 {
+            margin-bottom: 16px;
+          }
         </style>
 
         <article class="card">
-          <h3 class="text-center"><i class="fas fa-users"></i> Escalados no dia <span id="diaSelecionadoLabel">-</span></h3>
-          <div id="loadingDia" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+          <h3 class="text-center"><i class="fas fa-users"></i> Escalados no dia <span id="diaSelecionadoLabel">-</span>
+          </h3>
+          <div id="loadingDia" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...
+          </div>
           <div class="table-responsive">
             <table class="table table-sm text-center align-middle table-centered" style="border-collapse: separate;">
               <thead>
@@ -444,12 +477,13 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <form class="modal-body">
         <div class="form-row">
           <div class="form-group">
             <label for="nomeEscala">Nome da Escala *</label>
-            <input type="text" id="nomeEscala" name="nomeEscala" required class="form-control" placeholder="Ex: Escala Dezembro 2023">
+            <input type="text" id="nomeEscala" name="nomeEscala" required class="form-control"
+              placeholder="Ex: Escala Dezembro 2023">
           </div>
           <div class="form-group">
             <label for="tipoEscala">Tipo de Escala *</label>
@@ -462,7 +496,7 @@
             </select>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="dataInicioEscala">Data Início *</label>
@@ -473,7 +507,7 @@
             <input type="date" id="dataFimEscala" name="dataFimEscala" required class="form-control">
           </div>
         </div>
-        
+
         <div class="form-group">
           <label for="departamentosEscala">Departamentos</label>
           <select id="departamentosEscala" name="departamentosEscala" multiple class="form-control">
@@ -485,7 +519,7 @@
           </select>
           <small class="form-text">Segure Ctrl para selecionar múltiplos departamentos</small>
         </div>
-        
+
         <div class="form-group">
           <label>Turnos Disponíveis</label>
           <div class="turnos-checkbox">
@@ -507,23 +541,26 @@
             </label>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="minimoColaboradores">Mínimo de Colaboradores por Turno</label>
-            <input type="number" id="minimoColaboradores" name="minimoColaboradores" class="form-control" value="3" min="1">
+            <input type="number" id="minimoColaboradores" name="minimoColaboradores" class="form-control" value="3"
+              min="1">
           </div>
           <div class="form-group">
             <label for="maximoColaboradores">Máximo de Colaboradores por Turno</label>
-            <input type="number" id="maximoColaboradores" name="maximoColaboradores" class="form-control" value="10" min="1">
+            <input type="number" id="maximoColaboradores" name="maximoColaboradores" class="form-control" value="10"
+              min="1">
           </div>
         </div>
-        
+
         <div class="form-group">
           <label for="observacoesEscala">Observações</label>
-          <textarea id="observacoesEscala" name="observacoesEscala" class="form-control" rows="3" placeholder="Observações sobre a escala..."></textarea>
+          <textarea id="observacoesEscala" name="observacoesEscala" class="form-control" rows="3"
+            placeholder="Observações sobre a escala..."></textarea>
         </div>
-        
+
         <div class="form-group">
           <label>
             <input type="checkbox" id="gerarAutomatico" name="gerarAutomatico">
@@ -531,7 +568,7 @@
           </label>
         </div>
       </form>
-      
+
       <div class="modal-footer">
         <button type="button" onclick="fecharModalEscala()" class="btn btn-secondary">
           <i class="fas fa-times"></i> Cancelar
@@ -548,12 +585,12 @@
     function abrirModalEscala() {
       document.getElementById('modalEscala').style.display = 'flex';
     }
-    
+
     function fecharModalEscala() {
       document.getElementById('modalEscala').style.display = 'none';
       document.querySelector('#modalEscala form').reset();
     }
-    
+
     function mostrarAlerta(tipo, texto) {
       const container = document.querySelector('.alert-container-right');
       if (!container) return;
@@ -576,8 +613,8 @@
         mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios.');
       }
     }
-    
-    let calMes = parseInt(document.getElementById('filtroMes')?.value || new Date().getMonth()+1, 10);
+
+    let calMes = parseInt(document.getElementById('filtroMes')?.value || new Date().getMonth() + 1, 10);
     let calAno = parseInt(document.getElementById('filtroAno')?.value || new Date().getFullYear(), 10);
     let filtroDepartamentoId = document.getElementById('filtroDepartamento')?.value || '';
     let filtroEscalaId = document.getElementById('filtroEscala')?.value || '';
@@ -596,30 +633,30 @@
       const esc = filtroEscalaId || '';
       document.getElementById('filtroMes').value = calMes;
       document.getElementById('filtroAno').value = calAno;
-      document.getElementById('resumoMesLabel').textContent = `${String(calMes).padStart(2,'0')}/${calAno}`;
-      fetch(`/rh/ponto-escalas/api/calendario?mes=${calMes}&ano=${calAno}${dep?`&departamentoId=${dep}`:''}${esc?`&escalaId=${esc}`:''}`)
+      document.getElementById('resumoMesLabel').textContent = `${String(calMes).padStart(2, '0')}/${calAno}`;
+      fetch(`/rh/ponto-escalas/api/calendario?mes=${calMes}&ano=${calAno}${dep ? `&departamentoId=${dep}` : ''}${esc ? `&escalaId=${esc}` : ''}`)
         .then(r => r.json())
         .then(data => renderCalendario(data))
-        .catch(() => { document.getElementById('calendarioDias').innerHTML = ''; mostrarAlerta('danger','Falha ao carregar calendário'); });
+        .catch(() => { document.getElementById('calendarioDias').innerHTML = ''; mostrarAlerta('danger', 'Falha ao carregar calendário'); });
       atualizarResumo();
     }
     function renderCalendario(data) {
-      const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-      document.getElementById('calTitulo').textContent = `Calendário - ${meses[data.mes-1]} ${data.ano}`;
-      document.getElementById('calSubtitulo').textContent = `${meses[data.mes-1]} / ${data.ano}`;
+      const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      document.getElementById('calTitulo').textContent = `Calendário - ${meses[data.mes - 1]} ${data.ano}`;
+      document.getElementById('calSubtitulo').textContent = `${meses[data.mes - 1]} / ${data.ano}`;
       const diasEl = document.getElementById('calendarioDias');
       diasEl.innerHTML = '';
-      const ym = new Date(data.ano, data.mes-1, 1);
-      const primeiroDiaSemana = new Date(data.ano, data.mes-1, 1).getDay();
-      for (let i=0;i<primeiroDiaSemana;i++) {
+      const ym = new Date(data.ano, data.mes - 1, 1);
+      const primeiroDiaSemana = new Date(data.ano, data.mes - 1, 1).getDay();
+      for (let i = 0; i < primeiroDiaSemana; i++) {
         diasEl.innerHTML += `<div class="dia-calendario dia-outro-mes"></div>`;
       }
       for (const d of data.days) {
         const hoje = new Date();
-        const isHoje = hoje.getFullYear()===data.ano && (hoje.getMonth()+1)===data.mes && hoje.getDate()===d.day;
+        const isHoje = hoje.getFullYear() === data.ano && (hoje.getMonth() + 1) === data.mes && hoje.getDate() === d.day;
         const classes = ['dia-calendario'];
         if (isHoje) classes.push('hoje');
-        const diaStr = `${String(d.day).padStart(2,'0')}/${String(data.mes).padStart(2,'0')}/${data.ano}`;
+        const diaStr = `${String(d.day).padStart(2, '0')}/${String(data.mes).padStart(2, '0')}/${data.ano}`;
         diasEl.innerHTML += `<div class="${classes.join(' ')}" onclick="verDetalheDia(${d.day})">
           <div><strong>${d.day}</strong></div>
           <div class="escalas-dia">
@@ -628,28 +665,28 @@
         </div>`;
       }
       const hoje = new Date();
-      if (hoje.getFullYear()===data.ano && (hoje.getMonth()+1)===data.mes) { verDetalheDia(hoje.getDate()); }
+      if (hoje.getFullYear() === data.ano && (hoje.getMonth() + 1) === data.mes) { verDetalheDia(hoje.getDate()); }
     }
     function verDetalheDia(dia) {
-      diaSelecionado = `${calAno}-${String(calMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-      document.getElementById('diaSelecionadoLabel').textContent = `${String(dia).padStart(2,'0')}/${String(calMes).padStart(2,'0')}/${calAno}`;
+      diaSelecionado = `${calAno}-${String(calMes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+      document.getElementById('diaSelecionadoLabel').textContent = `${String(dia).padStart(2, '0')}/${String(calMes).padStart(2, '0')}/${calAno}`;
       loadColaboradoresDia(0);
     }
     function showLoadingDia(show) { document.getElementById('loadingDia').style.display = show ? 'block' : 'none'; }
     function renderDiaRows(items) {
       const tbody = document.getElementById('diaBody');
       tbody.innerHTML = '';
-      if (!items || items.length===0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center">Sem colaboradores escalados neste dia</td></tr>'; return; }
+      if (!items || items.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center">Sem colaboradores escalados neste dia</td></tr>'; return; }
       const rows = items.map(it => {
         const horarios = [it.entrada1 && it.saida1 ? `${it.entrada1} - ${it.saida1}` : null, it.entrada2 && it.saida2 ? `${it.entrada2} - ${it.saida2}` : null].filter(Boolean);
         const status = it.status || '-';
         const badgeClass = status.includes('Concluído') ? 'badge-success' : status.includes('Em andamento') ? 'badge-info' : status.includes('Atrasado') ? 'badge-danger' : status.includes('Falta') ? 'badge-danger' : status.includes('Sem registro') ? 'badge-warning' : 'badge-secondary';
         const detalhe = it.atrasoMinutos ? ` (${it.atrasoMinutos} min atraso)` : (it.proximaBatida ? ` (Próx: ${it.proximaBatida})` : '');
         return `<tr>
-          <td class="align-middle">${it.nome||'-'}</td>
-          <td class="align-middle">${it.departamento||'-'}</td>
-          <td class="align-middle">${it.matricula||'-'}</td>
-          <td class="align-middle">${it.escalaNome||'-'}</td>
+          <td class="align-middle">${it.nome || '-'}</td>
+          <td class="align-middle">${it.departamento || '-'}</td>
+          <td class="align-middle">${it.matricula || '-'}</td>
+          <td class="align-middle">${it.escalaNome || '-'}</td>
           <td class="align-middle horarios-cell">${horarios.length ? `<div>${horarios[0]}</div>${horarios[1] ? `<div>${horarios[1]}</div>` : ''}` : '-'}</td>
           <td class="align-middle"><span class="badge ${badgeClass}">${status}${detalhe}</span></td>
           <td class="actions align-middle">
@@ -678,26 +715,26 @@
       const dep = filtroDepartamentoId || '';
       const esc = filtroEscalaId || '';
       const q = document.getElementById('buscaDia')?.value || '';
-      fetch(`/rh/ponto-escalas/api/colaboradores-dia?dia=${encodeURIComponent(diaSelecionado)}&page=${page}&size=20${dep?`&departamentoId=${dep}`:''}${esc?`&escalaId=${esc}`:''}${q?`&q=${encodeURIComponent(q)}`:''}`)
+      fetch(`/rh/ponto-escalas/api/colaboradores-dia?dia=${encodeURIComponent(diaSelecionado)}&page=${page}&size=20${dep ? `&departamentoId=${dep}` : ''}${esc ? `&escalaId=${esc}` : ''}${q ? `&q=${encodeURIComponent(q)}` : ''}`)
         .then(r => r.json())
         .then(data => { renderDiaRows(data.content); renderPaginationDia(data); })
         .catch(() => { renderDiaRows([]); renderPaginationDia({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); })
         .finally(() => showLoadingDia(false));
     }
     function goDiaPage(p) { loadColaboradoresDia(Math.max(0, p)); }
-    document.addEventListener('DOMContentLoaded', function(){
-      document.getElementById('filtroDepartamento')?.addEventListener('change', function(e){ filtroDepartamentoId = e.target.value; carregarCalendario(); });
-      document.getElementById('filtroEscala')?.addEventListener('change', function(e){ filtroEscalaId = e.target.value; carregarCalendario(); });
-      document.getElementById('filtroMes')?.addEventListener('change', function(e){ calMes = parseInt(e.target.value,10)||calMes; carregarCalendario(); });
-      document.getElementById('filtroAno')?.addEventListener('change', function(e){ calAno = parseInt(e.target.value,10)||calAno; carregarCalendario(); });
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('filtroDepartamento')?.addEventListener('change', function (e) { filtroDepartamentoId = e.target.value; carregarCalendario(); });
+      document.getElementById('filtroEscala')?.addEventListener('change', function (e) { filtroEscalaId = e.target.value; carregarCalendario(); });
+      document.getElementById('filtroMes')?.addEventListener('change', function (e) { calMes = parseInt(e.target.value, 10) || calMes; carregarCalendario(); });
+      document.getElementById('filtroAno')?.addEventListener('change', function (e) { calAno = parseInt(e.target.value, 10) || calAno; carregarCalendario(); });
       carregarCalendario();
       setInterval(atualizarResumo, 30000);
     });
 
-    function atualizarResumo(){
+    function atualizarResumo() {
       const dep = filtroDepartamentoId || '';
       const esc = filtroEscalaId || '';
-      fetch(`/rh/ponto-escalas/api/resumo?mes=${calMes}&ano=${calAno}${dep?`&departamentoId=${dep}`:''}${esc?`&escalaId=${esc}`:''}`)
+      fetch(`/rh/ponto-escalas/api/resumo?mes=${calMes}&ano=${calAno}${dep ? `&departamentoId=${dep}` : ''}${esc ? `&escalaId=${esc}` : ''}`)
         .then(r => r.json())
         .then(d => {
           if (!d.success) return;
@@ -706,21 +743,21 @@
           document.getElementById('resTurnos').textContent = r.turnos;
           document.getElementById('resHoras').textContent = r.horasMesFormatado;
           document.getElementById('resCobertura').textContent = `${r.coberturaPercent}%`;
-        }).catch(()=>{ mostrarAlerta('danger','Falha ao carregar resumo'); });
+        }).catch(() => { mostrarAlerta('danger', 'Falha ao carregar resumo'); });
     }
-    
+
     function trocarTurno(colaboradorId) {
       mostrarAlerta('info', `Iniciando troca de turno para colaborador ${colaboradorId}`);
     }
-    
+
     function resolverConflito(conflito) {
       mostrarAlerta('info', `Resolvendo conflito ${conflito}`);
     }
-    
+
     function copiarEscala() {
       mostrarAlerta('info', 'Copiando escala de outro período...');
     }
-    
+
     function gerarEscalaAutomatica() {
       if (confirm('Gerar escala automaticamente? Isso substituirá a escala atual.')) {
         mostrarAlerta('info', 'Gerando escala automaticamente...');
@@ -730,75 +767,74 @@
         }, 2000);
       }
     }
-    
+
     function exportarEscala() { mostrarAlerta('info', 'Exportando escala...'); }
-    document.addEventListener('DOMContentLoaded', function(){ carregarEscala(); });
   </script>
-  
+
   <style>
     .periodo-selector {
       margin: 20px 0;
     }
-    
+
     .resumo-escala {
       margin: 20px 0;
     }
-    
+
     .resumo-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
     }
-    
+
     .resumo-item {
       display: flex;
       align-items: center;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    
+
     .resumo-item.colaboradores {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
-    
+
     .resumo-item.turnos {
       background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       color: white;
     }
-    
+
     .resumo-item.horas-mes {
       background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       color: white;
     }
-    
+
     .resumo-item.cobertura {
       background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
       color: white;
     }
-    
+
     .resumo-icon {
       font-size: 32px;
       margin-right: 20px;
       opacity: 0.9;
     }
-    
+
     .resumo-valor {
       font-size: 24px;
       font-weight: bold;
       margin: 5px 0;
     }
-    
+
     .resumo-detalhes {
       font-size: 14px;
       opacity: 0.9;
     }
-    
+
     .calendario-escala {
       margin: 20px 0;
     }
-    
+
     .calendario-header {
       display: flex;
       align-items: center;
@@ -806,7 +842,7 @@
       margin-bottom: 20px;
       gap: 20px;
     }
-    
+
     .btn-nav {
       background: #007bff;
       color: white;
@@ -815,39 +851,39 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    
+
     .btn-nav:hover {
       background: #0056b3;
     }
-    
+
     .calendario-grid {
       border: 1px solid #ddd;
       border-radius: 8px;
       overflow: hidden;
     }
-    
+
     .calendario-dias-semana {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       background: #f8f9fa;
     }
-    
+
     .dia-semana {
       padding: 10px;
       text-align: center;
       font-weight: bold;
       border-right: 1px solid #ddd;
     }
-    
+
     .dia-semana:last-child {
       border-right: none;
     }
-    
+
     .calendario-dias {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
     }
-    
+
     .dia-calendario {
       min-height: 80px;
       padding: 8px;
@@ -856,33 +892,33 @@
       cursor: pointer;
       position: relative;
     }
-    
+
     .dia-calendario:hover {
       background: #f8f9fa;
     }
-    
+
     .dia-calendario.hoje {
       background: #e3f2fd;
       font-weight: bold;
     }
-    
+
     .dia-calendario.fim-semana {
       background: #fff3e0;
     }
-    
+
     .dia-calendario.feriado {
       background: #ffebee;
     }
-    
+
     .dia-calendario.dia-outro-mes {
       color: #ccc;
       background: #f5f5f5;
     }
-    
+
     .escalas-dia {
       margin-top: 5px;
     }
-    
+
     .escala-turno {
       display: block;
       font-size: 10px;
@@ -891,42 +927,42 @@
       border-radius: 3px;
       text-align: center;
     }
-    
+
     .escala-turno.manha {
       background: #fff3cd;
       color: #856404;
     }
-    
+
     .escala-turno.tarde {
       background: #d1ecf1;
       color: #0c5460;
     }
-    
+
     .escala-turno.noite {
       background: #d4edda;
       color: #155724;
     }
-    
+
     .feriado-label {
       font-size: 10px;
       color: #dc3545;
       font-weight: bold;
       margin-top: 5px;
     }
-    
+
     .turnos-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 20px;
       margin: 20px 0;
     }
-    
+
     .turno-card {
       border: 1px solid #ddd;
       border-radius: 8px;
       overflow: hidden;
     }
-    
+
     .turno-header {
       padding: 15px;
       color: white;
@@ -934,30 +970,30 @@
       justify-content: space-between;
       align-items: center;
     }
-    
+
     .turno-header.manha {
       background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
     }
-    
+
     .turno-header.tarde {
       background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     }
-    
+
     .turno-header.noite {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .turno-count {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
       padding: 4px 8px;
       border-radius: 12px;
       font-size: 12px;
     }
-    
+
     .turno-colaboradores {
       padding: 15px;
     }
-    
+
     .colaborador-turno {
       display: flex;
       align-items: center;
@@ -967,12 +1003,12 @@
       border: 1px solid #eee;
       border-radius: 6px;
     }
-    
+
     .colaborador-info strong {
       display: block;
       margin-bottom: 2px;
     }
-    
+
     .status-badge {
       padding: 4px 8px;
       border-radius: 4px;
@@ -980,17 +1016,17 @@
       font-weight: bold;
       text-transform: uppercase;
     }
-    
+
     .status-badge.presente {
       background: #28a745;
       color: white;
     }
-    
+
     .status-badge.ferias {
       background: #17a2b8;
       color: white;
     }
-    
+
     .alerta-badge {
       padding: 4px 8px;
       border-radius: 4px;
@@ -998,22 +1034,22 @@
       font-weight: bold;
       text-transform: uppercase;
     }
-    
+
     .alerta-badge.cobertura {
       background: #ffc107;
       color: #333;
     }
-    
+
     .alerta-badge.conflito {
       background: #dc3545;
       color: white;
     }
-    
+
     .alerta-badge.ausencia {
       background: #17a2b8;
       color: white;
     }
-    
+
     .prioridade-badge {
       padding: 4px 8px;
       border-radius: 4px;
@@ -1021,43 +1057,43 @@
       font-weight: bold;
       text-transform: uppercase;
     }
-    
+
     .prioridade-badge.baixa {
       background: #28a745;
       color: white;
     }
-    
+
     .prioridade-badge.media {
       background: #ffc107;
       color: #333;
     }
-    
+
     .prioridade-badge.alta {
       background: #fd7e14;
       color: white;
     }
-    
+
     .prioridade-badge.critica {
       background: #dc3545;
       color: white;
     }
-    
+
     .turnos-checkbox {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    
+
     .turnos-checkbox label {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    
+
     .modal-large {
       max-width: 800px;
     }
-    
+
     .form-text {
       font-size: 12px;
       color: #6c757d;
@@ -1066,5 +1102,8 @@
   </style>
 
 </body>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script th:src="@{/js/notifications.js}"></script>
+<script th:src="@{/js/sidebar.js}"></script>
 
 </html>

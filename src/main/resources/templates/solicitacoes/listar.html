@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitações de Acesso - ERP Corporativo</title>
     <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -515,13 +517,21 @@
                                 <label class="filter-label">Status</label>
                                 <select name="status" class="filter-select">
                                     <option value="">Todos os Status</option>
-                                    <option value="PENDENTE" th:selected="${statusFiltro == 'PENDENTE'}">Pendente</option>
-                                    <option value="EM_ANALISE" th:selected="${statusFiltro == 'EM_ANALISE'}">Em Análise</option>
-                                    <option value="APROVADO" th:selected="${statusFiltro == 'APROVADO'}">Aprovado</option>
-                                    <option value="REJEITADO" th:selected="${statusFiltro == 'REJEITADO'}">Rejeitado</option>
-                                    <option value="APROVADO_PARCIAL" th:selected="${statusFiltro == 'APROVADO_PARCIAL'}">Aprovado Parcialmente</option>
-                                    <option value="USUARIO_CRIADO" th:selected="${statusFiltro == 'USUARIO_CRIADO'}">Usuário Criado</option>
-                                    <option value="CANCELADO" th:selected="${statusFiltro == 'CANCELADO'}">Cancelado</option>
+                                    <option value="PENDENTE" th:selected="${statusFiltro == 'PENDENTE'}">Pendente
+                                    </option>
+                                    <option value="EM_ANALISE" th:selected="${statusFiltro == 'EM_ANALISE'}">Em Análise
+                                    </option>
+                                    <option value="APROVADO" th:selected="${statusFiltro == 'APROVADO'}">Aprovado
+                                    </option>
+                                    <option value="REJEITADO" th:selected="${statusFiltro == 'REJEITADO'}">Rejeitado
+                                    </option>
+                                    <option value="APROVADO_PARCIAL"
+                                        th:selected="${statusFiltro == 'APROVADO_PARCIAL'}">Aprovado Parcialmente
+                                    </option>
+                                    <option value="USUARIO_CRIADO" th:selected="${statusFiltro == 'USUARIO_CRIADO'}">
+                                        Usuário Criado</option>
+                                    <option value="CANCELADO" th:selected="${statusFiltro == 'CANCELADO'}">Cancelado
+                                    </option>
                                 </select>
                             </div>
                             <div class="filter-group">
@@ -754,22 +764,12 @@
             }
         }
     </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
 
 </body>
+<script th:src="@{/js/notifications.js}"></script>
+<script th:src="@{/js/sidebar.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </html>

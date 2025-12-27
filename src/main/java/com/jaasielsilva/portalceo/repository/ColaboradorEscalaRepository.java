@@ -88,4 +88,6 @@ public interface ColaboradorEscalaRepository extends JpaRepository<ColaboradorEs
             @Param("fim") LocalDate fim,
             @Param("departamentoId") Long departamentoId,
             @Param("escalaId") Long escalaId);
+
+    long countByEscalaTrabalho_Id(Long escalaId);
 }

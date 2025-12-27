@@ -6,22 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nova Solicitação de Acesso - ERP Corporativo</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/solicitações-nova.css}" />
 
 </head>
 
 <body>
-    <div class="container mt-3">
-        <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${mensagem}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${erro}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+  <div class="container mt-3">
+    <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <span th:text="${mensagem}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${erro}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
@@ -58,7 +60,8 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="colaboradorBusca" class="required">Colaborador</label>
-                <input type="text" id="colaboradorBusca" class="form-control" placeholder="Digite nome, email ou CPF" autocomplete="off" />
+                <input type="text" id="colaboradorBusca" class="form-control" placeholder="Digite nome, email ou CPF"
+                  autocomplete="off" />
                 <input type="hidden" id="colaboradorId" name="colaborador.id" />
                 <div id="colaboradorResultados" class="autocomplete-results"></div>
               </div>
@@ -229,7 +232,7 @@
                 placeholder="Se necessário, especifique sistemas, relatórios ou funcionalidades específicas que o usuário precisa acessar."></textarea>
             </div>
           </div>
-          
+
           <!-- Botões de Ação -->
           <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
             <a href="/solicitacoes" class="btn btn-secondary">
@@ -409,12 +412,10 @@
       });
     }
   </script>
-  
-  <!-- jQuery necessário para o sistema de notificações -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notificações -->
+
   <script th:src="@{/js/notifications.js}"></script>
+  <script th:src="@{/js/sidebar.js}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
 

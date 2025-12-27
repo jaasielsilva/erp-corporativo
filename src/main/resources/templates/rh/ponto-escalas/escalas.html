@@ -9,6 +9,7 @@
   <link href="/css/style.css" rel="stylesheet">
   <link href="/css/sidebar.css" rel="stylesheet">
   <link href="/css/notifications.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -41,7 +42,7 @@
         <article class="card">
           <h3><i class="fas fa-list"></i> Escalas Vigentes</h3>
           <div class="table-responsive">
-            <table class="table table-sm">
+            <table class="table-list">
               <thead>
                 <tr>
                   <th>Nome</th>
@@ -53,32 +54,35 @@
                   <th>Ações</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="escVigBody">
                 <tr th:each="e : ${escalasVigentes}">
                   <td th:text="${e.nome}"></td>
                   <td th:text="${e.getTipoDescricao()}"></td>
                   <td th:text="${e.getDiasTrabalhados()}"></td>
                   <td th:text="${e.getCargaHorariaDiariaFormatada()}"></td>
                   <td>
-                    <span th:text="${e.dataVigenciaInicio}"></span>
+                    <span th:text="${e.dataVigenciaInicio != null ? #temporals.format(e.dataVigenciaInicio, 'dd/MM/yyyy') : '-'}"></span>
                     <span> - </span>
-                    <span th:text="${e.dataVigenciaFim}"></span>
+                    <span th:text="${e.dataVigenciaFim != null ? #temporals.format(e.dataVigenciaFim, 'dd/MM/yyyy') : ''}"></span>
                   </td>
                   <td>
-                    <span th:text="${e.ativo} ? 'Sim' : 'Não'"></span>
+                    <span th:class="'status-badge ' + (${e.ativo} ? 'status-ativo' : 'status-inativo')" th:text="${e.ativo} ? 'Sim' : 'Não'"></span>
                   </td>
                   <td>
-                    <button class="btn btn-sm btn-primary" th:attr="data-id=${e.id}" onclick="editarEscala(this)"><i
+                    <button type="button" class="btn btn-sm btn-primary" th:attr="data-id=${e.id}" onclick="editarEscala(this)"><i
                         class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" th:attr="data-id=${e.id}" onclick="encerrarVigencia(this)"><i
+                    <button type="button" class="btn btn-sm btn-danger" th:attr="data-id=${e.id}" onclick="encerrarVigencia(this)"><i
                         class="fas fa-stop"></i></button>
-                    <button class="btn btn-sm btn-secondary" th:attr="data-id=${e.id}" onclick="clonarEscala(this)"><i
+                    <button type="button" class="btn btn-sm btn-secondary" th:attr="data-id=${e.id}" onclick="clonarEscala(this)"><i
                         class="fas fa-clone"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" th:attr="data-id=${e.id}" onclick="excluirEscala(this)"><i
+                        class="fas fa-trash"></i></button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
+          <div id="paginationEscalas" class="pagination" style="text-align:center"></div>
         </article>
 
 
@@ -102,6 +106,12 @@
               </select>
             </div>
             <div class="col">
+              <label>Busca</label>
+              <input type="text" id="buscaDia" class="form-control" placeholder="Nome ou matrícula" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
               <label>Mês</label>
               <input type="number" id="filtroMes" min="1" max="12" class="form-control" th:value="${mesAtual}" />
             </div>
@@ -109,13 +119,9 @@
               <label>Ano</label>
               <input type="number" id="filtroAno" min="2000" max="2100" class="form-control" th:value="${anoAtual}" />
             </div>
-            <div class="col">
-              <label>Busca (nome ou matrícula)</label>
-              <input type="text" id="buscaDia" class="form-control" placeholder="Ex.: Ana ou 1234" />
-            </div>
-            <div class="col">
-              <button class="btn btn-primary" style="margin-top:24px" onclick="carregarCalendario()"><i
-                  class="fas fa-search"></i> Atualizar</button>
+            <div class="col" style="display:flex;align-items:flex-end;gap:10px;">
+              <button class="btn btn-secondary" onclick="limparFiltros()"><i class="fas fa-eraser"></i> Limpar</button>
+              <button class="btn btn-primary" onclick="carregarCalendario()"><i class="fas fa-search"></i> Atualizar</button>
             </div>
           </div>
         </article>
@@ -204,7 +210,7 @@
           </div>
         </article>
 
-        <div class="modal" id="modalEscala" style="display:none;">
+        <div class="modal hidden" id="modalEscala">
           <div class="modal-content">
             <div class="modal-header">
               <h5 id="modalEscalaTitulo">Nova Escala</h5>
@@ -295,22 +301,61 @@
         </div>
 
         <script>
+          function logModalEscala(evento, dados) {
+            try {
+              window.__modalEscalaLog = window.__modalEscalaLog || [];
+              window.__modalEscalaLog.push({ e: evento, t: Date.now(), d: dados || null });
+              if (window.console && console.debug) console.debug('modalEscala', evento, dados || '');
+            } catch (_) {}
+          }
+          function isModalEscalaVisible() {
+            const m = document.getElementById('modalEscala');
+            if (!m) return false;
+            const cs = window.getComputedStyle(m);
+            return m.classList.contains('show') || cs.display !== 'none';
+          }
+          window.dumpModalEscalaLog = function() {
+            try { console.table(window.__modalEscalaLog || []); } catch (_) {}
+          };
           function abrirModalEscala() {
+            const m = document.getElementById('modalEscala');
+            logModalEscala('abrir.start');
             document.getElementById('modalEscalaTitulo').innerText = 'Nova Escala';
             document.getElementById('formEscala').reset();
-            document.getElementById('modalEscala').style.display = 'block';
+            try { m.style.display = 'flex'; } catch (_) {}
+            m.classList.remove('hidden');
+            m.classList.add('show');
+            window.__modalEscalaOpenedAt = Date.now();
+            logModalEscala('abrir.end', { visible: isModalEscalaVisible() });
           }
           function fecharModalEscala() {
-            document.getElementById('modalEscala').style.display = 'none';
+            const m = document.getElementById('modalEscala');
+            const delta = window.__modalEscalaOpenedAt ? (Date.now() - window.__modalEscalaOpenedAt) : null;
+            if (delta !== null && delta < 200) { logModalEscala('fechar.blocked', { delta }); return; }
+            logModalEscala('fechar.called', { delta, visible: isModalEscalaVisible() });
+            m.classList.remove('show');
+            m.classList.add('hidden');
+            try { m.style.display = 'none'; } catch (_) {}
           }
-          function editarEscala(btn) {
-            var id = btn.getAttribute('data-id');
-            document.getElementById('escalaId').value = id;
-            document.getElementById('modalEscalaTitulo').innerText = 'Editar Escala';
-            document.getElementById('modalEscala').style.display = 'block';
+          async function editarEscala(btn) {
+            const id = btn.getAttribute('data-id');
+            logModalEscala('edit.clicked', { id });
+            const confirm = await Swal.fire({
+              title: 'Editar Escala',
+              text: 'Abrir o formulário para editar os dados da escala selecionada?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#0d6efd',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Editar',
+              cancelButtonText: 'Cancelar'
+            });
+            logModalEscala('edit.confirm', { confirmed: !!confirm.isConfirmed });
+            if (!confirm.isConfirmed) return;
+            window.location.href = `/rh/ponto-escalas/editar?id=${encodeURIComponent(id)}`;
           }
           async function salvarEscala() {
-            var payload = {
+            const payload = {
               id: document.getElementById('escalaId').value || null,
               nome: document.getElementById('escalaNome').value,
               tipo: document.getElementById('escalaTipo').value,
@@ -331,21 +376,90 @@
               trabalhaSabado: document.getElementById('dSab').checked,
               trabalhaDomingo: document.getElementById('dDom').checked
             };
-            var r = await fetch('/rh/ponto-escalas/api/escalas/salvar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            var j = await r.json();
-            if (j.success) { location.reload(); }
+            const confirm = await Swal.fire({
+              title: 'Confirmar Envio',
+              text: 'Salvar alterações da escala?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#198754',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Sim, salvar',
+              cancelButtonText: 'Cancelar'
+            });
+            logModalEscala('save.confirm', { confirmed: !!confirm.isConfirmed });
+            if (!confirm.isConfirmed) return;
+            Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            logModalEscala('save.request.start');
+            const r = await fetch('/rh/ponto-escalas/api/escalas/salvar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(x => x.json()).catch(() => ({ success: false }));
+            Swal.close();
+            if (r && r.success) {
+              await Swal.fire({ title: 'Sucesso', text: 'Escala salva com sucesso.', icon: 'success' });
+              logModalEscala('save.response.success');
+              logModalEscala('save.modal.close.called');
+              fecharModalEscala();
+              location.reload();
+            } else {
+              const msg = r && r.message ? r.message : 'Erro ao salvar escala.';
+              logModalEscala('save.response.error', { msg });
+              await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+            }
           }
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') logModalEscala('esc.pressed', { visible: isModalEscalaVisible() });
+          });
+          (function() {
+            const m = document.getElementById('modalEscala');
+            if (m) m.addEventListener('click', function(e) {
+              if (e.target && e.target.id === 'modalEscala') logModalEscala('overlay.click', { visible: isModalEscalaVisible() });
+            });
+          })();
           async function encerrarVigencia(btn) {
-            var id = btn.getAttribute('data-id');
-            var r = await fetch('/rh/ponto-escalas/api/escalas/encerrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
-            var j = await r.json();
-            if (j.success) { location.reload(); }
+            const id = btn.getAttribute('data-id');
+            const confirm = await Swal.fire({
+              title: 'Confirmar Envio',
+              text: 'Encerrar a vigência desta escala?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#198754',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Sim, encerrar',
+              cancelButtonText: 'Cancelar'
+            });
+            if (!confirm.isConfirmed) return;
+            Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            const r = await fetch('/rh/ponto-escalas/api/escalas/encerrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).then(x => x.json()).catch(() => ({ success: false }));
+            Swal.close();
+            if (r && r.success) {
+              await Swal.fire({ title: 'Sucesso', text: 'Vigência encerrada.', icon: 'success' });
+              location.reload();
+            } else {
+              const msg = r && r.message ? r.message : 'Erro ao encerrar vigência.';
+              await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+            }
           }
           async function clonarEscala(btn) {
-            var id = btn.getAttribute('data-id');
-            var r = await fetch('/rh/ponto-escalas/api/escalas/clonar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
-            var j = await r.json();
-            if (j.success) { location.reload(); }
+            const id = btn.getAttribute('data-id');
+            const confirm = await Swal.fire({
+              title: 'Confirmar Envio',
+              text: 'Clonar esta escala e criar uma cópia?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#198754',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Sim, clonar',
+              cancelButtonText: 'Cancelar'
+            });
+            if (!confirm.isConfirmed) return;
+            Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            const r = await fetch('/rh/ponto-escalas/api/escalas/clonar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).then(x => x.json()).catch(() => ({ success: false }));
+            Swal.close();
+            if (r && r.success) {
+              await Swal.fire({ title: 'Sucesso', text: 'Escala clonada com sucesso.', icon: 'success' });
+              location.reload();
+            } else {
+              const msg = r && r.message ? r.message : 'Erro ao clonar escala.';
+              await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+            }
           }
         </script>
 
@@ -432,129 +546,10 @@
     </main>
   </div>
 
-  <!-- Modal Nova Escala -->
-  <div id="modalEscala" class="modal" style="display: none;">
-    <div class="modal-content modal-large">
-      <div class="modal-header">
-        <h3><i class="fas fa-plus"></i> Nova Escala de Trabalho</h3>
-        <button onclick="fecharModalEscala()" class="btn-close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <form class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="nomeEscala">Nome da Escala *</label>
-            <input type="text" id="nomeEscala" name="nomeEscala" required class="form-control"
-              placeholder="Ex: Escala Dezembro 2023">
-          </div>
-          <div class="form-group">
-            <label for="tipoEscala">Tipo de Escala *</label>
-            <select id="tipoEscala" name="tipoEscala" required class="form-control">
-              <option value="">Selecione...</option>
-              <option value="mensal">Mensal</option>
-              <option value="semanal">Semanal</option>
-              <option value="quinzenal">Quinzenal</option>
-              <option value="personalizada">Personalizada</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="dataInicioEscala">Data Início *</label>
-            <input type="date" id="dataInicioEscala" name="dataInicioEscala" required class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="dataFimEscala">Data Fim *</label>
-            <input type="date" id="dataFimEscala" name="dataFimEscala" required class="form-control">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="departamentosEscala">Departamentos</label>
-          <select id="departamentosEscala" name="departamentosEscala" multiple class="form-control">
-            <option value="ti">TI</option>
-            <option value="vendas">Vendas</option>
-            <option value="financeiro">Financeiro</option>
-            <option value="rh">RH</option>
-            <option value="operacional">Operacional</option>
-          </select>
-          <small class="form-text">Segure Ctrl para selecionar múltiplos departamentos</small>
-        </div>
-
-        <div class="form-group">
-          <label>Turnos Disponíveis</label>
-          <div class="turnos-checkbox">
-            <label>
-              <input type="checkbox" name="turnos" value="manha" checked>
-              Manhã (08:00 - 17:00)
-            </label>
-            <label>
-              <input type="checkbox" name="turnos" value="tarde">
-              Tarde (14:00 - 23:00)
-            </label>
-            <label>
-              <input type="checkbox" name="turnos" value="noite">
-              Noite (22:00 - 07:00)
-            </label>
-            <label>
-              <input type="checkbox" name="turnos" value="comercial">
-              Comercial (08:00 - 18:00)
-            </label>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="minimoColaboradores">Mínimo de Colaboradores por Turno</label>
-            <input type="number" id="minimoColaboradores" name="minimoColaboradores" class="form-control" value="3"
-              min="1">
-          </div>
-          <div class="form-group">
-            <label for="maximoColaboradores">Máximo de Colaboradores por Turno</label>
-            <input type="number" id="maximoColaboradores" name="maximoColaboradores" class="form-control" value="10"
-              min="1">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="observacoesEscala">Observações</label>
-          <textarea id="observacoesEscala" name="observacoesEscala" class="form-control" rows="3"
-            placeholder="Observações sobre a escala..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="gerarAutomatico" name="gerarAutomatico">
-            Gerar escala automaticamente baseada nas preferências dos colaboradores
-          </label>
-        </div>
-      </form>
-
-      <div class="modal-footer">
-        <button type="button" onclick="fecharModalEscala()" class="btn btn-secondary">
-          <i class="fas fa-times"></i> Cancelar
-        </button>
-        <button type="button" onclick="salvarEscala()" class="btn btn-primary">
-          <i class="fas fa-save"></i> Criar Escala
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- Modal secundário removido para evitar conflito de IDs -->
 
   <script th:src="@{/js/script.js}"></script>
   <script>
-    function abrirModalEscala() {
-      document.getElementById('modalEscala').style.display = 'flex';
-    }
-
-    function fecharModalEscala() {
-      document.getElementById('modalEscala').style.display = 'none';
-      document.querySelector('#modalEscala form').reset();
-    }
-
     function mostrarAlerta(tipo, texto) {
       const container = document.querySelector('.alert-container-right');
       if (!container) return;
@@ -567,22 +562,55 @@
       setTimeout(() => { el.remove(); }, 6000);
     }
 
-    function salvarEscala() {
-      const form = document.querySelector('#modalEscala form');
-      if (form.checkValidity()) {
-        mostrarAlerta('success', 'Escala criada com sucesso!');
-        fecharModalEscala();
-        location.reload();
-      } else {
-        mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios.');
-      }
-    }
-
     let calMes = parseInt(document.getElementById('filtroMes')?.value || new Date().getMonth() + 1, 10);
     let calAno = parseInt(document.getElementById('filtroAno')?.value || new Date().getFullYear(), 10);
     let filtroDepartamentoId = document.getElementById('filtroDepartamento')?.value || '';
     let filtroEscalaId = document.getElementById('filtroEscala')?.value || '';
     let diaSelecionado = null;
+    (function initEscalasVigentesPagination(){
+      const tbody = document.getElementById('escVigBody');
+      const pager = document.getElementById('paginationEscalas');
+      if (!tbody || !pager) return;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      let page = 0;
+      const size = 10;
+      function renderPage(p){
+        page = Math.max(0, Math.min(p, Math.ceil(rows.length/size)-1));
+        rows.forEach((tr, idx) => {
+          const show = Math.floor(idx/size) === page;
+          tr.style.display = show ? '' : 'none';
+        });
+        renderPager();
+      }
+      function renderPager(){
+        const totalPages = Math.max(1, Math.ceil(rows.length/size));
+        const totalElements = rows.length;
+        const hasPrev = page > 0;
+        const hasNext = page < totalPages - 1;
+        let html = '';
+        html += `<div class="pagination-info" style="display:block;margin-bottom:8px;">Página ${page + 1} de ${totalPages} (${totalElements} escalas)</div>`;
+        html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="return (window.goEscalasPage(${page - 1}), false)"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+        html += hasNext ? ` <a class="btn btn-secondary" href="#" onclick="return (window.goEscalasPage(${page + 1}), false)">Próxima <i class="fas fa-chevron-right"></i></a>` : ` <span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+        pager.innerHTML = html;
+      }
+      window.goEscalasPage = renderPage;
+      renderPage(0);
+    })();
+    function limparFiltros() {
+      const dep = document.getElementById('filtroDepartamento');
+      const esc = document.getElementById('filtroEscala');
+      const mes = document.getElementById('filtroMes');
+      const ano = document.getElementById('filtroAno');
+      const busca = document.getElementById('buscaDia');
+      if (dep) dep.value = '';
+      if (esc) esc.value = '';
+      if (busca) busca.value = '';
+      calMes = new Date().getMonth() + 1;
+      calAno = new Date().getFullYear();
+      filtroDepartamentoId = '';
+      filtroEscalaId = '';
+      carregarCalendario();
+    }
 
     function mesAnterior() {
       if (calMes === 1) { calMes = 12; calAno--; } else { calMes--; }
@@ -637,29 +665,144 @@
       loadColaboradoresDia(0);
     }
     function showLoadingDia(show) { document.getElementById('loadingDia').style.display = show ? 'block' : 'none'; }
-    function renderDiaRows(items) {
-      const tbody = document.getElementById('diaBody');
-      tbody.innerHTML = '';
-      if (!items || items.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center">Sem colaboradores escalados neste dia</td></tr>'; return; }
-      const rows = items.map(it => {
-        const horarios = [it.entrada1 && it.saida1 ? `${it.entrada1} - ${it.saida1}` : null, it.entrada2 && it.saida2 ? `${it.entrada2} - ${it.saida2}` : null].filter(Boolean);
-        const status = it.status || '-';
-        const badgeClass = status.includes('Concluído') ? 'badge-success' : status.includes('Em andamento') ? 'badge-info' : status.includes('Atrasado') ? 'badge-danger' : status.includes('Falta') ? 'badge-danger' : status.includes('Sem registro') ? 'badge-warning' : 'badge-secondary';
-        const detalhe = it.atrasoMinutos ? ` (${it.atrasoMinutos} min atraso)` : (it.proximaBatida ? ` (Próx: ${it.proximaBatida})` : '');
-        return `<tr>
-          <td class="align-middle">${it.nome || '-'}</td>
-          <td class="align-middle">${it.departamento || '-'}</td>
-          <td class="align-middle">${it.matricula || '-'}</td>
-          <td class="align-middle">${it.escalaNome || '-'}</td>
-          <td class="align-middle horarios-cell">${horarios.length ? `<div>${horarios[0]}</div>${horarios[1] ? `<div>${horarios[1]}</div>` : ''}` : '-'}</td>
-          <td class="align-middle"><span class="badge ${badgeClass}">${status}${detalhe}</span></td>
-          <td class="actions align-middle">
-            <button class="btn btn-sm btn-secondary" onclick="abrirModalEscala()" title="Criar nova escala"><i class="fas fa-plus"></i></button>
-          </td>
-        </tr>`;
-      }).join('');
-      tbody.innerHTML = rows;
-    }
+          function renderDiaRows(items) {
+            const tbody = document.getElementById('diaBody');
+            tbody.innerHTML = '';
+            if (!items || items.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="text-center">Sem colaboradores escalados neste dia</td></tr>'; return; }
+            const rows = items.map(it => {
+              const horarios = [it.entrada1 && it.saida1 ? `${it.entrada1} - ${it.saida1}` : null, it.entrada2 && it.saida2 ? `${it.entrada2} - ${it.saida2}` : null].filter(Boolean);
+              const status = it.status || '-';
+              const badgeClass = status.includes('Concluído') ? 'badge-success' : status.includes('Em andamento') ? 'badge-info' : status.includes('Atrasado') ? 'badge-danger' : status.includes('Falta') ? 'badge-danger' : status.includes('Sem registro') ? 'badge-warning' : 'badge-secondary';
+              const detalhe = it.atrasoMinutos ? ` (${it.atrasoMinutos} min atraso)` : (it.proximaBatida ? ` (Próx: ${it.proximaBatida})` : '');
+              return `<tr>
+                <td class="align-middle">${it.nome || '-'}</td>
+                <td class="align-middle">${it.departamento || '-'}</td>
+                <td class="align-middle">${it.matricula || '-'}</td>
+                <td class="align-middle">${it.escalaNome || '-'}</td>
+                <td class="align-middle horarios-cell">${horarios.length ? `<div>${horarios[0]}</div>${horarios[1] ? `<div>${horarios[1]}</div>` : ''}` : '-'}</td>
+                <td class="align-middle"><span class="badge ${badgeClass}">${status}${detalhe}</span></td>
+                <td class="actions align-middle">
+            <button type="button" class="btn btn-sm btn-outline-primary" 
+                          title="Ações do dia" 
+                          onclick="abrirAcoesDia(this)" 
+                          data-colab-id="${it.id}" 
+                          data-escala-id="${it.escalaId}" 
+                          data-nome="${it.nome}" 
+                          data-departamento="${it.departamento}" 
+                          data-matricula="${it.matricula}" 
+                          data-escala-nome="${it.escalaNome}" 
+                          data-entrada1="${it.entrada1 || ''}" 
+                          data-saida1="${it.saida1 || ''}" 
+                          data-entrada2="${it.entrada2 || ''}" 
+                          data-saida2="${it.saida2 || ''}" 
+                          data-status="${status}">
+                    <i class="fas fa-ellipsis-h"></i>
+                  </button>
+                </td>
+              </tr>`;
+            }).join('');
+            tbody.innerHTML = rows;
+          }
+          async function abrirAcoesDia(btn) {
+            const colabId = btn.getAttribute('data-colab-id');
+            const escalaId = btn.getAttribute('data-escala-id');
+            const nome = btn.getAttribute('data-nome');
+            const departamento = btn.getAttribute('data-departamento');
+            const matricula = btn.getAttribute('data-matricula') || '-';
+            const escalaNome = btn.getAttribute('data-escala-nome') || '-';
+            const e1 = btn.getAttribute('data-entrada1') || '';
+            const s1 = btn.getAttribute('data-saida1') || '';
+            const e2 = btn.getAttribute('data-entrada2') || '';
+            const s2 = btn.getAttribute('data-saida2') || '';
+            const status = btn.getAttribute('data-status') || '-';
+            const horariosHtml = (e1 && s1 ? `<div>${e1} - ${s1}</div>` : '') + (e2 && s2 ? `<div>${e2} - ${s2}</div>` : '');
+            const html = `
+              <div class="mb-3">
+                <div><strong>${nome}</strong> (${departamento || '-'})</div>
+                <div class="small text-muted">Matrícula: ${matricula}</div>
+                <div>Escala: ${escalaNome}</div>
+                <div>Horários: ${horariosHtml || '-'}</div>
+                <div>Status: ${status}</div>
+              </div>
+              <div class="d-grid gap-2">
+                <button id="btnVerDetalhesDia" class="btn btn-outline-secondary">Ver detalhes</button>
+                <button id="btnAtribuirCoberturaDia" class="btn btn-primary">Atribuir cobertura neste dia</button>
+                <button id="btnEspelhoDia" class="btn btn-outline-primary">Abrir espelho do mês (PDF)</button>
+                <button id="btnRegistrarExcecaoDia" class="btn btn-outline-warning">Registrar exceção</button>
+              </div>
+            `;
+            const res = await Swal.fire({
+              title: 'Ações do dia',
+              html,
+              showConfirmButton: false,
+              showCancelButton: true,
+              cancelButtonText: 'Fechar'
+            });
+            const bDet = document.getElementById('btnVerDetalhesDia');
+            const bCob = document.getElementById('btnAtribuirCoberturaDia');
+            const bEsp = document.getElementById('btnEspelhoDia');
+            const bExc = document.getElementById('btnRegistrarExcecaoDia');
+            if (bDet) {
+              bDet.onclick = async () => {
+                await Swal.fire({ title: 'Detalhes do dia', html, icon: 'info' });
+              };
+            }
+            if (bCob) {
+              bCob.onclick = async () => {
+                if (!diaSelecionado || !escalaId) {
+                  return Swal.fire({ title: 'Atenção', text: 'Dia ou escala não identificados.', icon: 'warning' });
+                }
+                const dep = filtroDepartamentoId || '';
+                const rMain = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${diaSelecionado}${dep ? `&departamentoId=${dep}` : ''}&escalaId=${escalaId}`).then(x => x.json());
+                const mainList = (rMain && rMain.success) ? rMain.content.filter(c => !c.escaladoNoDia) : [];
+                let opts = mainList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+                let escaladosListHtml = '';
+                if (mainList.length === 0) {
+                  const rAll = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${diaSelecionado}${dep ? `&departamentoId=${dep}` : ''}&escalaId=${escalaId}&incluirEscalados=true`).then(x => x.json());
+                  const escaladosList = (rAll && rAll.success) ? rAll.content.filter(c => c.escaladoNoDia && String(c.id) !== String(colabId)) : [];
+                  const optsEsc = escaladosList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+                  escaladosListHtml = `<div class="mb-2"><label>Candidatos na mesma escala (escalados)</label><div class="reassign-warning"><i class="fas fa-exclamation-triangle"></i> Reatribuição consciente: pode impactar cobertura do turno original.</div><select id="selColabEscaladoDia" class="form-control"><option value="">Selecione...</option>${optsEsc}</select></div>`;
+                }
+                const htmlSel = `<div class="mb-2"><label>Colaborador (não escalado)</label><select id="selColabDispDia" class="form-control"><option value="">Selecione...</option>${opts}</select><div class="form-text">Listando apenas colaboradores não escalados no dia.</div></div>${escaladosListHtml}`;
+                const cfm = await Swal.fire({ title: 'Confirmar Envio', text: 'Atribuir cobertura para este dia?', html: htmlSel, icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', confirmButtonText: 'Sim, confirmar', cancelButtonText: 'Cancelar' });
+                if (!cfm.isConfirmed) return;
+                let novoId = document.getElementById('selColabDispDia').value;
+                if (!novoId) novoId = document.getElementById('selColabEscaladoDia')?.value || '';
+                if (!novoId) return Swal.fire({ title: 'Atenção', text: 'Selecione um colaborador.', icon: 'warning' });
+                Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                const ok = await fetch('/rh/ponto-escalas/api/alertas/atribuir-cobertura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ colaboradorId: novoId, escalaId: escalaId, dia: diaSelecionado }) }).then(x => x.json());
+                Swal.close();
+                if (ok && ok.success) {
+                  await Swal.fire({ title: 'Sucesso', text: 'Cobertura atribuída.', icon: 'success' });
+                  loadColaboradoresDia(0);
+                } else {
+                  const msg = ok && ok.message ? ok.message : 'Falha ao atribuir cobertura.';
+                  await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+                }
+              };
+            }
+            if (bEsp) {
+              bEsp.onclick = () => {
+                if (!diaSelecionado || !matricula || matricula === '-') {
+                  return Swal.fire({ title: 'Atenção', text: 'Matrícula não disponível para gerar espelho.', icon: 'warning' });
+                }
+                const parts = diaSelecionado.split('-');
+                const ano = parseInt(parts[0],10);
+                const mes = parseInt(parts[1],10);
+                const url = `/rh/ponto-escalas/relatorio-mensal/pdf?matricula=${encodeURIComponent(matricula)}&mes=${mes}&ano=${ano}`;
+                window.open(url, '_blank');
+              };
+            }
+            if (bExc) {
+              bExc.onclick = () => {
+                if (!diaSelecionado || !colabId) {
+                  return Swal.fire({ title: 'Atenção', text: 'Dia ou colaborador não identificado.', icon: 'warning' });
+                }
+                const url = `/rh/ponto-escalas/excecoes?colaboradorId=${encodeURIComponent(colabId)}&data=${encodeURIComponent(diaSelecionado)}`;
+                window.open(url, '_blank');
+              };
+            }
+          }
     function renderPaginationDia(data) {
       const el = document.getElementById('paginationDia');
       const totalPages = data.totalPages || 0;
@@ -740,7 +883,7 @@
       const esc = filtroEscalaId || '';
       fetch(`/rh/ponto-escalas/api/alertas?mes=${calMes}&ano=${calAno}&page=${page}&size=10${dep ? `&departamentoId=${dep}` : ''}${esc ? `&escalaId=${esc}` : ''}`)
         .then(r => r.json())
-        .then(d => { renderAlertasRows(d); renderAlertasPagination(d); })
+        .then(d => { window.__alertasItems = d.content || []; renderAlertasRows(d); renderAlertasPagination(d); })
         .catch(() => { renderAlertasRows({ success: false }); renderAlertasPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); });
     }
     function renderAlertasRows(d) {
@@ -750,23 +893,131 @@
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum alerta encontrado</td></tr>';
         return;
       }
-      const rows = d.content.map(it => {
+      const rows = d.content.map((it, idx) => {
         const tipoClass = it.tipo === 'Cobertura' ? 'cobertura' : it.tipo === 'Conflito' ? 'conflito' : 'ausencia';
         const priClass = (it.prioridade || '').toLowerCase() || 'baixa';
+        const resolvidoBadge = it.resolvido ? `<span class="status-badge resolvido">Resolvido</span>` : '';
+        const resolvidoInfo = it.resolvido && it.resolvidoEm ? `<div class="form-text">Resolvido em ${it.resolvidoEm}</div>` : '';
         return `<tr>
-          <td><span class="alerta-badge ${tipoClass}">${it.tipo}</span></td>
-          <td>${it.descricao || '-'}</td>
+          <td><span class="alerta-badge ${tipoClass}">${it.tipo}</span> ${resolvidoBadge}</td>
+          <td>${it.descricao || '-'}${resolvidoInfo}</td>
           <td>${it.colaborador || '-'}</td>
           <td>${it.data || '-'}</td>
           <td><span class="prioridade-badge ${priClass}">${it.prioridade || '-'}</span></td>
           <td>
-            <button onclick="resolverConflito('${it.tipo}')" class="btn-icon btn-secondary" title="Resolver">
+            <button onclick="abrirAcaoAlerta(${idx})" class="btn-icon btn-secondary" title="Resolver">
               <i class="fas fa-tools"></i>
             </button>
           </td>
         </tr>`;
       }).join('');
       tbody.innerHTML = rows;
+    }
+    async function abrirAcaoAlerta(idx) {
+      const it = (window.__alertasItems || [])[idx];
+      if (!it) return;
+      if (it.tipo === 'Cobertura') return acaoCobertura(it);
+      if (it.tipo === 'Conflito') return acaoConflito(it);
+      return acaoAusencia(it);
+    }
+    async function acaoCobertura(it) {
+      const dia = it.data;
+      const dep = filtroDepartamentoId || '';
+      const escId = it.escalaId || filtroEscalaId || '';
+      const rMain = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${dia}${dep ? `&departamentoId=${dep}` : ''}${escId ? `&escalaId=${escId}` : ''}`).then(x => x.json());
+      const mainList = (rMain && rMain.success) ? rMain.content.filter(c => !c.escaladoNoDia) : [];
+      let opts = mainList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      let escaladosListHtml = '';
+      if (mainList.length === 0) {
+        const rAll = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${dia}${dep ? `&departamentoId=${dep}` : ''}${escId ? `&escalaId=${escId}` : ''}&incluirEscalados=true`).then(x => x.json());
+        const escaladosList = (rAll && rAll.success) ? rAll.content.filter(c => c.escaladoNoDia) : [];
+        const optsEsc = escaladosList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+        escaladosListHtml = `<div class="mb-2"><label>Candidatos na mesma escala (escalados)</label><div class="reassign-warning"><i class="fas fa-exclamation-triangle"></i> Reatribuição consciente: pode impactar cobertura do turno original.</div><select id="selColabEscalado" class="form-control"><option value="">Selecione...</option>${optsEsc}</select></div>`;
+      }
+      const escSelect = document.getElementById('filtroEscala');
+      const escOpt = escSelect ? Array.from(escSelect.querySelectorAll('option')).map(o => `<option value="${o.value}" ${String(o.value)===String(escId)?'selected':''}>${o.textContent}</option>`).join('') : '';
+      const html = `<div class="mb-2"><label>Colaborador (não escalado)</label><select id="selColabDisp" class="form-control"><option value="">Selecione...</option>${opts}</select><div class="form-text">Listando apenas colaboradores não escalados no dia.</div></div>${escaladosListHtml}<div class="mb-2"><label>Escala</label><select id="selEscala" class="form-control">${escOpt}</select></div>`;
+      const res = await Swal.fire({ title: 'Confirmar Envio', text: 'Confirmar atribuição de cobertura para o dia selecionado?', html, icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', confirmButtonText: 'Sim, confirmar', cancelButtonText: 'Cancelar' });
+      if (!res.isConfirmed) return;
+      let colabId = document.getElementById('selColabDisp').value;
+      if (!colabId) colabId = document.getElementById('selColabEscalado')?.value || '';
+      const escalaId = document.getElementById('selEscala').value;
+      if (!colabId || !escalaId) return Swal.fire({ title: 'Atenção', text: 'Selecione colaborador e escala.', icon: 'warning' });
+      Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+      const ok = await fetch('/rh/ponto-escalas/api/alertas/atribuir-cobertura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ colaboradorId: colabId, escalaId: escalaId, dia }) }).then(x => x.json());
+      Swal.close();
+      if (ok && ok.success) {
+        it.resolvido = true;
+        it.resolvidoEm = new Date().toLocaleString('pt-BR');
+        await Swal.fire({ title: 'Sucesso', text: 'Cobertura atribuída.', icon: 'success' });
+        renderAlertasRows({ success: true, content: window.__alertasItems || [] });
+      } else {
+        const msg = ok && ok.message ? ok.message : 'Falha ao atribuir cobertura.';
+        await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+      }
+    }
+    async function acaoConflito(it) {
+      const dia = it.data;
+      const colabId = it.colaboradorId;
+      if (!colabId) return Swal.fire({ title: 'Atenção', text: 'Colaborador não identificado.', icon: 'warning' });
+      const r = await fetch(`/rh/ponto-escalas/api/alertas/atribuicoes-dia?colaboradorId=${colabId}&dia=${dia}`).then(x => x.json());
+      const list = (r && r.success) ? r.content : [];
+      const opts = list.map(a => `<option value="${a.escalaId}">${a.escalaNome}</option>`).join('');
+      const html = `<div class="mb-2"><label>Manter escala</label><select id="selManterEscala" class="form-control"><option value="">Escolher...</option>${opts}</select></div>`;
+      const res = await Swal.fire({ title: 'Confirmar Envio', text: 'Remover duplicidade mantendo a escala selecionada?', html, icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', confirmButtonText: 'Sim, confirmar', cancelButtonText: 'Cancelar' });
+      if (!res.isConfirmed) return;
+      const manter = document.getElementById('selManterEscala').value || null;
+      Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+      const ok = await fetch('/rh/ponto-escalas/api/alertas/resolver-conflito', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ colaboradorId: colabId, dia, manterEscalaId: manter }) }).then(x => x.json());
+      Swal.close();
+      if (ok && ok.success) {
+        it.resolvido = true;
+        it.resolvidoEm = new Date().toLocaleString('pt-BR');
+        await Swal.fire({ title: 'Sucesso', text: 'Conflito resolvido.', icon: 'success' });
+        renderAlertasRows({ success: true, content: window.__alertasItems || [] });
+      } else {
+        const msg = ok && ok.message ? ok.message : 'Falha ao resolver conflito.';
+        await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+      }
+    }
+    async function acaoAusencia(it) {
+      const dia = it.data;
+      const colabAusenteId = it.colaboradorId;
+      const dep = filtroDepartamentoId || '';
+      let escId = it.escalaId || '';
+      if (!escId) {
+        const rr = await fetch(`/rh/ponto-escalas/api/alertas/atribuicoes-dia?colaboradorId=${colabAusenteId}&dia=${dia}`).then(x => x.json());
+        if (rr && rr.success && rr.content && rr.content.length > 0) escId = rr.content[0].escalaId || '';
+      }
+      const rMain = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${dia}${dep ? `&departamentoId=${dep}` : ''}${escId ? `&escalaId=${escId}` : ''}`).then(x => x.json());
+      const mainList = (rMain && rMain.success) ? rMain.content.filter(c => !c.escaladoNoDia) : [];
+      const opts = mainList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      let escaladosListHtml = '';
+      if (mainList.length === 0) {
+        const rAll = await fetch(`/rh/ponto-escalas/api/colaboradores-disponiveis?dia=${dia}${dep ? `&departamentoId=${dep}` : ''}${escId ? `&escalaId=${escId}` : ''}&incluirEscalados=true`).then(x => x.json());
+        const escaladosList = (rAll && rAll.success) ? rAll.content.filter(c => c.escaladoNoDia && c.id !== colabAusenteId) : [];
+        const optsEsc = escaladosList.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+        escaladosListHtml = `<div class="mb-2"><label>Candidatos na mesma escala (escalados)</label><div class="reassign-warning"><i class="fas fa-exclamation-triangle"></i> Reatribuição consciente: pode impactar cobertura do turno original.</div><select id="selSubstEscalado" class="form-control"><option value="">Selecione...</option>${optsEsc}</select></div>`;
+      }
+      const html = `<div class="mb-2"><label>Substituto (não escalado)</label><select id="selSubst" class="form-control"><option value="">Selecione...</option>${opts}</select><div class="form-text">Listando apenas colaboradores não escalados no dia.</div></div>${escaladosListHtml}`;
+      const res = await Swal.fire({ title: 'Confirmar Envio', text: 'Confirmar substituição do colaborador ausente?', html, icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', confirmButtonText: 'Sim, confirmar', cancelButtonText: 'Cancelar' });
+      if (!res.isConfirmed) return;
+      let subId = document.getElementById('selSubst').value;
+      if (!subId) subId = document.getElementById('selSubstEscalado')?.value || '';
+      if (!subId) return Swal.fire({ title: 'Atenção', text: 'Selecione um substituto.', icon: 'warning' });
+      if (String(subId) === String(colabAusenteId)) return Swal.fire({ title: 'Atenção', text: 'Colaborador não pode ser substituído por ele mesmo.', icon: 'warning' });
+      Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+      const ok = await fetch('/rh/ponto-escalas/api/alertas/substituir-ferias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ colaboradorAusenteId: colabAusenteId, substitutoId: subId, dia }) }).then(x => x.json());
+      Swal.close();
+      if (ok && ok.success) {
+        it.resolvido = true;
+        it.resolvidoEm = new Date().toLocaleString('pt-BR');
+        await Swal.fire({ title: 'Sucesso', text: 'Substituição realizada.', icon: 'success' });
+        renderAlertasRows({ success: true, content: window.__alertasItems || [] });
+      } else {
+        const msg = ok && ok.message ? ok.message : 'Falha ao substituir.';
+        await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+      }
     }
     function renderAlertasPagination(data) {
       const el = document.getElementById('paginationAlertas');
@@ -780,6 +1031,21 @@
       html += hasPrev ? `<a class="btn btn-secondary" href="#" onclick="carregarAlertas(${page - 1});return false;" style="margin-right:8px"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-secondary disabled" style="margin-right:8px"><i class="fas fa-chevron-left"></i> Anterior</span>`;
       html += hasNext ? `<a class="btn btn-secondary" href="#" onclick="carregarAlertas(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
       el.innerHTML = html;
+    }
+    async function excluirEscala(btn) {
+      const id = btn.getAttribute('data-id');
+      const res = await Swal.fire({ title: 'Confirmar Exclusão', text: 'Excluir esta escala de trabalho? A operação não pode ser desfeita.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d', confirmButtonText: 'Excluir', cancelButtonText: 'Cancelar' });
+      if (!res.isConfirmed) return;
+      Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+      const resp = await fetch('/rh/ponto-escalas/api/escalas/excluir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).then(x => x.json()).catch(() => ({ success: false }));
+      Swal.close();
+      if (resp && resp.success) {
+        await Swal.fire({ title: 'Excluída', text: 'Escala excluída com sucesso.', icon: 'success' });
+        location.reload();
+      } else {
+        const msg = resp && resp.message ? resp.message : 'Erro ao excluir escala.';
+        await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+      }
     }
   </script>
 
@@ -1034,6 +1300,21 @@
       color: white;
     }
 
+    .status-badge.resolvido {
+      background: #28a745;
+      color: white;
+      margin-left: 6px;
+    }
+    .reassign-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin: 6px 0 10px 0;
+      font-size: 13px;
+    }
+
     .status-badge.ferias {
       background: #17a2b8;
       color: white;
@@ -1117,5 +1398,6 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script th:src="@{/js/notifications.js}"></script>
 <script th:src="@{/js/sidebar.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </html>

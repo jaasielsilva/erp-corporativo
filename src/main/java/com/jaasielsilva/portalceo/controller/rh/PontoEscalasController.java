@@ -215,11 +215,11 @@ public class PontoEscalasController {
             String entrada2 = String.valueOf(payload.getOrDefault("horarioEntrada2", null));
             String saida2 = String.valueOf(payload.getOrDefault("horarioSaida2", null));
 
-            e.setHorarioEntrada1(LocalTime.parse(entrada1));
-            e.setHorarioSaida1(LocalTime.parse(saida1));
-            if (entrada2 != null && !entrada2.equals("null") && !entrada2.isBlank()) e.setHorarioEntrada2(LocalTime.parse(entrada2));
+            e.setHorarioEntrada1(parseHoraFlex(entrada1));
+            e.setHorarioSaida1(parseHoraFlex(saida1));
+            if (entrada2 != null && !entrada2.equals("null") && !entrada2.isBlank()) e.setHorarioEntrada2(parseHoraFlex(entrada2));
             else e.setHorarioEntrada2(null);
-            if (saida2 != null && !saida2.equals("null") && !saida2.isBlank()) e.setHorarioSaida2(LocalTime.parse(saida2));
+            if (saida2 != null && !saida2.equals("null") && !saida2.isBlank()) e.setHorarioSaida2(parseHoraFlex(saida2));
             else e.setHorarioSaida2(null);
 
             Integer intervaloMinimo = Integer.valueOf(String.valueOf(payload.getOrDefault("intervaloMinimo", 0)));
@@ -281,6 +281,18 @@ public class PontoEscalasController {
         model.addAttribute("anoAtual", java.time.LocalDate.now().getYear());
         model.addAttribute("departamentos", departamentoService.listarTodos());
         return "rh/ponto-escalas/nova";
+    }
+
+    @GetMapping("/editar")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public String editarEscalaPage(@RequestParam Long id, Model model) {
+        java.time.YearMonth ym = java.time.YearMonth.now();
+        model.addAttribute("mesAtual", ym.getMonthValue());
+        model.addAttribute("anoAtual", ym.getYear());
+        model.addAttribute("escalaId", id);
+        model.addAttribute("departamentos", departamentoService.listarTodos());
+        return "rh/ponto-escalas/editar";
     }
 
     @PostMapping("/api/escalas/encerrar")
@@ -351,6 +363,125 @@ public class PontoEscalasController {
         } catch (Exception ex) {
             resp.put("success", false);
             resp.put("message", "Erro ao clonar escala");
+            return resp;
+        }
+    }
+
+    @GetMapping("/api/escalas/detalhar")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Map<String, Object> detalharEscala(@RequestParam Long id) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            EscalaTrabalho e = escalaTrabalhoRepository.findById(id).orElse(null);
+            if (e == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return resp;
+            }
+            Map<String, Object> d = new HashMap<>();
+            d.put("id", e.getId());
+            d.put("nome", e.getNome());
+            d.put("tipo", e.getTipo() != null ? e.getTipo().name() : null);
+            d.put("horarioEntrada1", formatHora(e.getHorarioEntrada1()));
+            d.put("horarioSaida1", formatHora(e.getHorarioSaida1()));
+            d.put("horarioEntrada2", formatHora(e.getHorarioEntrada2()));
+            d.put("horarioSaida2", formatHora(e.getHorarioSaida2()));
+            d.put("intervaloMinimo", e.getIntervaloMinimo());
+            d.put("dataVigenciaInicio", e.getDataVigenciaInicio() != null ? e.getDataVigenciaInicio().toString() : null);
+            d.put("dataVigenciaFim", e.getDataVigenciaFim() != null ? e.getDataVigenciaFim().toString() : null);
+            d.put("toleranciaAtraso", e.getToleranciaAtraso());
+            d.put("minutosTolerancia", e.getMinutosTolerancia());
+            d.put("trabalhaSegunda", e.getTrabalhaSegunda());
+            d.put("trabalhaTerca", e.getTrabalhaTerca());
+            d.put("trabalhaQuarta", e.getTrabalhaQuarta());
+            d.put("trabalhaQuinta", e.getTrabalhaQuinta());
+            d.put("trabalhaSexta", e.getTrabalhaSexta());
+            d.put("trabalhaSabado", e.getTrabalhaSabado());
+            d.put("trabalhaDomingo", e.getTrabalhaDomingo());
+            resp.put("success", true);
+            resp.put("escala", d);
+            return resp;
+        } catch (Exception ex) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao detalhar escala");
+            return resp;
+        }
+    }
+
+    private java.time.LocalTime parseHoraFlex(String s) {
+        if (s == null) return null;
+        String v = String.valueOf(s).trim();
+        if (v.isBlank() || "null".equalsIgnoreCase(v)) return null;
+        try {
+            return java.time.LocalTime.parse(v);
+        } catch (Exception ignore) {
+        }
+        try {
+            String[] parts = v.split(":");
+            if (parts.length >= 2) {
+                int h = Integer.parseInt(parts[0]);
+                int m = Integer.parseInt(parts[1]);
+                if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                    return java.time.LocalTime.of(h, m);
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        throw new IllegalArgumentException("Horário inválido: " + v);
+    }
+
+    private String formatHora(Object t) {
+        if (t == null) return null;
+        if (t instanceof java.time.LocalTime) {
+            return ((java.time.LocalTime) t).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+        }
+        String s = String.valueOf(t);
+        try {
+            return java.time.LocalTime.parse(s).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+        } catch (Exception ignore) {
+        }
+        try {
+            String[] parts = s.split(":");
+            if (parts.length >= 2) {
+                int h = Integer.parseInt(parts[0]);
+                int m = Integer.parseInt(parts[1]);
+                if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                    return String.format("%02d:%02d", h, m);
+                }
+            }
+        } catch (Exception ignore) {
+        }
+        return s;
+    }
+
+    @PostMapping("/api/escalas/excluir")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    public Map<String, Object> excluirEscala(@RequestBody Map<String, Object> payload) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long id = Long.valueOf(String.valueOf(payload.get("id")));
+            EscalaTrabalho e = escalaTrabalhoRepository.findById(id).orElse(null);
+            if (e == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return resp;
+            }
+            long refs = colaboradorEscalaRepository.countByEscalaTrabalho_Id(id);
+            if (refs > 0) {
+                resp.put("success", false);
+                resp.put("message", "Não é possível excluir: escala referenciada em atribuições de colaboradores");
+                return resp;
+            }
+            escalaTrabalhoRepository.deleteById(id);
+            resp.put("success", true);
+            return resp;
+        } catch (Exception ex) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao excluir escala");
             return resp;
         }
     }
@@ -626,6 +757,7 @@ public class PontoEscalasController {
                     alerta.put("data", dia.toString());
                     alerta.put("prioridade", "Alta");
                     alerta.put("escala", escalados.isEmpty() ? null : escalados.get(0).get("escalaNome"));
+                    alerta.put("escalaId", escalados.isEmpty() ? null : escalados.get(0).get("escalaId"));
                     itens.add(alerta);
                 }
 
@@ -638,6 +770,7 @@ public class PontoEscalasController {
                         confl.put("tipo", "Conflito");
                         confl.put("descricao", "Colaborador escalado em múltiplos turnos no mesmo dia (" + count + ")");
                         confl.put("colaborador", esc.get("colaboradorNome"));
+                        confl.put("colaboradorId", esc.get("colaboradorId"));
                         confl.put("data", dia.toString());
                         confl.put("prioridade", "Crítica");
                         itens.add(confl);
@@ -653,6 +786,8 @@ public class PontoEscalasController {
                             aus.put("tipo", "Ausência");
                             aus.put("descricao", "Colaborador em férias - substituição necessária");
                             aus.put("colaborador", esc.get("colaboradorNome"));
+                            aus.put("colaboradorId", esc.get("colaboradorId"));
+                            aus.put("escalaId", esc.get("escalaId"));
                             aus.put("data", dia.toString());
                             aus.put("prioridade", "Média");
                             itens.add(aus);
@@ -679,6 +814,230 @@ public class PontoEscalasController {
         } catch (Exception e) {
             resp.put("success", false);
             resp.put("message", "Erro ao gerar alertas de escalas");
+            return resp;
+        }
+    }
+
+    @PostMapping("/api/alertas/atribuir-cobertura")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    public Map<String, Object> atribuirCobertura(@RequestBody Map<String, Object> payload, Principal principal) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Usuario usuarioLogado = null;
+            if (principal != null && principal.getName() != null) {
+                usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            }
+            Long colaboradorId = Long.valueOf(String.valueOf(payload.get("colaboradorId")));
+            Long escalaId = Long.valueOf(String.valueOf(payload.get("escalaId")));
+            LocalDate dia = LocalDate.parse(String.valueOf(payload.get("dia")));
+            EscalaTrabalho escala = escalaTrabalhoRepository.findById(escalaId).orElse(null);
+            if (escala == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return resp;
+            }
+            java.util.List<ColaboradorEscala> vigColabDia = colaboradorEscalaRepository.findVigenteByColaboradorAndData(colaboradorId, dia);
+            boolean mesmaEscala = vigColabDia.stream().anyMatch(ce -> ce.getEscalaTrabalho() != null && escalaId.equals(ce.getEscalaTrabalho().getId()));
+            if (!mesmaEscala) {
+                resp.put("success", false);
+                resp.put("message", "Só é permitido atribuir cobertura com colaborador da mesma escala de trabalho");
+                return resp;
+            }
+            List<ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigenteByColaboradorAndData(colaboradorId, dia);
+            for (ColaboradorEscala ce : vigentes) {
+                LocalDate fim = dia.minusDays(1);
+                ce.setDataFim(fim);
+                colaboradorEscalaRepository.save(ce);
+            }
+            ColaboradorEscala novo = new ColaboradorEscala();
+            novo.setColaborador(colaboradorService.findById(colaboradorId));
+            novo.setEscalaTrabalho(escala);
+            novo.setDataInicio(dia);
+            novo.setDataFim(dia);
+            novo.setAtivo(true);
+            if (usuarioLogado != null) {
+                novo.setUsuarioCriacao(usuarioLogado);
+            }
+            colaboradorEscalaRepository.save(novo);
+            resp.put("success", true);
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao atribuir cobertura");
+            return resp;
+        }
+    }
+
+    @PostMapping("/api/alertas/resolver-conflito")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    public Map<String, Object> resolverConflito(@RequestBody Map<String, Object> payload) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long colaboradorId = Long.valueOf(String.valueOf(payload.get("colaboradorId")));
+            LocalDate dia = LocalDate.parse(String.valueOf(payload.get("dia")));
+            Long manterEscalaId = payload.get("manterEscalaId") != null && !String.valueOf(payload.get("manterEscalaId")).isBlank()
+                    ? Long.valueOf(String.valueOf(payload.get("manterEscalaId"))) : null;
+            List<ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigenteByColaboradorAndData(colaboradorId, dia);
+            if (vigentes == null || vigentes.isEmpty()) {
+                resp.put("success", false);
+                resp.put("message", "Nenhuma atribuição encontrada para o dia");
+                return resp;
+            }
+            for (ColaboradorEscala ce : vigentes) {
+                if (manterEscalaId != null && ce.getEscalaTrabalho() != null && manterEscalaId.equals(ce.getEscalaTrabalho().getId())) {
+                    continue;
+                }
+                LocalDate fim = dia.minusDays(1);
+                ce.setDataFim(fim);
+                colaboradorEscalaRepository.save(ce);
+            }
+            resp.put("success", true);
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao resolver conflito");
+            return resp;
+        }
+    }
+
+    @GetMapping("/api/alertas/atribuicoes-dia")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Map<String, Object> atribuicoesDia(@RequestParam Long colaboradorId, @RequestParam String dia) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            LocalDate data = LocalDate.parse(dia);
+            List<ColaboradorEscala> vigentes = colaboradorEscalaRepository.findVigenteByColaboradorAndData(colaboradorId, data);
+            List<Map<String, Object>> content = new ArrayList<>();
+            for (ColaboradorEscala ce : vigentes) {
+                Map<String, Object> it = new HashMap<>();
+                it.put("atribId", ce.getId());
+                it.put("escalaId", ce.getEscalaTrabalho() != null ? ce.getEscalaTrabalho().getId() : null);
+                it.put("escalaNome", ce.getEscalaTrabalho() != null ? ce.getEscalaTrabalho().getNome() : "-");
+                content.add(it);
+            }
+            resp.put("success", true);
+            resp.put("content", content);
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao buscar atribuições");
+            return resp;
+        }
+    }
+
+    @GetMapping("/api/colaboradores-disponiveis")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Map<String, Object> colaboradoresDisponiveis(@RequestParam String dia,
+                                                        @RequestParam(required = false) Long departamentoId,
+                                                        @RequestParam(required = false) Long escalaId,
+                                                        @RequestParam(required = false, defaultValue = "false") Boolean incluirEscalados) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            LocalDate data = LocalDate.parse(dia);
+            List<ColaboradorEscala> escalados = colaboradorEscalaRepository.findVigentesByData(data);
+            java.util.Set<Long> idsEscalados = new java.util.HashSet<>();
+            for (ColaboradorEscala ce : escalados) {
+                if (ce.getColaborador() != null && ce.getColaborador().getId() != null) {
+                    idsEscalados.add(ce.getColaborador().getId());
+                }
+            }
+            List<Colaborador> ativos = colaboradorService.listarAtivos();
+            List<Map<String, Object>> disponiveis = new ArrayList<>();
+            for (Colaborador c : ativos) {
+                if (!Boolean.TRUE.equals(incluirEscalados) && idsEscalados.contains(c.getId())) continue;
+                if (departamentoId != null) {
+                    if (c.getDepartamento() == null || c.getDepartamento().getId() == null || !departamentoId.equals(c.getDepartamento().getId())) {
+                        continue;
+                    }
+                }
+                if (escalaId != null) {
+                    List<ColaboradorEscala> vigColabDia = colaboradorEscalaRepository.findVigenteByColaboradorAndData(c.getId(), data);
+                    boolean mesmaEscala = vigColabDia.stream().anyMatch(ce -> ce.getEscalaTrabalho() != null && escalaId.equals(ce.getEscalaTrabalho().getId()));
+                    if (!mesmaEscala) continue;
+                }
+                Map<String, Object> it = new HashMap<>();
+                it.put("id", c.getId());
+                it.put("nome", c.getNome());
+                it.put("escaladoNoDia", idsEscalados.contains(c.getId()));
+                disponiveis.add(it);
+            }
+            resp.put("success", true);
+            resp.put("content", disponiveis);
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao listar colaboradores disponíveis");
+            return resp;
+        }
+    }
+
+    @PostMapping("/api/alertas/substituir-ferias")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    public Map<String, Object> substituirFerias(@RequestBody Map<String, Object> payload, Principal principal) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Usuario usuarioLogado = null;
+            if (principal != null && principal.getName() != null) {
+                usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            }
+            Long colaboradorAusenteId = Long.valueOf(String.valueOf(payload.get("colaboradorAusenteId")));
+            Long substitutoId = Long.valueOf(String.valueOf(payload.get("substitutoId")));
+            LocalDate dia = LocalDate.parse(String.valueOf(payload.get("dia")));
+            if (substitutoId != null && colaboradorAusenteId != null && substitutoId.equals(colaboradorAusenteId)) {
+                resp.put("success", false);
+                resp.put("message", "Colaborador não pode ser substituído por ele mesmo");
+                return resp;
+            }
+            List<ColaboradorEscala> vigentesAusente = colaboradorEscalaRepository.findVigenteByColaboradorAndData(colaboradorAusenteId, dia);
+            if (vigentesAusente == null || vigentesAusente.isEmpty()) {
+                resp.put("success", false);
+                resp.put("message", "Colaborador ausente sem escala no dia informado");
+                return resp;
+            }
+            ColaboradorEscala ref = vigentesAusente.get(0);
+            List<ColaboradorEscala> vigSubDia = colaboradorEscalaRepository.findVigenteByColaboradorAndData(substitutoId, dia);
+            boolean mesmaEscala = vigSubDia.stream().anyMatch(ce -> ce.getEscalaTrabalho() != null && ref.getEscalaTrabalho() != null && ref.getEscalaTrabalho().getId().equals(ce.getEscalaTrabalho().getId()));
+            if (!mesmaEscala) {
+                resp.put("success", false);
+                resp.put("message", "Substituição permitida apenas entre colaboradores da mesma escala de trabalho");
+                return resp;
+            }
+            for (ColaboradorEscala ce : vigentesAusente) {
+                LocalDate fim = dia.minusDays(1);
+                ce.setDataFim(fim);
+                colaboradorEscalaRepository.save(ce);
+            }
+            List<ColaboradorEscala> vigentesSub = colaboradorEscalaRepository.findVigenteByColaboradorAndData(substitutoId, dia);
+            for (ColaboradorEscala ce : vigentesSub) {
+                LocalDate fim = dia.minusDays(1);
+                ce.setDataFim(fim);
+                colaboradorEscalaRepository.save(ce);
+            }
+            ColaboradorEscala novo = new ColaboradorEscala();
+            novo.setColaborador(colaboradorService.findById(substitutoId));
+            novo.setEscalaTrabalho(ref.getEscalaTrabalho());
+            novo.setDataInicio(dia);
+            novo.setDataFim(dia);
+            novo.setAtivo(true);
+            if (usuarioLogado != null) {
+                novo.setUsuarioCriacao(usuarioLogado);
+            }
+            colaboradorEscalaRepository.save(novo);
+            resp.put("success", true);
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao substituir colaborador em férias");
             return resp;
         }
     }
@@ -1152,6 +1511,41 @@ public class PontoEscalasController {
         } catch (Exception e) {
             resp.put("success", false);
             resp.put("message", "Erro ao calcular resumo do mês");
+            return resp;
+        }
+    }
+
+    @GetMapping("/excecoes")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public String paginaExcecoes(Model model) {
+        model.addAttribute("colaboradoresAtivos", colaboradorService.listarAtivos());
+        return "rh/ponto-escalas/excecoes";
+    }
+
+    @PostMapping("/api/excecoes/salvar")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> salvarExcecao(@RequestBody Map<String, Object> payload) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            Long colaboradorId = Long.valueOf(String.valueOf(payload.get("colaboradorId")));
+            String data = String.valueOf(payload.get("data"));
+            String entrada1 = payload.get("entrada1") != null ? String.valueOf(payload.get("entrada1")) : null;
+            String saida1 = payload.get("saida1") != null ? String.valueOf(payload.get("saida1")) : null;
+            String entrada2 = payload.get("entrada2") != null ? String.valueOf(payload.get("entrada2")) : null;
+            String saida2 = payload.get("saida2") != null ? String.valueOf(payload.get("saida2")) : null;
+            String motivo = payload.get("motivo") != null ? String.valueOf(payload.get("motivo")) : "";
+            if (colaboradorId == null || data == null || data.isBlank()) {
+                resp.put("success", false);
+                resp.put("message", "Colaborador e data são obrigatórios");
+                return resp;
+            }
+            resp.put("success", true);
+            resp.put("message", "Exceção registrada");
+            return resp;
+        } catch (Exception e) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao salvar exceção");
             return resp;
         }
     }

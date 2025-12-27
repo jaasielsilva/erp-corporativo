@@ -137,7 +137,18 @@
       const ids = Array.from(selecionados);
       const r = await fetch('/rh/ponto-escalas/api/atribuir-massa', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({escalaId: parseInt(escalaId), dataInicio: dataInicio, dataFim: dataFim || null, colaboradorIds: ids})});
       const j = await r.json();
-      if (j.success) { alert('Processados: ' + j.processados); selecionados.clear(); loadAtribColaboradores(atribPage); }
+      if (j.success) {
+        if (window.Swal && Swal.fire) {
+          await Swal.fire({ title: 'Sucesso', text: 'Processados: ' + j.processados, icon: 'success' });
+        }
+        selecionados.clear();
+        loadAtribColaboradores(atribPage);
+      } else {
+        if (window.Swal && Swal.fire) {
+          const msg = j && j.message ? j.message : 'Erro na atribuição em massa.';
+          await Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+        }
+      }
     }
     document.addEventListener('DOMContentLoaded', function(){
       const input = document.getElementById('buscarAtribuicao');
@@ -152,5 +163,6 @@
       loadAtribColaboradores(0);
     });
   </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

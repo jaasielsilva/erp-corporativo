@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editar Escala de Trabalho - ERP Corporativo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+      <section class="content-area">
+        <div class="alert-container-right"></div>
+        <h1>Editar Escala de Trabalho</h1>
+        <article class="card">
+          <div class="row">
+            <div class="col">
+              <label>Nome</label>
+              <input id="escNome" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Tipo</label>
+              <select id="escTipo" class="form-control">
+                <option value="NORMAL">Normal (8h com intervalo)</option>
+                <option value="CORRIDA">Corrida (6h sem intervalo)</option>
+                <option value="TURNO_12X36">Turno 12x36</option>
+                <option value="TURNO_6X1">Turno 6x1</option>
+                <option value="FLEXIVEL">Flexível</option>
+                <option value="PERSONALIZADA">Personalizada</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Intervalo mínimo (min)</label>
+              <input id="escIntervalo" type="number" min="0" class="form-control" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>Entrada 1</label>
+              <input id="escEntrada1" type="time" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Saída 1</label>
+              <input id="escSaida1" type="time" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Entrada 2 (opcional)</label>
+              <input id="escEntrada2" type="time" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Saída 2 (opcional)</label>
+              <input id="escSaida2" type="time" class="form-control" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>Início da vigência</label>
+              <input id="escVigenciaInicio" type="date" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Fim da vigência (opcional)</label>
+              <input id="escVigenciaFim" type="date" class="form-control" />
+            </div>
+            <div class="col">
+              <label>Tolerância de atraso</label>
+              <select id="escTolAtraso" class="form-control">
+                <option value="true">Ativa</option>
+                <option value="false">Desativada</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Minutos tolerância</label>
+              <input id="escMinTol" type="number" min="0" class="form-control" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>Dias trabalhados</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" id="dSeg" /> Seg</label>
+                <label><input type="checkbox" id="dTer" /> Ter</label>
+                <label><input type="checkbox" id="dQua" /> Qua</label>
+                <label><input type="checkbox" id="dQui" /> Qui</label>
+                <label><input type="checkbox" id="dSex" /> Sex</label>
+                <label><input type="checkbox" id="dSab" /> Sáb</label>
+                <label><input type="checkbox" id="dDom" /> Dom</label>
+              </div>
+            </div>
+          </div>
+        </article>
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="salvarEdicao()"><i class="fas fa-save"></i> Salvar</button>
+          <a class="btn btn-light" th:href="@{/rh/ponto-escalas/escalas}"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    function showSwal(title, text, icon){ if (window.Swal && Swal.fire) return Swal.fire({ title, text, icon }); alert(title + (text ? (': ' + text) : '')); }
+    function setField(id, v){ const el = document.getElementById(id); if (el) el.value = v ?? ''; }
+    function setCheck(id, v){ const el = document.getElementById(id); if (el) el.checked = !!v; }
+    function fmtHHMM(v){ if (v == null || v === '') return ''; const m = String(v).match(/^(\d{1,2}):(\d{1,2})$/); if (!m) return ''; const h = parseInt(m[1],10), mm = parseInt(m[2],10); if (isNaN(h)||isNaN(mm)||h<0||h>23||mm<0||mm>59) return ''; return String(h).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); }
+    async function carregar(){
+      const id = new URLSearchParams(window.location.search).get('id');
+      if (!id) { await showSwal('Atenção','Identificador da escala não informado.','warning'); window.location.href = '/rh/ponto-escalas/escalas'; return; }
+      try {
+        if (window.Swal && Swal.fire) Swal.fire({ title: 'Carregando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        const r = await fetch(`/rh/ponto-escalas/api/escalas/detalhar?id=${encodeURIComponent(id)}`).then(x => x.json());
+        if (window.Swal && Swal.close) Swal.close();
+        if (!r || !r.success) { await showSwal('Erro','Falha ao carregar dados da escala.','error'); return; }
+        const e = r.escala || {};
+        setField('escNome', e.nome || '');
+        setField('escTipo', e.tipo || 'NORMAL');
+        setField('escEntrada1', fmtHHMM(e.horarioEntrada1));
+        setField('escSaida1', fmtHHMM(e.horarioSaida1));
+        setField('escEntrada2', fmtHHMM(e.horarioEntrada2 || ''));
+        setField('escSaida2', fmtHHMM(e.horarioSaida2 || ''));
+        setField('escIntervalo', e.intervaloMinimo ?? 0);
+        setField('escVigenciaInicio', e.dataVigenciaInicio || '');
+        setField('escVigenciaFim', e.dataVigenciaFim || '');
+        setField('escTolAtraso', String(!!e.toleranciaAtraso));
+        setField('escMinTol', e.minutosTolerancia ?? 10);
+        setCheck('dSeg', !!e.trabalhaSegunda);
+        setCheck('dTer', !!e.trabalhaTerca);
+        setCheck('dQua', !!e.trabalhaQuarta);
+        setCheck('dQui', !!e.trabalhaQuinta);
+        setCheck('dSex', !!e.trabalhaSexta);
+        setCheck('dSab', !!e.trabalhaSabado);
+        setCheck('dDom', !!e.trabalhaDomingo);
+        window.__escalaId = e.id || id;
+      } catch {
+        if (window.Swal && Swal.close) Swal.close();
+        await showSwal('Erro','Falha de rede ao carregar escala.','error');
+      }
+    }
+    async function salvarEdicao(){
+      const id = window.__escalaId;
+      if (!id) { await showSwal('Atenção','Escala não identificada.','warning'); return; }
+      const payload = {
+        id,
+        nome: document.getElementById('escNome').value,
+        tipo: document.getElementById('escTipo').value,
+        horarioEntrada1: document.getElementById('escEntrada1').value,
+        horarioSaida1: document.getElementById('escSaida1').value,
+        horarioEntrada2: document.getElementById('escEntrada2').value || null,
+        horarioSaida2: document.getElementById('escSaida2').value || null,
+        intervaloMinimo: parseInt(document.getElementById('escIntervalo').value||'0',10),
+        dataVigenciaInicio: document.getElementById('escVigenciaInicio').value || null,
+        dataVigenciaFim: document.getElementById('escVigenciaFim').value || null,
+        toleranciaAtraso: document.getElementById('escTolAtraso').value === 'true',
+        minutosTolerancia: parseInt(document.getElementById('escMinTol').value||'10',10),
+        trabalhaSegunda: document.getElementById('dSeg').checked,
+        trabalhaTerca: document.getElementById('dTer').checked,
+        trabalhaQuarta: document.getElementById('dQua').checked,
+        trabalhaQuinta: document.getElementById('dQui').checked,
+        trabalhaSexta: document.getElementById('dSex').checked,
+        trabalhaSabado: document.getElementById('dSab').checked,
+        trabalhaDomingo: document.getElementById('dDom').checked
+      };
+      if (!payload.nome || !payload.horarioEntrada1 || !payload.horarioSaida1) { await showSwal('Atenção','Preencha nome e horários principais.','warning'); return; }
+      try {
+        if (window.Swal && Swal.fire) Swal.fire({ title: 'Salvando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        const r = await fetch('/rh/ponto-escalas/api/escalas/salvar', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }).then(x => x.json());
+        if (window.Swal && Swal.close) Swal.close();
+        if (!r || !r.success) { const msg = r && r.message ? r.message : 'Erro ao salvar escala.'; await showSwal('Erro', msg, 'error'); return; }
+        await showSwal('Sucesso','Escala atualizada com sucesso.','success');
+        window.location.href = '/rh/ponto-escalas/escalas';
+      } catch {
+        if (window.Swal && Swal.close) Swal.close();
+        await showSwal('Erro','Falha de rede ao salvar.','error');
+      }
+    }
+    document.addEventListener('DOMContentLoaded', carregar);
+  </script>
+</body>
+</html>

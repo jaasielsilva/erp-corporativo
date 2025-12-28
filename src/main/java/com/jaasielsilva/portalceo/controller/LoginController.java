@@ -29,28 +29,4 @@ public class LoginController {
         return "login";
     }
 
-    @PostMapping("/login")
-    public String processLogin(@RequestParam String username,
-            @RequestParam String password,
-            Model model) {
-
-        var usuarioOpt = usuarioRepository.findByEmail(username);
-
-        if (usuarioOpt.isEmpty() || !passwordEncoder.matches(password, usuarioOpt.get().getSenha())) {
-            alertaSegurancaRepository.save(new AlertaSeguranca(
-                    null,
-                    "Tentativa de login suspeita",
-                    "MEDIA",
-                    LocalDateTime.now(),
-                    "Web",
-                    "Usuário ou senha incorretos para: " + username));
-
-            model.addAttribute("erro", "Usuário ou senha inválidos.");
-            return "login";
-        }
-
-        // login ok
-        return "redirect:/dashboard";
-    }
-
 }

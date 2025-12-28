@@ -21,6 +21,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.jaasielsilva.portalceo.security.UsuarioDetailsService;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,6 +48,8 @@ public class UsuarioService {
 
     @Autowired
     private ColaboradorRepository colaboradorRepository;
+    @Autowired
+    private UsuarioDetailsService usuarioDetailsService;
 
     public Usuario findByEmail(String email) {
         return usuarioRepository.findByEmail(email)
@@ -144,6 +148,7 @@ public class UsuarioService {
 
         usuario.setPerfis(novosPerfis);
         usuarioRepository.save(usuario);
+        usuarioDetailsService.evictAuthorities(usuario.getEmail());
     }
 
     /**

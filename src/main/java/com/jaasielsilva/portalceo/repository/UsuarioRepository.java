@@ -19,6 +19,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByMatricula(String matricula);
     Optional<Usuario> findByCpf(String cpf);
 
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.perfis p WHERE u.email = :email")
+    Optional<Usuario> findByEmailWithPerfis(@Param("email") String email);
+
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.perfis p WHERE u.matricula = :matricula")
+    Optional<Usuario> findByMatriculaWithPerfis(@Param("matricula") String matricula);
+
     // Query para contar usuários com perfil ADMIN
     @Query("SELECT COUNT(u) FROM Usuario u JOIN u.perfis p WHERE p.nome = :nomePerfil")
     long countUsuariosPorPerfil(@Param("nomePerfil") String nomePerfil);

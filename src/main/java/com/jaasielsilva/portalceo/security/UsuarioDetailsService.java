@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
 public class UsuarioDetailsService implements UserDetailsService {
@@ -22,15 +23,27 @@ public class UsuarioDetailsService implements UserDetailsService {
 
     private static final Logger log = LoggerFactory.getLogger(UsuarioDetailsService.class);
 
+    private final com.github.benmanes.caffeine.cache.Cache<String, Set<SimpleGrantedAuthority>> authoritiesCache =
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+                    .maximumSize(10000)
+                    .expireAfterWrite(java.time.Duration.ofMinutes(3))
+                    .build();
+
+    public void evictAuthorities(String email) {
+        if (email != null) {
+            authoritiesCache.invalidate(email);
+        }
+    }
+
     @Override
 public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     long t0 = System.nanoTime();
-    // Tentar buscar por email primeiro
-    Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
+    // Tentar buscar por email primeiro (com perfis pré-carregados)
+    Optional<Usuario> usuarioOpt = usuarioRepository.findByEmailWithPerfis(username);
 
     // Se não encontrar por email, tentar por matrícula
     if (usuarioOpt.isEmpty()) {
-        usuarioOpt = usuarioRepository.findByMatricula(username);
+        usuarioOpt = usuarioRepository.findByMatriculaWithPerfis(username);
     }
     long tLookup = System.nanoTime();
 
@@ -47,35 +60,37 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
         case BLOQUEADO -> throw new LockedException("Usuário bloqueado não pode fazer login.");
     }
 
-    // 🔹 Se o usuário for MASTER, dar todas as permissões
-    var authorities = new java.util.HashSet<SimpleGrantedAuthority>();
-    if (usuario.getNivelAcesso() != null && usuario.getNivelAcesso().name().equalsIgnoreCase("MASTER")) {
-        authorities.add(new SimpleGrantedAuthority("ROLE_MASTER"));
-        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_CRIAR"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_VISUALIZAR"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_ATRIBUIR"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_INICIAR"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_RESOLVER"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_FECHAR"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_REABRIR"));
-        authorities.add(new SimpleGrantedAuthority("CHAMADO_AVALIAR"));
-        authorities.add(new SimpleGrantedAuthority("TECNICO_ATENDER_CHAMADOS"));
-        authorities.add(new SimpleGrantedAuthority("TECNICO_GERENCIAR_PROPRIOS_CHAMADOS"));
-        authorities.add(new SimpleGrantedAuthority("ADMIN_GERENCIAR_USUARIOS"));
-        // Permissões Financeiras para Master
-        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_VER_SALDO"));
-        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_VER_EXTRATO"));
-        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_PAGAR"));
-        authorities.add(new SimpleGrantedAuthority("FINANCEIRO_CONFIGURAR"));
-    } else {
-        // 🔹 Caso não seja MASTER, pegar as permissões normais dos perfis
-        authorities.addAll(
-            usuario.getPerfis().stream()
-                    .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
-                    .collect(Collectors.toSet())
-        );
+    Set<SimpleGrantedAuthority> authorities = authoritiesCache.getIfPresent(usuario.getEmail());
+    if (authorities == null) {
+        var built = new java.util.HashSet<SimpleGrantedAuthority>();
+        if (usuario.getNivelAcesso() != null && usuario.getNivelAcesso().name().equalsIgnoreCase("MASTER")) {
+            built.add(new SimpleGrantedAuthority("ROLE_MASTER"));
+            built.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            built.add(new SimpleGrantedAuthority("ROLE_USER"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_CRIAR"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_VISUALIZAR"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_ATRIBUIR"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_INICIAR"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_RESOLVER"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_FECHAR"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_REABRIR"));
+            built.add(new SimpleGrantedAuthority("CHAMADO_AVALIAR"));
+            built.add(new SimpleGrantedAuthority("TECNICO_ATENDER_CHAMADOS"));
+            built.add(new SimpleGrantedAuthority("TECNICO_GERENCIAR_PROPRIOS_CHAMADOS"));
+            built.add(new SimpleGrantedAuthority("ADMIN_GERENCIAR_USUARIOS"));
+            built.add(new SimpleGrantedAuthority("FINANCEIRO_VER_SALDO"));
+            built.add(new SimpleGrantedAuthority("FINANCEIRO_VER_EXTRATO"));
+            built.add(new SimpleGrantedAuthority("FINANCEIRO_PAGAR"));
+            built.add(new SimpleGrantedAuthority("FINANCEIRO_CONFIGURAR"));
+        } else {
+            built.addAll(
+                usuario.getPerfis().stream()
+                        .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
+                        .collect(Collectors.toSet())
+            );
+        }
+        authoritiesCache.put(usuario.getEmail(), built);
+        authorities = built;
     }
 
     long tAuthorities = System.nanoTime();

@@ -77,7 +77,7 @@ public class SecurityConfig {
 
         @Bean
         public BCryptPasswordEncoder passwordEncoder() {
-                return new BCryptPasswordEncoder();
+                return new BCryptPasswordEncoder(10);
         }
 
         @Bean
@@ -92,7 +92,8 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http,
                         DaoAuthenticationProvider authenticationProvider,
-                        CustomAuthenticationFailureHandler failureHandler) throws Exception {
+                        CustomAuthenticationFailureHandler failureHandler,
+                        UsuarioDetailsService usuarioDetailsService) throws Exception {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
@@ -155,6 +156,10 @@ public class SecurityConfig {
                                                 .successHandler(customAuthenticationSuccessHandler)
                                                 .failureHandler(failureHandler)
                                                 .permitAll())
+                                .rememberMe(rm -> rm
+                                                .key("erp-corporativo-remember-me-key-2025")
+                                                .tokenValiditySeconds(86400)
+                                                .userDetailsService(usuarioDetailsService))
                                 .logout(logout -> logout.permitAll())
                                 .authenticationProvider(authenticationProvider);
 

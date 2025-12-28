@@ -56,6 +56,110 @@
         <!-- Cliente WebSocket global para toasts -->
         <script src="/js/websocket-notifications.js"></script>
         <script>
+            (function(){
+                if (typeof window.Swal === 'undefined') {
+                    var sw = document.createElement('script');
+                    sw.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+                    document.head.appendChild(sw);
+                }
+                function showGlobalResult(st){
+                    try {
+                        var total = st.total || 0;
+                        var ok = st.processados || 0;
+                        var logs = Array.isArray(st.logs) ? st.logs : [];
+                        var erros = logs.filter(function(l){ return l && l.status === 'erro'; });
+                        var pageSize = 10;
+                        var page = 0;
+                        var baseHtml =
+                          '<div><strong>Processados:</strong> ' + ok + ' de ' + total + '</div>' +
+                          (erros.length ? (
+                            '<div class="mt-2"><strong>Falhas (' + erros.length + '):</strong>' +
+                            '<div id="errorsContainer" style="max-height:220px;overflow:auto;border:1px solid #eee;padding:6px;border-radius:4px"></div>' +
+                            '<div class="mt-2 d-flex justify-content-between align-items-center">' +
+                              '<button id="errPrev" class="btn btn-sm btn-outline-secondary">Anterior</button>' +
+                              '<span id="errPageInfo" class="small text-muted"></span>' +
+                              '<button id="errNext" class="btn btn-sm btn-outline-secondary">Próxima</button>' +
+                            '</div>' +
+                            '</div>'
+                          ) : '');
+                        function renderPage(){
+                            var start = page * pageSize;
+                            var slice = erros.slice(start, start + pageSize);
+                            var container = document.getElementById('errorsContainer');
+                            var info = document.getElementById('errPageInfo');
+                            if (container) {
+                                container.innerHTML = slice.map(function(e){
+                                    return '<div>- ' + (e.colaborador || '-') + ' (' + (e.colaboradorId || '-') + ') • ' + (e.exception || '') + ' • ' + (e.mensagem || '') + '</div>';
+                                }).join('') || '<div>Nenhum erro</div>';
+                            }
+                            if (info) {
+                                var totalPages = Math.max(1, Math.ceil(erros.length / pageSize));
+                                info.textContent = 'Página ' + (page + 1) + ' de ' + totalPages;
+                            }
+                            var prev = document.getElementById('errPrev');
+                            var next = document.getElementById('errNext');
+                            if (prev) prev.disabled = page === 0;
+                            if (next) next.disabled = (page + 1) * pageSize >= erros.length;
+                        }
+                        function showSwal(){
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    title: st.success ? 'Sucesso' : 'Concluído com falhas',
+                                    html: baseHtml,
+                                    icon: st.success ? 'success' : 'warning',
+                                    didOpen: function(){
+                                        renderPage();
+                                        var prev = document.getElementById('errPrev');
+                                        var next = document.getElementById('errNext');
+                                        if (prev) prev.addEventListener('click', function(){ if (page > 0) { page--; renderPage(); } });
+                                        if (next) next.addEventListener('click', function(){ if ((page + 1) * pageSize < erros.length) { page++; renderPage(); } });
+                                    }
+                                });
+                            } else if (typeof window.globalToast === 'function') {
+                                window.globalToast((st.success ? 'Geração automática concluída' : 'Concluída com falhas') + ' (' + ok + '/' + total + ')', 'fas fa-info-circle', st.success ? 'medium' : 'high');
+                            }
+                        }
+                        showSwal();
+                    } catch(e){}
+                }
+                function pollJob(jobId){
+                    var polled = false;
+                    var timer = setInterval(function(){
+                        fetch('/rh/ponto-escalas/api/escalas/gerar-automatico/status?jobId=' + encodeURIComponent(jobId))
+                            .then(function(r){ return r.json(); })
+                            .then(function(st){
+                                if (st && st.success && st.running === false && !polled) {
+                                    polled = true;
+                                    clearInterval(timer);
+                                    try {
+                                        localStorage.setItem('gerarJobAlertShown', jobId);
+                                        localStorage.removeItem('gerarJobId');
+                                    } catch(e){}
+                                    showGlobalResult(st);
+                                }
+                            })
+                            .catch(function(){});
+                    }, 2000);
+                }
+                try {
+                    var existing = localStorage.getItem('gerarJobId');
+                    var shown = localStorage.getItem('gerarJobAlertShown');
+                    if (existing && existing !== shown) {
+                        pollJob(existing);
+                    }
+                    window.__globalJobListener = setInterval(function(){
+                        try {
+                            var jid = localStorage.getItem('gerarJobId');
+                            var shownId = localStorage.getItem('gerarJobAlertShown');
+                            if (jid && jid !== shownId) {
+                                pollJob(jid);
+                            }
+                        } catch(e){}
+                    }, 5000);
+                } catch(e){}
+            })();
+        </script>
+        <script>
             window.globalToast = function(message, icon, level){
                 try {
                     var toast = document.getElementById('global-toast');

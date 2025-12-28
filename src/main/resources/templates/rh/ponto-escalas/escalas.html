@@ -868,14 +868,102 @@
       mostrarAlerta('info', 'Copiando escala de outro período...');
     }
 
-    function gerarEscalaAutomatica() {
-      if (confirm('Gerar escala automaticamente? Isso substituirá a escala atual.')) {
-        mostrarAlerta('info', 'Gerando escala automaticamente...');
-        setTimeout(() => {
-          mostrarAlerta('success', 'Escala gerada com sucesso!');
-          location.reload();
-        }, 2000);
+        function gerarEscalaAutomatica() {
+      const dep = filtroDepartamentoId || '';
+      const esc = filtroEscalaId || '';
+      if (!esc) {
+        return Swal.fire({ title: 'Atenção', text: 'Selecione uma escala nos filtros para gerar automaticamente.', icon: 'warning' });
       }
+      const html = `
+        <div class="mb-2">Gerar atribuições automáticas para o mês selecionado.</div>
+        <div class="mb-2"><strong>Mês/Ano:</strong> ${String(calMes).padStart(2,'0')}/${calAno}</div>
+        <div class="mb-2"><strong>Departamento:</strong> ${dep ? 'Filtrado' : 'Todos'}</div>
+        <div class="mb-2"><strong>Escala:</strong> ${esc ? 'Selecionada' : '-'}</div>
+        <div class="form-text">Essa ação encerra vigências existentes e cria novas para o período.</div>
+      `;
+      Swal.fire({ title: 'Confirmar geração automática', html, icon: 'question', showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', confirmButtonText: 'Gerar', cancelButtonText: 'Cancelar' })
+        .then(async (res) => {
+          if (!res.isConfirmed) return;
+          try {
+            const start = await fetch('/rh/ponto-escalas/api/escalas/gerar-automatico/start', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mes: calMes, ano: calAno, departamentoId: dep || null, escalaId: esc })
+            }).then(x => x.json());
+            if (!start || !start.success || !start.jobId) {
+              const msg = start && start.message ? start.message : 'Erro ao iniciar processamento.';
+              return Swal.fire({ title: 'Erro', text: msg, icon: 'error' });
+            }
+            const jobId = start.jobId;
+            try { localStorage.setItem('gerarJobId', jobId); } catch(e){}
+            mostrarAlerta('info', 'Processamento iniciado. Você será notificado quando concluir.');
+            let done = false;
+            const poll = setInterval(async () => {
+              try {
+                const st = await fetch(`/rh/ponto-escalas/api/escalas/gerar-automatico/status?jobId=${encodeURIComponent(jobId)}`).then(x => x.json());
+                if (st && st.success && st.running === false && !done) {
+                  done = true;
+                  clearInterval(poll);
+                  try { localStorage.setItem('gerarJobAlertShown', jobId); localStorage.removeItem('gerarJobId'); } catch(e){}
+                  const total = st.total || 0;
+                  const ok = st.processados || 0;
+                  const logs = Array.isArray(st.logs) ? st.logs : [];
+                  const erros = logs.filter(l => l.status === 'erro');
+                  const pageSize = 10;
+                  let page = 0;
+                  const baseHtml = `
+                    <div><strong>Processados:</strong> ${ok} de ${total}</div>
+                    ${erros.length ? `
+                      <div class="mt-2"><strong>Falhas (${erros.length}):</strong>
+                        <div id="errorsContainer" style="max-height:220px;overflow:auto;border:1px solid #eee;padding:6px;border-radius:4px"></div>
+                        <div class="mt-2 d-flex justify-content-between align-items-center">
+                          <button id="errPrev" class="btn btn-sm btn-outline-secondary">Anterior</button>
+                          <span id="errPageInfo" class="small text-muted"></span>
+                          <button id="errNext" class="btn btn-sm btn-outline-secondary">Próxima</button>
+                        </div>
+                      </div>
+                    ` : ''}
+                  `;
+                  function renderPage() {
+                    const start = page * pageSize;
+                    const slice = erros.slice(start, start + pageSize);
+                    const container = document.getElementById('errorsContainer');
+                    const info = document.getElementById('errPageInfo');
+                    if (container) {
+                      container.innerHTML = slice.map(e => `
+                        <div>- ${e.colaborador} (${e.colaboradorId}) • ${e.exception || ''} • ${e.mensagem || ''}</div>
+                      `).join('') || '<div>Nenhum erro</div>';
+                    }
+                    if (info) {
+                      const totalPages = Math.max(1, Math.ceil(erros.length / pageSize));
+                      info.textContent = `Página ${page + 1} de ${totalPages}`;
+                    }
+                    const prev = document.getElementById('errPrev');
+                    const next = document.getElementById('errNext');
+                    if (prev) prev.disabled = page === 0;
+                    if (next) next.disabled = (page + 1) * pageSize >= erros.length;
+                  }
+                  await Swal.fire({
+                    title: st.success ? 'Sucesso' : 'Concluído com falhas',
+                    html: baseHtml,
+                    icon: st.success ? 'success' : 'warning',
+                    didOpen: () => {
+                      renderPage();
+                      const prev = document.getElementById('errPrev');
+                      const next = document.getElementById('errNext');
+                      if (prev) prev.addEventListener('click', () => { if (page > 0) { page--; renderPage(); } });
+                      if (next) next.addEventListener('click', () => { if ((page + 1) * pageSize < erros.length) { page++; renderPage(); } });
+                    }
+                  });
+                  carregarCalendario();
+                  atualizarResumo();
+                }
+              } catch (e) {}
+            }, 1500);
+          } catch (e) {
+            await Swal.fire({ title: 'Erro', text: 'Falha ao iniciar processamento automático.', icon: 'error' });
+          }
+        });
     }
 
     function exportarEscala() { mostrarAlerta('info', 'Exportando escala...'); }

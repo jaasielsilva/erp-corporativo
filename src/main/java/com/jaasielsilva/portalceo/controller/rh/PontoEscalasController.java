@@ -65,6 +65,9 @@ public class PontoEscalasController {
     @Autowired
     private SolicitacaoFeriasRepository feriasRepository;
 
+    private final java.util.concurrent.ExecutorService gerarExecutor = java.util.concurrent.Executors.newFixedThreadPool(8);
+    private final java.util.Map<String, java.util.Map<String, Object>> gerarJobs = new java.util.concurrent.ConcurrentHashMap<>();
+
     @GetMapping("/registros")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     public String paginaRegistros() {
@@ -96,7 +99,7 @@ public class PontoEscalasController {
     @PostMapping("/api/atribuir-massa")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo", "escalaAlertas"}, allEntries = true)
     public ResponseEntity<Map<String, Object>> atribuirMassa(@RequestBody Map<String, Object> payload, Principal principal) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -273,6 +276,356 @@ public class PontoEscalasController {
         }
     }
 
+    @PostMapping("/api/escalas/gerar-automatico/start")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public ResponseEntity<Map<String, Object>> gerarAutomaticoStart(@RequestBody Map<String, Object> payload, Principal principal) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            int mes = Integer.parseInt(String.valueOf(payload.get("mes")));
+            int ano = Integer.parseInt(String.valueOf(payload.get("ano")));
+            Object escalaObj = payload.get("escalaId");
+            if (mes < 1 || mes > 12 || ano < 2000 || ano > 2100 || escalaObj == null || String.valueOf(escalaObj).isBlank()) {
+                resp.put("success", false);
+                resp.put("message", "Parâmetros inválidos");
+                return ResponseEntity.badRequest().body(resp);
+            }
+            Long escalaId = Long.valueOf(String.valueOf(escalaObj));
+            EscalaTrabalho escala = escalaTrabalhoRepository.findById(escalaId).orElse(null);
+            if (escala == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return ResponseEntity.badRequest().body(resp);
+            }
+            Object depObj = payload.get("departamentoId");
+            Long departamentoId = (depObj != null && !String.valueOf(depObj).isBlank()) ? Long.valueOf(String.valueOf(depObj)) : null;
+            String jobId = java.util.UUID.randomUUID().toString();
+            java.util.Map<String, Object> status = new java.util.HashMap<>();
+            status.put("running", true);
+            status.put("success", true);
+            status.put("message", "Em processamento");
+            status.put("processados", 0);
+            status.put("erros", 0);
+            status.put("total", 0);
+            status.put("mes", mes);
+            status.put("ano", ano);
+            status.put("departamentoId", departamentoId);
+            status.put("escalaId", escalaId);
+            status.put("startedAt", java.time.LocalDateTime.now().toString());
+            gerarJobs.put(jobId, status);
+            gerarExecutor.submit(() -> {
+                try {
+                    java.time.YearMonth ym = java.time.YearMonth.of(ano, mes);
+                    java.time.LocalDate inicio = ym.atDay(1);
+                    java.time.LocalDate fim = ym.atEndOfMonth();
+                    final Usuario usuarioLogado = (principal != null && principal.getName() != null)
+                            ? usuarioService.buscarPorEmail(principal.getName()).orElse(null)
+                            : null;
+                    java.util.List<com.jaasielsilva.portalceo.model.Colaborador> candidatos = colaboradorService.listarAtivos();
+                    if (departamentoId != null) {
+                        candidatos = candidatos.stream().filter(c -> c.getDepartamento() != null && departamentoId.equals(c.getDepartamento().getId())).collect(java.util.stream.Collectors.toList());
+                    }
+                    status.put("total", candidatos.size());
+                    java.util.Map<Long, java.util.List<com.jaasielsilva.portalceo.model.ColaboradorEscala>> vigentesMap = new java.util.HashMap<>();
+                    if (!candidatos.isEmpty()) {
+                        java.util.List<Long> ids = candidatos.stream().map(com.jaasielsilva.portalceo.model.Colaborador::getId).toList();
+                        int chunk = candidatos.size() <= 300 ? 100 : (candidatos.size() <= 1000 ? 200 : 500);
+                        Object chunkObj = payload.get("chunkSize");
+                        if (chunkObj != null) {
+                            try {
+                                int c = Integer.parseInt(String.valueOf(chunkObj));
+                                if (c == 100 || c == 200 || c == 500) {
+                                    chunk = c;
+                                }
+                            } catch (Exception ignore) {}
+                        }
+                        int batchSize = 200;
+                        Object batchObj = payload.get("batchSize");
+                        if (batchObj != null) {
+                            try {
+                                int b = Integer.parseInt(String.valueOf(batchObj));
+                                if (b == 100 || b == 200 || b == 500) {
+                                    batchSize = b;
+                                }
+                            } catch (Exception ignore) {}
+                        }
+                        long t0 = System.nanoTime();
+                        for (int i = 0; i < ids.size(); i += chunk) {
+                            java.util.List<Long> sub = ids.subList(i, Math.min(i + chunk, ids.size()));
+                            java.util.List<com.jaasielsilva.portalceo.model.ColaboradorEscala> list = colaboradorEscalaRepository.findVigentesByColaboradoresAndData(sub, inicio);
+                            for (com.jaasielsilva.portalceo.model.ColaboradorEscala ce : list) {
+                                Long cid = ce.getColaborador() != null ? ce.getColaborador().getId() : null;
+                                if (cid != null) {
+                                    vigentesMap.computeIfAbsent(cid, k -> new java.util.ArrayList<>()).add(ce);
+                                }
+                            }
+                        }
+                        long t1 = System.nanoTime();
+                        status.put("chunkSize", chunk);
+                        status.put("batchSize", batchSize);
+                        status.put("prefetchMs", (t1 - t0) / 1_000_000);
+                    }
+                    long tProcessStart = System.nanoTime();
+                    java.util.concurrent.ExecutorCompletionService<java.util.Map<String, Object>> ecs = new java.util.concurrent.ExecutorCompletionService<>(gerarExecutor);
+                    for (com.jaasielsilva.portalceo.model.Colaborador col : candidatos) {
+                        ecs.submit(() -> {
+                            java.util.Map<String, Object> log = new java.util.HashMap<>();
+                            log.put("colaboradorId", col.getId());
+                            log.put("colaborador", col.getNome());
+                            try {
+                                java.util.List<com.jaasielsilva.portalceo.model.ColaboradorEscala> vigentes = vigentesMap.getOrDefault(col.getId(), java.util.Collections.emptyList());
+                                for (com.jaasielsilva.portalceo.model.ColaboradorEscala ce : vigentes) {
+                                    ce.setDataFim(inicio.minusDays(1));
+                                }
+                                com.jaasielsilva.portalceo.model.ColaboradorEscala novo = new com.jaasielsilva.portalceo.model.ColaboradorEscala();
+                                novo.setColaborador(col);
+                                novo.setEscalaTrabalho(escala);
+                                novo.setDataInicio(inicio);
+                                novo.setDataFim(fim);
+                                novo.setAtivo(true);
+                                if (usuarioLogado != null) {
+                                    novo.setUsuarioCriacao(usuarioLogado);
+                                }
+                                java.util.List<com.jaasielsilva.portalceo.model.ColaboradorEscala> toSave = new java.util.ArrayList<>(vigentes);
+                                toSave.add(novo);
+                                colaboradorEscalaRepository.saveAll(toSave);
+                                log.put("status", "atribuido");
+                            } catch (Exception e) {
+                                log.put("status", "erro");
+                                String msg = e.getMessage();
+                                Throwable root = e;
+                                while (root.getCause() != null) root = root.getCause();
+                                if (root != null && root != e && root.getMessage() != null) msg = root.getMessage();
+                                log.put("mensagem", msg != null ? msg : "Falha ao atribuir");
+                                log.put("exception", e.getClass().getSimpleName());
+                            }
+                            return log;
+                        });
+                    }
+                    int processed = 0;
+                    int ok = 0;
+                    int erros = 0;
+                    java.util.List<java.util.Map<String, Object>> logs = new java.util.ArrayList<>();
+                    for (int i = 0; i < candidatos.size(); i++) {
+                        try {
+                            java.util.concurrent.Future<java.util.Map<String, Object>> f = ecs.take();
+                            java.util.Map<String, Object> l = f.get();
+                            logs.add(l);
+                            processed++;
+                            if ("atribuido".equals(l.get("status"))) ok++; else erros++;
+                            status.put("processados", processed);
+                            status.put("erros", erros);
+                        } catch (Exception ignore) {
+                            erros++;
+                            status.put("erros", erros);
+                        }
+                    }
+                    status.put("running", false);
+                    status.put("success", erros == 0);
+                    status.put("message", erros == 0 ? "Concluído" : "Concluído com falhas");
+                    status.put("logs", logs);
+                    long tProcessEnd = System.nanoTime();
+                    status.put("processMs", (tProcessEnd - tProcessStart) / 1_000_000);
+                    status.put("finishedAt", java.time.LocalDateTime.now().toString());
+                } catch (Exception e) {
+                    status.put("running", false);
+                    status.put("success", false);
+                    status.put("message", "Erro durante processamento");
+                    status.put("error", String.valueOf(e.getMessage()));
+                    status.put("finishedAt", java.time.LocalDateTime.now().toString());
+                }
+            });
+            resp.put("success", true);
+            resp.put("jobId", jobId);
+            return ResponseEntity.ok(resp);
+        } catch (Exception ex) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao iniciar geração automática");
+            resp.put("error", String.valueOf(ex.getMessage()));
+            return ResponseEntity.ok(resp);
+        }
+    }
+
+    @GetMapping("/api/escalas/gerar-automatico/status")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    public Map<String, Object> gerarAutomaticoStatus(@RequestParam String jobId) {
+        java.util.Map<String, Object> st = gerarJobs.get(jobId);
+        Map<String, Object> resp = new HashMap<>();
+        if (st == null) {
+            resp.put("success", false);
+            resp.put("message", "Job não encontrado");
+            return resp;
+        }
+        resp.put("success", true);
+        resp.putAll(st);
+        return resp;
+    }
+
+    @PostMapping("/api/escalas/gerar-automatico")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo", "escalaAlertas"}, allEntries = true)
+    public ResponseEntity<Map<String, Object>> gerarAutomatico(@RequestBody Map<String, Object> payload, Principal principal) {
+        Map<String, Object> resp = new HashMap<>();
+        try {
+            int mes = Integer.parseInt(String.valueOf(payload.get("mes")));
+            int ano = Integer.parseInt(String.valueOf(payload.get("ano")));
+            if (mes < 1 || mes > 12 || ano < 2000 || ano > 2100) {
+                resp.put("success", false);
+                resp.put("message", "Mês/Ano inválidos");
+                return ResponseEntity.badRequest().body(resp);
+            }
+            Object escalaObj = payload.get("escalaId");
+            if (escalaObj == null || String.valueOf(escalaObj).isBlank()) {
+                resp.put("success", false);
+                resp.put("message", "Selecione uma escala para gerar automaticamente");
+                return ResponseEntity.badRequest().body(resp);
+            }
+            Long escalaId = Long.valueOf(String.valueOf(escalaObj));
+            EscalaTrabalho escala = escalaTrabalhoRepository.findById(escalaId).orElse(null);
+            if (escala == null) {
+                resp.put("success", false);
+                resp.put("message", "Escala não encontrada");
+                return ResponseEntity.badRequest().body(resp);
+            }
+            Object depObj = payload.get("departamentoId");
+            Long departamentoId = (depObj != null && !String.valueOf(depObj).isBlank())
+                    ? Long.valueOf(String.valueOf(depObj))
+                    : null;
+            java.time.YearMonth ym = java.time.YearMonth.of(ano, mes);
+            LocalDate inicio = ym.atDay(1);
+            LocalDate fim = ym.atEndOfMonth();
+            Usuario usuarioLogado = null;
+            if (principal != null && principal.getName() != null) {
+                usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            }
+            List<Colaborador> candidatos = colaboradorService.listarAtivos();
+            if (departamentoId != null) {
+                candidatos = candidatos.stream()
+                        .filter(c -> c.getDepartamento() != null && departamentoId.equals(c.getDepartamento().getId()))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            Map<Long, List<ColaboradorEscala>> vigentesMap = new HashMap<>();
+            if (!candidatos.isEmpty()) {
+                List<Long> ids = candidatos.stream().map(Colaborador::getId).toList();
+                int chunk = candidatos.size() <= 300 ? 100 : (candidatos.size() <= 1000 ? 200 : 500);
+                Object chunkObj = payload.get("chunkSize");
+                if (chunkObj != null) {
+                    try {
+                        int c = Integer.parseInt(String.valueOf(chunkObj));
+                        if (c == 100 || c == 200 || c == 500) {
+                            chunk = c;
+                        }
+                    } catch (Exception ignore) {}
+                }
+                long t0 = System.nanoTime();
+                for (int i = 0; i < ids.size(); i += chunk) {
+                    List<Long> sub = ids.subList(i, Math.min(i + chunk, ids.size()));
+                    for (ColaboradorEscala ce : colaboradorEscalaRepository.findVigentesByColaboradoresAndData(sub, inicio)) {
+                        Long cid = ce.getColaborador() != null ? ce.getColaborador().getId() : null;
+                        if (cid != null) vigentesMap.computeIfAbsent(cid, k -> new ArrayList<>()).add(ce);
+                    }
+                }
+                long t1 = System.nanoTime();
+                resp.put("chunkSize", chunk);
+                resp.put("prefetchMs", (t1 - t0) / 1_000_000);
+            }
+            long tStart = System.nanoTime();
+            int ok = 0;
+            List<Map<String, Object>> logs = new ArrayList<>();
+            Map<Long, List<ColaboradorEscala>> saveMap = new HashMap<>();
+            for (Colaborador col : candidatos) {
+                List<ColaboradorEscala> vigentes = vigentesMap.getOrDefault(col.getId(), java.util.Collections.emptyList());
+                for (ColaboradorEscala ce : vigentes) {
+                    ce.setDataFim(inicio.minusDays(1));
+                }
+                ColaboradorEscala novo = new ColaboradorEscala();
+                novo.setColaborador(col);
+                novo.setEscalaTrabalho(escala);
+                novo.setDataInicio(inicio);
+                novo.setDataFim(fim);
+                novo.setAtivo(true);
+                if (usuarioLogado != null) {
+                    novo.setUsuarioCriacao(usuarioLogado);
+                }
+                List<ColaboradorEscala> toSave = new ArrayList<>(vigentes);
+                toSave.add(novo);
+                saveMap.put(col.getId(), toSave);
+            }
+            int batchSize = 200;
+            Object batchObj = payload.get("batchSize");
+            if (batchObj != null) {
+                try {
+                    int b = Integer.parseInt(String.valueOf(batchObj));
+                    if (b == 100 || b == 200 || b == 500) {
+                        batchSize = b;
+                    }
+                } catch (Exception ignore) {}
+            }
+            List<Long> keys = new ArrayList<>(saveMap.keySet());
+            long saveStart = System.nanoTime();
+            int batchCount = 0;
+            for (int i = 0; i < keys.size(); i += batchSize) {
+                List<Long> subKeys = keys.subList(i, Math.min(i + batchSize, keys.size()));
+                List<ColaboradorEscala> batchList = new ArrayList<>();
+                for (Long k : subKeys) {
+                    batchList.addAll(saveMap.getOrDefault(k, java.util.Collections.emptyList()));
+                }
+                try {
+                    colaboradorEscalaRepository.saveAll(batchList);
+                    for (Long k : subKeys) {
+                        Map<String, Object> l = new HashMap<>();
+                        l.put("colaboradorId", k);
+                        l.put("status", "atribuido");
+                        logs.add(l);
+                        ok++;
+                    }
+                } catch (Exception e) {
+                    for (Long k : subKeys) {
+                        List<ColaboradorEscala> indiv = saveMap.getOrDefault(k, java.util.Collections.emptyList());
+                        try {
+                            colaboradorEscalaRepository.saveAll(indiv);
+                            Map<String, Object> l = new HashMap<>();
+                            l.put("colaboradorId", k);
+                            l.put("status", "atribuido");
+                            logs.add(l);
+                            ok++;
+                        } catch (Exception ex) {
+                            Map<String, Object> l = new HashMap<>();
+                            l.put("colaboradorId", k);
+                            l.put("status", "erro");
+                            String msg = ex.getMessage();
+                            Throwable root = ex;
+                            while (root.getCause() != null) root = root.getCause();
+                            if (root != null && root != ex && root.getMessage() != null) msg = root.getMessage();
+                            l.put("mensagem", msg != null ? msg : "Falha ao atribuir");
+                            l.put("exception", ex.getClass().getSimpleName());
+                            logs.add(l);
+                        }
+                    }
+                }
+                batchCount++;
+            }
+            long saveEnd = System.nanoTime();
+            long tEnd = System.nanoTime();
+            resp.put("success", true);
+            resp.put("processados", ok);
+            resp.put("total", candidatos.size());
+            resp.put("logs", logs);
+            resp.put("batchSize", batchSize);
+            resp.put("batchCount", batchCount);
+            resp.put("saveAllMs", (saveEnd - saveStart) / 1_000_000);
+            resp.put("processMs", (tEnd - tStart) / 1_000_000);
+            return ResponseEntity.ok(resp);
+        } catch (Exception ex) {
+            resp.put("success", false);
+            resp.put("message", "Erro ao gerar automaticamente");
+            resp.put("error", String.valueOf(ex.getMessage()));
+            return ResponseEntity.ok(resp);
+        }
+    }
+
     @GetMapping("/nova")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
@@ -298,7 +651,7 @@ public class PontoEscalasController {
     @PostMapping("/api/escalas/encerrar")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo", "escalaAlertas"}, allEntries = true)
     public Map<String, Object> encerrarEscala(@RequestBody Map<String, Object> payload) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -325,7 +678,7 @@ public class PontoEscalasController {
     @PostMapping("/api/escalas/clonar")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo", "escalaAlertas"}, allEntries = true)
     public Map<String, Object> clonarEscala(@RequestBody Map<String, Object> payload) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -671,6 +1024,10 @@ public class PontoEscalasController {
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(
+        value = "escalaAlertas",
+        key = "#mes + '_' + #ano + '_' + (#departamentoId == null ? 'all' : #departamentoId) + '_' + (#escalaId == null ? 'all' : #escalaId) + '_' + #minimoPorTurno + '_' + #page + '_' + #size"
+    )
     public Map<String, Object> alertas(@RequestParam Integer mes,
                                        @RequestParam Integer ano,
                                        @RequestParam(required = false) Long departamentoId,
@@ -761,6 +1118,11 @@ public class PontoEscalasController {
                     itens.add(alerta);
                 }
 
+                java.util.List<Long> idsDia = escalados.stream()
+                        .map(m -> (Long) m.get("colaboradorId"))
+                        .distinct()
+                        .toList();
+                java.util.Set<Long> feriasDia = new java.util.HashSet<>(feriasRepository.colaboradoresEmFeriasNoDia(dia, idsDia));
                 for (Map<String, Object> esc : escalados) {
                     Long colabId = (Long) esc.get("colaboradorId");
                     String key = dia.toString() + "|" + colabId;
@@ -774,25 +1136,19 @@ public class PontoEscalasController {
                         confl.put("data", dia.toString());
                         confl.put("prioridade", "Crítica");
                         itens.add(confl);
-                        // evitar alertar repetidamente para o mesmo colaborador/dia
                         contagemPorColaboradorDia.put(key, 1);
                     }
-
-                    try {
-                        Colaborador c = colaboradorService.findById(colabId);
-                        boolean emFerias = feriasRepository.existeConflitoPeriodo(c, dia, dia);
-                        if (emFerias) {
-                            Map<String, Object> aus = new HashMap<>();
-                            aus.put("tipo", "Ausência");
-                            aus.put("descricao", "Colaborador em férias - substituição necessária");
-                            aus.put("colaborador", esc.get("colaboradorNome"));
-                            aus.put("colaboradorId", esc.get("colaboradorId"));
-                            aus.put("escalaId", esc.get("escalaId"));
-                            aus.put("data", dia.toString());
-                            aus.put("prioridade", "Média");
-                            itens.add(aus);
-                        }
-                    } catch (Exception ignored) {}
+                    if (feriasDia.contains(colabId)) {
+                        Map<String, Object> aus = new HashMap<>();
+                        aus.put("tipo", "Ausência");
+                        aus.put("descricao", "Colaborador em férias - substituição necessária");
+                        aus.put("colaborador", esc.get("colaboradorNome"));
+                        aus.put("colaboradorId", esc.get("colaboradorId"));
+                        aus.put("escalaId", esc.get("escalaId"));
+                        aus.put("data", dia.toString());
+                        aus.put("prioridade", "Média");
+                        itens.add(aus);
+                    }
                 }
             }
 
@@ -821,7 +1177,7 @@ public class PontoEscalasController {
     @PostMapping("/api/alertas/atribuir-cobertura")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo", "escalaAlertas"}, allEntries = true)
     public Map<String, Object> atribuirCobertura(@RequestBody Map<String, Object> payload, Principal principal) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -873,7 +1229,7 @@ public class PontoEscalasController {
     @PostMapping("/api/alertas/resolver-conflito")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo", "escalaAlertas"}, allEntries = true)
     public Map<String, Object> resolverConflito(@RequestBody Map<String, Object> payload) {
         Map<String, Object> resp = new HashMap<>();
         try {
@@ -950,6 +1306,10 @@ public class PontoEscalasController {
                 }
             }
             List<Colaborador> ativos = colaboradorService.listarAtivos();
+            java.util.Set<Long> idsComEscala = new java.util.HashSet<>();
+            if (escalaId != null) {
+                idsComEscala.addAll(colaboradorEscalaRepository.findColaboradorIdsComEscalaNoDia(data, escalaId));
+            }
             List<Map<String, Object>> disponiveis = new ArrayList<>();
             for (Colaborador c : ativos) {
                 if (!Boolean.TRUE.equals(incluirEscalados) && idsEscalados.contains(c.getId())) continue;
@@ -958,11 +1318,7 @@ public class PontoEscalasController {
                         continue;
                     }
                 }
-                if (escalaId != null) {
-                    List<ColaboradorEscala> vigColabDia = colaboradorEscalaRepository.findVigenteByColaboradorAndData(c.getId(), data);
-                    boolean mesmaEscala = vigColabDia.stream().anyMatch(ce -> ce.getEscalaTrabalho() != null && escalaId.equals(ce.getEscalaTrabalho().getId()));
-                    if (!mesmaEscala) continue;
-                }
+                if (escalaId != null && !idsComEscala.contains(c.getId())) continue;
                 Map<String, Object> it = new HashMap<>();
                 it.put("id", c.getId());
                 it.put("nome", c.getNome());
@@ -982,7 +1338,7 @@ public class PontoEscalasController {
     @PostMapping("/api/alertas/substituir-ferias")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
-    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo"}, allEntries = true)
+    @org.springframework.cache.annotation.CacheEvict(value = {"escalaCalendario", "escalaResumo", "escalaAlertas"}, allEntries = true)
     public Map<String, Object> substituirFerias(@RequestBody Map<String, Object> payload, Principal principal) {
         Map<String, Object> resp = new HashMap<>();
         try {

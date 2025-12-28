@@ -28,6 +28,21 @@ public interface ColaboradorEscalaRepository extends JpaRepository<ColaboradorEs
            "AND (ce.escalaTrabalho.dataVigenciaFim IS NULL OR :data <= ce.escalaTrabalho.dataVigenciaFim)")
     List<ColaboradorEscala> findVigentesByData(@Param("data") LocalDate data);
 
+    @Query("SELECT ce FROM ColaboradorEscala ce JOIN FETCH ce.colaborador c JOIN FETCH ce.escalaTrabalho e WHERE ce.ativo = true " +
+           "AND c.id IN :ids " +
+           "AND (:data >= ce.dataInicio AND (ce.dataFim IS NULL OR :data <= ce.dataFim)) " +
+           "AND e.ativo = true " +
+           "AND (:data >= COALESCE(e.dataVigenciaInicio, :data)) " +
+           "AND (e.dataVigenciaFim IS NULL OR :data <= e.dataVigenciaFim)")
+    List<ColaboradorEscala> findVigentesByColaboradoresAndData(@Param("ids") List<Long> ids, @Param("data") LocalDate data);
+
+    @Query("SELECT c.id FROM ColaboradorEscala ce JOIN ce.colaborador c JOIN ce.escalaTrabalho e WHERE ce.ativo = true " +
+           "AND (:data >= ce.dataInicio AND (ce.dataFim IS NULL OR :data <= ce.dataFim)) " +
+           "AND e.ativo = true AND e.id = :escalaId " +
+           "AND (:data >= COALESCE(e.dataVigenciaInicio, :data)) " +
+           "AND (e.dataVigenciaFim IS NULL OR :data <= e.dataVigenciaFim)")
+    List<Long> findColaboradorIdsComEscalaNoDia(@Param("data") LocalDate data, @Param("escalaId") Long escalaId);
+
     @Query(value = "SELECT c.id, c.nome, d.nome, u.matricula, e.id, e.nome, e.horarioEntrada1, e.horarioSaida1, e.horarioEntrada2, e.horarioSaida2, e.tipo, ce.dataInicio " +
                 "FROM ColaboradorEscala ce " +
                 "JOIN ce.colaborador c " +

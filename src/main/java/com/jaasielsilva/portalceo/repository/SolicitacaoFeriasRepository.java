@@ -33,4 +33,11 @@ public interface SolicitacaoFeriasRepository extends JpaRepository<SolicitacaoFe
     boolean existeConflitoPeriodo(@Param("colaborador") Colaborador colaborador,
                                   @Param("inicio") LocalDate inicio,
                                   @Param("fim") LocalDate fim);
+
+    @Query("SELECT s.colaborador.id FROM SolicitacaoFerias s " +
+           "WHERE s.status IN ('SOLICITADA','APROVADA') " +
+           "AND s.periodoInicio <= :dia AND s.periodoFim >= :dia " +
+           "AND s.colaborador.id IN :colabIds")
+    List<Long> colaboradoresEmFeriasNoDia(@Param("dia") LocalDate dia,
+                                          @Param("colabIds") List<Long> colabIds);
 }

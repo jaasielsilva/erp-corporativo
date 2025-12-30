@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,367 +17,483 @@
             color: #fff;
             border: none;
         }
+
         .card-highlight .fa {
             font-size: 2rem;
             opacity: 0.8;
         }
+
         .upload-area {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 30px 20px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
         }
+
         .table thead {
             background: #667eea;
             color: #fff;
         }
+
         .badge-category {
             background: #764ba2;
             color: #fff;
             font-size: 0.95em;
         }
+
         .loading-spinner {
             text-align: center;
             padding: 40px 0;
         }
+
+        .template-search-results {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            z-index: 1050;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+            max-height: 280px;
+            overflow: auto;
+        }
+
+        .template-search-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .template-search-item:last-child {
+            border-bottom: none;
+        }
+
+        .template-search-item:hover {
+            background: rgba(102, 126, 234, 0.08);
+        }
+
         @media (max-width: 768px) {
-            .upload-area { padding: 20px 10px; }
+            .upload-area {
+                padding: 20px 10px;
+            }
         }
     </style>
 </head>
+
 <body>
-<div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-    <main class="main-content">
-        <header th:replace="~{components/topbar :: topbar}"></header>
-        <section class="content-area">
-            <div class="container-fluid py-4">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid py-4">
 
-                <!-- Destaques -->
-                <div class="row mb-4 g-3">
-                    <div class="col-md-4">
-                        <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3">
-                            <i class="fa fa-folder-open"></i>
-                            <div>
-                                <div class="fw-bold fs-5" id="metricTotalDocs" th:text="${totalDocumentos} ?: '—'">—</div>
-                                <div>Total de Documentos</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3" style="background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%);">
-                            <i class="fa fa-tags"></i>
-                            <div>
-                                <div class="fw-bold fs-5" id="metricCategoriasCount" th:text="${categoriasDocumentos.size()} ?: '—'">—</div>
-                                <div>Categorias Ativas</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3" style="background: linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);">
-                            <i class="fa fa-clock"></i>
-                            <div>
-                                <div class="fw-bold fs-5" th:text="${documentosRecentes.size()} ?: '—'">—</div>
-                                <div>Documentos Recentes</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Upload de Documento -->
-                <div class="upload-area mb-4 shadow-sm">
-                    <h5 class="mb-3"><i class="fas fa-cloud-upload-alt text-primary"></i> Upload de Documento</h5>
-                    <form id="formUploadDoc" enctype="multipart/form-data" autocomplete="off">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Título *</label>
-                                <input id="docTitulo" name="titulo" class="form-control" type="text" maxlength="120" required placeholder="Ex.: Contrato de Locação"/>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Categoria *</label>
-                                <select id="docCategoria" name="categoria" class="form-select" required>
-                                    <option value="">Selecione...</option>
-                                    <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}" th:text="${c.nome}"></option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Descrição</label>
-                                <input id="docDescricao" name="descricao" class="form-control" type="text" maxlength="200" placeholder="Breve descrição"/>
-                            </div>
-                            <div class="col-md-6 mt-2">
-                                <label class="form-label fw-semibold">Arquivo *</label>
-                                <input id="docArquivo" name="file" class="form-control" type="file" accept=".pdf,.doc,.docx,.png,.jpg" required/>
-                                <small class="text-muted">Tipos permitidos: PDF, DOC, DOCX, PNG, JPG. Máx. 10MB.</small>
-                            </div>
-                            <div class="col-md-6 mt-2 d-flex align-items-end justify-content-end">
-                                <button id="btnUploadDocumento" type="button" class="btn btn-success px-4"><i class="fas fa-upload"></i> Enviar</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Filtros e Listagem -->
-                <div class="card p-3 mb-4 shadow-sm">
-                    <h5><i class="fas fa-list"></i> Documentos</h5>
-                    <!-- Filtros -->
-                    <form id="formFiltroDocs" autocomplete="off">
-                        <div class="row g-3 align-items-end mb-2">
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Categoria</label>
-                                <select id="filtroDocCategoria" class="form-select">
-                                    <option value="">Todas</option>
-                                    <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}" th:text="${c.nome}"></option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Busca</label>
-                                <input id="filtroDocBusca" class="form-control" type="text" placeholder="Título ou descrição"/>
-                            </div>
-                            <div class="col-md-3 d-grid">
-                                <button id="btnBuscarDocs" type="button" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
-                            </div>
-                        </div>
-                    </form>
-
-                    <!-- Tabela -->
-                    <div id="docsLoading" class="loading-spinner d-none"><i class='fas fa-spinner fa-spin fa-2x'></i> Carregando...</div>
-                    <div class="table-responsive mt-2">
-                        <table class="table table-striped align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Título</th>
-                                    <th>Categoria</th>
-                                    <th>Descrição</th>
-                                    <th>Arquivo</th>
-                                    <th>Criado em</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="docsTableBody">
-                                <!-- Conteúdo dinâmico -->
-                                <tr><td colspan="6" class="text-muted text-center">Use os filtros para listar documentos.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Paginação -->
-                    <nav aria-label="Paginação de documentos" class="mt-2 d-flex justify-content-between align-items-center">
-                        <span id="docsPageInfo" class="small">Página 1 de 1</span>
-                        <ul class="pagination mb-0">
-                            <li class="page-item"><button id="docsPrev" type="button" class="page-link">&laquo; Anterior</button></li>
-                            <li class="page-item"><button id="docsNext" type="button" class="page-link">Próxima &raquo;</button></li>
-                        </ul>
-                    </nav>
-
-                </div>
-
-                <!-- Categorias e Modelos -->
-                <div class="row g-3 mb-4">
-                    <!-- Categorias -->
-                    <div class="col-md-6">
-                        <div class="card p-3 shadow-sm h-100">
-                            <h5><i class="fas fa-tags"></i> Categorias</h5>
-                            <div th:if="${categoriasDocumentos != null and !categoriasDocumentos.isEmpty()}" class="d-flex flex-wrap gap-2 mt-2">
-                                <span th:each="c : ${categoriasDocumentos}" th:text="${c.nome}" class='badge badge-category'></span>
-                            </div>
-                            <div th:if="${categoriasDocumentos == null or categoriasDocumentos.isEmpty()}" class='text-muted'>Nenhuma categoria cadastrada.</div>
-                        </div>
-                    </div>
-
-                    <!-- Modelos de Documentos -->
-                    <div class='col-md-6'>
-                        <div class='card p-3 shadow-sm h-100'>
-                            <h5><i class='fas fa-file-alt'></i> Modelos de Documentos</h5>
-                            <ul th:if="${modelosDocumentos != null and !modelosDocumentos.isEmpty()}" class='list-group list-group-flush mt-2'>
-                                <li th:each='m : ${modelosDocumentos}' class='list-group-item d-flex justify-content-between align-items-center'>
-                                    <span class="d-flex flex-column">
-                                        <span><b th:text='${m.nome}'>Modelo</b> - 
-                                            <small th:text="|Categoria: ${m.categoria}|">Categoria</small></span>
-                                        <span class="d-flex gap-2 mt-1">
-                                            <span th:text="|v${m.versao}|" class='badge bg-secondary'></span>
-                                            <span th:if="${m.status != null}" th:text="${m.status}" class='badge bg-info'></span>
-                                        </span>
-                                    </span>
-                                    <span class="d-flex gap-2">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" th:attr="data-id=${m.id}" data-action="modelo-usar"><i class="fas fa-play"></i> Usar</button>
-                                        <a th:href="@{|/juridico/modelos/download/${m.id}|}" class="btn btn-sm btn-outline-secondary" target="_blank"><i class="fas fa-download"></i> Baixar</a>
-                                    </span>
-                                </li>
-                            </ul>
-                            <span th:if="${modelosDocumentos == null or modelosDocumentos.isEmpty()}" class='text-muted'>Nenhum modelo disponível.</span>
-                            <div class="mt-3">
-                                <h6 class="fw-semibold">Adicionar Modelos</h6>
-                                <div class="row g-2 align-items-end">
-                                    <div class="col-md-6">
-                                        <input id="modeloFiles" class="form-control" type="file" accept=".pdf,.doc,.docx" multiple/>
-                                        <small class="text-muted">Tipos: PDF, DOC, DOCX. Máx. 10MB cada.</small>
+                    <!-- Destaques -->
+                    <div class="row mb-4 g-3">
+                        <div class="col-md-4">
+                            <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3">
+                                <i class="fa fa-folder-open"></i>
+                                <div>
+                                    <div class="fw-bold fs-5" id="metricTotalDocs" th:text="${totalDocumentos} ?: '—'">—
                                     </div>
-                                    <div class="col-md-3">
-                                        <input id="modeloCategoria" class="form-control" type="text" placeholder="Categoria (opcional)"/>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <input id="modeloVersao" class="form-control" type="text" placeholder="Versão" value="1.0.0"/>
-                                    </div>
-                                    <div class="col-md-1 d-grid">
-                                        <button id="btnUploadModelos" type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                    </div>
+                                    <div>Total de Documentos</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3"
+                                style="background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%);">
+                                <i class="fa fa-tags"></i>
+                                <div>
+                                    <div class="fw-bold fs-5" id="metricCategoriasCount"
+                                        th:text="${categoriasDocumentos.size()} ?: '—'">—</div>
+                                    <div>Categorias Ativas</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3"
+                                style="background: linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);">
+                                <i class="fa fa-clock"></i>
+                                <div>
+                                    <div class="fw-bold fs-5" th:text="${documentosRecentes.size()} ?: '—'">—</div>
+                                    <div>Documentos Recentes</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                </div>
+                    <!-- Upload de Documento -->
+                    <div class="upload-area mb-4 shadow-sm">
+                        <h5 class="mb-3"><i class="fas fa-cloud-upload-alt text-primary"></i> Upload de Documento</h5>
+                        <form id="formUploadDoc" enctype="multipart/form-data" autocomplete="off">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Título *</label>
+                                    <input id="docTitulo" name="titulo" class="form-control" type="text" maxlength="120"
+                                        required placeholder="Ex.: Contrato de Locação" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Categoria *</label>
+                                    <select id="docCategoria" name="categoria" class="form-select" required>
+                                        <option value="">Selecione...</option>
+                                        <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}"
+                                            th:text="${c.nome}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Descrição</label>
+                                    <input id="docDescricao" name="descricao" class="form-control" type="text"
+                                        maxlength="200" placeholder="Breve descrição" />
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <label class="form-label fw-semibold">Arquivo *</label>
+                                    <input id="docArquivo" name="file" class="form-control" type="file"
+                                        accept=".pdf,.doc,.docx,.png,.jpg" required />
+                                    <small class="text-muted">Tipos permitidos: PDF, DOC, DOCX, PNG, JPG. Máx.
+                                        10MB.</small>
+                                </div>
+                                <div class="col-md-6 mt-2 d-flex align-items-end justify-content-end">
+                                    <button id="btnUploadDocumento" type="button" class="btn btn-success px-4"><i
+                                            class="fas fa-upload"></i> Enviar</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
-                <!-- Documentos Recentes -->
-                <div class="card p-3 shadow-sm mb-4">
-                    <h5><i class="fas fa-clock"></i> Documentos Recentes</h5>
-                    <th:block th:if="${documentosRecentes != null and !documentosRecentes.isEmpty()}">
-                        <ul class="list-group list-group-flush mt-2">
-                            <li th:each="d : ${documentosRecentes}" class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><b th:text="${d.titulo}">Título</b> -
-                                    <small th:text="|Categoria: ${d.categoria}|">Categoria</small></span>
-                                <span class="d-flex align-items-center gap-2">
-                                    <span th:text="${#temporals.format(d.dataUpload, 'yyyy-MM-dd HH:mm')}">Data</span>
-                                    <span>|</span>
-                                    <span>Autor: <span th:text="${d.autor} ?: '—'">—</span></span>
-                                    <a th:href="@{|/juridico/documentos/download/${d.id}|}" class="btn btn-sm btn-outline-primary" title="Baixar"><i class="fas fa-download"></i></a>
-                                </span>
-                            </li>
-                        </ul>
-                    </th:block>
-                    <span th:if="${documentosRecentes == null or documentosRecentes.isEmpty()}" class="text-muted">Nenhum documento recente.</span>
-                </div>
+                    <div class="card p-3 mb-4 shadow-sm">
+                        <h5><i class="fas fa-bolt"></i> Templates rápidos</h5>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-6 position-relative">
+                                <label class="form-label fw-semibold">Cliente (PF)</label>
+                                <input id="procClienteBusca" class="form-control" type="text" autocomplete="off"
+                                    placeholder="Buscar cliente por nome, email ou CPF" />
+                                <input id="procClienteId" type="hidden" />
+                                <div id="procClienteResultados" class="template-search-results d-none"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Documento</label>
+                                <input class="form-control" type="text" value="PROCURAÇÃO AD JUDICIA" readonly />
+                            </div>
+                            <div class="col-md-3 d-grid">
+                                <button id="btnGerarProcuracaoAdJudicia" type="button" class="btn btn-primary">
+                                    <i class="fas fa-file-pdf"></i> Gerar PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-end mt-1">
+                            <div class="col-md-6"></div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Documento</label>
+                                <input class="form-control" type="text"
+                                    value="CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS" readonly />
+                            </div>
+                            <div class="col-md-3 d-grid">
+                                <button id="btnGerarContratoPrestacaoServicosAdvocaticios" type="button"
+                                    class="btn btn-primary">
+                                    <i class="fas fa-file-pdf"></i> Gerar PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div id="procClienteSelecionadoResumo" class="small text-muted mt-2">Nenhum cliente selecionado.
+                        </div>
+                    </div>
 
-            </div><!-- container-fluid -->
-        </section>
+                    <!-- Filtros e Listagem -->
+                    <div class="card p-3 mb-4 shadow-sm">
+                        <h5><i class="fas fa-list"></i> Documentos</h5>
+                        <!-- Filtros -->
+                        <form id="formFiltroDocs" autocomplete="off">
+                            <div class="row g-3 align-items-end mb-2">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Categoria</label>
+                                    <select id="filtroDocCategoria" class="form-select">
+                                        <option value="">Todas</option>
+                                        <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}"
+                                            th:text="${c.nome}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Busca</label>
+                                    <input id="filtroDocBusca" class="form-control" type="text"
+                                        placeholder="Título ou descrição" />
+                                </div>
+                                <div class="col-md-3 d-grid">
+                                    <button id="btnBuscarDocs" type="button" class="btn btn-primary"><i
+                                            class="fas fa-search"></i> Buscar</button>
+                                </div>
+                            </div>
+                        </form>
 
-        <!-- Footer -->
-        <footer th:replace="~{components/footer :: footer}"></footer>
+                        <!-- Tabela -->
+                        <div id="docsLoading" class="loading-spinner d-none"><i
+                                class='fas fa-spinner fa-spin fa-2x'></i> Carregando...</div>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-striped align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Categoria</th>
+                                        <th>Descrição</th>
+                                        <th>Arquivo</th>
+                                        <th>Criado em</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="docsTableBody">
+                                    <!-- Conteúdo dinâmico -->
+                                    <tr>
+                                        <td colspan="6" class="text-muted text-center">Use os filtros para listar
+                                            documentos.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
-    </main>
-</div>
+                        <!-- Paginação -->
+                        <nav aria-label="Paginação de documentos"
+                            class="mt-2 d-flex justify-content-between align-items-center">
+                            <span id="docsPageInfo" class="small">Página 1 de 1</span>
+                            <ul class="pagination mb-0">
+                                <li class="page-item"><button id="docsPrev" type="button" class="page-link">&laquo;
+                                        Anterior</button></li>
+                                <li class="page-item"><button id="docsNext" type="button" class="page-link">Próxima
+                                        &raquo;</button></li>
+                            </ul>
+                        </nav>
 
-<!-- Scripts -->
-<script>var CAN_PREVIEW=false;var CAN_DOWNLOAD=false;</script>
-<script th:inline="javascript">
-  var IS_ADMIN = /*[[${isAdmin}]]*/ false;
-  var IS_MASTER = /*[[${isMaster}]]*/ false;
-  var IS_RH = /*[[${isRH}]]*/ false;
-  var IS_JURIDICO = /*[[${isJuridico}]]*/ false;
-  CAN_PREVIEW = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
-  CAN_DOWNLOAD = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
-</script>
-<script src="/js/sidebar.js" defer></script>
-<script src="/js/notifications.js"></script> <!-- Se usar notificação customizada -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                    </div>
 
-<!-- Modal Detalhes Documento -->
-<div class="modal fade" id="docDetalhesModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="docDetalhesTitle"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="docDetalhesBody"></div>
-      <div class="modal-footer">
-        <a id="docDownloadBtn" href="#" class="btn btn-primary" target="_blank"><i class="fas fa-download"></i> Baixar</a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-      </div>
+                    <!-- Categorias e Modelos -->
+                    <div class="row g-3 mb-4">
+                        <!-- Categorias -->
+                        <div class="col-md-6">
+                            <div class="card p-3 shadow-sm h-100">
+                                <h5><i class="fas fa-tags"></i> Categorias</h5>
+                                <div th:if="${categoriasDocumentos != null and !categoriasDocumentos.isEmpty()}"
+                                    class="d-flex flex-wrap gap-2 mt-2">
+                                    <span th:each="c : ${categoriasDocumentos}" th:text="${c.nome}"
+                                        class='badge badge-category'></span>
+                                </div>
+                                <div th:if="${categoriasDocumentos == null or categoriasDocumentos.isEmpty()}"
+                                    class='text-muted'>Nenhuma categoria cadastrada.</div>
+                            </div>
+                        </div>
+
+                        <!-- Modelos de Documentos -->
+                        <div class='col-md-6'>
+                            <div class='card p-3 shadow-sm h-100'>
+                                <h5><i class='fas fa-file-alt'></i> Modelos de Documentos</h5>
+                                <ul th:if="${modelosDocumentos != null and !modelosDocumentos.isEmpty()}"
+                                    class='list-group list-group-flush mt-2'>
+                                    <li th:each='m : ${modelosDocumentos}'
+                                        class='list-group-item d-flex justify-content-between align-items-center'>
+                                        <span class="d-flex flex-column">
+                                            <span><b th:text='${m.nome}'>Modelo</b> -
+                                                <small th:text="|Categoria: ${m.categoria}|">Categoria</small></span>
+                                            <span class="d-flex gap-2 mt-1">
+                                                <span th:text="|v${m.versao}|" class='badge bg-secondary'></span>
+                                                <span th:if="${m.status != null}" th:text="${m.status}"
+                                                    class='badge bg-info'></span>
+                                            </span>
+                                        </span>
+                                        <span class="d-flex gap-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                th:attr="data-id=${m.id}" data-action="modelo-usar"><i
+                                                    class="fas fa-play"></i> Usar</button>
+                                            <a th:href="@{|/juridico/modelos/download/${m.id}|}"
+                                                class="btn btn-sm btn-outline-secondary" target="_blank"><i
+                                                    class="fas fa-download"></i> Baixar</a>
+                                        </span>
+                                    </li>
+                                </ul>
+                                <span th:if="${modelosDocumentos == null or modelosDocumentos.isEmpty()}"
+                                    class='text-muted'>Nenhum modelo disponível.</span>
+                                <div class="mt-3">
+                                    <h6 class="fw-semibold">Adicionar Modelos</h6>
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-6">
+                                            <input id="modeloFiles" class="form-control" type="file"
+                                                accept=".pdf,.doc,.docx" multiple />
+                                            <small class="text-muted">Tipos: PDF, DOC, DOCX. Máx. 10MB cada.</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input id="modeloCategoria" class="form-control" type="text"
+                                                placeholder="Categoria (opcional)" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input id="modeloVersao" class="form-control" type="text"
+                                                placeholder="Versão" value="1.0.0" />
+                                        </div>
+                                        <div class="col-md-1 d-grid">
+                                            <button id="btnUploadModelos" type="button" class="btn btn-primary"><i
+                                                    class="fas fa-plus"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Documentos Recentes -->
+                    <div class="card p-3 shadow-sm mb-4">
+                        <h5><i class="fas fa-clock"></i> Documentos Recentes</h5>
+                        <th:block th:if="${documentosRecentes != null and !documentosRecentes.isEmpty()}">
+                            <ul class="list-group list-group-flush mt-2">
+                                <li th:each="d : ${documentosRecentes}"
+                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><b th:text="${d.titulo}">Título</b> -
+                                        <small th:text="|Categoria: ${d.categoria}|">Categoria</small></span>
+                                    <span class="d-flex align-items-center gap-2">
+                                        <span
+                                            th:text="${#temporals.format(d.dataUpload, 'yyyy-MM-dd HH:mm')}">Data</span>
+                                        <span>|</span>
+                                        <span>Autor: <span th:text="${d.autor} ?: '—'">—</span></span>
+                                        <a th:href="@{|/juridico/documentos/download/${d.id}|}"
+                                            class="btn btn-sm btn-outline-primary" title="Baixar"><i
+                                                class="fas fa-download"></i></a>
+                                    </span>
+                                </li>
+                            </ul>
+                        </th:block>
+                        <span th:if="${documentosRecentes == null or documentosRecentes.isEmpty()}"
+                            class="text-muted">Nenhum documento recente.</span>
+                    </div>
+
+                </div><!-- container-fluid -->
+            </section>
+
+            <!-- Footer -->
+            <footer th:replace="~{components/footer :: footer}"></footer>
+
+        </main>
     </div>
-  </div>
-</div>
 
-<script>
-// UX Loading
-function showDocsLoading(show) {
-    $('#docsLoading').toggleClass('d-none', !show);
-}
+    <!-- Scripts -->
+    <script>var CAN_PREVIEW = false; var CAN_DOWNLOAD = false;</script>
+    <script th:inline="javascript">
+        var IS_ADMIN = /*[[${isAdmin}]]*/ false;
+        var IS_MASTER = /*[[${isMaster}]]*/ false;
+        var IS_RH = /*[[${isRH}]]*/ false;
+        var IS_JURIDICO = /*[[${isJuridico}]]*/ false;
+        CAN_PREVIEW = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
+        CAN_DOWNLOAD = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
+    </script>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="/js/notifications.js"></script> <!-- Se usar notificação customizada -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-// Notificação
-function notify(type, title, message, priority = 'medium', options = {}) {
-    if (typeof showToast === 'function') {
-        showToast({ type, title, message, priority, ...options });
-    } else {
-        const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
-        alert(`${icon} ${title}: ${message}`);
-    }
-}
+    <!-- Modal Detalhes Documento -->
+    <div class="modal fade" id="docDetalhesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="docDetalhesTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="docDetalhesBody"></div>
+                <div class="modal-footer">
+                    <a id="docDownloadBtn" href="#" class="btn btn-primary" target="_blank"><i
+                            class="fas fa-download"></i> Baixar</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-$(function () {
-    // Upload
-    $('#btnUploadDocumento').on('click', function () {
-        const $btn = $(this);
-        const titulo = $('#docTitulo').val()?.trim();
-        const categoria = $('#docCategoria').val();
-        const descricao = $('#docDescricao').val()?.trim();
-        const file = $('#docArquivo')[0]?.files?.[0];
-
-        if (!titulo || !categoria || !file) {
-            notify('error', 'Campos obrigatórios', 'Preencha todos os campos obrigatórios.');
-            return;
+    <script>
+        // UX Loading
+        function showDocsLoading(show) {
+            $('#docsLoading').toggleClass('d-none', !show);
         }
 
-        $btn.prop('disabled', true).html('<i class=\"fas fa-spinner fa-spin\"></i> Enviando...');
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('titulo', titulo);
-        formData.append('categoria', categoria);
-        formData.append('descricao', descricao || '');
-
-        $.ajax({
-            url: '/juridico/api/documentos/upload-multipart',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success(res) {
-                notify('success', 'Documento enviado', res.id ? `ID ${res.id}` : 'Upload concluído', 'low', { durationMs: 6000 });
-                setTimeout(() => window.location.reload(), 1200);
-            },
-            error(xhr) {
-                const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro no upload de arquivo';
-                notify('error', 'Falha no upload', msg, 'high', { sticky: true });
-            },
-            complete() {
-                $btn.prop('disabled', false).html('<i class=\"fas fa-upload\"></i> Enviar');
-            }
-        });
-    });
-
-    // Listagem paginada via API
-    let docsPage = 0;
-    let docsTotalPages = 1;
-    const docsSize = 10;
-
-    function renderDocs(items) {
-        const $tbody = $('#docsTableBody');
-        $tbody.empty();
-        if (!items || items.length === 0) {
-            $tbody.append('<tr><td colspan=\"5\" class=\"text-center text-muted\">Nenhum documento encontrado.</td></tr>');
-            return;
-        }
-        items.forEach(d => {
-            const lower = (d.caminhoArquivo || '').toLowerCase();
-            const ct = (d.contentType || '').toLowerCase();
-            const fn = (d.originalFilename || '').toLowerCase();
-            const isPdf = ct.includes('pdf') || lower.endsWith('.pdf') || fn.endsWith('.pdf');
-            const isImg = ct.startsWith('image/') || lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || fn.endsWith('.png') || fn.endsWith('.jpg') || fn.endsWith('.jpeg');
-            let linkHtml = '<span class="text-muted">—</span>';
-            if (isPdf || isImg) {
-                if (CAN_PREVIEW) {
-                    linkHtml = `<a href="/juridico/documentos/preview/${d.id}" target="_blank"><i class='fas fa-eye'></i> Visualizar</a>`;
-                } else if (CAN_DOWNLOAD) {
-                    linkHtml = `<a href="/juridico/documentos/download/${d.id}" target="_blank"><i class='fas fa-download'></i> Baixar</a>`;
-                }
+        // Notificação
+        function notify(type, title, message, priority = 'medium', options = {}) {
+            if (typeof showToast === 'function') {
+                showToast({ type, title, message, priority, ...options });
             } else {
-                if (CAN_DOWNLOAD) {
-                    linkHtml = `<a href="/juridico/documentos/download/${d.id}" target="_blank"><i class='fas fa-download'></i> Baixar</a>`;
-                }
+                const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+                alert(`${icon} ${title}: ${message}`);
             }
-            $tbody.append(`
+        }
+
+        $(function () {
+            // Upload
+            $('#btnUploadDocumento').on('click', function () {
+                const $btn = $(this);
+                const titulo = $('#docTitulo').val()?.trim();
+                const categoria = $('#docCategoria').val();
+                const descricao = $('#docDescricao').val()?.trim();
+                const file = $('#docArquivo')[0]?.files?.[0];
+
+                if (!titulo || !categoria || !file) {
+                    notify('error', 'Campos obrigatórios', 'Preencha todos os campos obrigatórios.');
+                    return;
+                }
+
+                $btn.prop('disabled', true).html('<i class=\"fas fa-spinner fa-spin\"></i> Enviando...');
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('titulo', titulo);
+                formData.append('categoria', categoria);
+                formData.append('descricao', descricao || '');
+
+                $.ajax({
+                    url: '/juridico/api/documentos/upload-multipart',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success(res) {
+                        notify('success', 'Documento enviado', res.id ? `ID ${res.id}` : 'Upload concluído', 'low', { durationMs: 6000 });
+                        setTimeout(() => window.location.reload(), 1200);
+                    },
+                    error(xhr) {
+                        const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro no upload de arquivo';
+                        notify('error', 'Falha no upload', msg, 'high', { sticky: true });
+                    },
+                    complete() {
+                        $btn.prop('disabled', false).html('<i class=\"fas fa-upload\"></i> Enviar');
+                    }
+                });
+            });
+
+            // Listagem paginada via API
+            let docsPage = 0;
+            let docsTotalPages = 1;
+            const docsSize = 10;
+
+            function renderDocs(items) {
+                const $tbody = $('#docsTableBody');
+                $tbody.empty();
+                if (!items || items.length === 0) {
+                    $tbody.append('<tr><td colspan=\"6\" class=\"text-center text-muted\">Nenhum documento encontrado.</td></tr>');
+                    return;
+                }
+                items.forEach(d => {
+                    const lower = (d.caminhoArquivo || '').toLowerCase();
+                    const ct = (d.contentType || '').toLowerCase();
+                    const fn = (d.originalFilename || '').toLowerCase();
+                    const isPdf = ct.includes('pdf') || lower.endsWith('.pdf') || fn.endsWith('.pdf');
+                    const isImg = ct.startsWith('image/') || lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || fn.endsWith('.png') || fn.endsWith('.jpg') || fn.endsWith('.jpeg');
+                    let linkHtml = '<span class="text-muted">—</span>';
+                    if (isPdf || isImg) {
+                        if (CAN_PREVIEW) {
+                            linkHtml = `<a href="/juridico/documentos/preview/${d.id}" target="_blank"><i class='fas fa-eye'></i> Visualizar</a>`;
+                        } else if (CAN_DOWNLOAD) {
+                            linkHtml = `<a href="/juridico/documentos/download/${d.id}" target="_blank"><i class='fas fa-download'></i> Baixar</a>`;
+                        }
+                    } else {
+                        if (CAN_DOWNLOAD) {
+                            linkHtml = `<a href="/juridico/documentos/download/${d.id}" target="_blank"><i class='fas fa-download'></i> Baixar</a>`;
+                        }
+                    }
+                    $tbody.append(`
                 <tr>
                     <td>${d.titulo || '—'}</td>
                     <td>${d.categoria || '—'}</td>
@@ -384,69 +501,229 @@ $(function () {
                     <td>${linkHtml}</td>
                     <td>${d.criadoEm || '—'}</td>
                 </tr>`);
-        });
-    }
+                });
+            }
 
-    function atualizarDocsPaginacao() {
-        $('#docsPageInfo').text(`Página ${docsPage + 1} de ${docsTotalPages}`);
-        $('#docsPrev').prop('disabled', docsPage <= 0);
-        $('#docsNext').prop('disabled', docsPage >= docsTotalPages - 1);
-    }
+            function atualizarDocsPaginacao() {
+                $('#docsPageInfo').text(`Página ${docsPage + 1} de ${docsTotalPages}`);
+                $('#docsPrev').prop('disabled', docsPage <= 0);
+                $('#docsNext').prop('disabled', docsPage >= docsTotalPages - 1);
+            }
 
-    function carregarDocs(page = 0) {
-        const categoria = $('#filtroDocCategoria').val();
-        const search = $('#filtroDocBusca').val()?.trim();
-        showDocsLoading(true);
-        $.get('/juridico/api/documentos', { categoria, search, page, size: docsSize })
-            .done(res => {
-                docsPage = res.page || 0;
-                docsTotalPages = res.totalPages || 1;
-                renderDocs(res.content);
-                (function decorateActions(list) {
-                    const $rows = $('#docsTableBody tr');
-                    $rows.each(function(idx) {
-                        const d = list[idx];
-                        if (!d) return;
-                        const actions = `
+            function carregarDocs(page = 0) {
+                const categoria = $('#filtroDocCategoria').val();
+                const search = $('#filtroDocBusca').val()?.trim();
+                showDocsLoading(true);
+                $.get('/juridico/api/documentos', { categoria, search, page, size: docsSize })
+                    .done(res => {
+                        docsPage = res.page || 0;
+                        docsTotalPages = res.totalPages || 1;
+                        renderDocs(res.content);
+                        (function decorateActions(list) {
+                            const $rows = $('#docsTableBody tr');
+                            $rows.each(function (idx) {
+                                const d = list[idx];
+                                if (!d) return;
+                                const actions = `
                             <div class="d-flex gap-1">
                                 ${CAN_PREVIEW ? `<a class="btn btn-sm btn-outline-secondary" href="/juridico/documentos/preview/${d.id}" target="_blank" title="Visualizar"><i class="fas fa-eye"></i></a>` : ''}
                                 ${CAN_DOWNLOAD ? `<a class="btn btn-sm btn-outline-primary" href="/juridico/documentos/download/${d.id}" target="_blank" title="Baixar"><i class="fas fa-download"></i></a>` : ''}
                                 <button type="button" class="btn btn-sm btn-outline-danger" data-action="doc-excluir" data-id="${d.id}"><i class="fas fa-trash"></i></button>
                             </div>`;
-                        $(this).append(`<td>${actions}</td>`);
+                                $(this).append(`<td>${actions}</td>`);
+                            });
+                        })(res.content);
+                        atualizarDocsPaginacao();
+                    })
+                    .fail(() => {
+                        notify('error', 'Falha ao listar', 'Não foi possível carregar os documentos.', 'high');
+                        $('#docsTableBody').html('<tr><td colspan=\"6\" class=\"text-center text-muted\">Erro ao carregar documentos.</td></tr>');
+                    })
+                    .always(() => showDocsLoading(false));
+            }
+
+            $('#btnBuscarDocs').on('click', () => carregarDocs(0));
+            $('#docsPrev').on('click', () => { if (docsPage > 0) carregarDocs(docsPage - 1); });
+            $('#docsNext').on('click', () => { if (docsPage < docsTotalPages - 1) carregarDocs(docsPage + 1); });
+
+            // Carregar ao abrir
+            carregarDocs(0);
+
+            function atualizarMetrics() {
+                $.get('/juridico/api/documentos/metrics')
+                    .done(res => {
+                        const total = (res && typeof res.total !== 'undefined') ? res.total : '—';
+                        const catCount = (res && Array.isArray(res.categorias)) ? res.categorias.length : '—';
+                        $('#metricTotalDocs').text(total);
+                        $('#metricCategoriasCount').text(catCount);
                     });
-                })(res.content);
-                atualizarDocsPaginacao();
-            })
-            .fail(() => {
-                notify('error', 'Falha ao listar', 'Não foi possível carregar os documentos.', 'high');
-                $('#docsTableBody').html('<tr><td colspan=\"5\" class=\"text-center text-muted\">Erro ao carregar documentos.</td></tr>');
-            })
-            .always(() => showDocsLoading(false));
-    }
+            }
+            atualizarMetrics();
+            setInterval(atualizarMetrics, 30000);
 
-    $('#btnBuscarDocs').on('click', () => carregarDocs(0));
-    $('#docsPrev').on('click', () => { if (docsPage > 0) carregarDocs(docsPage - 1); });
-    $('#docsNext').on('click', () => { if (docsPage < docsTotalPages - 1) carregarDocs(docsPage + 1); });
+            let procDebounce = null;
+            let procSelecionado = null;
 
-    // Carregar ao abrir
-    carregarDocs(0);
+            function hideProcResultados() {
+                $('#procClienteResultados').addClass('d-none').empty();
+            }
 
-    function atualizarMetrics() {
-        $.get('/juridico/api/documentos/metrics')
-            .done(res => {
-                const total = (res && typeof res.total !== 'undefined') ? res.total : '—';
-                const catCount = (res && Array.isArray(res.categorias)) ? res.categorias.length : '—';
-                $('#metricTotalDocs').text(total);
-                $('#metricCategoriasCount').text(catCount);
+            function setProcSelecionado(cliente) {
+                procSelecionado = cliente;
+                $('#procClienteId').val(cliente ? cliente.id : '');
+                const nome = cliente ? (cliente.nomeFantasia || cliente.nome || '—') : '—';
+                const tipo = cliente ? (cliente.tipoCliente || '—') : '—';
+                const status = cliente ? (cliente.status || '—') : '—';
+                $('#procClienteSelecionadoResumo').text(cliente ? `${nome} | Tipo: ${tipo} | Status: ${status}` : 'Nenhum cliente selecionado.');
+            }
+
+            $('#procClienteBusca').on('input', function () {
+                const q = ($(this).val() || '').trim();
+                setProcSelecionado(null);
+                if (!q) {
+                    hideProcResultados();
+                    return;
+                }
+                if (procDebounce) clearTimeout(procDebounce);
+                procDebounce = setTimeout(() => {
+                    $.get('/clientes/avancado/api/busca', { busca: q, tipoCliente: 'PF', ativo: true, size: 8, page: 0 })
+                        .done(res => {
+                            const items = (res && res.content) ? res.content : [];
+                            const $box = $('#procClienteResultados');
+                            $box.empty();
+                            if (!items.length) {
+                                $box.append(`<div class="template-search-item text-muted">Nenhum cliente encontrado</div>`);
+                                $box.removeClass('d-none');
+                                return;
+                            }
+                            items.forEach(c => {
+                                const display = (c.nomeFantasia || c.nome || '—');
+                                const extra = [c.tipoCliente, c.status].filter(Boolean).join(' | ');
+                                $box.append(`
+                            <div class="template-search-item" data-id="${c.id}">
+                                <div class="fw-semibold">${display}</div>
+                                <div class="small text-muted">${extra}</div>
+                            </div>
+                        `);
+                            });
+                            $box.removeClass('d-none');
+                        })
+                        .fail(() => {
+                            hideProcResultados();
+                            notify('error', 'Falha na busca', 'Não foi possível buscar clientes.', 'high');
+                        });
+                }, 250);
             });
-    }
-    atualizarMetrics();
-    setInterval(atualizarMetrics, 30000);
 
-    $(document).on('click', '[data-action="modelo-usar"]', function() {
-        const id = $(this).attr('data-id');
-        const modalHtml = `
+            $(document).on('click', '#procClienteResultados .template-search-item', function () {
+                const id = $(this).attr('data-id');
+                if (!id) return;
+                const nome = $(this).find('.fw-semibold').text();
+                setProcSelecionado({ id, nome });
+                $('#procClienteBusca').val(nome);
+                hideProcResultados();
+            });
+
+            $(document).on('click', function (e) {
+                const $t = $(e.target);
+                if ($t.closest('#procClienteResultados').length || $t.closest('#procClienteBusca').length) return;
+                hideProcResultados();
+            });
+
+            async function downloadBlob(blob, filename) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename || 'documento.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+
+            function getFilenameFromContentDisposition(cd) {
+                if (!cd) return null;
+                const match = /filename="?([^"]+)"?/i.exec(cd);
+                return match ? match[1] : null;
+            }
+
+            $('#btnGerarProcuracaoAdJudicia').on('click', async function () {
+                const $btn = $(this);
+                const id = $('#procClienteId').val();
+                if (!id) {
+                    notify('error', 'Seleção obrigatória', 'Selecione um cliente PF para gerar a procuração.', 'high');
+                    return;
+                }
+                try {
+                    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Gerando...');
+            const resp = await fetch(`/juridico/api/templates/procuracao-ad-judicia/pdf?clienteId=${encodeURIComponent(id)}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/pdf, application/json' }
+            });
+                    if (!resp.ok) {
+                        const txt = await resp.text();
+                        let msg = 'Falha ao gerar procuração';
+                        try {
+                            const j = JSON.parse(txt);
+                            msg = j.erro || msg;
+                        } catch (_) { }
+                        notify('error', 'Erro', msg, 'high');
+                        return;
+                    }
+                    const cd = resp.headers.get('content-disposition');
+                    const filename = getFilenameFromContentDisposition(cd) || 'procuracao_ad_judicia.pdf';
+                    const blob = await resp.blob();
+                    await downloadBlob(blob, filename);
+                    notify('success', 'PDF gerado', 'Download iniciado.', 'low');
+                    carregarDocs(0);
+                    atualizarMetrics();
+                } catch (e) {
+                    notify('error', 'Erro', 'Não foi possível gerar o PDF.', 'high');
+                } finally {
+                    $btn.prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Gerar PDF');
+                }
+            });
+
+            $('#btnGerarContratoPrestacaoServicosAdvocaticios').on('click', async function () {
+                const $btn = $(this);
+                const id = $('#procClienteId').val();
+                if (!id) {
+                    notify('error', 'Seleção obrigatória', 'Selecione um cliente PF para gerar o contrato.', 'high');
+                    return;
+                }
+                try {
+                    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Gerando...');
+            const resp = await fetch(`/juridico/api/templates/contrato-prestacao-servicos-advocaticios/pdf?clienteId=${encodeURIComponent(id)}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/pdf, application/json' }
+            });
+                    if (!resp.ok) {
+                        const txt = await resp.text();
+                        let msg = 'Falha ao gerar contrato';
+                        try {
+                            const j = JSON.parse(txt);
+                            msg = j.erro || msg;
+                        } catch (_) { }
+                        notify('error', 'Erro', msg, 'high');
+                        return;
+                    }
+                    const cd = resp.headers.get('content-disposition');
+                    const filename = getFilenameFromContentDisposition(cd) || 'contrato_prestacao_servicos_advocaticios.pdf';
+                    const blob = await resp.blob();
+                    await downloadBlob(blob, filename);
+                    notify('success', 'PDF gerado', 'Download iniciado.', 'low');
+                    carregarDocs(0);
+                    atualizarMetrics();
+                } catch (e) {
+                    notify('error', 'Erro', 'Não foi possível gerar o PDF.', 'high');
+                } finally {
+                    $btn.prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Gerar PDF');
+                }
+            });
+
+            $(document).on('click', '[data-action="modelo-usar"]', function () {
+                const id = $(this).attr('data-id');
+                const modalHtml = `
         <div class="modal fade" id="gerarDocumentoModal" tabindex="-1" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
@@ -478,35 +755,35 @@ $(function () {
             </div>
           </div>
         </div>`;
-        $('body').append(modalHtml);
-        const modal = new bootstrap.Modal(document.getElementById('gerarDocumentoModal'));
-        modal.show();
-        $('#gerarConfirmBtn').on('click', function() {
-            const titulo = $('#gerarTitulo').val()?.trim();
-            const categoria = $('#gerarCategoria').val();
-            const descricao = $('#gerarDescricao').val()?.trim();
-            if (!titulo) { notify('error', 'Campos obrigatórios', 'Informe o título.'); return; }
-            $.post('/juridico/api/documentos/gerar', { modeloId: id, titulo, categoria, descricao })
-                .done(res => {
-                    notify('success', 'Documento gerado', res.id ? `ID ${res.id}` : 'Concluído');
-                    modal.hide();
-                    $('#gerarDocumentoModal').remove();
-                    setTimeout(() => carregarDocs(0), 800);
-                })
-                .fail(xhr => {
-                    const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao gerar documento';
-                    notify('error', 'Erro', msg, 'high');
+                $('body').append(modalHtml);
+                const modal = new bootstrap.Modal(document.getElementById('gerarDocumentoModal'));
+                modal.show();
+                $('#gerarConfirmBtn').on('click', function () {
+                    const titulo = $('#gerarTitulo').val()?.trim();
+                    const categoria = $('#gerarCategoria').val();
+                    const descricao = $('#gerarDescricao').val()?.trim();
+                    if (!titulo) { notify('error', 'Campos obrigatórios', 'Informe o título.'); return; }
+                    $.post('/juridico/api/documentos/gerar', { modeloId: id, titulo, categoria, descricao })
+                        .done(res => {
+                            notify('success', 'Documento gerado', res.id ? `ID ${res.id}` : 'Concluído');
+                            modal.hide();
+                            $('#gerarDocumentoModal').remove();
+                            setTimeout(() => carregarDocs(0), 800);
+                        })
+                        .fail(xhr => {
+                            const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao gerar documento';
+                            notify('error', 'Erro', msg, 'high');
+                        });
                 });
-        });
-        $('#gerarDocumentoModal').on('hidden.bs.modal', function() { $('#gerarDocumentoModal').remove(); });
-    });
+                $('#gerarDocumentoModal').on('hidden.bs.modal', function () { $('#gerarDocumentoModal').remove(); });
+            });
 
-    $(document).on('click', '[data-action="doc-detalhes"]', function() {
-        const id = $(this).attr('data-id');
-        $.get(`/juridico/api/documentos/${id}`)
-            .done(d => {
-                $('#docDetalhesTitle').text(d.titulo || 'Documento');
-                const corpo = `
+            $(document).on('click', '[data-action="doc-detalhes"]', function () {
+                const id = $(this).attr('data-id');
+                $.get(`/juridico/api/documentos/${id}`)
+                    .done(d => {
+                        $('#docDetalhesTitle').text(d.titulo || 'Documento');
+                        const corpo = `
                     <div>
                         <p><b>Categoria:</b> ${d.categoria || '—'}</p>
                         <p><b>Descrição:</b> ${d.descricao || '—'}</p>
@@ -514,50 +791,51 @@ $(function () {
                         <p><b>Criado em:</b> ${d.criadoEm || '—'}</p>
                         <p><b>Autor:</b> ${d.autor || '—'}</p>
                     </div>`;
-                $('#docDetalhesBody').html(corpo);
-                $('#docDownloadBtn').attr('href', `/juridico/documentos/download/${id}`);
-                const modal = new bootstrap.Modal(document.getElementById('docDetalhesModal'));
-                modal.show();
-            })
-            .fail(() => notify('error', 'Falha ao carregar', 'Não foi possível obter detalhes do documento.', 'high'));
-    });
-
-    $(document).on('click', '[data-action="doc-excluir"]', function() {
-        const id = $(this).attr('data-id');
-        if (!confirm('Confirma excluir este documento?')) return;
-        $.ajax({ url: `/juridico/api/documentos/${id}`, method: 'DELETE' })
-            .done(() => { notify('success', 'Excluído', 'Documento removido com sucesso.'); carregarDocs(0); })
-            .fail(xhr => {
-                const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao excluir documento';
-                notify('error', 'Erro', msg, 'high');
+                        $('#docDetalhesBody').html(corpo);
+                        $('#docDownloadBtn').attr('href', `/juridico/documentos/download/${id}`);
+                        const modal = new bootstrap.Modal(document.getElementById('docDetalhesModal'));
+                        modal.show();
+                    })
+                    .fail(() => notify('error', 'Falha ao carregar', 'Não foi possível obter detalhes do documento.', 'high'));
             });
-    });
 
-    $('#btnUploadModelos').on('click', function() {
-        const files = $('#modeloFiles')[0]?.files;
-        if (!files || files.length === 0) { notify('error', 'Seleção vazia', 'Selecione ao menos um arquivo.'); return; }
-        const categoria = $('#modeloCategoria').val()?.trim();
-        const versao = $('#modeloVersao').val()?.trim();
-        const fd = new FormData();
-        Array.from(files).forEach(f => fd.append('files', f));
-        if (categoria) fd.append('categoria', categoria);
-        if (versao) fd.append('versao', versao);
-        $.ajax({
-            url: '/juridico/api/modelos/upload-batch',
-            method: 'POST',
-            data: fd,
-            processData: false,
-            contentType: false,
-        }).done(res => {
-            notify('success', 'Modelos adicionados', (res.criados?.length || 0) + ' modelos criados');
-            setTimeout(() => window.location.reload(), 1000);
-        }).fail(xhr => {
-            const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao criar modelos';
-            notify('error', 'Erro', msg, 'high');
+            $(document).on('click', '[data-action="doc-excluir"]', function () {
+                const id = $(this).attr('data-id');
+                if (!confirm('Confirma excluir este documento?')) return;
+                $.ajax({ url: `/juridico/api/documentos/${id}`, method: 'DELETE' })
+                    .done(() => { notify('success', 'Excluído', 'Documento removido com sucesso.'); carregarDocs(0); })
+                    .fail(xhr => {
+                        const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao excluir documento';
+                        notify('error', 'Erro', msg, 'high');
+                    });
+            });
+
+            $('#btnUploadModelos').on('click', function () {
+                const files = $('#modeloFiles')[0]?.files;
+                if (!files || files.length === 0) { notify('error', 'Seleção vazia', 'Selecione ao menos um arquivo.'); return; }
+                const categoria = $('#modeloCategoria').val()?.trim();
+                const versao = $('#modeloVersao').val()?.trim();
+                const fd = new FormData();
+                Array.from(files).forEach(f => fd.append('files', f));
+                if (categoria) fd.append('categoria', categoria);
+                if (versao) fd.append('versao', versao);
+                $.ajax({
+                    url: '/juridico/api/modelos/upload-batch',
+                    method: 'POST',
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                }).done(res => {
+                    notify('success', 'Modelos adicionados', (res.criados?.length || 0) + ' modelos criados');
+                    setTimeout(() => window.location.reload(), 1000);
+                }).fail(xhr => {
+                    const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao criar modelos';
+                    notify('error', 'Erro', msg, 'high');
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 
 </body>
+
 </html>

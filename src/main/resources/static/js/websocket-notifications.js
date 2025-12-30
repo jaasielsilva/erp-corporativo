@@ -170,6 +170,21 @@ function showToast(notification) {
     p.textContent = notification.message;
     content.appendChild(h4);
     content.appendChild(p);
+    if (notification.actionUrl) {
+        const actions = document.createElement('div');
+        actions.className = 'notification-actions';
+        const link = document.createElement('a');
+        link.className = 'btn-text';
+        link.href = notification.actionUrl;
+        link.textContent = notification.actionText || 'Abrir';
+        link.addEventListener('click', () => {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 300);
+        });
+        actions.appendChild(link);
+        content.appendChild(actions);
+    }
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'toast-close';

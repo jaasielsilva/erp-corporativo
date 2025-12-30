@@ -1,8 +1,12 @@
 package com.jaasielsilva.portalceo.controller;
 
 import com.jaasielsilva.portalceo.model.ContratoLegal;
+import com.jaasielsilva.portalceo.model.Cliente;
+import com.jaasielsilva.portalceo.model.Notification;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ContratoLegalService;
+import com.jaasielsilva.portalceo.service.ClienteService;
+import com.jaasielsilva.portalceo.service.NotificationService;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import com.jaasielsilva.portalceo.repository.juridico.*;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,6 +37,8 @@ import java.util.*;
 public class JuridicoController {
 
     private final ContratoLegalService contratoLegalService;
+    private final ClienteService clienteService;
+    private final NotificationService notificationService;
     private final UsuarioRepository usuarioRepository;
     private final com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService;
     // Repositórios jurídicos (Processos, Compliance, Documentos)
@@ -50,15 +58,16 @@ public class JuridicoController {
     public String index(Model model) {
         model.addAttribute("pageTitle", "Jurídico - Dashboard");
         model.addAttribute("moduleCSS", "juridico");
-        
+
         // Estatísticas do dashboard (dados reais quando disponíveis)
         Map<ContratoLegal.StatusContrato, Long> estatisticasStatus = contratoLegalService.getEstatisticasPorStatus();
         long ativos = estatisticasStatus.getOrDefault(ContratoLegal.StatusContrato.ATIVO, 0L);
         model.addAttribute("contratosAtivos", ativos);
 
         model.addAttribute("processosAndamento", processoJuridicoService.contarProcessosEmAndamento());
-        
-        // Prazos/vencimentos a partir de contratos com vencimento próximo (próximos 30 dias)
+
+        // Prazos/vencimentos a partir de contratos com vencimento próximo (próximos 30
+        // dias)
         List<ContratoLegal> proximosVencimentos = contratoLegalService.buscarContratosVencendoEm(30);
         model.addAttribute("prazosVencendo", proximosVencimentos != null ? proximosVencimentos.size() : 0);
 
@@ -80,18 +89,18 @@ public class JuridicoController {
             }
         }
         model.addAttribute("contratosVencimento", contratosVencimentoVm);
-        
+
         // Processos com prazos urgentes
         model.addAttribute("processosUrgentes", processoJuridicoService.obterProcessosUrgentes(7));
-        
+
         // Últimas atividades
         model.addAttribute("ultimasAtividades", processoJuridicoService.obterUltimasAtividades(10));
-        
+
         return "juridico/index";
     }
 
     // =============== CONTRATOS JURÍDICOS ===============
-    
+
     @GetMapping("/contratos")
     public String contratos(
             @RequestParam(value = "status", required = false) ContratoLegal.StatusContrato status,
@@ -106,7 +115,8 @@ public class JuridicoController {
         model.addAttribute("moduleCSS", "juridico");
 
         try {
-            Set<String> camposPermitidos = Set.of("dataInicio", "dataFim", "dataVencimento", "valorMensal", "valorContrato");
+            Set<String> camposPermitidos = Set.of("dataInicio", "dataFim", "dataVencimento", "valorMensal",
+                    "valorContrato");
             if (!camposPermitidos.contains(sortBy)) {
                 sortBy = "dataInicio";
             }
@@ -117,7 +127,8 @@ public class JuridicoController {
                 direction = Sort.Direction.ASC;
             }
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-            Page<ContratoLegal> contratosPage = contratoLegalService.buscarContratosComFiltros(numero, status, tipo, pageable);
+            Page<ContratoLegal> contratosPage = contratoLegalService.buscarContratosComFiltros(numero, status, tipo,
+                    pageable);
 
             model.addAttribute("listaContratos", contratosPage.getContent());
             model.addAttribute("page", page);
@@ -159,20 +170,20 @@ public class JuridicoController {
         model.addAttribute("contratoId", id);
         return "juridico/contrato-detalhe";
     }
-    
+
     @PostMapping("/contratos")
     @ResponseBody
     public ResponseEntity<?> criarContrato(@RequestParam String titulo,
-                                           @RequestParam ContratoLegal.TipoContrato tipo,
-                                           @RequestParam(required = false) String descricao,
-                                           @RequestParam String dataInicio,
-                                           @RequestParam(required = false, defaultValue = "12") Integer duracaoMeses,
-                                           @RequestParam(required = false) String valorMensal,
-                                           @RequestParam(required = false) String valorContrato,
-                                           @RequestParam(required = false, defaultValue = "false") Boolean renovacaoAutomatica,
-                                           @RequestParam(required = false, defaultValue = "30") Integer prazoNotificacao,
-                                           @RequestParam(required = false) String numeroContrato,
-                                           @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestParam ContratoLegal.TipoContrato tipo,
+            @RequestParam(required = false) String descricao,
+            @RequestParam String dataInicio,
+            @RequestParam(required = false, defaultValue = "12") Integer duracaoMeses,
+            @RequestParam(required = false) String valorMensal,
+            @RequestParam(required = false) String valorContrato,
+            @RequestParam(required = false, defaultValue = "false") Boolean renovacaoAutomatica,
+            @RequestParam(required = false, defaultValue = "30") Integer prazoNotificacao,
+            @RequestParam(required = false) String numeroContrato,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             // Obter usuário logado
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
@@ -225,38 +236,42 @@ public class JuridicoController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao criar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao criar contrato", "detalhes", e.getMessage()));
         }
     }
 
     // =============== PROCESSOS JURÍDICOS ===============
-    
+
     @GetMapping("/processos")
     public String processos(Model model) {
         model.addAttribute("pageTitle", "Processos Jurídicos");
         model.addAttribute("moduleCSS", "juridico");
-        
-        model.addAttribute("processosAndamento", processoJuridicoService.listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO));
-        model.addAttribute("processosSuspensos", processoJuridicoService.listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.SUSPENSO));
-        model.addAttribute("processosEncerrados", processoJuridicoService.listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO));
-        
+
+        model.addAttribute("processosAndamento", processoJuridicoService.listarPorStatus(
+                com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO));
+        model.addAttribute("processosSuspensos", processoJuridicoService
+                .listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.SUSPENSO));
+        model.addAttribute("processosEncerrados", processoJuridicoService
+                .listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO));
+
         // Próximas audiências
         model.addAttribute("proximasAudiencias", processoJuridicoService.obterProximasAudiencias(30));
-        
+
         // Prazos críticos
         model.addAttribute("prazosCriticos", processoJuridicoService.obterPrazosCriticos(7));
-        
+
         return "juridico/processos";
     }
-    
+
     @PostMapping("/processos")
     @ResponseBody
     public ResponseEntity<?> criarProcesso(@RequestParam String numero,
-                                          @RequestParam String tipo,
-                                          @RequestParam String tribunal,
-                                          @RequestParam String parte,
-                                          @RequestParam String assunto,
-                                          @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestParam String tipo,
+            @RequestParam String tribunal,
+            @RequestParam String parte,
+            @RequestParam String assunto,
+            @AuthenticationPrincipal UserDetails userDetails) {
         // Simular criação de processo
         Map<String, Object> processo = new HashMap<>();
         processo.put("id", System.currentTimeMillis());
@@ -268,12 +283,12 @@ public class JuridicoController {
         processo.put("status", "EM_ANDAMENTO");
         processo.put("responsavel", userDetails.getUsername());
         processo.put("dataAbertura", LocalDateTime.now());
-        
+
         return ResponseEntity.ok(processo);
     }
 
     // =============== COMPLIANCE ===============
-    
+
     @GetMapping("/compliance")
     public String compliance(Model model) {
         model.addAttribute("pageTitle", "Compliance e Conformidade");
@@ -297,14 +312,14 @@ public class JuridicoController {
         model.addAttribute("statusCompliance", status);
         return "juridico/compliance";
     }
-    
+
     @PostMapping("/compliance/auditoria")
     @ResponseBody
     public ResponseEntity<?> criarAuditoria(@RequestParam String tipo,
-                                           @RequestParam String escopo,
-                                           @RequestParam String dataInicio,
-                                           @RequestParam String auditor,
-                                           @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestParam String escopo,
+            @RequestParam String dataInicio,
+            @RequestParam String auditor,
+            @AuthenticationPrincipal UserDetails userDetails) {
         // Simular criação de auditoria
         Map<String, Object> auditoria = new HashMap<>();
         auditoria.put("id", System.currentTimeMillis());
@@ -314,12 +329,12 @@ public class JuridicoController {
         auditoria.put("status", "PLANEJADA");
         auditoria.put("responsavel", userDetails.getUsername());
         auditoria.put("dataCriacao", LocalDateTime.now());
-        
+
         return ResponseEntity.ok(auditoria);
     }
 
     // =============== DOCUMENTOS JURÍDICOS ===============
-    
+
     @GetMapping("/documentos")
     public String documentos(Model model) {
         model.addAttribute("pageTitle", "Biblioteca de Documentos");
@@ -336,8 +351,10 @@ public class JuridicoController {
         model.addAttribute("categoriasDocumentos", categorias);
 
         org.springframework.data.domain.Pageable pr = org.springframework.data.domain.PageRequest.of(
-                0, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "criadoEm"));
-        java.util.List<java.util.Map<String, Object>> recentes = documentoJuridicoRepository.findAll(pr).getContent().stream()
+                0, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC,
+                        "criadoEm"));
+        java.util.List<java.util.Map<String, Object>> recentes = documentoJuridicoRepository.findAll(pr).getContent()
+                .stream()
                 .map(d -> {
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
                     m.put("id", d.getId());
@@ -352,7 +369,8 @@ public class JuridicoController {
 
         if (documentoModeloRepository.count() == 0) {
             try {
-                String baseDirModelos = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
+                String baseDirModelos = System.getProperty("user.dir") + java.io.File.separator + "uploads"
+                        + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
                 java.nio.file.Path dirM = java.nio.file.Paths.get(baseDirModelos);
                 java.nio.file.Files.createDirectories(dirM);
                 java.nio.file.Path target = dirM.resolve("modelo_contrato_prestacao_servicos_v2_1.docx");
@@ -368,7 +386,8 @@ public class JuridicoController {
                 novo.setDataCriacao(java.time.LocalDateTime.now());
                 novo.setDataPublicacao(java.time.LocalDateTime.now());
                 documentoModeloRepository.save(novo);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         java.util.List<java.util.Map<String, Object>> modelosVm = documentoModeloRepository.findAll().stream()
                 .map(m -> {
@@ -384,13 +403,13 @@ public class JuridicoController {
         model.addAttribute("documentosPendentes", getDocumentosPendentesAssinatura());
         return "juridico/documentos";
     }
-    
+
     @PostMapping("/documentos/upload")
     @ResponseBody
     public ResponseEntity<?> uploadDocumento(@RequestParam String titulo,
-                                            @RequestParam String categoria,
-                                            @RequestParam String descricao,
-                                            @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestParam String categoria,
+            @RequestParam String descricao,
+            @AuthenticationPrincipal UserDetails userDetails) {
         // Simular upload de documento
         Map<String, Object> documento = new HashMap<>();
         documento.put("id", System.currentTimeMillis());
@@ -400,12 +419,12 @@ public class JuridicoController {
         documento.put("status", "ATIVO");
         documento.put("autor", userDetails.getUsername());
         documento.put("dataUpload", LocalDateTime.now());
-        
+
         return ResponseEntity.ok(documento);
     }
 
     // =============== APIs ===============
-    
+
     @GetMapping("/api/dashboard/estatisticas")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getEstatisticasDashboard() {
@@ -418,7 +437,7 @@ public class JuridicoController {
         estatisticas.put("prazosVencendo", proximos != null ? proximos.size() : 0);
         estatisticas.put("alertasCompliance", getAlertasCompliance());
         estatisticas.put("timestamp", LocalDateTime.now());
-        
+
         return ResponseEntity.ok(estatisticas);
     }
 
@@ -447,8 +466,11 @@ public class JuridicoController {
     public ResponseEntity<Map<String, Object>> listarUltimasAtividadesApi(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "dataHora"));
-        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso> pagina = andamentoProcessoRepository.findAll(pageable);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC,
+                        "dataHora"));
+        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso> pagina = andamentoProcessoRepository
+                .findAll(pageable);
         java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream()
                 .map(a -> {
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
@@ -478,7 +500,8 @@ public class JuridicoController {
             @RequestParam(value = "sortBy", defaultValue = "dataInicio") String sortBy,
             @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir) {
         // Campos permitidos para ordenação
-        Set<String> camposPermitidos = Set.of("dataInicio", "dataFim", "dataVencimento", "valorMensal", "valorContrato");
+        Set<String> camposPermitidos = Set.of("dataInicio", "dataFim", "dataVencimento", "valorMensal",
+                "valorContrato");
         if (!camposPermitidos.contains(sortBy)) {
             sortBy = "dataInicio";
         }
@@ -490,8 +513,10 @@ public class JuridicoController {
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        Page<ContratoLegal> contratosPage = contratoLegalService.buscarContratosComFiltros(numero, status, tipo, pageable);
-        List<com.jaasielsilva.portalceo.dto.ContratoLegalDTO> content = com.jaasielsilva.portalceo.mapper.ContratoLegalMapper.toDtoList(contratosPage.getContent());
+        Page<ContratoLegal> contratosPage = contratoLegalService.buscarContratosComFiltros(numero, status, tipo,
+                pageable);
+        List<com.jaasielsilva.portalceo.dto.ContratoLegalDTO> content = com.jaasielsilva.portalceo.mapper.ContratoLegalMapper
+                .toDtoList(contratosPage.getContent());
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("content", content);
@@ -511,19 +536,19 @@ public class JuridicoController {
         try {
             ContratoLegal contrato = contratoLegalService.buscarPorId(id);
             return ResponseEntity.ok(
-                    com.jaasielsilva.portalceo.mapper.ContratoLegalMapper.toDto(contrato)
-            );
+                    com.jaasielsilva.portalceo.mapper.ContratoLegalMapper.toDto(contrato));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body(Map.of("erro", "Contrato não encontrado"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao obter contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao obter contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PostMapping("/api/contratos")
     @ResponseBody
     public ResponseEntity<?> criarContratoApi(@RequestBody Map<String, Object> body,
-                                              @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                     .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
@@ -555,7 +580,8 @@ public class JuridicoController {
             Object numeroContratoObj = body.get("numeroContrato");
             if (numeroContratoObj != null) {
                 String num = String.valueOf(numeroContratoObj);
-                if (!num.isBlank()) contrato.setNumeroContrato(num.trim());
+                if (!num.isBlank())
+                    contrato.setNumeroContrato(num.trim());
             }
             Object valorMensalObj = body.get("valorMensal");
             if (valorMensalObj != null) {
@@ -577,21 +603,21 @@ public class JuridicoController {
                     "numeroContrato", salvo.getNumeroContrato(),
                     "status", salvo.getStatus(),
                     "titulo", salvo.getTitulo(),
-                    "tipo", salvo.getTipo()
-            ));
+                    "tipo", salvo.getTipo()));
         } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Data inválida: use o formato YYYY-MM-DD"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao criar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao criar contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/api/contratos/{id}")
     @ResponseBody
     public ResponseEntity<?> atualizarContratoApi(@PathVariable Long id,
-                                                  @RequestBody Map<String, Object> body) {
+            @RequestBody Map<String, Object> body) {
         try {
             ContratoLegal contrato;
             try {
@@ -600,8 +626,10 @@ public class JuridicoController {
                 return ResponseEntity.status(404).body(Map.of("erro", "Contrato não encontrado"));
             }
 
-            if (body.containsKey("titulo")) contrato.setTitulo(String.valueOf(body.get("titulo")));
-            if (body.containsKey("descricao")) contrato.setDescricao(String.valueOf(body.get("descricao")));
+            if (body.containsKey("titulo"))
+                contrato.setTitulo(String.valueOf(body.get("titulo")));
+            if (body.containsKey("descricao"))
+                contrato.setDescricao(String.valueOf(body.get("descricao")));
             if (body.containsKey("tipo") && body.get("tipo") != null)
                 contrato.setTipo(ContratoLegal.TipoContrato.valueOf(String.valueOf(body.get("tipo"))));
             if (body.containsKey("dataInicio") && body.get("dataInicio") != null)
@@ -629,14 +657,14 @@ public class JuridicoController {
             return ResponseEntity.ok(Map.of(
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
-                    "status", atualizado.getStatus()
-            ));
+                    "status", atualizado.getStatus()));
         } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Data inválida: use o formato YYYY-MM-DD"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao atualizar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao atualizar contrato", "detalhes", e.getMessage()));
         }
     }
 
@@ -649,7 +677,8 @@ public class JuridicoController {
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao excluir contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao excluir contrato", "detalhes", e.getMessage()));
         }
     }
 
@@ -680,7 +709,8 @@ public class JuridicoController {
         if (status != null && !status.isBlank()) {
             try {
                 statusEnum = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.valueOf(status);
-            } catch (IllegalArgumentException ignored) {}
+            } catch (IllegalArgumentException ignored) {
+            }
         }
 
         Page<com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico> processos;
@@ -690,8 +720,9 @@ public class JuridicoController {
         } else if (statusEnum != null) {
             processos = processoJuridicoRepository.findByStatus(statusEnum, pageable);
         } else if (hasSearch) {
-            processos = processoJuridicoRepository.findByNumeroContainingIgnoreCaseOrParteContainingIgnoreCaseOrAssuntoContainingIgnoreCase(
-                    search, search, search, pageable);
+            processos = processoJuridicoRepository
+                    .findByNumeroContainingIgnoreCaseOrParteContainingIgnoreCaseOrAssuntoContainingIgnoreCase(
+                            search, search, search, pageable);
         } else {
             processos = processoJuridicoRepository.findAll(pageable);
         }
@@ -740,7 +771,7 @@ public class JuridicoController {
     @PostMapping("/api/processos")
     @ResponseBody
     public ResponseEntity<?> criarProcessoApi(@RequestBody Map<String, Object> body,
-                                              @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico p = new com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico();
         p.setNumero(String.valueOf(body.getOrDefault("numero", "")));
         p.setTipo(String.valueOf(body.getOrDefault("tipo", "JUDICIAL")));
@@ -748,16 +779,32 @@ public class JuridicoController {
         p.setParte(String.valueOf(body.getOrDefault("parte", "")));
         p.setAssunto(String.valueOf(body.getOrDefault("assunto", "")));
         Object statusObj = body.get("status");
-        p.setStatus(statusObj != null ? com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.valueOf(String.valueOf(statusObj)) : com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
+        p.setStatus(statusObj != null
+                ? com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso
+                        .valueOf(String.valueOf(statusObj))
+                : com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
         p.setDataAbertura(java.time.LocalDate.now());
         processoJuridicoRepository.save(p);
+
+        String numero = p.getNumero() != null ? p.getNumero() : "—";
+        String parte = p.getParte() != null ? p.getParte() : "—";
+        String url = "/juridico/processos?openProcessId=" + p.getId();
+        notificationService.createGlobalNotificationWithAction(
+                "juridico_processo_criado",
+                "Novo processo jurídico",
+                "Processo " + numero + " (" + parte + ") criado.",
+                Notification.Priority.LOW,
+                url,
+                "ProcessoJuridico",
+                p.getId());
+
         return ResponseEntity.ok(Map.of("id", p.getId()));
     }
 
     @PostMapping("/api/processos/{id}/audiencias")
     @ResponseBody
     public ResponseEntity<?> criarAudienciaApi(@PathVariable Long id,
-                                               @RequestBody Map<String, Object> body) {
+            @RequestBody Map<String, Object> body) {
         com.jaasielsilva.portalceo.model.juridico.Audiencia a = new com.jaasielsilva.portalceo.model.juridico.Audiencia();
         a.setProcessoId(id);
         Object dh = body.get("dataHora");
@@ -774,14 +821,15 @@ public class JuridicoController {
 
     @GetMapping("/api/processos/{id}/audiencias")
     @ResponseBody
-    public ResponseEntity<List<com.jaasielsilva.portalceo.model.juridico.Audiencia>> listarAudiencias(@PathVariable Long id) {
+    public ResponseEntity<List<com.jaasielsilva.portalceo.model.juridico.Audiencia>> listarAudiencias(
+            @PathVariable Long id) {
         return ResponseEntity.ok(processoJuridicoService.listarAudienciasDoProcesso(id));
     }
 
     @PostMapping("/api/processos/{id}/prazos")
     @ResponseBody
     public ResponseEntity<?> criarPrazoApi(@PathVariable Long id,
-                                           @RequestBody Map<String, Object> body) {
+            @RequestBody Map<String, Object> body) {
         com.jaasielsilva.portalceo.model.juridico.PrazoJuridico pz = new com.jaasielsilva.portalceo.model.juridico.PrazoJuridico();
         pz.setProcessoId(id);
         Object dl = body.get("dataLimite");
@@ -799,7 +847,8 @@ public class JuridicoController {
 
     @GetMapping("/api/processos/{id}/prazos")
     @ResponseBody
-    public ResponseEntity<List<com.jaasielsilva.portalceo.model.juridico.PrazoJuridico>> listarPrazos(@PathVariable Long id) {
+    public ResponseEntity<List<com.jaasielsilva.portalceo.model.juridico.PrazoJuridico>> listarPrazos(
+            @PathVariable Long id) {
         return ResponseEntity.ok(processoJuridicoService.listarPrazosDoProcesso(id));
     }
 
@@ -817,10 +866,12 @@ public class JuridicoController {
     @PutMapping("/api/processos/{id}/status")
     @ResponseBody
     public ResponseEntity<?> atualizarStatusProcesso(@PathVariable Long id,
-                                                     @RequestParam("status") String status) {
+            @RequestParam("status") String status) {
         try {
-            com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso st = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.valueOf(status);
-            com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico p = processoJuridicoService.atualizarStatus(id, st);
+            com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso st = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso
+                    .valueOf(status);
+            com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico p = processoJuridicoService.atualizarStatus(id,
+                    st);
             return ResponseEntity.ok(Map.of("id", p.getId(), "status", p.getStatus()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Status inválido"));
@@ -882,7 +933,7 @@ public class JuridicoController {
     @PutMapping("/api/compliance/nao-conformidades/{id}/status")
     @ResponseBody
     public ResponseEntity<?> atualizarStatusNaoConformidade(@PathVariable Long id,
-                                                            @RequestParam(value = "resolvida", required = false) Boolean resolvida) {
+            @RequestParam(value = "resolvida", required = false) Boolean resolvida) {
         return naoConformidadeRepository.findById(id)
                 .map(nc -> {
                     if (resolvida == null) {
@@ -992,7 +1043,7 @@ public class JuridicoController {
     @PostMapping("/api/compliance/auditorias")
     @ResponseBody
     public ResponseEntity<?> criarAuditoriaApi(@RequestBody Map<String, Object> body,
-                                               @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         com.jaasielsilva.portalceo.model.juridico.AuditoriaCompliance ac = new com.jaasielsilva.portalceo.model.juridico.AuditoriaCompliance();
         ac.setTipo(String.valueOf(body.getOrDefault("tipo", "INTERNA")));
         ac.setEscopo(String.valueOf(body.getOrDefault("escopo", "LGPD")));
@@ -1002,7 +1053,8 @@ public class JuridicoController {
         } else {
             ac.setDataInicio(java.time.LocalDate.now());
         }
-        ac.setAuditor(String.valueOf(body.getOrDefault("auditor", userDetails != null ? userDetails.getUsername() : "sistema")));
+        ac.setAuditor(String
+                .valueOf(body.getOrDefault("auditor", userDetails != null ? userDetails.getUsername() : "sistema")));
         auditoriaComplianceRepository.save(ac);
         return ResponseEntity.ok(Map.of("id", ac.getId()));
     }
@@ -1010,7 +1062,7 @@ public class JuridicoController {
     @PutMapping("/api/compliance/auditorias/{id}/resultado")
     @ResponseBody
     public ResponseEntity<?> atualizarResultadoAuditoria(@PathVariable Long id,
-                                                         @RequestBody Map<String, Object> body) {
+            @RequestBody Map<String, Object> body) {
         return auditoriaComplianceRepository.findById(id)
                 .map(a -> {
                     String resultado = String.valueOf(body.getOrDefault("resultado", "")).trim();
@@ -1034,17 +1086,21 @@ public class JuridicoController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico> docs = documentoJuridicoRepository.findAll(pageable);
+        Page<com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico> docs = documentoJuridicoRepository
+                .findAll(pageable);
         List<Map<String, Object>> content = new ArrayList<>();
         for (var d : docs.getContent()) {
             if (categoria != null && !categoria.isBlank()) {
                 String cat = categoria.toLowerCase();
-                if (d.getCategoria() == null || !d.getCategoria().toLowerCase().contains(cat)) continue;
+                if (d.getCategoria() == null || !d.getCategoria().toLowerCase().contains(cat))
+                    continue;
             }
             if (search != null && !search.isBlank()) {
                 String termo = search.toLowerCase();
-                String texto = ((d.getTitulo() == null ? "" : d.getTitulo()) + " " + (d.getDescricao() == null ? "" : d.getDescricao())).toLowerCase();
-                if (!texto.contains(termo)) continue;
+                String texto = ((d.getTitulo() == null ? "" : d.getTitulo()) + " "
+                        + (d.getDescricao() == null ? "" : d.getDescricao())).toLowerCase();
+                if (!texto.contains(termo))
+                    continue;
             }
             Map<String, Object> m = new HashMap<>();
             m.put("id", d.getId());
@@ -1094,7 +1150,8 @@ public class JuridicoController {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
         org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> modelos;
         if (categoria != null && !categoria.isBlank() && status != null) {
-            modelos = documentoModeloRepository.findByCategoriaContainingIgnoreCaseAndStatus(categoria, status, pageable);
+            modelos = documentoModeloRepository.findByCategoriaContainingIgnoreCaseAndStatus(categoria, status,
+                    pageable);
         } else if (categoria != null && !categoria.isBlank()) {
             modelos = documentoModeloRepository.findByCategoriaContainingIgnoreCase(categoria, pageable);
         } else if (status != null) {
@@ -1106,8 +1163,10 @@ public class JuridicoController {
         for (var m : modelos.getContent()) {
             if (search != null && !search.isBlank()) {
                 String s = search.toLowerCase();
-                String txt = ((m.getNome() == null ? "" : m.getNome()) + " " + (m.getCategoria() == null ? "" : m.getCategoria())).toLowerCase();
-                if (!txt.contains(s)) continue;
+                String txt = ((m.getNome() == null ? "" : m.getNome()) + " "
+                        + (m.getCategoria() == null ? "" : m.getCategoria())).toLowerCase();
+                if (!txt.contains(s))
+                    continue;
             }
             java.util.Map<String, Object> vm = new java.util.HashMap<>();
             vm.put("id", m.getId());
@@ -1128,21 +1187,21 @@ public class JuridicoController {
 
     @PostMapping("/api/modelos/upload-multipart")
     @ResponseBody
-    public ResponseEntity<?> criarModeloMultipart(@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
-                                                  @RequestParam String nome,
-                                                  @RequestParam String categoria,
-                                                  @RequestParam(required = false) String versao,
-                                                  @RequestParam(required = false) String changelog,
-                                                  @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+    public ResponseEntity<?> criarModeloMultipart(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam String nome,
+            @RequestParam String categoria,
+            @RequestParam(required = false) String versao,
+            @RequestParam(required = false) String changelog,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         try {
-            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
+            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads"
+                    + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
             java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
             java.nio.file.Files.createDirectories(dir);
-            String sanitized = java.util.UUID.randomUUID() + "_" + (
-                    file.getOriginalFilename() == null
-                            ? "modelo"
-                            : file.getOriginalFilename().replaceAll("[^a-zA-Z0-9_\\.\\-]", "_")
-            );
+            String sanitized = java.util.UUID.randomUUID() + "_" + (file.getOriginalFilename() == null
+                    ? "modelo"
+                    : file.getOriginalFilename().replaceAll("[^a-zA-Z0-9_\\.\\-]", "_"));
             java.nio.file.Path target = dir.resolve(sanitized);
             file.transferTo(target.toFile());
 
@@ -1158,17 +1217,19 @@ public class JuridicoController {
             documentoModeloRepository.save(m);
             return ResponseEntity.ok(java.util.Map.of("id", m.getId()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao criar modelo", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(java.util.Map.of("erro", "Falha ao criar modelo", "detalhes", e.getMessage()));
         }
     }
 
     @PostMapping("/api/modelos/upload-batch")
     @ResponseBody
-    public ResponseEntity<?> criarModelosBatch(@RequestParam("files") java.util.List<org.springframework.web.multipart.MultipartFile> files,
-                                               @RequestParam(required = false) String categoria,
-                                               @RequestParam(required = false) String versao,
-                                               @RequestParam(required = false) String changelog,
-                                               @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+    public ResponseEntity<?> criarModelosBatch(
+            @RequestParam("files") java.util.List<org.springframework.web.multipart.MultipartFile> files,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String versao,
+            @RequestParam(required = false) String changelog,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         try {
             if (files == null || files.isEmpty()) {
                 return ResponseEntity.badRequest().body(java.util.Map.of("erro", "Selecione ao menos um arquivo"));
@@ -1176,11 +1237,13 @@ public class JuridicoController {
             long maxSize = 10L * 1024 * 1024;
             java.util.Set<String> allowed = java.util.Set.of(".doc", ".docx", ".pdf");
             java.util.List<java.util.Map<String, Object>> criados = new java.util.ArrayList<>();
-            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
+            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads"
+                    + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
             java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
             java.nio.file.Files.createDirectories(dir);
             for (var file : files) {
-                if (file == null || file.isEmpty()) continue;
+                if (file == null || file.isEmpty())
+                    continue;
                 if (file.getSize() > maxSize) {
                     return ResponseEntity.badRequest().body(java.util.Map.of("erro", "Arquivo excede 10MB"));
                 }
@@ -1188,9 +1251,11 @@ public class JuridicoController {
                 String lower = originalName.toLowerCase();
                 boolean ok = allowed.stream().anyMatch(lower::endsWith);
                 if (!ok) {
-                    return ResponseEntity.badRequest().body(java.util.Map.of("erro", "Tipos permitidos: PDF, DOC, DOCX"));
+                    return ResponseEntity.badRequest()
+                            .body(java.util.Map.of("erro", "Tipos permitidos: PDF, DOC, DOCX"));
                 }
-                String sanitized = java.util.UUID.randomUUID() + "_" + originalName.replaceAll("[^a-zA-Z0-9_\\.\\-]", "_");
+                String sanitized = java.util.UUID.randomUUID() + "_"
+                        + originalName.replaceAll("[^a-zA-Z0-9_\\.\\-]", "_");
                 java.nio.file.Path target = dir.resolve(sanitized);
                 file.transferTo(target.toFile());
 
@@ -1205,19 +1270,21 @@ public class JuridicoController {
                 m.setCriadoPor(userDetails != null ? userDetails.getUsername() : null);
                 m.setDataCriacao(java.time.LocalDateTime.now());
                 documentoModeloRepository.save(m);
-                criados.add(java.util.Map.of("id", m.getId(), "nome", m.getNome(), "categoria", m.getCategoria(), "versao", m.getVersao()));
+                criados.add(java.util.Map.of("id", m.getId(), "nome", m.getNome(), "categoria", m.getCategoria(),
+                        "versao", m.getVersao()));
             }
             return ResponseEntity.ok(java.util.Map.of("criados", criados));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao criar modelos", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(java.util.Map.of("erro", "Falha ao criar modelos", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/api/modelos/{id}/status")
     @ResponseBody
     public ResponseEntity<?> atualizarStatusModelo(@PathVariable Long id,
-                                                   @RequestParam com.jaasielsilva.portalceo.model.juridico.ModeloStatus status,
-                                                   @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+            @RequestParam com.jaasielsilva.portalceo.model.juridico.ModeloStatus status,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         return documentoModeloRepository.findById(id)
                 .map(m -> {
                     m.setStatus(status);
@@ -1246,9 +1313,12 @@ public class JuridicoController {
                             return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
                         }
                         String contentType = java.nio.file.Files.probeContentType(path);
-                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(path);
+                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(
+                                path);
                         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                        headers.setContentType(contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                        headers.setContentType(
+                                contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType)
+                                        : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
                         headers.setContentDispositionFormData("attachment", path.getFileName().toString());
                         return ResponseEntity.ok().headers(headers).body(resource);
                     } catch (Exception e) {
@@ -1261,31 +1331,37 @@ public class JuridicoController {
     @PostMapping("/api/documentos/gerar")
     @ResponseBody
     public ResponseEntity<?> gerarDocumentoAPartirDeModelo(@RequestParam Long modeloId,
-                                                           @RequestParam String titulo,
-                                                           @RequestParam(required = false) String categoria,
-                                                           @RequestParam(required = false) String descricao,
-                                                           @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+            @RequestParam String titulo,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String descricao,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         return documentoModeloRepository.findById(modeloId)
                 .map(m -> {
                     try {
-                        String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "juridico" + java.io.File.separator + "documentos";
+                        String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads"
+                                + java.io.File.separator + "juridico" + java.io.File.separator + "documentos";
                         java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
                         java.nio.file.Files.createDirectories(dir);
-                        String filename = java.util.UUID.randomUUID() + "_" + java.nio.file.Paths.get(m.getArquivoModelo()).getFileName().toString();
+                        String filename = java.util.UUID.randomUUID() + "_"
+                                + java.nio.file.Paths.get(m.getArquivoModelo()).getFileName().toString();
                         java.nio.file.Path target = dir.resolve(filename);
-                        java.nio.file.Files.copy(java.nio.file.Paths.get(m.getArquivoModelo()), target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        java.nio.file.Files.copy(java.nio.file.Paths.get(m.getArquivoModelo()), target,
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
                         com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
                         d.setTitulo(titulo);
                         d.setCategoria(categoria != null && !categoria.isBlank() ? categoria : m.getCategoria());
-                        d.setDescricao((descricao != null && !descricao.isBlank() ? descricao + " | " : "") + "Gerado a partir do modelo: " + m.getNome());
+                        d.setDescricao((descricao != null && !descricao.isBlank() ? descricao + " | " : "")
+                                + "Gerado a partir do modelo: " + m.getNome());
                         d.setCaminhoArquivo(target.toString());
                         d.setCriadoEm(java.time.LocalDateTime.now());
                         d.setAutor(userDetails != null ? userDetails.getUsername() : null);
                         documentoJuridicoRepository.save(d);
-                        return ResponseEntity.ok(java.util.Map.of("id", d.getId(), "caminhoArquivo", d.getCaminhoArquivo()));
+                        return ResponseEntity
+                                .ok(java.util.Map.of("id", d.getId(), "caminhoArquivo", d.getCaminhoArquivo()));
                     } catch (Exception e) {
-                        return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao gerar documento", "detalhes", e.getMessage()));
+                        return ResponseEntity.status(500)
+                                .body(java.util.Map.of("erro", "Falha ao gerar documento", "detalhes", e.getMessage()));
                     }
                 })
                 .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Modelo não encontrado")));
@@ -1295,8 +1371,8 @@ public class JuridicoController {
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<?> personalizarDocumento(@PathVariable Long id,
-                                                   @RequestBody java.util.Map<String, Object> body,
-                                                   @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+            @RequestBody java.util.Map<String, Object> body,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         return documentoJuridicoRepository.findById(id)
                 .map(d -> {
                     try {
@@ -1307,8 +1383,10 @@ public class JuridicoController {
                                 placeholders.put(String.valueOf(k), String.valueOf(map.get(k)));
                             }
                         }
-                        boolean persist = java.util.Optional.ofNullable(body.get("persist")).map(v -> Boolean.parseBoolean(String.valueOf(v))).orElse(true);
-                        String nomeArquivo = java.util.Optional.ofNullable(body.get("nomeArquivo")).map(String::valueOf).orElse(null);
+                        boolean persist = java.util.Optional.ofNullable(body.get("persist"))
+                                .map(v -> Boolean.parseBoolean(String.valueOf(v))).orElse(true);
+                        String nomeArquivo = java.util.Optional.ofNullable(body.get("nomeArquivo")).map(String::valueOf)
+                                .orElse(null);
 
                         byte[] result;
                         if (d.getConteudo() != null && d.getConteudo().length > 0) {
@@ -1317,14 +1395,18 @@ public class JuridicoController {
                             java.nio.file.Path path = java.nio.file.Paths.get(d.getCaminhoArquivo());
                             result = documentTemplateService.personalizeDocx(path, placeholders);
                         } else {
-                            return ResponseEntity.status(400).body(java.util.Map.of("erro", "Documento sem conteúdo ou caminho para personalização"));
+                            return ResponseEntity.status(400).body(
+                                    java.util.Map.of("erro", "Documento sem conteúdo ou caminho para personalização"));
                         }
 
                         if (persist) {
                             d.setConteudo(result);
                             d.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-                            String baseName = nomeArquivo != null && !nomeArquivo.isBlank() ? nomeArquivo : (d.getOriginalFilename() != null ? d.getOriginalFilename() : (d.getTitulo() != null ? d.getTitulo() : "documento"));
-                            if (!baseName.toLowerCase().endsWith(".docx")) baseName = baseName + ".docx";
+                            String baseName = nomeArquivo != null && !nomeArquivo.isBlank() ? nomeArquivo
+                                    : (d.getOriginalFilename() != null ? d.getOriginalFilename()
+                                            : (d.getTitulo() != null ? d.getTitulo() : "documento"));
+                            if (!baseName.toLowerCase().endsWith(".docx"))
+                                baseName = baseName + ".docx";
                             d.setOriginalFilename(baseName);
                             d.setTamanho((long) result.length);
                             d.setCaminhoArquivo(null);
@@ -1333,16 +1415,20 @@ public class JuridicoController {
                             documentoJuridicoRepository.save(d);
                             return ResponseEntity.ok(java.util.Map.of("id", d.getId(), "personalizado", true));
                         } else {
-                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(result);
+                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(
+                                    result);
                             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                            headers.setContentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
-                            String fname = nomeArquivo != null ? nomeArquivo : (d.getTitulo() != null ? d.getTitulo() : "documento") + "_personalizado.docx";
+                            headers.setContentType(org.springframework.http.MediaType.parseMediaType(
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+                            String fname = nomeArquivo != null ? nomeArquivo
+                                    : (d.getTitulo() != null ? d.getTitulo() : "documento") + "_personalizado.docx";
                             headers.setContentDispositionFormData("attachment", fname);
                             headers.setContentLength(result.length);
                             return ResponseEntity.ok().headers(headers).body(resource);
                         }
                     } catch (Exception e) {
-                        return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao personalizar", "detalhes", e.getMessage()));
+                        return ResponseEntity.status(500)
+                                .body(java.util.Map.of("erro", "Falha ao personalizar", "detalhes", e.getMessage()));
                     }
                 })
                 .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Documento não encontrado")));
@@ -1352,8 +1438,8 @@ public class JuridicoController {
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<?> gerarDocumentoPdf(@RequestParam String titulo,
-                                               @RequestBody java.util.Map<String, Object> body,
-                                               @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+            @RequestBody java.util.Map<String, Object> body,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         try {
             String html = java.util.Optional.ofNullable(body.get("html")).map(String::valueOf).orElse("");
             Object phObj = body.get("placeholders");
@@ -1367,7 +1453,8 @@ public class JuridicoController {
             com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
             d.setTitulo(titulo);
             d.setCategoria(String.valueOf(java.util.Optional.ofNullable(body.get("categoria")).orElse("Contrato")));
-            d.setDescricao(String.valueOf(java.util.Optional.ofNullable(body.get("descricao")).orElse("Documento PDF personalizado a partir de HTML")));
+            d.setDescricao(String.valueOf(java.util.Optional.ofNullable(body.get("descricao"))
+                    .orElse("Documento PDF personalizado a partir de HTML")));
             d.setConteudo(pdf);
             d.setContentType(org.springframework.http.MediaType.APPLICATION_PDF_VALUE);
             d.setOriginalFilename(titulo.endsWith(".pdf") ? titulo : titulo + ".pdf");
@@ -1378,14 +1465,403 @@ public class JuridicoController {
             documentoJuridicoRepository.save(d);
             return ResponseEntity.ok(java.util.Map.of("id", d.getId()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao gerar PDF", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(java.util.Map.of("erro", "Falha ao gerar PDF", "detalhes", e.getMessage()));
         }
+    }
+
+    @GetMapping(value = "/api/templates/procuracao-ad-judicia/pdf", produces = { MediaType.APPLICATION_PDF_VALUE,
+            MediaType.APPLICATION_JSON_VALUE })
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    public ResponseEntity<?> gerarProcuracaoAdJudiciaPdf(@RequestParam Long clienteId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Optional<Cliente> clienteOpt = clienteService.buscarPorId(clienteId);
+            if (clienteOpt.isEmpty()) {
+                return ResponseEntity.status(404).contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("erro", "Cliente não encontrado"));
+            }
+            Cliente cliente = clienteOpt.get();
+            if (cliente.getTipoCliente() != null && !"PF".equalsIgnoreCase(cliente.getTipoCliente())) {
+                return ResponseEntity.status(400).contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("erro", "Procuração AD JUDICIA disponível apenas para cliente PF"));
+            }
+
+            Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
+            placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
+            placeholders.put("escritorio_endereco",
+                    "Avenida Giovanni Gronchi, 6195 Conj 1008 - Vila Andrade, Sao Paulo/SP - CEP 05724-003");
+            placeholders.put("escritorio_telefone", "(11) 99775-7675");
+            placeholders.put("outorgante_texto", buildOutorganteTexto(cliente));
+            placeholders.put("outorgante_email", nvl(cliente.getEmail()));
+            placeholders.put("assinatura_cidade", nvlOr(cliente.getCidade(), "São Paulo"));
+            placeholders.put("assinatura_data_extenso", formatDateExtenso(LocalDate.now()));
+            placeholders.put("outorgante_nome", nvl(cliente.getNome()));
+
+            String html = """
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                      <meta charset="UTF-8" />
+                      <style>
+                        @page { size: A4; margin: 24mm 18mm; }
+                        body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
+                        .center { text-align: center; }
+                        .title { font-size: 18px; font-weight: 700; margin: 18px 0 14px; letter-spacing: 0.4px; }
+                        .header { margin-bottom: 18px; }
+                        .header .line { margin: 2px 0; }
+                        .section { margin-top: 10px; }
+                        .label { font-weight: 700; }
+                        .p { margin: 6px 0; line-height: 1.45; text-align: justify; }
+                        .signature { margin-top: 26px; }
+                        .signature .date { margin-top: 16px; }
+                        .signature .line { margin-top: 40px; border-top: 1px solid #111; width: 70%; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header center">
+                        <div class="line"><b>{{escritorio_razao_social}}</b></div>
+                        <div class="line">{{escritorio_nome_advogado}}</div>
+                        <div class="line">{{escritorio_endereco}}</div>
+                        <div class="line">{{escritorio_telefone}}</div>
+                      </div>
+
+                      <div class="title center">PROCURAÇÃO AD JUDICIA</div>
+
+                      <div class="section">
+                        <div class="p"><span class="label">OUTORGANTE:</span> {{outorgante_texto}}</div>
+                        <div class="p"><span class="label">Email:</span> {{outorgante_email}}</div>
+                      </div>
+
+                      <div class="section">
+                        <div class="p"><span class="label">OUTORGADO(a):</span> Itamir Pinto Mamede, brasileiro, casado, Advogado, inscrito na OAB-SP, sob o Nº 459.446, com escritório profissional à Av. Giovanni Gronchi 6195 - Sala 1008, bairro Vila Andrade, na cidade de São Paulo-SP, Cep 05724-003.</div>
+                        <div class="p"><span class="label">Email:</span> itamir07adv@gmail.com</div>
+                      </div>
+
+                      <div class="section">
+                        <div class="p"><span class="label">PODERES:</span> Aos quais confere amplos poderes para o foro em geral, com as cláusulas AD JUDICIA ET EXTRA, em qualquer juízo, instância ou tribunal, podendo propor contra quem de direito ações competentes e defendê-lo nas contrárias, seguindo umas e outras até final decisão e execução, usando os recursos legais, acompanhando-os, conferindo-lhes ainda poderes especiais para requerer ou acompanhar falências, ceder, transferir, habilitar ou declarar créditos, prestar compromissos em geral, inclusive de síndico e inventariante, confessar, desistir, transigir, firmar compromissos ou acordos, inclusive conciliar nos termos do art. 400 do Código de Processo Civil, receber e dar quitação, endossar cheques, requerer alvarás, efetuar levantamentos de depósitos judiciais em depositários públicos, bancos, cartórios, inclusive protestar, notificar participar de praças, leilões, adjudicar, remir, etc., em especial poderes et extra para representar perante quaisquer repartições públicas Federais, Estaduais, Municipais, Autarquias ou Delegacias de Polícia, acompanhar processos crime e sumário como assistentes do Ministério Público nos termos do art. 268 e seguintes do Código de Processo Penal, agindo em conjunto ou separadamente, inclusive substabelecer este a outrem, com ou sem reservas de iguais poderes, dando tudo por bom, ficando convencionado que o presente mandato é irrevogável pelo mandante consoante artigo 684 do Código Civil Brasileiro, tendo em vista o contrato de honorários por resultado futuro, (quota litis) resolvendo-se na forma do artigo 683 do Código Civil Brasileiro.</div>
+                      </div>
+
+                      <div class="signature">
+                        <div class="p date">{{assinatura_cidade}}, {{assinatura_data_extenso}}.</div>
+                        <div class="line"></div>
+                        <div class="p center">{{outorgante_nome}}</div>
+                      </div>
+                    </body>
+                    </html>
+                    """;
+
+            byte[] pdf = documentTemplateService.generatePdfFromHtml(html, placeholders);
+
+            com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
+            String titulo = "PROCURAÇÃO AD JUDICIA - " + nvl(cliente.getNome());
+            d.setTitulo(titulo);
+            d.setCategoria("Procuração");
+            d.setDescricao("Procuração AD JUDICIA gerada a partir do cadastro do cliente");
+            d.setConteudo(pdf);
+            d.setContentType(MediaType.APPLICATION_PDF_VALUE);
+            d.setOriginalFilename(safeFilename("procuracao_ad_judicia_" + nvl(cliente.getNome())) + ".pdf");
+            d.setTamanho((long) pdf.length);
+            d.setCaminhoArquivo(null);
+            d.setCriadoEm(LocalDateTime.now());
+            d.setAutor(userDetails != null ? userDetails.getUsername() : null);
+            documentoJuridicoRepository.save(d);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", d.getOriginalFilename());
+            headers.setContentLength(pdf.length);
+
+            return ResponseEntity.ok().headers(headers).body(pdf);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("erro", "Falha ao gerar PDF", "detalhes", e.getMessage()));
+        }
+    }
+
+    @GetMapping(value = "/api/templates/contrato-prestacao-servicos-advocaticios/pdf", produces = {
+            MediaType.APPLICATION_PDF_VALUE, MediaType.APPLICATION_JSON_VALUE })
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    public ResponseEntity<?> gerarContratoPrestacaoServicosAdvocaticiosPdf(@RequestParam Long clienteId,
+            @RequestParam(required = false) String objeto,
+            @RequestParam(required = false) String testemunha1,
+            @RequestParam(required = false) String testemunha1Rg,
+            @RequestParam(required = false) String testemunha2,
+            @RequestParam(required = false) String testemunha2Rg,
+            @RequestParam(required = false) String cidade,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Optional<Cliente> clienteOpt = clienteService.buscarPorId(clienteId);
+            if (clienteOpt.isEmpty()) {
+                return ResponseEntity.status(404).contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("erro", "Cliente não encontrado"));
+            }
+            Cliente cliente = clienteOpt.get();
+            if (cliente.getTipoCliente() != null && !"PF".equalsIgnoreCase(cliente.getTipoCliente())) {
+                return ResponseEntity.status(400).contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("erro", "Contrato disponível apenas para cliente PF"));
+            }
+
+            Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
+            placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
+            placeholders.put("escritorio_endereco",
+                    "Avenida Giovanni Gronchi, 6195 Conj 1008 - Vila Andrade, Sao Paulo/SP - CEP 05724-003");
+            placeholders.put("escritorio_telefone", "(11) 99775-7675");
+            placeholders.put("contratante_texto", buildContratanteTexto(cliente));
+            placeholders.put("contratante_nome", nvl(cliente.getNome()));
+            placeholders.put("contratante_cpf", nvl(cliente.getCpfCnpj()));
+            placeholders.put("objeto", nvl(objeto));
+            placeholders.put("assinatura_cidade", nvlOr(cidade, nvlOr(cliente.getCidade(), "São Paulo")));
+            placeholders.put("assinatura_data_extenso", formatDateExtenso(LocalDate.now()));
+            placeholders.put("testemunha1_nome", nvl(testemunha1));
+            placeholders.put("testemunha1_rg", nvl(testemunha1Rg));
+            placeholders.put("testemunha2_nome", nvl(testemunha2));
+            placeholders.put("testemunha2_rg", nvl(testemunha2Rg));
+
+            String html = """
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                      <meta charset="UTF-8" />
+                      <style>
+                        @page { size: A4; margin: 20mm 16mm; }
+                        body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
+                        .center { text-align: center; }
+                        .title { font-size: 18px; font-weight: 700; margin: 18px 0 14px; letter-spacing: 0.4px; }
+                        .header { margin-bottom: 14px; }
+                        .header .line { margin: 2px 0; }
+                        .p { margin: 8px 0; line-height: 1.55; text-align: justify; }
+                        .label { font-weight: 700; }
+                        .obj { white-space: pre-wrap; }
+                        .signature { margin-top: 18px; }
+                        .sign-row { display: table; width: 100%; margin-top: 18px; }
+                        .sign-col { display: table-cell; width: 50%; vertical-align: top; padding: 0 10px; }
+                        .line { border-top: 1px solid #111; width: 100%; margin-top: 46px; }
+                        .sign-name { margin-top: 6px; text-align: center; }
+                        .small { font-size: 11px; }
+                        .footer { position: fixed; left: 0; right: 0; bottom: 10mm; text-align: center; font-size: 10px; color: #333; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header center">
+                        <div class="line"><b>{{escritorio_razao_social}}</b></div>
+                        <div class="line">{{escritorio_nome_advogado}}</div>
+                        <div class="line">{{escritorio_endereco}}</div>
+                        <div class="line">{{escritorio_telefone}}</div>
+                      </div>
+
+                      <div class="title center">CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS</div>
+
+                      <div class="p">{{contratante_texto}}</div>
+
+                      <div class="p"><span class="label">CONTRATADO(A):</span> Itamir Pinto Mamede, nacionalidade brasileiro, estado civil casado, profissão Advogado, inscrito na OAB-SP, sob o Nº 459.446, com escritório profissional à Av. Giovanni Gronchi 6195 - Sala 1008, no bairro Vila Andrade, na cidade de São Paulo - SP, Cep. 05724-003, Telefone (11) 99775-7675, de ora em diante simplesmente denominado(a) CONTRATADO(A).</div>
+
+                      <div class="p">O CONTRATANTE tem o conhecimento de que o exercício de advocacia é um meio, e não um fim em si, a ser efetivado com o devido zelo e desempenho, fundamentados na Constituição Federal, e nas leis vigentes em nosso ordenamento jurídico. Este contrato tem período indeterminado, devendo ocorrer a prestação dos serviços advocatícios, ora contratados, até o termo final da ação especificada no item OBJETO.</div>
+
+                      <div class="p"><span class="label">DO OBJETO:</span> Ingressar com PEDIDO de: <span class="obj">{{objeto}}</span></div>
+
+                      <div class="p">§1° : Os honorários advocatícios são de 30% (trinta por cento) sobre o valor da INDENIZAÇÃO recebida e este a ser pago pelo CONTRATANTE imediatamente de forma pecuniária ao CONTRATADO, tendo como meio de pagamento via PIX ou transferência bancária. Também será devido em caso de ocorrer a transição entre as partes sem a anuência do CONTRATADO.</div>
+
+                      <div class="p">§2: FORO: Fica eleito o foro de São Paulo para dirimir quaisquer dúvidas oriundas do presente contrato. LEGALIDADE: O presente contrato tem força executiva, nos termos do artigo 784, III, do Código de Processo Civil/15, e, para que produza seus efeitos de direito, firmam as partes o presente, em duas vias de igual teor e forma, na presença de duas testemunhas que a tudo assistiram.</div>
+
+                      <div class="signature center">
+                        <div class="p">{{assinatura_cidade}}, {{assinatura_data_extenso}}.</div>
+                      </div>
+
+                      <div class="sign-row">
+                        <div class="sign-col">
+                          <div class="line"></div>
+                          <div class="sign-name small"><b>Itamir Pinto Mamede</b><br/>CONTRATADO(a)</div>
+                        </div>
+                        <div class="sign-col">
+                          <div class="line"></div>
+                          <div class="sign-name small"><b>{{contratante_nome}}</b><br/>CONTRATANTE</div>
+                        </div>
+                      </div>
+
+                      <div class="sign-row">
+                        <div class="sign-col">
+                          <div class="line"></div>
+                          <div class="sign-name small"><b>{{testemunha1_nome}}</b><br/>TESTEMUNHA 1<br/>RG: {{testemunha1_rg}}</div>
+                        </div>
+                        <div class="sign-col">
+                          <div class="line"></div>
+                          <div class="sign-name small"><b>{{testemunha2_nome}}</b><br/>TESTEMUNHA 2<br/>RG: {{testemunha2_rg}}</div>
+                        </div>
+                      </div>
+
+                      <div class="footer">{{escritorio_endereco}}</div>
+                    </body>
+                    </html>
+                    """;
+
+            byte[] pdf = documentTemplateService.generatePdfFromHtml(html, placeholders);
+
+            com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
+            String titulo = "CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS - " + nvl(cliente.getNome());
+            d.setTitulo(titulo);
+            d.setCategoria("Contrato");
+            d.setDescricao("Contrato de prestação de serviços advocatícios gerado a partir do cadastro do cliente");
+            d.setConteudo(pdf);
+            d.setContentType(MediaType.APPLICATION_PDF_VALUE);
+            d.setOriginalFilename(safeFilename("contrato_servicos_advocaticios_" + nvl(cliente.getNome())) + ".pdf");
+            d.setTamanho((long) pdf.length);
+            d.setCaminhoArquivo(null);
+            d.setCriadoEm(LocalDateTime.now());
+            d.setAutor(userDetails != null ? userDetails.getUsername() : null);
+            documentoJuridicoRepository.save(d);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", d.getOriginalFilename());
+            headers.setContentLength(pdf.length);
+            return ResponseEntity.ok().headers(headers).body(pdf);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("erro", "Falha ao gerar PDF", "detalhes", e.getMessage()));
+        }
+    }
+
+    private String buildContratanteTexto(Cliente cliente) {
+        String nome = nvl(cliente.getNome());
+        String cpf = nvl(cliente.getCpfCnpj());
+        if (!isBlank(nome) && !isBlank(cpf)) {
+            return nome + ", portador(a) do CPF/MF n° " + cpf
+                    + ", de ora em diante simplesmente denominado(a) CONTRATANTE.";
+        }
+        if (!isBlank(nome)) {
+            return nome + ", de ora em diante simplesmente denominado(a) CONTRATANTE.";
+        }
+        if (!isBlank(cpf)) {
+            return "portador(a) do CPF/MF n° " + cpf + ", de ora em diante simplesmente denominado(a) CONTRATANTE.";
+        }
+        return "de ora em diante simplesmente denominado(a) CONTRATANTE.";
+    }
+
+    private String buildOutorganteTexto(Cliente cliente) {
+        List<String> cabecalho = new ArrayList<>();
+        if (!isBlank(cliente.getNome()))
+            cabecalho.add(cliente.getNome());
+        if (!isBlank(cliente.getNacionalidade()))
+            cabecalho.add(cliente.getNacionalidade());
+        if (!isBlank(cliente.getEstadoCivil()))
+            cabecalho.add(cliente.getEstadoCivil());
+        if (!isBlank(cliente.getProfissao()))
+            cabecalho.add(cliente.getProfissao());
+
+        List<String> dados = new ArrayList<>();
+        String filiacao = firstNonBlank(cliente.getNomeMae(), cliente.getNomePai());
+        if (!isBlank(filiacao)) {
+            dados.add("filho(a) de " + filiacao);
+        }
+        if (cliente.getDataNascimento() != null) {
+            dados.add("nascido(a) aos " + formatDate(cliente.getDataNascimento()));
+        }
+        if (!isBlank(cliente.getCpfCnpj())) {
+            dados.add("inscrito no CPF sob o Nº " + cliente.getCpfCnpj());
+        }
+        if (!isBlank(cliente.getRg())) {
+            dados.add("RG Nº " + cliente.getRg());
+        }
+        String endereco = buildEndereco(cliente);
+        if (!isBlank(endereco)) {
+            dados.add("residente e domiciliado à " + endereco);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (!cabecalho.isEmpty()) {
+            sb.append(String.join(", ", cabecalho));
+        }
+        if (!dados.isEmpty()) {
+            if (sb.length() > 0)
+                sb.append(", ");
+            sb.append(String.join(", ", dados));
+        }
+        if (sb.length() > 0 && sb.charAt(sb.length() - 1) != '.')
+            sb.append('.');
+        return sb.toString();
+    }
+
+    private String buildEndereco(Cliente cliente) {
+        List<String> partes = new ArrayList<>();
+        String base = joinNonBlank(", ",
+                cliente.getLogradouro(),
+                cliente.getNumero(),
+                cliente.getComplemento());
+        if (!isBlank(base))
+            partes.add(base);
+        if (!isBlank(cliente.getBairro()))
+            partes.add(cliente.getBairro());
+
+        String cidadeUf = joinNonBlank(" - ",
+                joinNonBlank("/", cliente.getCidade(), cliente.getEstado()),
+                (!isBlank(cliente.getCep()) ? ("Cep " + cliente.getCep()) : null));
+        if (!isBlank(cidadeUf))
+            partes.add(cidadeUf);
+
+        return String.join(", ", partes);
+    }
+
+    private String formatDate(LocalDate date) {
+        return date != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format(date) : "";
+    }
+
+    private String formatDateExtenso(LocalDate date) {
+        if (date == null)
+            return "";
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy",
+                new java.util.Locale("pt", "BR"));
+        return fmt.format(date);
+    }
+
+    private String safeFilename(String input) {
+        String base = input != null ? input.trim() : "documento";
+        if (base.isBlank())
+            base = "documento";
+        return base.replaceAll("[^a-zA-Z0-9\\-_\\.]+", "_");
+    }
+
+    private String joinNonBlank(String sep, String... parts) {
+        List<String> out = new ArrayList<>();
+        if (parts != null) {
+            for (String p : parts) {
+                if (!isBlank(p))
+                    out.add(p.trim());
+            }
+        }
+        return String.join(sep, out);
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null)
+            return null;
+        for (String v : values) {
+            if (!isBlank(v))
+                return v.trim();
+        }
+        return null;
+    }
+
+    private boolean isBlank(String v) {
+        return v == null || v.trim().isEmpty();
+    }
+
+    private String nvl(String v) {
+        return v != null ? v : "";
+    }
+
+    private String nvlOr(String v, String fallback) {
+        return !isBlank(v) ? v.trim() : (fallback != null ? fallback : "");
     }
 
     @PostMapping("/api/documentos/upload")
     @ResponseBody
     public ResponseEntity<?> uploadDocumentoApi(@RequestBody Map<String, Object> body,
-                                                @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
         d.setTitulo(String.valueOf(body.getOrDefault("titulo", "Documento")));
         d.setCategoria(String.valueOf(body.getOrDefault("categoria", "Contrato")));
@@ -1400,10 +1876,10 @@ public class JuridicoController {
     @PostMapping("/api/documentos/upload-multipart")
     @ResponseBody
     public ResponseEntity<?> uploadDocumentoMultipart(@RequestParam("file") MultipartFile file,
-                                                      @RequestParam String titulo,
-                                                      @RequestParam String categoria,
-                                                      @RequestParam(value = "descricao", required = false) String descricao,
-                                                      @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestParam String titulo,
+            @RequestParam String categoria,
+            @RequestParam(value = "descricao", required = false) String descricao,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
             d.setTitulo(titulo);
@@ -1419,7 +1895,8 @@ public class JuridicoController {
             documentoJuridicoRepository.save(d);
             return ResponseEntity.ok(Map.of("id", d.getId()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha no upload do arquivo", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha no upload do arquivo", "detalhes", e.getMessage()));
         }
     }
 
@@ -1459,9 +1936,12 @@ public class JuridicoController {
                 .map(d -> {
                     try {
                         if (d.getConteudo() != null && d.getConteudo().length > 0) {
-                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(d.getConteudo());
+                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(
+                                    d.getConteudo());
                             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                            headers.setContentType(d.getContentType() != null ? org.springframework.http.MediaType.parseMediaType(d.getContentType()) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                            headers.setContentType(d.getContentType() != null
+                                    ? org.springframework.http.MediaType.parseMediaType(d.getContentType())
+                                    : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
                             String fname = d.getOriginalFilename() != null ? d.getOriginalFilename() : "documento";
                             headers.setContentDispositionFormData("attachment", fname);
                             headers.setContentLength(d.getTamanho() != null ? d.getTamanho() : d.getConteudo().length);
@@ -1472,9 +1952,12 @@ public class JuridicoController {
                             return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
                         }
                         String contentType = java.nio.file.Files.probeContentType(path);
-                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(path);
+                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(
+                                path);
                         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                        headers.setContentType(contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                        headers.setContentType(
+                                contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType)
+                                        : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
                         headers.setContentDispositionFormData("attachment", path.getFileName().toString());
                         return ResponseEntity.ok().headers(headers).body(resource);
                     } catch (Exception e) {
@@ -1491,9 +1974,12 @@ public class JuridicoController {
                 .map(d -> {
                     try {
                         if (d.getConteudo() != null && d.getConteudo().length > 0) {
-                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(d.getConteudo());
+                            org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(
+                                    d.getConteudo());
                             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                            headers.setContentType(d.getContentType() != null ? org.springframework.http.MediaType.parseMediaType(d.getContentType()) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                            headers.setContentType(d.getContentType() != null
+                                    ? org.springframework.http.MediaType.parseMediaType(d.getContentType())
+                                    : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
                             String fname = d.getOriginalFilename() != null ? d.getOriginalFilename() : "documento";
                             headers.set("Content-Disposition", "inline; filename=\"" + fname + "\"");
                             headers.setCacheControl("no-cache, no-store, must-revalidate");
@@ -1507,10 +1993,14 @@ public class JuridicoController {
                             return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
                         }
                         String contentType = java.nio.file.Files.probeContentType(path);
-                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(path);
+                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(
+                                path);
                         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                        headers.setContentType(contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType) : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
-                        headers.set("Content-Disposition", "inline; filename=\"" + path.getFileName().toString() + "\"");
+                        headers.setContentType(
+                                contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType)
+                                        : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
+                        headers.set("Content-Disposition",
+                                "inline; filename=\"" + path.getFileName().toString() + "\"");
                         headers.setCacheControl("no-cache, no-store, must-revalidate");
                         headers.setPragma("no-cache");
                         headers.setExpires(0);
@@ -1527,7 +2017,7 @@ public class JuridicoController {
     @PutMapping("/contratos/{id}/enviar-analise")
     @ResponseBody
     public ResponseEntity<?> enviarParaAnalise(@PathVariable Long id,
-                                               @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                     .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
@@ -1537,20 +2027,20 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato enviado para análise"
-            ));
+                    "mensagem", "Contrato enviado para análise"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao enviar para análise", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao enviar para análise", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/contratos/{id}/aprovar")
     @ResponseBody
     public ResponseEntity<?> aprovarContrato(@PathVariable Long id,
-                                             @RequestBody(required = false) Map<String, Object> body,
-                                             @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestBody(required = false) Map<String, Object> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             String observacoes = body != null ? String.valueOf(body.getOrDefault("observacoes", "")) : "";
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
@@ -1561,20 +2051,20 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato aprovado"
-            ));
+                    "mensagem", "Contrato aprovado"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao aprovar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao aprovar contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/contratos/{id}/assinar")
     @ResponseBody
     public ResponseEntity<?> assinarContrato(@PathVariable Long id,
-                                             @RequestBody Map<String, Object> body,
-                                             @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             String dataStr = String.valueOf(body.getOrDefault("dataAssinatura", ""));
             LocalDate dataAssinatura = LocalDate.parse(dataStr);
@@ -1586,21 +2076,21 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato assinado"
-            ));
+                    "mensagem", "Contrato assinado"));
         } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Data inválida: use o formato YYYY-MM-DD"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao assinar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao assinar contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/contratos/{id}/ativar")
     @ResponseBody
     public ResponseEntity<?> ativarContrato(@PathVariable Long id,
-                                            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                     .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
@@ -1610,20 +2100,20 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato ativado"
-            ));
+                    "mensagem", "Contrato ativado"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao ativar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao ativar contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/contratos/{id}/suspender")
     @ResponseBody
     public ResponseEntity<?> suspenderContrato(@PathVariable Long id,
-                                               @RequestBody Map<String, Object> body,
-                                               @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             String motivo = String.valueOf(body.getOrDefault("motivo", ""));
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
@@ -1634,19 +2124,19 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato suspenso"
-            ));
+                    "mensagem", "Contrato suspenso"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao suspender contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao suspender contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/contratos/{id}/reativar")
     @ResponseBody
     public ResponseEntity<?> reativarContrato(@PathVariable Long id,
-                                              @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                     .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
@@ -1656,20 +2146,20 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato reativado"
-            ));
+                    "mensagem", "Contrato reativado"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao reativar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao reativar contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/contratos/{id}/rescindir")
     @ResponseBody
     public ResponseEntity<?> rescindirContrato(@PathVariable Long id,
-                                               @RequestBody Map<String, Object> body,
-                                               @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             String motivo = String.valueOf(body.getOrDefault("motivo", ""));
             String dataStr = String.valueOf(body.getOrDefault("dataRescisao", ""));
@@ -1682,24 +2172,26 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato rescindido"
-            ));
+                    "mensagem", "Contrato rescindido"));
         } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Data inválida: use o formato YYYY-MM-DD"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao rescindir contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao rescindir contrato", "detalhes", e.getMessage()));
         }
     }
 
     @PutMapping("/contratos/{id}/renovar")
     @ResponseBody
     public ResponseEntity<?> renovarContrato(@PathVariable Long id,
-                                             @RequestBody Map<String, Object> body,
-                                             @AuthenticationPrincipal UserDetails userDetails) {
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Integer novasDuracaoMeses = body.get("novasDuracaoMeses") != null ? Integer.parseInt(String.valueOf(body.get("novasDuracaoMeses"))) : null;
+            Integer novasDuracaoMeses = body.get("novasDuracaoMeses") != null
+                    ? Integer.parseInt(String.valueOf(body.get("novasDuracaoMeses")))
+                    : null;
             String valorStr = String.valueOf(body.getOrDefault("novoValor", "0"));
             // aceitar tanto "1500,00" quanto "1500.00"
             valorStr = valorStr.replace(".", "").replace(",", ".");
@@ -1713,21 +2205,21 @@ public class JuridicoController {
                     "id", atualizado.getId(),
                     "numeroContrato", atualizado.getNumeroContrato(),
                     "status", atualizado.getStatus(),
-                    "mensagem", "Contrato renovado"
-            ));
+                    "mensagem", "Contrato renovado"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao renovar contrato", "detalhes", e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao renovar contrato", "detalhes", e.getMessage()));
         }
     }
 
     // =============== MÉTODOS AUXILIARES ===============
-    
+
     private int getContratosAtivos() {
         return 45;
     }
-    
+
     private int getProcessosAndamento() {
         try {
             return (int) processoJuridicoRepository.count();
@@ -1735,11 +2227,11 @@ public class JuridicoController {
             return 0;
         }
     }
-    
+
     private int getPrazosVencendo() {
         return 8;
     }
-    
+
     private int getAlertasCompliance() {
         try {
             return (int) naoConformidadeRepository.count();
@@ -1747,10 +2239,10 @@ public class JuridicoController {
             return 0;
         }
     }
-    
+
     private List<Map<String, Object>> getContratosProximosVencimento() {
         List<Map<String, Object>> contratos = new ArrayList<>();
-        
+
         Map<String, Object> contrato1 = new HashMap<>();
         contrato1.put("titulo", "Contrato de Prestação de Serviços - TechCorp");
         contrato1.put("contraparte", "TechCorp Ltda");
@@ -1758,7 +2250,7 @@ public class JuridicoController {
         contrato1.put("valor", "R$ 50.000,00");
         contrato1.put("status", "ATIVO");
         contratos.add(contrato1);
-        
+
         Map<String, Object> contrato2 = new HashMap<>();
         contrato2.put("titulo", "Contrato de Locação - Escritório Central");
         contrato2.put("contraparte", "Imobiliária ABC");
@@ -1766,13 +2258,13 @@ public class JuridicoController {
         contrato2.put("valor", "R$ 15.000,00");
         contrato2.put("status", "ATIVO");
         contratos.add(contrato2);
-        
+
         return contratos;
     }
-    
+
     private List<Map<String, Object>> getProcessosUrgentes() {
         List<Map<String, Object>> processos = new ArrayList<>();
-        
+
         Map<String, Object> processo1 = new HashMap<>();
         processo1.put("numero", "1234567-89.2023.8.26.0100");
         processo1.put("tipo", "Trabalhista");
@@ -1780,35 +2272,35 @@ public class JuridicoController {
         processo1.put("proximoPrazo", LocalDate.now().plusDays(3));
         processo1.put("acao", "Contestação");
         processos.add(processo1);
-        
+
         return processos;
     }
-    
+
     private List<Map<String, Object>> getUltimasAtividades() {
         List<Map<String, Object>> atividades = new ArrayList<>();
-        
+
         Map<String, Object> atividade1 = new HashMap<>();
         atividade1.put("tipo", "Contrato");
         atividade1.put("descricao", "Contrato de prestação de serviços aprovado");
         atividade1.put("data", LocalDateTime.now().minusHours(2));
         atividade1.put("usuario", "Dr. Carlos Oliveira");
         atividades.add(atividade1);
-        
+
         Map<String, Object> atividade2 = new HashMap<>();
         atividade2.put("tipo", "Processo");
         atividade2.put("descricao", "Audiência agendada para processo trabalhista");
         atividade2.put("data", LocalDateTime.now().minusHours(4));
         atividade2.put("usuario", "Dra. Ana Santos");
         atividades.add(atividade2);
-        
+
         return atividades;
     }
-    
+
     private List<Map<String, Object>> getListaContratos(String status) {
         // Simular lista de contratos por status
         return new ArrayList<>();
     }
-    
+
     private Map<String, Object> getEstatisticasContratos() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalAtivos", 45);
@@ -1817,38 +2309,38 @@ public class JuridicoController {
         stats.put("valorTotal", "R$ 2.450.000,00");
         return stats;
     }
-    
+
     private List<Map<String, Object>> getListaProcessos(String status) {
         // Simular lista de processos por status
         return new ArrayList<>();
     }
-    
+
     private List<Map<String, Object>> getProximasAudiencias() {
         List<Map<String, Object>> audiencias = new ArrayList<>();
-        
+
         Map<String, Object> audiencia1 = new HashMap<>();
         audiencia1.put("processo", "1234567-89.2023.8.26.0100");
         audiencia1.put("tipo", "Instrução");
         audiencia1.put("data", LocalDateTime.now().plusDays(7));
         audiencia1.put("local", "Fórum Central");
         audiencias.add(audiencia1);
-        
+
         return audiencias;
     }
-    
+
     private List<Map<String, Object>> getPrazosCriticos() {
         List<Map<String, Object>> prazos = new ArrayList<>();
-        
+
         Map<String, Object> prazo1 = new HashMap<>();
         prazo1.put("processo", "1234567-89.2023.8.26.0100");
         prazo1.put("acao", "Contestação");
         prazo1.put("dataLimite", LocalDate.now().plusDays(3));
         prazo1.put("responsavel", "Dr. Carlos Oliveira");
         prazos.add(prazo1);
-        
+
         return prazos;
     }
-    
+
     private Map<String, Object> getStatusCompliance() {
         Map<String, Object> status = new HashMap<>();
         status.put("conformidade", 92.5);
@@ -1857,23 +2349,23 @@ public class JuridicoController {
         status.put("ultimaAuditoria", LocalDate.now().minusMonths(3));
         return status;
     }
-    
+
     private List<Map<String, Object>> getNormasVigentes() {
         List<Map<String, Object>> normas = new ArrayList<>();
-        
+
         Map<String, Object> norma1 = new HashMap<>();
         norma1.put("codigo", "LGPD");
         norma1.put("nome", "Lei Geral de Proteção de Dados");
         norma1.put("status", "VIGENTE");
         norma1.put("ultimaRevisao", LocalDate.now().minusMonths(6));
         normas.add(norma1);
-        
+
         return normas;
     }
-    
+
     private List<Map<String, Object>> getNaoConformidades() {
         List<Map<String, Object>> naoConformidades = new ArrayList<>();
-        
+
         Map<String, Object> nc1 = new HashMap<>();
         nc1.put("codigo", "NC-001");
         nc1.put("descricao", "Falta de treinamento em LGPD");
@@ -1881,73 +2373,73 @@ public class JuridicoController {
         nc1.put("status", "ABERTA");
         nc1.put("prazoCorrecao", LocalDate.now().plusDays(30));
         naoConformidades.add(nc1);
-        
+
         return naoConformidades;
     }
-    
+
     private List<Map<String, Object>> getAuditorias() {
         List<Map<String, Object>> auditorias = new ArrayList<>();
-        
+
         Map<String, Object> auditoria1 = new HashMap<>();
         auditoria1.put("tipo", "Compliance LGPD");
         auditoria1.put("status", "CONCLUIDA");
         auditoria1.put("data", LocalDate.now().minusMonths(3));
         auditoria1.put("resultado", "APROVADO");
         auditorias.add(auditoria1);
-        
+
         return auditorias;
     }
-    
+
     private List<Map<String, Object>> getCategoriasDocumentos() {
         List<Map<String, Object>> categorias = new ArrayList<>();
-        
+
         Map<String, Object> cat1 = new HashMap<>();
         cat1.put("nome", "Contratos");
         cat1.put("quantidade", 45);
         categorias.add(cat1);
-        
+
         Map<String, Object> cat2 = new HashMap<>();
         cat2.put("nome", "Processos");
         cat2.put("quantidade", 23);
         categorias.add(cat2);
-        
+
         return categorias;
     }
-    
+
     private List<Map<String, Object>> getDocumentosRecentes() {
         List<Map<String, Object>> documentos = new ArrayList<>();
-        
+
         Map<String, Object> doc1 = new HashMap<>();
         doc1.put("titulo", "Contrato de Prestação de Serviços");
         doc1.put("categoria", "Contratos");
         doc1.put("dataUpload", LocalDateTime.now().minusHours(2));
         doc1.put("autor", "Dr. Carlos Oliveira");
         documentos.add(doc1);
-        
+
         return documentos;
     }
-    
+
     private List<Map<String, Object>> getModelosDocumentos() {
         List<Map<String, Object>> modelos = new ArrayList<>();
-        
+
         Map<String, Object> modelo1 = new HashMap<>();
         modelo1.put("nome", "Modelo de Contrato de Prestação de Serviços");
         modelo1.put("categoria", "Contratos");
         modelo1.put("versao", "2.1");
         modelos.add(modelo1);
-        
+
         return modelos;
     }
-    
+
     private List<Map<String, Object>> getDocumentosPendentesAssinatura() {
         List<Map<String, Object>> pendentes = new ArrayList<>();
-        
+
         Map<String, Object> doc1 = new HashMap<>();
         doc1.put("titulo", "Contrato de Locação - Filial Norte");
         doc1.put("signatarios", "2 de 3");
         doc1.put("prazoAssinatura", LocalDate.now().plusDays(5));
         pendentes.add(doc1);
-        
+
         return pendentes;
     }
 }

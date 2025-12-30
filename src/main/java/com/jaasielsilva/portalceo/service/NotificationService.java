@@ -6,6 +6,8 @@ import com.jaasielsilva.portalceo.model.ProcessoAdesao;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.NotificationRepository;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
+import com.jaasielsilva.portalceo.repository.juridico.ProcessoJuridicoRepository;
+import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -16,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +39,9 @@ public class NotificationService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ProcessoJuridicoRepository processoJuridicoRepository;
 
     // Método para obter RealtimeNotificationService sem dependência circular
     private RealtimeNotificationService getRealtimeNotificationService() {
@@ -76,6 +82,22 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
 
         // Enviar notificação global em tempo real
+        RealtimeNotificationService realtimeService = getRealtimeNotificationService();
+        if (realtimeService != null) {
+            realtimeService.sendGlobalNotification(notification);
+        }
+
+        return notification;
+    }
+
+    public Notification createGlobalNotificationWithAction(String type, String title, String message,
+            Notification.Priority priority, String actionUrl, String entityType, Long entityId) {
+        Notification notification = new Notification(type, title, message, priority);
+        notification.setActionUrl(actionUrl);
+        notification.setEntityType(entityType);
+        notification.setEntityId(entityId);
+        notification = notificationRepository.save(notification);
+
         RealtimeNotificationService realtimeService = getRealtimeNotificationService();
         if (realtimeService != null) {
             realtimeService.sendGlobalNotification(notification);
@@ -264,6 +286,43 @@ public class NotificationService {
         int deactivated = notificationRepository.deactivateOldNotifications(cutoffDate);
         if (deactivated > 0) {
             System.out.println("🧹 Limpeza automática: " + deactivated + " notificações antigas removidas");
+        }
+    }
+
+    @Scheduled(cron = "0 0 8 * * ?")
+    @Async
+    public void notifyProcesses30DaysOld() {
+        LocalDate targetDate = LocalDate.now().minusDays(30);
+        List<ProcessoJuridico> processos = processoJuridicoRepository
+                .findByStatusAndDataAbertura(ProcessoJuridico.StatusProcesso.EM_ANDAMENTO, targetDate);
+        if (processos == null || processos.isEmpty()) {
+            return;
+        }
+
+        String notificationType = "juridico_processo_30_dias";
+        for (ProcessoJuridico p : processos) {
+            if (p == null || p.getId() == null) {
+                continue;
+            }
+            if (notificationRepository.existsByTypeAndEntityTypeAndEntityId(notificationType, "ProcessoJuridico",
+                    p.getId())) {
+                continue;
+            }
+
+            String numero = p.getNumero() != null ? p.getNumero() : "—";
+            String parte = p.getParte() != null ? p.getParte() : "—";
+            String titulo = "Processo com 30 dias";
+            String mensagem = "Processo " + numero + " (" + parte + ") completou 30 dias em andamento.";
+            String url = "/juridico/processos?openProcessId=" + p.getId();
+
+            createGlobalNotificationWithAction(
+                    notificationType,
+                    titulo,
+                    mensagem,
+                    Notification.Priority.MEDIUM,
+                    url,
+                    "ProcessoJuridico",
+                    p.getId());
         }
     }
 

@@ -85,6 +85,41 @@
                 required />
             </div>
 
+            <div class="form-group">
+              <label for="dataNascimento">Data de Nascimento:</label>
+              <input type="date" id="dataNascimento" th:field="*{dataNascimento}" th:disabled="${cliente.tipoCliente != 'PF'}" />
+            </div>
+
+            <div class="form-group">
+              <label for="rg">RG:</label>
+              <input type="text" id="rg" th:field="*{rg}" placeholder="Digite o RG" th:disabled="${cliente.tipoCliente != 'PF'}" />
+            </div>
+
+            <div class="form-group">
+              <label for="nacionalidade">Nacionalidade:</label>
+              <input type="text" id="nacionalidade" th:field="*{nacionalidade}" placeholder="Ex.: Brasileiro(a)" th:disabled="${cliente.tipoCliente != 'PF'}" />
+            </div>
+
+            <div class="form-group">
+              <label for="estadoCivil">Estado Civil:</label>
+              <input type="text" id="estadoCivil" th:field="*{estadoCivil}" placeholder="Ex.: Solteiro(a)" th:disabled="${cliente.tipoCliente != 'PF'}" />
+            </div>
+
+            <div class="form-group">
+              <label for="profissao">Profissão:</label>
+              <input type="text" id="profissao" th:field="*{profissao}" placeholder="Ex.: Empresário(a)" th:disabled="${cliente.tipoCliente != 'PF'}" />
+            </div>
+
+            <div class="form-group">
+              <label for="nomeMae">Nome da Mãe:</label>
+              <input type="text" id="nomeMae" th:field="*{nomeMae}" placeholder="Digite o nome da mãe" th:disabled="${cliente.tipoCliente != 'PF'}" />
+            </div>
+
+            <div class="form-group">
+              <label for="nomePai">Nome do Pai:</label>
+              <input type="text" id="nomePai" th:field="*{nomePai}" placeholder="Digite o nome do pai" th:disabled="${cliente.tipoCliente != 'PF'}" />
+            </div>
+
             <!-- Inscrição Estadual -->
             <div class="form-group">
               <label for="inscricaoEstadual">Inscrição Estadual:</label>

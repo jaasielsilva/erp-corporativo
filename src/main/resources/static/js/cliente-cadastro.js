@@ -12,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const telefone = document.getElementById('telefone');
   const celular = document.getElementById('celular');
   const cpfCnpj = document.getElementById('cpfCnpj');
+  const dataNascimento = document.getElementById('dataNascimento');
+  const rg = document.getElementById('rg');
+  const nacionalidade = document.getElementById('nacionalidade');
+  const estadoCivil = document.getElementById('estadoCivil');
+  const profissao = document.getElementById('profissao');
+  const nomeMae = document.getElementById('nomeMae');
+  const nomePai = document.getElementById('nomePai');
 
   // Atualiza campos habilitados conforme tipo de cliente (PF/PJ)
   function atualizarCamposPorTipo() {
@@ -29,6 +36,25 @@ document.addEventListener('DOMContentLoaded', () => {
       inscricaoEstadual.value = '';
       inscricaoMunicipal.disabled = true;
       inscricaoMunicipal.value = '';
+    }
+
+    const pfEnabled = tipo === 'PF';
+    if (dataNascimento) dataNascimento.disabled = !pfEnabled;
+    if (rg) rg.disabled = !pfEnabled;
+    if (nacionalidade) nacionalidade.disabled = !pfEnabled;
+    if (estadoCivil) estadoCivil.disabled = !pfEnabled;
+    if (profissao) profissao.disabled = !pfEnabled;
+    if (nomeMae) nomeMae.disabled = !pfEnabled;
+    if (nomePai) nomePai.disabled = !pfEnabled;
+
+    if (!pfEnabled) {
+      if (dataNascimento) dataNascimento.value = '';
+      if (rg) rg.value = '';
+      if (nacionalidade) nacionalidade.value = '';
+      if (estadoCivil) estadoCivil.value = '';
+      if (profissao) profissao.value = '';
+      if (nomeMae) nomeMae.value = '';
+      if (nomePai) nomePai.value = '';
     }
   }
 

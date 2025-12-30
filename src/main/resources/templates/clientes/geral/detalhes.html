@@ -27,6 +27,13 @@
           <p><strong>Telefone:</strong> <span th:text="${cliente.telefone}"></span></p>
           <p><strong>Celular:</strong> <span th:text="${cliente.celular}"></span></p>
           <p><strong>CPF/CNPJ:</strong> <span th:text="${cliente.cpfCnpj}"></span></p>
+          <p th:if="${cliente.tipoCliente == 'PF'}"><strong>Data de Nascimento:</strong> <span th:text="${cliente.dataNascimento != null ? #temporals.format(cliente.dataNascimento, 'dd/MM/yyyy') : ''}"></span></p>
+          <p th:if="${cliente.tipoCliente == 'PF'}"><strong>RG:</strong> <span th:text="${cliente.rg}"></span></p>
+          <p th:if="${cliente.tipoCliente == 'PF'}"><strong>Nacionalidade:</strong> <span th:text="${cliente.nacionalidade}"></span></p>
+          <p th:if="${cliente.tipoCliente == 'PF'}"><strong>Estado Civil:</strong> <span th:text="${cliente.estadoCivil}"></span></p>
+          <p th:if="${cliente.tipoCliente == 'PF'}"><strong>Profissão:</strong> <span th:text="${cliente.profissao}"></span></p>
+          <p th:if="${cliente.tipoCliente == 'PF'}"><strong>Nome da Mãe:</strong> <span th:text="${cliente.nomeMae}"></span></p>
+          <p th:if="${cliente.tipoCliente == 'PF'}"><strong>Nome do Pai:</strong> <span th:text="${cliente.nomePai}"></span></p>
           <p><strong>Inscrição Estadual:</strong> <span th:text="${cliente.inscricaoEstadual}"></span></p>
           <p><strong>Inscrição Municipal:</strong> <span th:text="${cliente.inscricaoMunicipal}"></span></p>
 

@@ -26,6 +26,14 @@ public class Cliente {
     private String cpfCnpj;
     private String tipoCliente; // PF ou PJ
 
+    private LocalDate dataNascimento;
+    private String rg;
+    private String nacionalidade;
+    private String estadoCivil;
+    private String profissao;
+    private String nomeMae;
+    private String nomePai;
+
     // Endereço
     private String logradouro;
     private String numero;
@@ -42,13 +50,13 @@ public class Cliente {
     private String pessoaContato;
     private String observacoes;
 
-    private String nomeFantasia;          // Para PJ
-    private String inscricaoMunicipal;    // Para PJ
-    private String inscricaoEstadual;     // Para PJ
+    private String nomeFantasia; // Para PJ
+    private String inscricaoMunicipal; // Para PJ
+    private String inscricaoEstadual; // Para PJ
 
     private Boolean ativo = true;
 
-    private LocalDateTime dataExclusao;       // Exclusão lógica
+    private LocalDateTime dataExclusao; // Exclusão lógica
 
     // Auditoria de criação
     private LocalDateTime dataCriacao;
@@ -65,8 +73,6 @@ public class Cliente {
 
     // Campo para identificar clientes VIP
     private Boolean vip = false;
-
-    
 
     // Relacionamento com contratos vinculados a este cliente
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)

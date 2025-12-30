@@ -7,11 +7,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
+
 public interface ProcessoJuridicoRepository extends JpaRepository<ProcessoJuridico, Long> {
     long countByStatus(ProcessoJuridico.StatusProcesso status);
     java.util.List<ProcessoJuridico> findByStatus(ProcessoJuridico.StatusProcesso status);
 
     Page<ProcessoJuridico> findByStatus(ProcessoJuridico.StatusProcesso status, Pageable pageable);
+
+    java.util.List<ProcessoJuridico> findByDataAbertura(LocalDate dataAbertura);
+
+    java.util.List<ProcessoJuridico> findByStatusAndDataAbertura(ProcessoJuridico.StatusProcesso status, LocalDate dataAbertura);
 
     Page<ProcessoJuridico> findByNumeroContainingIgnoreCaseOrParteContainingIgnoreCaseOrAssuntoContainingIgnoreCase(
             String numero, String parte, String assunto, Pageable pageable);

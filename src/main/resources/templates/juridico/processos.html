@@ -58,10 +58,11 @@
                                         <th>Assunto</th>
                                         <th>Status</th>
                                         <th>Aberto em</th>
+                                        <th>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="procTableBody">
-                                    <tr><td colspan="7" class="text-muted">Use os filtros para listar processos.</td></tr>
+                                    <tr><td colspan="8" class="text-muted">Use os filtros para listar processos.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -212,6 +213,52 @@
         </main>
     </div>
 
+    <div class="modal fade" id="procDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes do Processo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-muted">Número</div>
+                            <div id="procDetailNumero">—</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-muted">Status</div>
+                            <div id="procDetailStatus">—</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-muted">Tipo</div>
+                            <div id="procDetailTipo">—</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-muted">Tribunal</div>
+                            <div id="procDetailTribunal">—</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-muted">Parte</div>
+                            <div id="procDetailParte">—</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-muted">Aberto em</div>
+                            <div id="procDetailDataAbertura">—</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="fw-semibold text-muted">Assunto</div>
+                            <div id="procDetailAssunto">—</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
@@ -236,13 +283,13 @@
                 const $tbody = $('#procTableBody');
                 $tbody.empty();
                 if (!items || items.length === 0) {
-                    $tbody.append('<tr><td colspan="7" class="text-center text-muted">Nenhum processo encontrado.</td></tr>');
+                    $tbody.append('<tr><td colspan="8" class="text-center text-muted">Nenhum processo encontrado.</td></tr>');
                     return;
                 }
                 items.forEach(p => {
                     const status = p.status || '—';
                     $tbody.append(`
-                        <tr>
+                        <tr data-id="${p.id || ''}">
                             <td>${p.numero || '—'}</td>
                             <td>${p.tipo || '—'}</td>
                             <td>${p.tribunal || '—'}</td>
@@ -250,6 +297,11 @@
                             <td>${p.assunto || '—'}</td>
                             <td><span class="badge bg-secondary">${status}</span></td>
                             <td>${p.dataAbertura || '—'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary proc-detail" type="button" data-id="${p.id}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
                         </tr>
                     `);
                 });
@@ -264,7 +316,7 @@
             function carregarProcessos(page = 0) {
                 const status = $('#filtroStatusProcesso').val();
                 const search = $('#filtroBuscaProcesso').val()?.trim();
-                $('#procTableBody').html('<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>');
+                $('#procTableBody').html('<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>');
                 $.get('/juridico/api/processos', { status, search, page, size: procSize })
                     .done(res => {
                         procPage = res.page || 0;
@@ -274,13 +326,43 @@
                     })
                     .fail(() => {
                         notify('error', 'Falha ao listar', 'Não foi possível carregar os processos.', 'high');
-                        $('#procTableBody').html('<tr><td colspan="7" class="text-center text-muted">Erro ao carregar processos.</td></tr>');
+                        $('#procTableBody').html('<tr><td colspan="8" class="text-center text-muted">Erro ao carregar processos.</td></tr>');
+                    });
+            }
+
+            function setProcDetail(id, data) {
+                $('#procDetailNumero').text(data && data.numero ? data.numero : '—');
+                $('#procDetailTipo').text(data && data.tipo ? data.tipo : '—');
+                $('#procDetailTribunal').text(data && data.tribunal ? data.tribunal : '—');
+                $('#procDetailParte').text(data && data.parte ? data.parte : '—');
+                $('#procDetailAssunto').text(data && data.assunto ? data.assunto : '—');
+                $('#procDetailStatus').text(data && data.status ? data.status : '—');
+                $('#procDetailDataAbertura').text(data && data.dataAbertura ? data.dataAbertura : '—');
+                $('#procDetailModal').attr('data-proc-id', id);
+            }
+
+            function abrirDetalhesProcesso(id) {
+                if (!id) return;
+                setProcDetail(id, null);
+                $.get(`/juridico/api/processos/${id}`)
+                    .done(res => {
+                        setProcDetail(id, res);
+                        const modalEl = document.getElementById('procDetailModal');
+                        if (modalEl) new bootstrap.Modal(modalEl).show();
+                    })
+                    .fail(() => {
+                        notify('error', 'Falha ao abrir', 'Não foi possível carregar detalhes do processo.', 'high');
                     });
             }
 
             $('#btnBuscarProcessos').on('click', () => carregarProcessos(0));
             $('#procPrev').on('click', () => { if (procPage > 0) carregarProcessos(procPage - 1); });
             $('#procNext').on('click', () => { if (procPage < procTotalPages - 1) carregarProcessos(procPage + 1); });
+            $(document).on('click', '.proc-detail', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                abrirDetalhesProcesso($(this).data('id'));
+            });
 
             $('#btnCriarProcesso').on('click', function() {
                 const $btn = $(this);
@@ -318,6 +400,13 @@
                     }
                 });
             });
+
+            try {
+                const openId = new URLSearchParams(window.location.search).get('openProcessId');
+                if (openId) {
+                    abrirDetalhesProcesso(openId);
+                }
+            } catch (e) {}
         });
     </script>
 </body>

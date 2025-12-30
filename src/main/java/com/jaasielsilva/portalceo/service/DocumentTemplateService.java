@@ -61,13 +61,30 @@ public class DocumentTemplateService {
     }
 
     public byte[] generatePdfFromHtml(String html, Map<String, String> placeholders) throws Exception {
-        String processed = replacePlaceholders(html, placeholders);
+        Map<String, String> escaped = new java.util.HashMap<>();
+        if (placeholders != null) {
+            for (Map.Entry<String, String> e : placeholders.entrySet()) {
+                escaped.put(e.getKey(), escapeXml(e.getValue()));
+            }
+        }
+        String processed = replacePlaceholders(html, escaped);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         com.openhtmltopdf.pdfboxout.PdfRendererBuilder builder = new com.openhtmltopdf.pdfboxout.PdfRendererBuilder();
         builder.withHtmlContent(processed, null);
         builder.toStream(baos);
         builder.run();
         return baos.toByteArray();
+    }
+
+    private String escapeXml(String input) {
+        if (input == null || input.isEmpty()) return "";
+        String out = input;
+        out = out.replace("&", "&amp;");
+        out = out.replace("<", "&lt;");
+        out = out.replace(">", "&gt;");
+        out = out.replace("\"", "&quot;");
+        out = out.replace("'", "&apos;");
+        return out;
     }
 
     private String replacePlaceholders(String text, Map<String, String> placeholders) {

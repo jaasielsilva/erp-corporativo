@@ -221,7 +221,7 @@ public class GlobalControllerAdvice {
         Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
-            return cargoNome.contains("financeiro") || cargoNome.contains("contabil") ||
+            return cargoNome.contains("financeiro") || cargoNome.contains("contabil") || cargoNome.contains("contábil") ||
                     cargoNome.contains("tesouraria") || cargoNome.contains("controller");
         }
         return false;
@@ -244,7 +244,8 @@ public class GlobalControllerAdvice {
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("estoque") || cargoNome.contains("almoxarifado") ||
-                    cargoNome.contains("logistica") || cargoNome.contains("armazem");
+                    cargoNome.contains("logistica") || cargoNome.contains("logística") || 
+                    cargoNome.contains("armazem") || cargoNome.contains("armazém");
         }
         return false;
     }
@@ -255,7 +256,7 @@ public class GlobalControllerAdvice {
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("compras") || cargoNome.contains("suprimentos") ||
-                    cargoNome.contains("procurement") || cargoNome.contains("aquisicoes");
+                    cargoNome.contains("procurement") || cargoNome.contains("aquisicoes") || cargoNome.contains("aquisições");
         }
         return false;
     }
@@ -265,7 +266,7 @@ public class GlobalControllerAdvice {
         Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
-            return cargoNome.contains("marketing") || cargoNome.contains("comunicacao") ||
+            return cargoNome.contains("marketing") || cargoNome.contains("comunicacao") || cargoNome.contains("comunicação") ||
                     cargoNome.contains("publicidade") || cargoNome.contains("branding");
         }
         return false;
@@ -288,8 +289,9 @@ public class GlobalControllerAdvice {
         Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
-            return cargoNome.contains("juridico") || cargoNome.contains("advogado") ||
-                    cargoNome.contains("legal") || cargoNome.contains("compliance");
+            return cargoNome.contains("juridico") || cargoNome.contains("jurídico") || 
+                    cargoNome.contains("advogado") || cargoNome.contains("legal") || 
+                    cargoNome.contains("compliance");
         }
         return false;
     }
@@ -303,8 +305,7 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("podeAcessarVendas")
     public boolean podeAcessarVendas() {
-        // Jurídico também precisa acessar clientes para contratos e processos
-        return isVendas() || isJuridico() || isGerencial() || isMaster() || isAdmin();
+        return isVendas() || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarEstoque")

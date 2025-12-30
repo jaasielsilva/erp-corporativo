@@ -75,6 +75,36 @@ public class ClienteContratoController {
         return "redirect:/clientes/contratos/listar";
     }
 
+    @GetMapping("/api/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getContratoDetalhesApi(@PathVariable Long id) {
+        Contrato contrato = clienteContratoService.buscarContratoCliente(id);
+        if (contrato == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Map<String, Object> detalhe = new HashMap<>();
+        detalhe.put("id", contrato.getId());
+        detalhe.put("numeroContrato", contrato.getNumeroContrato());
+        detalhe.put("status", contrato.getStatus() != null ? contrato.getStatus().name() : null);
+        detalhe.put("valor", contrato.getValor());
+        detalhe.put("dataInicio", contrato.getDataInicio());
+        detalhe.put("dataFim", contrato.getDataFim());
+        detalhe.put("tipo", contrato.getTipo() != null ? contrato.getTipo().name() : null);
+        detalhe.put("descricao", contrato.getDescricao());
+        detalhe.put("dataCriacao", contrato.getDataCriacao());
+        detalhe.put("ultimaAtualizacao", contrato.getUltimaAtualizacao());
+
+        if (contrato.getCliente() != null) {
+            detalhe.put("clienteNome", contrato.getCliente().getNomeFantasia() != null
+                    ? contrato.getCliente().getNomeFantasia()
+                    : contrato.getCliente().getNome());
+            detalhe.put("clienteDocumento", contrato.getCliente().getCpfCnpj());
+        }
+
+        return ResponseEntity.ok(detalhe);
+    }
+
     @GetMapping("/api/listar")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> listarContratosClientesApi(
@@ -123,7 +153,8 @@ public class ClienteContratoController {
         resp.put("totalElements", contratosPage.getTotalElements());
         resp.put("hasPrevious", contratosPage.hasPrevious());
         resp.put("hasNext", contratosPage.hasNext());
-        resp.put("metrics", montarMetricas());
+        // Metricas removidas para otimização de performance (evita 5 consultas pesadas por requisição)
+        // resp.put("metrics", montarMetricas());
 
         return ResponseEntity.ok(resp);
     }

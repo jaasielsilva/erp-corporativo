@@ -63,6 +63,11 @@ public class ColaboradorService {
         return colaboradorRepository.findByAtivoTrue();
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "colaboradoresSelecao", unless = "#result == null || #result.isEmpty()")
+    public List<Colaborador> listarAtivosParaSelecao() {
+        return colaboradorRepository.findBasicInfoForSelection();
+    }
+
     public Page<Colaborador> listarAtivosPaginado(Pageable pageable) {
         return colaboradorRepository.findByAtivoTrue(pageable);
     }

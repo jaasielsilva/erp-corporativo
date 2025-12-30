@@ -14,11 +14,93 @@ import java.util.Optional;
 public class GlobalControllerAdvice {
 
     private final UsuarioRepository usuarioRepository;
+    private final com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService;
+    private final com.jaasielsilva.portalceo.service.ContratoLegalService contratoLegalService;
     private Usuario usuarioCache;
     private String emailCache;
 
-    public GlobalControllerAdvice(UsuarioRepository usuarioRepository) {
+    public GlobalControllerAdvice(UsuarioRepository usuarioRepository, 
+                                  com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService,
+                                  com.jaasielsilva.portalceo.service.ContratoLegalService contratoLegalService) {
         this.usuarioRepository = usuarioRepository;
+        this.processoJuridicoService = processoJuridicoService;
+        this.contratoLegalService = contratoLegalService;
+    }
+
+    @ModelAttribute("alertasJuridicosGlobais")
+    public java.util.List<String> alertasJuridicosGlobais() {
+        Usuario usuario = usuarioLogado();
+        // Apenas carrega alertas se o usuário estiver logado e tiver acesso ao jurídico (assumindo acesso básico por enquanto)
+        if (usuario == null) {
+            return java.util.Collections.emptyList();
+        }
+        
+        java.util.List<String> alertas = new java.util.ArrayList<>();
+        java.time.LocalDate amanha = java.time.LocalDate.now().plusDays(1);
+        
+        try {
+            // Contratos vencendo amanhã
+            java.util.List<com.jaasielsilva.portalceo.model.ContratoLegal> proximosVencimentos = contratoLegalService.findContratosVencendoEm(2);
+            if (proximosVencimentos != null) {
+                for (com.jaasielsilva.portalceo.model.ContratoLegal c : proximosVencimentos) {
+                    if (c.getDataVencimento() != null && c.getDataVencimento().isEqual(amanha)) {
+                        alertas.add("O contrato <strong>" + c.getTitulo() + "</strong> vence amanhã (" + 
+                            c.getDataVencimento().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ").");
+                    }
+                }
+            }
+
+            // Processos com prazos urgentes (amanhã)
+            java.util.List<java.util.Map<String, Object>> urgentes = processoJuridicoService.obterProcessosUrgentes(2);
+            if (urgentes != null) {
+                for (java.util.Map<String, Object> p : urgentes) {
+                    Object prazoObj = p.get("proximoPrazo");
+                    if (prazoObj != null) {
+                        java.time.LocalDate prazoData = null;
+                        if (prazoObj instanceof java.time.LocalDate) {
+                            prazoData = (java.time.LocalDate) prazoObj;
+                        } else if (prazoObj instanceof String) {
+                            try {
+                                prazoData = java.time.LocalDate.parse((String) prazoObj);
+                            } catch (Exception e) {}
+                        }
+                        
+                        if (prazoData != null && prazoData.isEqual(amanha)) {
+                            alertas.add("O processo <strong>" + p.get("numero") + "</strong> tem um prazo vencendo amanhã.");
+                        }
+                    }
+                }
+            }
+
+            // Audiências amanhã
+            java.util.List<java.util.Map<String, Object>> audiencias = processoJuridicoService.obterProximasAudiencias(2);
+            if (audiencias != null) {
+                for (java.util.Map<String, Object> a : audiencias) {
+                    Object dataObj = a.get("dataHora");
+                    if (dataObj != null) {
+                        java.time.LocalDateTime dataHora = null;
+                        if (dataObj instanceof java.time.LocalDateTime) {
+                            dataHora = (java.time.LocalDateTime) dataObj;
+                        } else if (dataObj instanceof String) {
+                            try {
+                                dataHora = java.time.LocalDateTime.parse((String) dataObj);
+                            } catch (Exception e) {}
+                        }
+                        
+                        if (dataHora != null && dataHora.toLocalDate().isEqual(amanha)) {
+                            String horaFormatada = dataHora.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                            String processoNum = (String) a.get("processoNumero");
+                            alertas.add("Audiência amanhã às <strong>" + horaFormatada + "</strong> no processo <strong>" + (processoNum != null ? processoNum : "N/A") + "</strong>.");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Silently fail to avoid breaking global navigation
+            System.err.println("Erro ao carregar alertas jurídicos globais: " + e.getMessage());
+        }
+
+        return alertas;
     }
 
     @ModelAttribute("usuarioLogado")
@@ -221,7 +303,8 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("podeAcessarVendas")
     public boolean podeAcessarVendas() {
-        return isVendas() || isGerencial() || isMaster() || isAdmin();
+        // Jurídico também precisa acessar clientes para contratos e processos
+        return isVendas() || isJuridico() || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarEstoque")

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${processo.id != null} ? 'Editar Processo' : 'Novo Processo'">Processo Jurídico</title>
+    
+    <!-- Bootstrap & Styles -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
+    
+    <!-- Toastr for notifications -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="container-fluid py-4">
+            
+            <!-- Header Moderno -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-1">
+                            <li class="breadcrumb-item"><a href="/juridico/processos" class="text-decoration-none text-muted small">Processos</a></li>
+                            <li class="breadcrumb-item active" aria-current="page" th:text="${processo.id != null} ? 'Editar' : 'Novo'">Novo</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-6 text-muted mb-0">
+                        <i class="fas fa-file-signature me-2"></i>
+                        <span th:text="${processo.id != null} ? 'Editar Processo' : 'Novo Processo'">Novo Processo</span>
+                    </h1>
+                </div>
+                <a th:if="${processo.cliente != null}" th:href="@{/juridico/processos/cliente/{id}(id=${processo.cliente.id})}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i> Voltar
+                </a>
+                <a th:if="${processo.cliente == null}" href="/juridico/processos" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i> Voltar
+                </a>
+            </div>
+
+            <!-- Card do Formulário -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light border-bottom-0 py-3">
+                    <h6 class="mb-0 text-primary fw-bold"><i class="fas fa-info-circle me-2"></i>Dados do Processo</h6>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/juridico/processos/salvar}" th:object="${processo}" method="post" id="formProcesso">
+                        <input type="hidden" th:field="*{id}" />
+                        
+                        <div class="row g-4">
+                            <!-- Cliente -->
+                            <div class="col-md-6">
+                                <label for="cliente" class="form-label fw-semibold text-muted small text-uppercase">Cliente <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-user"></i></span>
+                                    <select class="form-select border-start-0 ps-0" id="cliente" th:field="*{cliente}" required>
+                                        <option value="">-- Selecione o Cliente --</option>
+                                        <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Tipo de Ação -->
+                            <div class="col-md-6">
+                                <label for="tipo" class="form-label fw-semibold text-muted small text-uppercase">Tipo de Ação <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-tag"></i></span>
+                                    <select class="form-select border-start-0 ps-0" id="tipo" th:field="*{tipo}" required>
+                                        <option value="">-- Selecione --</option>
+                                        <option th:each="t : ${tiposAcao}" th:value="${t}" th:text="${t.descricao}"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Número do Processo -->
+                            <div class="col-md-4">
+                                <label for="numero" class="form-label fw-semibold text-muted small text-uppercase">Número do Processo</label>
+                                <input type="text" class="form-control" id="numero" th:field="*{numero}" placeholder="0000000-00.0000.0.00.0000" />
+                            </div>
+
+                            <!-- Tribunal -->
+                            <div class="col-md-4">
+                                <label for="tribunal" class="form-label fw-semibold text-muted small text-uppercase">Tribunal/Vara</label>
+                                <input type="text" class="form-control" id="tribunal" th:field="*{tribunal}" placeholder="Ex: TJSP - 1ª Vara Cível" />
+                            </div>
+
+                            <!-- Parte Contrária -->
+                            <div class="col-md-4">
+                                <label for="parte" class="form-label fw-semibold text-muted small text-uppercase">Parte Contrária</label>
+                                <input type="text" class="form-control" id="parte" th:field="*{parte}" placeholder="Ex: Empresa X" />
+                            </div>
+
+                            <!-- Assunto -->
+                            <div class="col-12">
+                                <label for="assunto" class="form-label fw-semibold text-muted small text-uppercase">Assunto/Objeto</label>
+                                <textarea class="form-control" id="assunto" th:field="*{assunto}" rows="2" placeholder="Descreva brevemente o objeto da ação..."></textarea>
+                            </div>
+                            
+                            <!-- Data Abertura -->
+                            <div class="col-md-4">
+                                <label for="dataAbertura" class="form-label fw-semibold text-muted small text-uppercase">Data de Abertura</label>
+                                <input type="date" class="form-control" id="dataAbertura" th:field="*{dataAbertura}" />
+                            </div>
+
+                            <!-- Status (Apenas edição) -->
+                            <div class="col-md-4" th:if="${processo.id != null}">
+                                <label for="status" class="form-label fw-semibold text-muted small text-uppercase">Status</label>
+                                <select class="form-select" id="status" th:field="*{status}">
+                                    <option value="EM_ANDAMENTO">Em Andamento</option>
+                                    <option value="SUSPENSO">Suspenso</option>
+                                    <option value="ENCERRADO">Encerrado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-5">
+                            <a th:if="${processo.cliente != null}" th:href="@{/juridico/processos/cliente/{id}(id=${processo.cliente.id})}" class="btn btn-light border">Cancelar</a>
+                            <a th:if="${processo.cliente == null}" href="/juridico/processos" class="btn btn-light border">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Salvar Processo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="/js/notifications.js"></script>
+  
+  <script>
+    // Configuração do Toastr
+    if(typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+    }
+
+    $(document).ready(function() {
+        // Validação simples antes do submit
+        $('#formProcesso').on('submit', function(e) {
+            const cliente = $('#cliente').val();
+            const tipo = $('#tipo').val();
+            
+            if(!cliente || !tipo) {
+                e.preventDefault();
+                if(typeof toastr !== 'undefined') {
+                    toastr.error('Preencha os campos obrigatórios (Cliente e Tipo de Ação).', 'Erro de Validação');
+                } else {
+                    alert('Preencha os campos obrigatórios.');
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>

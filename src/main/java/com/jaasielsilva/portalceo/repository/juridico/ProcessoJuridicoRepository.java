@@ -36,4 +36,6 @@ public interface ProcessoJuridicoRepository extends JpaRepository<ProcessoJuridi
             @Param("status") ProcessoJuridico.StatusProcesso status,
             @Param("search") String search,
             Pageable pageable);
+
+    Page<ProcessoJuridico> findByClienteId(Long clienteId, Pageable pageable);
 }

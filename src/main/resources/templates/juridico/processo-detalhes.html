@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Detalhes do Processo - Portal CEO</title>
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .form-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .form-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f1f3f5;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            background: none;
+        }
+        
+        .nav-tabs {
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 1.5rem;
+        }
+        
+        .avatar-circle-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <section class="content-area">
+                <div class="container-fluid py-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-1">
+                                    <li class="breadcrumb-item"><a href="/juridico/processos" class="text-decoration-none text-muted">Processos</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
+                                </ol>
+                            </nav>
+                            <h1 class="display-6 fw-bold text-dark mb-0">Processo <span th:text="${processo.numero}"></span></h1>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/juridico/processos}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <a th:href="@{/juridico/processos/novo(id=${processo.id})}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>Editar
+                            </a>
+                        </div>
+                    </div>
+
+                    <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                        <i class="fas fa-check-circle me-2"></i><span th:text="${mensagem}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <div class="row">
+                        <!-- Coluna Principal -->
+                        <div class="col-lg-8">
+                            <!-- Abas e Conteúdo -->
+                            <div class="form-card">
+                                <div class="card-body p-0">
+                                    <ul class="nav nav-tabs px-3 pt-2" id="processoTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="andamentos-tab" data-bs-toggle="tab" data-bs-target="#andamentos" type="button" role="tab">
+                                                <i class="fas fa-history me-2"></i>Andamentos
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="prazos-tab" data-bs-toggle="tab" data-bs-target="#prazos" type="button" role="tab">
+                                                <i class="fas fa-calendar-alt me-2"></i>Prazos
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="audiencias-tab" data-bs-toggle="tab" data-bs-target="#audiencias" type="button" role="tab">
+                                                <i class="fas fa-gavel me-2"></i>Audiências
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <div class="tab-content p-4" id="processoTabsContent">
+                                        <!-- Aba Andamentos -->
+                                        <div class="tab-pane fade show active" id="andamentos" role="tabpanel">
+                                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                                <h5 class="mb-0 fw-bold text-secondary">Histórico de Andamentos</h5>
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAndamento">
+                                                    <i class="fas fa-plus me-2"></i>Novo Andamento
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="timeline-modern" id="procTimeline">
+                                                <div th:each="andamento : ${andamentos}" class="timeline-item-modern" 
+                                                     th:classappend="${andamento.tipo != null && andamento.tipo.name() == 'INICIAL' ? 'inicial' : (andamento.tipo != null && andamento.tipo.name() == 'AUDIENCIA' ? 'audiencia' : (andamento.tipo != null && andamento.tipo.name() == 'FINAL' ? 'final' : (andamento.tipo != null && andamento.tipo.name() == 'IMPORTANTE' ? 'importante' : 'comum')))}">
+                                                    <div class="timeline-icon-modern">
+                                                        <i class="fas" th:classappend="${andamento.tipo != null && andamento.tipo.name() == 'INICIAL' ? 'fa-flag' : (andamento.tipo != null && andamento.tipo.name() == 'AUDIENCIA' ? 'fa-gavel' : (andamento.tipo != null && andamento.tipo.name() == 'FINAL' ? 'fa-check-circle' : (andamento.tipo != null && andamento.tipo.name() == 'IMPORTANTE' ? 'fa-star' : 'fa-circle')))}"></i>
+                                                    </div>
+                                                    <div class="timeline-content-modern">
+                                                        <span class="timeline-date-modern" th:text="${#temporals.format(andamento.dataHora, 'dd/MM/yyyy HH:mm')}">Data</span>
+                                                        <h5 class="timeline-title-modern" th:text="${andamento.titulo}">Título</h5>
+                                                        <div class="timeline-desc-modern" th:text="${andamento.descricao}">Descrição</div>
+                                                        <small class="text-muted mt-2 d-block border-top pt-2"><i class="fas fa-user-circle me-1"></i> <span th:text="${andamento.usuario}">Usuário</span></small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-center text-muted py-4" th:if="${andamentos.empty}">
+                                                    <div class="mb-3"><i class="fas fa-inbox fa-3x opacity-25"></i></div>
+                                                    <p class="mb-0">Nenhum andamento registrado.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Aba Prazos -->
+                                        <div class="tab-pane fade" id="prazos" role="tabpanel">
+                                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                                <h5 class="mb-0 fw-bold text-secondary">Prazos Processuais</h5>
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalPrazo">
+                                                    <i class="fas fa-plus me-2"></i>Novo Prazo
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="timeline-modern" id="prazosTimeline">
+                                                <div th:each="prazo : ${prazos}" class="timeline-item-modern" 
+                                                     th:classappend="${prazo.cumprido ? 'final' : 'comum'}">
+                                                    <div class="timeline-icon-modern">
+                                                         <i class="fas" th:classappend="${prazo.cumprido ? 'fa-check-circle' : 'fa-calendar'}"></i>
+                                                    </div>
+                                                    <div class="timeline-content-modern">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                 <span class="timeline-date-modern" th:text="${#temporals.format(prazo.dataLimite, 'dd/MM/yyyy')}">Data</span>
+                                                                 <h5 class="timeline-title-modern" th:text="${prazo.descricao}">Descrição</h5>
+                                                            </div>
+                                                             <div th:if="${!prazo.cumprido}">
+                                                                 <form th:action="@{/juridico/prazos/concluir}" method="post" style="display:inline;">
+                                                                     <input type="hidden" name="prazoId" th:value="${prazo.id}" />
+                                                                     <input type="hidden" name="processoId" th:value="${processo.id}" />
+                                                                     <button type="submit" class="btn btn-sm btn-outline-success rounded-pill" title="Marcar como Cumprido">
+                                                                         <i class="fas fa-check me-1"></i> Concluir
+                                                                     </button>
+                                                                 </form>
+                                                             </div>
+                                                             <div th:if="${prazo.cumprido}">
+                                                                 <span class="badge bg-success-subtle text-success rounded-pill"><i class="fas fa-check-circle me-1"></i> CUMPRIDO</span>
+                                                             </div>
+                                                        </div>
+                                                        
+                                                        <small class="text-muted mt-2 d-block border-top pt-2">
+                                                            <i class="fas fa-user-circle me-1"></i> 
+                                                            <span th:text="${prazo.responsabilidade}">Resp</span>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-center text-muted py-4" th:if="${prazos.empty}">
+                                                    <div class="mb-3"><i class="fas fa-calendar-times fa-3x opacity-25"></i></div>
+                                                    <p class="mb-0">Nenhum prazo cadastrado.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Aba Audiências -->
+                                        <div class="tab-pane fade" id="audiencias" role="tabpanel">
+                                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                                <h5 class="mb-0 fw-bold text-secondary">Audiências Agendadas</h5>
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAudiencia">
+                                                    <i class="fas fa-plus me-2"></i>Nova Audiência
+                                                </button>
+                                            </div>
+
+                                            <div class="timeline-modern" id="audienciasTimeline">
+                                                <div th:each="audiencia : ${audiencias}" class="timeline-item-modern audiencia">
+                                                    <div class="timeline-icon-modern">
+                                                        <i class="fas fa-gavel"></i>
+                                                    </div>
+                                                    <div class="timeline-content-modern">
+                                                        <span class="timeline-date-modern" th:text="${#temporals.format(audiencia.dataHora, 'dd/MM/yyyy HH:mm')}">Data</span>
+                                                        <h5 class="timeline-title-modern" th:text="${audiencia.tipo}">Tipo</h5>
+                                                        <div class="timeline-desc-modern" th:text="${audiencia.observacoes}">Obs</div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-center text-muted py-4" th:if="${audiencias.empty}">
+                                                    <div class="mb-3"><i class="fas fa-gavel fa-3x opacity-25"></i></div>
+                                                    <p class="mb-0">Nenhuma audiência agendada.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coluna Lateral (Informações) -->
+                        <div class="col-lg-4">
+                            <div class="form-card">
+                                <div class="form-header">
+                                    <h5 class="mb-0 fw-bold text-secondary"><i class="fas fa-info-circle me-2"></i>Informações</h5>
+                                    <span class="badge rounded-pill" 
+                                          th:classappend="${processo.status.name() == 'EM_ANDAMENTO' ? 'bg-warning-subtle text-warning' : (processo.status.name() == 'ENCERRADO' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary')}"
+                                          th:text="${processo.status}">Status</span>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-bold mb-1">Cliente</label>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle-sm bg-primary-subtle text-primary me-2">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <h6 class="mb-0" th:text="${processo.cliente.nome}">Nome do Cliente</h6>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-bold mb-1">Tipo de Ação</label>
+                                        <p class="mb-0 fw-bold text-dark" th:text="${processo.tipo.descricao}">Trabalhista</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-bold mb-1">Tribunal</label>
+                                        <p class="mb-0 text-dark" th:text="${processo.tribunal}">TJSP</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-bold mb-1">Parte Contrária</label>
+                                        <p class="mb-0 text-dark" th:text="${processo.parte}">Fulano</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="text-muted small text-uppercase fw-bold mb-1">Data Abertura</label>
+                                        <p class="mb-0 text-dark"><i class="far fa-calendar-alt me-2 text-muted"></i><span th:text="${#temporals.format(processo.dataAbertura, 'dd/MM/yyyy')}"></span></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-muted small text-uppercase fw-bold mb-1">Assunto</label>
+                                        <p class="mb-0 text-secondary small bg-light p-2 rounded" th:text="${processo.assunto}">Descrição do assunto...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- Modais (Mantidos e estilizados) -->
+    <!-- Modal Andamento -->
+    <div class="modal fade" id="modalAndamento" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" th:action="@{/juridico/andamentos/salvar}" method="post">
+                <input type="hidden" name="processoId" th:value="${processo.id}" />
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Novo Andamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" name="titulo" class="form-control" required placeholder="Resumo do andamento" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea name="descricao" class="form-control" rows="3" required placeholder="Detalhes do que ocorreu..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select name="tipoEtapa" class="form-select">
+                            <option value="ANDAMENTO">Andamento Comum</option>
+                            <option value="IMPORTANTE">Importante</option>
+                            <option value="FINAL">Final</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Prazo -->
+    <div class="modal fade" id="modalPrazo" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" th:action="@{/juridico/prazos/salvar}" method="post">
+                <input type="hidden" name="processoId" th:value="${processo.id}" />
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Novo Prazo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Data Limite</label>
+                        <input type="date" name="dataLimite" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <input type="text" name="descricao" class="form-control" required placeholder="O que deve ser feito?" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Responsável</label>
+                        <input type="text" name="responsabilidade" class="form-control" placeholder="Quem deve cumprir?" />
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Audiencia -->
+    <div class="modal fade" id="modalAudiencia" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" th:action="@{/juridico/audiencias/salvar}" method="post">
+                <input type="hidden" name="processoId" th:value="${processo.id}" />
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Nova Audiência</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Data e Hora</label>
+                        <input type="datetime-local" name="dataHora" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select name="tipo" class="form-select">
+                            <option value="Conciliação">Conciliação</option>
+                            <option value="Instrução">Instrução</option>
+                            <option value="Julgamento">Julgamento</option>
+                            <option value="Outra">Outra</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="3" placeholder="Local, link, detalhes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

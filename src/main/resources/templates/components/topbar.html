@@ -8,6 +8,60 @@
 </head>
 <body>
     <header class="topbar" th:fragment="topbar" th:inline="text">
+        <style>
+            /* Inline Styles for Topbar consistency */
+            .topbar {
+                background-color: #f3f4f6 !important;
+                height: 60px !important;
+                min-height: 60px !important;
+                max-height: 60px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 0 30px !important;
+                border-bottom: 1px solid #e5e7eb !important;
+                flex-shrink: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                position: relative !important;
+                z-index: 50 !important;
+                overflow: visible !important;
+            }
+
+            /* Fix Toast/Alert Size - Match /juridico (Toastr) */
+            #global-toast, .notification-toast, .toast-container .toast {
+                width: 300px !important;
+                min-width: 300px !important;
+                max-width: 90vw !important; /* Mobile safe */
+                padding: 8px 12px !important;
+                font-size: 12px !important;
+                border-radius: 4px !important;
+                box-shadow: 0 0 12px rgba(0,0,0,0.175) !important;
+                /* Reset wide widths */
+                right: 12px !important;
+            }
+            
+            /* Toast positioning */
+            #global-toast {
+                top: 70px !important; /* Below topbar */
+                z-index: 9999 !important;
+            }
+
+            /* Responsive adjustments */
+            @media (max-width: 768px) {
+                .topbar {
+                    padding: 0 15px !important;
+                }
+                .topbar .menu-toggle {
+                    display: flex !important;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .topbar-title h1 {
+                    font-size: 18px !important;
+                }
+            }
+        </style>
         <div class="topbar-title">
             <h1>Sistema ERP Corporativo</h1>
         </div>
@@ -186,6 +240,136 @@
                 } catch (e) {}
             };
         </script>
+
+    <!-- Toast Container para Alertas Globais Jurídicos -->
+    <div id="juridico-toast-container" th:if="${alertasJuridicosGlobais != null and !alertasJuridicosGlobais.isEmpty()}" 
+         class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        
+        <!-- Fallback CSS para páginas sem Bootstrap (ex: Dashboard) -->
+        <style>
+            /* Se o Bootstrap não estiver carregado, essas classes precisam de definição básica */
+            .toast-container.position-fixed { position: fixed; }
+            .toast-container.top-0 { top: 0; }
+            .toast-container.end-0 { right: 0; }
+            .toast-container.p-3 { padding: 1rem; }
+            
+            /* Estilo base do Toast se não houver Bootstrap */
+            .toast:not(.show):not(.hide) { 
+                /* Em bootstrap puro, toast tem display none por padrão, mas nosso script controla isso */
+                /* display: none; */ 
+            }
+            .toast {
+                background-color: #fff;
+                border: 1px solid rgba(0,0,0,.1);
+                border-radius: .25rem;
+                box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+                min-width: 350px;
+                max-width: 100%;
+                font-size: .875rem;
+                pointer-events: auto;
+                background-clip: padding-box;
+                margin-bottom: .75rem;
+                display: none; /* JS vai mostrar */
+            }
+            .toast.show { display: block; opacity: 1; }
+            
+            .toast-header {
+                display: flex;
+                align-items: center;
+                padding: .5rem .75rem;
+                color: #6c757d;
+                background-color: rgba(255,255,255,.85);
+                background-clip: padding-box;
+                border-bottom: 1px solid rgba(0,0,0,.05);
+                border-top-left-radius: calc(.25rem - 1px);
+                border-top-right-radius: calc(.25rem - 1px);
+            }
+            .toast-body { padding: .75rem; word-wrap: break-word; }
+            
+            /* Utilitários básicos usados no HTML */
+            .me-auto { margin-right: auto !important; }
+            .me-2 { margin-right: .5rem !important; }
+            .mt-1 { margin-top: .25rem !important; }
+            .text-warning { color: #ffc107 !important; }
+            .text-dark { color: #212529 !important; }
+            .text-muted { color: #6c757d !important; }
+            .fw-medium { font-weight: 500 !important; }
+            .border-bottom-0 { border-bottom: 0 !important; }
+            .d-flex { display: flex !important; }
+            .align-items-start { align-items: flex-start !important; }
+            
+            /* Botão de fechar */
+            .btn-close {
+                box-sizing: content-box;
+                width: 1em;
+                height: 1em;
+                padding: .25em .25em;
+                color: #000;
+                background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+                border: 0;
+                border-radius: .25rem;
+                opacity: .5;
+                cursor: pointer;
+            }
+            .btn-close:hover { opacity: .75; }
+        </style>
+
+        <div th:each="alerta : ${alertasJuridicosGlobais}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+            <div class="toast-header border-bottom-0">
+                <i class="fas fa-bell text-warning me-2"></i>
+                <strong class="me-auto text-dark">Lembrete Jurídico</strong>
+                <small class="text-muted">Amanhã</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body py-3">
+                <div class="d-flex align-items-start">
+                    <div class="me-2 mt-1 text-warning"><i class="fas fa-circle fa-xs"></i></div>
+                    <div th:utext="${alerta}" class="fw-medium text-secondary"></div>
+                </div>
+            </div>
+        </div>
+        <script>
+            // Auto-show toasts on any page
+            document.addEventListener('DOMContentLoaded', function() {
+                var container = document.getElementById('juridico-toast-container');
+                if (container) {
+                    // Move to body to avoid stacking context issues (transform, overflow, etc.)
+                    document.body.appendChild(container);
+                    
+                    var toastElList = [].slice.call(container.querySelectorAll('.toast'));
+                    
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+                        toastElList.map(function(toastEl) {
+                            var t = new bootstrap.Toast(toastEl, { autohide: false });
+                            t.show();
+                            return t;
+                        });
+                    } else {
+                        // Fallback for pages without Bootstrap JS
+                        toastElList.forEach(function(el) {
+                            el.classList.add('show');
+                            el.style.display = 'block';
+                            el.style.opacity = '1';
+                            el.style.backgroundColor = '#fff'; // Ensure visibility
+                            el.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'; // Add shadow
+                            el.style.marginBottom = '0.75rem'; // Spacing
+                            
+                            // Manual close handler
+                            var btn = el.querySelector('.btn-close');
+                            if(btn) {
+                                btn.style.cursor = 'pointer';
+                                btn.onclick = function(){ 
+                                    el.style.display = 'none'; 
+                                    el.classList.remove('show');
+                                };
+                            }
+                        });
+                    }
+                }
+            });
+        </script>
+    </div>
     </header>
+
 </body>
 </html>

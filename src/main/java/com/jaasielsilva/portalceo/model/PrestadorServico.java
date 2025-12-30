@@ -29,4 +29,9 @@ public class PrestadorServico {
     @Column(nullable = false)
     private boolean ativo = true;  // novo campo para indicar ativo/inativo
 
+    public PrestadorServico(Long id, String nome) {
+        this.id = id;
+        this.nome = nome;
+    }
+
 }

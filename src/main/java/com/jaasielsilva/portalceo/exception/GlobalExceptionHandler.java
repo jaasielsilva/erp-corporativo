@@ -120,7 +120,19 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Trata exceções de acesso negado
+     * Trata exceções de acesso negado (Spring Security)
+     */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex,
+                                         RedirectAttributes redirectAttributes) {
+        
+        logger.warn("Acesso negado (Spring Security): {}", ex.getMessage());
+        return "redirect:/acesso-negado";
+    }
+
+    /**
+     * Trata exceções de segurança genéricas
      */
     @ExceptionHandler(SecurityException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -130,7 +142,7 @@ public class GlobalExceptionHandler {
         logger.warn("Acesso negado: {}", ex.getMessage());
         redirectAttributes.addFlashAttribute("erro", 
             "Você não tem permissão para realizar esta operação.");
-        return "redirect:/rh/colaboradores/listar";
+        return "redirect:/acesso-negado";
     }
 
     /**

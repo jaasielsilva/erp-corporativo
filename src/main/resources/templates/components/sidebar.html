@@ -1,8 +1,9 @@
 <div class="sidebar" th:fragment="sidebar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
   <div>
     <div class="user-panel">
-      <img th:if="${usuarioLogado != null}" th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}"
+      <img th:if="${usuarioLogado != null and usuarioLogado.id != null}" th:src="@{/usuarios/{id}/foto(id=${usuarioLogado.id})}"
         onerror="this.onerror=null;this.src='/img/gerente.png';" alt="Foto do usuário" class="user-avatar" />
+      <img th:if="${usuarioLogado == null or usuarioLogado.id == null}" src="/img/gerente.png" alt="Foto do usuário" class="user-avatar" />
       <div class="user-info">
         <div class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Nome do Usuário</div>
         <div class="user-level" th:text="${nivelAcesso}" style="font-size: 0.8em; color: #888; margin-top: 2px;">Nível
@@ -458,10 +459,33 @@
           </a>
           <ul class="submenu">
             <li><a href="/juridico"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="/juridico/previdenciario"><i class="fas fa-scale-balanced"></i> Previdenciário (INSS)</a></li>
+            <li><a href="/clientes"><i class="fas fa-users"></i> Clientes</a></li>
+            
+            <!-- Previdenciário Submenu -->
+            <li class="has-submenu">
+              <a href="javascript:void(0);" class="submenu-toggle">
+                <i class="fas fa-scale-balanced"></i> Previdenciário (INSS)
+              </a>
+              <ul class="submenu">
+                 <li><a href="/juridico/previdenciario"><i class="fas fa-list"></i> Listar</a></li>
+                 <li><a href="/juridico/previdenciario/novo"><i class="fas fa-plus"></i> Novo</a></li>
+              </ul>
+            </li>
+
             <li><a href="/whatchat"><i class="fab fa-whatsapp"></i> WhaTchat</a></li>
             <li><a href="/juridico/contratos"><i class="fas fa-file-signature"></i> Contratos</a></li>
-            <li><a href="/juridico/processos"><i class="fas fa-gavel"></i> Processos</a></li>
+            
+            <!-- Processos Submenu -->
+            <li class="has-submenu">
+              <a href="javascript:void(0);" class="submenu-toggle">
+                <i class="fas fa-gavel"></i> Processos
+              </a>
+              <ul class="submenu">
+                 <li><a href="/juridico/processos"><i class="fas fa-list"></i> Listar</a></li>
+                 <li><a href="/juridico/processos/novo"><i class="fas fa-plus"></i> Novo Processo</a></li>
+              </ul>
+            </li>
+
             <li><a href="/juridico/compliance"><i class="fas fa-check-circle"></i> Compliance</a></li>
             <li><a href="/juridico/documentos"><i class="fas fa-folder-open"></i> Documentos</a></li>
           </ul>

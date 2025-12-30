@@ -8,6 +8,8 @@ import com.jaasielsilva.portalceo.repository.juridico.AudienciaRepository;
 import com.jaasielsilva.portalceo.repository.juridico.AndamentoProcessoRepository;
 import com.jaasielsilva.portalceo.repository.juridico.PrazoJuridicoRepository;
 import com.jaasielsilva.portalceo.repository.juridico.ProcessoJuridicoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,27 @@ public class ProcessoJuridicoService {
         this.audienciaRepo = audienciaRepo;
         this.prazoRepo = prazoRepo;
         this.andamentoRepo = andamentoRepo;
+    }
+
+    @Transactional
+    public ProcessoJuridico salvar(ProcessoJuridico processo) {
+        if (processo.getDataAbertura() == null) {
+            processo.setDataAbertura(LocalDate.now());
+        }
+        if (processo.getStatus() == null) {
+            processo.setStatus(ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
+        }
+        return processoRepo.save(processo);
+    }
+    
+    @Transactional(readOnly = true)
+    public Optional<ProcessoJuridico> buscarPorId(Long id) {
+        return processoRepo.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProcessoJuridico> listarPorCliente(Long clienteId, Pageable pageable) {
+        return processoRepo.findByClienteId(clienteId, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -146,6 +169,44 @@ public class ProcessoJuridicoService {
     @Transactional
     public AndamentoProcesso adicionarAndamento(AndamentoProcesso andamento) {
         return andamentoRepo.save(andamento);
+    }
+
+    @Transactional
+    public AndamentoProcesso adicionarAndamento(Long processoId, String titulo, String descricao, String tipoEtapa) {
+        AndamentoProcesso a = new AndamentoProcesso();
+        a.setProcessoId(processoId);
+        a.setTitulo(titulo);
+        a.setDescricao(descricao);
+        try {
+            a.setTipoEtapa(AndamentoProcesso.TipoEtapa.valueOf(tipoEtapa));
+        } catch (IllegalArgumentException e) {
+            a.setTipoEtapa(AndamentoProcesso.TipoEtapa.ANDAMENTO);
+        }
+        a.setDataHora(LocalDateTime.now());
+        // TODO: Pegar usuário logado
+        a.setUsuario("Sistema"); 
+        return andamentoRepo.save(a);
+    }
+
+    @Transactional
+    public PrazoJuridico adicionarPrazo(Long processoId, String dataLimite, String descricao, String responsabilidade) {
+        PrazoJuridico p = new PrazoJuridico();
+        p.setProcessoId(processoId);
+        p.setDescricao(descricao);
+        p.setResponsabilidade(responsabilidade);
+        p.setDataLimite(LocalDate.parse(dataLimite));
+        p.setCumprido(false);
+        return prazoRepo.save(p);
+    }
+
+    @Transactional
+    public Audiencia adicionarAudiencia(Long processoId, String dataHora, String tipo, String observacoes) {
+        Audiencia a = new Audiencia();
+        a.setProcessoId(processoId);
+        a.setDataHora(LocalDateTime.parse(dataHora));
+        a.setTipo(tipo);
+        a.setObservacoes(observacoes);
+        return audienciaRepo.save(a);
     }
 
     @Transactional

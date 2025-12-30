@@ -88,6 +88,27 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
                         .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getNome()))
                         .collect(Collectors.toSet())
             );
+
+            // Regras dinâmicas de permissão baseadas no Cargo (Auto-Roles)
+            // Garante que estagiários e funcionários tenham acesso aos seus módulos
+            if (usuario.getCargo() != null) {
+                String cargo = usuario.getCargo().getNome().toLowerCase();
+                
+                // Jurídico: Acesso a processos e documentos
+                if (cargo.contains("juridico") || cargo.contains("advogado") || cargo.contains("legal")) {
+                    built.add(new SimpleGrantedAuthority("ROLE_JURIDICO"));
+                }
+                
+                // RH: Acesso a dados de colaboradores (básico)
+                if (cargo.contains("rh") || cargo.contains("recursos humanos")) {
+                    built.add(new SimpleGrantedAuthority("ROLE_RH"));
+                }
+                
+                // Vendas: Acesso a clientes (se necessário explicitamente)
+                if (cargo.contains("vendas") || cargo.contains("comercial")) {
+                    built.add(new SimpleGrantedAuthority("ROLE_VENDAS"));
+                }
+            }
         }
         authoritiesCache.put(usuario.getEmail(), built);
         authorities = built;

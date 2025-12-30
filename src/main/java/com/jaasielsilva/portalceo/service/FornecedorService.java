@@ -3,6 +3,7 @@ package com.jaasielsilva.portalceo.service;
 import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.repository.FornecedorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,8 +21,17 @@ public class FornecedorService {
     /**
      * Lista fornecedores ativos (ativo = true).
      */
+    @Cacheable(value = "fornecedoresAtivos", unless = "#result == null || #result.isEmpty()")
     public List<Fornecedor> listarAtivos() {
         return fornecedorRepository.findByAtivoTrue();
+    }
+
+    /**
+     * Lista fornecedores ativos apenas com dados básicos (ID, Razão Social) para seleção.
+     */
+    @Cacheable(value = "fornecedoresSelecao", unless = "#result == null || #result.isEmpty()")
+    public List<Fornecedor> listarAtivosParaSelecao() {
+        return fornecedorRepository.findBasicInfoForSelection();
     }
 
     /**

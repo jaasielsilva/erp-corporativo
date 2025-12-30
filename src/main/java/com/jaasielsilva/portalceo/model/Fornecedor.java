@@ -98,4 +98,9 @@ public class Fornecedor {
     public void onPreUpdate() {
         dataUltimaEdicao = LocalDateTime.now();
     }
+
+    public Fornecedor(Long id, String razaoSocial) {
+        this.id = id;
+        this.razaoSocial = razaoSocial;
+    }
 }

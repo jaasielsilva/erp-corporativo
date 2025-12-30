@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Processos do Cliente</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
+    <!-- Toastr for notifications -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+    <main class="main-content">
+      <header th:replace="~{components/topbar :: topbar}"></header>
+
+      <section class="content-area">
+        <div class="container-fluid py-4">
+            <!-- Header Moderno -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-1">
+                            <li class="breadcrumb-item"><a href="/clientes" class="text-decoration-none text-muted small">Clientes</a></li>
+                            <li class="breadcrumb-item active" aria-current="page" th:text="${cliente.nome}">Nome do Cliente</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-6 text-muted mb-0"><i class="fas fa-balance-scale"></i> Processos Jurídicos</h1>
+                </div>
+                <a th:href="@{/juridico/processos/novo(clienteId=${cliente.id})}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-plus me-2"></i> Novo Processo
+                </a>
+            </div>
+
+            <!-- Alertas -->
+            <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensagem}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Card de Listagem -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase fw-bold">
+                                <tr>
+                                    <th class="ps-4">Número</th>
+                                    <th>Tipo</th>
+                                    <th>Tribunal</th>
+                                    <th>Parte Contrária</th>
+                                    <th>Status</th>
+                                    <th>Data Abertura</th>
+                                    <th class="text-end pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="processo : ${processos.content}" class="cursor-pointer proc-row" th:data-id="${processo.id}">
+                                    <td class="ps-4 fw-bold text-primary" th:text="${processo.numero}">00000</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${processo.tipo != null ? processo.tipo.descricao : 'Outros'}">Tipo</span>
+                                    </td>
+                                    <td th:text="${processo.tribunal}">Tribunal</td>
+                                    <td th:text="${processo.parte}">Parte</td>
+                                    <td>
+                                        <span class="badge rounded-pill" 
+                                              th:classappend="${processo.status.name() == 'EM_ANDAMENTO' ? 'bg-warning-subtle text-warning-emphasis' : (processo.status.name() == 'ENCERRADO' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis')}"
+                                              th:text="${processo.status}">Status</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(processo.dataAbertura, 'dd/MM/yyyy')}">01/01/2024</td>
+                                    <td class="text-end pe-4">
+                                        <button class="btn btn-sm btn-icon btn-light text-primary proc-detail" th:data-id="${processo.id}" title="Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a th:href="@{/juridico/processos/novo(id=${processo.id})}" class="btn btn-sm btn-icon btn-light text-muted ms-1" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${processos.empty}">
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <div class="mb-3"><i class="fas fa-folder-open fa-3x opacity-25"></i></div>
+                                        <p class="mb-0">Nenhum processo encontrado para este cliente.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Paginação -->
+                <div class="card-footer bg-white border-top-0 py-3" th:if="${processos.totalPages > 1}">
+                    <nav aria-label="Navegação de página">
+                        <ul class="pagination pagination-sm justify-content-end mb-0">
+                            <li class="page-item" th:classappend="${processos.first} ? 'disabled'">
+                                <a class="page-link border-0" th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${processos.number - 1})}"><i class="fas fa-chevron-left"></i></a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, processos.totalPages - 1)}"
+                                th:classappend="${processos.number == i} ? 'active'">
+                                <a class="page-link border-0 rounded-circle mx-1" th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${i})}" th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${processos.last} ? 'disabled'">
+                                <a class="page-link border-0" th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${processos.number + 1})}"><i class="fas fa-chevron-right"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      <footer th:replace="~{components/footer :: footer}"></footer>
+    </main>
+  </div>
+
+  <!-- Offcanvas de Detalhes do Processo (Reutilizado do padrão corporativo) -->
+  <div class="offcanvas offcanvas-end process-offcanvas" tabindex="-1" id="procDetailOffcanvas" aria-labelledby="procDetailOffcanvasLabel">
+      <div class="offcanvas-header">
+          <div>
+              <h5 class="offcanvas-title fw-bold" id="procDetailOffcanvasLabel">Detalhes do Processo</h5>
+              <div class="process-meta">
+                  <span id="procDetailNumeroHeader" class="badge bg-white text-dark bg-opacity-25">0000000-00.0000.0.00.0000</span>
+                  <span id="procDetailStatusHeader" class="badge bg-success">EM ANDAMENTO</span>
+              </div>
+          </div>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body p-0">
+          <!-- Navegação em Abas Modernas -->
+          <ul class="nav nav-tabs modern-tabs px-3 pt-2" id="procTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="tab-resumo" data-bs-toggle="tab" data-bs-target="#content-resumo" type="button" role="tab">Resumo</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="tab-timeline" data-bs-toggle="tab" data-bs-target="#content-timeline" type="button" role="tab">Timeline</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="tab-audiencias" data-bs-toggle="tab" data-bs-target="#content-audiencias" type="button" role="tab">Audiências</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="tab-prazos" data-bs-toggle="tab" data-bs-target="#content-prazos" type="button" role="tab">Prazos</button>
+              </li>
+          </ul>
+
+          <div class="tab-content p-4">
+              <!-- Conteúdo Resumo -->
+              <div class="tab-pane fade show active" id="content-resumo" role="tabpanel">
+                  <div class="row g-3">
+                      <div class="col-12 mb-2">
+                          <h6 class="text-muted text-uppercase small fw-bold mb-3">Informações Gerais</h6>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="info-card">
+                              <div class="info-label"><i class="fas fa-balance-scale me-1"></i> Tribunal</div>
+                              <div class="info-value" id="procDetailTribunal">—</div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="info-card">
+                              <div class="info-label"><i class="fas fa-tag me-1"></i> Tipo</div>
+                              <div class="info-value" id="procDetailTipo">—</div>
+                          </div>
+                      </div>
+                      <div class="col-12">
+                          <div class="info-card">
+                              <div class="info-label"><i class="fas fa-user-friends me-1"></i> Parte Contrária</div>
+                              <div class="info-value" id="procDetailParte">—</div>
+                          </div>
+                      </div>
+                      <div class="col-12">
+                          <div class="info-card">
+                              <div class="info-label"><i class="fas fa-file-alt me-1"></i> Assunto</div>
+                              <div class="info-value" id="procDetailAssunto">—</div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="info-card">
+                              <div class="info-label"><i class="far fa-calendar-alt me-1"></i> Abertura</div>
+                              <div class="info-value" id="procDetailDataAbertura">—</div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="info-card border-0 bg-light">
+                              <div class="info-label">Ações Rápidas</div>
+                              <a href="#" id="linkEditarProcesso" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-edit"></i> Editar</a>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Conteúdo Timeline -->
+              <div class="tab-pane fade" id="content-timeline" role="tabpanel">
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                      <h6 class="text-muted text-uppercase small fw-bold mb-0">Linha do Tempo</h6>
+                      <button class="btn btn-sm btn-primary rounded-pill px-3" id="btnNovoAndamento">
+                          <i class="fas fa-plus me-1"></i> Novo Evento
+                      </button>
+                  </div>
+
+                  <!-- Form Inline de Nova Movimentação (Oculto por padrão) -->
+                  <div id="formAndamento" class="card mb-4 border-0 shadow-sm bg-light d-none" style="border-radius: 12px;">
+                      <div class="card-body">
+                          <h6 class="card-title mb-3 text-primary fw-bold">Registrar Movimentação</h6>
+                          <div class="row g-2">
+                              <div class="col-md-8">
+                                  <input type="text" id="andamentoTitulo" class="form-control form-control-sm border-0 shadow-sm" placeholder="Título (ex: Conclusão para Sentença)" required>
+                              </div>
+                              <div class="col-md-4">
+                                  <select id="andamentoTipo" class="form-select form-select-sm border-0 shadow-sm">
+                                      <option value="ANDAMENTO">Comum</option>
+                                      <option value="INICIAL">Inicial</option>
+                                      <option value="IMPORTANTE">Decisão</option>
+                                      <option value="AUDIENCIA">Audiência</option>
+                                      <option value="FINAL">Sentença</option>
+                                  </select>
+                              </div>
+                              <div class="col-12">
+                                  <textarea id="andamentoDescricao" class="form-control form-control-sm border-0 shadow-sm" rows="2" placeholder="Descrição detalhada..."></textarea>
+                              </div>
+                              <div class="col-12 text-end mt-2">
+                                  <button class="btn btn-sm btn-secondary me-1" id="btnCancelarAndamento">Cancelar</button>
+                                  <button class="btn btn-sm btn-primary" id="btnSalvarAndamento">Salvar</button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="timeline-modern" id="procTimeline">
+                      <div class="text-center py-4 text-muted">Carregando timeline...</div>
+                  </div>
+              </div>
+
+              <!-- Conteúdo Audiências -->
+              <div class="tab-pane fade" id="content-audiencias" role="tabpanel">
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                      <h6 class="text-muted text-uppercase small fw-bold mb-0">Audiências</h6>
+                      <button class="btn btn-sm btn-primary rounded-pill px-3" id="btnNovaAudiencia">
+                          <i class="fas fa-plus me-1"></i> Nova
+                      </button>
+                  </div>
+
+                  <!-- Form Nova Audiência -->
+                  <div id="formAudiencia" class="card mb-4 border-0 shadow-sm bg-light d-none" style="border-radius: 12px;">
+                      <div class="card-body">
+                          <h6 class="card-title mb-3 text-primary fw-bold">Agendar Audiência</h6>
+                          <div class="row g-2">
+                              <div class="col-md-6">
+                                  <label class="small text-muted">Data e Hora</label>
+                                  <input type="datetime-local" id="audienciaData" class="form-control form-control-sm border-0 shadow-sm" required>
+                              </div>
+                              <div class="col-md-6">
+                                  <label class="small text-muted">Tipo</label>
+                                  <select id="audienciaTipo" class="form-select form-select-sm border-0 shadow-sm">
+                                      <option value="CONCILIACAO">Conciliação</option>
+                                      <option value="INSTRUCAO">Instrução e Julgamento</option>
+                                      <option value="UNA">Una</option>
+                                      <option value="OUTRA">Outra</option>
+                                  </select>
+                              </div>
+                              <div class="col-12">
+                                  <textarea id="audienciaObs" class="form-control form-control-sm border-0 shadow-sm" rows="2" placeholder="Observações..."></textarea>
+                              </div>
+                              <div class="col-12 text-end mt-2">
+                                  <button class="btn btn-sm btn-secondary me-1" id="btnCancelarAudiencia">Cancelar</button>
+                                  <button class="btn btn-sm btn-primary" id="btnSalvarAudiencia">Agendar</button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div id="listaAudiencias" class="timeline-modern">
+                      <div class="text-center py-4 text-muted">Carregando...</div>
+                  </div>
+              </div>
+
+              <!-- Conteúdo Prazos -->
+              <div class="tab-pane fade" id="content-prazos" role="tabpanel">
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                      <h6 class="text-muted text-uppercase small fw-bold mb-0">Prazos</h6>
+                      <button class="btn btn-sm btn-primary rounded-pill px-3" id="btnNovoPrazo">
+                          <i class="fas fa-plus me-1"></i> Novo
+                      </button>
+                  </div>
+
+                  <!-- Form Novo Prazo -->
+                  <div id="formPrazo" class="card mb-4 border-0 shadow-sm bg-light d-none" style="border-radius: 12px;">
+                      <div class="card-body">
+                          <h6 class="card-title mb-3 text-primary fw-bold">Registrar Prazo</h6>
+                          <div class="row g-2">
+                              <div class="col-md-6">
+                                  <label class="small text-muted">Data Limite</label>
+                                  <input type="date" id="prazoData" class="form-control form-control-sm border-0 shadow-sm" required>
+                              </div>
+                              <div class="col-md-6">
+                                  <label class="small text-muted">Responsável</label>
+                                  <select id="prazoResponsavel" class="form-select form-select-sm border-0 shadow-sm">
+                                      <option value="JURIDICO">Jurídico</option>
+                                      <option value="CLIENTE">Cliente</option>
+                                      <option value="PERITO">Perito</option>
+                                  </select>
+                              </div>
+                              <div class="col-12">
+                                  <input type="text" id="prazoDescricao" class="form-control form-control-sm border-0 shadow-sm" placeholder="Descrição (ex: Apresentar Réplica)" required>
+                              </div>
+                              <div class="col-12 text-end mt-2">
+                                  <button class="btn btn-sm btn-secondary me-1" id="btnCancelarPrazo">Cancelar</button>
+                                  <button class="btn btn-sm btn-primary" id="btnSalvarPrazo">Salvar</button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div id="listaPrazos" class="timeline-modern">
+                      <div class="text-center py-4 text-muted">Carregando...</div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script src="/js/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script>
+    // Configuração do Toastr e Função Notify
+    if(typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+    }
+
+    function notify(type, title, message) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: title,
+                text: message,
+                icon: type,
+                confirmButtonColor: '#0d6efd'
+            });
+        } else if (typeof toastr !== 'undefined') {
+            if (type === 'error') toastr.error(message, title);
+            else if (type === 'success') toastr.success(message, title);
+            else if (type === 'warning') toastr.warning(message, title);
+            else toastr.info(message, title);
+        } else {
+            alert(title + "\n" + message);
+        }
+    }
+
+    $(document).ready(function() {
+        const offcanvasEl = document.getElementById('procDetailOffcanvas');
+        const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+
+        // Abrir Detalhes (clique na linha ou botão)
+        $('.proc-row, .proc-detail').on('click', function(e) {
+            // Se clicar em um botão dentro da linha (como Editar), não abre o modal se não for o botão de detalhe
+            if ($(e.target).closest('a').length > 0 && !$(e.target).closest('.proc-detail').length) return;
+            
+            const id = $(this).data('id');
+            if (id) abrirDetalhesProcesso(id);
+        });
+
+        function abrirDetalhesProcesso(id) {
+            // Limpar estado anterior
+            $('#procDetailNumeroHeader').text('Carregando...');
+            $('#procTimeline').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>');
+            $('#procDetailOffcanvas').attr('data-proc-id', id);
+            
+            // Configurar link de edição
+            $('#linkEditarProcesso').attr('href', `/juridico/processos/novo?id=${id}`);
+
+            offcanvas.show();
+
+            // Carregar dados via API
+            $.get(`/juridico/api/processos/${id}`)
+                .done(function(data) {
+                    $('#procDetailNumeroHeader').text(data.numero || 'Sem Número');
+                    $('#procDetailStatusHeader').text(data.status || 'EM_ANDAMENTO')
+                        .removeClass('bg-success bg-warning bg-secondary')
+                        .addClass(getStatusBadgeClass(data.status));
+                    
+                    $('#procDetailTribunal').text(data.tribunal || '—');
+                    $('#procDetailTipo').text(data.tipo || '—');
+                    $('#procDetailParte').text(data.parte || '—');
+                    $('#procDetailAssunto').text(data.assunto || '—');
+                    $('#procDetailDataAbertura').text(formatarData(data.dataAbertura));
+
+                    // Carregar Timeline
+                    carregarTimeline(id);
+                    carregarAudiencias(id);
+                    carregarPrazos(id);
+                })
+                .fail(function() {
+                    notify('error', 'Erro', 'Não foi possível carregar os detalhes do processo.');
+                });
+        }
+
+        function carregarTimeline(id) {
+             $.get(`/juridico/api/processos/${id}/timeline`)
+                .done(timelineData => {
+                    const tipoProc = $('#procDetailTipo').text();
+                    renderTimeline(timelineData, tipoProc);
+                })
+                .fail(() => {
+                    $('#procTimeline').html('<div class="text-center text-danger">Erro ao carregar timeline.</div>');
+                });
+        }
+
+        function renderTimeline(data, tipoProcesso) {
+            const $container = $('#procTimeline');
+            $container.empty();
+
+            if (!data || data.length === 0) {
+                 // Mock Data se vazio (opcional, ou apenas mensagem)
+                 $container.html('<div class="text-center py-4 text-muted">Nenhuma movimentação registrada.</div>');
+                 return;
+            }
+
+            let html = '';
+            data.forEach(item => {
+                const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+                
+                let iconClass = 'fa-circle';
+                let tipoClass = 'comum';
+                
+                if (item.tipo === 'INICIAL') { iconClass = 'fa-flag'; tipoClass = 'inicial'; }
+                else if (item.tipo === 'AUDIENCIA') { iconClass = 'fa-gavel'; tipoClass = 'audiencia'; }
+                else if (item.tipo === 'FINAL') { iconClass = 'fa-check-circle'; tipoClass = 'final'; }
+                else if (item.tipo === 'IMPORTANTE') { iconClass = 'fa-star'; tipoClass = 'importante'; }
+                else { iconClass = 'fa-file-alt'; }
+                
+                html += `
+                <div class="timeline-item-modern ${tipoClass}">
+                    <div class="timeline-icon-modern">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="timeline-content-modern">
+                        <span class="timeline-date-modern">${dataFormatada}</span>
+                        <h5 class="timeline-title-modern">${item.titulo}</h5>
+                        <div class="timeline-desc-modern">${item.descricao || ''}</div>
+                        ${item.usuario ? `<small class="text-muted mt-2 d-block border-top pt-2"><i class="fas fa-user-circle me-1"></i> ${item.usuario}</small>` : ''}
+                    </div>
+                </div>`;
+            });
+            $container.html(html);
+        }
+
+        // --- Lógica de Andamentos (Timeline) ---
+        $('#btnNovoAndamento').on('click', function() {
+            $('#formAndamento').removeClass('d-none').hide().slideDown();
+            $('#andamentoTitulo').focus();
+        });
+        
+        $('#btnCancelarAndamento').on('click', function() {
+            $('#formAndamento').slideUp(function() {
+                $(this).addClass('d-none');
+                $('#andamentoTitulo').val('');
+                $('#andamentoDescricao').val('');
+                $('#andamentoTipo').val('ANDAMENTO');
+            });
+        });
+        
+        $('#btnSalvarAndamento').on('click', function() {
+            const procId = $('#procDetailOffcanvas').attr('data-proc-id');
+            if(!procId) return;
+            
+            const titulo = $('#andamentoTitulo').val()?.trim();
+            const descricao = $('#andamentoDescricao').val()?.trim();
+            const tipo = $('#andamentoTipo').val();
+            
+            if(!titulo) {
+                notify('error', 'Campo obrigatório', 'Informe o título do andamento.');
+                return;
+            }
+            
+            const $btn = $(this);
+            const originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            
+            $.ajax({
+                url: `/juridico/api/processos/${procId}/andamentos`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ titulo, descricao, tipo }),
+                success: function() {
+                    notify('success', 'Sucesso', 'Andamento registrado!');
+                    $('#btnCancelarAndamento').click();
+                    carregarTimeline(procId);
+                },
+                error: function() {
+                    notify('error', 'Erro', 'Não foi possível salvar o andamento.', 'high');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        });
+
+        // --- Lógica de Audiências ---
+        $('#btnNovaAudiencia').on('click', function() {
+            $('#formAudiencia').removeClass('d-none').hide().slideDown();
+            $('#audienciaData').focus();
+        });
+        
+        $('#btnCancelarAudiencia').on('click', function() {
+            $('#formAudiencia').slideUp(function() {
+                $(this).addClass('d-none');
+                $('#audienciaData').val('');
+                $('#audienciaObs').val('');
+                $('#audienciaTipo').val('CONCILIACAO');
+            });
+        });
+        
+        $('#btnSalvarAudiencia').on('click', function() {
+            const procId = $('#procDetailOffcanvas').attr('data-proc-id');
+            if(!procId) return;
+            
+            const dataHora = $('#audienciaData').val();
+            const tipo = $('#audienciaTipo').val();
+            const observacoes = $('#audienciaObs').val()?.trim();
+            
+            if(!dataHora) {
+                notify('error', 'Campo obrigatório', 'Informe a data e hora da audiência.');
+                return;
+            }
+            
+            const $btn = $(this);
+            const originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            
+            $.ajax({
+                url: `/juridico/api/processos/${procId}/audiencias`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ dataHora, tipo, observacoes }),
+                success: function() {
+                    notify('success', 'Sucesso', 'Audiência agendada!');
+                    $('#btnCancelarAudiencia').click();
+                    carregarAudiencias(procId);
+                    carregarTimeline(procId);
+                },
+                error: function() {
+                    notify('error', 'Erro', 'Não foi possível agendar a audiência.', 'high');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        });
+
+        function carregarAudiencias(id) {
+             $.get(`/juridico/api/processos/${id}/audiencias`)
+                .done(data => {
+                    renderAudiencias(data);
+                })
+                .fail(() => {
+                    $('#listaAudiencias').html('<div class="text-center text-danger">Erro ao carregar audiências.</div>');
+                });
+        }
+
+        function renderAudiencias(data) {
+            const $container = $('#listaAudiencias');
+            $container.empty();
+
+            if (!data || data.length === 0) {
+                 $container.html('<div class="text-center py-4 text-muted">Nenhuma audiência agendada.</div>');
+                 return;
+            }
+
+            let html = '';
+            data.forEach(item => {
+                const dataFormatada = new Date(item.dataHora).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                
+                html += `
+                <div class="timeline-item-modern audiencia">
+                    <div class="timeline-icon-modern">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <div class="timeline-content-modern">
+                        <span class="timeline-date-modern">${dataFormatada}</span>
+                        <h5 class="timeline-title-modern">${item.tipo}</h5>
+                        <div class="timeline-desc-modern">${item.observacoes || ''}</div>
+                    </div>
+                </div>`;
+            });
+            $container.html(html);
+        }
+
+        // --- Lógica de Prazos ---
+        $('#btnNovoPrazo').on('click', function() {
+            $('#formPrazo').removeClass('d-none').hide().slideDown();
+            $('#prazoData').focus();
+        });
+        
+        $('#btnCancelarPrazo').on('click', function() {
+            $('#formPrazo').slideUp(function() {
+                $(this).addClass('d-none');
+                $('#prazoData').val('');
+                $('#prazoDescricao').val('');
+                $('#prazoResponsavel').val('JURIDICO');
+            });
+        });
+        
+        $('#btnSalvarPrazo').on('click', function() {
+            const procId = $('#procDetailOffcanvas').attr('data-proc-id');
+            if(!procId) return;
+            
+            const dataLimite = $('#prazoData').val();
+            const descricao = $('#prazoDescricao').val()?.trim();
+            const responsavel = $('#prazoResponsavel').val();
+            
+            if(!dataLimite || !descricao) {
+                notify('error', 'Campos obrigatórios', 'Informe a data limite e a descrição.');
+                return;
+            }
+            
+            const $btn = $(this);
+            const originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            
+            $.ajax({
+                url: `/juridico/api/processos/${procId}/prazos`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ dataLimite, descricao, responsavel }),
+                success: function() {
+                    notify('success', 'Sucesso', 'Prazo registrado!');
+                    $('#btnCancelarPrazo').click();
+                    carregarPrazos(procId);
+                },
+                error: function() {
+                    notify('error', 'Erro', 'Não foi possível salvar o prazo.', 'high');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        });
+
+        function carregarPrazos(id) {
+             $.get(`/juridico/api/processos/${id}/prazos`)
+                .done(data => {
+                    renderPrazos(data);
+                })
+                .fail(() => {
+                    $('#listaPrazos').html('<div class="text-center text-danger">Erro ao carregar prazos.</div>');
+                });
+        }
+
+        function renderPrazos(data) {
+            const $container = $('#listaPrazos');
+            $container.empty();
+
+            if (!data || data.length === 0) {
+                 $container.html('<div class="text-center py-4 text-muted">Nenhum prazo pendente.</div>');
+                 return;
+            }
+
+            let html = '';
+            data.forEach(item => {
+                const parts = item.dataLimite.split('-');
+                const dataPrazo = new Date(parts[0], parts[1] - 1, parts[2]); 
+                const dataFormatada = dataPrazo.toLocaleDateString('pt-BR');
+                
+                const hoje = new Date();
+                hoje.setHours(0,0,0,0);
+                
+                let tipoClass = 'comum';
+                let iconClass = 'fa-calendar';
+                
+                if (item.cumprido) {
+                    tipoClass = 'final';
+                    iconClass = 'fa-check-circle';
+                } else if (dataPrazo < hoje) {
+                    tipoClass = 'importante';
+                    iconClass = 'fa-exclamation-circle';
+                } else if (dataPrazo.getTime() === hoje.getTime()) {
+                    tipoClass = 'importante';
+                    iconClass = 'fa-exclamation-triangle';
+                }
+
+                html += `
+                <div class="timeline-item-modern ${tipoClass}">
+                    <div class="timeline-icon-modern">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="timeline-content-modern">
+                        <span class="timeline-date-modern">${dataFormatada}</span>
+                        <h5 class="timeline-title-modern">${item.descricao}</h5>
+                        <small class="text-muted mt-2 d-block border-top pt-2"><i class="fas fa-user-circle me-1"></i> ${item.responsavel || 'Jurídico'}</small>
+                    </div>
+                </div>`;
+            });
+            $container.html(html);
+        }
+
+        // Helpers
+        function getStatusBadgeClass(status) {
+            if (status === 'EM_ANDAMENTO') return 'bg-success';
+            if (status === 'SUSPENSO') return 'bg-warning text-dark';
+            if (status === 'ENCERRADO') return 'bg-secondary';
+            return 'bg-secondary';
+        }
+
+        function formatarData(dataIso) {
+            if (!dataIso) return '—';
+            return new Date(dataIso).toLocaleDateString('pt-BR');
+        }
+
+        function getIconForType(tipo) {
+            switch (tipo) {
+                case 'INICIAL': return 'fas fa-flag';
+                case 'AUDIENCIA': return 'fas fa-gavel';
+                case 'FINAL': return 'fas fa-check-circle';
+                case 'IMPORTANTE': return 'fas fa-star';
+                default: return 'fas fa-file-alt';
+            }
+        }
+    });
+  </script>
+</body>
+</html>

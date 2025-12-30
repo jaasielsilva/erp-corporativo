@@ -59,6 +59,9 @@
             <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" class="btn-editar">
               <i class="fas fa-edit"></i> Editar
             </a>
+            <a th:href="@{'/juridico/processos/cliente/' + ${cliente.id}}" class="btn-juridico" style="background-color: #6f42c1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px; display: inline-flex; align-items: center; gap: 5px;">
+              <i class="fas fa-gavel"></i> Processos Jurídicos
+            </a>
             <a th:href="@{/clientes}" class="btn-voltar">Voltar</a>
           </div>
 

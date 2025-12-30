@@ -15,6 +15,7 @@
   <!-- Seu CSS padrão -->
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  
   <style>
     .status-badge{padding:6px 10px;border-radius:999px;font-size:0.85rem;font-weight:600;color:#fff;display:inline-block;min-width:70px;text-align:center}
     .status-ativo{background-color:#22c55e}
@@ -94,6 +95,7 @@
     window.statusFiltro = /*[[${statusFiltro}]]*/ '';
     window.origemFiltro = /*[[${origemFiltro}]]*/ '';
     window.buscaInicial = /*[[${busca}]]*/ '';
+    window.podeAcessarJuridico = /*[[${podeAcessarJuridico}]]*/ false;
   </script>
   <script>
     let currentPage = 0;
@@ -135,6 +137,7 @@
           <td style="text-align:center"><span class="${badge}">${status}</span></td>
           <td class="acoes" style="text-align:center">
             <a href="/clientes/${c.id}/detalhes" class="btn btn-sm btn-info" title="Detalhes"><i class="fas fa-eye"></i></a>
+            ${window.podeAcessarJuridico ? `<a href="/juridico/processos/cliente/${c.id}" class="btn btn-sm btn-dark" title="Processos Jurídicos" style="background-color: #2c3e50; border-color: #2c3e50; color: white;"><i class="fas fa-gavel"></i></a>` : ''}
             <a href="/clientes/${c.id}/editar" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
             <button type="button" class="btn btn-sm btn-danger" onclick="openDesligamentoModal(${c.id})" title="Excluir"><i class="fas fa-user-times"></i></button>
           </td>

@@ -29,7 +29,18 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     @Query("SELECT COALESCE(SUM(c.valor), 0) FROM Contrato c WHERE c.cliente IS NOT NULL AND c.status = :status")
     BigDecimal somarValorContratosClientes(@Param("status") StatusContrato status);
 
-    @Query("SELECT c FROM Contrato c " +
+    @Query(value = "SELECT c FROM Contrato c JOIN FETCH c.cliente " +
+            "WHERE c.cliente IS NOT NULL " +
+            "  AND (:clienteId IS NULL OR c.cliente.id = :clienteId) " +
+            "  AND (:tipo IS NULL OR c.tipo = :tipo) " +
+            "  AND (:status IS NULL OR c.status = :status) " +
+            "  AND ( " +
+            "        :busca IS NULL " +
+            "        OR LOWER(c.numeroContrato) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(c.cliente.nome, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(c.cliente.nomeFantasia, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "      )",
+            countQuery = "SELECT COUNT(c) FROM Contrato c " +
             "WHERE c.cliente IS NOT NULL " +
             "  AND (:clienteId IS NULL OR c.cliente.id = :clienteId) " +
             "  AND (:tipo IS NULL OR c.tipo = :tipo) " +
@@ -43,6 +54,57 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     Page<Contrato> buscarContratosClientes(@Param("busca") String busca,
             @Param("clienteId") Long clienteId,
             @Param("tipo") TipoContrato tipo,
+            @Param("status") StatusContrato status,
+            Pageable pageable);
+
+    @Query("SELECT c.numeroContrato FROM Contrato c WHERE c.numeroContrato LIKE :prefix% ORDER BY c.id DESC LIMIT 1")
+    List<String> findUltimoNumeroContrato(@Param("prefix") String prefix);
+
+    // --- Métodos Genéricos para Todos os Contratos ---
+
+    long countByStatus(StatusContrato status);
+
+    long countByDataFimBetween(LocalDate inicio, LocalDate fim);
+
+    @Query("SELECT COALESCE(SUM(c.valor), 0) FROM Contrato c WHERE c.status = :status")
+    BigDecimal somarValorTotalPorStatus(@Param("status") StatusContrato status);
+
+    @Query(value = "SELECT c FROM Contrato c " +
+            "LEFT JOIN c.cliente cli " +
+            "LEFT JOIN c.fornecedor forn " +
+            "LEFT JOIN c.prestadorServico pres " +
+            "LEFT JOIN c.colaborador col " +
+            "WHERE " +
+            "  c.tipo IN :tipos " +
+            "  AND (:status IS NULL OR c.status = :status) " +
+            "  AND ( " +
+            "        :busca IS NULL " +
+            "        OR LOWER(c.numeroContrato) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(cli.nome, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(cli.nomeFantasia, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(forn.razaoSocial, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(pres.nome, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(col.nome, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "      )",
+            countQuery = "SELECT COUNT(c) FROM Contrato c " +
+            "LEFT JOIN c.cliente cli " +
+            "LEFT JOIN c.fornecedor forn " +
+            "LEFT JOIN c.prestadorServico pres " +
+            "LEFT JOIN c.colaborador col " +
+            "WHERE " +
+            "  c.tipo IN :tipos " +
+            "  AND (:status IS NULL OR c.status = :status) " +
+            "  AND ( " +
+            "        :busca IS NULL " +
+            "        OR LOWER(c.numeroContrato) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(cli.nome, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(cli.nomeFantasia, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(forn.razaoSocial, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(pres.nome, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "        OR LOWER(COALESCE(col.nome, '')) LIKE LOWER(CONCAT('%', :busca, '%')) " +
+            "      )")
+    Page<Contrato> buscarTodosContratos(@Param("busca") String busca,
+            @Param("tipos") List<TipoContrato> tipos,
             @Param("status") StatusContrato status,
             Pageable pageable);
 }

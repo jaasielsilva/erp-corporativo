@@ -96,6 +96,68 @@ public class JuridicoController {
         // Últimas atividades
         model.addAttribute("ultimasAtividades", processoJuridicoService.obterUltimasAtividades(10));
 
+        // Alertas imediatos (para popup)
+        List<String> alertas = new ArrayList<>();
+        LocalDate amanha = LocalDate.now().plusDays(1);
+        
+        // Contratos vencendo amanhã
+        if (proximosVencimentos != null) {
+            for (ContratoLegal c : proximosVencimentos) {
+                if (c.getDataVencimento() != null && c.getDataVencimento().isEqual(amanha)) {
+                    alertas.add("O contrato <strong>" + c.getTitulo() + "</strong> vence amanhã (" + 
+                        c.getDataVencimento().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ").");
+                }
+            }
+        }
+        
+        // Processos com prazos urgentes (amanhã)
+        List<Map<String, Object>> urgentes = processoJuridicoService.obterProcessosUrgentes(7); // Pega próximos 7 dias
+        if (urgentes != null) {
+            for (Map<String, Object> p : urgentes) {
+                Object prazoObj = p.get("proximoPrazo"); // Chave correta retornada pelo serviço
+                if (prazoObj != null) {
+                    LocalDate prazoData = null;
+                    if (prazoObj instanceof LocalDate) {
+                        prazoData = (LocalDate) prazoObj;
+                    } else if (prazoObj instanceof String) {
+                        try {
+                            prazoData = LocalDate.parse((String) prazoObj);
+                        } catch (Exception e) {}
+                    }
+                    
+                    if (prazoData != null && prazoData.isEqual(amanha)) {
+                        alertas.add("O processo <strong>" + p.get("numero") + "</strong> tem um prazo vencendo amanhã.");
+                    }
+                }
+            }
+        }
+        
+        // Audiências amanhã
+        List<Map<String, Object>> audiencias = processoJuridicoService.obterProximasAudiencias(2);
+        if (audiencias != null) {
+            for (Map<String, Object> a : audiencias) {
+                Object dataObj = a.get("dataHora");
+                if (dataObj != null) {
+                    LocalDateTime dataHora = null;
+                    if (dataObj instanceof LocalDateTime) {
+                        dataHora = (LocalDateTime) dataObj;
+                    } else if (dataObj instanceof String) {
+                        try {
+                            dataHora = LocalDateTime.parse((String) dataObj);
+                        } catch (Exception e) {}
+                    }
+                    
+                    if (dataHora != null && dataHora.toLocalDate().isEqual(amanha)) {
+                         String horaFormatada = dataHora.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                         String processoNum = (String) a.get("processoNumero");
+                         alertas.add("Audiência amanhã às <strong>" + horaFormatada + "</strong> no processo <strong>" + (processoNum != null ? processoNum : "N/A") + "</strong>.");
+                    }
+                }
+            }
+        }
+        
+        model.addAttribute("alertasImediatos", alertas);
+
         return "juridico/index";
     }
 
@@ -774,7 +836,12 @@ public class JuridicoController {
             @AuthenticationPrincipal UserDetails userDetails) {
         com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico p = new com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico();
         p.setNumero(String.valueOf(body.getOrDefault("numero", "")));
-        p.setTipo(String.valueOf(body.getOrDefault("tipo", "JUDICIAL")));
+        String tipoStr = String.valueOf(body.getOrDefault("tipo", "OUTROS"));
+        try {
+            p.setTipo(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.TipoAcaoJuridica.valueOf(tipoStr.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            p.setTipo(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.TipoAcaoJuridica.OUTROS);
+        }
         p.setTribunal(String.valueOf(body.getOrDefault("tribunal", "")));
         p.setParte(String.valueOf(body.getOrDefault("parte", "")));
         p.setAssunto(String.valueOf(body.getOrDefault("assunto", "")));

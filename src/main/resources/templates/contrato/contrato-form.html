@@ -2,182 +2,313 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-  <meta charset="UTF-8" />
-  <title th:text="${contrato.id != null} ? 'Editar Contrato' : 'Novo Contrato'">Contrato</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${contrato.id != null} ? 'Editar Contrato - Portal CEO' : 'Novo Contrato - Portal CEO'">Contrato</title>
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .form-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .form-section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f1f3f5;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 0.9rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            border-color: #dee2e6;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.15);
+        }
+
+        .btn-action {
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+    </style>
 </head>
 
 <body>
-  <div class="container mt-4">
-    <h2 th:text="${contrato.id != null} ? 'Editar Contrato' : 'Novo Contrato'"></h2>
-    <form th:action="@{/contratos/salvar}" th:object="${contrato}" method="post">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-      <!-- Informações Gerais -->
-      <fieldset class="border p-3 mb-4">
-        <legend class="w-auto px-2">Informações Gerais</legend>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-        <div class="mb-3">
-          <label for="numeroContrato" class="form-label">Número do Contrato</label>
-          <input type="text" class="form-control" id="numeroContrato" th:field="*{numeroContrato}" />
-        </div>
+            <section class="content-area">
+                <div class="container-fluid py-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-1">
+                                    <li class="breadcrumb-item"><a href="/contratos" class="text-decoration-none text-muted">Contratos</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page" th:text="${contrato.id != null} ? 'Editar' : 'Novo'">Novo</li>
+                                </ol>
+                            </nav>
+                            <h1 class="display-6 fw-bold text-dark mb-0" th:text="${contrato.id != null} ? 'Editar Contrato' : 'Novo Contrato'">Novo Contrato</h1>
+                        </div>
+                    </div>
 
-        <div class="mb-3">
-          <label for="tipo" class="form-label">Tipo de Contrato</label>
-          <select class="form-select" id="tipo" th:field="*{tipo}">
-            <option value="">-- Selecione --</option>
-            <option th:each="tipo : ${tiposContrato}" th:value="${tipo}" th:text="${tipo}"></option>
-          </select>
-        </div>
+                    <!-- Form Card -->
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10">
+                            <div class="form-card">
+                                <form th:action="@{/contratos/salvar}" th:object="${contrato}" method="post">
+                                    <input type="hidden" th:field="*{id}" />
+                                    
+                                    <div class="p-4">
+                                        <!-- Informações Gerais -->
+                                        <div class="form-section-title"><i class="fas fa-info-circle me-2"></i>Informações Gerais</div>
+                                        
+                                        <div class="row g-4 mb-4">
+                                            <div class="col-md-4">
+                                                <label for="numeroContrato" class="form-label">Número do Contrato</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light"><i class="fas fa-hashtag text-muted"></i></span>
+                                                    <input type="text" class="form-control bg-light" id="numeroContrato" th:field="*{numeroContrato}" readonly />
+                                                </div>
+                                                <div class="form-text text-muted small">Gerado automaticamente pelo sistema</div>
+                                            </div>
 
-        <div class="mb-3">
-          <label for="valor" class="form-label" id="label-valor">Valor</label>
-          <input type="number" step="0.01" class="form-control" id="valor" th:field="*{valor}" />
-        </div>
+                                            <div class="col-md-4">
+                                                <label for="tipo" class="form-label">Tipo de Contrato <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="tipo" th:field="*{tipo}" required>
+                                                    <option value="">-- Selecione --</option>
+                                                    <option th:each="tipo : ${tiposContrato}" th:value="${tipo}" th:text="${tipo}"></option>
+                                                </select>
+                                            </div>
 
+                                            <div class="col-md-4">
+                                                <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="status" th:field="*{status}" required>
+                                                    <option th:each="status : ${statusContrato}" th:value="${status}" th:text="${status}">Status</option>
+                                                </select>
+                                            </div>
 
-        <div class="mb-3">
-          <label class="form-label">Departamento Responsável</label>
-          <input type="text" class="form-control" th:value="${departamentoUsuario.nome}" readonly />
-        </div>
+                                            <div class="col-12">
+                                                <label for="descricao" class="form-label">Objeto / Descrição</label>
+                                                <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="3" placeholder="Descreva o objeto do contrato..."></textarea>
+                                            </div>
+                                        </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="dataInicio" class="form-label">Data Início</label>
-            <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" />
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="dataFim" class="form-label">Data Fim</label>
-            <input type="date" class="form-control" id="dataFim" th:field="*{dataFim}" />
-          </div>
-        </div>
+                                        <!-- Valores e Datas -->
+                                        <div class="form-section-title"><i class="fas fa-calendar-alt me-2"></i>Vigência e Valores</div>
 
-        <div class="mb-3">
-          <label for="status" class="form-label">Status</label>
-          <select class="form-select" id="status" th:field="*{status}">
-            <option th:each="status : ${statusContrato}" th:value="${status}" th:text="${status}">Status</option>
-          </select>
-        </div>
+                                        <div class="row g-4 mb-4">
+                                            <div class="col-md-4">
+                                                <label for="valorVisual" class="form-label" id="label-valor">Valor Total <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">R$</span>
+                                                    <input type="text" class="form-control" id="valorVisual" required placeholder="0,00" />
+                                                    <input type="hidden" id="valorReal" th:field="*{valor}" />
+                                                </div>
+                                            </div>
 
-        <div class="mb-3">
-          <label for="descricao" class="form-label">Descrição</label>
-          <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="4"></textarea>
-        </div>
-      </fieldset>
+                                            <div class="col-md-4">
+                                                <label for="dataInicio" class="form-label">Data Início <span class="text-danger">*</span></label>
+                                                <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" required />
+                                            </div>
 
-      <!-- Vinculações Condicionais -->
-      <fieldset class="border p-3 mb-4">
-        <legend class="w-auto px-2">Vinculações</legend>
+                                            <div class="col-md-4">
+                                                <label for="dataFim" class="form-label">Data Fim <span class="text-danger">*</span></label>
+                                                <input type="date" class="form-control" id="dataFim" th:field="*{dataFim}" required />
+                                            </div>
+                                        </div>
 
-        <!-- Fornecedor -->
-        <div class="mb-3 vinculo" id="vinculo-fornecedor" style="display:none;">
-          <label for="fornecedor" class="form-label">Fornecedor</label>
-          <select class="form-select" id="fornecedor" th:field="*{fornecedor}">
-            <option value="">-- Nenhum --</option>
-            <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.razaoSocial}"></option>
-          </select>
-        </div>
+                                        <!-- Partes Envolvidas -->
+                                        <div class="form-section-title"><i class="fas fa-users me-2"></i>Partes Envolvidas</div>
 
-        <!-- Cliente -->
-        <div class="mb-3 vinculo" id="vinculo-cliente" style="display:none;">
-          <label for="cliente" class="form-label">Cliente</label>
-          <select class="form-select" id="cliente" th:field="*{cliente}">
-            <option value="">-- Nenhum --</option>
-            <option th:each="c : ${clientes}" th:value="${c.id}"
-              th:text="${c.nomeFantasia != null ? c.nomeFantasia : c.nome}"></option>
-          </select>
-        </div>
+                                        <div class="row g-4 mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Departamento Interno</label>
+                                                <input type="text" class="form-control bg-light" th:value="${departamentoUsuario != null ? departamentoUsuario.nome : 'N/A'}" readonly disabled />
+                                            </div>
 
-        <!-- Prestador de Serviço -->
-        <div class="mb-3 vinculo" id="vinculo-prestador" style="display:none;">
-          <label for="prestadorServico" class="form-label">Prestador de Serviço</label>
-          <select class="form-select" id="prestadorServico" th:field="*{prestadorServico}">
-            <option value="">-- Nenhum --</option>
-            <option th:each="p : ${prestadoresServico}" th:value="${p.id}" th:text="${p.nome}"></option>
-          </select>
-        </div>
+                                            <!-- Campos Dinâmicos -->
+                                            <div class="col-md-6 vinculo" id="vinculo-fornecedor" style="display:none;">
+                                                <label for="fornecedor" class="form-label">Fornecedor Vinculado</label>
+                                                <select class="form-select" id="fornecedor" th:field="*{fornecedor}">
+                                                    <option value="">-- Selecione o Fornecedor --</option>
+                                                    <option th:each="f : ${fornecedores}" th:value="${f.id}" th:text="${f.razaoSocial}"></option>
+                                                </select>
+                                            </div>
 
-        <!-- Colaborador -->
-        <div class="mb-3 vinculo" id="vinculo-colaborador" style="display:none;">
-          <label for="colaborador" class="form-label">Colaborador</label>
-          <select class="form-select" id="colaborador" th:field="*{colaborador}">
-            <option value="">-- Nenhum --</option>
-            <option th:each="col : ${colaboradores}" th:value="${col.id}" th:text="${col.nome}"></option>
-          </select>
-        </div>
+                                            <div class="col-md-6 vinculo" id="vinculo-cliente" style="display:none;">
+                                                <label for="cliente" class="form-label">Cliente Vinculado</label>
+                                                <select class="form-select" id="cliente" th:field="*{cliente}">
+                                                    <option value="">-- Selecione o Cliente --</option>
+                                                    <option th:each="c : ${clientes}" th:value="${c.id}"
+                                                        th:text="${c.nomeFantasia != null ? c.nomeFantasia : c.nome}"></option>
+                                                </select>
+                                            </div>
 
-      </fieldset>
+                                            <div class="col-md-6 vinculo" id="vinculo-prestador" style="display:none;">
+                                                <label for="prestadorServico" class="form-label">Prestador de Serviço</label>
+                                                <select class="form-select" id="prestadorServico" th:field="*{prestadorServico}">
+                                                    <option value="">-- Selecione o Prestador --</option>
+                                                    <option th:each="p : ${prestadoresServico}" th:value="${p.id}" th:text="${p.nome}"></option>
+                                                </select>
+                                            </div>
 
-      <button type="submit" class="btn btn-primary">Salvar</button>
-      <a th:href="@{/contratos}" class="btn btn-secondary ms-2">Cancelar</a>
-    </form>
-  </div>
+                                            <div class="col-md-6 vinculo" id="vinculo-colaborador" style="display:none;">
+                                                <label for="colaborador" class="form-label">Colaborador</label>
+                                                <select class="form-select" id="colaborador" th:field="*{colaborador}">
+                                                    <option value="">-- Selecione o Colaborador --</option>
+                                                    <option th:each="col : ${colaboradores}" th:value="${col.id}" th:text="${col.nome}"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
 
-  <script>
-    function ajustarVisibilidade() {
-      const tipo = document.getElementById('tipo').value;
-      const valorInput = document.getElementById('valor');
-      const labelValor = document.getElementById('label-valor');
+                                    <div class="form-header bg-light d-flex justify-content-end gap-2 border-top">
+                                        <a th:href="@{/contratos}" class="btn btn-light border btn-action">Cancelar</a>
+                                        <button type="submit" class="btn btn-primary btn-action"><i class="fas fa-save me-2"></i>Salvar Contrato</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-      // Esconder todos os blocos
-      document.querySelectorAll('.vinculo').forEach(div => div.style.display = 'none');
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
 
-      switch (tipo) {
-        case 'FORNECEDOR':
-          document.getElementById('vinculo-fornecedor').style.display = 'block';
-          valorInput.readOnly = true;
-          labelValor.textContent = 'Valor';
-          break;
-        case 'CLIENTE':
-          document.getElementById('vinculo-cliente').style.display = 'block';
-          valorInput.readOnly = true;
-          labelValor.textContent = 'Valor';
-          break;
-        case 'PRESTACAO_SERVICO':
-          document.getElementById('vinculo-prestador').style.display = 'block';
-          valorInput.readOnly = true;
-          labelValor.textContent = 'Valor';
-          break;
-        case 'TRABALHISTA':
-          document.getElementById('vinculo-colaborador').style.display = 'block';
-          valorInput.readOnly = false;
-          labelValor.textContent = 'Salário';
-          break;
-        default:
-          valorInput.readOnly = true;
-          labelValor.textContent = 'Valor';
-          break;
-      }
-    }
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}"></script>
 
-    document.getElementById('tipo').addEventListener('change', ajustarVisibilidade);
-    window.addEventListener('DOMContentLoaded', ajustarVisibilidade);
-  </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tipoSelect = document.getElementById('tipo');
+            const labelValor = document.getElementById('label-valor');
+            const vinculos = {
+                'FORNECEDOR': document.getElementById('vinculo-fornecedor'),
+                'CLIENTE': document.getElementById('vinculo-cliente'),
+                'PRESTACAO_SERVICO': document.getElementById('vinculo-prestador'),
+                'TRABALHISTA': document.getElementById('vinculo-colaborador')
+            };
 
+            function ajustarVisibilidade() {
+                const tipo = tipoSelect.value;
+                
+                // Hide all
+                Object.values(vinculos).forEach(el => {
+                    if(el) {
+                        el.style.display = 'none';
+                        // Optional: Reset select value if hidden to avoid submission errors if needed, 
+                        // but usually better to keep it if user switches back and forth.
+                        // However, backend might get confused if multiple IDs are sent.
+                        // For now, just hide.
+                    }
+                });
 
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+                // Show relevant
+                if (vinculos[tipo]) {
+                    vinculos[tipo].style.display = 'block';
+                    // Add animation class if desired
+                    vinculos[tipo].classList.add('fade-in');
+                }
 
+                // Update label
+                if (labelValor) {
+                    switch (tipo) {
+                        case 'FORNECEDOR': labelValor.innerHTML = 'Valor Total <span class="text-danger">*</span>'; break;
+                        case 'CLIENTE': labelValor.innerHTML = 'Valor do Contrato <span class="text-danger">*</span>'; break;
+                        case 'PRESTACAO_SERVICO': labelValor.innerHTML = 'Valor do Serviço <span class="text-danger">*</span>'; break;
+                        case 'TRABALHISTA': labelValor.innerHTML = 'Salário Mensal <span class="text-danger">*</span>'; break;
+                        default: labelValor.innerHTML = 'Valor <span class="text-danger">*</span>'; break;
+                    }
+                }
+            }
 
+            tipoSelect.addEventListener('change', ajustarVisibilidade);
+            
+            // Initial run
+            ajustarVisibilidade();
 
+            // Formatação de Moeda
+            const valorVisual = document.getElementById('valorVisual');
+            const valorReal = document.getElementById('valorReal');
 
+            function formatarMoeda(valor) {
+                if (!valor) return '';
+                // Garante que é tratado como número
+                let numero = parseFloat(valor);
+                if (isNaN(numero)) return '';
+                
+                // Formata para pt-BR
+                return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
 
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
+            // Inicializa o valor visual se já houver valor salvo
+            if (valorReal.value) {
+                valorVisual.value = formatarMoeda(valorReal.value);
+            }
 
-
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-
-
-
+            valorVisual.addEventListener('input', function(e) {
+                let value = e.target.value;
+                
+                // Remove tudo que não é dígito
+                value = value.replace(/\D/g, "");
+                
+                if (value === "") {
+                    valorVisual.value = "";
+                    valorReal.value = "";
+                    return;
+                }
+                
+                // Converte para decimal (dividir por 100)
+                const decimalValue = parseInt(value) / 100;
+                
+                // Atualiza o input visual formatado
+                e.target.value = decimalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                
+                // Atualiza o input hidden com formato padrão de ponto (ex: 1234.56)
+                // Usando toFixed(2) para garantir 2 casas decimais e ponto
+                valorReal.value = decimalValue.toFixed(2);
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -106,4 +106,10 @@ public class Cliente {
     public void onPreUpdate() {
         dataUltimaEdicao = LocalDateTime.now();
     }
+
+    public Cliente(Long id, String nome, String nomeFantasia) {
+        this.id = id;
+        this.nome = nome;
+        this.nomeFantasia = nomeFantasia;
+    }
 }

@@ -13,6 +13,9 @@ import org.springframework.data.repository.query.Param;
 public interface FornecedorRepository extends JpaRepository<Fornecedor, Long> {
     List<Fornecedor> findByAtivoTrue();
 
+    @Query("SELECT new Fornecedor(f.id, f.razaoSocial) FROM Fornecedor f WHERE f.ativo = true ORDER BY f.razaoSocial")
+    List<Fornecedor> findBasicInfoForSelection();
+
     @Query("SELECT f FROM Fornecedor f WHERE " +
            "(:busca IS NULL OR LOWER(f.razaoSocial) LIKE LOWER(CONCAT('%', :busca, '%')) " +
            " OR LOWER(f.nomeFantasia) LIKE LOWER(CONCAT('%', :busca, '%')) " +

@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.model.NivelAcesso;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -115,6 +116,7 @@ public class ClienteService {
     // Exemplo: só admins podem excluir
     return usuario.getNivelAcesso() == NivelAcesso.ADMIN; // ou outro critério
     }
+
     public List<Cliente> listarClientesAtivos() {
     return repository.findByAtivoTrue();
     }
@@ -150,8 +152,14 @@ public class ClienteService {
         return repository.findByStatus("PENDENTE");
     }
 
+    @Cacheable(value = "clientesAtivosPorTipo", key = "#tipoCliente", unless = "#result == null || #result.isEmpty()")
     public List<Cliente> listarAtivosPorTipo(String tipoCliente) {
     return repository.findByAtivoTrueAndTipoCliente(tipoCliente);
+    }
+
+    @Cacheable(value = "clientesSelecaoPorTipo", key = "#tipoCliente", unless = "#result == null || #result.isEmpty()")
+    public List<Cliente> listarAtivosParaSelecaoPorTipo(String tipoCliente) {
+        return repository.findBasicInfoForSelectionByTipo(tipoCliente);
     }
 
     public Cliente findById(Long id) {

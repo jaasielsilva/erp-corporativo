@@ -436,7 +436,7 @@ body.dark-mode .badge.pendente {
   .vip-cards {
     display: flex;
     flex-direction: column;
-  }
+    }
 
   .card-metric,
   .vip-card {
@@ -645,27 +645,6 @@ form.form-cliente select[disabled] {
   border-color: #ddd;
 }
 
-/* Botões submit e reset */
-form.form-cliente button {
-  grid-column: span 3;
-  padding: 0.75rem 1.2rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  color: #fff;
-  background-color: #2563eb;
-  justify-self: center;
-  max-width: 240px;
-  margin-top: 1rem;
-}
-
-form.form-cliente button:hover {
-  background-color: #1e40af;
-}
-
 /* Mensagens de erro para validação */
 .msg-erro {
   color: #dc3545;
@@ -686,15 +665,6 @@ form.form-cliente button:hover {
   gap: 0.4rem;
 }
 
-/* Alinhamento específico para botões em formulário */
-.form-buttons {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
 /* Ajuste para textarea (ex: observações) */
 form.form-cliente textarea {
   min-height: 100px;
@@ -707,9 +677,6 @@ form.form-cliente textarea {
   form.form-cliente fieldset {
     grid-template-columns: 1fr 1fr;
   }
-  form.form-cliente button {
-    grid-column: span 2;
-  }
 }
 
 @media (max-width: 576px) {
@@ -717,10 +684,8 @@ form.form-cliente textarea {
   form.form-cliente fieldset {
     grid-template-columns: 1fr;
   }
-  form.form-cliente button {
-    grid-column: span 1;
-  }
 }
+
 /* --- Scroll fixo para máximo 4 clientes visíveis --- */
 .table-scroll-limit {
   max-height: calc(4 * 68px + 42px); /* 4 linhas + cabeçalho (~310px) */
@@ -763,4 +728,75 @@ form.form-cliente textarea {
 .btn-excluir-cliente i {
   color: #dc2626; /* vermelho padrão */
   font-size: 1.1rem;
+}
+
+/* --- Botões de Formulário (Salvar e Cancelar) --- */
+.form-group.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem; /* Espaço entre os botões */
+  margin-top: 2rem;
+  grid-column: 1 / -1; /* Ocupa todas as colunas */
+}
+
+/* Estilo base para botões de ação */
+.btn-salvar, .btn-cancelar {
+  padding: 0.8rem 2rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 150px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  line-height: normal;
+}
+
+/* Botão Salvar (Azul) */
+.btn-salvar {
+  background-color: #2563eb !important;
+}
+
+.btn-salvar:hover {
+  background-color: #1e40af !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Botão Cancelar (Vermelho) */
+.btn-cancelar {
+  background-color: #dc3545 !important;
+}
+
+.btn-cancelar:hover {
+  background-color: #c82333 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* Remove estilos conflitantes antigos se houver */
+form.form-cliente button {
+  grid-column: auto;
+  margin-top: 0;
+  max-width: none;
+  justify-self: auto;
+  /* Reset background para garantir que as classes .btn-salvar peguem */
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Reaplicar cores específicas pois o reset acima pode afetar */
+form.form-cliente button.btn-salvar {
+  background-color: #2563eb !important;
+  padding: 0.8rem 2rem !important;
+}
+form.form-cliente button.btn-salvar:hover {
+  background-color: #1e40af !important;
 }

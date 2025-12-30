@@ -852,6 +852,75 @@ public class JuridicoController {
         return ResponseEntity.ok(processoJuridicoService.listarPrazosDoProcesso(id));
     }
 
+    @GetMapping("/api/processos/{id}/timeline")
+    @ResponseBody
+    public ResponseEntity<?> obterTimeline(@PathVariable Long id) {
+        // Combina andamentos e audiências para formar a linha do tempo
+        List<com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso> andamentos = processoJuridicoService.listarAndamentos(id);
+        
+        // Transformar para um formato simples para o front
+        List<Map<String, Object>> timeline = new ArrayList<>();
+        
+        for (var a : andamentos) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("data", a.getDataHora());
+            item.put("titulo", a.getTitulo() != null ? a.getTitulo() : "Andamento");
+            item.put("descricao", a.getDescricao());
+            item.put("tipo", a.getTipoEtapa() != null ? a.getTipoEtapa().name() : "ANDAMENTO");
+            item.put("usuario", a.getUsuario());
+            item.put("categoria", "ANDAMENTO");
+            timeline.add(item);
+        }
+
+        // Ordenar por data (decrescente)
+        timeline.sort((a, b) -> ((LocalDateTime)b.get("data")).compareTo((LocalDateTime)a.get("data")));
+
+        return ResponseEntity.ok(timeline);
+    }
+
+    @PostMapping("/api/processos/{id}/andamentos")
+    @ResponseBody
+    public ResponseEntity<?> adicionarAndamento(@PathVariable Long id, 
+                                              @RequestBody Map<String, Object> body,
+                                              @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso andamento = new com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso();
+            andamento.setProcessoId(id);
+            andamento.setTitulo((String) body.get("titulo"));
+            andamento.setDescricao((String) body.get("descricao"));
+            
+            String tipoStr = (String) body.get("tipo");
+            if (tipoStr != null) {
+                try {
+                    andamento.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.valueOf(tipoStr));
+                } catch (Exception e) {
+                    andamento.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.ANDAMENTO);
+                }
+            } else {
+                andamento.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.ANDAMENTO);
+            }
+            
+            // Tenta pegar a data do body ou usa agora
+            String dataStr = (String) body.get("dataHora");
+            if (dataStr != null && !dataStr.isBlank()) {
+                try {
+                    andamento.setDataHora(LocalDateTime.parse(dataStr));
+                } catch (Exception e) {
+                     andamento.setDataHora(LocalDateTime.now());
+                }
+            } else {
+                andamento.setDataHora(LocalDateTime.now());
+            }
+
+            andamento.setUsuario(userDetails != null ? userDetails.getUsername() : "Sistema");
+
+            processoJuridicoService.adicionarAndamento(andamento);
+            return ResponseEntity.ok(Map.of("mensagem", "Movimentação registrada com sucesso!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Erro ao salvar andamento: " + e.getMessage()));
+        }
+    }
+
     @PutMapping("/api/prazos/{id}/concluir")
     @ResponseBody
     public ResponseEntity<?> concluirPrazo(@PathVariable Long id) {

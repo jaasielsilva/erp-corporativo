@@ -39,6 +39,7 @@ public class ClienteAvancadoController {
             @RequestParam(value = "tipoCliente", required = false) String tipoCliente,
             @RequestParam(value = "vip", required = false) Boolean vip,
             @RequestParam(value = "ativo", required = false) Boolean ativo,
+            @RequestParam(value = "origem", required = false) String origem,
             @RequestParam(value = "size", defaultValue = "10") int size,
             Model model) {
 
@@ -48,6 +49,7 @@ public class ClienteAvancadoController {
         filtros.put("tipoCliente", tipoCliente);
         filtros.put("vip", vip);
         filtros.put("ativo", ativo);
+        filtros.put("origem", origem);
         filtros.put("pageSize", size);
 
         model.addAttribute("filtros", filtros);
@@ -81,10 +83,11 @@ public class ClienteAvancadoController {
             @RequestParam(value = "tipoCliente", required = false) String tipoCliente,
             @RequestParam(value = "vip", required = false) Boolean vip,
             @RequestParam(value = "ativo", required = false) Boolean ativo,
+            @RequestParam(value = "origem", required = false) String origem,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
 
-        Page<Cliente> clientesPage = clienteService.listarAvancado(busca, status, tipoCliente, vip, ativo, page, size);
+        Page<Cliente> clientesPage = clienteService.listarAvancado(busca, status, tipoCliente, vip, ativo, origem, page, size);
 
         List<Map<String, Object>> content = clientesPage.getContent().stream()
                 .map(cliente -> {
@@ -96,6 +99,7 @@ public class ClienteAvancadoController {
                     mapa.put("tipoCliente", cliente.getTipoCliente());
                     mapa.put("vip", cliente.getVip());
                     mapa.put("ativo", cliente.getAtivo());
+                    mapa.put("origem", cliente.getOrigem());
                     mapa.put("ultimoAcesso", cliente.getUltimoAcesso());
                     return mapa;
                 })

@@ -71,6 +71,12 @@ public class Cliente {
     // Campo para controle de último acesso
     private LocalDateTime ultimoAcesso;
 
+    // Campos de Indicação
+    private String origem; // "Indicação", "Google", "Redes Sociais", "Outros"
+    private String indicadorNome;
+    private String indicadorTelefone;
+    private LocalDate dataIndicacao;
+
     // Campo para identificar clientes VIP
     private Boolean vip = false;
 

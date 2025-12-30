@@ -20,6 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const nomeMae = document.getElementById('nomeMae');
   const nomePai = document.getElementById('nomePai');
 
+  // Campos de Indicação
+  const origem = document.getElementById('origem');
+  const divIndicacao = document.getElementById('divIndicacao');
+  const indicadorNome = document.getElementById('indicadorNome');
+  const indicadorTelefone = document.getElementById('indicadorTelefone');
+  const dataIndicacao = document.getElementById('dataIndicacao');
+
   // Atualiza campos habilitados conforme tipo de cliente (PF/PJ)
   function atualizarCamposPorTipo() {
     if (!tipoCliente) return;
@@ -55,6 +62,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (profissao) profissao.value = '';
       if (nomeMae) nomeMae.value = '';
       if (nomePai) nomePai.value = '';
+    }
+  }
+
+  // Atualiza visibilidade dos campos de indicação
+  function atualizarCamposPorOrigem() {
+    if (!origem || !divIndicacao) return;
+    
+    if (origem.value === 'Indicação') {
+      divIndicacao.style.display = 'block';
+      if (indicadorNome) indicadorNome.setAttribute('required', 'required');
+      if (indicadorTelefone) indicadorTelefone.setAttribute('required', 'required');
+      
+      // Preencher data atual se estiver vazio
+      if (dataIndicacao && !dataIndicacao.value) {
+        const hoje = new Date().toISOString().split('T')[0];
+        dataIndicacao.value = hoje;
+      }
+    } else {
+      divIndicacao.style.display = 'none';
+      if (indicadorNome) {
+        indicadorNome.removeAttribute('required');
+        indicadorNome.value = '';
+      }
+      if (indicadorTelefone) {
+        indicadorTelefone.removeAttribute('required');
+        indicadorTelefone.value = '';
+      }
+      if (dataIndicacao) dataIndicacao.value = '';
     }
   }
 
@@ -149,14 +184,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inicialização
   function init() {
     atualizarCamposPorTipo();
+    atualizarCamposPorOrigem();
 
     if (tipoCliente) {
       tipoCliente.addEventListener('change', atualizarCamposPorTipo);
     }
 
+    if (origem) {
+      origem.addEventListener('change', atualizarCamposPorOrigem);
+    }
+
     if (cpfCnpj) cpfCnpj.addEventListener('input', mascaraCpfCnpj);
     if (telefone) telefone.addEventListener('input', mascaraTelefone);
     if (celular) celular.addEventListener('input', mascaraTelefone);
+    if (indicadorTelefone) indicadorTelefone.addEventListener('input', mascaraTelefone);
 
     configurarBuscaCep();
     validarCamposObrigatorios();

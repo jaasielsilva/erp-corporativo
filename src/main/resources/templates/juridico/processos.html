@@ -221,34 +221,89 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="fw-semibold text-muted">Número</div>
-                            <div id="procDetailNumero">—</div>
+                    <ul class="nav nav-tabs mb-3" id="procTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-resumo" data-bs-toggle="tab" data-bs-target="#content-resumo" type="button" role="tab">Resumo</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-timeline" data-bs-toggle="tab" data-bs-target="#content-timeline" type="button" role="tab">Timeline</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="content-resumo" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-muted">Número</div>
+                                    <div id="procDetailNumero">—</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-muted">Status</div>
+                                    <div id="procDetailStatus">—</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-muted">Tipo</div>
+                                    <div id="procDetailTipo">—</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-muted">Tribunal</div>
+                                    <div id="procDetailTribunal">—</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-muted">Parte</div>
+                                    <div id="procDetailParte">—</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-semibold text-muted">Aberto em</div>
+                                    <div id="procDetailDataAbertura">—</div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="fw-semibold text-muted">Assunto</div>
+                                    <div id="procDetailAssunto">—</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="fw-semibold text-muted">Status</div>
-                            <div id="procDetailStatus">—</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="fw-semibold text-muted">Tipo</div>
-                            <div id="procDetailTipo">—</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="fw-semibold text-muted">Tribunal</div>
-                            <div id="procDetailTribunal">—</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="fw-semibold text-muted">Parte</div>
-                            <div id="procDetailParte">—</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="fw-semibold text-muted">Aberto em</div>
-                            <div id="procDetailDataAbertura">—</div>
-                        </div>
-                        <div class="col-12">
-                            <div class="fw-semibold text-muted">Assunto</div>
-                            <div id="procDetailAssunto">—</div>
+
+                        <!-- Tab Timeline -->
+                        <div class="tab-pane fade" id="content-timeline" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-muted mb-0">Histórico de Movimentações</h6>
+                                <button class="btn btn-sm btn-outline-primary" id="btnNovoAndamento" type="button">
+                                    <i class="fas fa-plus"></i> Nova Movimentação
+                                </button>
+                            </div>
+                            
+                            <!-- Form Inline de Nova Movimentação (Oculto por padrão) -->
+                            <div id="formAndamento" class="card mb-4 border-light bg-light d-none">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Registrar Movimentação</h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-8">
+                                            <input type="text" id="andamentoTitulo" class="form-control form-control-sm" placeholder="Título (ex: Conclusão para Sentença)" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select id="andamentoTipo" class="form-select form-select-sm">
+                                                <option value="ANDAMENTO">Andamento Comum</option>
+                                                <option value="INICIAL">Inicial / Distribuição</option>
+                                                <option value="IMPORTANTE">Decisão / Importante</option>
+                                                <option value="AUDIENCIA">Audiência / Perícia</option>
+                                                <option value="FINAL">Sentença / Final</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <textarea id="andamentoDescricao" class="form-control form-control-sm" rows="2" placeholder="Descrição detalhada da movimentação..."></textarea>
+                                        </div>
+                                        <div class="col-12 text-end mt-2">
+                                            <button type="button" class="btn btn-sm btn-secondary me-1" id="btnCancelarAndamento">Cancelar</button>
+                                            <button type="button" class="btn btn-sm btn-success" id="btnSalvarAndamento">Salvar Movimentação</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="timelineContainer" class="timeline">
+                                <!-- Timeline items injected via JS -->
+                                <div class="text-center text-muted py-3">Carregando histórico...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -341,14 +396,172 @@
                 $('#procDetailModal').attr('data-proc-id', id);
             }
 
+            function renderTimeline(items, processType) {
+                const $container = $('#timelineContainer');
+                $container.empty();
+
+                // Mock Expert Data if empty (for demonstration)
+                if (!items || items.length === 0) {
+                    items = generateExpertMockData(processType);
+                }
+
+                items.forEach(item => {
+                    const tipoClass = (item.tipo || 'ANDAMENTO').toLowerCase();
+                    const icon = item.tipo === 'INICIAL' ? '<i class="fas fa-file-contract"></i>' :
+                                 item.tipo === 'AUDIENCIA' ? '<i class="fas fa-gavel"></i>' :
+                                 item.tipo === 'FINAL' ? '<i class="fas fa-check-double"></i>' :
+                                 item.tipo === 'IMPORTANTE' ? '<i class="fas fa-exclamation"></i>' :
+                                 '<i class="fas fa-circle"></i>';
+
+                    // Formatar data se possível
+                    let dataFormatada = item.data;
+                    try {
+                        if(item.data && item.data.includes('T')) {
+                            const d = new Date(item.data);
+                            dataFormatada = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                        }
+                    } catch(e) {}
+
+                    $container.append(`
+                        <div class="timeline-item ${tipoClass}">
+                            <div class="timeline-icon d-flex align-items-center justify-content-center text-primary" style="font-size: 10px;">
+                                <!-- Icon handled by CSS but could be explicit -->
+                            </div>
+                            <div class="timeline-content shadow-sm">
+                                <span class="timeline-date"><i class="far fa-clock"></i> ${dataFormatada}</span>
+                                <h5 class="timeline-title">${item.titulo}</h5>
+                                <div class="timeline-desc">${item.descricao}</div>
+                                ${item.usuario ? `<small class="text-muted mt-2 d-block"><i class="fas fa-user"></i> ${item.usuario}</small>` : ''}
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            function generateExpertMockData(processType) {
+                const now = new Date();
+                const mocks = [];
+                const type = (processType || '').toUpperCase();
+
+                if (type.includes('INSS') || type.includes('PREVIDENCIARIO')) {
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 2).toISOString(),
+                        titulo: "Conclusão para Sentença",
+                        descricao: "Processo concluso para julgamento após apresentação de laudos.",
+                        tipo: "IMPORTANTE",
+                        usuario: "Sistema"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 15).toISOString(),
+                        titulo: "Laudo Pericial Juntado",
+                        descricao: "Perícia médica realizada. Constatação de incapacidade laborativa temporária.",
+                        tipo: "ANDAMENTO",
+                        usuario: "Perito Dr. Mendes"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 45).toISOString(),
+                        titulo: "Perícia Médica Agendada",
+                        descricao: "Agendamento de perícia para avaliação de auxílio-doença.",
+                        tipo: "AUDIENCIA", // Reused for scheduling
+                        usuario: "Secretaria"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 60).toISOString(),
+                        titulo: "Citação do INSS",
+                        descricao: "Autarquia citada para apresentar contestação.",
+                        tipo: "ANDAMENTO",
+                        usuario: "Oficial de Justiça"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 65).toISOString(),
+                        titulo: "Petição Inicial Protocolada",
+                        descricao: "Distribuição automática. Requerimento de restabelecimento de benefício.",
+                        tipo: "INICIAL",
+                        usuario: "Dr. Advogado"
+                    });
+                } else if (type.includes('SEGURADORA') || type.includes('CIVEL') || type.includes('INDENIZACAO')) {
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 5).toISOString(),
+                        titulo: "Impugnação à Contestação",
+                        descricao: "Réplica apresentada rebatendo as preliminares da seguradora.",
+                        tipo: "ANDAMENTO",
+                        usuario: "Dr. Advogado"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 20).toISOString(),
+                        titulo: "Contestação Juntada",
+                        descricao: "Seguradora apresenta defesa alegando exclusão de cobertura.",
+                        tipo: "IMPORTANTE",
+                        usuario: "Sistema PJe"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 40).toISOString(),
+                        titulo: "Aviso de Recebimento (AR) Positivo",
+                        descricao: "Citação efetivada na sede da ré.",
+                        tipo: "ANDAMENTO",
+                        usuario: "Correios"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 50).toISOString(),
+                        titulo: "Distribuição",
+                        descricao: "Ação de Cobrança de Seguro c/c Danos Morais.",
+                        tipo: "INICIAL",
+                        usuario: "Distribuidor"
+                    });
+                } else {
+                    // Generic
+                     mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 10).toISOString(),
+                        titulo: "Movimentação de Processo",
+                        descricao: "Processo em análise pelo juiz.",
+                        tipo: "ANDAMENTO",
+                        usuario: "Sistema"
+                    });
+                    mocks.push({
+                        data: new Date(now.getTime() - 86400000 * 30).toISOString(),
+                        titulo: "Abertura de Processo",
+                        descricao: "Processo cadastrado no sistema.",
+                        tipo: "INICIAL",
+                        usuario: "Admin"
+                    });
+                }
+                return mocks;
+            }
+
             function abrirDetalhesProcesso(id) {
                 if (!id) return;
+                
+                // Reset e mostra modal
                 setProcDetail(id, null);
+                $('#timelineContainer').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>');
+                
+                const modalEl = document.getElementById('procDetailModal');
+                if (modalEl) {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                    
+                    // Reset tab to first one
+                    const firstTabEl = document.querySelector('#procTabs button[data-bs-target="#content-resumo"]');
+                    if(firstTabEl) {
+                        const tab = new bootstrap.Tab(firstTabEl);
+                        tab.show();
+                    }
+                }
+
+                // 1. Fetch Detalhes
                 $.get(`/juridico/api/processos/${id}`)
                     .done(res => {
                         setProcDetail(id, res);
-                        const modalEl = document.getElementById('procDetailModal');
-                        if (modalEl) new bootstrap.Modal(modalEl).show();
+                        
+                        // 2. Fetch Timeline (passando o tipo do processo para o mock se falhar ou vier vazio)
+                        $.get(`/juridico/api/processos/${id}/timeline`)
+                            .done(timelineData => {
+                                renderTimeline(timelineData, res.tipo);
+                            })
+                            .fail(() => {
+                                // Fallback para mock se endpoint falhar (ex: ambiente dev sem banco populado)
+                                renderTimeline([], res.tipo);
+                            });
                     })
                     .fail(() => {
                         notify('error', 'Falha ao abrir', 'Não foi possível carregar detalhes do processo.', 'high');

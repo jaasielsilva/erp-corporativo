@@ -120,6 +120,35 @@
               <input type="text" id="nomePai" th:field="*{nomePai}" placeholder="Digite o nome do pai" th:disabled="${cliente.tipoCliente != 'PF'}" />
             </div>
 
+            <!-- Origem do Cliente -->
+            <div class="form-group">
+              <label for="origem">Origem do Cliente:</label>
+              <select id="origem" th:field="*{origem}">
+                <option value="" th:selected="${cliente.origem == null}">-- Selecione a origem --</option>
+                <option value="Indicação" th:selected="${cliente.origem == 'Indicação'}">Indicação</option>
+                <option value="Google" th:selected="${cliente.origem == 'Google'}">Google</option>
+                <option value="Redes Sociais" th:selected="${cliente.origem == 'Redes Sociais'}">Redes Sociais</option>
+                <option value="Outros" th:selected="${cliente.origem == 'Outros'}">Outros</option>
+              </select>
+            </div>
+
+            <!-- Campos de Indicação -->
+            <div id="divIndicacao" style="display: none; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; background-color: #f9f9f9;">
+              <h3 style="margin-top: 0; font-size: 1.1em; color: #555;">Dados da Indicação</h3>
+              <div class="form-group">
+                <label for="indicadorNome">Nome do Indicador:</label>
+                <input type="text" id="indicadorNome" th:field="*{indicadorNome}" placeholder="Nome completo do indicador" />
+              </div>
+              <div class="form-group">
+                <label for="indicadorTelefone">Telefone do Indicador:</label>
+                <input type="text" id="indicadorTelefone" th:field="*{indicadorTelefone}" placeholder="(xx) xxxxx-xxxx" maxlength="15" />
+              </div>
+              <div class="form-group">
+                <label for="dataIndicacao">Data da Indicação:</label>
+                <input type="date" id="dataIndicacao" th:field="*{dataIndicacao}" readonly />
+              </div>
+            </div>
+
             <!-- Inscrição Estadual -->
             <div class="form-group">
               <label for="inscricaoEstadual">Inscrição Estadual:</label>

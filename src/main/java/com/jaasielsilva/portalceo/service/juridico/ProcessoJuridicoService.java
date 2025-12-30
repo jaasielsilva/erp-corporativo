@@ -138,6 +138,16 @@ public class ProcessoJuridicoService {
         return prazoRepo.findByProcessoIdOrderByDataLimiteAsc(processoId);
     }
 
+    @Transactional(readOnly = true)
+    public List<AndamentoProcesso> listarAndamentos(Long processoId) {
+        return andamentoRepo.findByProcessoIdOrderByDataHoraDesc(processoId);
+    }
+
+    @Transactional
+    public AndamentoProcesso adicionarAndamento(AndamentoProcesso andamento) {
+        return andamentoRepo.save(andamento);
+    }
+
     @Transactional
     public ProcessoJuridico atualizarStatus(Long id, ProcessoJuridico.StatusProcesso status) {
         ProcessoJuridico p = processoRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));

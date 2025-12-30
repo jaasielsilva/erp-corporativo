@@ -184,11 +184,12 @@ public class ClienteService {
     }
 
     // Paginação padronizada com filtro
-    public Page<Cliente> listarPaginado(String busca, String status, int page, int size) {
+    public Page<Cliente> listarPaginado(String busca, String status, String origem, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("nome").ascending());
         String termo = (busca != null && !busca.isBlank()) ? busca.trim() : null;
         String st = (status != null && !status.isBlank()) ? status.trim() : null;
-        return repository.buscarComFiltros(termo, st, pageable);
+        String org = (origem != null && !origem.isBlank()) ? origem.trim() : null;
+        return repository.buscarComFiltros(termo, st, org, pageable);
     }
 
     public Page<Cliente> listarAvancado(String busca,
@@ -196,6 +197,7 @@ public class ClienteService {
             String tipoCliente,
             Boolean vip,
             Boolean ativo,
+            String origem,
             int page,
             int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100),
@@ -203,6 +205,7 @@ public class ClienteService {
         String termo = (busca != null && !busca.isBlank()) ? busca.trim() : null;
         String st = (status != null && !status.isBlank()) ? status.trim() : null;
         String tipo = (tipoCliente != null && !tipoCliente.isBlank()) ? tipoCliente.trim() : null;
-        return repository.buscarAvancado(termo, st, tipo, vip, ativo, pageable);
+        String org = (origem != null && !origem.isBlank()) ? origem.trim() : null;
+        return repository.buscarAvancado(termo, st, tipo, vip, ativo, org, pageable);
     }
 }

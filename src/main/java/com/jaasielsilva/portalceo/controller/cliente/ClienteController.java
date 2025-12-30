@@ -36,10 +36,11 @@ public class ClienteController {
     @GetMapping
     public String listarClientes(@RequestParam(value = "busca", required = false) String busca,
                                  @RequestParam(value = "status", required = false) String status,
+                                 @RequestParam(value = "origem", required = false) String origem,
                                  @RequestParam(value = "page", defaultValue = "0") int page,
                                  @RequestParam(value = "size", defaultValue = "10") int size,
                                  Model model) {
-        var clientesPage = clienteService.listarPaginado(busca, status, page, size);
+        var clientesPage = clienteService.listarPaginado(busca, status, origem, page, size);
         model.addAttribute("clientes", clientesPage.getContent());
         model.addAttribute("currentPage", clientesPage.getNumber());
         model.addAttribute("totalPages", clientesPage.getTotalPages());
@@ -48,6 +49,7 @@ public class ClienteController {
         model.addAttribute("hasNext", clientesPage.hasNext());
         model.addAttribute("busca", busca);
         model.addAttribute("statusFiltro", status);
+        model.addAttribute("origemFiltro", origem);
 
         // Estatísticas para exibir na tela
         model.addAttribute("totalClientes", clienteService.contarTotal());
@@ -70,9 +72,10 @@ public class ClienteController {
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "q", required = false) String q,
-            @RequestParam(name = "status", required = false) String status) {
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "origem", required = false) String origem) {
         try {
-            var pagina = clienteService.listarPaginado(q, status, Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+            var pagina = clienteService.listarPaginado(q, status, origem, Math.max(page, 0), Math.min(Math.max(size, 1), 100));
 
             java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream().map(c -> {
                 java.util.Map<String, Object> m = new java.util.HashMap<>();
@@ -82,6 +85,7 @@ public class ClienteController {
                 m.put("email", c.getEmail());
                 m.put("telefone", c.getTelefone());
                 m.put("status", c.getStatus());
+                m.put("origem", c.getOrigem());
                 return m;
             }).collect(java.util.stream.Collectors.toList());
 

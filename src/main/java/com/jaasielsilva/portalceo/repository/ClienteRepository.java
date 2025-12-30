@@ -100,9 +100,11 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
            " OR LOWER(c.telefone) LIKE LOWER(CONCAT('%', :busca, '%')) " +
            " OR LOWER(c.celular) LIKE LOWER(CONCAT('%', :busca, '%')) " +
            " OR LOWER(c.cpfCnpj) LIKE LOWER(CONCAT('%', :busca, '%'))) " +
-           " AND (:status IS NULL OR LOWER(c.status) = LOWER(:status))")
+           " AND (:status IS NULL OR LOWER(c.status) = LOWER(:status))" +
+           " AND (:origem IS NULL OR LOWER(c.origem) = LOWER(:origem))")
     Page<Cliente> buscarComFiltros(@Param("busca") String busca,
                                    @Param("status") String status,
+                                   @Param("origem") String origem,
                                    Pageable pageable);
 
     @Query("SELECT c FROM Cliente c WHERE " +
@@ -114,12 +116,14 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
            " AND (:status IS NULL OR LOWER(c.status) = LOWER(:status))" +
            " AND (:tipoCliente IS NULL OR LOWER(c.tipoCliente) = LOWER(:tipoCliente))" +
            " AND (:vip IS NULL OR c.vip = :vip)" +
-           " AND (:ativo IS NULL OR c.ativo = :ativo)")
+           " AND (:ativo IS NULL OR c.ativo = :ativo)" +
+           " AND (:origem IS NULL OR LOWER(c.origem) = LOWER(:origem))")
     Page<Cliente> buscarAvancado(@Param("busca") String busca,
                                  @Param("status") String status,
                                  @Param("tipoCliente") String tipoCliente,
                                  @Param("vip") Boolean vip,
                                  @Param("ativo") Boolean ativo,
+                                 @Param("origem") String origem,
                                  Pageable pageable);
 
 }

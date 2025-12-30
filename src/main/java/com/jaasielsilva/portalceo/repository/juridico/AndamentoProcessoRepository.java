@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AndamentoProcessoRepository extends JpaRepository<AndamentoProcesso, Long> {
     java.util.List<AndamentoProcesso> findTop10ByOrderByDataHoraDesc();
+    java.util.List<AndamentoProcesso> findByProcessoIdOrderByDataHoraDesc(Long processoId);
 }

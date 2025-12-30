@@ -8,7 +8,12 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name = "solicitacoes_acesso")
+@Table(name = "solicitacoes_acesso", indexes = {
+    @Index(name = "idx_sa_status", columnList = "status"),
+    @Index(name = "idx_sa_data_solicitacao", columnList = "dataSolicitacao"),
+    @Index(name = "idx_sa_colaborador", columnList = "colaborador_id"),
+    @Index(name = "idx_sa_aprovador", columnList = "aprovador_usuario_id")
+})
 public class SolicitacaoAcesso {
     
     @Id

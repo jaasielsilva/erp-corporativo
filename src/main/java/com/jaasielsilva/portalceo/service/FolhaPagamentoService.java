@@ -221,12 +221,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                 nDone.setActionUrl("/rh/folha-pagamento/visualizar/" + folha.getId());
                 nDone.setMetadata(String.format("{\"jobId\":\"%s\",\"folhaId\":%d,\"mes\":%d,\"ano\":%d,\"durationMs\":%d}", jobId, folha.getId(), mes, ano, durationMs));
                 notificationRepository.save(nDone);
-                notificationService.createGlobalNotification(
-                        "payroll_processing_complete",
-                        "Processamento de Folha",
-                        String.format("Concluído %02d/%d — folhaId=%d", mes, ano, folha.getId()),
-                        com.jaasielsilva.portalceo.model.Notification.Priority.MEDIUM
-                );
             } catch (Exception ignored) {}
             appendJobLog(jobId, String.format("Folha gerada com sucesso (folhaId=%d)", folha.getId()));
             pushJobStatus(jobId);
@@ -245,12 +239,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
                 nErr.setActionUrl("/rh/folha-pagamento");
                 nErr.setMetadata(String.format("{\"jobId\":\"%s\",\"mes\":%d,\"ano\":%d}", jobId, mes, ano));
                 notificationRepository.save(nErr);
-                notificationService.createGlobalNotification(
-                        "payroll_processing_error",
-                        "Processamento de Folha",
-                        String.format("Erro no processamento %02d/%d", mes, ano),
-                        com.jaasielsilva.portalceo.model.Notification.Priority.HIGH
-                );
             } catch (Exception ignored) {}
             appendJobLog(jobId, String.format("Erro no processamento: %s", e.getMessage()));
             logger.error("Erro no processamento da folha {}/{}: {}", mes, ano, e.getMessage());

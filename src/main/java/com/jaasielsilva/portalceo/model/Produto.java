@@ -8,6 +8,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_produto_ativo", columnList = "ativo"),
+        @Index(name = "idx_produto_categoria", columnList = "categoria_id"),
+        @Index(name = "idx_produto_fornecedor", columnList = "fornecedor_id"),
+        @Index(name = "idx_produto_estoque", columnList = "estoque"),
+        @Index(name = "idx_produto_minimo_estoque", columnList = "minimoEstoque")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

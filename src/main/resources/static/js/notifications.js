@@ -125,13 +125,13 @@ $(document).ready(function () {
                 let meta = null;
                 try { meta = n.metadata ? JSON.parse(n.metadata) : null; } catch {}
                 const protocol = meta && meta.protocol ? meta.protocol : null;
-                const jobId = meta && meta.jobId ? meta.jobId : null;
                 const folhaId = meta && meta.folhaId ? meta.folhaId : null;
+                const jobId = meta && meta.jobId ? meta.jobId : null;
                 const ref = (meta && meta.mes && meta.ano) ? `${meta.mes}-${meta.ano}` : null;
                 // Preferir chave de payroll
                 let key = null;
-                if (jobId) key = `payroll:job:${jobId}`;
-                else if (folhaId) key = `payroll:folha:${folhaId}`;
+                if (folhaId) key = `payroll:folha:${folhaId}`;
+                else if (jobId) key = `payroll:job:${jobId}`;
                 else if (ref) key = `payroll:ref:${ref}`;
                 else if (protocol) key = `${n.type}:${protocol}`;
 
@@ -169,10 +169,34 @@ $(document).ready(function () {
                 }
             });
 
-            const finalNotifications = [];
-            byProtocol.forEach(v => finalNotifications.push(v));
-            byId.forEach(v => finalNotifications.push(v));
-            finalNotifications.sort((a, b) => (b.timestamp ? b.timestamp.getTime() : 0) - (a.timestamp ? a.timestamp.getTime() : 0));
+            const buildKey = (n) => {
+                let meta = null;
+                try { meta = n.metadata ? JSON.parse(n.metadata) : null; } catch {}
+                const folhaId = meta && meta.folhaId ? meta.folhaId : null;
+                const jobId = meta && meta.jobId ? meta.jobId : null;
+                const ref = (meta && meta.mes && meta.ano) ? `${meta.mes}-${meta.ano}` : null;
+                if (folhaId) return `payroll:folha:${folhaId}`;
+                if (jobId) return `payroll:job:${jobId}`;
+                if (ref) return `payroll:ref:${ref}`;
+                if (n.id != null) return `id:${n.id}`;
+                return `${n.title}|${n.message}`;
+            };
+            const finalMap = new Map();
+            byProtocol.forEach((v, k) => finalMap.set(k, v));
+            byId.forEach((v) => {
+                const k = buildKey(v);
+                const existing = finalMap.get(k);
+                const exTs = existing && existing.timestamp ? existing.timestamp.getTime() : 0;
+                const cTs = v && v.timestamp ? v.timestamp.getTime() : 0;
+                const exIsUser = existing && existing.remetenteNome && existing.remetenteNome !== 'Sistema';
+                const cIsUser = v && v.remetenteNome && v.remetenteNome !== 'Sistema';
+                const pick = (!existing)
+                    ? v
+                    : (cTs > exTs ? v : (!exIsUser && cIsUser ? v : existing));
+                finalMap.set(k, pick);
+            });
+            const finalNotifications = Array.from(finalMap.values())
+                .sort((a, b) => (b.timestamp ? b.timestamp.getTime() : 0) - (a.timestamp ? a.timestamp.getTime() : 0));
 
             if (finalNotifications.length === 0) {
                 $list.append('<li class="no-notifications"><i class="fas fa-bell-slash"></i><p>Sem notificações</p></li>');

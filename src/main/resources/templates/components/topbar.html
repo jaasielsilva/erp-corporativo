@@ -123,14 +123,19 @@
                     } catch(e){}
                 }
                 function pollJob(jobId){
+                    if (window.__jobPollTimer && window.__jobPollingJobId === jobId) { return; }
+                    if (window.__jobPollTimer) { try { clearInterval(window.__jobPollTimer); } catch(e){} }
+                    window.__jobPollingJobId = jobId;
                     var polled = false;
-                    var timer = setInterval(function(){
+                    window.__jobPollTimer = setInterval(function(){
                         fetch('/rh/ponto-escalas/api/escalas/gerar-automatico/status?jobId=' + encodeURIComponent(jobId))
                             .then(function(r){ return r.json(); })
                             .then(function(st){
                                 if (st && st.success && st.running === false && !polled) {
                                     polled = true;
-                                    clearInterval(timer);
+                                    try { clearInterval(window.__jobPollTimer); } catch(e){}
+                                    window.__jobPollTimer = null;
+                                    window.__jobPollingJobId = null;
                                     try {
                                         localStorage.setItem('gerarJobAlertShown', jobId);
                                         localStorage.removeItem('gerarJobId');
@@ -145,14 +150,14 @@
                     var existing = localStorage.getItem('gerarJobId');
                     var shown = localStorage.getItem('gerarJobAlertShown');
                     if (existing && existing !== shown) {
-                        pollJob(existing);
+                        if (!window.__jobPollTimer || window.__jobPollingJobId !== existing) { pollJob(existing); }
                     }
                     window.__globalJobListener = setInterval(function(){
                         try {
                             var jid = localStorage.getItem('gerarJobId');
                             var shownId = localStorage.getItem('gerarJobAlertShown');
                             if (jid && jid !== shownId) {
-                                pollJob(jid);
+                                if (!window.__jobPollTimer || window.__jobPollingJobId !== jid) { pollJob(jid); }
                             }
                         } catch(e){}
                     }, 5000);

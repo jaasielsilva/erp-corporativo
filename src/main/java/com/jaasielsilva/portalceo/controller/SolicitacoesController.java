@@ -146,6 +146,58 @@ public String listarSolicitacoes(
     return "solicitacoes/listar";
 }
 
+    @GetMapping("/api/listar")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> listarAjax(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "busca", required = false) String busca) {
+        try {
+            Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("dataSolicitacao").descending());
+            Page<SolicitacaoAcesso> solicitacoesPage;
+            if (status != null && !status.isEmpty() && busca != null && !busca.isEmpty()) {
+                Page<SolicitacaoAcesso> todasPorTexto = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
+                java.util.List<SolicitacaoAcesso> filtradas = todasPorTexto.getContent().stream()
+                        .filter(s -> s.getStatus() == statusEnum)
+                        .collect(java.util.stream.Collectors.toList());
+                solicitacoesPage = new PageImpl<>(filtradas, pageable, filtradas.size());
+            } else if (status != null && !status.isEmpty()) {
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
+                solicitacoesPage = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
+            } else if (busca != null && !busca.isEmpty()) {
+                solicitacoesPage = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+            } else {
+                solicitacoesPage = solicitacaoAcessoService.listarTodas(pageable);
+            }
+            java.util.List<com.jaasielsilva.portalceo.dto.SolicitacaoSimpleDTO> content = solicitacoesPage.getContent().stream()
+                    .map(com.jaasielsilva.portalceo.dto.SolicitacaoSimpleDTO::new)
+                    .collect(java.util.stream.Collectors.toList());
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("content", content);
+            resp.put("currentPage", solicitacoesPage.getNumber());
+            resp.put("totalPages", solicitacoesPage.getTotalPages());
+            resp.put("totalElements", solicitacoesPage.getTotalElements());
+            resp.put("hasPrevious", solicitacoesPage.hasPrevious());
+            resp.put("hasNext", solicitacoesPage.hasNext());
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.add("Cache-Control", "no-store, no-cache, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+            return new org.springframework.http.ResponseEntity<>(resp, headers, org.springframework.http.HttpStatus.OK);
+        } catch (Exception e) {
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("content", java.util.Collections.emptyList());
+            resp.put("currentPage", 0);
+            resp.put("totalPages", 0);
+            resp.put("totalElements", 0);
+            resp.put("hasPrevious", false);
+            resp.put("hasNext", false);
+            return org.springframework.http.ResponseEntity.ok(resp);
+        }
+    }
+
 
     /**
      * Exibir formulário de nova solicitação
@@ -566,6 +618,71 @@ public String listarSolicitacoes(
         model.addAttribute("usuarioLogado", usuarioLogado);
 
         return "solicitacoes/pendentes";
+    }
+
+    @GetMapping("/todas/api/listar")
+    @ResponseBody
+    public ResponseEntity<java.util.Map<String, Object>> listarTodasAjax(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "15") int size,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "busca", required = false) String busca,
+            Principal principal) {
+        try {
+            Usuario usuarioLogado = usuarioService.buscarPorEmail(principal.getName()).orElse(null);
+            if (usuarioLogado == null || !usuarioLogado.podeGerenciarUsuarios()) {
+                java.util.Map<String, Object> resp = new java.util.HashMap<>();
+                resp.put("content", java.util.Collections.emptyList());
+                resp.put("currentPage", 0);
+                resp.put("totalPages", 0);
+                resp.put("totalElements", 0);
+                resp.put("hasPrevious", false);
+                resp.put("hasNext", false);
+                return ResponseEntity.ok(resp);
+            }
+            Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("dataSolicitacao").descending());
+            Page<SolicitacaoAcesso> solicitacoesPage;
+            if (status != null && !status.isEmpty()) {
+                StatusSolicitacao statusEnum = StatusSolicitacao.valueOf(status);
+                if (busca != null && !busca.isEmpty()) {
+                    Page<SolicitacaoAcesso> resultadoBusca = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+                    java.util.List<SolicitacaoAcesso> filtrados = resultadoBusca.getContent().stream()
+                            .filter(s -> s.getStatus() == statusEnum)
+                            .collect(java.util.stream.Collectors.toList());
+                    solicitacoesPage = new PageImpl<>(filtrados, pageable, filtrados.size());
+                } else {
+                    solicitacoesPage = solicitacaoAcessoService.listarPorStatus(statusEnum, pageable);
+                }
+            } else if (busca != null && !busca.isEmpty()) {
+                solicitacoesPage = solicitacaoAcessoService.buscarPorTexto(busca, pageable);
+            } else {
+                solicitacoesPage = solicitacaoAcessoService.listarTodas(pageable);
+            }
+            java.util.List<com.jaasielsilva.portalceo.dto.SolicitacaoSimpleDTO> content = solicitacoesPage.getContent().stream()
+                    .map(com.jaasielsilva.portalceo.dto.SolicitacaoSimpleDTO::new)
+                    .collect(java.util.stream.Collectors.toList());
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("content", content);
+            resp.put("currentPage", solicitacoesPage.getNumber());
+            resp.put("totalPages", solicitacoesPage.getTotalPages());
+            resp.put("totalElements", solicitacoesPage.getTotalElements());
+            resp.put("hasPrevious", solicitacoesPage.hasPrevious());
+            resp.put("hasNext", solicitacoesPage.hasNext());
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.add("Cache-Control", "no-store, no-cache, must-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+            return new org.springframework.http.ResponseEntity<>(resp, headers, org.springframework.http.HttpStatus.OK);
+        } catch (Exception e) {
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("content", java.util.Collections.emptyList());
+            resp.put("currentPage", 0);
+            resp.put("totalPages", 0);
+            resp.put("totalElements", 0);
+            resp.put("hasPrevious", false);
+            resp.put("hasNext", false);
+            return org.springframework.http.ResponseEntity.ok(resp);
+        }
     }
 
     /**

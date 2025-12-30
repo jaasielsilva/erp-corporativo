@@ -21,7 +21,8 @@ public class RequestAuditFilter extends OncePerRequestFilter {
     private AuditoriaRhLogService auditoriaService;
 
     private static final Set<String> IGNORES = Set.of(
-            "/css/", "/js/", "/images/", "/webjars/", "/ws/", "/favicon.ico"
+            "/css/", "/js/", "/images/", "/webjars/", "/ws/", "/favicon.ico",
+            "/rh/ponto-escalas/api/escalas/gerar-automatico/status"
     );
 
     @Override

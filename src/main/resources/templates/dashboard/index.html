@@ -238,17 +238,16 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-boxes"></i></div>
-                            <div class="stat-number" id="kpiTotalProdutos" th:text="${totalProdutos}">847</div>
+                            <div class="stat-number" id="kpiTotalProdutos" th:text="${totalProdutos}" th:attr="data-value=${totalProdutos}">847</div>
                             <div class="stat-label">Produtos em Estoque</div>
-                            <div class="stat-change negative" id="kpiProdutosCriticos" th:text="'-' + ${produtosCriticos} + ' produto crítico'">
+                            <div class="stat-change negative" id="kpiProdutosCriticos" th:text="${produtosCriticos}" th:attr="data-value=${produtosCriticos}">
                                 -23 produtos críticos</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
-                            <div class="stat-number" id="kpiTotalFuncionarios" th:text="${totalFuncionarios}">156</div>
+                            <div class="stat-number" id="kpiTotalFuncionarios" th:text="${totalFuncionarios}" th:attr="data-value=${totalFuncionarios}">156</div>
                             <div class="stat-label">Funcionários Ativos</div>
-                            <div class="stat-change positive" id="kpiContratacoes12Meses"
-                                th:text="'+' + ${contratacoes12Meses} + ' contratações nos últimos 12 meses'">+5 contratações nos últimos 12 meses</div>
+                            <div class="stat-change positive" id="kpiContratacoes12Meses" th:text="${contratacoes12Meses}" th:attr="data-value=${contratacoes12Meses}">+5 contratações nos últimos 12 meses</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
@@ -437,26 +436,7 @@
         let metaValores = [20000, 20000, 20000, 25000, 25000, 25000, 30000, 30000, 30000, 35000, 35000, 35000];
 
         // Tentar obter dados dinâmicos
-        try {
-            const dynamicLabels = [[${ ultimos12MesesLabels }]];
-            const dynamicValores = [[${ ultimos12MesesValores }]];
-            const dynamicMeta = [[${ metaVendasMensal }]];
-
-            console.log('Vendas - Labels:', dynamicLabels);
-            console.log('Vendas - Valores:', dynamicValores);
-            console.log('Vendas - Meta:', dynamicMeta);
-
-            if (dynamicLabels && dynamicLabels.length > 0) {
-                vendasLabels = dynamicLabels;
-                vendasValores = dynamicValores;
-                metaValores = dynamicMeta;
-                console.log('Usando dados dinâmicos para vendas');
-            } else {
-                console.log('Usando dados estáticos para vendas');
-            }
-        } catch (e) {
-            console.log('Erro ao carregar dados de vendas, usando estáticos:', e);
-        }
+        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
 
         const chartVendas = new Chart(ctxVendas, {
             type: 'line',
@@ -521,29 +501,7 @@
         let categoriasValores = [2500, 1800, 1200, 800];
 
         // Tentar obter dados dinâmicos
-        try {
-            const dynamicLabels = [[${ categoriasLabels }]];
-            const dynamicValores = [[${ categoriasValores }]];
-
-            console.log('Dados dinâmicos - Labels:', dynamicLabels);
-            console.log('Dados dinâmicos - Valores:', dynamicValores);
-
-            if (dynamicLabels && dynamicLabels.length > 0) {
-                categoriasLabels = dynamicLabels;
-                // Se todos os valores são zero, usar dados estáticos
-                const hasNonZeroValues = dynamicValores.some(val => val > 0);
-                if (hasNonZeroValues) {
-                    categoriasValores = dynamicValores;
-                    console.log('Usando dados dinâmicos');
-                } else {
-                    console.log('Dados dinâmicos são zeros, usando estáticos de fallback');
-                }
-            } else {
-                console.log('Usando dados estáticos de fallback');
-            }
-        } catch (e) {
-            console.log('Erro ao carregar dados dinâmicos, usando estáticos:', e);
-        }
+        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
 
         const chartCategorias = new Chart(ctxCategorias, {
             type: 'doughnut',
@@ -585,33 +543,7 @@
         let solicitacoesValores = [25, 45, 8, 12];
 
         // Tentar obter dados dinâmicos
-        try {
-            const dynamicSolicitacoes = [[${ solicitacoesStatus }]];
-            console.log('=== DEBUG FRONTEND SOLICITAÇÕES ===');
-            console.log('Dados recebidos do backend:', dynamicSolicitacoes);
-            console.log('Tipo dos dados:', typeof dynamicSolicitacoes);
-            console.log('É array?', Array.isArray(dynamicSolicitacoes));
-            console.log('Tamanho do array:', dynamicSolicitacoes ? dynamicSolicitacoes.length : 'null/undefined');
-
-            if (dynamicSolicitacoes && dynamicSolicitacoes.length > 0) {
-                // Se todos os valores são zero, usar dados estáticos
-                const hasNonZeroValues = dynamicSolicitacoes.some(val => val > 0);
-                console.log('Tem valores não-zero?', hasNonZeroValues);
-
-                if (hasNonZeroValues) {
-                    solicitacoesValores = dynamicSolicitacoes;
-                    console.log('✅ Usando dados dinâmicos para solicitações:', solicitacoesValores);
-                } else {
-                    console.log('⚠️ Dados de solicitações são zeros, usando estáticos de fallback');
-                }
-            } else {
-                console.log('⚠️ Array vazio ou null, usando dados estáticos para solicitações');
-            }
-            console.log('Valores finais que serão usados:', solicitacoesValores);
-            console.log('=====================================');
-        } catch (e) {
-            console.log('❌ Erro ao carregar dados de solicitações, usando estáticos:', e);
-        }
+        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
 
         const chartSolicitacoes = new Chart(ctxSolicitacoes, {
             type: 'doughnut',
@@ -642,19 +574,7 @@
         let performanceValores = [85, 92, 78, 88, 91];
 
         // Tentar obter dados dinâmicos
-        try {
-            const dynamicPerformance = [[${ performanceIndicadores }]];
-            console.log('Performance - Valores:', dynamicPerformance);
-
-            if (dynamicPerformance && dynamicPerformance.length > 0) {
-                performanceValores = dynamicPerformance;
-                console.log('Usando dados dinâmicos para performance');
-            } else {
-                console.log('Usando dados estáticos para performance');
-            }
-        } catch (e) {
-            console.log('Erro ao carregar dados de performance, usando estáticos:', e);
-        }
+        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
 
         const chartPerformance = new Chart(ctxPerformance, {
             type: 'bar',
@@ -709,26 +629,7 @@
         let adesaoValores = [12, 18, 15, 22, 19, 25];
 
         // Tentar obter dados dinâmicos dos últimos 6 meses
-        try {
-            const dynamicLabels = [[${ adesaoRHLabels }]];
-            const dynamicValores = [[${ adesaoRHValores }]];
-            console.log('Adesão RH - Labels:', dynamicLabels);
-            console.log('Adesão RH - Valores:', dynamicValores);
-
-            if (dynamicLabels && dynamicLabels.length > 0) {
-                adesaoLabels = dynamicLabels;
-                console.log('Usando labels dinâmicos para adesão RH');
-            }
-
-            if (dynamicValores && dynamicValores.length > 0) {
-                adesaoValores = dynamicValores;
-                console.log('Usando valores dinâmicos para adesão RH');
-            } else {
-                console.log('Usando dados estáticos para adesão RH');
-            }
-        } catch (e) {
-            console.log('Erro ao carregar dados de adesão RH, usando estáticos:', e);
-        }
+        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
 
         const chartAdesaoRH = new Chart(ctxAdesaoRH, {
             type: 'bar',
@@ -793,66 +694,52 @@
             fetch('/dashboard/api/metrics')
                 .then(r => r.json())
                 .then(d => {
-                    const t = d && d.totais ? d.totais : {};
-                    const g = d && d.graficos ? d.graficos : {};
                     const vf = v => (v === null || typeof v === 'undefined') ? '—' : v;
                     const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = vf(val); };
-                    el('kpiFaturamentoMensal', t.faturamentoMensal);
-                    el('kpiCrescimentoFaturamento', t.crescimentoFaturamento + ' vs mês anterior');
-                    el('kpiTotalVendas', t.totalVendas);
-                    el('kpiCrescimentoVendas', t.crescimentoVendas + ' vs mês anterior');
-                    el('kpiTotalClientes', t.totalClientes);
-                    el('kpiNovosClientes', '+' + vf(t.novosClientes30Dias) + ' novos nos últimos 30 dias');
-                    el('kpiTotalProdutos', t.totalProdutos);
-                    el('kpiProdutosCriticos', '-' + vf(t.produtosCriticos) + ' produto crítico');
-                    el('kpiTotalFuncionarios', t.totalFuncionarios);
-                    el('kpiContratacoes12Meses', '+' + vf(t.contratacoes12Meses) + ' contratações nos últimos 12 meses');
-                    el('kpiProcessosAdesaoTotal', t.processosAdesaoTotal);
-                    el('kpiProcessosAguardando', vf(t.processosAguardandoAprovacao) + ' aguardando aprovação');
-                    el('kpiMargemLucro', t.margemLucro);
-                    el('kpiTicketMedio', t.ticketMedio);
-                    el('kpiRoiMensal', t.roiMensal);
-                    el('kpiInadimplencia', t.inadimplencia);
-                    el('kpiTaxaRetencao', t.taxaRetencao);
-                    el('kpiProdutividadeMedia', t.produtividadeMedia);
-                    el('kpiSatisfacaoInterna', t.satisfacaoInterna);
-                    el('kpiGiroEstoque', t.giroEstoque);
-                    el('kpiTempoEntrega', t.tempoEntrega);
-                    el('kpiTaxaDevolucao', t.taxaDevolucao);
-                    el('kpiEficienciaLogistica', t.eficienciaLogistica);
-                    if (g.vendas) {
-                        const vl = Array.isArray(g.vendas.labels) ? g.vendas.labels : [];
-                        const vv = Array.isArray(g.vendas.valores) ? g.vendas.valores : [];
-                        const vm = Array.isArray(g.vendas.meta) ? g.vendas.meta : [];
-                        if (vl.length > 0) {
-                            chartVendas.data.labels = vl;
-                            chartVendas.data.datasets[0].data = vv;
-                            chartVendas.data.datasets[1].data = vm;
-                            chartVendas.update();
-                        }
+                    el('kpiFaturamentoMensal', d.faturamentoMensalFormatado);
+                    el('kpiCrescimentoFaturamento', d.crescimentoFaturamento + ' vs mês anterior');
+                    el('kpiTotalVendas', d.totalVendas);
+                    el('kpiCrescimentoVendas', d.crescimentoVendas + ' vs mês anterior');
+                    el('kpiTotalClientes', d.totalClientes);
+                    el('kpiNovosClientes', '+' + vf(d.novosClientes30Dias) + ' novos nos últimos 30 dias');
+                    { const v = Number(d.totalProdutos || 0); el('kpiTotalProdutos', v.toLocaleString('pt-BR')); }
+                    { const v = Number(d.produtosCriticos || 0); const t = '-' + Math.abs(v).toLocaleString('pt-BR') + (Math.abs(v) === 1 ? ' produto crítico' : ' produtos críticos'); el('kpiProdutosCriticos', t); const e = document.getElementById('kpiProdutosCriticos'); if (e) { e.classList.add('negative'); e.classList.remove('positive'); } }
+                    { const v = Number(d.totalFuncionarios || 0); el('kpiTotalFuncionarios', v.toLocaleString('pt-BR')); }
+                    { const v = Number(d.contratacoes12Meses || 0); const t = (v >= 0 ? '+' : '-') + Math.abs(v).toLocaleString('pt-BR') + (Math.abs(v) === 1 ? ' contratação' : ' contratações') + ' nos últimos 12 meses'; el('kpiContratacoes12Meses', t); const e = document.getElementById('kpiContratacoes12Meses'); if (e) { if (v >= 0) { e.classList.add('positive'); e.classList.remove('negative'); } else { e.classList.add('negative'); e.classList.remove('positive'); } } }
+                    el('kpiProcessosAdesaoTotal', d.processosAdesaoTotal);
+                    el('kpiProcessosAguardando', vf(d.processosAguardandoAprovacao) + ' aguardando aprovação');
+                    el('kpiMargemLucro', d.margemLucro);
+                    el('kpiTicketMedio', d.ticketMedioFormatado);
+                    el('kpiRoiMensal', d.roiMensal);
+                    el('kpiInadimplencia', d.inadimplencia);
+                    el('kpiGiroEstoque', d.giroEstoque);
+                    el('kpiTempoEntrega', d.tempoEntrega);
+                    el('kpiTaxaDevolucao', d.taxaDevolucao);
+                    el('kpiEficienciaLogistica', d.eficienciaLogistica);
+                    if (Array.isArray(d.ultimos12MesesLabels) && d.ultimos12MesesLabels.length > 0) {
+                        chartVendas.data.labels = d.ultimos12MesesLabels;
+                        chartVendas.data.datasets[0].data = Array.isArray(d.ultimos12MesesValores) ? d.ultimos12MesesValores : [];
+                        chartVendas.data.datasets[1].data = Array.isArray(d.metaVendasMensal) ? d.metaVendasMensal : [];
+                        chartVendas.update();
                     }
-                    if (g.categorias) {
-                        const cl = Array.isArray(g.categorias.labels) ? g.categorias.labels : [];
-                        const cv = Array.isArray(g.categorias.valores) ? g.categorias.valores : [];
-                        if (cl.length > 0 && cv.some(v => v > 0)) {
-                            chartCategorias.data.labels = cl;
-                            chartCategorias.data.datasets[0].data = cv;
-                            chartCategorias.update();
-                        }
+                    if (Array.isArray(d.categoriasLabels) && Array.isArray(d.categoriasValores)) {
+                        chartCategorias.data.labels = d.categoriasLabels;
+                        chartCategorias.data.datasets[0].data = d.categoriasValores;
+                        chartCategorias.update();
                     }
-                    if (g.solicitacoes && Array.isArray(g.solicitacoes.valores)) {
-                        chartSolicitacoes.data.datasets[0].data = g.solicitacoes.valores;
+                    if (Array.isArray(d.solicitacoesStatus)) {
+                        chartSolicitacoes.data.datasets[0].data = d.solicitacoesStatus;
                         chartSolicitacoes.update();
                     }
-                    if (g.adesao) {
-                        const al = Array.isArray(g.adesao.labels) ? g.adesao.labels : [];
-                        const av = Array.isArray(g.adesao.valores) ? g.adesao.valores : [];
-                        if (al.length > 0) chartAdesaoRH.data.labels = al;
-                        if (av.length > 0) chartAdesaoRH.data.datasets[0].data = av;
+                    if (Array.isArray(d.adesaoRHLabels)) {
+                        chartAdesaoRH.data.labels = d.adesaoRHLabels;
+                    }
+                    if (Array.isArray(d.adesaoRHValores)) {
+                        chartAdesaoRH.data.datasets[0].data = d.adesaoRHValores;
                         chartAdesaoRH.update();
                     }
-                    if (Array.isArray(g.performance) && g.performance.length > 0) {
-                        chartPerformance.data.datasets[0].data = g.performance;
+                    if (Array.isArray(d.performanceIndicadores) && d.performanceIndicadores.length > 0) {
+                        chartPerformance.data.datasets[0].data = d.performanceIndicadores;
                         chartPerformance.update();
                     }
                     const lu = document.getElementById('lastUpdate');
@@ -1120,6 +1007,53 @@
             };
             return icons[tipo] || 'fas fa-bell';
         }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function fmt(n) {
+                try {
+                    if (n == null) return '0';
+                    const s = String(n).trim();
+                    const num = typeof n === 'number' ? n : parseFloat(s.replace(/[^\d-]/g, ''));
+                    if (!isFinite(num)) return s;
+                    return num.toLocaleString('pt-BR');
+                } catch { return String(n); }
+            }
+            const elProdutos = document.getElementById('kpiTotalProdutos');
+            if (elProdutos) {
+                const v = elProdutos.dataset.value ?? elProdutos.textContent;
+                elProdutos.textContent = fmt(v);
+            }
+            const elCriticos = document.getElementById('kpiProdutosCriticos');
+            if (elCriticos) {
+                const raw = elCriticos.dataset.value ?? elCriticos.textContent;
+                let num = parseInt(String(raw).replace(/[^\d-]/g, ''));
+                if (!isFinite(num)) num = 0;
+                const abs = Math.abs(num);
+                const plural = abs === 1 ? 'produto crítico' : 'produtos críticos';
+                const sign = num < 0 ? '-' : '+';
+                elCriticos.textContent = `${sign}${fmt(abs)} ${plural}`;
+                elCriticos.classList.toggle('positive', num >= 0);
+                elCriticos.classList.toggle('negative', num < 0);
+            }
+            const elFunc = document.getElementById('kpiTotalFuncionarios');
+            if (elFunc) {
+                const v = elFunc.dataset.value ?? elFunc.textContent;
+                elFunc.textContent = fmt(v);
+            }
+            const elContr = document.getElementById('kpiContratacoes12Meses');
+            if (elContr) {
+                const raw = elContr.dataset.value ?? elContr.textContent;
+                let num = parseInt(String(raw).replace(/[^\d-]/g, ''));
+                if (!isFinite(num)) num = 0;
+                const sign = num >= 0 ? '+' : '-';
+                const abs = Math.abs(num);
+                const plural = abs === 1 ? 'contratação' : 'contratações';
+                elContr.textContent = `${sign}${fmt(abs)} ${plural} nos últimos 12 meses`;
+                elContr.classList.toggle('positive', num >= 0);
+                elContr.classList.toggle('negative', num < 0);
+            }
+        });
     </script>
     </div>
     </section>

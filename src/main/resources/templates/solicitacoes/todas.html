@@ -366,7 +366,7 @@
             <!-- Tabela de Solicitações -->
             <div class="table-card">
                 <div class="table-container">
-                    <table class="data-table" th:if="${solicitacoes != null and solicitacoes.hasContent()}">
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Protocolo</th>
@@ -379,64 +379,11 @@
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr th:each="solicitacao : ${solicitacoes.content}">
-                                <td class="protocol-cell" th:text="${solicitacao.protocolo}"></td>
-                                <td>
-                                    <div class="user-info">
-                                        <div class="user-name" th:text="${solicitacao.colaboradorNome}"></div>
-                                        <div class="user-detail">-</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="user-info">
-                                        <div class="user-name" th:text="${solicitacao.solicitanteNome}"></div>
-                                        <div class="user-detail">-</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="level-badge" th:text="${solicitacao.nivelSolicitado}">-</span>
-                                </td>
-                                <td>
-                                    <span class="level-badge"
-                                          th:classappend="${
-                                              solicitacao.status == 'PENDENTE' ? 'status-pending' :
-                                              solicitacao.status == 'APROVADO' ? 'status-approved' :
-                                              solicitacao.status == 'REJEITADO' ? 'status-rejected' : ''
-                                          }"
-                                          th:text="${solicitacao.status}"></span>
-                                </td>
-                                <td th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy')}"></td>
-                                <td>
-                                    <span class="level-badge"
-                                          th:classappend="${
-                                              solicitacao.prioridade == 'URGENTE' ? 'status-rejected' :
-                                              solicitacao.prioridade == 'ALTA' ? 'status-pending' : ''
-                                          }"
-                                          th:text="${solicitacao.prioridade}"></span>
-                                </td>
-                                <td>
-                                    <div class="action-group">
-                                        <a th:href="@{/solicitacoes/{id}(id=${solicitacao.id})}"
-                                           class="btn-view"
-                                           title="Ver Detalhes">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <div th:if="${usuarioLogado.podeGerenciarUsuarios() and solicitacao.status == 'PENDENTE'}">
-                                            <a th:href="@{/solicitacoes/aprovar/{id}(id=${solicitacao.id})}"
-                                               class="btn-approve"
-                                               title="Aprovar">
-                                                <i class="fas fa-check"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
+                        <tbody id="todasBody"></tbody>
                     </table>
 
                     <!-- Estado Vazio -->
-                    <div class="empty-state" th:if="${solicitacoes == null or !solicitacoes.hasContent()}">
+                    <div class="empty-state" id="emptyState" style="display:none;">
                         <i class="fas fa-inbox"></i>
                         <h3>Nenhuma solicitação encontrada</h3>
                         <p>Não há solicitações que correspondam aos filtros aplicados.</p>
@@ -444,27 +391,7 @@
                 </div>
 
                 <!-- Paginação -->
-                <div class="pagination" th:if="${solicitacoes != null and solicitacoes.totalPages > 1}">
-                    <a th:if="${currentPage > 0}"
-                       th:href="@{/solicitacoes/todas(page=${currentPage - 1}, status=${param.status}, busca=${param.busca})}">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-
-                    <span th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
-                          th:if="${pageNum >= currentPage - 2 and pageNum <= currentPage + 2}">
-                        <a th:if="${pageNum != currentPage}"
-                           th:href="@{/solicitacoes/todas(page=${pageNum}, status=${param.status}, busca=${param.busca})}"
-                           th:text="${pageNum + 1}"></a>
-                        <span th:if="${pageNum == currentPage}"
-                              class="current"
-                              th:text="${pageNum + 1}"></span>
-                    </span>
-
-                    <a th:if="${currentPage < totalPages - 1}"
-                       th:href="@{/solicitacoes/todas(page=${currentPage + 1}, status=${param.status}, busca=${param.busca})}">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </div>
+                <div id="pagination" class="pagination"></div>
             </div>
         </div>
     </div>
@@ -473,7 +400,109 @@
     <div th:if="${mensagem}" class="alert alert-success" th:text="${mensagem}"></div>
     <div th:if="${erro != null}" class="alert alert-danger" th:text="${erro}"></div>
 
+    <script th:inline="javascript">
+        window.__podeGerenciarUsuarios = [[${usuarioLogado != null ? usuarioLogado.podeGerenciarUsuarios() : false}]];
+    </script>
     <script>
+        let __page = 0;
+        function formatDateBr(v){
+            try {
+                if (!v) return '-';
+                if (Array.isArray(v)) {
+                    const y = v[0], m = (`0${v[1]}`).slice(-2), d = (`0${v[2]}`).slice(-2);
+                    return `${d}/${m}/${y}`;
+                }
+                const dt = new Date(v);
+                const d = (`0${dt.getDate()}`).slice(-2);
+                const m = (`0${dt.getMonth() + 1}`).slice(-2);
+                const y = dt.getFullYear();
+                return `${d}/${m}/${y}`;
+            } catch { return '-'; }
+        }
+        function renderRows(items){
+            const tbody = document.getElementById('todasBody');
+            const empty = document.getElementById('emptyState');
+            if (!tbody) return;
+            if (!items || items.length === 0){
+                tbody.innerHTML = '';
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+            if (empty) empty.style.display = 'none';
+            const rows = items.map(it => {
+                const id = it.id;
+                const protocolo = it.protocolo || '-';
+                const colabNome = it.colaboradorNome || 'N/A';
+                const solicitanteNome = it.solicitanteNome || 'N/A';
+                const nivel = it.nivelSolicitado || 'N/A';
+                const status = (it.status || 'PENDENTE').toUpperCase();
+                const statusClass = status === 'PENDENTE' ? 'status-pending' : (status === 'APROVADO' ? 'status-approved' : (status === 'REJEITADO' ? 'status-rejected' : ''));
+                const data = formatDateBr(it.dataSolicitacao);
+                const prioridade = (it.prioridade || '').toUpperCase();
+                const priClass = prioridade === 'URGENTE' ? 'status-rejected' : (prioridade === 'ALTA' ? 'status-pending' : '');
+                const approveAction = (status === 'PENDENTE' && window.__podeGerenciarUsuarios) ? `
+                    <a href="/solicitacoes/aprovar/${id}" class="btn-approve" title="Aprovar"><i class="fas fa-check"></i></a>
+                ` : '';
+                return `
+                    <tr>
+                        <td class="protocol-cell">${protocolo}</td>
+                        <td><div class="user-info"><div class="user-name">${colabNome}</div></div></td>
+                        <td><div class="user-info"><div class="user-name">${solicitanteNome}</div></div></td>
+                        <td><span class="level-badge">${nivel}</span></td>
+                        <td><span class="level-badge ${statusClass}">${status}</span></td>
+                        <td>${data}</td>
+                        <td><span class="level-badge ${priClass}">${prioridade || '-'}</span></td>
+                        <td>
+                            <div class="action-group">
+                                <a href="/solicitacoes/${id}" class="btn-view" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
+                                ${approveAction}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            tbody.innerHTML = rows;
+        }
+        function renderPagination(data){
+            const el = document.getElementById('pagination');
+            if (!el) return;
+            const totalPages = data.totalPages || 0;
+            const totalElements = data.totalElements || 0;
+            const page = data.currentPage || 0;
+            const hasPrev = data.hasPrevious;
+            const hasNext = data.hasNext;
+            let html = '';
+            html += `<span class="pagination-info">Página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} solicitações)</span>`;
+            html += hasPrev
+                ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>`
+                : `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+            html += hasNext
+                ? `<a class="btn btn-secondary" href="#" onclick="goToPage(${page + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>`
+                : `<span class="btn btn-secondary disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+            el.innerHTML = html;
+        }
+        function loadTodas(page=0){
+            __page = page;
+            const statusEl = document.querySelector('select[name="status"]');
+            const buscaEl = document.querySelector('input[name="busca"]');
+            const status = statusEl ? statusEl.value : '';
+            const busca = buscaEl ? buscaEl.value : '';
+            fetch(`/solicitacoes/todas/api/listar?page=${page}&size=15&status=${encodeURIComponent(status || '')}&busca=${encodeURIComponent(busca || '')}`)
+                .then(r => r.json())
+                .then(d => { renderRows(d.content); renderPagination(d); })
+                .catch(() => { renderRows([]); renderPagination({ currentPage: 0, totalPages: 0, hasPrevious: false, hasNext: false }); });
+        }
+        function goToPage(p){ loadTodas(Math.max(0, p)); }
+        document.addEventListener('DOMContentLoaded', function(){
+            const form = document.querySelector('.filter-card form');
+            if (form) {
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    loadTodas(0);
+                });
+            }
+            loadTodas(0);
+        });
         // Auto-hide alerts
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
@@ -483,19 +512,6 @@
             });
         }, 5000);
     </script>
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  
-  <!-- Script de notifica��es -->  <!-- jQuery necess�rio para o sistema de notifica��es -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-
 
   <script th:src="@{/js/notifications.js}"></script>
   <script src="/js/sidebar.js" defer></script>

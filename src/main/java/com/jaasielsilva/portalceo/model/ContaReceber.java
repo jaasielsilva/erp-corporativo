@@ -16,7 +16,14 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "conta_receber")
+@Table(name = "conta_receber", indexes = {
+        @Index(name = "idx_cr_data_emissao", columnList = "dataEmissao"),
+        @Index(name = "idx_cr_data_vencimento", columnList = "dataVencimento"),
+        @Index(name = "idx_cr_data_recebimento", columnList = "dataRecebimento"),
+        @Index(name = "idx_cr_status", columnList = "status"),
+        @Index(name = "idx_cr_categoria", columnList = "categoria"),
+        @Index(name = "idx_cr_cliente", columnList = "cliente_id")
+})
 @EqualsAndHashCode(callSuper = true)
 public class ContaReceber extends BaseEntity {
 

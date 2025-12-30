@@ -53,30 +53,7 @@
           <p><strong>Observações:</strong></p>
           <p th:text="${cliente.observacoes}"></p>
 
-          <!-- Novas Ações -->
-          <div class="acoes-detalhes" role="group" aria-label="Ações do cliente">
 
-            <!-- Enviar Email -->
-            <a th:href="'mailto:' + ${cliente.email}" class="btn-email" title="Enviar Email">
-              <i class="fas fa-envelope"></i> Enviar Email
-            </a>
-
-            <!-- Exportar para PDF -->
-            <button type="button" class="btn-pdf" title="Exportar Detalhes para PDF" onclick="exportarPDF()">
-              <i class="fas fa-file-pdf"></i> Exportar PDF
-            </button>
-
-            <!-- Imprimir detalhes -->
-            <button type="button" class="btn-print" title="Imprimir detalhes" onclick="window.print()">
-              <i class="fas fa-print"></i> Imprimir
-            </button>
-
-            <!-- Emitir Nota Fiscal -->
-            <button type="button" class="btn-invoice" title="Emitir Nota Fiscal"
-              th:onclick="|emitirNotaFiscal(${cliente.id})|">
-              <i class="fas fa-file-invoice"></i> Emitir Nota Fiscal
-            </button>
-          </div>
 
           <div class="botoes-acoes">
             <a th:href="@{'/clientes/' + ${cliente.id} + '/editar'}" class="btn-editar">
@@ -110,33 +87,7 @@
         }
       });
     });
-    // Exportar detalhes para PDF simples (usando jsPDF)
-    function exportarPDF() {
-      if (!window.jspdf) {
-        alert('Biblioteca jsPDF não carregada');
-        return;
-      }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFontSize(16);
-      doc.text('Detalhes do Cliente', 10, 20);
-
-      const detalhes = document.querySelector('.detalhes');
-      let y = 30;
-      detalhes.querySelectorAll('p, ul').forEach(el => {
-        const text = el.innerText || el.textContent;
-        doc.setFontSize(12);
-        const splitText = doc.splitTextToSize(text, 180);
-        doc.text(splitText, 10, y);
-        y += splitText.length * 7 + 5;
-      });
-
-      doc.save('detalhes-cliente.pdf');
-    }
   </script>
-
-  <!-- Import jsPDF CDN para exportar PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 
 

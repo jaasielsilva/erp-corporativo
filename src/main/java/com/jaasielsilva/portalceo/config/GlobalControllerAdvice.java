@@ -298,6 +298,12 @@ public class GlobalControllerAdvice {
 
     // Variáveis para controle de acesso específico por área
 
+    @ModelAttribute("isEstagiario")
+    public boolean isEstagiario() {
+        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
+        return usuario != null && usuario.getNivelAcesso() == NivelAcesso.ESTAGIARIO;
+    }
+
     @ModelAttribute("podeAcessarRH")
     public boolean podeAcessarRH() {
         return isRH() || podeGerenciarRH() || isMaster() || isAdmin();

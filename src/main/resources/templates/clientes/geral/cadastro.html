@@ -11,6 +11,7 @@
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
   <link rel="stylesheet" th:href="@{/css/cliente-cadastro.css}" />
+    <link href="/css/notifications.css" rel="stylesheet">
 
   <!-- Inputmask -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/inputmask.min.js"></script>
@@ -249,5 +250,7 @@
   
 
 </body>
-
+      <!-- Scripts da página: evite duplicar WebSocket; cliente global é carregado no Topbar -->
+    <script th:src="@{/js/notifications.js}" defer></script>
+    <script src="/js/sidebar.js" defer></script>
 </html>

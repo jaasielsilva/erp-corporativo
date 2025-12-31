@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auditoria Jurídico - Início</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
+            <section class="content-area">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12 text-center py-5">
+                            <h1 class="display-6 text-muted">Auditoria Jurídico</h1>
+                            <p class="text-muted">Governança, logs de atividades e revisões.</p>
+                        </div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/juridico/auditoria/acessos" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-user-check fa-2x text-primary"></i>
+                                        <h5 class="mt-3">Log de Acessos</h5>
+                                        <p class="text-muted">Autenticações e acessos</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/juridico/auditoria/alteracoes" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-edit fa-2x text-warning"></i>
+                                        <h5 class="mt-3">Alterações de Dados</h5>
+                                        <p class="text-muted">Edições, criações e exclusões</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/juridico/auditoria/exportacoes" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-file-export fa-2x text-success"></i>
+                                        <h5 class="mt-3">Exportações</h5>
+                                        <p class="text-muted">Relatórios e arquivos gerados</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <a href="/juridico/auditoria/revisoes" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-search fa-2x text-danger"></i>
+                                        <h5 class="mt-3">Revisões Periódicas</h5>
+                                        <p class="text-muted">Revisões de conformidade</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12 col-xl-8 mx-auto">
+                            <div class="alert alert-secondary d-flex align-items-center" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <div>
+                                    Use os filtros nas páginas para refinar por período, usuário e recurso.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+</body>
+</html>

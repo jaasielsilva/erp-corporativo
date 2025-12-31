@@ -11,6 +11,7 @@
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="/css/corporate.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .card-highlight {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -91,79 +92,7 @@
             <section class="content-area">
                 <div class="container-fluid py-4">
 
-                    <!-- Destaques -->
-                    <div class="row mb-4 g-3">
-                        <div class="col-md-4">
-                            <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3">
-                                <i class="fa fa-folder-open"></i>
-                                <div>
-                                    <div class="fw-bold fs-5" id="metricTotalDocs" th:text="${totalDocumentos} ?: '—'">—
-                                    </div>
-                                    <div>Total de Documentos</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3"
-                                style="background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%);">
-                                <i class="fa fa-tags"></i>
-                                <div>
-                                    <div class="fw-bold fs-5" id="metricCategoriasCount"
-                                        th:text="${categoriasDocumentos.size()} ?: '—'">—</div>
-                                    <div>Categorias Ativas</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card card-highlight shadow-sm p-3 d-flex flex-row align-items-center gap-3"
-                                style="background: linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);">
-                                <i class="fa fa-clock"></i>
-                                <div>
-                                    <div class="fw-bold fs-5" th:text="${documentosRecentes.size()} ?: '—'">—</div>
-                                    <div>Documentos Recentes</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Upload de Documento -->
-                    <div class="upload-area mb-4 shadow-sm">
-                        <h5 class="mb-3"><i class="fas fa-cloud-upload-alt text-primary"></i> Upload de Documento</h5>
-                        <form id="formUploadDoc" enctype="multipart/form-data" autocomplete="off">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Título *</label>
-                                    <input id="docTitulo" name="titulo" class="form-control" type="text" maxlength="120"
-                                        required placeholder="Ex.: Contrato de Locação" />
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Categoria *</label>
-                                    <select id="docCategoria" name="categoria" class="form-select" required>
-                                        <option value="">Selecione...</option>
-                                        <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}"
-                                            th:text="${c.nome}"></option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Descrição</label>
-                                    <input id="docDescricao" name="descricao" class="form-control" type="text"
-                                        maxlength="200" placeholder="Breve descrição" />
-                                </div>
-                                <div class="col-md-6 mt-2">
-                                    <label class="form-label fw-semibold">Arquivo *</label>
-                                    <input id="docArquivo" name="file" class="form-control" type="file"
-                                        accept=".pdf,.doc,.docx,.png,.jpg" required />
-                                    <small class="text-muted">Tipos permitidos: PDF, DOC, DOCX, PNG, JPG. Máx.
-                                        10MB.</small>
-                                </div>
-                                <div class="col-md-6 mt-2 d-flex align-items-end justify-content-end">
-                                    <button id="btnUploadDocumento" type="button" class="btn btn-success px-4"><i
-                                            class="fas fa-upload"></i> Enviar</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
+                    <!-- Templates rápidos (Prioridade) -->
                     <div class="card p-3 mb-4 shadow-sm">
                         <h5><i class="fas fa-bolt"></i> Templates rápidos</h5>
                         <div class="row g-3 align-items-end">
@@ -204,7 +133,12 @@
 
                     <!-- Filtros e Listagem -->
                     <div class="card p-3 mb-4 shadow-sm">
-                        <h5><i class="fas fa-list"></i> Documentos</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-list"></i> Documentos</h5>
+                            <button type="button" class="btn btn-success btn-sm" onclick="abrirUploadSwal()">
+                                <i class="fas fa-cloud-upload-alt"></i> Novo Upload
+                            </button>
+                        </div>
                         <!-- Filtros -->
                         <form id="formFiltroDocs" autocomplete="off">
                             <div class="row g-3 align-items-end mb-2">
@@ -267,76 +201,33 @@
 
                     </div>
 
-                    <!-- Categorias e Modelos -->
-                    <div class="row g-3 mb-4">
-                        <!-- Categorias -->
-                        <div class="col-md-6">
-                            <div class="card p-3 shadow-sm h-100">
-                                <h5><i class="fas fa-tags"></i> Categorias</h5>
-                                <div th:if="${categoriasDocumentos != null and !categoriasDocumentos.isEmpty()}"
-                                    class="d-flex flex-wrap gap-2 mt-2">
-                                    <span th:each="c : ${categoriasDocumentos}" th:text="${c.nome}"
-                                        class='badge badge-category'></span>
-                                </div>
-                                <div th:if="${categoriasDocumentos == null or categoriasDocumentos.isEmpty()}"
-                                    class='text-muted'>Nenhuma categoria cadastrada.</div>
-                            </div>
+                    <!-- Modelos de Documentos -->
+                    <div class="card p-3 shadow-sm mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class='fas fa-file-alt'></i> Modelos de Documentos</h5>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="abrirModeloSwal()">
+                                <i class="fas fa-plus"></i> Novo Modelo
+                            </button>
                         </div>
-
-                        <!-- Modelos de Documentos -->
-                        <div class='col-md-6'>
-                            <div class='card p-3 shadow-sm h-100'>
-                                <h5><i class='fas fa-file-alt'></i> Modelos de Documentos</h5>
-                                <ul th:if="${modelosDocumentos != null and !modelosDocumentos.isEmpty()}"
-                                    class='list-group list-group-flush mt-2'>
-                                    <li th:each='m : ${modelosDocumentos}'
-                                        class='list-group-item d-flex justify-content-between align-items-center'>
-                                        <span class="d-flex flex-column">
-                                            <span><b th:text='${m.nome}'>Modelo</b> -
-                                                <small th:text="|Categoria: ${m.categoria}|">Categoria</small></span>
-                                            <span class="d-flex gap-2 mt-1">
-                                                <span th:text="|v${m.versao}|" class='badge bg-secondary'></span>
-                                                <span th:if="${m.status != null}" th:text="${m.status}"
-                                                    class='badge bg-info'></span>
-                                            </span>
-                                        </span>
-                                        <span class="d-flex gap-2">
-                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                th:attr="data-id=${m.id}" data-action="modelo-usar"><i
-                                                    class="fas fa-play"></i> Usar</button>
-                                            <a th:href="@{|/juridico/modelos/download/${m.id}|}"
-                                                class="btn btn-sm btn-outline-secondary" target="_blank"><i
-                                                    class="fas fa-download"></i> Baixar</a>
-                                        </span>
-                                    </li>
-                                </ul>
-                                <span th:if="${modelosDocumentos == null or modelosDocumentos.isEmpty()}"
-                                    class='text-muted'>Nenhum modelo disponível.</span>
-                                <div class="mt-3">
-                                    <h6 class="fw-semibold">Adicionar Modelos</h6>
-                                    <div class="row g-2 align-items-end">
-                                        <div class="col-md-6">
-                                            <input id="modeloFiles" class="form-control" type="file"
-                                                accept=".pdf,.doc,.docx" multiple />
-                                            <small class="text-muted">Tipos: PDF, DOC, DOCX. Máx. 10MB cada.</small>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <input id="modeloCategoria" class="form-control" type="text"
-                                                placeholder="Categoria (opcional)" />
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input id="modeloVersao" class="form-control" type="text"
-                                                placeholder="Versão" value="1.0.0" />
-                                        </div>
-                                        <div class="col-md-1 d-grid">
-                                            <button id="btnUploadModelos" type="button" class="btn btn-primary"><i
-                                                    class="fas fa-plus"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                        <ul th:if="${modelosDocumentos != null and !modelosDocumentos.isEmpty()}"
+                            class='list-group list-group-flush mt-2'>
+                            <li th:each='m : ${modelosDocumentos}'
+                                class='list-group-item d-flex justify-content-between align-items-center'>
+                                <span class="d-flex flex-column">
+                                    <span><b th:text='${m.nome}'>Modelo</b> -
+                                        <small th:text="|Categoria: ${m.categoria}|">Categoria</small></span>
+                                    <span class="d-flex gap-2 mt-1">
+                                        <span th:text="|v${m.versao}|" class='badge bg-secondary'></span>
+                                        <span th:if="${m.status != null}" th:text="${m.status}"
+                                            class='badge bg-info'></span>
+                                    </span>
+                                </span>
+                                <button class='btn btn-sm btn-outline-primary' th:attr="data-id=${m.id}"
+                                    data-action="modelo-usar"><i class='fas fa-pen'></i> Usar</button>
+                            </li>
+                        </ul>
+                        <div th:if="${modelosDocumentos == null or modelosDocumentos.isEmpty()}" class='text-muted'>
+                            Nenhum modelo disponível.</div>
                     </div>
 
                     <!-- Documentos Recentes -->
@@ -406,6 +297,89 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalUploadDoc" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cloud-upload-alt text-primary"></i> Upload de Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formUploadDoc" enctype="multipart/form-data" autocomplete="off">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Título *</label>
+                                <input id="docTitulo" name="titulo" class="form-control" type="text" maxlength="120"
+                                    required placeholder="Ex.: Contrato de Locação" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Categoria *</label>
+                                <select id="docCategoria" name="categoria" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}"
+                                        th:text="${c.nome}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold">Descrição</label>
+                                <input id="docDescricao" name="descricao" class="form-control" type="text"
+                                    maxlength="200" placeholder="Breve descrição" />
+                            </div>
+                            <div class="col-md-12 mt-2">
+                                <label class="form-label fw-semibold">Arquivo *</label>
+                                <input id="docArquivo" name="file" class="form-control" type="file"
+                                    accept=".pdf,.doc,.docx,.png,.jpg" required />
+                                <small class="text-muted">Tipos permitidos: PDF, DOC, DOCX, PNG, JPG. Máx.
+                                    10MB.</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnUploadDocumento" type="button" class="btn btn-success"><i class="fas fa-upload"></i>
+                        Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalUploadModelo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-alt text-primary"></i> Adicionar Modelo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formUploadModelo">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Arquivo (Word/PDF)</label>
+                            <input id="modeloFiles" class="form-control" type="file" accept=".pdf,.doc,.docx" multiple />
+                            <small class="text-muted">Tipos: PDF, DOC, DOCX. Máx. 10MB.</small>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Categoria</label>
+                                <input id="modeloCategoria" class="form-control" type="text"
+                                    placeholder="Ex: Contratos, Procurações" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Versão</label>
+                                <input id="modeloVersao" class="form-control" type="text" value="1.0.0" />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnUploadModelos" type="button" class="btn btn-primary"><i class="fas fa-plus"></i>
+                        Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // UX Loading
         function showDocsLoading(show) {
@@ -423,45 +397,95 @@
         }
 
         $(function () {
-            // Upload
-            $('#btnUploadDocumento').on('click', function () {
-                const $btn = $(this);
-                const titulo = $('#docTitulo').val()?.trim();
-                const categoria = $('#docCategoria').val();
-                const descricao = $('#docDescricao').val()?.trim();
-                const file = $('#docArquivo')[0]?.files?.[0];
+            // Função para abrir Upload via SweetAlert2
+            window.abrirUploadSwal = function() {
+                // Reaproveita as options do select oculto (renderizado pelo Thymeleaf)
+                const optionsHtml = $('#docCategoria').html();
+                
+                Swal.fire({
+                    title: 'Upload de Documento',
+                    html: `
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Título *</label>
+                                <input id="swalDocTitulo" class="form-control" placeholder="Ex.: Contrato de Locação" maxlength="120">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Categoria *</label>
+                                <select id="swalDocCategoria" class="form-select">
+                                    ${optionsHtml}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Descrição</label>
+                                <input id="swalDocDescricao" class="form-control" placeholder="Breve descrição" maxlength="200">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Arquivo *</label>
+                                <input id="swalDocArquivo" type="file" class="form-control" accept=".pdf,.doc,.docx,.png,.jpg">
+                                <div class="form-text small">Tipos permitidos: PDF, DOC, DOCX, PNG, JPG. Máx. 10MB.</div>
+                            </div>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-upload"></i> Enviar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    focusConfirm: false,
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        const titulo = document.getElementById('swalDocTitulo').value.trim();
+                        const categoria = document.getElementById('swalDocCategoria').value;
+                        const descricao = document.getElementById('swalDocDescricao').value.trim();
+                        const fileInput = document.getElementById('swalDocArquivo');
+                        const file = fileInput.files[0];
 
-                if (!titulo || !categoria || !file) {
-                    notify('error', 'Campos obrigatórios', 'Preencha todos os campos obrigatórios.');
-                    return;
-                }
+                        if (!titulo || !categoria || !file) {
+                            Swal.showValidationMessage('Preencha todos os campos obrigatórios (Título, Categoria e Arquivo)');
+                            return false;
+                        }
 
-                $btn.prop('disabled', true).html('<i class=\"fas fa-spinner fa-spin\"></i> Enviando...');
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('titulo', titulo);
-                formData.append('categoria', categoria);
-                formData.append('descricao', descricao || '');
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('titulo', titulo);
+                        formData.append('categoria', categoria);
+                        formData.append('descricao', descricao);
 
-                $.ajax({
-                    url: '/juridico/api/documentos/upload-multipart',
-                    method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success(res) {
-                        notify('success', 'Documento enviado', res.id ? `ID ${res.id}` : 'Upload concluído', 'low', { durationMs: 6000 });
-                        setTimeout(() => window.location.reload(), 1200);
+                        return $.ajax({
+                            url: '/juridico/api/documentos/upload-multipart',
+                            method: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false
+                        }).catch(error => {
+                            const msg = error.responseJSON && error.responseJSON.erro ? error.responseJSON.erro : 'Erro no upload';
+                            Swal.showValidationMessage(msg);
+                        });
                     },
-                    error(xhr) {
-                        const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro no upload de arquivo';
-                        notify('error', 'Falha no upload', msg, 'high', { sticky: true });
-                    },
-                    complete() {
-                        $btn.prop('disabled', false).html('<i class=\"fas fa-upload\"></i> Enviar');
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sucesso!',
+                            text: 'Documento enviado com sucesso.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
                     }
                 });
+            };
+
+            // Antigo Upload (desativado/mantido apenas como referência se precisar)
+            /*
+            $('#btnUploadDocumento').on('click', function () {
+                // ... (código antigo)
             });
+            */
+
 
             // Listagem paginada via API
             let docsPage = 0;
@@ -799,9 +823,21 @@
                     .fail(() => notify('error', 'Falha ao carregar', 'Não foi possível obter detalhes do documento.', 'high'));
             });
 
-            $(document).on('click', '[data-action="doc-excluir"]', function () {
+            $(document).on('click', '[data-action="doc-excluir"]', async function () {
                 const id = $(this).attr('data-id');
-                if (!confirm('Confirma excluir este documento?')) return;
+                const result = await Swal.fire({
+                    title: 'Atenção',
+                    text: 'Confirma excluir este documento?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, excluir',
+                    cancelButtonText: 'Cancelar'
+                });
+
+                if (!result.isConfirmed) return;
+                
                 $.ajax({ url: `/juridico/api/documentos/${id}`, method: 'DELETE' })
                     .done(() => { notify('success', 'Excluído', 'Documento removido com sucesso.'); carregarDocs(0); })
                     .fail(xhr => {
@@ -810,29 +846,86 @@
                     });
             });
 
-            $('#btnUploadModelos').on('click', function () {
-                const files = $('#modeloFiles')[0]?.files;
-                if (!files || files.length === 0) { notify('error', 'Seleção vazia', 'Selecione ao menos um arquivo.'); return; }
-                const categoria = $('#modeloCategoria').val()?.trim();
-                const versao = $('#modeloVersao').val()?.trim();
-                const fd = new FormData();
-                Array.from(files).forEach(f => fd.append('files', f));
-                if (categoria) fd.append('categoria', categoria);
-                if (versao) fd.append('versao', versao);
-                $.ajax({
-                    url: '/juridico/api/modelos/upload-batch',
-                    method: 'POST',
-                    data: fd,
-                    processData: false,
-                    contentType: false,
-                }).done(res => {
-                    notify('success', 'Modelos adicionados', (res.criados?.length || 0) + ' modelos criados');
-                    setTimeout(() => window.location.reload(), 1000);
-                }).fail(xhr => {
-                    const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao criar modelos';
-                    notify('error', 'Erro', msg, 'high');
+            // Função para abrir Modelo via SweetAlert2
+            window.abrirModeloSwal = function() {
+                Swal.fire({
+                    title: 'Adicionar Modelo',
+                    html: `
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Arquivo (Word/PDF)</label>
+                                <input id="swalModeloFiles" class="form-control" type="file" accept=".pdf,.doc,.docx" multiple>
+                                <div class="form-text small">Tipos: PDF, DOC, DOCX. Máx. 10MB.</div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold">Categoria</label>
+                                    <input id="swalModeloCategoria" class="form-control" placeholder="Ex: Contratos, Procurações">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Versão</label>
+                                    <input id="swalModeloVersao" class="form-control" value="1.0.0">
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-plus"></i> Adicionar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#0d6efd',
+                    cancelButtonColor: '#6c757d',
+                    focusConfirm: false,
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        const filesInput = document.getElementById('swalModeloFiles');
+                        const files = filesInput.files;
+                        const categoria = document.getElementById('swalModeloCategoria').value.trim();
+                        const versao = document.getElementById('swalModeloVersao').value.trim();
+
+                        if (!files || files.length === 0) {
+                            Swal.showValidationMessage('Selecione ao menos um arquivo.');
+                            return false;
+                        }
+
+                        const fd = new FormData();
+                        Array.from(files).forEach(f => fd.append('files', f));
+                        if (categoria) fd.append('categoria', categoria);
+                        if (versao) fd.append('versao', versao);
+
+                        return $.ajax({
+                            url: '/juridico/api/modelos/upload-batch',
+                            method: 'POST',
+                            data: fd,
+                            processData: false,
+                            contentType: false,
+                        }).catch(error => {
+                            const msg = error.responseJSON && error.responseJSON.erro ? error.responseJSON.erro : 'Falha ao criar modelos';
+                            Swal.showValidationMessage(msg);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const res = result.value;
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Modelos adicionados',
+                            text: (res.criados?.length || 0) + ' modelos criados',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
                 });
+            };
+
+            // Antigo Modelo (desativado)
+            /*
+            $('#btnUploadModelos').on('click', function () {
+               // ...
             });
+            */
         });
     </script>
 

@@ -7,6 +7,7 @@ import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ContratoLegalService;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.NotificationService;
+import com.jaasielsilva.portalceo.service.AuditoriaJuridicoLogService;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import com.jaasielsilva.portalceo.repository.juridico.*;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,7 @@ public class JuridicoController {
     private final DocumentoJuridicoRepository documentoJuridicoRepository;
     private final com.jaasielsilva.portalceo.repository.juridico.DocumentoModeloRepository documentoModeloRepository;
     private final com.jaasielsilva.portalceo.service.DocumentTemplateService documentTemplateService;
+    private final AuditoriaJuridicoLogService auditoriaJuridicoLogService;
 
     // Página principal do Jurídico
     @GetMapping
@@ -429,20 +431,39 @@ public class JuridicoController {
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("documentosRecentes", recentes);
 
+        // Migração/Correção automática do modelo fictício para o real
+        try {
+            java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> ficticios = documentoModeloRepository.findAll().stream()
+                .filter(m -> "Modelo de Contrato de Prestação de Serviços".equals(m.getNome()))
+                .collect(java.util.stream.Collectors.toList());
+            
+            for (com.jaasielsilva.portalceo.model.juridico.DocumentoModelo m : ficticios) {
+                m.setNome("Procuração Ad Judicia");
+                m.setCategoria("Procurações");
+                m.setVersao("1.0");
+                m.setStatus(com.jaasielsilva.portalceo.model.juridico.ModeloStatus.PUBLICADO);
+                m.setDataPublicacao(java.time.LocalDateTime.now());
+                documentoModeloRepository.save(m);
+            }
+        } catch (Exception e) {
+            // Ignorar erro na migração
+        }
+
         if (documentoModeloRepository.count() == 0) {
             try {
                 String baseDirModelos = System.getProperty("user.dir") + java.io.File.separator + "uploads"
                         + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
                 java.nio.file.Path dirM = java.nio.file.Paths.get(baseDirModelos);
                 java.nio.file.Files.createDirectories(dirM);
-                java.nio.file.Path target = dirM.resolve("modelo_contrato_prestacao_servicos_v2_1.docx");
+                // Arquivo placeholder
+                java.nio.file.Path target = dirM.resolve("procuracao_ad_judicia_v1.docx");
                 if (!java.nio.file.Files.exists(target)) {
                     java.nio.file.Files.write(target, new byte[0]);
                 }
                 com.jaasielsilva.portalceo.model.juridico.DocumentoModelo novo = new com.jaasielsilva.portalceo.model.juridico.DocumentoModelo();
-                novo.setNome("Modelo de Contrato de Prestação de Serviços");
-                novo.setCategoria("CONTRATOS");
-                novo.setVersao("2.1");
+                novo.setNome("Procuração Ad Judicia");
+                novo.setCategoria("Procurações");
+                novo.setVersao("1.0");
                 novo.setStatus(com.jaasielsilva.portalceo.model.juridico.ModeloStatus.PUBLICADO);
                 novo.setArquivoModelo(target.toString());
                 novo.setDataCriacao(java.time.LocalDateTime.now());
@@ -1636,58 +1657,7 @@ public class JuridicoController {
             placeholders.put("assinatura_data_extenso", formatDateExtenso(LocalDate.now()));
             placeholders.put("outorgante_nome", nvl(cliente.getNome()));
 
-            String html = """
-                    <!DOCTYPE html>
-                    <html lang="pt-BR">
-                    <head>
-                      <meta charset="UTF-8" />
-                      <style>
-                        @page { size: A4; margin: 24mm 18mm; }
-                        body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
-                        .center { text-align: center; }
-                        .title { font-size: 18px; font-weight: 700; margin: 18px 0 14px; letter-spacing: 0.4px; }
-                        .header { margin-bottom: 18px; }
-                        .header .line { margin: 2px 0; }
-                        .section { margin-top: 10px; }
-                        .label { font-weight: 700; }
-                        .p { margin: 6px 0; line-height: 1.45; text-align: justify; }
-                        .signature { margin-top: 26px; }
-                        .signature .date { margin-top: 16px; }
-                        .signature .line { margin-top: 40px; border-top: 1px solid #111; width: 70%; }
-                      </style>
-                    </head>
-                    <body>
-                      <div class="header center">
-                        <div class="line"><b>{{escritorio_razao_social}}</b></div>
-                        <div class="line">{{escritorio_nome_advogado}}</div>
-                        <div class="line">{{escritorio_endereco}}</div>
-                        <div class="line">{{escritorio_telefone}}</div>
-                      </div>
-
-                      <div class="title center">PROCURAÇÃO AD JUDICIA</div>
-
-                      <div class="section">
-                        <div class="p"><span class="label">OUTORGANTE:</span> {{outorgante_texto}}</div>
-                        <div class="p"><span class="label">Email:</span> {{outorgante_email}}</div>
-                      </div>
-
-                      <div class="section">
-                        <div class="p"><span class="label">OUTORGADO(a):</span> Itamir Pinto Mamede, brasileiro, casado, Advogado, inscrito na OAB-SP, sob o Nº 459.446, com escritório profissional à Av. Giovanni Gronchi 6195 - Sala 1008, bairro Vila Andrade, na cidade de São Paulo-SP, Cep 05724-003.</div>
-                        <div class="p"><span class="label">Email:</span> itamir07adv@gmail.com</div>
-                      </div>
-
-                      <div class="section">
-                        <div class="p"><span class="label">PODERES:</span> Aos quais confere amplos poderes para o foro em geral, com as cláusulas AD JUDICIA ET EXTRA, em qualquer juízo, instância ou tribunal, podendo propor contra quem de direito ações competentes e defendê-lo nas contrárias, seguindo umas e outras até final decisão e execução, usando os recursos legais, acompanhando-os, conferindo-lhes ainda poderes especiais para requerer ou acompanhar falências, ceder, transferir, habilitar ou declarar créditos, prestar compromissos em geral, inclusive de síndico e inventariante, confessar, desistir, transigir, firmar compromissos ou acordos, inclusive conciliar nos termos do art. 400 do Código de Processo Civil, receber e dar quitação, endossar cheques, requerer alvarás, efetuar levantamentos de depósitos judiciais em depositários públicos, bancos, cartórios, inclusive protestar, notificar participar de praças, leilões, adjudicar, remir, etc., em especial poderes et extra para representar perante quaisquer repartições públicas Federais, Estaduais, Municipais, Autarquias ou Delegacias de Polícia, acompanhar processos crime e sumário como assistentes do Ministério Público nos termos do art. 268 e seguintes do Código de Processo Penal, agindo em conjunto ou separadamente, inclusive substabelecer este a outrem, com ou sem reservas de iguais poderes, dando tudo por bom, ficando convencionado que o presente mandato é irrevogável pelo mandante consoante artigo 684 do Código Civil Brasileiro, tendo em vista o contrato de honorários por resultado futuro, (quota litis) resolvendo-se na forma do artigo 683 do Código Civil Brasileiro.</div>
-                      </div>
-
-                      <div class="signature">
-                        <div class="p date">{{assinatura_cidade}}, {{assinatura_data_extenso}}.</div>
-                        <div class="line"></div>
-                        <div class="p center">{{outorgante_nome}}</div>
-                      </div>
-                    </body>
-                    </html>
-                    """;
+            String html = getProcuracaoHtmlTemplate();
 
             byte[] pdf = documentTemplateService.generatePdfFromHtml(html, placeholders);
 
@@ -1758,82 +1728,7 @@ public class JuridicoController {
             placeholders.put("testemunha2_nome", nvl(testemunha2));
             placeholders.put("testemunha2_rg", nvl(testemunha2Rg));
 
-            String html = """
-                    <!DOCTYPE html>
-                    <html lang="pt-BR">
-                    <head>
-                      <meta charset="UTF-8" />
-                      <style>
-                        @page { size: A4; margin: 20mm 16mm; }
-                        body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
-                        .center { text-align: center; }
-                        .title { font-size: 18px; font-weight: 700; margin: 18px 0 14px; letter-spacing: 0.4px; }
-                        .header { margin-bottom: 14px; }
-                        .header .line { margin: 2px 0; }
-                        .p { margin: 8px 0; line-height: 1.55; text-align: justify; }
-                        .label { font-weight: 700; }
-                        .obj { white-space: pre-wrap; }
-                        .signature { margin-top: 18px; }
-                        .sign-row { display: table; width: 100%; margin-top: 18px; }
-                        .sign-col { display: table-cell; width: 50%; vertical-align: top; padding: 0 10px; }
-                        .line { border-top: 1px solid #111; width: 100%; margin-top: 46px; }
-                        .sign-name { margin-top: 6px; text-align: center; }
-                        .small { font-size: 11px; }
-                        .footer { position: fixed; left: 0; right: 0; bottom: 10mm; text-align: center; font-size: 10px; color: #333; }
-                      </style>
-                    </head>
-                    <body>
-                      <div class="header center">
-                        <div class="line"><b>{{escritorio_razao_social}}</b></div>
-                        <div class="line">{{escritorio_nome_advogado}}</div>
-                        <div class="line">{{escritorio_endereco}}</div>
-                        <div class="line">{{escritorio_telefone}}</div>
-                      </div>
-
-                      <div class="title center">CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS</div>
-
-                      <div class="p">{{contratante_texto}}</div>
-
-                      <div class="p"><span class="label">CONTRATADO(A):</span> Itamir Pinto Mamede, nacionalidade brasileiro, estado civil casado, profissão Advogado, inscrito na OAB-SP, sob o Nº 459.446, com escritório profissional à Av. Giovanni Gronchi 6195 - Sala 1008, no bairro Vila Andrade, na cidade de São Paulo - SP, Cep. 05724-003, Telefone (11) 99775-7675, de ora em diante simplesmente denominado(a) CONTRATADO(A).</div>
-
-                      <div class="p">O CONTRATANTE tem o conhecimento de que o exercício de advocacia é um meio, e não um fim em si, a ser efetivado com o devido zelo e desempenho, fundamentados na Constituição Federal, e nas leis vigentes em nosso ordenamento jurídico. Este contrato tem período indeterminado, devendo ocorrer a prestação dos serviços advocatícios, ora contratados, até o termo final da ação especificada no item OBJETO.</div>
-
-                      <div class="p"><span class="label">DO OBJETO:</span> Ingressar com PEDIDO de: <span class="obj">{{objeto}}</span></div>
-
-                      <div class="p">§1° : Os honorários advocatícios são de 30% (trinta por cento) sobre o valor da INDENIZAÇÃO recebida e este a ser pago pelo CONTRATANTE imediatamente de forma pecuniária ao CONTRATADO, tendo como meio de pagamento via PIX ou transferência bancária. Também será devido em caso de ocorrer a transição entre as partes sem a anuência do CONTRATADO.</div>
-
-                      <div class="p">§2: FORO: Fica eleito o foro de São Paulo para dirimir quaisquer dúvidas oriundas do presente contrato. LEGALIDADE: O presente contrato tem força executiva, nos termos do artigo 784, III, do Código de Processo Civil/15, e, para que produza seus efeitos de direito, firmam as partes o presente, em duas vias de igual teor e forma, na presença de duas testemunhas que a tudo assistiram.</div>
-
-                      <div class="signature center">
-                        <div class="p">{{assinatura_cidade}}, {{assinatura_data_extenso}}.</div>
-                      </div>
-
-                      <div class="sign-row">
-                        <div class="sign-col">
-                          <div class="line"></div>
-                          <div class="sign-name small"><b>Itamir Pinto Mamede</b><br/>CONTRATADO(a)</div>
-                        </div>
-                        <div class="sign-col">
-                          <div class="line"></div>
-                          <div class="sign-name small"><b>{{contratante_nome}}</b><br/>CONTRATANTE</div>
-                        </div>
-                      </div>
-
-                      <div class="sign-row">
-                        <div class="sign-col">
-                          <div class="line"></div>
-                          <div class="sign-name small"><b>{{testemunha1_nome}}</b><br/>TESTEMUNHA 1<br/>RG: {{testemunha1_rg}}</div>
-                        </div>
-                        <div class="sign-col">
-                          <div class="line"></div>
-                          <div class="sign-name small"><b>{{testemunha2_nome}}</b><br/>TESTEMUNHA 2<br/>RG: {{testemunha2_rg}}</div>
-                        </div>
-                      </div>
-
-                      <div class="footer">{{escritorio_endereco}}</div>
-                    </body>
-                    </html>
-                    """;
+            String html = getContratoPrestacaoServicosHtmlTemplate();
 
             byte[] pdf = documentTemplateService.generatePdfFromHtml(html, placeholders);
 
@@ -2058,11 +1953,43 @@ public class JuridicoController {
     @DeleteMapping("/api/documentos/{id}")
     @ResponseBody
     public ResponseEntity<?> excluirDocumentoApi(@PathVariable Long id) {
-        if (!documentoJuridicoRepository.existsById(id)) {
-            return ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado"));
-        }
-        documentoJuridicoRepository.deleteById(id);
-        return ResponseEntity.ok(Map.of("id", id, "excluido", true));
+        return documentoJuridicoRepository.findById(id)
+                .map(d -> {
+                    try {
+                        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+                        
+                        String ip = "0.0.0.0";
+                        try {
+                            org.springframework.web.context.request.ServletRequestAttributes attrs = (org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+                            if (attrs != null) {
+                                jakarta.servlet.http.HttpServletRequest request = attrs.getRequest();
+                                ip = request.getRemoteAddr();
+                                String xForwardedFor = request.getHeader("X-Forwarded-For");
+                                if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+                                    ip = xForwardedFor.split(",")[0].trim();
+                                }
+                            }
+                        } catch (Exception ignored) {
+                        }
+                        
+                        auditoriaJuridicoLogService.registrar(
+                            "DOCUMENTOS",
+                            "EXCLUSAO",
+                            "Documento ID " + d.getId(),
+                            username,
+                            ip,
+                            "Exclusão do documento: " + d.getTitulo(),
+                            true
+                        );
+                    } catch (Exception e) {
+                        // Log erro de auditoria mas não impede exclusão
+                        System.err.println("Erro ao registrar auditoria de exclusão: " + e.getMessage());
+                    }
+                    
+                    documentoJuridicoRepository.delete(d);
+                    return ResponseEntity.ok(Map.of("id", id, "excluido", true));
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado")));
     }
 
     @GetMapping("/documentos/download/{id}")
@@ -2559,9 +2486,10 @@ public class JuridicoController {
         List<Map<String, Object>> modelos = new ArrayList<>();
 
         Map<String, Object> modelo1 = new HashMap<>();
-        modelo1.put("nome", "Modelo de Contrato de Prestação de Serviços");
-        modelo1.put("categoria", "Contratos");
-        modelo1.put("versao", "2.1");
+        modelo1.put("nome", "Procuração Ad Judicia");
+        modelo1.put("categoria", "Procurações");
+        modelo1.put("versao", "1.0");
+        modelo1.put("status", "PUBLICADO");
         modelos.add(modelo1);
 
         return modelos;
@@ -2577,5 +2505,169 @@ public class JuridicoController {
         pendentes.add(doc1);
 
         return pendentes;
+    }
+
+    private String getProcuracaoHtmlTemplate() {
+        return """
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                  <meta charset="UTF-8" />
+                  <style>
+                    @page { size: A4; margin: 24mm 18mm; }
+                    body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
+                    .center { text-align: center; }
+                    .title { font-size: 18px; font-weight: 700; margin: 18px 0 14px; letter-spacing: 0.4px; }
+                    .header { margin-bottom: 30px; }
+                    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                    .header-logo-cell { width: 100px; vertical-align: middle; text-align: left; }
+                    .header-text-cell { vertical-align: middle; text-align: center; padding-right: 100px; }
+                    .header-title { font-weight: bold; font-size: 14px; text-transform: uppercase; color: #002244; }
+                    .header-subtitle { font-weight: bold; font-style: italic; font-size: 12px; margin-top: 5px; color: #002244; }
+                    .separator { border-bottom: 2px solid #002244; margin-top: 5px; margin-bottom: 30px; }
+                    .section { margin-top: 10px; }
+                    .label { font-weight: 700; }
+                    .p { margin: 6px 0; line-height: 1.45; text-align: justify; }
+                    .signature-section { margin-top: 60px; text-align: right; margin-bottom: 40px; }
+                    .signature-line { margin-top: 40px; border-top: 1px solid #111; width: 60%; margin-left: auto; margin-right: auto; }
+                    .signature-name { text-align: center; font-weight: bold; margin-top: 5px; }
+                    .footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: bold; font-style: italic; color: #002244; border-top: 1px solid #fff; padding-top: 10px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="header">
+                    <table class="header-table">
+                      <tr>
+                        <td class="header-logo-cell">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80">
+                               <!-- Scale Body -->
+                               <path d="M50 10 L50 85 M20 25 L80 25" stroke="#002244" stroke-width="4" fill="none" />
+                               <!-- Pans -->
+                               <path d="M20 25 L20 60 M80 25 L80 60" stroke="#C5A059" stroke-width="2" fill="none" />
+                               <path d="M10 60 Q20 75 30 60 Z" fill="#C5A059" opacity="0.9" />
+                               <path d="M70 60 Q80 75 90 60 Z" fill="#C5A059" opacity="0.9" />
+                               <!-- Base -->
+                               <path d="M35 85 L65 85 L50 65 Z" fill="#002244" />
+                               <circle cx="50" cy="10" r="3" fill="#002244" />
+                            </svg>
+                        </td>
+                        <td class="header-text-cell">
+                            <div class="header-title">ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA</div>
+                            <div class="header-subtitle">Itamir Pinto Mamede Advogado</div>
+                        </td>
+                      </tr>
+                    </table>
+                    <div class="separator"></div>
+                  </div>
+
+                  <div class="title center">PROCURAÇÃO AD JUDICIA</div>
+
+                  <div class="section">
+                    <div class="p"><span class="label">OUTORGANTE:</span> {{outorgante_texto}}</div>
+                    <div class="p"><span class="label">Email:</span> {{outorgante_email}}</div>
+                  </div>
+
+                  <div class="section">
+                    <div class="p"><span class="label">OUTORGADO(a):</span> Itamir Pinto Mamede, brasileiro, casado, Advogado, inscrito na OAB-SP, sob o Nº 459.446, com escritório profissional à Av. Giovanni Gronchi 6195 - Sala 1008, bairro Vila Andrade, na cidade de São Paulo-SP, Cep 05724-003.</div>
+                    <div class="p"><span class="label">Email:</span> itamir07adv@gmail.com</div>
+                  </div>
+
+                  <div class="section">
+                    <div class="p"><span class="label">PODERES:</span> Aos quais confere amplos poderes para o foro em geral, com as cláusulas AD JUDICIA ET EXTRA, em qualquer juízo, instância ou tribunal, podendo propor contra quem de direito ações competentes e defendê-lo nas contrárias, seguindo umas e outras até final decisão e execução, usando os recursos legais , acompanhando-os, conferindo-lhes ainda poderes especiais para requerer ou acompanhar falências, ceder, transferir, habilitar ou declarar créditos, prestar compromissos em geral, inclusive de síndico e inventariante, confessar, desistir, transigir, firmar compromissos ou acordos, inclusive conciliar nos termos do art. 400 do Código de Processo Civil, receber e dar quitação, endossar cheques, requerer alvarás, efetuar levantamentos de depósitos judiciais em depositários públicos, bancos, cartórios, inclusive protestar, notificar participar de praças, leilões, adjudicar, remir, etc., em especial poderes et extra para representar perante quaisquer repartições públicas Federais, Estaduais, Municipais, Autarquias ou Delegacias de Polícia, acompanhar processos crime e sumário como assistentes do Ministério Público nos termos do art. 268 e seguintes do Código de Processo Penal, agindo em conjunto ou separadamente, inclusive substabelecer este a outrem, com ou sem reservas de iguais poderes, dando tudo por bom, ficando convencionado que o presente mandato é irrevogável pelo mandante consoante artigo 684 do Código Civil Brasileiro, tendo em vista o contrato de honorários por resultado futuro, (quota litis) resolvendo-se na forma do artigo 683 do Código Civil Brasileiro.</div>
+                  </div>
+
+                  <div class="signature-section">
+                    {{assinatura_cidade}}, {{assinatura_data_extenso}}.
+                  </div>
+
+                  <div class="signature-line"></div>
+                  <div class="signature-name">{{outorgante_nome}}</div>
+
+                  <div class="footer">
+                    {{escritorio_endereco}}<br/>
+                    {{escritorio_telefone}}
+                  </div>
+                </body>
+                </html>
+                """;
+    }
+
+    private String getContratoPrestacaoServicosHtmlTemplate() {
+        return """
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                  <meta charset="UTF-8" />
+                  <style>
+                    @page { size: A4; margin: 20mm 16mm; }
+                    body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
+                    .center { text-align: center; }
+                    .title { font-size: 18px; font-weight: 700; margin: 18px 0 14px; letter-spacing: 0.4px; }
+                    .header { margin-bottom: 14px; }
+                    .header .line { margin: 2px 0; }
+                    .p { margin: 8px 0; line-height: 1.55; text-align: justify; }
+                    .label { font-weight: 700; }
+                    .obj { white-space: pre-wrap; }
+                    .signature { margin-top: 18px; }
+                    .sign-row { display: table; width: 100%; margin-top: 18px; }
+                    .sign-col { display: table-cell; width: 50%; vertical-align: top; padding: 0 10px; }
+                    .line { border-top: 1px solid #111; width: 100%; margin-top: 46px; }
+                    .sign-name { margin-top: 6px; text-align: center; }
+                    .small { font-size: 11px; }
+                    .footer { position: fixed; left: 0; right: 0; bottom: 10mm; text-align: center; font-size: 10px; color: #333; }
+                  </style>
+                </head>
+                <body>
+                  <div class="header center">
+                    <div class="line"><b>{{escritorio_razao_social}}</b></div>
+                    <div class="line">{{escritorio_nome_advogado}}</div>
+                    <div class="line">{{escritorio_endereco}}</div>
+                    <div class="line">{{escritorio_telefone}}</div>
+                  </div>
+
+                  <div class="title center">CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS</div>
+
+                  <div class="p">{{contratante_texto}}</div>
+
+                  <div class="p"><span class="label">CONTRATADO(A):</span> Itamir Pinto Mamede, nacionalidade brasileiro, estado civil casado, profissão Advogado, inscrito na OAB-SP, sob o Nº 459.446, com escritório profissional à Av. Giovanni Gronchi 6195 - Sala 1008, no bairro Vila Andrade, na cidade de São Paulo - SP, Cep. 05724-003, Telefone (11) 99775-7675, de ora em diante simplesmente denominado(a) CONTRATADO(A).</div>
+
+                  <div class="p">O CONTRATANTE tem o conhecimento de que o exercício de advocacia é um meio, e não um fim em si, a ser efetivado com o devido zelo e desempenho, fundamentados na Constituição Federal, e nas leis vigentes em nosso ordenamento jurídico. Este contrato tem período indeterminado, devendo ocorrer a prestação dos serviços advocatícios, ora contratados, até o termo final da ação especificada no item OBJETO.</div>
+
+                  <div class="p"><span class="label">DO OBJETO:</span> Ingressar com PEDIDO de: <span class="obj">{{objeto}}</span></div>
+
+                  <div class="p">§1° : Os honorários advocatícios são de 30% (trinta por cento) sobre o valor da INDENIZAÇÃO recebida e este a ser pago pelo CONTRATANTE imediatamente de forma pecuniária ao CONTRATADO, tendo como meio de pagamento via PIX ou transferência bancária. Também será devido em caso de ocorrer a transição entre as partes sem a anuência do CONTRATADO.</div>
+
+                  <div class="p">§2: FORO: Fica eleito o foro de São Paulo para dirimir quaisquer dúvidas oriundas do presente contrato. LEGALIDADE: O presente contrato tem força executiva, nos termos do artigo 784, III, do Código de Processo Civil/15, e, para que produza seus efeitos de direito, firmam as partes o presente, em duas vias de igual teor e forma, na presença de duas testemunhas que a tudo assistiram.</div>
+
+                  <div class="signature center">
+                    <div class="p">{{assinatura_cidade}}, {{assinatura_data_extenso}}.</div>
+                  </div>
+
+                  <div class="sign-row">
+                    <div class="sign-col">
+                      <div class="line"></div>
+                      <div class="sign-name small"><b>Itamir Pinto Mamede</b><br/>CONTRATADO(a)</div>
+                    </div>
+                    <div class="sign-col">
+                      <div class="line"></div>
+                      <div class="sign-name small"><b>{{contratante_nome}}</b><br/>CONTRATANTE</div>
+                    </div>
+                  </div>
+
+                  <div class="sign-row">
+                    <div class="sign-col">
+                      <div class="line"></div>
+                      <div class="sign-name small"><b>{{testemunha1_nome}}</b><br/>TESTEMUNHA 1<br/>RG: {{testemunha1_rg}}</div>
+                    </div>
+                    <div class="sign-col">
+                      <div class="line"></div>
+                      <div class="sign-name small"><b>{{testemunha2_nome}}</b><br/>TESTEMUNHA 2<br/>RG: {{testemunha2_rg}}</div>
+                    </div>
+                  </div>
+
+                  <div class="footer">{{escritorio_endereco}}</div>
+                </body>
+                </html>
+                """;
     }
 }

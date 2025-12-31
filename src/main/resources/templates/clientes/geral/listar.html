@@ -13,14 +13,36 @@
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <!-- Seu CSS padrão -->
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-  
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/sidebar.css" rel="stylesheet">
+  <link href="/css/notifications.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
   <style>
-    .status-badge{padding:6px 10px;border-radius:999px;font-size:0.85rem;font-weight:600;color:#fff;display:inline-block;min-width:70px;text-align:center}
-    .status-ativo{background-color:#22c55e}
-    .status-inativo{background-color:#ef4444}
-    .status-pendente{background-color:#fbbf24;color:#000}
+    .status-badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      display: inline-block;
+      min-width: 70px;
+      text-align: center
+    }
+
+    .status-ativo {
+      background-color: #22c55e
+    }
+
+    .status-inativo {
+      background-color: #ef4444
+    }
+
+    .status-pendente {
+      background-color: #fbbf24;
+      color: #000
+    }
   </style>
   <link href="/css/notifications.css" rel="stylesheet">
 
@@ -39,14 +61,13 @@
 
         <div class="toolbar">
           <form class="search-form" th:action="@{/clientes}" method="get">
-            <input type="text" name="busca" placeholder="Buscar por nome, email ou telefone"
-              th:value="${busca}" />
+            <input type="text" name="busca" placeholder="Buscar por nome, email ou telefone" th:value="${busca}" />
             <select name="origem" style="margin-left: 10px; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                <option value="">Todas Origens</option>
-                <option value="Indicação" th:selected="${origemFiltro == 'Indicação'}">Indicação</option>
-                <option value="Google" th:selected="${origemFiltro == 'Google'}">Google</option>
-                <option value="Redes Sociais" th:selected="${origemFiltro == 'Redes Sociais'}">Redes Sociais</option>
-                <option value="Outros" th:selected="${origemFiltro == 'Outros'}">Outros</option>
+              <option value="">Todas Origens</option>
+              <option value="Indicação" th:selected="${origemFiltro == 'Indicação'}">Indicação</option>
+              <option value="Google" th:selected="${origemFiltro == 'Google'}">Google</option>
+              <option value="Redes Sociais" th:selected="${origemFiltro == 'Redes Sociais'}">Redes Sociais</option>
+              <option value="Outros" th:selected="${origemFiltro == 'Outros'}">Outros</option>
             </select>
             <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
           </form>
@@ -56,7 +77,8 @@
           </a>
         </div>
 
-        <div id="loading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>
+        <div id="loading" class="loading" style="display:none"><i class="fas fa-spinner fa-spin"></i> Carregando...
+        </div>
         <table class="table-list" style="text-align:center">
           <thead>
             <tr>
@@ -86,8 +108,10 @@
       <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
       <div id="msgErroMatricula"></div>
       <div id="msgSucessoExcluir"></div>
-      <button class="btn btn-danger" data-action="confirmar-exclusao" onclick="validarEExcluir()"><i class="fas fa-trash-alt"></i> Confirmar exclusão</button>
-      <button class="btn btn-secondary" onclick="closeDesligamentoModal()"><i class="fas fa-times"></i> Cancelar</button>
+      <button class="btn btn-danger" data-action="confirmar-exclusao" onclick="validarEExcluir()"><i
+          class="fas fa-trash-alt"></i> Confirmar exclusão</button>
+      <button class="btn btn-secondary" onclick="closeDesligamentoModal()"><i class="fas fa-times"></i>
+        Cancelar</button>
     </div>
   </div>
 
@@ -101,9 +125,9 @@
     let currentPage = 0;
     let query = window.buscaInicial || '';
     let debounceTimer;
-    function showLoading(show){
+    function showLoading(show) {
       const el = document.getElementById('loading');
-      if(el) el.style.display = show ? 'block' : 'none';
+      if (el) el.style.display = show ? 'block' : 'none';
     }
 
     function statusBadgeClass(status) {
@@ -176,25 +200,25 @@
 
     function goToPage(p) { loadClientes(Math.max(0, p)); }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const input = document.querySelector('input[name="busca"]');
       const form = document.querySelector('form.search-form');
       const origemSelect = document.querySelector('select[name="origem"]');
-      
+
       if (input) {
-        input.addEventListener('input', function(e) {
+        input.addEventListener('input', function (e) {
           clearTimeout(debounceTimer);
           query = e.target.value || '';
           debounceTimer = setTimeout(() => loadClientes(0), 300);
         });
       }
       if (origemSelect) {
-        origemSelect.addEventListener('change', function() {
+        origemSelect.addEventListener('change', function () {
           loadClientes(0);
         });
       }
       if (form) {
-        form.addEventListener('submit', function(e) { e.preventDefault(); loadClientes(0); });
+        form.addEventListener('submit', function (e) { e.preventDefault(); loadClientes(0); });
       }
       loadClientes(0);
     });
@@ -253,7 +277,7 @@
           setTimeout(() => { closeDesligamentoModal(); window.location.href = '/clientes'; }, 1500);
         } else {
           let errorText = 'Erro ao excluir cliente. Contate o ADMINISTRADOR DO SISTEMA.';
-          try { const errorData = await response.json(); if (errorData.erro) errorText = errorData.erro; } catch {}
+          try { const errorData = await response.json(); if (errorData.erro) errorText = errorData.erro; } catch { }
           if (msgErro) { msgErro.textContent = errorText; msgErro.style.display = 'block'; }
           if (btnConfirmar) btnConfirmar.disabled = false;
         }
@@ -263,18 +287,14 @@
       }
     }
   </script>
-    
-  </script>
-   <script th:src="@{/js/sidebar.js}"></script>
 
-  <!-- jQuery necessário -->
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  </script>
 
   <!-- Seu JS de notificações -->
   <script th:src="@{/js/notifications.js}"></script>
 
+    <script src="/js/sidebar.js" defer></script>
 
- 
 </body>
 
 </html>

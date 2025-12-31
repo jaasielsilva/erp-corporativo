@@ -356,6 +356,15 @@ public class SecurityConfig {
                                                 return permissaoRepository.save(p);
                                         });
 
+                        // Permissões Jurídico
+                        Permissao roleJuridicoGerente = permissaoRepository.findByNome("ROLE_JURIDICO_GERENTE")
+                                        .orElseGet(() -> {
+                                                Permissao p = new Permissao();
+                                                p.setNome("ROLE_JURIDICO_GERENTE");
+                                                p.setCategoria("Jurídico");
+                                                return permissaoRepository.save(p);
+                                        });
+
                         // Perfis básicos (mantidos para compatibilidade)
                         Perfil adminPerfil = perfilRepository.findByNome("ADMIN")
                                         .orElseGet(() -> {
@@ -377,6 +386,17 @@ public class SecurityConfig {
                                                 p.getPermissoes().add(finVerSaldo);
                                                 p.getPermissoes().add(finVerExtrato);
                                                 p.getPermissoes().add(finPagar);
+                                                return perfilRepository.save(p);
+                                        });
+
+                        // Perfil JURIDICO_GERENTE
+                        Perfil juridicoGerentePerfil = perfilRepository.findByNome("JURIDICO_GERENTE")
+                                        .orElseGet(() -> {
+                                                Perfil p = new Perfil();
+                                                p.setNome("JURIDICO_GERENTE");
+                                                p.setPermissoes(new HashSet<>());
+                                                p.getPermissoes().add(roleUser);
+                                                p.getPermissoes().add(roleJuridicoGerente);
                                                 return perfilRepository.save(p);
                                         });
 

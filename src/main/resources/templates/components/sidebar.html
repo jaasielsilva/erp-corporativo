@@ -488,6 +488,20 @@
 
             <li><a href="/juridico/compliance"><i class="fas fa-check-circle"></i> Compliance</a></li>
             <li><a href="/juridico/documentos"><i class="fas fa-folder-open"></i> Documentos</a></li>
+
+            <!-- Auditoria Jurídico -->
+            <li class="has-submenu" sec:authorize="hasAnyRole('ADMIN','MASTER','JURIDICO_GERENTE')">
+              <a href="javascript:void(0);" class="submenu-toggle">
+                <i class="fas fa-shield-alt"></i> Auditoria
+              </a>
+              <ul class="submenu">
+                <li><a href="/juridico/auditoria"><i class="fas fa-home"></i> Início</a></li>
+                <li><a href="/juridico/auditoria/acessos"><i class="fas fa-user-check"></i> Log de Acessos</a></li>
+                <li><a href="/juridico/auditoria/alteracoes"><i class="fas fa-edit"></i> Alterações de Dados</a></li>
+                <li><a href="/juridico/auditoria/exportacoes"><i class="fas fa-file-export"></i> Exportações</a></li>
+                <li><a href="/juridico/auditoria/revisoes"><i class="fas fa-search"></i> Revisões Periódicas</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
 

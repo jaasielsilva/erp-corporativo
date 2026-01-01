@@ -133,12 +133,13 @@
                                           th:text="${conta.status ?: 'PENDENTE'}">PENDENTE</span>
                                 </td>
                                 <td class="text-end">
-                                    <button th:if="${conta.status != 'RECEBIDA'}"
+                                    <button
                                         th:onclick="'registrarPagamento(' + ${conta.id} + ')'"
-                                        class="btn btn-sm btn-outline-success" title="Registrar Pagamento">
+                                        class="btn btn-sm btn-outline-success" title="Registrar Pagamento"
+                                        th:disabled="${conta.status == 'RECEBIDA'}">
                                         <i class="fas fa-check-double"></i> Receber
                                     </button>
-                                    <a th:href="@{/financeiro/contas-receber/detalhes/{id}(id=${conta.id})}" 
+                                    <a th:href="@{/financeiro/contas-receber/{id}(id=${conta.id})}" 
                                        class="btn btn-sm btn-outline-info" title="Detalhes">
                                         <i class="fas fa-eye"></i>
                                     </a>

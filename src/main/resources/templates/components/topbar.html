@@ -326,6 +326,9 @@
                     <div class="me-2 mt-1 text-warning"><i class="fas fa-circle fa-xs"></i></div>
                     <div th:utext="${alerta}" class="fw-medium text-secondary"></div>
                 </div>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-snooze-1h">Lembrar em 1h</button>
+                </div>
             </div>
         </div>
         <script>
@@ -338,21 +341,63 @@
                     
                     var toastElList = [].slice.call(container.querySelectorAll('.toast'));
                     
+                    function getSnoozes(){
+                        try { return JSON.parse(localStorage.getItem('juridicoSnoozes') || '{}'); } catch(e){ return {}; }
+                    }
+                    function saveSnooze(key, until){
+                        var s = getSnoozes(); s[key] = until; localStorage.setItem('juridicoSnoozes', JSON.stringify(s));
+                    }
+                    function isSnoozed(key){
+                        var s = getSnoozes(); var until = s[key] || 0; return Number(until) > Date.now();
+                    }
+                    function getAlertKey(el){
+                        try {
+                            var content = el.querySelector('.fw-medium');
+                            var raw = content ? (content.innerText || content.textContent || '').trim() : (el.innerText || '').trim();
+                            var hash = 0;
+                            for (var i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
+                            return 'juridico:' + hash;
+                        } catch(e){ return 'juridico:' + Math.random().toString(36).slice(2); }
+                    }
+                    
                     if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
                         toastElList.map(function(toastEl) {
+                            var key = getAlertKey(toastEl);
                             var t = new bootstrap.Toast(toastEl, { autohide: false });
-                            t.show();
+                            if (!isSnoozed(key)) {
+                                t.show();
+                            } else {
+                                try { t.hide(); } catch(e){} 
+                                toastEl.classList.remove('show'); 
+                                toastEl.style.display = 'none';
+                            }
+                            var btn = toastEl.querySelector('.btn-snooze-1h');
+                            if (btn) {
+                                btn.addEventListener('click', function(){
+                                    var k = getAlertKey(toastEl);
+                                    saveSnooze(k, Date.now() + 60 * 60 * 1000);
+                                    try { t.hide(); } catch(e){}
+                                    toastEl.classList.remove('show');
+                                    toastEl.style.display = 'none';
+                                });
+                            }
                             return t;
                         });
                     } else {
                         // Fallback for pages without Bootstrap JS
                         toastElList.forEach(function(el) {
-                            el.classList.add('show');
-                            el.style.display = 'block';
-                            el.style.opacity = '1';
-                            el.style.backgroundColor = '#fff'; // Ensure visibility
-                            el.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'; // Add shadow
-                            el.style.marginBottom = '0.75rem'; // Spacing
+                            var key = getAlertKey(el);
+                            if (!isSnoozed(key)) {
+                                el.classList.add('show');
+                                el.style.display = 'block';
+                                el.style.opacity = '1';
+                                el.style.backgroundColor = '#fff';
+                                el.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
+                                el.style.marginBottom = '0.75rem';
+                            } else {
+                                el.classList.remove('show');
+                                el.style.display = 'none';
+                            }
                             
                             // Manual close handler
                             var btn = el.querySelector('.btn-close');
@@ -362,6 +407,15 @@
                                     el.style.display = 'none'; 
                                     el.classList.remove('show');
                                 };
+                            }
+                            var snoozeBtn = el.querySelector('.btn-snooze-1h');
+                            if (snoozeBtn) {
+                                snoozeBtn.addEventListener('click', function(){
+                                    var k = getAlertKey(el);
+                                    saveSnooze(k, Date.now() + 60 * 60 * 1000);
+                                    el.classList.remove('show');
+                                    el.style.display = 'none';
+                                });
                             }
                         });
                     }

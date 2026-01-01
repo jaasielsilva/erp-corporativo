@@ -75,38 +75,34 @@
                                               th:text="${processo.status}">Status</span>
                                     </td>
                                     <td th:text="${#temporals.format(processo.dataAbertura, 'dd/MM/yyyy')}">01/01/2024</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-info proc-detail" th:data-id="${processo.id}" title="Detalhes">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <a th:if="${processo.status == null or processo.status.name() != 'ENCERRADO'}"
-                                           th:href="@{/juridico/processos/novo(id=${processo.id})}"
-                                           class="btn btn-sm btn-warning ms-1" title="Editar">
-                                           <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a th:if="${processo.status != null and processo.status.name() == 'ENCERRADO'}"
-                                           href="#"
-                                           class="btn btn-sm btn-warning ms-1 disabled"
-                                           title="Processo encerrado"
-                                           onclick="return false;" style="pointer-events: none;">
-                                           <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button th:if="${processo.status == null or processo.status.name() != 'ENCERRADO'}"
-                                                class="btn btn-sm btn-success proc-ganho ms-1"
-                                                th:data-id="${processo.id}" title="Registrar ganho de causa">
-                                            <i class="fas fa-hand-holding-usd"></i>
-                                        </button>
-                                        <button th:if="${processo.status != null and processo.status.name() == 'ENCERRADO'}"
-                                                class="btn btn-sm btn-success ms-1 disabled"
-                                                title="Processo encerrado"
-                                                disabled>
-                                            <i class="fas fa-hand-holding-usd"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-dark ms-1 proc-reabrir"
-                                                th:if="${processo.status != null and processo.status.name() == 'ENCERRADO'}"
-                                                th:data-id="${processo.id}" title="Reabrir processo">
-                                            <i class="fas fa-unlock"></i>
-                                        </button>
+                                    <td class="pe-4">
+                                        <div class="d-flex gap-2 w-100">
+                                            <button class="btn btn-sm btn-info proc-detail" th:data-id="${processo.id}" title="Detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            
+                                            <a th:href="@{/juridico/processos/novo(id=${processo.id})}"
+                                               class="btn btn-sm btn-warning"
+                                               th:classappend="${processo.status != null and processo.status.name() == 'ENCERRADO' ? ' disabled' : ''}"
+                                               th:attr="aria-disabled=${processo.status != null and processo.status.name() == 'ENCERRADO'}"
+                                               title="Editar"
+                                               th:onclick="${processo.status != null and processo.status.name() == 'ENCERRADO'} ? 'return false;' : null"
+                                               th:style="${processo.status != null and processo.status.name() == 'ENCERRADO'} ? 'pointer-events: none;' : null">
+                                               <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            <button class="btn btn-sm btn-success proc-ganho"
+                                                    th:data-id="${processo.id}" title="Registrar ganho de causa"
+                                                    th:disabled="${processo.status != null and processo.status.name() == 'ENCERRADO'}">
+                                                <i class="fas fa-hand-holding-usd"></i>
+                                            </button>
+                                            
+                                            <button class="btn btn-sm btn-dark proc-reabrir"
+                                                    th:data-id="${processo.id}" title="Reabrir processo"
+                                                    th:disabled="${processo.status == null or processo.status.name() != 'ENCERRADO'}">
+                                                <i class="fas fa-unlock"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 <!-- Processos Previdenciários mesclados na mesma tabela -->
@@ -124,38 +120,34 @@
                                               th:text="${p.statusAtual}">Status</span>
                                     </td>
                                     <td th:text="${p.dataAbertura != null ? T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy').format(p.dataAbertura) : '—'}">—</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-info previd-detail" th:data-id="${p.id}" title="Detalhes">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <a th:if="${p.statusAtual == null or p.statusAtual.name() != 'ENCERRADO'}"
-                                           th:href="@{'/juridico/previdenciario/' + ${p.id}}"
-                                           class="btn btn-sm btn-warning ms-1" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a th:if="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}"
-                                           href="#"
-                                           class="btn btn-sm btn-warning ms-1 disabled"
-                                           title="Processo encerrado"
-                                           onclick="return false;" style="pointer-events: none;">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button th:if="${p.statusAtual == null or p.statusAtual.name() != 'ENCERRADO'}"
-                                                class="btn btn-sm btn-success previd-ganho ms-1"
-                                                th:data-id="${p.id}" title="Registrar ganho de causa">
-                                            <i class="fas fa-hand-holding-usd"></i>
-                                        </button>
-                                        <button th:if="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}"
-                                                class="btn btn-sm btn-success ms-1 disabled"
-                                                title="Processo encerrado"
-                                                disabled>
-                                            <i class="fas fa-hand-holding-usd"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-dark ms-1 previd-reabrir"
-                                                th:if="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}"
-                                                th:data-id="${p.id}" title="Reabrir processo">
-                                            <i class="fas fa-unlock"></i>
-                                        </button>
+                                    <td class="pe-4">
+                                        <div class="d-flex gap-2 w-100">
+                                            <button class="btn btn-sm btn-info previd-detail" th:data-id="${p.id}" title="Detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            
+                                            <a th:href="@{'/juridico/previdenciario/' + ${p.id}}"
+                                               class="btn btn-sm btn-warning"
+                                               th:classappend="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO' ? ' disabled' : ''}"
+                                               th:attr="aria-disabled=${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}"
+                                               title="Editar"
+                                               th:onclick="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'} ? 'return false;' : null"
+                                               th:style="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'} ? 'pointer-events: none;' : null">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            <button class="btn btn-sm btn-success previd-ganho"
+                                                    th:data-id="${p.id}" title="Registrar ganho de causa"
+                                                    th:disabled="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}">
+                                                <i class="fas fa-hand-holding-usd"></i>
+                                            </button>
+                                            
+                                            <button class="btn btn-sm btn-dark previd-reabrir"
+                                                    th:data-id="${p.id}" title="Reabrir processo"
+                                                    th:disabled="${p.statusAtual == null or p.statusAtual.name() != 'ENCERRADO'}">
+                                                <i class="fas fa-unlock"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr th:if="${processos.empty and (processosPrevidenciarios == null or processosPrevidenciarios.isEmpty())}">

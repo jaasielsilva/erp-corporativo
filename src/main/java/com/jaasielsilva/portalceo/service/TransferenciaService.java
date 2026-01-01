@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.model.*;
 import com.jaasielsilva.portalceo.repository.ContaBancariaRepository;
 import com.jaasielsilva.portalceo.repository.FluxoCaixaRepository;
 import com.jaasielsilva.portalceo.repository.TransferenciaRepository;
+import com.jaasielsilva.portalceo.repository.ClienteRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class TransferenciaService {
 
     @Autowired
     private FluxoCaixaRepository fluxoCaixaRepository;
+
+    @Autowired
+    private ClienteRepository clienteRepository;
 
     @Transactional(readOnly = true)
     public java.util.List<Transferencia> listarTodas() {
@@ -98,5 +102,34 @@ public class TransferenciaService {
         entrada.setDataCriacao(LocalDateTime.now());
         
         fluxoCaixaRepository.save(entrada);
+    }
+
+    @Transactional
+    public void realizarPagamentoCliente(TransferenciaDTO dto, Usuario usuario) {
+        ContaBancaria origem = contaBancariaRepository.findById(dto.getContaOrigemId())
+                .orElseThrow(() -> new EntityNotFoundException("Conta de origem não encontrada"));
+
+        com.jaasielsilva.portalceo.model.Cliente cliente = clienteRepository.findById(dto.getClienteDestinoId())
+                .orElseThrow(() -> new EntityNotFoundException("Cliente destino não encontrado"));
+
+        if (origem.getSaldo().compareTo(dto.getValor()) < 0) {
+            throw new IllegalArgumentException("Saldo insuficiente na conta de origem");
+        }
+
+        origem.setSaldo(origem.getSaldo().subtract(dto.getValor()));
+        contaBancariaRepository.save(origem);
+
+        FluxoCaixa saida = new FluxoCaixa();
+        saida.setDescricao("Pagamento ao cliente " + (cliente.getNomeFantasia() != null && !cliente.getNomeFantasia().isBlank() ? cliente.getNomeFantasia() : cliente.getNome()) + " - " + dto.getDescricao());
+        saida.setValor(dto.getValor());
+        saida.setData(dto.getDataTransferencia());
+        saida.setTipoMovimento(FluxoCaixa.TipoMovimento.SAIDA);
+        saida.setCategoria(FluxoCaixa.CategoriaFluxo.OUTRAS_DESPESAS);
+        saida.setStatus(FluxoCaixa.StatusFluxo.REALIZADO);
+        saida.setContaBancaria(origem);
+        saida.setUsuarioCriacao(usuario);
+        saida.setDataCriacao(LocalDateTime.now());
+
+        fluxoCaixaRepository.save(saida);
     }
 }

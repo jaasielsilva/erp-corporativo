@@ -194,6 +194,21 @@
           </div>
 
           <div class="form-group">
+            <label for="agencia">Agência</label>
+            <input type="text" id="agencia" th:field="*{agencia}" placeholder="Agência bancária" />
+          </div>
+
+          <div class="form-group">
+            <label for="conta">Conta</label>
+            <input type="text" id="conta" th:field="*{conta}" placeholder="Número da conta" />
+          </div>
+
+          <div class="form-group">
+            <label for="chavePix">Chave Pix</label>
+            <input type="text" id="chavePix" th:field="*{chavePix}" placeholder="Email, CPF/CNPJ, telefone ou aleatória" />
+          </div>
+
+          <div class="form-group">
             <label for="observacoes">Observações</label>
             <textarea id="observacoes" th:field="*{observacoes}" rows="4"
               placeholder="Observações adicionais"></textarea>

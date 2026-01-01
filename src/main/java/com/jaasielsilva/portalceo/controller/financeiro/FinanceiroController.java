@@ -332,6 +332,7 @@ public class FinanceiroController {
         model.addAttribute("pageTitle", "Transferências");
         model.addAttribute("moduleCSS", "financeiro");
         model.addAttribute("contas", contaBancariaService.listarContasAtivas());
+        model.addAttribute("clientes", clienteService.listarTodos());
         model.addAttribute("transferenciaDTO", new TransferenciaDTO());
         model.addAttribute("historicoTransferencias", transferenciaService.listarTodas());
         return "financeiro/transferencias";
@@ -343,6 +344,12 @@ public class FinanceiroController {
                                         @RequestAttribute("usuarioLogado") Usuario usuario) {
         Map<String, Object> response = new HashMap<>();
         try {
+            if (Boolean.TRUE.equals(dto.getPagamentoCliente())) {
+                transferenciaService.realizarPagamentoCliente(dto, usuario);
+                response.put("success", true);
+                response.put("message", "Pagamento ao cliente realizado com sucesso!");
+                return ResponseEntity.ok(response);
+            }
             transferenciaService.realizarTransferencia(dto, usuario);
             response.put("success", true);
             response.put("message", "Transferência realizada com sucesso!");

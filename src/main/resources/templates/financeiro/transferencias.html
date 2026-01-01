@@ -169,6 +169,10 @@
                 </div>
                 <div class="modal-body">
                     <form id="formTransferencia">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="pagamentoClienteSwitch">
+                            <label class="form-check-label" for="pagamentoClienteSwitch">Pagamento a Cliente</label>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Conta de Origem (Sai Dinheiro)</label>
                             <select class="form-select" id="contaOrigem" name="contaOrigemId" required>
@@ -178,12 +182,19 @@
                                 </option>
                             </select>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3" id="grupoContaDestino">
                             <label class="form-label">Conta de Destino (Entra Dinheiro)</label>
-                            <select class="form-select" id="contaDestino" name="contaDestinoId" required>
+                            <select class="form-select" id="contaDestino" name="contaDestinoId">
                                 <option value="" selected disabled>Selecione a conta de destino</option>
                                 <option th:each="conta : ${contas}" th:value="${conta.id}" th:text="${conta.nome}">
                                 </option>
+                            </select>
+                        </div>
+                        <div class="mb-3 d-none" id="grupoClienteDestino">
+                            <label class="form-label">Cliente Destino</label>
+                            <select class="form-select" id="clienteDestino" name="clienteDestinoId">
+                                <option value="" selected disabled>Selecione o cliente</option>
+                                <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nomeFantasia != null && !c.nomeFantasia.isBlank() ? c.nomeFantasia : c.nome}"></option>
                             </select>
                         </div>
                         <div class="row">
@@ -240,19 +251,27 @@
         function salvarTransferencia() {
             // Validação básica
             const origem = $('#contaOrigem').val();
+            const pagamentoCliente = $('#pagamentoClienteSwitch').is(':checked');
             const destino = $('#contaDestino').val();
+            const clienteDestino = $('#clienteDestino').val();
             const valorStr = $('#valor').val();
             const data = $('#dataTransferencia').val();
             const descricao = $('#descricao').val();
 
-            if (!origem || !destino || !valorStr || !data || !descricao) {
-                Swal.fire('Atenção', 'Preencha todos os campos obrigatórios.', 'warning');
-                return;
-            }
-
-            if (origem === destino) {
-                Swal.fire('Erro', 'A conta de origem e destino não podem ser iguais.', 'error');
-                return;
+            if (pagamentoCliente) {
+                if (!origem || !clienteDestino || !valorStr || !data || !descricao) {
+                    Swal.fire('Atenção', 'Preencha todos os campos obrigatórios.', 'warning');
+                    return;
+                }
+            } else {
+                if (!origem || !destino || !valorStr || !data || !descricao) {
+                    Swal.fire('Atenção', 'Preencha todos os campos obrigatórios.', 'warning');
+                    return;
+                }
+                if (origem === destino) {
+                    Swal.fire('Erro', 'A conta de origem e destino não podem ser iguais.', 'error');
+                    return;
+                }
             }
 
             // Converter valor (R$ 1.000,00 -> 1000.00)
@@ -263,9 +282,18 @@
                 return;
             }
 
-            const payload = {
+            const payload = pagamentoCliente ? {
+                contaOrigemId: parseInt(origem),
+                clienteDestinoId: parseInt(clienteDestino),
+                pagamentoCliente: true,
+                valor: valor,
+                dataTransferencia: data,
+                descricao: descricao,
+                observacoes: $('#observacoes').val()
+            } : {
                 contaOrigemId: parseInt(origem),
                 contaDestinoId: parseInt(destino),
+                pagamentoCliente: false,
                 valor: valor,
                 dataTransferencia: data,
                 descricao: descricao,
@@ -277,7 +305,7 @@
 
             Swal.fire({
                 title: 'Confirmar Transferência?',
-                text: `Valor: R$ ${valorStr} de Conta Origem para Conta Destino`,
+                text: pagamentoCliente ? `Valor: R$ ${valorStr} de Conta Origem para Cliente` : `Valor: R$ ${valorStr} de Conta Origem para Conta Destino`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Sim, transferir',
@@ -307,7 +335,7 @@
                 if (result.isConfirmed) {
                     Swal.fire({
                         title: 'Sucesso!',
-                        text: 'Transferência realizada com sucesso.',
+                        text: pagamentoCliente ? 'Pagamento ao cliente registrado com sucesso.' : 'Transferência realizada com sucesso.',
                         icon: 'success'
                     }).then(() => {
                         location.reload();
@@ -315,6 +343,13 @@
                 }
             });
         }
+        document.getElementById('pagamentoClienteSwitch').addEventListener('change', function() {
+            const isOn = this.checked;
+            document.getElementById('grupoContaDestino').classList.toggle('d-none', isOn);
+            document.getElementById('contaDestino').required = !isOn;
+            document.getElementById('grupoClienteDestino').classList.toggle('d-none', !isOn);
+            document.getElementById('clienteDestino').required = isOn;
+        });
     </script>
 </body>
 </html>

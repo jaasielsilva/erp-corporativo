@@ -9,6 +9,8 @@ import java.time.LocalDate;
 public class TransferenciaDTO {
     private Long contaOrigemId;
     private Long contaDestinoId;
+    private Long clienteDestinoId;
+    private Boolean pagamentoCliente;
     private BigDecimal valor;
     private LocalDate dataTransferencia;
     private String descricao;

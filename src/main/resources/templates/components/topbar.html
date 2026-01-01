@@ -328,6 +328,7 @@
                 </div>
                 <div class="mt-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary btn-snooze-1h">Lembrar em 1h</button>
+                    <button type="button" class="btn btn-sm btn-outline-dark btn-marcar-lido">Marcar como lido</button>
                 </div>
             </div>
         </div>
@@ -350,6 +351,15 @@
                     function isSnoozed(key){
                         var s = getSnoozes(); var until = s[key] || 0; return Number(until) > Date.now();
                     }
+                    function getReads(){
+                        try { return JSON.parse(localStorage.getItem('juridicoReads') || '{}'); } catch(e){ return {}; }
+                    }
+                    function saveRead(key){
+                        var r = getReads(); r[key] = true; localStorage.setItem('juridicoReads', JSON.stringify(r));
+                    }
+                    function isRead(key){
+                        var r = getReads(); return !!r[key];
+                    }
                     function getAlertKey(el){
                         try {
                             var content = el.querySelector('.fw-medium');
@@ -364,7 +374,7 @@
                         toastElList.map(function(toastEl) {
                             var key = getAlertKey(toastEl);
                             var t = new bootstrap.Toast(toastEl, { autohide: false });
-                            if (!isSnoozed(key)) {
+                            if (!isSnoozed(key) && !isRead(key)) {
                                 t.show();
                             } else {
                                 try { t.hide(); } catch(e){} 
@@ -381,13 +391,37 @@
                                     toastEl.style.display = 'none';
                                 });
                             }
+                            var btnResolve = toastEl.querySelector('.btn-resolver-agora');
+                            if (btnResolve) {
+                                btnResolve.addEventListener('click', function(){
+                                    var link = toastEl.querySelector('.fw-medium a[href]');
+                                    var k = getAlertKey(toastEl);
+                                    saveRead(k);
+                                    try { t.hide(); } catch(e){}
+                                    toastEl.classList.remove('show');
+                                    toastEl.style.display = 'none';
+                                    if (link && link.getAttribute('href')) {
+                                        window.location.href = link.getAttribute('href');
+                                    }
+                                });
+                            }
+                            var btnRead = toastEl.querySelector('.btn-marcar-lido');
+                            if (btnRead) {
+                                btnRead.addEventListener('click', function(){
+                                    var k = getAlertKey(toastEl);
+                                    saveRead(k);
+                                    try { t.hide(); } catch(e){}
+                                    toastEl.classList.remove('show');
+                                    toastEl.style.display = 'none';
+                                });
+                            }
                             return t;
                         });
                     } else {
                         // Fallback for pages without Bootstrap JS
                         toastElList.forEach(function(el) {
                             var key = getAlertKey(el);
-                            if (!isSnoozed(key)) {
+                            if (!isSnoozed(key) && !isRead(key)) {
                                 el.classList.add('show');
                                 el.style.display = 'block';
                                 el.style.opacity = '1';
@@ -413,6 +447,28 @@
                                 snoozeBtn.addEventListener('click', function(){
                                     var k = getAlertKey(el);
                                     saveSnooze(k, Date.now() + 60 * 60 * 1000);
+                                    el.classList.remove('show');
+                                    el.style.display = 'none';
+                                });
+                            }
+                            var resolveBtn = el.querySelector('.btn-resolver-agora');
+                            if (resolveBtn) {
+                                resolveBtn.addEventListener('click', function(){
+                                    var link = el.querySelector('.fw-medium a[href]');
+                                    var k = getAlertKey(el);
+                                    saveRead(k);
+                                    el.classList.remove('show');
+                                    el.style.display = 'none';
+                                    if (link && link.getAttribute('href')) {
+                                        window.location.href = link.getAttribute('href');
+                                    }
+                                });
+                            }
+                            var readBtn = el.querySelector('.btn-marcar-lido');
+                            if (readBtn) {
+                                readBtn.addEventListener('click', function(){
+                                    var k = getAlertKey(el);
+                                    saveRead(k);
                                     el.classList.remove('show');
                                     el.style.display = 'none';
                                 });

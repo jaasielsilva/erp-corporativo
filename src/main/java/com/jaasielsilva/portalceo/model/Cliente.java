@@ -84,6 +84,16 @@ public class Cliente {
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Contrato> contratos;
 
+    // Dados bancários para pagamentos
+    @Column(length = 50)
+    private String agencia;
+
+    @Column(length = 50)
+    private String conta;
+
+    @Column(length = 120)
+    private String chavePix;
+
     // Auditoria de exclusão
     @ManyToOne
     @JoinColumn(name = "usuario_exclusao_id")

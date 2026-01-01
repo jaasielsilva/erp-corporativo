@@ -66,7 +66,10 @@ public class GlobalControllerAdvice {
                         }
                         
                         if (prazoData != null && prazoData.isEqual(amanha)) {
-                            alertas.add("O processo <strong>" + p.get("numero") + "</strong> tem um prazo vencendo amanhã.");
+                            String processIdStr = String.valueOf(p.get("id"));
+                            String url = "/juridico/processos?openProcessId=" + processIdStr;
+                            alertas.add("O processo <strong>" + p.get("numero") + "</strong> tem um prazo vencendo amanhã. " +
+                                    "<a href=\"" + url + "\" class=\"ms-2\" style=\"text-decoration: underline;\">Abrir processo</a>");
                         }
                     }
                 }

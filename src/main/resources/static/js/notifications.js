@@ -97,7 +97,8 @@ $(document).ready(function () {
                     metadata: n.metadata || null,
                     read: !!n.isRead || !!n.read,
                     priority: (n.priority && typeof n.priority === 'string') ? n.priority.toLowerCase() : 'medium',
-                    entityId: n.entityId || null
+                    entityId: n.entityId || null,
+                    entityType: n.entityType || null
                 };
             }).filter(n => n.title && n.message && n.timestamp);
 
@@ -212,6 +213,14 @@ $(document).ready(function () {
                 const subtitle = `De: ${n.remetenteNome || 'Sistema'}`;
                 const timeText = (n.timestamp && !isNaN(n.timestamp.getTime())) ? n.timestamp.toLocaleString('pt-BR') : '';
                 const actionLink = n.actionUrl ? `<a href="${n.actionUrl}" class="btn-text">Abrir</a>` : '';
+                let detailLink = '';
+                if (n.entityId) {
+                    if (n.entityType === 'ProcessoJuridico') {
+                        detailLink = `<a href="/juridico/processos/${n.entityId}/detalhes" class="btn-text">Ir para detalhe</a>`;
+                    } else {
+                        detailLink = `<a href="/rh/colaboradores/${n.entityId}" class="btn-text">Ir para detalhe</a>`;
+                    }
+                }
                 const $item = $(`
                     <li class="notification-item ${unreadClass} priority-${priorityClass} type-${typeClass}" data-id="${n.id}" data-type="${n.type}">
                         <div class="notification-icon"><i class="${icon}"></i></div>
@@ -222,7 +231,7 @@ $(document).ready(function () {
                             <span class="notification-time">${timeText || ''}</span>
                             <div class="notification-actions">
                                 <button class="mark-read-btn btn-text" data-id="${n.id}" data-type="${n.type}">Marcar como lida</button>
-                                ${n.entityId ? `<a href="/rh/colaboradores/${n.entityId}" class="btn-text">Ir para detalhe</a>` : ''}
+                                ${detailLink}
                                 ${actionLink}
                                 <button class="silence-btn btn-text" data-id="${n.id}" data-type="${n.type}">Silenciar</button>
                             </div>

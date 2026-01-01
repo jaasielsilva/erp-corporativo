@@ -318,13 +318,20 @@ public class UsuarioController {
     @GetMapping("/{id}/foto")
     public ResponseEntity<byte[]> exibirFoto(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-        if (usuarioOpt.isPresent() && usuarioOpt.get().getFotoPerfil() != null) {
-            byte[] foto = usuarioOpt.get().getFotoPerfil();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(detectImageMediaType(foto));
-            return new ResponseEntity<>(foto, headers, HttpStatus.OK);
+        byte[] foto = usuarioOpt.isPresent() ? usuarioOpt.get().getFotoPerfil() : null;
+        if (foto == null) {
+            try {
+                org.springframework.core.io.ClassPathResource imagemPadrao = new org.springframework.core.io.ClassPathResource("static/img/gerente.png");
+                try (java.io.InputStream in = imagemPadrao.getInputStream()) {
+                    foto = in.readAllBytes();
+                }
+            } catch (java.io.IOException e) {
+                return ResponseEntity.notFound().build();
+            }
         }
-        return ResponseEntity.notFound().build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(detectImageMediaType(foto));
+        return new ResponseEntity<>(foto, headers, HttpStatus.OK);
     }
 
     private MediaType detectImageMediaType(byte[] bytes) {

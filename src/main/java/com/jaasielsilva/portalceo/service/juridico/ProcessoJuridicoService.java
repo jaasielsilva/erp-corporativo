@@ -147,6 +147,11 @@ public class ProcessoJuridicoService {
     @Transactional
     public PrazoJuridico concluirPrazo(Long prazoId) {
         PrazoJuridico p = prazoRepo.findById(prazoId).orElseThrow(() -> new IllegalArgumentException("Prazo não encontrado"));
+        ProcessoJuridico proc = processoRepo.findById(p.getProcessoId())
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+        if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
+            throw new IllegalStateException("Não é possível modificar prazos de processos encerrados");
+        }
         p.setCumprido(true);
         return prazoRepo.save(p);
     }
@@ -168,11 +173,21 @@ public class ProcessoJuridicoService {
 
     @Transactional
     public AndamentoProcesso adicionarAndamento(AndamentoProcesso andamento) {
+        ProcessoJuridico proc = processoRepo.findById(andamento.getProcessoId())
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+        if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
+            throw new IllegalStateException("Não é possível adicionar eventos a processos encerrados");
+        }
         return andamentoRepo.save(andamento);
     }
 
     @Transactional
     public AndamentoProcesso adicionarAndamento(Long processoId, String titulo, String descricao, String tipoEtapa) {
+        ProcessoJuridico proc = processoRepo.findById(processoId)
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+        if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
+            throw new IllegalStateException("Não é possível adicionar eventos a processos encerrados");
+        }
         AndamentoProcesso a = new AndamentoProcesso();
         a.setProcessoId(processoId);
         a.setTitulo(titulo);
@@ -190,6 +205,11 @@ public class ProcessoJuridicoService {
 
     @Transactional
     public PrazoJuridico adicionarPrazo(Long processoId, String dataLimite, String descricao, String responsabilidade) {
+        ProcessoJuridico proc = processoRepo.findById(processoId)
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+        if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
+            throw new IllegalStateException("Não é possível adicionar prazos a processos encerrados");
+        }
         PrazoJuridico p = new PrazoJuridico();
         p.setProcessoId(processoId);
         p.setDescricao(descricao);
@@ -201,6 +221,11 @@ public class ProcessoJuridicoService {
 
     @Transactional
     public Audiencia adicionarAudiencia(Long processoId, String dataHora, String tipo, String observacoes) {
+        ProcessoJuridico proc = processoRepo.findById(processoId)
+                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+        if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
+            throw new IllegalStateException("Não é possível agendar audiências em processos encerrados");
+        }
         Audiencia a = new Audiencia();
         a.setProcessoId(processoId);
         a.setDataHora(LocalDateTime.parse(dataHora));

@@ -21,6 +21,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado;
 
 @Entity
 @Table(name = "juridico_previd_processo")
@@ -63,6 +65,25 @@ public class ProcessoPrevidenciario {
 
     @Column(name = "url_meu_inss", length = 500)
     private String urlMeuInss;
+
+    @Column(name = "valor_causa")
+    private BigDecimal valorCausa;
+
+    @Column(name = "valor_concedido")
+    private BigDecimal valorConcedido;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resultado_decisao", length = 30)
+    private ProcessoDecisaoResultado resultadoDecisao;
+
+    @Column(name = "ganhou_causa")
+    private Boolean ganhouCausa;
+
+    @Column(name = "data_decisao")
+    private LocalDate dataDecisao;
+
+    @Column(name = "observacao_decisao", length = 1000)
+    private String observacaoDecisao;
 
     @PrePersist
     public void prePersist() {

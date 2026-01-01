@@ -42,6 +42,9 @@ public class NotificationService {
 
     @Autowired
     private ProcessoJuridicoRepository processoJuridicoRepository;
+    
+    @Autowired
+    private com.jaasielsilva.portalceo.repository.juridico.AudienciaRepository audienciaRepository;
 
     // Método para obter RealtimeNotificationService sem dependência circular
     private RealtimeNotificationService getRealtimeNotificationService() {
@@ -324,6 +327,12 @@ public class NotificationService {
                     "ProcessoJuridico",
                     p.getId());
         }
+    }
+
+    @Scheduled(cron = "0 * * * * ?")
+    @Async
+    public void notifyUpcomingAudiencias() {
+        return;
     }
 
     // Métodos de conveniência para tipos específicos de notificação

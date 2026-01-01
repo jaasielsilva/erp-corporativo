@@ -11,6 +11,7 @@ import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.service.Workf
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import com.jaasielsilva.portalceo.service.ClienteService;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciarioStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,12 +22,20 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.math.BigDecimal;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado;
 
 @Controller
 @RequestMapping("/juridico/previdenciario")
@@ -131,6 +140,7 @@ public class ProcessoPrevidenciarioController {
         model.addAttribute("permiteAnexo", workflowService.permiteAnexo(processo.getEtapaAtual()));
         model.addAttribute("tiposDocumento", TipoDocumentoProcesso.values());
         model.addAttribute("etapaAtual", processo.getEtapaAtual());
+        model.addAttribute("tiposDecisao", ProcessoDecisaoResultado.values());
         return "juridico/previdenciario/detalhe";
     }
 
@@ -166,6 +176,134 @@ public class ProcessoPrevidenciarioController {
         return "redirect:/juridico/previdenciario/" + id;
     }
 
+    @PostMapping("/{id}/decisao")
+    public String salvarDecisao(@PathVariable Long id,
+            @RequestParam(value = "resultado", required = false) ProcessoDecisaoResultado resultado,
+            @RequestParam(value = "ganhouCausa", required = false) Boolean ganhouCausa,
+            @RequestParam(value = "valorCausa", required = false) String valorCausaStr,
+            @RequestParam(value = "valorConcedido", required = false) String valorConcedidoStr,
+            @RequestParam(value = "dataDecisao", required = false) LocalDate dataDecisao,
+            @RequestParam(value = "observacaoDecisao", required = false) String observacaoDecisao,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Usuario executor = usuarioLogado(authentication);
+            BigDecimal valorCausa = parseDecimal(valorCausaStr);
+            BigDecimal valorConcedido = parseDecimal(valorConcedidoStr);
+            processoService.atualizarDecisao(id, resultado, ganhouCausa, valorCausa, valorConcedido, dataDecisao,
+                    observacaoDecisao, executor);
+            redirectAttributes.addFlashAttribute("sucesso", "Decisão registrada com sucesso");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/juridico/previdenciario/" + id;
+    }
+
+    @GetMapping("/api/processos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> obterDetalhesApi(@PathVariable Long id) {
+        try {
+            ProcessoPrevidenciario p = processoService.buscarPorId(id);
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", p.getId());
+            m.put("numero", p.getNumeroProtocolo() != null ? p.getNumeroProtocolo() : ("Processo #" + p.getId()));
+            m.put("tipo", "Previdenciária");
+            m.put("tribunal", "—");
+            m.put("parte", "Instituto Nacional do Seguro Social – INSS");
+            m.put("status", p.getStatusAtual() != null ? p.getStatusAtual().name() : null);
+            m.put("etapa", p.getEtapaAtual() != null ? p.getEtapaAtual().name() : null);
+            m.put("dataAbertura", p.getDataAbertura());
+            m.put("dataProtocolo", p.getDataProtocolo());
+            m.put("urlMeuInss", p.getUrlMeuInss());
+            return ResponseEntity.ok(m);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(Map.of("erro", "Processo previdenciário não encontrado"));
+        }
+    }
+
+    @GetMapping("/api/processos/{id}/historico")
+    @ResponseBody
+    public ResponseEntity<?> obterHistoricoApi(@PathVariable Long id) {
+        try {
+            var lista = historicoService.listarPorProcesso(id).stream().map(h -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("data", h.getDataEvento());
+                m.put("tipo", "ANDAMENTO");
+                m.put("titulo", h.getEvento());
+                m.put("descricao", h.getObservacao());
+                m.put("usuario", h.getUsuario() != null ? h.getUsuario().getNome() : null);
+                return m;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(lista);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(List.of());
+        }
+    }
+
+    @GetMapping("/api/processos/{id}/documentos")
+    @ResponseBody
+    public ResponseEntity<?> obterDocumentosApi(@PathVariable Long id) {
+        try {
+            var lista = documentoService.listarPorProcesso(id).stream().map(d -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", d.getId());
+                m.put("tipo", d.getTipoDocumento() != null ? d.getTipoDocumento().name() : null);
+                m.put("dataUpload", d.getDataUpload());
+                m.put("enviadoPor", d.getEnviadoPor() != null ? d.getEnviadoPor().getNome() : null);
+                m.put("caminhoArquivo", d.getCaminhoArquivo());
+                return m;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(lista);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(List.of());
+        }
+    }
+
+    @PostMapping("/api/processos/{id}/reabrir")
+    @ResponseBody
+    public ResponseEntity<?> reabrirApi(@PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            Authentication authentication) {
+        try {
+            Usuario executor = usuarioLogado(authentication);
+            String justificativa = body.get("justificativa") != null ? String.valueOf(body.get("justificativa")).trim() : null;
+            String destinoStr = body.get("statusDestino") != null ? String.valueOf(body.get("statusDestino")).trim() : "EM_ANDAMENTO";
+            ProcessoPrevidenciarioStatus destino = null;
+            try {
+                destino = ProcessoPrevidenciarioStatus.valueOf(destinoStr);
+            } catch (Exception ignored) {}
+            processoService.reabrir(id, destino, justificativa, executor);
+            return ResponseEntity.ok(Map.of("sucesso", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/api/processos/{id}/ganho")
+    @ResponseBody
+    public ResponseEntity<?> registrarGanhoApi(@PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            Authentication authentication) {
+        try {
+            Usuario executor = usuarioLogado(authentication);
+            BigDecimal valor = parseDecimal(body.get("valor") != null ? String.valueOf(body.get("valor")) : null);
+            LocalDate vencimento = null;
+            try {
+                String venc = body.get("vencimento") != null ? String.valueOf(body.get("vencimento")) : null;
+                if (venc != null && !venc.isBlank()) vencimento = LocalDate.parse(venc);
+            } catch (Exception ignored) {}
+            String numeroDocumento = body.get("numeroDocumento") != null ? String.valueOf(body.get("numeroDocumento")) : null;
+            String observacoes = body.get("observacoes") != null ? String.valueOf(body.get("observacoes")) : null;
+            if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("erro", "Valor inválido"));
+            }
+            processoService.registrarGanho(id, valor, vencimento, numeroDocumento, observacoes, executor);
+            return ResponseEntity.ok(Map.of("sucesso", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
+    }
+
     private Usuario usuarioLogado(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             throw new IllegalStateException("Usuário não autenticado");
@@ -174,5 +312,16 @@ public class ProcessoPrevidenciarioController {
         return usuarioRepository.findByEmail(username)
                 .or(() -> usuarioRepository.findByMatricula(username))
                 .orElseThrow(() -> new IllegalStateException("Usuário não encontrado"));
+    }
+
+    private BigDecimal parseDecimal(String v) {
+        if (v == null) return null;
+        String s = v.trim().replace(".", "").replace(",", ".");
+        if (s.isBlank()) return null;
+        try {
+            return new BigDecimal(s);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

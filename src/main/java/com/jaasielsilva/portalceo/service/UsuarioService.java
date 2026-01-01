@@ -101,8 +101,10 @@ public class UsuarioService {
         if (usuario.getFotoPerfil() == null) {
             try {
                 ClassPathResource imagemPadrao = new ClassPathResource("static/img/gerente.png");
-                byte[] fotoPadrao = Files.readAllBytes(imagemPadrao.getFile().toPath());
-                usuario.setFotoPerfil(fotoPadrao);
+                try (java.io.InputStream in = imagemPadrao.getInputStream()) {
+                    byte[] fotoPadrao = in.readAllBytes();
+                    usuario.setFotoPerfil(fotoPadrao);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 usuario.setFotoPerfil(null);

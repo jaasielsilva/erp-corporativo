@@ -964,6 +964,14 @@ public class JuridicoController {
     @ResponseBody
     public ResponseEntity<?> criarAudienciaApi(@PathVariable Long id,
             @RequestBody Map<String, Object> body) {
+        var procOpt = processoJuridicoRepository.findById(id);
+        if (procOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado"));
+        }
+        var proc = procOpt.get();
+        if (proc.getStatus() == com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Processo encerrado não permite novas audiências"));
+        }
         com.jaasielsilva.portalceo.model.juridico.Audiencia a = new com.jaasielsilva.portalceo.model.juridico.Audiencia();
         a.setProcessoId(id);
         Object dh = body.get("dataHora");
@@ -989,6 +997,14 @@ public class JuridicoController {
     @ResponseBody
     public ResponseEntity<?> criarPrazoApi(@PathVariable Long id,
             @RequestBody Map<String, Object> body) {
+        var procOpt = processoJuridicoRepository.findById(id);
+        if (procOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado"));
+        }
+        var proc = procOpt.get();
+        if (proc.getStatus() == com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Processo encerrado não permite novos prazos"));
+        }
         com.jaasielsilva.portalceo.model.juridico.PrazoJuridico pz = new com.jaasielsilva.portalceo.model.juridico.PrazoJuridico();
         pz.setProcessoId(id);
         Object dl = body.get("dataLimite");
@@ -1096,6 +1112,14 @@ public class JuridicoController {
     public ResponseEntity<?> atualizarStatusProcesso(@PathVariable Long id,
             @RequestParam("status") String status) {
         try {
+            var procOpt = processoJuridicoRepository.findById(id);
+            if (procOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado"));
+            }
+            var atual = procOpt.get();
+            if (atual.getStatus() == com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
+                return ResponseEntity.status(403).body(Map.of("erro", "Processo encerrado: utilize o fluxo de reabertura"));
+            }
             com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso st = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso
                     .valueOf(status);
             com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico p = processoJuridicoService.atualizarStatus(id,
@@ -1103,6 +1127,56 @@ public class JuridicoController {
             return ResponseEntity.ok(Map.of("id", p.getId(), "status", p.getStatus()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Status inválido"));
+        }
+    }
+
+    @PostMapping("/api/processos/{id}/reabrir")
+    @ResponseBody
+    public ResponseEntity<?> reabrirProcesso(@PathVariable Long id,
+                                             @RequestBody Map<String, Object> body,
+                                             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        try {
+            var procOpt = processoJuridicoRepository.findById(id);
+            if (procOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado"));
+            }
+            var processo = procOpt.get();
+            if (processo.getStatus() != com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
+                return ResponseEntity.badRequest().body(Map.of("erro", "Somente processos encerrados podem ser reabertos"));
+            }
+            boolean autorizado = userDetails != null && userDetails.getAuthorities().stream().anyMatch(a ->
+                    a.getAuthority().equals("ROLE_ADMIN") ||
+                    a.getAuthority().equals("ROLE_MASTER") ||
+                    a.getAuthority().equals("ROLE_JURIDICO") ||
+                    a.getAuthority().equals("ROLE_GERENCIAL")
+            );
+            if (!autorizado) {
+                return ResponseEntity.status(403).body(Map.of("erro", "Usuário sem permissão para reabrir processo"));
+            }
+            String justificativa = String.valueOf(body.getOrDefault("justificativa", "")).trim();
+            if (justificativa.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("erro", "Informe a justificativa da reabertura"));
+            }
+            String destinoStr = String.valueOf(body.getOrDefault("statusDestino", "EM_ANDAMENTO"));
+            com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso destino;
+            try {
+                destino = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.valueOf(destinoStr);
+            } catch (Exception ex) {
+                destino = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO;
+            }
+            processo.setStatus(destino);
+            processoJuridicoRepository.save(processo);
+            com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso reg = new com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso();
+            reg.setProcessoId(processo.getId());
+            reg.setTitulo("Reabertura do processo");
+            reg.setDescricao(justificativa);
+            reg.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.IMPORTANTE);
+            reg.setDataHora(java.time.LocalDateTime.now());
+            reg.setUsuario(userDetails != null ? userDetails.getUsername() : "Sistema");
+            processoJuridicoService.adicionarAndamento(reg);
+            return ResponseEntity.ok(Map.of("id", processo.getId(), "status", processo.getStatus()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Falha ao reabrir processo: " + ex.getMessage()));
         }
     }
 

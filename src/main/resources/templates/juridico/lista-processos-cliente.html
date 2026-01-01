@@ -11,7 +11,7 @@
     <link href="/css/corporate.css" rel="stylesheet">
     <!-- Toastr for notifications -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -52,42 +52,113 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light text-muted small text-uppercase fw-bold">
                                 <tr>
-                                    <th class="ps-4">Número</th>
-                                    <th>Tipo</th>
-                                    <th>Tribunal</th>
-                                    <th>Parte Contrária</th>
-                                    <th>Status</th>
-                                    <th>Data Abertura</th>
+                                    <th class="text-center">Número</th>
+                                    <th class="text-center">Tipo</th>
+                                    <th class="text-center">Tribunal</th>
+                                    <th class="text-center">Parte Contrária</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Data Abertura</th>
                                     <th class="text-end pe-4">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:each="processo : ${processos.content}" class="cursor-pointer proc-row" th:data-id="${processo.id}">
-                                    <td class="ps-4 fw-bold text-primary" th:text="${processo.numero}">00000</td>
-                                    <td>
+                                    <td class="text-center fw-bold text-primary" th:text="${processo.numero}">00000</td>
+                                    <td class="text-center">
                                         <span class="badge bg-light text-dark border" th:text="${processo.tipo != null ? processo.tipo.descricao : 'Outros'}">Tipo</span>
                                     </td>
                                     <td th:text="${processo.tribunal}">Tribunal</td>
-                                    <td th:text="${processo.parte}">Parte</td>
-                                    <td>
+                                    <td class="text-center" th:text="${processo.parte}">Parte</td>
+                                    <td class="text-center">
                                         <span class="badge rounded-pill" 
                                               th:classappend="${processo.status.name() == 'EM_ANDAMENTO' ? 'bg-warning-subtle text-warning-emphasis' : (processo.status.name() == 'ENCERRADO' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis')}"
                                               th:text="${processo.status}">Status</span>
                                     </td>
                                     <td th:text="${#temporals.format(processo.dataAbertura, 'dd/MM/yyyy')}">01/01/2024</td>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-icon btn-light text-primary proc-detail" th:data-id="${processo.id}" title="Detalhes">
+                                        <button class="btn btn-sm btn-info proc-detail" th:data-id="${processo.id}" title="Detalhes">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <a th:href="@{/juridico/processos/novo(id=${processo.id})}" class="btn btn-sm btn-icon btn-light text-muted ms-1" title="Editar">
-                                            <i class="fas fa-edit"></i>
+                                        <a th:if="${processo.status == null or processo.status.name() != 'ENCERRADO'}"
+                                           th:href="@{/juridico/processos/novo(id=${processo.id})}"
+                                           class="btn btn-sm btn-warning ms-1" title="Editar">
+                                           <i class="fas fa-edit"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-icon btn-light text-success proc-ganho ms-1" th:data-id="${processo.id}" title="Registrar ganho de causa">
+                                        <a th:if="${processo.status != null and processo.status.name() == 'ENCERRADO'}"
+                                           href="#"
+                                           class="btn btn-sm btn-warning ms-1 disabled"
+                                           title="Processo encerrado"
+                                           onclick="return false;" style="pointer-events: none;">
+                                           <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button th:if="${processo.status == null or processo.status.name() != 'ENCERRADO'}"
+                                                class="btn btn-sm btn-success proc-ganho ms-1"
+                                                th:data-id="${processo.id}" title="Registrar ganho de causa">
                                             <i class="fas fa-hand-holding-usd"></i>
+                                        </button>
+                                        <button th:if="${processo.status != null and processo.status.name() == 'ENCERRADO'}"
+                                                class="btn btn-sm btn-success ms-1 disabled"
+                                                title="Processo encerrado"
+                                                disabled>
+                                            <i class="fas fa-hand-holding-usd"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-dark ms-1 proc-reabrir"
+                                                th:if="${processo.status != null and processo.status.name() == 'ENCERRADO'}"
+                                                th:data-id="${processo.id}" title="Reabrir processo">
+                                            <i class="fas fa-unlock"></i>
                                         </button>
                                     </td>
                                 </tr>
-                                <tr th:if="${processos.empty}">
+                                <!-- Processos Previdenciários mesclados na mesma tabela -->
+                                <tr th:each="p : ${processosPrevidenciarios}" class="cursor-pointer proc-row-previdenciario" th:data-id="${p.id}">
+                                    <td class="text-center fw-bold text-primary"
+                                        th:text="${p.numeroProtocolo != null ? p.numeroProtocolo : 'Processo #' + p.id}">Processo #1</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border">Previdenciária</span>
+                                    </td>
+                                    <td>—</td>
+                                    <td class="text-center">Instituto Nacional do Seguro Social – INSS</td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill"
+                                              th:classappend="${p.statusAtual != null && p.statusAtual.name() == 'EM_ANDAMENTO' ? 'bg-warning-subtle text-warning-emphasis' : (p.statusAtual != null && p.statusAtual.name() == 'ENCERRADO' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis')}"
+                                              th:text="${p.statusAtual}">Status</span>
+                                    </td>
+                                    <td th:text="${p.dataAbertura != null ? T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy').format(p.dataAbertura) : '—'}">—</td>
+                                    <td class="text-end pe-4">
+                                        <button class="btn btn-sm btn-info previd-detail" th:data-id="${p.id}" title="Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a th:if="${p.statusAtual == null or p.statusAtual.name() != 'ENCERRADO'}"
+                                           th:href="@{'/juridico/previdenciario/' + ${p.id}}"
+                                           class="btn btn-sm btn-warning ms-1" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a th:if="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}"
+                                           href="#"
+                                           class="btn btn-sm btn-warning ms-1 disabled"
+                                           title="Processo encerrado"
+                                           onclick="return false;" style="pointer-events: none;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button th:if="${p.statusAtual == null or p.statusAtual.name() != 'ENCERRADO'}"
+                                                class="btn btn-sm btn-success previd-ganho ms-1"
+                                                th:data-id="${p.id}" title="Registrar ganho de causa">
+                                            <i class="fas fa-hand-holding-usd"></i>
+                                        </button>
+                                        <button th:if="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}"
+                                                class="btn btn-sm btn-success ms-1 disabled"
+                                                title="Processo encerrado"
+                                                disabled>
+                                            <i class="fas fa-hand-holding-usd"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-dark ms-1 previd-reabrir"
+                                                th:if="${p.statusAtual != null and p.statusAtual.name() == 'ENCERRADO'}"
+                                                th:data-id="${p.id}" title="Reabrir processo">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr th:if="${processos.empty and (processosPrevidenciarios == null or processosPrevidenciarios.isEmpty())}">
                                     <td colspan="7" class="text-center py-5 text-muted">
                                         <div class="mb-3"><i class="fas fa-folder-open fa-3x opacity-25"></i></div>
                                         <p class="mb-0">Nenhum processo encontrado para este cliente.</p>
@@ -95,27 +166,40 @@
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-                
-                <!-- Paginação -->
-                <div class="card-footer bg-white border-top-0 py-3" th:if="${processos.totalPages > 1}">
-                    <nav aria-label="Navegação de página">
-                        <ul class="pagination pagination-sm justify-content-end mb-0">
-                            <li class="page-item" th:classappend="${processos.first} ? 'disabled'">
-                                <a class="page-link border-0" th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${processos.number - 1})}"><i class="fas fa-chevron-left"></i></a>
-                            </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, processos.totalPages - 1)}"
-                                th:classappend="${processos.number == i} ? 'active'">
-                                <a class="page-link border-0 rounded-circle mx-1" th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${i})}" th:text="${i + 1}">1</a>
-                            </li>
-                            <li class="page-item" th:classappend="${processos.last} ? 'disabled'">
-                                <a class="page-link border-0" th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${processos.number + 1})}"><i class="fas fa-chevron-right"></i></a>
-                            </li>
-                        </ul>
-                    </nav>
                 </div>
             </div>
+            
+            <!-- Paginação padrão (modelo /clientes) -->
+            <div class="card-footer bg-white border-top-0 py-3" th:if="${processos.totalPages > 0}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="pagination-info">
+                        Página <span th:text="${processos.number + 1}">1</span> de
+                        <span th:text="${processos.totalPages}">1</span>
+                        (<span th:text="${processos.totalElements}">0</span> processos)
+                    </span>
+                    <div class="pagination-nav">
+                        <a class="btn btn-secondary"
+                           th:if="${!processos.first}"
+                           th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${processos.number - 1})}">
+                           <i class="fas fa-chevron-left"></i> Anterior
+                        </a>
+                        <span class="btn btn-secondary disabled" th:if="${processos.first}">
+                            <i class="fas fa-chevron-left"></i> Anterior
+                        </span>
+                        <a class="btn btn-secondary ms-2"
+                           th:if="${!processos.last}"
+                           th:href="@{/juridico/processos/cliente/{id}(id=${cliente.id}, page=${processos.number + 1})}">
+                           Próxima <i class="fas fa-chevron-right"></i>
+                        </a>
+                        <span class="btn btn-secondary ms-2 disabled" th:if="${processos.last}">
+                            Próxima <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
         </div>
       </section>
 
@@ -328,6 +412,71 @@
       </div>
   </div>
 
+  <!-- Offcanvas de Detalhes Previdenciário (INSS) -->
+  <div class="offcanvas offcanvas-end process-offcanvas" tabindex="-1" id="previdDetailOffcanvas" aria-labelledby="previdDetailOffcanvasLabel">
+      <div class="offcanvas-header">
+          <div>
+              <h5 class="offcanvas-title fw-bold" id="previdDetailOffcanvasLabel">Detalhes do Processo INSS</h5>
+              <div class="process-meta">
+                  <span id="previdDetailNumeroHeader" class="badge bg-white text-dark bg-opacity-25">Processo #</span>
+                  <span id="previdDetailStatusHeader" class="badge bg-success">EM ANDAMENTO</span>
+              </div>
+          </div>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body p-0">
+          <ul class="nav nav-tabs modern-tabs px-3 pt-2" id="previdTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#previd-content-resumo" type="button" role="tab">Resumo</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#previd-content-timeline" type="button" role="tab">Timeline</button>
+              </li>
+          </ul>
+          <div class="tab-content p-4">
+              <div class="tab-pane fade show active" id="previd-content-resumo" role="tabpanel">
+                  <div class="row g-3">
+                      <div class="col-md-6">
+                          <div class="info-card">
+                              <div class="info-label">Tipo</div>
+                              <div class="info-value" id="previdDetailTipo">Previdenciária</div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="info-card">
+                              <div class="info-label">Etapa</div>
+                              <div class="info-value" id="previdDetailEtapa">—</div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="info-card">
+                              <div class="info-label">Abertura</div>
+                              <div class="info-value" id="previdDetailDataAbertura">—</div>
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="info-card">
+                              <div class="info-label">Protocolo INSS</div>
+                              <div class="info-value" id="previdDetailProtocolo">—</div>
+                          </div>
+                      </div>
+                      <div class="col-12">
+                          <div class="info-card">
+                              <div class="info-label">URL Meu INSS</div>
+                              <div class="info-value" id="previdDetailUrlMeuInss">—</div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="tab-pane fade" id="previd-content-timeline" role="tabpanel">
+                  <div class="timeline-modern" id="previdTimeline">
+                      <div class="text-center py-4 text-muted">Carregando timeline...</div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
   <script src="/js/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/notifications.js"></script>
@@ -363,15 +512,26 @@
     $(document).ready(function() {
         const offcanvasEl = document.getElementById('procDetailOffcanvas');
         const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+        const previdOffcanvasEl = document.getElementById('previdDetailOffcanvas');
+        const previdOffcanvas = new bootstrap.Offcanvas(previdOffcanvasEl);
 
         // Abrir Detalhes (clique na linha ou botão)
         $('.proc-row, .proc-detail').on('click', function(e) {
             // Se clicar em um botão dentro da linha (como Editar), não abre o modal se não for o botão de detalhe
             if ($(e.target).closest('.proc-ganho').length > 0) return;
+            if ($(e.target).closest('.proc-reabrir').length > 0) return;
             if ($(e.target).closest('a').length > 0 && !$(e.target).closest('.proc-detail').length) return;
             
             const id = $(this).data('id');
             if (id) abrirDetalhesProcesso(id);
+        });
+
+        $('.proc-row-previdenciario, .previd-detail').on('click', function(e) {
+            if ($(e.target).closest('.previd-reabrir').length > 0) return;
+            if ($(e.target).closest('.previd-ganho').length > 0) return;
+            if ($(e.target).closest('a').length > 0 && !$(e.target).closest('.previd-detail').length) return;
+            const id = $(this).data('id');
+            if (id) abrirDetalhesPrevidenciario(id);
         });
 
         // Registrar ganho de causa (ação rápida)
@@ -460,6 +620,147 @@
             });
         });
 
+        // Reabrir processo (Previdenciário)
+        $(document).on('click', '.previd-reabrir', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = $(this).data('id');
+            const { value: formValues, isConfirmed } = await Swal.fire({
+                title: 'Reabrir processo INSS',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-2">
+                            <label class="form-label">Destino do status</label>
+                            <select id="swPrevStatusDestino" class="form-select">
+                                <option value="EM_ANDAMENTO">Em Andamento</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Justificativa</label>
+                            <textarea id="swPrevJustificativa" class="form-control" rows="3" placeholder="Explique os motivos da reabertura..." required></textarea>
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Reabrir',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const justificativa = document.getElementById('swPrevJustificativa').value.trim();
+                    const statusDestino = document.getElementById('swPrevStatusDestino').value;
+                    if (!justificativa) {
+                        Swal.showValidationMessage('Informe a justificativa.');
+                        return false;
+                    }
+                    return { justificativa, statusDestino };
+                }
+            });
+            if (!isConfirmed || !formValues) return;
+            $.ajax({
+                url: `/juridico/previdenciario/api/processos/${id}/reabrir`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formValues)
+            })
+            .done(() => {
+                notify('success', 'Reaberto', 'Processo INSS reaberto com sucesso.');
+                location.reload();
+            })
+            .fail(xhr => {
+                let msg = 'Falha ao reabrir processo';
+                try {
+                    if (xhr.responseJSON && xhr.responseJSON.erro) msg = xhr.responseJSON.erro;
+                    else if (xhr.responseText) msg = xhr.responseText;
+                    else if (xhr.statusText) msg = xhr.statusText;
+                } catch(e) {}
+                notify('error', 'Erro', msg);
+            });
+        });
+
+        // Registrar ganho de causa (Previdenciário)
+        $(document).on('click', '.previd-ganho', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = $(this).data('id');
+            const r = await Swal.fire({
+                title: 'Registrar ganho de causa (INSS)',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-2">
+                            <label class="form-label">Valor (R$)</label>
+                            <input id="swPrevValorGanho" class="form-control" placeholder="Ex.: 15.000,00" inputmode="numeric">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Vencimento</label>
+                            <input id="swPrevVencimento" type="date" class="form-control" value="${new Date().toISOString().slice(0,10)}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Número do documento (opcional)</label>
+                            <input id="swPrevDocNum" class="form-control" placeholder="Ex.: Prev-12345">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Observações (opcional)</label>
+                            <textarea id="swPrevObs" class="form-control" rows="2" placeholder="Detalhes do benefício/concessão"></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Registrar',
+                cancelButtonText: 'Cancelar',
+                focusConfirm: false,
+                didOpen: () => {
+                    const el = document.getElementById('swPrevValorGanho');
+                    el.addEventListener('input', () => {
+                        let digits = (el.value || '').replace(/\D/g, '');
+                        if (!digits) { el.value = ''; return; }
+                        const num = Number(digits) / 100;
+                        el.value = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    });
+                },
+                preConfirm: () => {
+                    const vStr = document.getElementById('swPrevValorGanho').value;
+                    const dt = document.getElementById('swPrevVencimento').value;
+                    if (!vStr || !dt) {
+                        Swal.showValidationMessage('Informe Valor e Vencimento.');
+                        return false;
+                    }
+                    return {
+                        valor: vStr,
+                        vencimento: dt,
+                        numeroDocumento: document.getElementById('swPrevDocNum').value || '',
+                        observacoes: document.getElementById('swPrevObs').value || ''
+                    };
+                }
+            });
+            if (!r.isConfirmed || !r.value) return;
+            $.ajax({
+                url: `/juridico/previdenciario/api/processos/${id}/ganho`,
+                method: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(r.value)
+            })
+            .done(() => { 
+                notify('success', 'Registrado', 'Ganho registrado e lançado em Contas a Receber.'); 
+                location.reload();
+            })
+            .fail(xhr => {
+                let msg = 'Falha ao registrar ganho';
+                try {
+                    if (xhr.responseJSON && xhr.responseJSON.erro) {
+                        msg = xhr.responseJSON.erro;
+                    } else if (xhr.responseText) {
+                        const maybeJson = JSON.parse(xhr.responseText);
+                        if (maybeJson && maybeJson.erro) msg = maybeJson.erro;
+                        else msg = xhr.responseText;
+                    } else if (xhr.statusText) {
+                        msg = xhr.statusText;
+                    }
+                } catch(e) {
+                    if (xhr.responseText) msg = xhr.responseText;
+                }
+                notify('error', 'Erro', msg);
+            });
+        });
         function abrirDetalhesProcesso(id) {
             // Limpar estado anterior
             $('#procDetailNumeroHeader').text('Carregando...');
@@ -478,6 +779,19 @@
                     $('#procDetailStatusHeader').text(data.status || 'EM_ANDAMENTO')
                         .removeClass('bg-success bg-warning bg-secondary')
                         .addClass(getStatusBadgeClass(data.status));
+                    
+                    const encerrado = String(data.status) === 'ENCERRADO';
+                    if (encerrado) {
+                        $('#btnNovoAndamento').prop('disabled', true).addClass('disabled').hide();
+                        $('#formAndamento').addClass('d-none');
+                        $('#btnNovaAudiencia').prop('disabled', true).addClass('disabled').hide();
+                        $('#formAudiencia').addClass('d-none');
+                        $('#btnNovoPrazo').prop('disabled', true).addClass('disabled').hide();
+                        $('#formPrazo').addClass('d-none');
+                        $('#linkEditarProcesso').addClass('disabled').attr('href', '#').attr('title', 'Processo encerrado');
+                    } else {
+                        $('#btnNovoAndamento, #btnNovaAudiencia, #btnNovoPrazo').prop('disabled', false).removeClass('disabled').show();
+                    }
                     
                     $('#procDetailTribunal').text(data.tribunal || '—');
                     $('#procDetailTipo').text(data.tipo || '—');
@@ -503,6 +817,17 @@
                 })
                 .fail(() => {
                     $('#procTimeline').html('<div class="text-center text-danger">Erro ao carregar timeline.</div>');
+                });
+        }
+
+        function carregarTimelinePrevid(id) {
+             $.get(`/juridico/previdenciario/api/processos/${id}/historico`)
+                .done(timelineData => {
+                    renderTimeline(timelineData, 'Previdenciária');
+                    $('#previdTimeline').html($('#procTimeline').html());
+                })
+                .fail(() => {
+                    $('#previdTimeline').html('<div class="text-center text-danger">Erro ao carregar timeline.</div>');
                 });
         }
 
@@ -543,6 +868,29 @@
                 </div>`;
             });
             $container.html(html);
+        }
+
+        function abrirDetalhesPrevidenciario(id) {
+            $('#previdDetailNumeroHeader').text('Carregando...');
+            $('#previdTimeline').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>');
+            $('#previdDetailOffcanvas').attr('data-proc-id', id);
+            previdOffcanvas.show();
+            $.get(`/juridico/previdenciario/api/processos/${id}`)
+                .done(function(data) {
+                    $('#previdDetailNumeroHeader').text(data.numero || ('Processo #' + id));
+                    $('#previdDetailStatusHeader').text(data.status || 'EM_ANDAMENTO')
+                        .removeClass('bg-success bg-warning bg-secondary')
+                        .addClass(getStatusBadgeClass(data.status));
+                    $('#previdDetailTipo').text('Previdenciária');
+                    $('#previdDetailEtapa').text(data.etapa || '—');
+                    $('#previdDetailDataAbertura').text(formatarData(data.dataAbertura));
+                    $('#previdDetailProtocolo').text(data.numero || '—');
+                    $('#previdDetailUrlMeuInss').text(data.urlMeuInss || '—');
+                    carregarTimelinePrevid(id);
+                })
+                .fail(function() {
+                    notify('error', 'Erro', 'Não foi possível carregar os detalhes do processo INSS.');
+                });
         }
 
         // --- Lógica de Andamentos (Timeline) ---
@@ -593,6 +941,64 @@
                 complete: function() {
                     $btn.prop('disabled', false).html(originalHtml);
                 }
+            });
+        });
+
+        // Reabrir processo (Somente Jurídico)
+        $(document).on('click', '.proc-reabrir', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = $(this).data('id');
+            const { value: formValues, isConfirmed } = await Swal.fire({
+                title: 'Reabrir processo',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-2">
+                            <label class="form-label">Destino do status</label>
+                            <select id="swStatusDestino" class="form-select">
+                                <option value="EM_ANDAMENTO">Em Andamento</option>
+                                <option value="SUSPENSO">Suspenso</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Justificativa</label>
+                            <textarea id="swJustificativa" class="form-control" rows="3" placeholder="Explique os motivos da reabertura..." required></textarea>
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Reabrir',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const justificativa = document.getElementById('swJustificativa').value.trim();
+                    const statusDestino = document.getElementById('swStatusDestino').value;
+                    if (!justificativa) {
+                        Swal.showValidationMessage('Informe a justificativa.');
+                        return false;
+                    }
+                    return { justificativa, statusDestino };
+                }
+            });
+            if (!isConfirmed || !formValues) return;
+            $.ajax({
+                url: `/juridico/api/processos/${id}/reabrir`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formValues)
+            })
+            .done(() => {
+                notify('success', 'Reaberto', 'Processo reaberto com sucesso.');
+                location.reload();
+            })
+            .fail(xhr => {
+                let msg = 'Falha ao reabrir processo';
+                try {
+                    if (xhr.responseJSON && xhr.responseJSON.erro) msg = xhr.responseJSON.erro;
+                    else if (xhr.responseText) msg = xhr.responseText;
+                    else if (xhr.statusText) msg = xhr.statusText;
+                } catch(e) {}
+                notify('error', 'Erro', msg);
             });
         });
 
@@ -819,4 +1225,8 @@
     });
   </script>
 </body>
+
+        <!-- Scripts da página: evite duplicar WebSocket; cliente global é carregado no Topbar -->
+    <script th:src="@{/js/notifications.js}" defer></script>
+    <script src="/js/sidebar.js" defer></script>
 </html>

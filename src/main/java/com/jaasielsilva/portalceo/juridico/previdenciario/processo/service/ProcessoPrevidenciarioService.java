@@ -16,6 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.math.BigDecimal;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado;
+import com.jaasielsilva.portalceo.service.ContaReceberService;
+import com.jaasielsilva.portalceo.model.ContaReceber;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +30,16 @@ public class ProcessoPrevidenciarioService {
     private final ClienteService clienteService;
     private final UsuarioRepository usuarioRepository;
     private final HistoricoProcessoService historicoProcessoService;
+    private final ContaReceberService contaReceberService;
 
     @Transactional(readOnly = true)
     public List<ProcessoPrevidenciario> listar() {
         return processoRepository.findAllByOrderByDataAberturaDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProcessoPrevidenciario> listarPorCliente(Long clienteId) {
+        return processoRepository.findByCliente_IdOrderByDataAberturaDesc(clienteId);
     }
 
     @Transactional(readOnly = true)
@@ -61,6 +72,9 @@ public class ProcessoPrevidenciarioService {
     public ProcessoPrevidenciario atualizarDadosBasicos(Long processoId, Long clienteId, Long responsavelId,
             Usuario usuarioExecutor) {
         ProcessoPrevidenciario existente = buscarPorId(processoId);
+        if (existente.getStatusAtual() == ProcessoPrevidenciarioStatus.ENCERRADO) {
+            throw new IllegalStateException("Processo encerrado não permite alterações");
+        }
         Cliente cliente = clienteService.buscarPorId(clienteId)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
         Usuario responsavel = usuarioRepository.findById(responsavelId)
@@ -87,6 +101,9 @@ public class ProcessoPrevidenciarioService {
             String urlMeuInss,
             Usuario usuarioExecutor) {
         ProcessoPrevidenciario existente = buscarPorId(processoId);
+        if (existente.getStatusAtual() == ProcessoPrevidenciarioStatus.ENCERRADO) {
+            throw new IllegalStateException("Processo encerrado não permite alterações");
+        }
         if (existente.getEtapaAtual() != EtapaWorkflowCodigo.PROTOCOLO_INSS) {
             throw new IllegalStateException("Dados de protocolo só podem ser editados na etapa PROTOCOLO_INSS");
         }
@@ -101,6 +118,95 @@ public class ProcessoPrevidenciarioService {
         ProcessoPrevidenciario atualizado = processoRepository.save(existente);
         historicoProcessoService.registrar(atualizado, "ATUALIZACAO_PROTOCOLO_INSS", usuarioExecutor,
                 "Dados do protocolo atualizados");
+        return atualizado;
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarDecisao(Long processoId,
+            ProcessoDecisaoResultado resultado,
+            Boolean ganhouCausa,
+            BigDecimal valorCausa,
+            BigDecimal valorConcedido,
+            LocalDate dataDecisao,
+            String observacao,
+            Usuario usuarioExecutor) {
+        ProcessoPrevidenciario existente = buscarPorId(processoId);
+        if (existente.getStatusAtual() == ProcessoPrevidenciarioStatus.ENCERRADO) {
+            throw new IllegalStateException("Processo encerrado não permite alterações");
+        }
+        if (existente.getEtapaAtual() != EtapaWorkflowCodigo.DECISAO) {
+            throw new IllegalStateException("Decisão só pode ser registrada na etapa DECISAO");
+        }
+        existente.setResultadoDecisao(resultado);
+        existente.setGanhouCausa(ganhouCausa != null ? ganhouCausa : null);
+        existente.setValorCausa(valorCausa);
+        existente.setValorConcedido(valorConcedido);
+        existente.setDataDecisao(dataDecisao);
+        existente.setObservacaoDecisao((observacao != null && !observacao.isBlank()) ? observacao.trim() : null);
+        ProcessoPrevidenciario atualizado = processoRepository.save(existente);
+        historicoProcessoService.registrar(atualizado, "DECISAO_PROCESSO", usuarioExecutor,
+                resultado != null ? resultado.name() : "SEM_RESULTADO");
+
+        if ((resultado == ProcessoDecisaoResultado.DEFERIDO || Boolean.TRUE.equals(ganhouCausa))
+                && valorConcedido != null && valorConcedido.compareTo(BigDecimal.ZERO) > 0) {
+            ContaReceber conta = new ContaReceber();
+            conta.setDescricao("Previdenciário #" + atualizado.getId() + " - decisão");
+            conta.setCliente(atualizado.getCliente());
+            conta.setValorOriginal(valorConcedido);
+            conta.setDataEmissao(LocalDate.now());
+            conta.setDataVencimento(LocalDate.now().plusDays(30));
+            conta.setTipo(ContaReceber.TipoContaReceber.SERVICO);
+            conta.setCategoria(ContaReceber.CategoriaContaReceber.SERVICO);
+            conta.setNumeroDocumento("PREV-" + atualizado.getId() + "-" + LocalDate.now());
+            contaReceberService.save(conta, usuarioExecutor);
+        }
+        return atualizado;
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario reabrir(Long processoId,
+            ProcessoPrevidenciarioStatus statusDestino,
+            String justificativa,
+            Usuario usuarioExecutor) {
+        ProcessoPrevidenciario existente = buscarPorId(processoId);
+        if (existente.getStatusAtual() != ProcessoPrevidenciarioStatus.ENCERRADO) {
+            throw new IllegalStateException("Somente processos ENCERRADOS podem ser reabertos");
+        }
+        ProcessoPrevidenciarioStatus destino = statusDestino != null ? statusDestino : ProcessoPrevidenciarioStatus.EM_ANDAMENTO;
+        existente.setStatusAtual(destino);
+        existente.setDataEncerramento(null);
+        ProcessoPrevidenciario atualizado = processoRepository.save(existente);
+        historicoProcessoService.registrar(atualizado, "REABERTURA_PROCESSO", usuarioExecutor,
+                (justificativa != null ? justificativa : "Sem justificativa") + " -> " + destino.name());
+        return atualizado;
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario registrarGanho(Long processoId,
+            BigDecimal valor,
+            LocalDate vencimento,
+            String numeroDocumento,
+            String observacoes,
+            Usuario usuarioExecutor) {
+        ProcessoPrevidenciario existente = buscarPorId(processoId);
+        ContaReceber conta = new ContaReceber();
+        conta.setDescricao("Previdenciário #" + existente.getId() + " - ganho de causa");
+        conta.setCliente(existente.getCliente());
+        conta.setValorOriginal(valor);
+        conta.setDataEmissao(LocalDate.now());
+        conta.setDataVencimento(vencimento != null ? vencimento : LocalDate.now().plusDays(30));
+        conta.setTipo(ContaReceber.TipoContaReceber.SERVICO);
+        conta.setCategoria(ContaReceber.CategoriaContaReceber.SERVICO);
+        conta.setNumeroDocumento(numeroDocumento != null && !numeroDocumento.isBlank()
+                ? numeroDocumento
+                : ("PREV-" + existente.getId() + "-" + LocalDate.now()));
+        contaReceberService.save(conta, usuarioExecutor);
+
+        existente.setStatusAtual(ProcessoPrevidenciarioStatus.ENCERRADO);
+        existente.setDataEncerramento(LocalDateTime.now());
+        ProcessoPrevidenciario atualizado = processoRepository.save(existente);
+        historicoProcessoService.registrar(atualizado, "GANHO_CAUSA", usuarioExecutor,
+                observacoes != null ? observacoes : "Valor: " + (valor != null ? valor : "—"));
         return atualizado;
     }
 }

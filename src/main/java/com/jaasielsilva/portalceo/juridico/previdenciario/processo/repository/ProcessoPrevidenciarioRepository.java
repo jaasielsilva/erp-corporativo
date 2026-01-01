@@ -9,4 +9,6 @@ import java.util.List;
 public interface ProcessoPrevidenciarioRepository extends JpaRepository<ProcessoPrevidenciario, Long> {
     @EntityGraph(attributePaths = { "cliente", "responsavel" })
     List<ProcessoPrevidenciario> findAllByOrderByDataAberturaDesc();
+    @EntityGraph(attributePaths = { "cliente", "responsavel" })
+    List<ProcessoPrevidenciario> findByCliente_IdOrderByDataAberturaDesc(Long clienteId);
 }

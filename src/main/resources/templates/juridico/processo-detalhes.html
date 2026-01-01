@@ -90,16 +90,22 @@
                                     <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
                                 </ol>
                             </nav>
-                            <h1 class="display-6 fw-bold text-dark mb-0">Processo <span th:text="${processo.numero}"></span></h1>
+                            <h1 class="display-6 fw-bold text-dark mb-0">Processo <span th:text="${processo != null && processo.numero != null ? processo.numero : '—'}"></span></h1>
                         </div>
                         <div class="d-flex gap-2">
                             <a th:href="@{/juridico/processos}" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Voltar
                             </a>
-                            <a th:href="@{/juridico/processos/novo(id=${processo.id})}" class="btn btn-primary">
+                            <a th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}"
+                               th:href="@{/juridico/processos/novo(id=${processo.id})}" class="btn btn-primary">
                                 <i class="fas fa-edit me-2"></i>Editar
                             </a>
                         </div>
+                    </div>
+
+                    <div th:if="${processo.status != null && processo.status.name() == 'ENCERRADO'}"
+                         class="alert alert-secondary border-0 border-start border-4 border-secondary mb-4">
+                        <i class="fas fa-lock me-2"></i> Processo encerrado. Edições e novos registros estão desativados.
                     </div>
 
                     <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show mb-4" role="alert">
@@ -136,7 +142,8 @@
                                         <div class="tab-pane fade show active" id="andamentos" role="tabpanel">
                                             <div class="d-flex justify-content-between align-items-center mb-4">
                                                 <h5 class="mb-0 fw-bold text-secondary">Histórico de Andamentos</h5>
-                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAndamento">
+                                                <button th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}"
+                                                        class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAndamento">
                                                     <i class="fas fa-plus me-2"></i>Novo Andamento
                                                 </button>
                                             </div>
@@ -148,7 +155,7 @@
                                                         <i class="fas" th:classappend="${andamento.tipo != null && andamento.tipo.name() == 'INICIAL' ? 'fa-flag' : (andamento.tipo != null && andamento.tipo.name() == 'AUDIENCIA' ? 'fa-gavel' : (andamento.tipo != null && andamento.tipo.name() == 'FINAL' ? 'fa-check-circle' : (andamento.tipo != null && andamento.tipo.name() == 'IMPORTANTE' ? 'fa-star' : 'fa-circle')))}"></i>
                                                     </div>
                                                     <div class="timeline-content-modern">
-                                                        <span class="timeline-date-modern" th:text="${#temporals.format(andamento.dataHora, 'dd/MM/yyyy HH:mm')}">Data</span>
+                                                        <span class="timeline-date-modern" th:text="${andamento.dataHora != null ? #temporals.format(andamento.dataHora, 'dd/MM/yyyy HH:mm') : ''}">Data</span>
                                                         <h5 class="timeline-title-modern" th:text="${andamento.titulo}">Título</h5>
                                                         <div class="timeline-desc-modern" th:text="${andamento.descricao}">Descrição</div>
                                                         <small class="text-muted mt-2 d-block border-top pt-2"><i class="fas fa-user-circle me-1"></i> <span th:text="${andamento.usuario}">Usuário</span></small>
@@ -165,7 +172,8 @@
                                         <div class="tab-pane fade" id="prazos" role="tabpanel">
                                             <div class="d-flex justify-content-between align-items-center mb-4">
                                                 <h5 class="mb-0 fw-bold text-secondary">Prazos Processuais</h5>
-                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalPrazo">
+                                                <button th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}"
+                                                        class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalPrazo">
                                                     <i class="fas fa-plus me-2"></i>Novo Prazo
                                                 </button>
                                             </div>
@@ -179,11 +187,11 @@
                                                     <div class="timeline-content-modern">
                                                         <div class="d-flex justify-content-between align-items-start">
                                                             <div>
-                                                                 <span class="timeline-date-modern" th:text="${#temporals.format(prazo.dataLimite, 'dd/MM/yyyy')}">Data</span>
+                                                                 <span class="timeline-date-modern" th:text="${prazo.dataLimite != null ? #temporals.format(prazo.dataLimite, 'dd/MM/yyyy') : ''}">Data</span>
                                                                  <h5 class="timeline-title-modern" th:text="${prazo.descricao}">Descrição</h5>
                                                             </div>
-                                                             <div th:if="${!prazo.cumprido}">
-                                                                 <form th:action="@{/juridico/prazos/concluir}" method="post" style="display:inline;">
+                                                             <div th:if="${!prazo.cumprido and (processo.status == null || processo.status.name() != 'ENCERRADO')}">
+                                                                 <form th:action="@{/juridico/processos/prazos/concluir}" method="post" style="display:inline;">
                                                                      <input type="hidden" name="prazoId" th:value="${prazo.id}" />
                                                                      <input type="hidden" name="processoId" th:value="${processo.id}" />
                                                                      <button type="submit" class="btn btn-sm btn-outline-success rounded-pill" title="Marcar como Cumprido">
@@ -213,7 +221,8 @@
                                         <div class="tab-pane fade" id="audiencias" role="tabpanel">
                                             <div class="d-flex justify-content-between align-items-center mb-4">
                                                 <h5 class="mb-0 fw-bold text-secondary">Audiências Agendadas</h5>
-                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAudiencia">
+                                                <button th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}"
+                                                        class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAudiencia">
                                                     <i class="fas fa-plus me-2"></i>Nova Audiência
                                                 </button>
                                             </div>
@@ -224,7 +233,7 @@
                                                         <i class="fas fa-gavel"></i>
                                                     </div>
                                                     <div class="timeline-content-modern">
-                                                        <span class="timeline-date-modern" th:text="${#temporals.format(audiencia.dataHora, 'dd/MM/yyyy HH:mm')}">Data</span>
+                                                        <span class="timeline-date-modern" th:text="${audiencia.dataHora != null ? #temporals.format(audiencia.dataHora, 'dd/MM/yyyy HH:mm') : ''}">Data</span>
                                                         <h5 class="timeline-title-modern" th:text="${audiencia.tipo}">Tipo</h5>
                                                         <div class="timeline-desc-modern" th:text="${audiencia.observacoes}">Obs</div>
                                                     </div>
@@ -246,8 +255,8 @@
                                 <div class="form-header">
                                     <h5 class="mb-0 fw-bold text-secondary"><i class="fas fa-info-circle me-2"></i>Informações</h5>
                                     <span class="badge rounded-pill" 
-                                          th:classappend="${processo.status.name() == 'EM_ANDAMENTO' ? 'bg-warning-subtle text-warning' : (processo.status.name() == 'ENCERRADO' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary')}"
-                                          th:text="${processo.status}">Status</span>
+                                          th:classappend="${processo != null && processo.status != null ? (processo.status.name() == 'EM_ANDAMENTO' ? 'bg-warning-subtle text-warning' : (processo.status.name() == 'ENCERRADO' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary')) : 'bg-secondary-subtle text-secondary'}"
+                                          th:text="${processo != null && processo.status != null ? processo.status : '—'}">Status</span>
                                 </div>
                                 <div class="card-body p-4">
                                     <div class="mb-4">
@@ -256,33 +265,33 @@
                                             <div class="avatar-circle-sm bg-primary-subtle text-primary me-2">
                                                 <i class="fas fa-user-tie"></i>
                                             </div>
-                                            <h6 class="mb-0" th:text="${processo.cliente.nome}">Nome do Cliente</h6>
+                                            <h6 class="mb-0" th:text="${processo != null && processo.cliente != null && processo.cliente.nome != null ? processo.cliente.nome : '—'}">Nome do Cliente</h6>
                                         </div>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="text-muted small text-uppercase fw-bold mb-1">Tipo de Ação</label>
-                                        <p class="mb-0 fw-bold text-dark" th:text="${processo.tipo.descricao}">Trabalhista</p>
+                                        <p class="mb-0 fw-bold text-dark" th:text="${processo != null && processo.tipo != null && processo.tipo.descricao != null ? processo.tipo.descricao : '—'}">Trabalhista</p>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="text-muted small text-uppercase fw-bold mb-1">Tribunal</label>
-                                        <p class="mb-0 text-dark" th:text="${processo.tribunal}">TJSP</p>
+                                        <p class="mb-0 text-dark" th:text="${processo != null && processo.tribunal != null ? processo.tribunal : '—'}">TJSP</p>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="text-muted small text-uppercase fw-bold mb-1">Parte Contrária</label>
-                                        <p class="mb-0 text-dark" th:text="${processo.parte}">Fulano</p>
+                                        <p class="mb-0 text-dark" th:text="${processo != null && processo.parte != null ? processo.parte : '—'}">Fulano</p>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="text-muted small text-uppercase fw-bold mb-1">Data Abertura</label>
-                                        <p class="mb-0 text-dark"><i class="far fa-calendar-alt me-2 text-muted"></i><span th:text="${#temporals.format(processo.dataAbertura, 'dd/MM/yyyy')}"></span></p>
+                                        <p class="mb-0 text-dark"><i class="far fa-calendar-alt me-2 text-muted"></i><span th:text="${processo != null && processo.dataAbertura != null ? #temporals.format(processo.dataAbertura, 'dd/MM/yyyy') : '—'}"></span></p>
                                     </div>
 
                                     <div>
                                         <label class="text-muted small text-uppercase fw-bold mb-1">Assunto</label>
-                                        <p class="mb-0 text-secondary small bg-light p-2 rounded" th:text="${processo.assunto}">Descrição do assunto...</p>
+                                        <p class="mb-0 text-secondary small bg-light p-2 rounded" th:text="${processo != null && processo.assunto != null ? processo.assunto : '—'}">Descrição do assunto...</p>
                                     </div>
                                 </div>
                             </div>
@@ -298,9 +307,9 @@
 
     <!-- Modais (Mantidos e estilizados) -->
     <!-- Modal Andamento -->
-    <div class="modal fade" id="modalAndamento" tabindex="-1">
+    <div th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}" class="modal fade" id="modalAndamento" tabindex="-1">
         <div class="modal-dialog">
-            <form class="modal-content" th:action="@{/juridico/andamentos/salvar}" method="post">
+            <form class="modal-content" th:action="@{/juridico/processos/andamentos/salvar}" method="post">
                 <input type="hidden" name="processoId" th:value="${processo.id}" />
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold">Novo Andamento</h5>
@@ -333,9 +342,9 @@
     </div>
 
     <!-- Modal Prazo -->
-    <div class="modal fade" id="modalPrazo" tabindex="-1">
+    <div th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}" class="modal fade" id="modalPrazo" tabindex="-1">
         <div class="modal-dialog">
-            <form class="modal-content" th:action="@{/juridico/prazos/salvar}" method="post">
+            <form class="modal-content" th:action="@{/juridico/processos/prazos/salvar}" method="post">
                 <input type="hidden" name="processoId" th:value="${processo.id}" />
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold">Novo Prazo</h5>
@@ -364,9 +373,9 @@
     </div>
 
     <!-- Modal Audiencia -->
-    <div class="modal fade" id="modalAudiencia" tabindex="-1">
+    <div th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}" class="modal fade" id="modalAudiencia" tabindex="-1">
         <div class="modal-dialog">
-            <form class="modal-content" th:action="@{/juridico/audiencias/salvar}" method="post">
+            <form class="modal-content" th:action="@{/juridico/processos/audiencias/salvar}" method="post">
                 <input type="hidden" name="processoId" th:value="${processo.id}" />
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold">Nova Audiência</h5>

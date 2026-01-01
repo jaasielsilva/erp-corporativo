@@ -4,6 +4,7 @@ import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.service.ProcessoPrevidenciarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import java.util.List;
 public class ProcessoJuridicoController {
 
     private final ProcessoJuridicoService processoService;
+    private final ProcessoPrevidenciarioService processoPrevidenciarioService;
     private final ClienteService clienteService;
 
     @GetMapping("/novo")
@@ -129,6 +131,7 @@ public class ProcessoJuridicoController {
         clienteService.buscarPorId(clienteId).ifPresent(cliente -> model.addAttribute("cliente", cliente));
         
         model.addAttribute("processos", processos);
+        model.addAttribute("processosPrevidenciarios", processoPrevidenciarioService.listarPorCliente(clienteId));
         return "juridico/lista-processos-cliente";
     }
 }

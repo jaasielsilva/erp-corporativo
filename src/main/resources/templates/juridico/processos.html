@@ -428,6 +428,18 @@
             // Inicialização
             carregarProcessos(0);
 
+            (function autoOpenFromQuery(){
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const openId = params.get('openProcessId');
+                    if (openId) {
+                        const idNum = parseInt(openId, 10);
+                        if (!isNaN(idNum) && idNum > 0) {
+                            setTimeout(() => abrirDetalhesProcesso(idNum), 200);
+                        }
+                    }
+                } catch(e) {}
+            })();
 
             // --- Lógica do Offcanvas (Timeline, etc) ---
             

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Documentação de Páginas</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div th:replace="components/topbar :: topbar"></div>
+<div class="container mt-3">
+    <h1>Manual de Páginas do Sistema</h1>
+    <div class="mb-2 text-muted small">
+        <span>Atualizado em </span><span th:text="${#dates.format(lastUpdated, 'dd/MM/yyyy HH:mm')}">data</span>
+        <span class="ms-3">Versão dinâmica (reflete alterações em tempo real)</span>
+    </div>
+    <form method="get" action="#" th:action="@{/documentacao}">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" name="q" placeholder="Buscar página por URL, título, template" th:value="${param.q}">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+            <button class="btn btn-outline-secondary" type="button" id="exportPdfBtn">Exportar PDF</button>
+        </div>
+    </form>
+
+    <h2>Índice Completo</h2>
+    <p class="text-muted">Listagem de todas as páginas e endpoints mapeados.</p>
+
+    <div class="accordion" id="docsAccordion">
+        <div class="accordion-item" th:each="grp : ${groups}">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        th:attr="data-bs-target=${'#' + grp.id}"
+                        aria-expanded="false">
+                    <span th:text="${grp.label}">grupo</span>
+                </button>
+            </h2>
+            <div class="accordion-collapse collapse"
+                 th:id="${grp.id}"
+                 data-bs-parent="#docsAccordion">
+                <div class="accordion-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Método</th>
+                            <th>Template</th>
+                            <th>Título</th>
+                            <th>Permissões</th>
+                            <th>Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="doc : ${grp.docs}">
+                            <td><a th:href="${doc.url}" th:text="${doc.url}">/url</a></td>
+                            <td th:text="${doc.httpMethod}">GET</td>
+                            <td th:text="${doc.template}">template</td>
+                            <td th:text="${doc.title}">título</td>
+                            <td><code th:text="${doc.permissions}">perm</code></td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/documentacao/pagina(template=${doc.template}, url=${doc.url})}">Ver Detalhes</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h2>Padrões de Documentação</h2>
+        <ul>
+            <li>Formato consistente (URL, função, elementos, fluxos, permissões, screenshot)</li>
+            <li>Linguagem clara e técnica quando necessário</li>
+            <li>Referências cruzadas entre páginas relacionadas</li>
+            <li>Versão e data de atualização dinâmica</li>
+        </ul>
+    </div>
+</div>
+
+<script src="/static/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    (function(){
+        var btn = document.getElementById('exportPdfBtn');
+        if (btn) {
+            btn.addEventListener('click', function(){
+                window.print();
+            });
+        }
+    })();
+</script>
+</body>
+</html>

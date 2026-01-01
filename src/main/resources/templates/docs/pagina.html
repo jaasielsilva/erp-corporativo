@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${doc.title}">Página</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div th:replace="components/topbar :: topbar"></div>
+<div class="container mt-3">
+    <h1 th:text="${doc.title}">Título</h1>
+    <div class="mb-2 text-muted small">
+        <span>Atualizado em </span><span th:text="${#dates.format(lastUpdated, 'dd/MM/yyyy HH:mm')}">data</span>
+        <span class="ms-3">Versão dinâmica</span>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>URL:</strong> <a th:href="${doc.url}" th:text="${doc.url}">/url</a></p>
+                    <p><strong>Método:</strong> <span th:text="${doc.httpMethod}">GET</span></p>
+                    <p><strong>Template:</strong> <span th:text="${doc.template}">template</span></p>
+                    <p><strong>Permissões:</strong> <code th:text="${doc.permissions}">isAuthenticated()</code></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Função/Propósito:</strong> <span th:text="${doc.purpose}">propósito</span></p>
+                    <p><strong>Última atualização:</strong> <span th:text="${#dates.format(doc.lastUpdated, 'dd/MM/yyyy HH:mm')}">data</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">Elementos e Componentes</div>
+                <div class="card-body">
+                    <p><strong>Componentes:</strong></p>
+                    <ul>
+                        <li th:each="c : ${doc.components}" th:text="${c}">component</li>
+                        <li th:if="${#lists.isEmpty(doc.components)}" class="text-muted">nenhum</li>
+                    </ul>
+                    <p><strong>Elementos:</strong></p>
+                    <ul>
+                        <li th:each="e : ${doc.elements}" th:text="${e}">element</li>
+                        <li th:if="${#lists.isEmpty(doc.elements)}" class="text-muted">nenhum</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">Fluxos de Navegação</div>
+                <div class="card-body">
+                    <ul>
+                        <li th:each="l : ${doc.navigationLinks}"><a th:href="${l}" th:text="${l}">/link</a></li>
+                        <li th:if="${#lists.isEmpty(doc.navigationLinks)}" class="text-muted">nenhum</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Screenshot Atualizado</span>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" id="captureBtn">Capturar Screenshot</button>
+                <form method="post" action="#" th:action="@{/documentacao/upload-screenshot}" class="d-inline" id="uploadForm">
+                    <input type="hidden" name="template" th:value="${doc.template}">
+                    <input type="hidden" name="imageBase64" id="imageBase64">
+                    <button class="btn btn-sm btn-outline-success" type="submit">Salvar</button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-2">
+                <img th:src="${doc.screenshotPath}" alt="Screenshot" style="max-width:100%;border:1px solid #eee;border-radius:4px;"
+                     onerror="this.style.display='none';var n=document.getElementById('noShot'); if(n){ n.style.display='block'; }">
+                <div id="noShot" style="display:none;" class="text-muted">Nenhuma captura disponível ainda.</div>
+            </div>
+            <div th:if="${doc.url != null and #strings.startsWith(doc.url,'/')}">
+                <iframe th:src="${doc.url}" style="width:100%;height:480px;border:1px solid #ddd;border-radius:4px;"></iframe>
+            </div>
+            <div th:unless="${doc.url != null and #strings.startsWith(doc.url,'/')}" class="text-muted">
+                URL não mapeada para navegação direta.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+    (function(){
+        var btn = document.getElementById('captureBtn');
+        var iframe;
+        document.addEventListener('DOMContentLoaded', function(){
+            iframe = document.querySelector('iframe');
+        });
+        if (btn) {
+            btn.addEventListener('click', function(){
+                try {
+                    var target = iframe && iframe.contentWindow ? iframe.contentWindow.document.body : document.body;
+                    html2canvas(target, {useCORS:true, allowTaint:true, logging:false}).then(function(canvas){
+                        var data = canvas.toDataURL('image/png');
+                        document.getElementById('imageBase64').value = data;
+                    });
+                } catch(e){}
+            });
+        }
+    })();
+</script>
+</body>
+</html>
+

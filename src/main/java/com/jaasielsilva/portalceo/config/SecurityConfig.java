@@ -135,6 +135,8 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/ajuda/**").authenticated()
                                                 // Endpoints que DEVEM ser autenticados
                                                 .requestMatchers("/api/rh/**").authenticated()
+                                                .requestMatchers(HttpMethod.POST, "/documentacao/export-md/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/documentacao/export-md/**").permitAll()
                                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")
                                                 .permitAll()

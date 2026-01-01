@@ -341,6 +341,11 @@
                 clienteId: initialFilters.clienteId || ''
             };
 
+            const urlParams = new URLSearchParams(window.location.search);
+            const openIdParam = urlParams.get('id');
+            const openFlag = urlParams.get('open');
+            let initialOpenDone = false;
+
             // Set initial filter values
             $('#contratosBusca').val(currentState.busca);
             $('#contratosStatus').val(currentState.status);
@@ -409,6 +414,15 @@
                 $.get(`/clientes/contratos/api/listar?${params.toString()}`)
                     .done(function(data) {
                         renderTable(data);
+                        if (!initialOpenDone) {
+                            if (openIdParam) {
+                                openOffcanvas(openIdParam);
+                                initialOpenDone = true;
+                            } else if (openFlag === 'detalhes' && data.content && data.content.length > 0) {
+                                openOffcanvas(data.content[0].id);
+                                initialOpenDone = true;
+                            }
+                        }
                     })
                     .fail(function() {
                         $tbody.html('<tr><td colspan="6" class="text-center py-4 text-danger"><i class="fas fa-exclamation-circle me-2"></i>Erro ao carregar dados.</td></tr>');

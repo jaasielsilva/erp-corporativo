@@ -42,6 +42,7 @@ public class JuridicoController {
     private final NotificationService notificationService;
     private final UsuarioRepository usuarioRepository;
     private final com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService;
+    private final com.jaasielsilva.portalceo.service.ContaReceberService contaReceberService;
     // Repositórios jurídicos (Processos, Compliance, Documentos)
     private final ProcessoJuridicoRepository processoJuridicoRepository;
     private final AudienciaRepository audienciaRepository;
@@ -847,6 +848,76 @@ public class JuridicoController {
                     m.put("status", p.getStatus());
                     m.put("dataAbertura", p.getDataAbertura());
                     return ResponseEntity.ok(m);
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado")));
+    }
+
+    @PostMapping("/api/processos/{id}/ganho")
+    @ResponseBody
+    public ResponseEntity<?> registrarGanhoDeCausa(@PathVariable Long id,
+                                                   @RequestBody Map<String, Object> body,
+                                                   @ModelAttribute("usuarioLogado") com.jaasielsilva.portalceo.model.Usuario usuario) {
+        return processoJuridicoRepository.findById(id)
+                .map(processo -> {
+                    try {
+                        if (processo.getCliente() == null) {
+                            return ResponseEntity.badRequest().body(Map.of("erro", "Vincule um cliente ao processo antes de registrar ganho"));
+                        }
+                        String valorStrRaw = String.valueOf(body.getOrDefault("valor", "")).trim();
+                        String valorStr = valorStrRaw.replaceAll("[^0-9,\\.]", "");
+                        if (valorStr.isEmpty()) {
+                            return ResponseEntity.badRequest().body(Map.of("erro", "Informe o valor da indenização"));
+                        }
+                        java.math.BigDecimal valor = new java.math.BigDecimal(valorStr.replace(".", "").replace(",", "."));
+                        String vencimentoStr = String.valueOf(body.getOrDefault("vencimento", "")).trim();
+                        java.time.LocalDate vencimento;
+                        if (vencimentoStr.isEmpty()) {
+                            vencimento = java.time.LocalDate.now();
+                        } else {
+                            try {
+                                vencimento = java.time.LocalDate.parse(vencimentoStr);
+                            } catch (Exception ex) {
+                                return ResponseEntity.badRequest().body(Map.of("erro", "Data de vencimento inválida"));
+                            }
+                        }
+                        String numeroDocumento = String.valueOf(body.getOrDefault("numeroDocumento", "")).trim();
+                        String observacoes = String.valueOf(body.getOrDefault("observacoes", "")).trim();
+                        com.jaasielsilva.portalceo.model.ContaReceber conta = new com.jaasielsilva.portalceo.model.ContaReceber();
+                        String numero = processo.getNumero() != null ? processo.getNumero() : "—";
+                        String parte = processo.getParte() != null ? processo.getParte() : "—";
+                        conta.setDescricao("Ganho de causa - Processo " + numero + " (" + parte + ")");
+                        conta.setCliente(processo.getCliente());
+                        conta.setValorOriginal(valor);
+                        conta.setDataEmissao(java.time.LocalDate.now());
+                        conta.setDataVencimento(vencimento);
+                        conta.setTipo(com.jaasielsilva.portalceo.model.ContaReceber.TipoContaReceber.SERVICO);
+                        conta.setCategoria(com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber.JURIDICO);
+                        conta.setNumeroDocumento(numeroDocumento.isEmpty() ? null : numeroDocumento);
+                        conta.setObservacoes(observacoes.isEmpty() ? null : observacoes);
+                        com.jaasielsilva.portalceo.model.ContaReceber saved;
+                        try {
+                            saved = contaReceberService.save(conta, usuario);
+                        } catch (Exception ex) {
+                            String m = ex.getMessage() != null ? ex.getMessage() : "";
+                            if (m.contains("Data truncated for column 'categoria'")) {
+                                conta.setCategoria(com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber.SERVICO);
+                                saved = contaReceberService.save(conta, usuario);
+                                processo.setStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO);
+                                processoJuridicoRepository.save(processo);
+                                return ResponseEntity.ok(Map.of(
+                                        "id", saved.getId(),
+                                        "descricao", saved.getDescricao(),
+                                        "aviso", "Categoria JURIDICO não suportada no banco, registrado como SERVICO"
+                                ));
+                            }
+                            throw ex;
+                        }
+                        processo.setStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO);
+                        processoJuridicoRepository.save(processo);
+                        return ResponseEntity.ok(Map.of("id", saved.getId(), "descricao", saved.getDescricao()));
+                    } catch (Exception e) {
+                        return ResponseEntity.status(400).body(Map.of("erro", "Falha ao registrar ganho: " + e.getMessage()));
+                    }
                 })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado")));
     }

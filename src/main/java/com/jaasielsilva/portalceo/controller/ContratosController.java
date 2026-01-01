@@ -223,7 +223,6 @@ public class ContratosController {
         model.addAttribute("tiposContrato", tiposPermitidos);
         model.addAttribute("statusContrato", StatusContrato.values());
         model.addAttribute("fornecedores", fornecedorService.listarAtivosParaSelecao());
-        model.addAttribute("clientes", clienteService.listarAtivosParaSelecaoPorTipo("PJ"));
         model.addAttribute("prestadoresServico", prestadorServicoService.listarAtivosParaSelecao());
         model.addAttribute("departamentoUsuario", usuarioLogado.getDepartamento());
         model.addAttribute("colaboradores", colaboradorService.listarAtivosParaSelecao());
@@ -309,7 +308,6 @@ public class ContratosController {
         
         // Carrega as listas para os dropdowns (mesma lógica do novo)
         model.addAttribute("fornecedores", fornecedorService.listarAtivosParaSelecao());
-        model.addAttribute("clientes", clienteService.listarAtivosParaSelecaoPorTipo("PJ"));
         model.addAttribute("prestadoresServico", prestadorServicoService.listarAtivosParaSelecao());
         model.addAttribute("colaboradores", colaboradorService.listarAtivosParaSelecao());
         

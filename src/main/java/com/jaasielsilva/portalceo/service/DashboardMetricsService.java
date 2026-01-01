@@ -50,7 +50,6 @@ public class DashboardMetricsService {
         String crescimentoVendas = totalVendasAnterior == 0 ? "+0%" :
                 String.format("%+,.1f%%", ((double)(totalVendas - totalVendasAnterior) / (double) totalVendasAnterior) * 100.0);
         long produtosEstoque = produtoService.somarQuantidadeEstoque();
-        BigDecimal faturamentoMensal = indicadorService.getRoiMensal();
         String crescimentoFaturamento = "0%";
         long produtosCriticos = produtoService.contarProdutosCriticos();
         long totalFuncionarios = colaboradorService.contarAtivos();
@@ -80,8 +79,23 @@ public class DashboardMetricsService {
             ultimos12MesesLabels.add(label);
             ultimos12MesesValores.add(valor);
         }
+        // Faturamento total dos últimos 12 meses e crescimento vs mês anterior
+        BigDecimal faturamento12MesesTotal = BigDecimal.ZERO;
+        for (BigDecimal v : ultimos12MesesValores) {
+            if (v != null) faturamento12MesesTotal = faturamento12MesesTotal.add(v);
+        }
+        BigDecimal valorMesAtual = vendasUltimos12Meses.getOrDefault(agoraYm, BigDecimal.ZERO);
+        BigDecimal valorMesAnterior = vendasUltimos12Meses.getOrDefault(agoraYm.minusMonths(1), BigDecimal.ZERO);
+        if (valorMesAnterior != null && valorMesAnterior.compareTo(BigDecimal.ZERO) > 0) {
+            double pct = ((valorMesAtual.doubleValue() - valorMesAnterior.doubleValue()) / valorMesAnterior.doubleValue()) * 100.0;
+            crescimentoFaturamento = String.format("%+,.1f%%", pct);
+        } else {
+            crescimentoFaturamento = "+0%";
+        }
+        // Meta: usa média mensal dos últimos 12 meses com acréscimo de 20%
         List<BigDecimal> metaVendasMensal = new ArrayList<>();
-        BigDecimal metaBase = faturamentoMensal.multiply(new BigDecimal("1.2"));
+        double mediaMensal = faturamento12MesesTotal.doubleValue() / 12.0;
+        BigDecimal metaBase = BigDecimal.valueOf(mediaMensal * 1.2);
         for (int i = 0; i < 12; i++) {
             metaVendasMensal.add(metaBase);
         }
@@ -108,7 +122,7 @@ public class DashboardMetricsService {
         dto.totalVendas = totalVendas;
         dto.crescimentoVendas = crescimentoVendas;
         dto.totalProdutos = produtosEstoque;
-        dto.faturamentoMensalFormatado = indicadorService.formatarMoeda(faturamentoMensal);
+        dto.faturamentoMensalFormatado = indicadorService.formatarMoeda(faturamento12MesesTotal);
         dto.crescimentoFaturamento = crescimentoFaturamento;
         dto.produtosCriticos = produtosCriticos;
         dto.totalFuncionarios = totalFuncionarios;

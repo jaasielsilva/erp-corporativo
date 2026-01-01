@@ -174,9 +174,23 @@
                                                 <label for="cliente" class="form-label">Cliente Vinculado</label>
                                                 <select class="form-select" id="cliente" th:field="*{cliente}">
                                                     <option value="">-- Selecione o Cliente --</option>
-                                                    <option th:each="c : ${clientes}" th:value="${c.id}"
-                                                        th:text="${c.nomeFantasia != null ? c.nomeFantasia : c.nome}"></option>
                                                 </select>
+                                                <div class="input-group mt-2">
+                                                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                                                    <input type="text" class="form-control" id="clienteBusca" placeholder="Buscar cliente...">
+                                                    <button class="btn btn-outline-secondary" type="button" id="clienteBuscarBtn">Buscar</button>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <label class="form-label" for="clienteTipo">Tipo de Cliente</label>
+                                                    <select class="form-select" id="clienteTipo">
+                                                        <option value="">Todos</option>
+                                                        <option value="PF">Pessoa Física (PF)</option>
+                                                        <option value="PJ">Pessoa Jurídica (PJ)</option>
+                                                    </select>
+                                                </div>
+                                                <div class="position-relative mt-2">
+                                                    <div id="clienteSugestoes" class="list-group shadow-sm" style="display:none; max-height: 240px; overflow:auto;"></div>
+                                                </div>
                                             </div>
 
                                             <div class="col-md-6 vinculo" id="vinculo-prestador" style="display:none;">
@@ -227,6 +241,10 @@
                 'PRESTACAO_SERVICO': document.getElementById('vinculo-prestador'),
                 'TRABALHISTA': document.getElementById('vinculo-colaborador')
             };
+            const fornecedorSelect = document.getElementById('fornecedor');
+            const clienteSelectEl = document.getElementById('cliente');
+            const prestadorSelect = document.getElementById('prestadorServico');
+            const colaboradorSelect = document.getElementById('colaborador');
 
             function ajustarVisibilidade() {
                 const tipo = tipoSelect.value;
@@ -235,17 +253,12 @@
                 Object.values(vinculos).forEach(el => {
                     if(el) {
                         el.style.display = 'none';
-                        // Optional: Reset select value if hidden to avoid submission errors if needed, 
-                        // but usually better to keep it if user switches back and forth.
-                        // However, backend might get confused if multiple IDs are sent.
-                        // For now, just hide.
                     }
                 });
 
                 // Show relevant
                 if (vinculos[tipo]) {
                     vinculos[tipo].style.display = 'block';
-                    // Add animation class if desired
                     vinculos[tipo].classList.add('fade-in');
                 }
 
@@ -259,6 +272,15 @@
                         default: labelValor.innerHTML = 'Valor <span class="text-danger">*</span>'; break;
                     }
                 }
+                if (tipo === 'CLIENTE') {
+                    if (window.carregarClientes) {
+                        window.carregarClientes(document.getElementById('clienteBusca') ? document.getElementById('clienteBusca').value : '', 0);
+                    }
+                }
+                if (fornecedorSelect) fornecedorSelect.required = tipo === 'FORNECEDOR';
+                if (clienteSelectEl) clienteSelectEl.required = tipo === 'CLIENTE';
+                if (prestadorSelect) prestadorSelect.required = tipo === 'PRESTACAO_SERVICO';
+                if (colaboradorSelect) colaboradorSelect.required = tipo === 'TRABALHISTA';
             }
 
             tipoSelect.addEventListener('change', ajustarVisibilidade);
@@ -307,6 +329,175 @@
                 // Usando toFixed(2) para garantir 2 casas decimais e ponto
                 valorReal.value = decimalValue.toFixed(2);
             });
+
+            const clienteSelect = document.getElementById('cliente');
+            const clienteBuscaInput = document.getElementById('clienteBusca');
+            const clienteBuscarBtn = document.getElementById('clienteBuscarBtn');
+            const clienteSugestoes = document.getElementById('clienteSugestoes');
+            let clienteBuscaTimer;
+            let sugestaoIndex = -1;
+            window.carregarClientes = function(q, page) {
+                const params = new URLSearchParams({
+                    busca: q || '',
+                    tipo: (document.getElementById('clienteTipo') ? document.getElementById('clienteTipo').value : ''),
+                    page: page || 0,
+                    size: 20
+                });
+                fetch('/clientes/api/select?' + params.toString())
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!clienteSelect) return;
+                        clienteSelect.innerHTML = '<option value="">-- Selecione o Cliente --</option>';
+                        (data.content || []).forEach(item => {
+                            const opt = document.createElement('option');
+                            opt.value = item.id;
+                            opt.textContent = item.nome;
+                            clienteSelect.appendChild(opt);
+                        });
+                    })
+                    .catch(() => {});
+            };
+            function renderSugestoes(q) {
+                if (clienteSugestoes) {
+                    clienteSugestoes.style.display = 'block';
+                    clienteSugestoes.innerHTML = '<div class="list-group-item"><span class="spinner-border spinner-border-sm me-2"></span>Carregando...</div>';
+                }
+                const params = new URLSearchParams({
+                    busca: q || '',
+                    tipo: (document.getElementById('clienteTipo') ? document.getElementById('clienteTipo').value : ''),
+                    page: 0,
+                    size: 5
+                });
+                fetch('/clientes/api/select?' + params.toString())
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!clienteSugestoes) return;
+                        const list = data.content || [];
+                        if (list.length === 0) {
+                            clienteSugestoes.style.display = 'none';
+                            clienteSugestoes.innerHTML = '';
+                            return;
+                        }
+                        clienteSugestoes.innerHTML = '';
+                        sugestaoIndex = -1;
+                        list.forEach(item => {
+                            const tipo = item.tipoCliente || '';
+                            const status = item.status || '';
+                            const el = document.createElement('a');
+                            el.href = 'javascript:void(0)';
+                            el.className = 'list-group-item list-group-item-action';
+                            el.innerHTML = '<div class="d-flex w-100 justify-content-between"><div><small class="text-muted d-block">Cliente (' + (tipo || '—') + ')</small><strong>' + (item.nome || '') + '</strong></div><small class="text-muted">' + (tipo || '') + ' | ' + (status || '') + '</small></div>';
+                            el.addEventListener('click', function() {
+                                let found = false;
+                                for (let i = 0; i < clienteSelect.options.length; i++) {
+                                    if (String(clienteSelect.options[i].value) === String(item.id)) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    const opt = document.createElement('option');
+                                    opt.value = item.id;
+                                    opt.textContent = item.nome;
+                                    clienteSelect.appendChild(opt);
+                                }
+                                clienteSelect.value = item.id;
+                                clienteSugestoes.style.display = 'none';
+                                clienteSugestoes.innerHTML = '';
+                            });
+                            clienteSugestoes.appendChild(el);
+                        });
+                        clienteSugestoes.style.display = 'block';
+                    })
+                    .catch(() => {
+                        if (clienteSugestoes) {
+                            clienteSugestoes.style.display = 'none';
+                            clienteSugestoes.innerHTML = '';
+                        }
+                    });
+            }
+            function updateActiveSuggestion() {
+                const items = clienteSugestoes ? clienteSugestoes.querySelectorAll('.list-group-item') : [];
+                items.forEach((el, idx) => {
+                    if (idx === sugestaoIndex) el.classList.add('active');
+                    else el.classList.remove('active');
+                });
+            }
+            function selectSuggestionByIndex() {
+                const items = clienteSugestoes ? clienteSugestoes.querySelectorAll('.list-group-item') : [];
+                const el = items[sugestaoIndex];
+                if (!el) return;
+                const nameEl = el.querySelector('strong');
+                const title = nameEl ? nameEl.textContent : '';
+                const tipoTextEl = el.querySelector('.text-muted');
+                const idOpt = Array.from(clienteSelect.options).find(o => o.textContent === title);
+                if (idOpt) {
+                    clienteSelect.value = idOpt.value;
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = title;
+                    clienteSelect.appendChild(opt);
+                    clienteSelect.value = opt.value;
+                }
+                if (clienteSugestoes) {
+                    clienteSugestoes.style.display = 'none';
+                    clienteSugestoes.innerHTML = '';
+                }
+            }
+            if (clienteBuscarBtn) {
+                clienteBuscarBtn.addEventListener('click', function() {
+                    window.carregarClientes(clienteBuscaInput ? clienteBuscaInput.value : '', 0);
+                });
+            }
+            const clienteTipoSelect = document.getElementById('clienteTipo');
+            if (clienteTipoSelect) {
+                clienteTipoSelect.addEventListener('change', function() {
+                    window.carregarClientes(clienteBuscaInput ? clienteBuscaInput.value : '', 0);
+                    renderSugestoes(clienteBuscaInput ? clienteBuscaInput.value : '');
+                });
+            }
+            if (clienteBuscaInput) {
+                clienteBuscaInput.addEventListener('input', function() {
+                    clearTimeout(clienteBuscaTimer);
+                    clienteBuscaTimer = setTimeout(function() {
+                        window.carregarClientes(clienteBuscaInput.value, 0);
+                        renderSugestoes(clienteBuscaInput.value);
+                    }, 300);
+                });
+                clienteBuscaInput.addEventListener('blur', function() {
+                    setTimeout(function() {
+                        if (clienteSugestoes) {
+                            clienteSugestoes.style.display = 'none';
+                            clienteSugestoes.innerHTML = '';
+                        }
+                    }, 200);
+                });
+                clienteBuscaInput.addEventListener('keydown', function(e) {
+                    const items = clienteSugestoes ? clienteSugestoes.querySelectorAll('.list-group-item') : [];
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (items.length > 0) {
+                            sugestaoIndex = Math.min(sugestaoIndex + 1, items.length - 1);
+                            updateActiveSuggestion();
+                        }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (items.length > 0) {
+                            sugestaoIndex = Math.max(sugestaoIndex - 1, 0);
+                            updateActiveSuggestion();
+                        }
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        selectSuggestionByIndex();
+                    } else if (e.key === 'Escape') {
+                        if (clienteSugestoes) {
+                            clienteSugestoes.style.display = 'none';
+                            clienteSugestoes.innerHTML = '';
+                        }
+                    }
+                });
+            }
         });
     </script>
 </body>

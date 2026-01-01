@@ -222,12 +222,9 @@
                                 th:text="${crescimentoFaturamento} + ' vs mês anterior'">+12.5% vs mês anterior</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
-                            <div class="stat-number" id="kpiTotalVendas" th:text="${totalVendas}">1.247</div>
-                            <div class="stat-label">Quantidade de Vendas</div>
-                            <div class="stat-change" id="kpiCrescimentoVendas"
-                                th:class="${crescimentoVendas.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}"
-                                th:text="${crescimentoVendas} + ' vs mês anterior'">+8.3% vs mês anterior</div>
+                            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="stat-number" id="kpiInadimplencia" th:text="${inadimplencia}">0,0%</div>
+                            <div class="stat-label">Inadimplência</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon"><i class="fas fa-users"></i></div>
@@ -259,6 +256,12 @@
                                 th:text="${processosAguardandoAprovacao} + ' aguardando aprovação'">
                                 5 aguardando aprovação
                             </div>
+                        </div>
+                        <div class="stat-card" onclick="window.location.href='/juridico'">
+                            <div class="stat-icon"><i class="fas fa-gavel"></i></div>
+                            <div class="stat-number" id="kpiJuridicoProcessos">0</div>
+                            <div class="stat-label">Processos Jurídicos em Andamento</div>
+                            <div class="stat-change" id="kpiJuridicoPrazos">Prazos a vencer: 0</div>
                         </div>
 
                     </div>
@@ -744,6 +747,13 @@
                     }
                     const lu = document.getElementById('lastUpdate');
                     if (lu) lu.textContent = new Date().toLocaleString('pt-BR');
+                });
+            fetch('/juridico/api/dashboard/estatisticas')
+                .then(r => r.json())
+                .then(j => {
+                    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+                    el('kpiJuridicoProcessos', (j && typeof j.processosAndamento !== 'undefined') ? j.processosAndamento : '0');
+                    el('kpiJuridicoPrazos', 'Prazos a vencer: ' + ((j && typeof j.prazosVencendo !== 'undefined') ? j.prazosVencendo : '0'));
                 });
         }
         function formatBytes(bytes) {

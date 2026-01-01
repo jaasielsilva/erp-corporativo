@@ -227,4 +227,43 @@ public class ClienteController {
             default -> clienteService.buscarTodos();
         };
     }
+
+    @GetMapping("/api/select")
+    @ResponseBody
+    public java.util.Map<String, Object> selecionarClientesApi(
+            @RequestParam(value = "busca", required = false) String busca,
+            @RequestParam(value = "tipo", required = false, defaultValue = "") String tipo,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.Cliente> pagina = clienteService.listarAvancado(
+                busca,
+                null,
+                tipo,
+                null,
+                true,
+                null,
+                page,
+                size
+        );
+
+        var content = pagina.getContent().stream()
+                .map(c -> {
+                    java.util.Map<String, Object> m = new java.util.HashMap<>();
+                    m.put("id", c.getId());
+                    m.put("nome", c.getNomeFantasia() != null && !c.getNomeFantasia().isBlank() ? c.getNomeFantasia() : c.getNome());
+                    m.put("tipoCliente", c.getTipoCliente());
+                    m.put("status", c.getStatus());
+                    return m;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        java.util.Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("content", content);
+        resp.put("currentPage", pagina.getNumber());
+        resp.put("totalPages", pagina.getTotalPages());
+        resp.put("totalElements", pagina.getTotalElements());
+        resp.put("hasPrevious", pagina.hasPrevious());
+        resp.put("hasNext", pagina.hasNext());
+        return resp;
+    }
 }

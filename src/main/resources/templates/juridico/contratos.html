@@ -258,6 +258,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(function () {
             function notify(type, title, message, priority = 'medium', options = {}) {
@@ -278,12 +279,8 @@
             function formatBRL(input) {
                 let digits = (input.value || '').replace(/\D/g, '');
                 if (!digits) { input.value = ''; return; }
-                // mínimo 0,00
-                while (digits.length < 3) digits = '0' + digits;
-                const intPart = digits.slice(0, -2);
-                const decPart = digits.slice(-2);
-                const intWithSeparators = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                input.value = `${intWithSeparators},${decPart}`;
+                const num = Number(digits) / 100;
+                input.value = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
 
             const currencyInputs = ['#valorMensal', '#valorContrato'];
@@ -393,7 +390,7 @@
                 });
             }
 
-            $('.table').on('click', '.btn-acao', function () {
+            $('.table').on('click', '.btn-acao', async function () {
                 const id = $(this).attr('data-id');
                 const action = $(this).attr('data-action');
                 if (!id || !action) return;
@@ -403,17 +400,49 @@
                         executarAcaoContrato(id, 'enviar-analise');
                         break;
                     case 'aprovar': {
-                        const observacoes = prompt('Observações da aprovação (opcional):', '') || '';
+                        const r = await Swal.fire({
+                            title: 'Aprovar Contrato',
+                            input: 'textarea',
+                            inputLabel: 'Observações da aprovação (opcional):',
+                            inputPlaceholder: 'Digite observações...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Aprovar',
+                            cancelButtonText: 'Cancelar'
+                        });
+                        if (!r.isConfirmed) return;
+                        const observacoes = r.value || '';
                         executarAcaoContrato(id, 'aprovar', { observacoes });
                         break;
                     }
                     case 'assinar': {
-                        let dt = prompt('Data de assinatura (DD/MM/AAAA):', '');
-                        if (!dt || !isValidBRDate(dt)) {
-                            notify('error', 'Data inválida', 'Informe a data no formato DD/MM/AAAA.');
-                            return;
-                        }
-                        const dataAssinatura = parseBRDateToISO(dt);
+                        const r = await Swal.fire({
+                            title: 'Assinar Contrato',
+                            html: `
+                                <div class="text-start">
+                                    <label class="form-label">Data de assinatura (DD/MM/AAAA):</label>
+                                    <input id="swDataAss" class="form-control" placeholder="DD/MM/AAAA" inputmode="numeric">
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: 'Assinar',
+                            cancelButtonText: 'Cancelar',
+                            focusConfirm: false,
+                            didOpen: () => {
+                                const el = document.getElementById('swDataAss');
+                                el.addEventListener('input', () => maskDateBR(el));
+                                el.addEventListener('blur', () => maskDateBR(el));
+                            },
+                            preConfirm: () => {
+                                const val = document.getElementById('swDataAss').value;
+                                if (!val || !isValidBRDate(val)) {
+                                    Swal.showValidationMessage('Informe a data no formato DD/MM/AAAA.');
+                                    return false;
+                                }
+                                return val;
+                            }
+                        });
+                        if (!r.isConfirmed || !r.value) return;
+                        const dataAssinatura = parseBRDateToISO(r.value);
                         executarAcaoContrato(id, 'assinar', { dataAssinatura });
                         break;
                     }
@@ -421,8 +450,23 @@
                         executarAcaoContrato(id, 'ativar');
                         break;
                     case 'suspender': {
-                        const motivo = prompt('Motivo da suspensão:', '');
-                        if (!motivo) { notify('error', 'Campo obrigatório', 'Informe o motivo.'); return; }
+                        const r = await Swal.fire({
+                            title: 'Suspender Contrato',
+                            input: 'text',
+                            inputLabel: 'Motivo da suspensão:',
+                            inputPlaceholder: 'Descreva o motivo',
+                            showCancelButton: true,
+                            confirmButtonText: 'Suspender',
+                            cancelButtonText: 'Cancelar',
+                            preConfirm: (val) => {
+                                if (!val || !val.trim()) {
+                                    Swal.showValidationMessage('Informe o motivo.');
+                                }
+                                return val;
+                            }
+                        });
+                        if (!r.isConfirmed) return;
+                        const motivo = r.value;
                         executarAcaoContrato(id, 'suspender', { motivo });
                         break;
                     }
@@ -430,26 +474,71 @@
                         executarAcaoContrato(id, 'reativar');
                         break;
                     case 'rescindir': {
-                        const motivo = prompt('Motivo da rescisão:', '') || '';
-                        let dt = prompt('Data da rescisão (DD/MM/AAAA):', '');
-                        if (!dt || !isValidBRDate(dt)) {
-                            notify('error', 'Data inválida', 'Informe a data no formato DD/MM/AAAA.');
-                            return;
-                        }
-                        const dataRescisao = parseBRDateToISO(dt);
-                        executarAcaoContrato(id, 'rescindir', { motivo, dataRescisao });
+                        const r = await Swal.fire({
+                            title: 'Rescindir Contrato',
+                            html: `
+                                <div class="text-start">
+                                    <div class="mb-2">
+                                        <label class="form-label">Motivo da rescisão</label>
+                                        <input id="swMotivoResc" class="form-control" placeholder="Descreva o motivo">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Data da rescisão (DD/MM/AAAA)</label>
+                                        <input id="swDataResc" class="form-control" placeholder="DD/MM/AAAA">
+                                    </div>
+                                </div>
+                            `,
+                            focusConfirm: false,
+                            showCancelButton: true,
+                            confirmButtonText: 'Rescindir',
+                            cancelButtonText: 'Cancelar',
+                            preConfirm: () => {
+                                const motivo = document.getElementById('swMotivoResc').value || '';
+                                const dt = document.getElementById('swDataResc').value || '';
+                                if (!dt || !isValidBRDate(dt)) {
+                                    Swal.showValidationMessage('Informe a data no formato DD/MM/AAAA.');
+                                    return false;
+                                }
+                                return { motivo, dt };
+                            }
+                        });
+                        if (!r.isConfirmed || !r.value) return;
+                        const dataRescisao = parseBRDateToISO(r.value.dt);
+                        executarAcaoContrato(id, 'rescindir', { motivo: r.value.motivo, dataRescisao });
                         break;
                     }
                     case 'renovar': {
-                        const mesesStr = prompt('Nova duração (meses):', '12');
-                        const novasDuracaoMeses = mesesStr ? parseInt(mesesStr, 10) : null;
-                        if (!novasDuracaoMeses || novasDuracaoMeses <= 0) {
-                            notify('error', 'Valor inválido', 'Informe a duração em meses.');
-                            return;
-                        }
-                        let valorStr = prompt('Novo valor (R$):', '');
-                        if (!valorStr) valorStr = '0';
-                        executarAcaoContrato(id, 'renovar', { novasDuracaoMeses, novoValor: valorStr });
+                        const r = await Swal.fire({
+                            title: 'Renovar Contrato',
+                            html: `
+                                <div class="text-start">
+                                    <div class="mb-2">
+                                        <label class="form-label">Nova duração (meses)</label>
+                                        <input id="swDuracaoMeses" type="number" min="1" class="form-control" value="12">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Novo valor (R$)</label>
+                                        <input id="swNovoValor" class="form-control" placeholder="Ex.: 1500,00">
+                                    </div>
+                                </div>
+                            `,
+                            focusConfirm: false,
+                            showCancelButton: true,
+                            confirmButtonText: 'Renovar',
+                            cancelButtonText: 'Cancelar',
+                            preConfirm: () => {
+                                const mesesStr = document.getElementById('swDuracaoMeses').value;
+                                const novasDuracaoMeses = mesesStr ? parseInt(mesesStr, 10) : null;
+                                if (!novasDuracaoMeses || novasDuracaoMeses <= 0) {
+                                    Swal.showValidationMessage('Informe a duração em meses.');
+                                    return false;
+                                }
+                                const valorStr = document.getElementById('swNovoValor').value || '0';
+                                return { novasDuracaoMeses, valorStr };
+                            }
+                        });
+                        if (!r.isConfirmed || !r.value) return;
+                        executarAcaoContrato(id, 'renovar', { novasDuracaoMeses: r.value.novasDuracaoMeses, novoValor: r.value.valorStr });
                         break;
                     }
                     default:

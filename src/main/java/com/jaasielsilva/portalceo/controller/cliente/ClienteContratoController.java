@@ -72,7 +72,7 @@ public class ClienteContratoController {
         if (id != null) {
             return "redirect:/clientes/contratos/" + id + "/detalhes";
         }
-        return "redirect:/clientes/contratos/listar";
+        return "redirect:/clientes/contratos/listar?open=detalhes";
     }
 
     @GetMapping("/api/{id}")

@@ -137,6 +137,7 @@ public class ContaReceber extends BaseEntity {
     public enum CategoriaContaReceber {
         PRODUTO("Venda de Produtos"),
         SERVICO("Prestação de Serviços"),
+        JURIDICO("Jurídico"),
         CONSULTORIA("Consultoria"),
         MANUTENCAO("Manutenção"),
         OUTROS("Outros");

@@ -235,6 +235,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(function() {
             function notify(type, title, message, priority = 'medium', options = {}) {
@@ -389,10 +390,19 @@
                     .fail(() => notify('error', 'Falha', 'Não foi possível carregar detalhes da auditoria.', 'high'));
             });
 
-            $(document).on('click', 'button[data-action="registrar-resultado"]', function() {
+            $(document).on('click', 'button[data-action="registrar-resultado"]', async function() {
                 const id = $(this).data('id');
-                const resultado = prompt('Informe o resultado da auditoria (deixe vazio para remover):');
-                if (resultado === null) return;
+                const r = await Swal.fire({
+                    title: 'Registrar Resultado',
+                    input: 'textarea',
+                    inputLabel: 'Informe o resultado da auditoria (deixe vazio para remover):',
+                    inputPlaceholder: 'Digite o resultado',
+                    showCancelButton: true,
+                    confirmButtonText: 'Salvar',
+                    cancelButtonText: 'Cancelar'
+                });
+                if (!r.isConfirmed) return;
+                const resultado = r.value || '';
                 $.ajax({
                     url: `/juridico/api/compliance/auditorias/${id}/resultado`,
                     method: 'PUT',

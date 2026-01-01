@@ -12,6 +12,7 @@
     <!-- Toastr for notifications -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   <div class="app-container">
@@ -81,6 +82,9 @@
                                         <a th:href="@{/juridico/processos/novo(id=${processo.id})}" class="btn btn-sm btn-icon btn-light text-muted ms-1" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <button class="btn btn-sm btn-icon btn-light text-success proc-ganho ms-1" th:data-id="${processo.id}" title="Registrar ganho de causa">
+                                            <i class="fas fa-hand-holding-usd"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 <tr th:if="${processos.empty}">
@@ -363,10 +367,97 @@
         // Abrir Detalhes (clique na linha ou botão)
         $('.proc-row, .proc-detail').on('click', function(e) {
             // Se clicar em um botão dentro da linha (como Editar), não abre o modal se não for o botão de detalhe
+            if ($(e.target).closest('.proc-ganho').length > 0) return;
             if ($(e.target).closest('a').length > 0 && !$(e.target).closest('.proc-detail').length) return;
             
             const id = $(this).data('id');
             if (id) abrirDetalhesProcesso(id);
+        });
+
+        // Registrar ganho de causa (ação rápida)
+        $(document).on('click', '.proc-ganho', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = $(this).data('id');
+            const r = await Swal.fire({
+                title: 'Registrar ganho de causa',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-2">
+                            <label class="form-label">Valor (R$)</label>
+                            <input id="swValorGanho" class="form-control" placeholder="Ex.: 15.000,00" inputmode="numeric">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Vencimento</label>
+                            <input id="swVencimento" type="date" class="form-control" value="${new Date().toISOString().slice(0,10)}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Número do documento (opcional)</label>
+                            <input id="swDocNum" class="form-control" placeholder="Ex.: Proc-12345">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Observações (opcional)</label>
+                            <textarea id="swObs" class="form-control" rows="2" placeholder="Detalhes do acordo/indenização"></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Registrar',
+                cancelButtonText: 'Cancelar',
+                focusConfirm: false,
+                didOpen: () => {
+                    const el = document.getElementById('swValorGanho');
+                    el.addEventListener('input', () => {
+                        let digits = (el.value || '').replace(/\D/g, '');
+                        if (!digits) { el.value = ''; return; }
+                        const num = Number(digits) / 100;
+                        el.value = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    });
+                },
+                preConfirm: () => {
+                    const vStr = document.getElementById('swValorGanho').value;
+                    const dt = document.getElementById('swVencimento').value;
+                    if (!vStr || !dt) {
+                        Swal.showValidationMessage('Informe Valor e Vencimento.');
+                        return false;
+                    }
+                    return {
+                        valor: vStr,
+                        vencimento: dt,
+                        numeroDocumento: document.getElementById('swDocNum').value || '',
+                        observacoes: document.getElementById('swObs').value || ''
+                    };
+                }
+            });
+            if (!r.isConfirmed || !r.value) return;
+            $.ajax({
+                url: `/juridico/api/processos/${id}/ganho`,
+                method: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(r.value)
+            })
+            .done(() => { 
+                notify('success', 'Registrado', 'Ganho registrado e lançado em Contas a Receber.'); 
+                // Atualizar linha (status ENCERRADO será refletido ao recarregar)
+                location.reload();
+            })
+            .fail(xhr => {
+                let msg = 'Falha ao registrar ganho';
+                try {
+                    if (xhr.responseJSON && xhr.responseJSON.erro) {
+                        msg = xhr.responseJSON.erro;
+                    } else if (xhr.responseText) {
+                        const maybeJson = JSON.parse(xhr.responseText);
+                        if (maybeJson && maybeJson.erro) msg = maybeJson.erro;
+                        else msg = xhr.responseText;
+                    } else if (xhr.statusText) {
+                        msg = xhr.statusText;
+                    }
+                } catch(e) {
+                    if (xhr.responseText) msg = xhr.responseText;
+                }
+                notify('error', 'Erro', msg);
+            });
         });
 
         function abrirDetalhesProcesso(id) {

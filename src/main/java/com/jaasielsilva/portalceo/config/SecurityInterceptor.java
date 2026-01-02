@@ -96,6 +96,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
                 "img-src 'self' data: https:; " +
                 "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
                 "connect-src 'self' ws: wss: https://viacep.com.br https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+                "upgrade-insecure-requests; " +
                 (isDocs ? "frame-ancestors 'self';" : "frame-ancestors 'none';");
         response.setHeader(HEADER_CONTENT_SECURITY_POLICY, csp);
     }

@@ -1,48 +1,62 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Permissões - Portal CEO</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    
+    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css"
+        rel="stylesheet">
+
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+
     <style>
         .card-stats {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             border: none;
         }
+
         .card-stats .card-body {
             padding: 1.5rem;
         }
+
         .stats-icon {
             font-size: 2.5rem;
             opacity: 0.8;
         }
+
         .badge-sistema {
             background-color: #dc3545;
         }
+
         .badge-custom {
             background-color: #28a745;
         }
+
         .table-hover tbody tr:hover {
-            background-color: rgba(0,123,255,.075);
+            background-color: rgba(0, 123, 255, .075);
         }
+
         .btn-action {
             margin: 0 2px;
         }
+
         .category-filter {
             background: #f8f9fa;
             border-radius: 0.375rem;
             padding: 1rem;
             margin-bottom: 1rem;
         }
+
         .permission-icon {
             width: 35px;
             height: 35px;
@@ -55,14 +69,15 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Incluir sidebar -->
     <div th:replace="~{components/sidebar :: sidebar}"></div>
-    
+
     <div class="main-content">
         <!-- Topbar -->
         <div th:replace="~{components/topbar :: topbar}"></div>
-        
+
         <div class="container-fluid px-4">
             <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="mb-4">
@@ -71,7 +86,7 @@
                     <li class="breadcrumb-item active">Permissões</li>
                 </ol>
             </nav>
-            
+
             <!-- Título e Ações -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
@@ -90,18 +105,18 @@
                     </button>
                 </div>
             </div>
-            
+
             <!-- Alertas -->
             <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fas fa-check-circle"></i> <span th:text="${sucesso}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            
+
             <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle"></i> <span th:text="${erro}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            
+
             <!-- Cards de Estatísticas -->
             <div class="row mb-4" th:if="${estatisticas}">
                 <div class="col-md-3">
@@ -110,7 +125,8 @@
                             <div class="row align-items-center">
                                 <div class="col">
                                     <h5 class="card-title text-uppercase text-muted mb-0">Total Permissões</h5>
-                                    <span class="h2 font-weight-bold mb-0" th:text="${estatisticas.totalPermissoes}">0</span>
+                                    <span class="h2 font-weight-bold mb-0"
+                                        th:text="${estatisticas.totalPermissoes}">0</span>
                                 </div>
                                 <div class="col-auto">
                                     <div class="stats-icon">
@@ -121,7 +137,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-3">
                     <div class="card card-stats">
                         <div class="card-body">
@@ -139,14 +155,15 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-3">
                     <div class="card card-stats">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col">
                                     <h5 class="card-title text-uppercase text-muted mb-0">Perfis Ativos</h5>
-                                    <span class="h2 font-weight-bold mb-0" th:text="${estatisticas.totalPerfis}">0</span>
+                                    <span class="h2 font-weight-bold mb-0"
+                                        th:text="${estatisticas.totalPerfis}">0</span>
                                 </div>
                                 <div class="col-auto">
                                     <div class="stats-icon">
@@ -157,7 +174,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-3">
                     <div class="card card-stats">
                         <div class="card-body">
@@ -165,7 +182,8 @@
                                 <div class="col">
                                     <h5 class="card-title text-uppercase text-muted mb-0">Mais Usada</h5>
                                     <span class="h6 font-weight-bold mb-0" th:if="${estatisticas.permissaoMaisUsada}">
-                                        <span th:text="${#strings.replace(estatisticas.permissaoMaisUsada, 'ROLE_', '')}">-</span>
+                                        <span
+                                            th:text="${#strings.replace(estatisticas.permissaoMaisUsada, 'ROLE_', '')}">-</span>
                                     </span>
                                 </div>
                                 <div class="col-auto">
@@ -178,7 +196,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Filtros -->
             <div class="category-filter">
                 <div class="row align-items-center">
@@ -186,7 +204,8 @@
                         <label for="categoriaFilter" class="form-label">Filtrar por Categoria:</label>
                         <select class="form-select" id="categoriaFilter">
                             <option value="">Todas as categorias</option>
-                            <option th:each="categoria : ${categorias}" th:value="${categoria}" th:text="${categoria}">Categoria</option>
+                            <option th:each="categoria : ${categorias}" th:value="${categoria}" th:text="${categoria}">
+                                Categoria</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -208,7 +227,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Tabela de Permissões -->
             <div class="card shadow">
                 <div class="card-header bg-white">
@@ -228,7 +247,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card-body">
                     <!-- Visualização em Tabela -->
                     <div id="tableView">
@@ -252,45 +271,46 @@
                                                 </div>
                                                 <div>
                                                     <h6 class="mb-0" th:text="${permissao.nome}">Nome da Permissão</h6>
-                                                    <small class="text-muted" th:text="${#strings.replace(permissao.nome, 'ROLE_', '')}">Descrição</small>
+                                                    <small class="text-muted"
+                                                        th:text="${#strings.replace(permissao.nome, 'ROLE_', '')}">Descrição</small>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info" th:text="${permissao.categoria ?: 'Geral'}">Categoria</span>
+                                            <span class="badge bg-info"
+                                                th:text="${permissao.categoria ?: 'Geral'}">Categoria</span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary" 
-                                                  th:text="${estatisticas.perfisPorPermissao[permissao.nome] ?: 0} + ' perfil(is)'">0 perfis</span>
+                                            <span class="badge bg-secondary"
+                                                th:text="${estatisticas.perfisComPermissao[permissao.nome] ?: 0} + ' perfil(is)'">0
+                                                perfis</span>
                                         </td>
                                         <td>
-                                            <span th:if="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}" 
-                                                  class="badge badge-sistema">Sistema</span>
-                                            <span th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}" 
-                                                  class="badge badge-custom">Personalizada</span>
+                                            <span
+                                                th:if="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
+                                                class="badge badge-sistema">Sistema</span>
+                                            <span
+                                                th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
+                                                class="badge badge-custom">Personalizada</span>
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a th:href="@{/permissoes/detalhes/{id}(id=${permissao.id})}" 
-                                                   class="btn btn-sm btn-outline-info btn-action" 
-                                                   title="Ver Detalhes">
+                                                <a th:href="@{/permissoes/detalhes/{id}(id=${permissao.id})}"
+                                                    class="btn btn-sm btn-outline-info btn-action" title="Ver Detalhes">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                
-                                                <a th:href="@{/permissoes/editar/{id}(id=${permissao.id})}" 
-                                                   class="btn btn-sm btn-outline-warning btn-action" 
-                                                   title="Editar"
-                                                   th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}">
+
+                                                <a th:href="@{/permissoes/editar/{id}(id=${permissao.id})}"
+                                                    class="btn btn-sm btn-outline-warning btn-action" title="Editar"
+                                                    th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-outline-danger btn-action" 
-                                                        title="Excluir"
-                                                        th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
-                                                        onclick="confirmarExclusao(this)" 
-                                                        th:data-id="${permissao.id}" 
-                                                        th:data-nome="${permissao.nome}">
+
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-action"
+                                                    title="Excluir"
+                                                    th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
+                                                    onclick="confirmarExclusao(this)" th:data-id="${permissao.id}"
+                                                    th:data-nome="${permissao.nome}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -300,14 +320,14 @@
                             </table>
                         </div>
                     </div>
-                    
+
                     <!-- Visualização em Cards -->
                     <div id="cardView" style="display: none;">
                         <div class="row" id="permissoesCards">
                             <div th:each="permissao : ${permissoes}" class="col-md-4 mb-3">
-                                <div class="card h-100 permission-card" 
-                                     th:data-categoria="${permissao.categoria ?: 'Geral'}"
-                                     th:data-tipo="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome) ? 'sistema' : 'custom'}">
+                                <div class="card h-100 permission-card"
+                                    th:data-categoria="${permissao.categoria ?: 'Geral'}"
+                                    th:data-tipo="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome) ? 'sistema' : 'custom'}">
                                     <div class="card-body">
                                         <div class="d-flex align-items-start mb-3">
                                             <div class="permission-icon me-3">
@@ -315,45 +335,49 @@
                                             </div>
                                             <div class="flex-grow-1">
                                                 <h6 class="card-title mb-1" th:text="${permissao.nome}">Permissão</h6>
-                                                <p class="card-text text-muted small" th:text="${#strings.replace(permissao.nome, 'ROLE_', '')}">Descrição</p>
+                                                <p class="card-text text-muted small"
+                                                    th:text="${#strings.replace(permissao.nome, 'ROLE_', '')}">Descrição
+                                                </p>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="mb-3">
-                                            <span class="badge bg-info me-1" th:text="${permissao.categoria ?: 'Geral'}">Categoria</span>
-                                            <span th:if="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}" 
-                                                  class="badge badge-sistema">Sistema</span>
-                                            <span th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}" 
-                                                  class="badge badge-custom">Personalizada</span>
+                                            <span class="badge bg-info me-1"
+                                                th:text="${permissao.categoria ?: 'Geral'}">Categoria</span>
+                                            <span
+                                                th:if="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
+                                                class="badge badge-sistema">Sistema</span>
+                                            <span
+                                                th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
+                                                class="badge badge-custom">Personalizada</span>
                                         </div>
-                                        
+
                                         <div class="mb-3">
                                             <small class="text-muted">
-                                                <i class="fas fa-user-tag"></i> 
-                                                <span th:text="${estatisticas.perfisPorPermissao[permissao.nome] ?: 0} + ' perfil(is)'">
+                                                <i class="fas fa-user-tag"></i>
+                                                <span
+                                                    th:text="${estatisticas.perfisComPermissao[permissao.nome] ?: 0} + ' perfil(is)'">
                                                     0 perfis
                                                 </span>
                                             </small>
                                         </div>
-                                        
+
                                         <div class="d-flex justify-content-between">
-                                            <a th:href="@{/permissoes/detalhes/{id}(id=${permissao.id})}" 
-                                               class="btn btn-sm btn-outline-info">
+                                            <a th:href="@{/permissoes/detalhes/{id}(id=${permissao.id})}"
+                                                class="btn btn-sm btn-outline-info">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            
-                                            <a th:href="@{/permissoes/editar/{id}(id=${permissao.id})}" 
-                                               class="btn btn-sm btn-outline-warning"
-                                               th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}">
+
+                                            <a th:href="@{/permissoes/editar/{id}(id=${permissao.id})}"
+                                                class="btn btn-sm btn-outline-warning"
+                                                th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger"
-                                                    th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
-                                                    onclick="confirmarExclusao(this)" 
-                                                    th:data-id="${permissao.id}" 
-                                                    th:data-nome="${permissao.nome}">
+
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:unless="${#lists.contains({'ROLE_ADMIN', 'ROLE_USER', 'ROLE_MASTER', 'ROLE_GERENTE'}, permissao.nome)}"
+                                                onclick="confirmarExclusao(this)" th:data-id="${permissao.id}"
+                                                th:data-nome="${permissao.nome}">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -366,24 +390,26 @@
             </div>
         </div>
     </div>
-    
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
     
-    <script>
+
+    <script th:inline="none">
         let currentView = 'table';
-        
-        $(document).ready(function() {
+
+        $(document).ready(function () {
             // Inicializar DataTable
             $('#permissoesTable').DataTable({
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                    url: 'https://cdn.jsdelivr.net/npm/datatables.net-plugins@1.13.6/i18n/pt-BR.json'
                 },
                 pageLength: 10,
                 order: [[0, 'asc']],
@@ -391,14 +417,14 @@
                     { orderable: false, targets: [4] } // Coluna de ações não ordenável
                 ]
             });
-            
+
             // Filtros
-            $('#categoriaFilter, #tipoFilter').on('change', function() {
+            $('#categoriaFilter, #tipoFilter').on('change', function () {
                 aplicarFiltros();
             });
-            
+
             // Busca personalizada
-            $('#searchInput').on('keyup', function() {
+            $('#searchInput').on('keyup', function () {
                 if (currentView === 'table') {
                     $('#permissoesTable').DataTable().search(this.value).draw();
                 } else {
@@ -406,34 +432,34 @@
                 }
             });
         });
-        
+
         function aplicarFiltros() {
             const categoria = $('#categoriaFilter').val();
             const tipo = $('#tipoFilter').val();
             const busca = $('#searchInput').val().toLowerCase();
-            
+
             if (currentView === 'table') {
                 // Filtrar DataTable
                 $('#permissoesTable').DataTable().search(busca).draw();
             } else {
                 // Filtrar cards
-                $('.permission-card').each(function() {
+                $('.permission-card').each(function () {
                     const card = $(this);
                     const cardCategoria = card.data('categoria');
                     const cardTipo = card.data('tipo');
                     const cardTexto = card.text().toLowerCase();
-                    
+
                     let mostrar = true;
-                    
+
                     if (categoria && cardCategoria !== categoria) mostrar = false;
                     if (tipo && cardTipo !== tipo) mostrar = false;
                     if (busca && !cardTexto.includes(busca)) mostrar = false;
-                    
+
                     card.closest('.col-md-4').toggle(mostrar);
                 });
             }
         }
-        
+
         function toggleView() {
             if (currentView === 'table') {
                 $('#tableView').hide();
@@ -450,7 +476,7 @@
             }
             aplicarFiltros();
         }
-        
+
         function confirmarExclusao(button) {
             const permissaoId = button.getAttribute('data-id');
             const permissaoNome = button.getAttribute('data-nome');
@@ -469,32 +495,32 @@
                     fetch('/permissoes/excluir/' + permissaoId, {
                         method: 'POST'
                     })
-                    .then(() => {
-                        Swal.fire({
-                            title: 'Excluída',
-                            text: 'Permissão excluída com sucesso.',
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => {
-                            location.reload();
+                        .then(() => {
+                            Swal.fire({
+                                title: 'Excluída',
+                                text: 'Permissão excluída com sucesso.',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        })
+                        .catch(() => {
+                            Swal.fire({
+                                title: 'Erro',
+                                text: 'Erro ao excluir a permissão.',
+                                icon: 'error'
+                            });
                         });
-                    })
-                    .catch(() => {
-                        Swal.fire({
-                            title: 'Erro',
-                            text: 'Erro ao excluir a permissão.',
-                            icon: 'error'
-                        });
-                    });
                 }
             });
         }
-        
+
         function exportarJSON() {
             window.open('/permissoes/exportar/json', '_blank');
         }
-        
+
         function inicializarPermissoes() {
             Swal.fire({
                 title: 'Inicializar Permissões Padrão',
@@ -525,15 +551,16 @@
                 }
             });
         }
-        
+
         // Auto-hide alerts
-        setTimeout(function() {
+        setTimeout(function () {
             $('.alert').fadeOut('slow');
         }, 5000);
     </script>
-  <!-- Script de notifica��es -->
+    <!-- Script de notifica��es -->
 
-  <script th:src="@{/js/notifications.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
 
 </body>
+
 </html>

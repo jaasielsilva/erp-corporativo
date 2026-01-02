@@ -193,9 +193,15 @@ public class PermissaoService {
             categoriasPermissoes.put(permissao.getNome(), categoria);
         }
         
+        String permissaoMaisUsada = permissoes.stream()
+                .max(Comparator.comparingLong(p -> perfisComPermissao.getOrDefault(p.getNome(), 0L)))
+                .map(Permissao::getNome)
+                .orElse(null);
+        
         relatorio.put("perfisComPermissao", perfisComPermissao);
         relatorio.put("categoriasPermissoes", categoriasPermissoes);
         relatorio.put("permissoesPorCategoria", listarPorCategoria());
+        relatorio.put("permissaoMaisUsada", permissaoMaisUsada);
         
         return relatorio;
     }

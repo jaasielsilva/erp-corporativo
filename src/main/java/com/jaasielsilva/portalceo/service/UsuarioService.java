@@ -54,6 +54,8 @@ public class UsuarioService {
 
     @Value("${app.base-url:http://localhost:8080}")
     private String appBaseUrl;
+    @Value("${spring.mail.username:}")
+    private String mailFrom;
 
     public Usuario findByEmail(String email) {
         return usuarioRepository.findByEmail(email)
@@ -438,6 +440,9 @@ public class UsuarioService {
 
             MimeMessage mensagem = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensagem, true, "UTF-8");
+            if (mailFrom != null && !mailFrom.isBlank()) {
+                helper.setFrom(mailFrom);
+            }
             helper.setTo(email);
             helper.setSubject("🔐 Redefinição de Senha - ERP Corporativo");
             helper.setText(html, true);

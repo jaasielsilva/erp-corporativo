@@ -1,3 +1,4 @@
 app:
   upload:
     path: "/uploads"
+  base-url: "https://erpcorporativo.shop"

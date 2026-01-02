@@ -1,3 +1,4 @@
 app:
   upload:
     path: "C:/erp/uploads"
+  base-url: "http://localhost:8080"

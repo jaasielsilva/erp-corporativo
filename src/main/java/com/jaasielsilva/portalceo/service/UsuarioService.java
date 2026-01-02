@@ -20,6 +20,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.jaasielsilva.portalceo.security.UsuarioDetailsService;
 
@@ -50,6 +51,9 @@ public class UsuarioService {
     private ColaboradorRepository colaboradorRepository;
     @Autowired
     private UsuarioDetailsService usuarioDetailsService;
+
+    @Value("${app.base-url:http://localhost:8080}")
+    private String appBaseUrl;
 
     public Usuario findByEmail(String email) {
         return usuarioRepository.findByEmail(email)
@@ -424,7 +428,8 @@ public class UsuarioService {
 
         Usuario usuario = usuarioOpt.get();
         String token = gerarTokenRedefinicao(usuario);
-        String url = "http://localhost:8080/resetar-senha?token=" + token;
+        String base = appBaseUrl != null && appBaseUrl.endsWith("/") ? appBaseUrl.substring(0, appBaseUrl.length() - 1) : appBaseUrl;
+        String url = base + "/resetar-senha?token=" + token;
 
         try {
             // Carrega o template HTML personalizado
@@ -458,6 +463,10 @@ public class UsuarioService {
             template = template.replace("{{NOME_USUARIO}}", nomeUsuario);
             template = template.replace("{{EMAIL_USUARIO}}", emailUsuario);
             template = template.replace("{{LINK_REDEFINICAO}}", linkRedefinicao);
+            if (appBaseUrl != null) {
+                String base = appBaseUrl.endsWith("/") ? appBaseUrl.substring(0, appBaseUrl.length() - 1) : appBaseUrl;
+                template = template.replace("{{BASE_URL}}", base);
+            }
 
             return template;
         } catch (Exception e) {

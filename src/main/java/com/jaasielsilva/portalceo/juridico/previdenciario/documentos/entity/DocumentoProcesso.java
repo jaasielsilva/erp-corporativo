@@ -42,6 +42,18 @@ public class DocumentoProcesso {
     @Column(name = "caminho_arquivo", nullable = false, length = 500)
     private String caminhoArquivo;
 
+    @Column(name = "nome_original", length = 255)
+    private String nomeOriginal;
+
+    @Column(name = "nome_arquivo", length = 255)
+    private String nomeArquivo;
+
+    @Column(name = "content_type", length = 120)
+    private String contentType;
+
+    @Column(name = "tamanho_bytes")
+    private Long tamanhoBytes;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "enviado_por_id", nullable = false)
     private Usuario enviadoPor;

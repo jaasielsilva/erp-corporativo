@@ -69,6 +69,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/painelceo
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 12345
@@ -81,6 +82,8 @@ services:
       - evolution-api
     networks:
       - painelnet
+    volumes:
+      - /var/erp/uploads:/uploads
 
   prometheus:
     image: prom/prometheus:latest

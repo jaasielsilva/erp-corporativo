@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -55,6 +56,9 @@ public class JuridicoController {
     private final com.jaasielsilva.portalceo.repository.juridico.DocumentoModeloRepository documentoModeloRepository;
     private final com.jaasielsilva.portalceo.service.DocumentTemplateService documentTemplateService;
     private final AuditoriaJuridicoLogService auditoriaJuridicoLogService;
+
+    @Value("${app.upload.path:uploads}")
+    private String uploadBasePath;
 
     // Página principal do Jurídico
     @GetMapping
@@ -1497,9 +1501,7 @@ public class JuridicoController {
             @RequestParam(required = false) String changelog,
             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         try {
-            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads"
-                    + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
-            java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
+            java.nio.file.Path dir = java.nio.file.Paths.get(uploadBasePath, "juridico", "modelos");
             java.nio.file.Files.createDirectories(dir);
             String sanitized = java.util.UUID.randomUUID() + "_" + (file.getOriginalFilename() == null
                     ? "modelo"
@@ -1539,9 +1541,7 @@ public class JuridicoController {
             long maxSize = 10L * 1024 * 1024;
             java.util.Set<String> allowed = java.util.Set.of(".doc", ".docx", ".pdf");
             java.util.List<java.util.Map<String, Object>> criados = new java.util.ArrayList<>();
-            String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads"
-                    + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
-            java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
+            java.nio.file.Path dir = java.nio.file.Paths.get(uploadBasePath, "juridico", "modelos");
             java.nio.file.Files.createDirectories(dir);
             for (var file : files) {
                 if (file == null || file.isEmpty())
@@ -1640,9 +1640,7 @@ public class JuridicoController {
         return documentoModeloRepository.findById(modeloId)
                 .map(m -> {
                     try {
-                        String baseDir = System.getProperty("user.dir") + java.io.File.separator + "uploads"
-                                + java.io.File.separator + "juridico" + java.io.File.separator + "documentos";
-                        java.nio.file.Path dir = java.nio.file.Paths.get(baseDir);
+                        java.nio.file.Path dir = java.nio.file.Paths.get(uploadBasePath, "juridico", "documentos");
                         java.nio.file.Files.createDirectories(dir);
                         String filename = java.util.UUID.randomUUID() + "_"
                                 + java.nio.file.Paths.get(m.getArquivoModelo()).getFileName().toString();

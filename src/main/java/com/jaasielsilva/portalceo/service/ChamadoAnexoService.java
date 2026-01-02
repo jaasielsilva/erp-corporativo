@@ -29,8 +29,8 @@ public class ChamadoAnexoService {
     @Autowired
     private ChamadoAnexoRepository anexoRepository;
 
-    @Value("${app.upload.chamados.dir:uploads/chamados}")
-    private String uploadDir;
+    @Value("${app.upload.path:uploads}")
+    private String uploadBasePath;
 
     @Value("${app.upload.chamados.max-size:10485760}")
     private long maxFileSize;
@@ -175,7 +175,7 @@ public class ChamadoAnexoService {
      * Cria diretório específico para o chamado
      */
     private Path criarDiretorioChamado(Long chamadoId) throws IOException {
-        Path diretorioChamado = Paths.get(uploadDir, chamadoId.toString());
+        Path diretorioChamado = Paths.get(uploadBasePath, "chamados", chamadoId.toString());
         Files.createDirectories(diretorioChamado);
         logger.debug("Diretório criado/verificado: {}", diretorioChamado);
         return diretorioChamado;

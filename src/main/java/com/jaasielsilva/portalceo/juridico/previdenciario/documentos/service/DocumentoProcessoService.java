@@ -36,8 +36,8 @@ public class DocumentoProcessoService {
     private final WorkflowService workflowService;
     private final HistoricoProcessoService historicoProcessoService;
 
-    @Value("${app.upload.juridico.previdenciario.dir:uploads/juridico/previdenciario}")
-    private String uploadDir;
+    @Value("${app.upload.path:uploads}")
+    private String uploadBasePath;
 
     @Transactional(readOnly = true)
     public List<DocumentoProcesso> listarPorProcesso(Long processoId) {
@@ -64,7 +64,11 @@ public class DocumentoProcessoService {
             throw new IllegalStateException("A etapa atual não permite anexos");
         }
 
-        Path dir = Paths.get(uploadDir, "processos", String.valueOf(processoId));
+        Long clienteId = processo.getCliente() != null ? processo.getCliente().getId() : null;
+        if (clienteId == null) {
+            throw new IllegalStateException("Processo sem cliente associado");
+        }
+        Path dir = Paths.get(uploadBasePath, "processos", "cliente_" + clienteId);
         Files.createDirectories(dir);
 
         String original = arquivo.getOriginalFilename() == null ? "arquivo" : arquivo.getOriginalFilename();
@@ -77,6 +81,10 @@ public class DocumentoProcessoService {
         doc.setProcessoPrevidenciario(processo);
         doc.setTipoDocumento(tipoDocumento);
         doc.setCaminhoArquivo(destino.toString());
+        doc.setNomeOriginal(original);
+        doc.setNomeArquivo(nomeUnico);
+        doc.setContentType(arquivo.getContentType());
+        doc.setTamanhoBytes(arquivo.getSize());
         doc.setEnviadoPor(usuarioExecutor);
         doc.setDataUpload(LocalDateTime.now());
 
@@ -110,7 +118,11 @@ public class DocumentoProcessoService {
             throw new IllegalStateException("A etapa atual não permite anexos");
         }
 
-        Path dir = Paths.get(uploadDir, "processos", String.valueOf(processoId));
+        Long clienteId = processo.getCliente() != null ? processo.getCliente().getId() : null;
+        if (clienteId == null) {
+            throw new IllegalStateException("Processo sem cliente associado");
+        }
+        Path dir = Paths.get(uploadBasePath, "processos", "cliente_" + clienteId);
         Files.createDirectories(dir);
 
         String original = (originalFilename == null || originalFilename.isBlank()) ? "arquivo" : originalFilename;
@@ -123,6 +135,10 @@ public class DocumentoProcessoService {
         doc.setProcessoPrevidenciario(processo);
         doc.setTipoDocumento(tipoDocumento);
         doc.setCaminhoArquivo(destino.toString());
+        doc.setNomeOriginal(original);
+        doc.setNomeArquivo(nomeUnico);
+        doc.setContentType("application/octet-stream");
+        doc.setTamanhoBytes((long) bytes.length);
         doc.setEnviadoPor(usuarioExecutor);
         doc.setDataUpload(LocalDateTime.now());
 

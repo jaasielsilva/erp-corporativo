@@ -33,8 +33,8 @@ public class DocumentoAdesaoService {
     @Autowired
     private WorkflowAdesaoService workflowAdesaoService;
     
-    @Value("${app.upload.dir:uploads/adesao}")
-    private String uploadDir;
+    @Value("${app.upload.path:uploads}")
+    private String uploadBasePath;
     
     @Value("${app.upload.max-size:5242880}") // 5MB
     private long maxFileSize;
@@ -129,7 +129,7 @@ public class DocumentoAdesaoService {
      * Lista todos os documentos de uma sessão
      */
     public List<DocumentoInfo> listarDocumentos(String sessionId) {
-        Path diretorioSessao = Paths.get(uploadDir, sessionId);
+        Path diretorioSessao = Paths.get(uploadBasePath, "adesao", sessionId);
         
         if (!Files.exists(diretorioSessao)) {
             return new ArrayList<>();
@@ -168,7 +168,7 @@ public class DocumentoAdesaoService {
      * Remove um documento específico
      */
     public boolean removerDocumento(String sessionId, String tipoDocumento) {
-        Path diretorioSessao = Paths.get(uploadDir, sessionId);
+        Path diretorioSessao = Paths.get(uploadBasePath, "adesao", sessionId);
         
         try {
             return Files.list(diretorioSessao)
@@ -198,8 +198,8 @@ public class DocumentoAdesaoService {
      * Move documentos da sessão temporária para o diretório final do colaborador
      */
     public boolean moverDocumentosParaColaborador(String sessionId, Long colaboradorId) {
-        Path diretorioSessao = Paths.get(uploadDir, sessionId);
-        Path diretorioColaborador = Paths.get(uploadDir, "colaboradores", colaboradorId.toString());
+        Path diretorioSessao = Paths.get(uploadBasePath, "adesao", sessionId);
+        Path diretorioColaborador = Paths.get(uploadBasePath, "adesao", "colaboradores", colaboradorId.toString());
         
         try {
             // Criar diretório do colaborador
@@ -234,12 +234,12 @@ public class DocumentoAdesaoService {
      * Limpa todos os arquivos de uma sessão
      */
     public void limparSessao(String sessionId) {
-        Path diretorioSessao = Paths.get(uploadDir, sessionId);
+        Path diretorioSessao = Paths.get(uploadBasePath, "adesao", sessionId);
         
         if (Files.exists(diretorioSessao)) {
             try {
                 Files.walk(diretorioSessao)
-                        .sorted(Comparator.reverseOrder())
+                    .sorted(Comparator.reverseOrder())
                         .map(Path::toFile)
                         .forEach(File::delete);
                         
@@ -255,7 +255,7 @@ public class DocumentoAdesaoService {
      * Limpa sessões antigas (mais de 24 horas)
      */
     public void limparSessoesAntigas() {
-        Path diretorioUpload = Paths.get(uploadDir);
+        Path diretorioUpload = Paths.get(uploadBasePath, "adesao");
         
         if (!Files.exists(diretorioUpload)) {
             return;
@@ -321,7 +321,7 @@ public class DocumentoAdesaoService {
     }
     
     private Path criarDiretorioSessao(String sessionId) throws IOException {
-        Path diretorioSessao = Paths.get(uploadDir, sessionId);
+        Path diretorioSessao = Paths.get(uploadBasePath, "adesao", sessionId);
         Files.createDirectories(diretorioSessao);
         return diretorioSessao;
     }

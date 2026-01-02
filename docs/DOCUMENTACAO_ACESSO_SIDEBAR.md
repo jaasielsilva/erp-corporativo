@@ -94,6 +94,18 @@
 | Suporte (`sidebar.html:507`) | Todos | Livre |
 | Sair (`sidebar.html:510-512`) | Todos | Livre |
 
+## Departamento Jurídico — Combinações de Cargo/Permissões/Nível e Itens do Sidebar
+- Visibilidade do módulo: `podeAcessarJuridico` verdadeiro quando `isJuridico` ou `isGerencial` ou `isMaster` ou `isAdmin` ([GlobalControllerAdvice.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/config/GlobalControllerAdvice.java#L340-L343)). A detecção de cargo jurídico considera nomes contendo “juridico/jurídico”, “advogado”, “legal” ou “compliance” ([GlobalControllerAdvice.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/config/GlobalControllerAdvice.java#L290-L299)).
+- Auditoria Jurídica exige perfil/role específico: `hasAnyRole('ADMIN','MASTER','JURIDICO_GERENTE')` ([sidebar.html](file:///c:/Users/jasie/erp-corporativo/src/main/resources/templates/components/sidebar.html#L491-L503)) e endpoints protegidos com `@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")` ([JuridicoAuditoriaController.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/controller/juridico/JuridicoAuditoriaController.java#L22-L85)).
+
+| Combinação (Cargo/Perfil/Nível) | Itens visíveis no Sidebar | Condições/Permissões principais |
+|---|---|---|
+| Cargo Jurídico com nível não-gerencial (ANALISTA/OPERACIONAL/USER/ESTAGIARIO etc.) | Dashboard, Clientes, Previdenciário (Listar/Novo), WhaTchat, Contratos, Processos (Listar/Novo), Compliance, Documentos | `podeAcessarJuridico` por `isJuridico`; endpoints de jurídico/whatchat com `ROLE_JURIDICO`/`ROLE_GERENCIAL` ([JuridicoController.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/controller/JuridicoController.java#L1672-L2177), [ChatController.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/controller/whatchat/ChatController.java#L15)) |
+| Cargo Jurídico com nível gerencial (GERENTE/COORDENADOR/SUPERVISOR) | Itens acima | `podeAcessarJuridico` por `isGerencial`; Auditoria não aparece sem `JURIDICO_GERENTE` |
+| Cargo não jurídico com nível gerencial | Itens acima | `podeAcessarJuridico` por `isGerencial` |
+| ADMIN ou MASTER | Itens acima + Auditoria Jurídica | `isAdmin`/`isMaster`; Auditoria visível por `hasAnyRole('ADMIN','MASTER',...)` ([sidebar.html](file:///c:/Users/jasie/erp-corporativo/src/main/resources/templates/components/sidebar.html#L491-L503)) |
+| Perfil JURIDICO_GERENTE (qualquer nível) | Adicional: Auditoria Jurídica | Perfil e role semeados em segurança ([SecurityConfig.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/config/SecurityConfig.java#L361-L403)); visibilidade no sidebar e proteção de endpoints conforme acima |
+
 ## Exemplos
 - Perfil GERENTE: atende `podeGerenciarUsuarios` e vê “Usuários” no sidebar (`GlobalControllerAdvice.java:71-75`, `sidebar.html:469-471`).
 - Perfil COORDENADOR: contempla `podeAcessarFinanceiro`, acessando “Financeiro” (`NivelAcesso.java:81-83`, `sidebar.html:291`).

@@ -12,11 +12,16 @@ import com.jaasielsilva.portalceo.repository.AcaoUsuarioRepository;
 import com.jaasielsilva.portalceo.dto.AcaoUsuarioDTO;
 import com.jaasielsilva.portalceo.service.ChamadoService;
 import com.jaasielsilva.portalceo.service.ti.BackupService;
+import com.jaasielsilva.portalceo.service.ti.BackupMysqlService;
 import com.jaasielsilva.portalceo.service.ti.MetricasService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,6 +42,9 @@ public class TiController {
 
     @Autowired
     private BackupService backupService;
+
+    @Autowired
+    private BackupMysqlService backupMysqlService;
 
     @Autowired
     private SistemaStatusRepository sistemaStatusRepository;
@@ -140,6 +148,41 @@ public class TiController {
         model.addAttribute("espacoUtilizado", backupService.obterEspacoUtilizado());
 
         return "ti/backup";
+    }
+
+    @PostMapping("/backup/mysql")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ADMIN','MASTER')")
+    public ResponseEntity<?> gerarBackupMysql(Authentication authentication) {
+        try {
+            ByteArrayResource resource = backupMysqlService.gerarDumpGzip();
+            String filename = backupMysqlService.buildFilename();
+            String modeUsed = backupMysqlService.getLastModeUsed();
+            try {
+                Optional<com.jaasielsilva.portalceo.model.Usuario> usuarioOpt =
+                        usuarioService.buscarPorEmail(authentication != null ? authentication.getName() : null);
+                usuarioOpt.ifPresent(u -> acaoUsuarioRepository.save(
+                        new com.jaasielsilva.portalceo.model.AcaoUsuario(LocalDateTime.now(), "BACKUP_MYSQL_GERADO", u, null)));
+            } catch (Exception ignored) {}
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .header("X-Backup-Mode", modeUsed)
+                    .contentType(MediaType.parseMediaType("application/gzip"))
+                    .contentLength(resource.contentLength())
+                    .body(resource);
+        } catch (RuntimeException ex) {
+            String raw = ex.getMessage() != null ? ex.getMessage() : "Falha ao gerar backup";
+            String message = raw;
+            if (raw.toLowerCase().contains("view") && raw.toLowerCase().contains("invalid")) {
+                message = "Falha ao gerar backup: view inválida ou permissões insuficientes no banco.";
+            }
+            Map<String, Object> body = new HashMap<>();
+            body.put("success", false);
+            body.put("message", message);
+            body.put("code", "BACKUP_ERROR");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body);
+        }
     }
 
     @PostMapping("/backup/executar")

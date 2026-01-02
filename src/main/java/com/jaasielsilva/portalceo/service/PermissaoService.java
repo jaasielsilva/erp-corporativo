@@ -324,4 +324,61 @@ public class PermissaoService {
         
         return permissoesCriadas;
     }
+
+    public List<Permissao> sugerirPermissoesPorModulosENivel(List<String> modulos, String nivel) {
+        Set<String> sugeridas = new HashSet<>();
+        boolean gerencial = nivel != null && Set.of("MASTER","ADMIN","GERENTE","COORDENADOR","SUPERVISOR").contains(nivel.toUpperCase());
+        sugeridas.add("ROLE_USER");
+        if (modulos != null) {
+            for (String m : modulos) {
+                String mm = m.toUpperCase();
+                if (mm.equals("FINANCEIRO")) {
+                    if (gerencial) {
+                        sugeridas.add("ROLE_FINANCEIRO_READ");
+                        sugeridas.add("ROLE_FINANCEIRO_WRITE");
+                        sugeridas.add("ROLE_FINANCEIRO_DELETE");
+                        sugeridas.add("ROLE_FINANCEIRO_ADMIN");
+                    } else {
+                        sugeridas.add("ROLE_FINANCEIRO_READ");
+                    }
+                } else if (mm.equals("RH")) {
+                    if (gerencial) {
+                        sugeridas.add("ROLE_RH_READ");
+                        sugeridas.add("ROLE_RH_WRITE");
+                        sugeridas.add("ROLE_RH_DELETE");
+                        sugeridas.add("ROLE_RH_ADMIN");
+                    } else {
+                        sugeridas.add("ROLE_RH_READ");
+                    }
+                } else if (mm.equals("RELATORIOS") || mm.equals("RELATÓRIOS")) {
+                    sugeridas.add("ROLE_RELATORIO_READ");
+                    if (gerencial) {
+                        sugeridas.add("ROLE_RELATORIO_EXPORT");
+                    }
+                } else if (mm.equals("CONFIG") || mm.equals("CONFIGURACOES") || mm.equals("CONFIGURAÇÕES")) {
+                    sugeridas.add("ROLE_CONFIG_READ");
+                    if (gerencial) {
+                        sugeridas.add("ROLE_CONFIG_WRITE");
+                    }
+                } else if (mm.equals("JURIDICO") || mm.equals("JURÍDICO")) {
+                    sugeridas.add("ROLE_JURIDICO");
+                    if (gerencial) {
+                        sugeridas.add("ROLE_JURIDICO_GERENTE");
+                    }
+                } else {
+                    sugeridas.add("ROLE_" + mm + "_READ");
+                }
+            }
+        }
+        if (nivel != null) {
+            String n = nivel.toUpperCase();
+            if (n.equals("MASTER")) sugeridas.add("ROLE_MASTER");
+            if (n.equals("ADMIN")) sugeridas.add("ROLE_ADMIN");
+        }
+        List<Permissao> resultado = new ArrayList<>();
+        for (String nome : sugeridas) {
+            permissaoRepository.findByNome(nome).ifPresent(resultado::add);
+        }
+        return resultado;
+    }
 }

@@ -254,6 +254,24 @@ public class PerfilService {
         return relatorio;
     }
 
+    public com.jaasielsilva.portalceo.dto.PerfisRelatorioDTO gerarRelatorioEstatisticasDto() {
+        List<Perfil> perfis = perfilRepository.findAll();
+        Map<String, Long> usuariosPorPerfil = new HashMap<>();
+        Map<String, Integer> permissoesPorPerfil = new HashMap<>();
+        for (Perfil perfil : perfis) {
+            long usuarios = usuarioRepository.countByPerfisContaining(perfil);
+            int permissoes = perfil.getPermissoes() != null ? perfil.getPermissoes().size() : 0;
+            usuariosPorPerfil.put(perfil.getNome(), usuarios);
+            permissoesPorPerfil.put(perfil.getNome(), permissoes);
+        }
+        com.jaasielsilva.portalceo.dto.PerfisRelatorioDTO dto = new com.jaasielsilva.portalceo.dto.PerfisRelatorioDTO();
+        dto.setTotalPerfis((long) perfis.size());
+        dto.setTotalUsuarios(usuarioRepository.count());
+        dto.setUsuariosPorPerfil(usuariosPorPerfil);
+        dto.setPermissoesPorPerfil(permissoesPorPerfil);
+        return dto;
+    }
+
     // ===============================
     // MÉTODOS AUXILIARES
     // ===============================

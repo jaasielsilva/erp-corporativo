@@ -12,6 +12,10 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+
+     <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
     
     <style>
         .permission-card {
@@ -54,8 +58,8 @@
     <div th:replace="~{components/sidebar :: sidebar}"></div>
     
     <div class="main-content">
-        <!-- Incluir header -->
-        <div th:replace="~{fragments/header :: header}"></div>
+        <!-- Topbar -->
+        <div th:replace="~{components/topbar :: topbar}"></div>
         
         <div class="container-fluid px-4">
             <!-- Breadcrumb -->
@@ -122,7 +126,7 @@
                                         <div class="col-6">
                                             <div class="text-center p-3 bg-light rounded">
                                                 <i class="fas fa-users fa-2x text-primary mb-2"></i>
-                                                <div class="h5 mb-0" th:text="${usuariosCount ?: 0}">0</div>
+                                                <div class="h5 mb-0" th:text="${usuariosCount != null ? usuariosCount : 0}">0</div>
                                                 <small class="text-muted">Usuários</small>
                                             </div>
                                         </div>
@@ -157,6 +161,9 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-primary" onclick="openProfileAssistant()">
+                                        <i class="fas fa-magic"></i> Assistente de Perfil
+                                    </button>
                                     <button type="button" class="btn btn-toggle-all" onclick="toggleAllPermissions(true)">
                                         <i class="fas fa-check-double"></i> Selecionar Todas
                                     </button>
@@ -200,12 +207,12 @@
                                                     <span th:text="${categoria.key}">Categoria</span>
                                                 </h6>
                                                 <div>
-                                                    <button type="button" class="btn btn-sm btn-light" 
-                                                            th:onclick="'toggleCategory(\'' + ${categoria.key} + '\', true)'">
+                                                    <button type="button" class="btn btn-sm btn-light btn-cat-all"
+                                                            th:data-category="${categoria.key}">
                                                         <i class="fas fa-check"></i> Todas
                                                     </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-light" 
-                                                            th:onclick="'toggleCategory(\'' + ${categoria.key} + '\', false)'">
+                                                    <button type="button" class="btn btn-sm btn-outline-light btn-cat-none"
+                                                            th:data-category="${categoria.key}">
                                                         <i class="fas fa-times"></i> Nenhuma
                                                     </button>
                                                 </div>
@@ -215,14 +222,15 @@
                                         <div class="row">
                                             <div th:each="permissao : ${categoria.value}" class="col-md-6 mb-3">
                                                 <div class="permission-card p-3" 
-                                                     th:classappend="${#lists.contains(perfil.permissoes, permissao) ? 'selected' : ''}">
+                                                     th:classappend="${perfil.permissoes != null and #lists.contains(perfil.permissoes, permissao) ? 'selected' : ''}">
                                                     <div class="form-check">
                                                         <input class="form-check-input permission-checkbox" 
                                                                type="checkbox" 
                                                                th:id="'perm_' + ${permissao.id}"
                                                                th:value="${permissao.id}"
-                                                               name="permissaoIds"
-                                                               th:checked="${#lists.contains(perfil.permissoes, permissao)}"
+                                                               name="permissoes"
+                                                               th:checked="${perfil.permissoes != null and #lists.contains(perfil.permissoes, permissao)}"
+                                                               th:data-nome="${permissao.nome}"
                                                                th:data-categoria="${categoria.key}">
                                                         <label class="form-check-label w-100" 
                                                                th:for="'perm_' + ${permissao.id}">
@@ -305,12 +313,15 @@
         </div>
     </div>
     
+    
+    
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <script>
+    <script th:inline="none">
         $(document).ready(function() {
             updatePermissionCount();
             
@@ -318,6 +329,14 @@
             $('.permission-checkbox').on('change', function() {
                 updatePermissionCount();
                 updateCardSelection(this);
+            });
+            $('.btn-cat-all').on('click', function(){
+                const categoria = $(this).data('category');
+                toggleCategory(categoria, true);
+            });
+            $('.btn-cat-none').on('click', function(){
+                const categoria = $(this).data('category');
+                toggleCategory(categoria, false);
             });
             
             // Busca de permissões
@@ -339,6 +358,8 @@
                     return false;
                 }
             });
+            
+            initAssistantModules();
         });
         
         function updatePermissionCount() {
@@ -371,8 +392,12 @@
         }
         
         function toggleByCategory() {
-            // Implementar lógica para seleção por categoria
-            alert('Funcionalidade em desenvolvimento');
+            Swal.fire({
+                title: 'Funcionalidade em desenvolvimento',
+                text: 'Em breve você poderá selecionar permissões por categoria.',
+                icon: 'info',
+                confirmButtonText: 'Ok'
+            });
         }
         
         function previewPermissions() {
@@ -407,16 +432,185 @@
                 });
             }
             
-            $('#previewContent').html(html);
-            new bootstrap.Modal(document.getElementById('modalVisualizacao')).show();
+            Swal.fire({
+                title: 'Visualizar Permissões Selecionadas',
+                html: '<div class="text-start">' + html + '</div>',
+                width: '800px',
+                icon: 'info',
+                confirmButtonText: 'Fechar',
+                showCloseButton: true
+            });
         }
+        
+        const ASSISTANT_MODULES = ["Financeiro","RH","Jurídico","Relatórios","Configurações","Suporte","Comercial","TI"];
+        let assistantRecs = [];
+        
+        function initAssistantModules() {
+            const $mods = $('#assistantModules');
+            if ($mods.length) {
+                $mods.empty();
+                ASSISTANT_MODULES.forEach(m => {
+                    $mods.append(new Option(m, m));
+                });
+                const dp = document.querySelector('.swal2-popup');
+                $mods.select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Selecione módulos',
+                    width: 'resolve',
+                    dropdownParent: dp ? $(dp) : undefined
+                });
+            }
+        }
+        
+        function openProfileAssistant() {
+            Swal.fire({
+                title: 'Assistente de Perfil',
+                html: `
+                    <div class="container-fluid text-start">
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Módulos</label>
+                                    <select id="assistantModules" class="form-select" multiple="multiple" style="width:100%"></select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Nível de Acesso</label>
+                                    <select id="assistantLevel" class="form-select">
+                                        <option value="BASICO">Básico</option>
+                                        <option value="GERENTE">Gerencial</option>
+                                        <option value="ADMIN">Admin</option>
+                                        <option value="MASTER">Master</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-success" onclick="gerarRecomendacoes()">
+                                        <i class="fas fa-wand-magic-sparkles"></i> Gerar Recomendações
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary ms-2" onclick="aplicarRecomendacoes()">
+                                        <i class="fas fa-clipboard-check"></i> Aplicar ao Formulário
+                                    </button>
+                                </div>
+                                <div>
+                                    <h6 class="text-primary mb-2">Permissões Recomendadas</h6>
+                                    <div id="assistantRecommendations" class="border rounded p-3" style="min-height:120px"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <h6 class="text-secondary mb-2">Preview do Menu</h6>
+                                <div id="assistantSidebarPreview" class="border rounded p-3" style="min-height:180px"></div>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                width: '900px',
+                showConfirmButton: false,
+                showCloseButton: true,
+                didOpen: () => {
+                    initAssistantModules();
+                    $('#assistantModules').val(null).trigger('change');
+                    $('#assistantLevel').val('BASICO');
+                    $('#assistantRecommendations').html('');
+                    updateAssistantSidebarPreview();
+                    $('#assistantModules').on('change', updateAssistantSidebarPreview);
+                    $('#assistantLevel').on('change', updateAssistantSidebarPreview);
+                }
+            });
+        }
+        
+        function normalizeModuleName(name) {
+            return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+        }
+        
+        function gerarRecomendacoes() {
+            const mods = ($('#assistantModules').val() || []).map(normalizeModuleName);
+            const nivel = $('#assistantLevel').val();
+            $.ajax({
+                url: '/perfis/recomendacoes',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ modulos: mods, nivel: nivel }),
+                success: function(lista) {
+                    assistantRecs = Array.isArray(lista) ? lista : [];
+                    renderAssistantRecommendations();
+                    updateAssistantSidebarPreview();
+                },
+                error: function() {
+                    $('#assistantRecommendations').html('<span class="text-danger">Erro ao obter recomendações.</span>');
+                }
+            });
+        }
+        
+        function renderAssistantRecommendations() {
+            if (!assistantRecs.length) {
+                $('#assistantRecommendations').html('');
+                Swal.fire({
+                    title: 'Nenhuma recomendação gerada',
+                    text: 'Ajuste os módulos e o nível de acesso para tentar novamente.',
+                    icon: 'info',
+                    confirmButtonText: 'Ok'
+                });
+                return;
+            }
+            let html = '';
+            assistantRecs.forEach(p => {
+                const nome = p.nome || '';
+                html += '<span class="badge bg-primary me-1 mb-1">' + nome + '</span>';
+            });
+            $('#assistantRecommendations').html(html);
+        }
+        
+        function aplicarRecomendacoes() {
+            if (!assistantRecs.length) return;
+            assistantRecs.forEach(p => {
+                const id = p.id;
+                const nome = p.nome;
+                if (id && $('#perm_' + id).length) {
+                    const cb = $('#perm_' + id).get(0);
+                    $(cb).prop('checked', true);
+                    updateCardSelection(cb);
+                } else if (nome) {
+                    $('.permission-checkbox').each(function() {
+                        const n = $(this).data('nome');
+                        if (n === nome) {
+                            $(this).prop('checked', true);
+                            updateCardSelection(this);
+                        }
+                    });
+                }
+            });
+            updatePermissionCount();
+        }
+        
+        function updateAssistantSidebarPreview() {
+            const mods = ($('#assistantModules').val() || []).map(normalizeModuleName);
+            const nivel = ($('#assistantLevel').val() || '').toUpperCase();
+            const items = ['Dashboard'];
+            if (mods.includes('FINANCEIRO')) items.push('Financeiro');
+            if (mods.includes('RH')) items.push('RH');
+            if (mods.includes('JURIDICO')) items.push('Jurídico');
+            if (mods.includes('RELATORIOS')) items.push('Relatórios');
+            if (mods.includes('CONFIGURACOES') || mods.includes('CONFIG')) items.push('Configurações');
+            if (mods.includes('SUPORTE')) items.push('Suporte');
+            if (mods.includes('COMERCIAL')) items.push('Comercial');
+            if (mods.includes('TI')) items.push('TI');
+            if (nivel === 'ADMIN' || nivel === 'MASTER') items.push('Administração');
+            let html = '<ul class="list-unstyled mb-0">';
+            items.forEach(i => {
+                html += '<li class="mb-1"><i class="fas fa-chevron-right text-muted me-2"></i>' + i + '</li>';
+            });
+            html += '</ul>';
+            $('#assistantSidebarPreview').html(html);
+        }
+        
+        $('#assistantModules').on('change', updateAssistantSidebarPreview);
+        $('#assistantLevel').on('change', updateAssistantSidebarPreview);
         
         // Auto-hide alerts
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);
     </script>
-  <!-- Script de notifica��es -->
+  <!-- Script de notifica��es -->
 
   <script th:src="@{/js/notifications.js}"></script>
 

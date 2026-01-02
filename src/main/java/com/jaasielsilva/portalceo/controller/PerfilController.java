@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.controller;
 
+import com.jaasielsilva.portalceo.dto.PerfisRelatorioDTO;
 import com.jaasielsilva.portalceo.model.Perfil;
 import com.jaasielsilva.portalceo.model.Permissao;
 import com.jaasielsilva.portalceo.model.Usuario;
@@ -41,18 +42,17 @@ public class PerfilController {
      */
     @GetMapping
     public String listar(Model model, Principal principal) {
-        // Verifica permissão
         if (!temPermissaoGerenciarPerfis(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
 
         List<Perfil> perfis = perfilService.listarOrdenadosPorNome();
-        Map<String, Object> estatisticas = perfilService.gerarRelatorioEstatisticas();
-        
+        PerfisRelatorioDTO relatorio = perfilService.gerarRelatorioEstatisticasDto();
+
         model.addAttribute("perfis", perfis);
-        model.addAttribute("estatisticas", estatisticas);
+        model.addAttribute("relatorio", relatorio);
         model.addAttribute("paginaAtual", "perfis");
-        
+
         return "perfis/listar";
     }
 
@@ -69,8 +69,8 @@ public class PerfilController {
         model.addAttribute("permissoes", permissaoService.listarOrdenadasPorNome());
         model.addAttribute("permissoesPorCategoria", permissaoService.listarPorCategoria());
         model.addAttribute("acao", "criar");
-        
-        return "perfis/formulario";
+
+        return "perfis/form";
     }
 
     /**
@@ -97,8 +97,8 @@ public class PerfilController {
         model.addAttribute("permissoesPorCategoria", permissaoService.listarPorCategoria());
         model.addAttribute("permissoesAtivas", perfil.getPermissoes());
         model.addAttribute("acao", "editar");
-        
-        return "perfis/formulario";
+
+        return "perfis/form";
     }
 
     /**
@@ -117,12 +117,15 @@ public class PerfilController {
 
         Perfil perfil = perfilOpt.get();
         List<Usuario> usuarios = perfilService.listarUsuariosDoPerfil(id);
-        
+
         model.addAttribute("perfil", perfil);
         model.addAttribute("usuarios", usuarios);
         model.addAttribute("totalUsuarios", usuarios.size());
+        model.addAttribute("usuariosCount", usuarios.size());
         model.addAttribute("podeModificar", perfilService.podeSerModificado(id));
-        
+        model.addAttribute("permissoesPorCategoria", permissaoService.listarPorCategoria());
+        model.addAttribute("cobertura", 0);
+
         return "perfis/detalhes";
     }
 
@@ -134,11 +137,11 @@ public class PerfilController {
      * Salva um novo perfil
      */
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute Perfil perfil, 
-                        @RequestParam(value = "permissoes", required = false) List<Long> permissaoIds,
-                        RedirectAttributes redirectAttributes,
-                        Principal principal) {
-        
+    public String salvar(@ModelAttribute Perfil perfil,
+            @RequestParam(value = "permissoes", required = false) List<Long> permissaoIds,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
         if (!temPermissaoGerenciarPerfis(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -146,15 +149,15 @@ public class PerfilController {
         try {
             // Salva o perfil
             Perfil perfilSalvo = perfilService.salvar(perfil);
-            
+
             // Adiciona permissões se foram selecionadas
             if (permissaoIds != null && !permissaoIds.isEmpty()) {
                 perfilService.definirPermissoes(perfilSalvo.getId(), new HashSet<>(permissaoIds));
             }
-            
+
             redirectAttributes.addFlashAttribute("sucesso", "Perfil criado com sucesso!");
             return "redirect:/perfis";
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao criar perfil: " + e.getMessage());
             return "redirect:/perfis/novo";
@@ -166,11 +169,11 @@ public class PerfilController {
      */
     @PostMapping("/atualizar/{id}")
     public String atualizar(@PathVariable Long id,
-                           @ModelAttribute Perfil perfil,
-                           @RequestParam(value = "permissoes", required = false) List<Long> permissaoIds,
-                           RedirectAttributes redirectAttributes,
-                           Principal principal) {
-        
+            @ModelAttribute Perfil perfil,
+            @RequestParam(value = "permissoes", required = false) List<Long> permissaoIds,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
         if (!temPermissaoGerenciarPerfis(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -180,17 +183,17 @@ public class PerfilController {
                 redirectAttributes.addFlashAttribute("erro", "Este perfil não pode ser modificado.");
                 return "redirect:/perfis";
             }
-            
+
             // Atualiza o perfil
             perfilService.atualizar(id, perfil);
-            
+
             // Atualiza permissões
             Set<Long> novasPermissoes = permissaoIds != null ? new HashSet<>(permissaoIds) : new HashSet<>();
             perfilService.definirPermissoes(id, novasPermissoes);
-            
+
             redirectAttributes.addFlashAttribute("sucesso", "Perfil atualizado com sucesso!");
             return "redirect:/perfis";
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao atualizar perfil: " + e.getMessage());
             return "redirect:/perfis/editar/" + id;
@@ -201,10 +204,10 @@ public class PerfilController {
      * Exclui um perfil
      */
     @PostMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id, 
-                         RedirectAttributes redirectAttributes,
-                         Principal principal) {
-        
+    public String excluir(@PathVariable Long id,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
         if (!temPermissaoGerenciarPerfis(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -212,11 +215,11 @@ public class PerfilController {
         try {
             perfilService.excluir(id);
             redirectAttributes.addFlashAttribute("sucesso", "Perfil excluído com sucesso!");
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao excluir perfil: " + e.getMessage());
         }
-        
+
         return "redirect:/perfis";
     }
 
@@ -224,6 +227,18 @@ public class PerfilController {
     // ENDPOINTS AJAX
     // ===============================
 
+    @GetMapping("/api/page")
+    @ResponseBody
+    public ResponseEntity<com.jaasielsilva.portalceo.dto.PerfisPageDTO> pageData(Principal principal) {
+        if (!temPermissaoGerenciarPerfis(principal)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        List<Perfil> perfis = perfilService.listarOrdenadosPorNome();
+        PerfisRelatorioDTO relatorio = perfilService.gerarRelatorioEstatisticasDto();
+        com.jaasielsilva.portalceo.dto.PerfisPageDTO dto =
+                new com.jaasielsilva.portalceo.dto.PerfisPageDTO(perfis, relatorio);
+        return ResponseEntity.ok(dto);
+    }
     /**
      * Busca perfis via AJAX
      */
@@ -303,11 +318,31 @@ public class PerfilController {
 
         Map<String, Object> estatisticas = perfilService.gerarRelatorioEstatisticas();
         Map<String, List<Permissao>> permissoesPorCategoria = permissaoService.listarPorCategoria();
-        
+
         model.addAttribute("estatisticas", estatisticas);
         model.addAttribute("permissoesPorCategoria", permissoesPorCategoria);
-        
+
         return "perfis/relatorios";
+    }
+
+    @PostMapping("/recomendacoes")
+    @ResponseBody
+    public ResponseEntity<List<Permissao>> recomendar(@RequestBody Map<String, Object> payload, Principal principal) {
+        if (!temPermissaoGerenciarPerfis(principal)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        Object mods = payload.get("modulos");
+        Object niv = payload.get("nivel");
+        List<String> modulos = new ArrayList<>();
+        if (mods instanceof List<?>) {
+            for (Object o : (List<?>) mods) {
+                if (o != null)
+                    modulos.add(o.toString());
+            }
+        }
+        String nivel = niv != null ? niv.toString() : null;
+        List<Permissao> sugestao = permissaoService.sugerirPermissoesPorModulosENivel(modulos, nivel);
+        return ResponseEntity.ok(sugestao);
     }
 
     /**
@@ -324,7 +359,7 @@ public class PerfilController {
         relatorio.put("perfis", perfilService.listarTodos());
         relatorio.put("estatisticas", perfilService.gerarRelatorioEstatisticas());
         relatorio.put("dataExportacao", new Date());
-        
+
         return ResponseEntity.ok(relatorio);
     }
 
@@ -336,19 +371,14 @@ public class PerfilController {
      * Verifica se o usuário tem permissão para gerenciar perfis
      */
     private boolean temPermissaoGerenciarPerfis(Principal principal) {
-        if (principal == null) {
+        Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
             return false;
         }
-        
-        // Aqui você pode implementar a lógica específica de verificação
-        // Por exemplo, verificar se o usuário tem nível ADMIN ou MASTER
-        Authentication auth = (Authentication) principal;
         return auth.getAuthorities().stream()
-                .anyMatch(authority -> 
-                    authority.getAuthority().equals("ROLE_ADMIN") ||
-                    authority.getAuthority().equals("ROLE_MASTER") ||
-                    authority.getAuthority().equals("ROLE_CONFIG_WRITE")
-                );
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN") ||
+                        authority.getAuthority().equals("ROLE_MASTER") ||
+                        authority.getAuthority().equals("ROLE_CONFIG_WRITE"));
     }
 
     /**
@@ -357,6 +387,6 @@ public class PerfilController {
     @ExceptionHandler(Exception.class)
     public String handleError(Exception e, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("erro", "Erro interno: " + e.getMessage());
-        return "redirect:/perfis";
+        return "redirect:/dashboard?erro=erro-interno";
     }
 }

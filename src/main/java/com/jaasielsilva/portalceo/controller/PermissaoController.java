@@ -20,11 +20,14 @@ import java.util.*;
 @RequestMapping("/permissoes")
 public class PermissaoController {
 
-    @Autowired
-    private PermissaoService permissaoService;
+    private final PermissaoService permissaoService;
+    private final PerfilService perfilService;
 
     @Autowired
-    private PerfilService perfilService;
+    public PermissaoController(PermissaoService permissaoService, PerfilService perfilService) {
+        this.permissaoService = permissaoService;
+        this.perfilService = perfilService;
+    }
 
     // ===============================
     // PÁGINAS PRINCIPAIS
@@ -35,7 +38,7 @@ public class PermissaoController {
      */
     @GetMapping
     public String listar(Model model, Principal principal) {
-        // Verifica permissão
+
         if (!temPermissaoGerenciarPermissoes(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -43,12 +46,14 @@ public class PermissaoController {
         List<Permissao> permissoes = permissaoService.listarOrdenadasPorNome();
         Map<String, List<Permissao>> permissoesPorCategoria = permissaoService.listarPorCategoria();
         Map<String, Object> estatisticas = permissaoService.gerarRelatorioEstatisticas();
-        
-        model.addAttribute("permissoes", permissoes);
-        model.addAttribute("permissoesPorCategoria", permissoesPorCategoria);
-        model.addAttribute("estatisticas", estatisticas);
+
+        model.addAttribute("permissoes", permissoes != null ? permissoes : Collections.emptyList());
+        model.addAttribute("permissoesPorCategoria",
+                permissoesPorCategoria != null ? permissoesPorCategoria : new HashMap<>());
+        model.addAttribute("estatisticas", estatisticas != null ? estatisticas : new HashMap<>());
+        model.addAttribute("categorias", getCategorias());
         model.addAttribute("paginaAtual", "permissoes");
-        
+
         return "permissoes/listar";
     }
 
@@ -64,8 +69,8 @@ public class PermissaoController {
         model.addAttribute("permissao", new Permissao());
         model.addAttribute("categorias", getCategorias());
         model.addAttribute("acao", "criar");
-        
-        return "permissoes/formulario";
+
+        return "permissoes/form";
     }
 
     /**
@@ -90,8 +95,8 @@ public class PermissaoController {
         model.addAttribute("permissao", permissao);
         model.addAttribute("categorias", getCategorias());
         model.addAttribute("acao", "editar");
-        
-        return "permissoes/formulario";
+
+        return "permissoes/form";
     }
 
     /**
@@ -110,12 +115,12 @@ public class PermissaoController {
 
         Permissao permissao = permissaoOpt.get();
         List<Perfil> perfis = permissaoService.listarPerfisComPermissao(id);
-        
+
         model.addAttribute("permissao", permissao);
         model.addAttribute("perfis", perfis);
         model.addAttribute("totalPerfis", perfis.size());
         model.addAttribute("podeModificar", permissaoService.podeSerModificada(id));
-        
+
         return "permissoes/detalhes";
     }
 
@@ -128,9 +133,9 @@ public class PermissaoController {
      */
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Permissao permissao,
-                        RedirectAttributes redirectAttributes,
-                        Principal principal) {
-        
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
         if (!temPermissaoGerenciarPermissoes(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -139,7 +144,7 @@ public class PermissaoController {
             permissaoService.salvar(permissao);
             redirectAttributes.addFlashAttribute("sucesso", "Permissão criada com sucesso!");
             return "redirect:/permissoes";
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao criar permissão: " + e.getMessage());
             return "redirect:/permissoes/nova";
@@ -151,10 +156,10 @@ public class PermissaoController {
      */
     @PostMapping("/atualizar/{id}")
     public String atualizar(@PathVariable Long id,
-                           @ModelAttribute Permissao permissao,
-                           RedirectAttributes redirectAttributes,
-                           Principal principal) {
-        
+            @ModelAttribute Permissao permissao,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
         if (!temPermissaoGerenciarPermissoes(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -164,11 +169,11 @@ public class PermissaoController {
                 redirectAttributes.addFlashAttribute("erro", "Esta permissão não pode ser modificada.");
                 return "redirect:/permissoes";
             }
-            
+
             permissaoService.atualizar(id, permissao);
             redirectAttributes.addFlashAttribute("sucesso", "Permissão atualizada com sucesso!");
             return "redirect:/permissoes";
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao atualizar permissão: " + e.getMessage());
             return "redirect:/permissoes/editar/" + id;
@@ -179,10 +184,10 @@ public class PermissaoController {
      * Exclui uma permissão
      */
     @PostMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id, 
-                         RedirectAttributes redirectAttributes,
-                         Principal principal) {
-        
+    public String excluir(@PathVariable Long id,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
         if (!temPermissaoGerenciarPermissoes(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -190,11 +195,11 @@ public class PermissaoController {
         try {
             permissaoService.excluir(id);
             redirectAttributes.addFlashAttribute("sucesso", "Permissão excluída com sucesso!");
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao excluir permissão: " + e.getMessage());
         }
-        
+
         return "redirect:/permissoes";
     }
 
@@ -284,9 +289,9 @@ public class PermissaoController {
      */
     @PostMapping("/criar-lote")
     public String processarCriacaoLote(@RequestParam("nomes") String nomesTexto,
-                                      RedirectAttributes redirectAttributes,
-                                      Principal principal) {
-        
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
         if (!temPermissaoGerenciarPermissoes(principal)) {
             return "redirect:/dashboard?erro=sem-permissao";
         }
@@ -298,19 +303,19 @@ public class PermissaoController {
                     .map(String::trim)
                     .filter(nome -> !nome.isEmpty())
                     .toList();
-            
+
             if (nomes.isEmpty()) {
                 redirectAttributes.addFlashAttribute("erro", "Nenhuma permissão válida foi informada.");
                 return "redirect:/permissoes/criar-lote";
             }
-            
+
             List<Permissao> permissoesCriadas = permissaoService.criarPermissoes(nomes);
-            
-            redirectAttributes.addFlashAttribute("sucesso", 
-                String.format("%d permissão(ões) criada(s) com sucesso!", permissoesCriadas.size()));
-            
+
+            redirectAttributes.addFlashAttribute("sucesso",
+                    String.format("%d permissão(ões) criada(s) com sucesso!", permissoesCriadas.size()));
+
             return "redirect:/permissoes";
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao criar permissões: " + e.getMessage());
             return "redirect:/permissoes/criar-lote";
@@ -329,11 +334,11 @@ public class PermissaoController {
         try {
             permissaoService.criarPermissoesPadrao();
             redirectAttributes.addFlashAttribute("sucesso", "Permissões padrão inicializadas com sucesso!");
-            
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", "Erro ao inicializar permissões: " + e.getMessage());
         }
-        
+
         return "redirect:/permissoes";
     }
 
@@ -352,10 +357,10 @@ public class PermissaoController {
 
         Map<String, Object> estatisticas = permissaoService.gerarRelatorioEstatisticas();
         Map<String, List<Permissao>> permissoesPorCategoria = permissaoService.listarPorCategoria();
-        
+
         model.addAttribute("estatisticas", estatisticas);
         model.addAttribute("permissoesPorCategoria", permissoesPorCategoria);
-        
+
         return "permissoes/relatorios";
     }
 
@@ -374,7 +379,7 @@ public class PermissaoController {
         relatorio.put("permissoesPorCategoria", permissaoService.listarPorCategoria());
         relatorio.put("estatisticas", permissaoService.gerarRelatorioEstatisticas());
         relatorio.put("dataExportacao", new Date());
-        
+
         return ResponseEntity.ok(relatorio);
     }
 
@@ -389,13 +394,11 @@ public class PermissaoController {
         if (principal == null) {
             return false;
         }
-        
+
         // Apenas usuários MASTER podem gerenciar permissões
         Authentication auth = (Authentication) principal;
         return auth.getAuthorities().stream()
-                .anyMatch(authority -> 
-                    authority.getAuthority().equals("ROLE_MASTER")
-                );
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_MASTER"));
     }
 
     /**
@@ -403,14 +406,13 @@ public class PermissaoController {
      */
     private List<String> getCategorias() {
         return Arrays.asList(
-            "Usuários",
-            "Recursos Humanos", 
-            "Financeiro",
-            "Relatórios",
-            "Configurações",
-            "Sistema",
-            "Geral"
-        );
+                "Usuários",
+                "Recursos Humanos",
+                "Financeiro",
+                "Relatórios",
+                "Configurações",
+                "Sistema",
+                "Geral");
     }
 
     /**

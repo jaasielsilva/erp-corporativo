@@ -10,7 +10,7 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     
     <style>
         .card-stats {
@@ -60,8 +60,8 @@
     <div th:replace="~{components/sidebar :: sidebar}"></div>
     
     <div class="main-content">
-        <!-- Incluir header -->
-        <div th:replace="~{components/header :: header}"></div>
+        <!-- Topbar -->
+        <div th:replace="~{components/topbar :: topbar}"></div>
         
         <div class="container-fluid px-4">
             <!-- Breadcrumb -->
@@ -367,35 +367,14 @@
         </div>
     </div>
     
-    <!-- Modal de Confirmação de Exclusão -->
-    <div class="modal fade" id="modalExclusao" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning"></i> Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Tem certeza que deseja excluir a permissão <strong id="nomePermissaoExclusao"></strong>?</p>
-                    <p class="text-muted small">Esta ação não pode ser desfeita e afetará todos os perfis que possuem esta permissão.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="formExclusao" method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Excluir
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
     
     <script>
         let currentView = 'table';
@@ -475,11 +454,41 @@
         function confirmarExclusao(button) {
             const permissaoId = button.getAttribute('data-id');
             const permissaoNome = button.getAttribute('data-nome');
-            
-            document.getElementById('nomePermissaoExclusao').textContent = permissaoNome;
-            document.getElementById('formExclusao').action = '/permissoes/excluir/' + permissaoId;
-            
-            new bootstrap.Modal(document.getElementById('modalExclusao')).show();
+
+            Swal.fire({
+                title: 'Confirmar Exclusão',
+                html: 'Deseja excluir a permissão <strong>' + permissaoNome + '</strong>?<br><small>Esta ação não pode ser desfeita e afetará todos os perfis que possuem esta permissão.</small>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-trash"></i> Excluir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/permissoes/excluir/' + permissaoId, {
+                        method: 'POST'
+                    })
+                    .then(() => {
+                        Swal.fire({
+                            title: 'Excluída',
+                            text: 'Permissão excluída com sucesso.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    })
+                    .catch(() => {
+                        Swal.fire({
+                            title: 'Erro',
+                            text: 'Erro ao excluir a permissão.',
+                            icon: 'error'
+                        });
+                    });
+                }
+            });
         }
         
         function exportarJSON() {
@@ -487,17 +496,34 @@
         }
         
         function inicializarPermissoes() {
-            if (confirm('Deseja inicializar as permissões padrão do sistema? Isso pode criar novas permissões.')) {
-                $.post('/permissoes/inicializar', function(data) {
-                    if (data.sucesso) {
-                        location.reload();
-                    } else {
-                        alert('Erro ao inicializar permissões: ' + data.erro);
-                    }
-                }).fail(function() {
-                    alert('Erro ao inicializar permissões.');
-                });
-            }
+            Swal.fire({
+                title: 'Inicializar Permissões Padrão',
+                text: 'Deseja inicializar as permissões padrão do sistema? Isso pode criar novas permissões.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-sync"></i> Inicializar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/permissoes/inicializar-padrao', { method: 'POST' })
+                        .then(() => {
+                            Swal.fire({
+                                title: 'Concluído',
+                                text: 'Permissões padrão inicializadas com sucesso!',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        })
+                        .catch(() => {
+                            Swal.fire({
+                                title: 'Erro',
+                                text: 'Erro ao inicializar permissões padrão.',
+                                icon: 'error'
+                            });
+                        });
+                }
+            });
         }
         
         // Auto-hide alerts

@@ -161,8 +161,10 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("podeAcessarFinanceiro")
     public boolean podeAcessarFinanceiro() {
-        Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
-        return usuario != null && usuario.getNivelAcesso().podeAcessarFinanceiro();
+        Usuario usuario = usuarioLogado();
+        return (usuario != null && usuario.getNivelAcesso().podeAcessarFinanceiro())
+                || isFinanceiro() || possuiPerfilComPrefixo("FINANCEIRO")
+                || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeGerenciarRH")
@@ -309,42 +311,53 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("podeAcessarRH")
     public boolean podeAcessarRH() {
-        return isRH() || podeGerenciarRH() || isMaster() || isAdmin();
+        return isRH() || possuiPerfilComPrefixo("RH") || podeGerenciarRH() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarVendas")
     public boolean podeAcessarVendas() {
-        return isVendas() || isGerencial() || isMaster() || isAdmin();
+        return isVendas() || possuiPerfilComPrefixo("VENDAS") || possuiPerfilComPrefixo("COMERCIAL")
+                || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarEstoque")
     public boolean podeAcessarEstoque() {
-        return isEstoque() || isCompras() || isGerencial() || isMaster() || isAdmin();
+        return isEstoque() || possuiPerfilComPrefixo("ESTOQUE") || isCompras() || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarCompras")
     public boolean podeAcessarCompras() {
-        return isCompras() || isGerencial() || isMaster() || isAdmin();
+        return isCompras() || possuiPerfilComPrefixo("COMPRAS") || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarMarketing")
     public boolean podeAcessarMarketing() {
-        return isMarketing() || isGerencial() || isMaster() || isAdmin();
+        return isMarketing() || possuiPerfilComPrefixo("MARKETING") || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarTI")
     public boolean podeAcessarTI() {
-        return isTI() || isMaster() || isAdmin();
+        return isTI() || possuiPerfilComPrefixo("TI") || isMaster() || isAdmin();
+    }
+
+    private boolean possuiPerfilComPrefixo(String prefixo) {
+        Usuario usuario = usuarioLogado();
+        if (usuario != null && usuario.getPerfis() != null) {
+            String p = prefixo != null ? prefixo.toUpperCase() : "";
+            return usuario.getPerfis().stream()
+                    .anyMatch(perfil -> perfil.getNome() != null && perfil.getNome().toUpperCase().startsWith(p));
+        }
+        return false;
     }
 
     @ModelAttribute("podeAcessarJuridico")
     public boolean podeAcessarJuridico() {
-        return isJuridico() || isGerencial() || isMaster() || isAdmin();
+        return isJuridico() || possuiPerfilComPrefixo("JURIDICO") || isGerencial() || isMaster() || isAdmin();
     }
 
     @ModelAttribute("podeAcessarProjetos")
     public boolean podeAcessarProjetos() {
-        return isTI() || isMaster() || isAdmin() || isGerencial();
+        return isTI() || possuiPerfilComPrefixo("PROJETOS") || isMaster() || isAdmin() || isGerencial();
     }
 
     @ModelAttribute("podeGerenciarProjetos")

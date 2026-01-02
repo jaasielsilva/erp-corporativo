@@ -96,8 +96,8 @@
     <div th:replace="~{components/sidebar :: sidebar}"></div>
     
     <div class="main-content">
-        <!-- Incluir header -->
-        <div th:replace="~{fragments/header :: header}"></div>
+        <!-- Topbar -->
+        <div th:replace="~{components/topbar :: topbar}"></div>
         
         <div class="container-fluid px-4">
             <!-- Breadcrumb -->
@@ -480,7 +480,7 @@
             new bootstrap.Modal(document.getElementById('modalExclusao')).show();
         }
     </script>
-  <!-- Script de notificações -->
+  <!-- Script de notificaï¿½ï¿½es -->
 
   <script th:src="@{/js/notifications.js}"></script>
 

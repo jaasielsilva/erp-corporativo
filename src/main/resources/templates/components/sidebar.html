@@ -23,7 +23,8 @@
         <li class="sidebar-section">
           <div class="sidebar-section-title">Principal</div>
         </li>
-        <li><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <!-- Permissão principal do módulo Dashboard -->
+        <li sec:authorize="hasAuthority('MENU_DASHBOARD')"><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
 
         <!-- Ícone de Notificações -->
         <li style="position: relative;">
@@ -53,12 +54,13 @@
         </li>
 
 
-        <!-- Seção Comercial -->
-        <li class="sidebar-section" th:if="${podeAcessarVendas}">
+        <!-- Seção Comercial (visível se possuir MENU_CLIENTES ou MENU_VENDAS) -->
+        <li class="sidebar-section" sec:authorize="hasAnyAuthority('MENU_CLIENTES','MENU_VENDAS')">
           <div class="sidebar-section-title">Comercial</div>
         </li>
 
-        <li class="has-submenu" th:if="${podeAcessarVendas}">
+        <!-- Módulo Clientes (MENU_CLIENTES) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_CLIENTES')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-address-book"></i> Clientes
           </a>
@@ -69,9 +71,8 @@
                 <i class="fas fa-folder"></i> Geral
               </a>
               <ul class="submenu">
-                <li><a href="/clientes"><i class="fas fa-list"></i> Listar</a></li>
-                <li th:if="${podeGerenciarVendas}"><a href="/clientes/cadastro"><i class="fas fa-plus"></i> Novo</a>
-                </li>
+                <li sec:authorize="hasAuthority('MENU_CLIENTES_LISTAR')"><a href="/clientes"><i class="fas fa-list"></i> Listar</a></li>
+                <li sec:authorize="hasAuthority('MENU_CLIENTES_NOVO')"><a href="/clientes/cadastro"><i class="fas fa-plus"></i> Novo</a></li>
               </ul>
             </li>
 
@@ -81,7 +82,7 @@
                 <i class="fas fa-file-contract"></i> Contratos
               </a>
               <ul class="submenu">
-                <li><a href="/clientes/contratos/listar"><i class="fas fa-list"></i> Listar</a></li>
+                <li sec:authorize="hasAuthority('MENU_CLIENTES_CONTRATOS_LISTAR')"><a href="/clientes/contratos/listar"><i class="fas fa-list"></i> Listar</a></li>
               </ul>
             </li>
 
@@ -91,8 +92,8 @@
                 <i class="fas fa-history"></i> Histórico
               </a>
               <ul class="submenu">
-                <li><a href="/clientes/historico/interacoes"><i class="fas fa-comments"></i> Interações</a></li>
-                <li><a href="/clientes/historico/pedidos"><i class="fas fa-clipboard-list"></i> Pedidos</a></li>
+                <li sec:authorize="hasAuthority('MENU_CLIENTES_HISTORICO_INTERACOES')"><a href="/clientes/historico/interacoes"><i class="fas fa-comments"></i> Interações</a></li>
+                <li sec:authorize="hasAuthority('MENU_CLIENTES_HISTORICO_PEDIDOS')"><a href="/clientes/historico/pedidos"><i class="fas fa-clipboard-list"></i> Pedidos</a></li>
               </ul>
             </li>
 
@@ -102,48 +103,49 @@
                 <i class="fas fa-search"></i> Avançado
               </a>
               <ul class="submenu">
-                <li><a href="/clientes/avancado/busca"><i class="fas fa-search-plus"></i> Busca</a></li>
-                <li><a href="/clientes/avancado/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+                <li sec:authorize="hasAuthority('MENU_CLIENTES_AVANCADO_BUSCA')"><a href="/clientes/avancado/busca"><i class="fas fa-search-plus"></i> Busca</a></li>
+                <li sec:authorize="hasAuthority('MENU_CLIENTES_AVANCADO_RELATORIOS')"><a href="/clientes/avancado/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
               </ul>
             </li>
           </ul>
         </li>
 
-        <li class="has-submenu" th:if="${podeAcessarVendas}">
+        <!-- Módulo Vendas (MENU_VENDAS) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_VENDAS')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-shopping-cart"></i> Vendas
           </a>
           <ul class="submenu">
-            <li><a href="/vendas"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="/vendas/pdv"><i class="fas fa-cash-register"></i> PDV</a></li>
-            <li><a href="/vendas/pedidos"><i class="fas fa-clipboard-list"></i> Pedidos</a></li>
-            <li><a href="/vendas/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+            <li sec:authorize="hasAuthority('MENU_VENDAS_DASHBOARD')"><a href="/vendas"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li sec:authorize="hasAuthority('MENU_VENDAS_PDV')"><a href="/vendas/pdv"><i class="fas fa-cash-register"></i> PDV</a></li>
+            <li sec:authorize="hasAuthority('MENU_VENDAS_PEDIDOS')"><a href="/vendas/pedidos"><i class="fas fa-clipboard-list"></i> Pedidos</a></li>
+            <li sec:authorize="hasAuthority('MENU_VENDAS_RELATORIOS')"><a href="/vendas/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
           </ul>
         </li>
 
 
-        <li th:if="${podeAcessarCompras}"><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
+        <!-- Compras -->
+        <li sec:authorize="hasAuthority('MENU_COMPRAS')"><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
 
-        <!-- Seção Operacional -->
-        <li class="sidebar-section" th:if="${podeAcessarEstoque}">
+        <!-- Seção Operacional (MENU_ESTOQUE) -->
+        <li class="sidebar-section" sec:authorize="hasAuthority('MENU_ESTOQUE')">
           <div class="sidebar-section-title">Operacional</div>
         </li>
-        <li th:if="${podeAcessarEstoque}"><a href="/produtos"><i class="fas fa-boxes"></i> Produtos</a></li>
-        <li th:if="${podeAcessarEstoque}"><a href="/estoque"><i class="fas fa-warehouse"></i> Estoque</a></li>
+        <li sec:authorize="hasAuthority('MENU_ESTOQUE_PRODUTOS')"><a href="/produtos"><i class="fas fa-boxes"></i> Produtos</a></li>
+        <li sec:authorize="hasAuthority('MENU_ESTOQUE')"><a href="/estoque"><i class="fas fa-warehouse"></i> Estoque</a></li>
 
-        <li class="has-submenu" th:if="${podeAcessarEstoque}">
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_ESTOQUE_CATEGORIAS')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-tags"></i> Categorias
           </a>
           <ul class="submenu">
-            <li><a href="/categorias"><i class="fas fa-list"></i> Listar Categorias</a></li>
-            <li><a href="/categorias/nova"><i class="fas fa-plus-circle"></i> Nova Categoria</a></li>
+            <li sec:authorize="hasAuthority('MENU_ESTOQUE_CATEGORIAS_LISTAR')"><a href="/categorias"><i class="fas fa-list"></i> Listar Categorias</a></li>
+            <li sec:authorize="hasAuthority('MENU_ESTOQUE_CATEGORIAS_NOVO')"><a href="/categorias/nova"><i class="fas fa-plus-circle"></i> Nova Categoria</a></li>
           </ul>
         </li>
 
-        <!-- Módulo RH - Apenas área de RH e níveis gerenciais -->
-        <li class="has-submenu" th:if="${podeAcessarRH}"
-          sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
+        <!-- Módulo RH (MENU_RH) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-users"></i> Recursos Humanos
           </a>
@@ -153,14 +155,9 @@
                 <i class="fas fa-user-tie"></i> Colaboradores
               </a>
               <ul class="submenu">
-                <li sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE')"><a
-                    href="/rh/colaboradores/listar"><i class="fas fa-list"></i> Listar</a></li>
-                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA')">
-                  <a href="/rh/colaboradores/novo"><i class="fas fa-plus"></i> Novo</a>
-                </li>
-                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a
-                    href="/rh/colaboradores/adesao"><i class="fas fa-user-plus"></i>
-                    Adesão de Colaboradores</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_COLABORADORES_LISTAR')"><a href="/rh/colaboradores/listar"><i class="fas fa-list"></i> Listar</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_COLABORADORES_NOVO')"><a href="/rh/colaboradores/novo"><i class="fas fa-plus"></i> Novo</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_COLABORADORES_ADESAO')"><a href="/rh/colaboradores/adesao"><i class="fas fa-user-plus"></i> Adesão de Colaboradores</a></li>
                 <!--<li><a href="/rh/colaboradores/ficha"><i class="fas fa-id-card"></i> Ficha</a></li>-->
                 <!-- <li><a href="/rh/colaboradores/documentos"><i class="fas fa-file-alt"></i> Documentos</a></li> -->
                 <!-- <li><a href="/rh/colaboradores/historico"><i class="fas fa-history"></i> Histórico</a></li> -->
@@ -168,250 +165,212 @@
 
             </li>
 
-            <!-- Folha de Pagamento - Apenas RH e níveis superiores -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+            <!-- Folha de Pagamento -->
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_FOLHA')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-money-bill-wave"></i> Folha de Pagamento
               </a>
               <ul class="submenu">
-                <li><a href="/rh/folha-pagamento"><i class="fas fa-home"></i> Início</a></li>
-                <li><a href="/rh/folha-pagamento/listar"><i class="fas fa-list"></i> Listar</a></li>
-                <li><a href="/rh/folha-pagamento/gerar"><i class="fas fa-calculator"></i> Gerar</a></li>
-                <li><a href="/rh/folha-pagamento/holerite"><i class="fas fa-receipt"></i> Holerite</a></li>
-                <li><a href="/rh/folha-pagamento/descontos"><i class="fas fa-minus-circle"></i> Descontos</a></li>
-                <li><a href="/rh/folha-pagamento/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FOLHA_INICIO')"><a href="/rh/folha-pagamento"><i class="fas fa-home"></i> Início</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FOLHA_LISTAR')"><a href="/rh/folha-pagamento/listar"><i class="fas fa-list"></i> Listar</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FOLHA_GERAR')"><a href="/rh/folha-pagamento/gerar"><i class="fas fa-calculator"></i> Gerar</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FOLHA_HOLERITE')"><a href="/rh/folha-pagamento/holerite"><i class="fas fa-receipt"></i> Holerite</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FOLHA_DESCONTOS')"><a href="/rh/folha-pagamento/descontos"><i class="fas fa-minus-circle"></i> Descontos</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FOLHA_RELATORIOS')"><a href="/rh/folha-pagamento/relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
               </ul>
             </li>
 
-            <!-- Benefícios - Todos os níveis gerenciais -->
-            <li class="has-submenu" th:if="${isGerencial}"
-              sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','RH_GERENTE')">
+            <!-- Benefícios -->
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_BENEFICIOS')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-gift"></i> Benefícios
               </a>
               <ul class="submenu">
-                <li><a href="/rh/beneficios/plano-saude"><i class="fas fa-heartbeat"></i> Plano de Saúde</a></li>
-                <li><a href="/rh/beneficios/vale-transporte/listar"><i class="fas fa-bus"></i> Vale Transporte</a></li>
-                <li><a href="/rh/beneficios/vale-refeicao/listar"><i class="fas fa-utensils"></i> Vale Refeição</a></li>
-                <li><a href="/rh/beneficios/adesao"><i class="fas fa-check-circle"></i> Adesão</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_BENEFICIOS_PLANO_SAUDE')"><a href="/rh/beneficios/plano-saude"><i class="fas fa-heartbeat"></i> Plano de Saúde</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_BENEFICIOS_VALE_TRANSPORTE')"><a href="/rh/beneficios/vale-transporte/listar"><i class="fas fa-bus"></i> Vale Transporte</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_BENEFICIOS_VALE_REFEICAO')"><a href="/rh/beneficios/vale-refeicao/listar"><i class="fas fa-utensils"></i> Vale Refeição</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_BENEFICIOS_ADESAO')"><a href="/rh/beneficios/adesao"><i class="fas fa-check-circle"></i> Adesão</a></li>
               </ul>
             </li>
 
-            <!-- Workflow de Aprovação - Apenas níveis gerenciais -->
-            <li class="has-submenu" th:if="${isGerencial}"
-              sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','SUPERVISOR')">
+            <!-- Workflow de Aprovação -->
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_WORKFLOW')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-tasks"></i> Workflow
               </a>
               <ul class="submenu">
-                <li><a href="/rh/workflow/aprovacao"><i class="fas fa-clipboard-check"></i> Aprovação de Processos</a>
-                </li>
-                <li><a href="/rh/workflow/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_WORKFLOW_APROVACAO')"><a href="/rh/workflow/aprovacao"><i class="fas fa-clipboard-check"></i> Aprovação de Processos</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_WORKFLOW_RELATORIOS')"><a href="/rh/workflow/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
               </ul>
             </li>
 
             <!-- Ponto e Escalas -->
-            <li class="has-submenu"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_PONTO')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-clock"></i> Ponto e Escalas
               </a>
               <ul class="submenu">
-                <li><a href="/rh/ponto-escalas/registros"><i class="fas fa-fingerprint"></i> Registros</a></li>
-                <li th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','SUPERVISOR')"><a
-                    href="/rh/ponto-escalas/correcoes"><i class="fas fa-edit"></i>
-                    Correções</a></li>
-                <li th:if="${isGerencial}" sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','SUPERVISOR')"><a
-                    href="/rh/ponto-escalas/escalas"><i class="fas fa-calendar-alt"></i>
-                    Escalas</a></li>
-                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a
-                    href="/rh/ponto-escalas/relatorios"><i class="fas fa-chart-line"></i>
-                    Relatórios</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_PONTO_REGISTROS')"><a href="/rh/ponto-escalas/registros"><i class="fas fa-fingerprint"></i> Registros</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_PONTO_CORRECOES')"><a href="/rh/ponto-escalas/correcoes"><i class="fas fa-edit"></i> Correções</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_PONTO_ESCALAS')"><a href="/rh/ponto-escalas/escalas"><i class="fas fa-calendar-alt"></i> Escalas</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_PONTO_RELATORIOS')"><a href="/rh/ponto-escalas/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
               </ul>
             </li>
 
             <!-- Férias -->
-            <li class="has-submenu"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_FERIAS')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-umbrella-beach"></i> Férias
               </a>
               <ul class="submenu">
-                <li
-                  sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
-                  <a href="/rh/ferias/solicitar"><i class="fas fa-paper-plane"></i> Solicitar</a></li>
-                <li th:if="${isGerencial}"
-                  sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','RH_GERENTE','SUPERVISOR')"><a
-                    href="/rh/ferias/aprovar"><i class="fas fa-check"></i> Aprovar</a></li>
-                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a
-                    href="/rh/ferias/planejamento"><i class="fas fa-calendar-check"></i>
-                    Planejamento</a></li>
-                <li
-                  sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','GERENCIAL','SUPERVISOR','COLABORADOR')">
-                  <a href="/rh/ferias/calendario"><i class="fas fa-calendar"></i> Calendário</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FERIAS_SOLICITAR')"><a href="/rh/ferias/solicitar"><i class="fas fa-paper-plane"></i> Solicitar</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FERIAS_APROVAR')"><a href="/rh/ferias/aprovar"><i class="fas fa-check"></i> Aprovar</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FERIAS_PLANEJAMENTO')"><a href="/rh/ferias/planejamento"><i class="fas fa-calendar-check"></i> Planejamento</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_FERIAS_CALENDARIO')"><a href="/rh/ferias/calendario"><i class="fas fa-calendar"></i> Calendário</a></li>
               </ul>
             </li>
 
             <!-- Avaliação -->
-            <li class="has-submenu" th:if="${isGerencial}"
-              sec:authorize="hasAnyRole('GERENCIAL','ADMIN','MASTER','RH_GERENTE')">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_AVALIACAO')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-star"></i> Avaliação
               </a>
               <ul class="submenu">
-                <li><a href="/rh/avaliacao/periodicidade"><i class="fas fa-calendar-week"></i> Periodicidade</a></li>
-                <li><a href="/rh/avaliacao/feedbacks"><i class="fas fa-comments"></i> Feedbacks</a></li>
-                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a
-                    href="/rh/avaliacao/relatorios"><i class="fas fa-chart-pie"></i>
-                    Relatórios</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AVALIACAO_PERIODICIDADE')"><a href="/rh/avaliacao/periodicidade"><i class="fas fa-calendar-week"></i> Periodicidade</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AVALIACAO_FEEDBACKS')"><a href="/rh/avaliacao/feedbacks"><i class="fas fa-comments"></i> Feedbacks</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AVALIACAO_RELATORIOS')"><a href="/rh/avaliacao/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
               </ul>
             </li>
 
             <!-- Treinamentos -->
-            <li class="has-submenu"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE')">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_TREINAMENTOS')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-graduation-cap"></i> Treinamentos
               </a>
               <ul class="submenu">
-                <li th:if="${podeGerenciarRH}" sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')"><a
-                    href="/rh/treinamentos/cadastro"><i class="fas fa-plus-square"></i>
-                    Cadastro</a></li>
-                <li
-                  sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','COLABORADOR')">
-                  <a href="/rh/treinamentos/inscricao"><i class="fas fa-user-plus"></i> Inscrição</a></li>
-                <li
-                  sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE','RH_ANALISTA','RH_ASSISTENTE','COLABORADOR')">
-                  <a href="/rh/treinamentos/certificado"><i class="fas fa-certificate"></i> Certificado</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_TREINAMENTOS_CADASTRO')"><a href="/rh/treinamentos/cadastro"><i class="fas fa-plus-square"></i> Cadastro</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_TREINAMENTOS_INSCRICAO')"><a href="/rh/treinamentos/inscricao"><i class="fas fa-user-plus"></i> Inscrição</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_TREINAMENTOS_CERTIFICADO')"><a href="/rh/treinamentos/certificado"><i class="fas fa-certificate"></i> Certificado</a></li>
               </ul>
             </li>
 
-            <!-- Recrutamento - Apenas RH -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+            <!-- Recrutamento -->
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-search"></i> Recrutamento
               </a>
               <ul class="submenu">
-                <li><a href="/rh/recrutamento/candidatos"><i class="fas fa-user-plus"></i> Candidatos</a></li>
-                <li><a href="/rh/recrutamento/vagas"><i class="fas fa-briefcase"></i> Vagas</a></li>
-                <li><a href="/rh/recrutamento/triagem"><i class="fas fa-filter"></i> Triagem</a></li>
-                <li><a href="/rh/recrutamento/entrevistas"><i class="fas fa-handshake"></i> Entrevistas</a></li>
-                <li><a href="/rh/recrutamento/historico"><i class="fas fa-history"></i> Histórico</a></li>
-                <li><a href="/rh/recrutamento/pipeline"><i class="fas fa-diagram-project"></i> Pipeline</a></li>
-                <li><a href="/rh/recrutamento/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO_CANDIDATOS')"><a href="/rh/recrutamento/candidatos"><i class="fas fa-user-plus"></i> Candidatos</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO_VAGAS')"><a href="/rh/recrutamento/vagas"><i class="fas fa-briefcase"></i> Vagas</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO_TRIAGEM')"><a href="/rh/recrutamento/triagem"><i class="fas fa-filter"></i> Triagem</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO_ENTREVISTAS')"><a href="/rh/recrutamento/entrevistas"><i class="fas fa-handshake"></i> Entrevistas</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO_HISTORICO')"><a href="/rh/recrutamento/historico"><i class="fas fa-history"></i> Histórico</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO_PIPELINE')"><a href="/rh/recrutamento/pipeline"><i class="fas fa-diagram-project"></i> Pipeline</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RECRUTAMENTO_RELATORIOS')"><a href="/rh/recrutamento/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
               </ul>
             </li>
 
-            <!-- Relatórios RH - Apenas RH -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+            <!-- Relatórios RH -->
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_RELATORIOS')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-chart-bar"></i> Relatórios RH
               </a>
               <ul class="submenu">
-                <li><a href="/rh/relatorios/turnover"><i class="fas fa-exchange-alt"></i> Turnover</a></li>
-                <li><a href="/rh/relatorios/absenteismo"><i class="fas fa-user-times"></i> Absenteísmo</a></li>
-                <li><a href="/rh/relatorios/headcount"><i class="fas fa-users"></i> Headcount</a></li>
-                <li><a href="/rh/relatorios/indicadores"><i class="fas fa-tachometer-alt"></i> Indicadores</a></li>
-                <li><a href="/rh/relatorios/admissoes-demissoes"><i class="fas fa-user-group"></i>
-                    Admissões/Demissões</a></li>
-                <li><a href="/rh/relatorios/ferias-beneficios"><i class="fas fa-umbrella-beach"></i> Férias e
-                    Benefícios</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RELATORIOS_TURNOVER')"><a href="/rh/relatorios/turnover"><i class="fas fa-exchange-alt"></i> Turnover</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RELATORIOS_ABSENTEISMO')"><a href="/rh/relatorios/absenteismo"><i class="fas fa-user-times"></i> Absenteísmo</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RELATORIOS_HEADCOUNT')"><a href="/rh/relatorios/headcount"><i class="fas fa-users"></i> Headcount</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RELATORIOS_INDICADORES')"><a href="/rh/relatorios/indicadores"><i class="fas fa-tachometer-alt"></i> Indicadores</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES')"><a href="/rh/relatorios/admissoes-demissoes"><i class="fas fa-user-group"></i> Admissões/Demissões</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_RELATORIOS_FERIAS_BENEFICIOS')"><a href="/rh/relatorios/ferias-beneficios"><i class="fas fa-umbrella-beach"></i> Férias e Benefícios</a></li>
               </ul>
             </li>
 
             <!-- Configurações RH -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_CONFIGURACOES')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-cogs"></i> Configurações RH
               </a>
               <ul class="submenu">
-                <li><a href="/rh/configuracoes"><i class="fas fa-home"></i> Início</a></li>
-                <li><a href="/rh/configuracoes/politicas-ferias"><i class="fas fa-umbrella-beach"></i> Políticas de
-                    Férias</a></li>
-                <li><a href="/rh/configuracoes/ponto"><i class="fas fa-fingerprint"></i> Parâmetros de Ponto</a></li>
-                <li><a href="/rh/configuracoes/integracoes"><i class="fas fa-plug"></i> Integrações</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_CONFIGURACOES_INICIO')"><a href="/rh/configuracoes"><i class="fas fa-home"></i> Início</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_CONFIGURACOES_POLITICAS_FERIAS')"><a href="/rh/configuracoes/politicas-ferias"><i class="fas fa-umbrella-beach"></i> Políticas de Férias</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_CONFIGURACOES_PONTO')"><a href="/rh/configuracoes/ponto"><i class="fas fa-fingerprint"></i> Parâmetros de Ponto</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_CONFIGURACOES_INTEGRACOES')"><a href="/rh/configuracoes/integracoes"><i class="fas fa-plug"></i> Integrações</a></li>
               </ul>
             </li>
 
             <!-- Auditoria RH -->
-            <li class="has-submenu" th:if="${podeGerenciarRH}"
-              sec:authorize="hasAnyRole('ADMIN','MASTER','RH_GERENTE')">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH_AUDITORIA')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-shield-alt"></i> Auditoria RH
               </a>
               <ul class="submenu">
-                <li><a href="/rh/auditoria"><i class="fas fa-home"></i> Início</a></li>
-                <li><a href="/rh/auditoria/acessos"><i class="fas fa-user-check"></i> Log de Acessos</a></li>
-                <li><a href="/rh/auditoria/alteracoes"><i class="fas fa-edit"></i> Alterações de Dados</a></li>
-                <li><a href="/rh/auditoria/exportacoes"><i class="fas fa-file-export"></i> Exportações</a></li>
-                <li><a href="/rh/auditoria/revisoes"><i class="fas fa-search"></i> Revisões Periódicas</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AUDITORIA_INICIO')"><a href="/rh/auditoria"><i class="fas fa-home"></i> Início</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AUDITORIA_ACESSOS')"><a href="/rh/auditoria/acessos"><i class="fas fa-user-check"></i> Log de Acessos</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AUDITORIA_ALTERACOES')"><a href="/rh/auditoria/alteracoes"><i class="fas fa-edit"></i> Alterações de Dados</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AUDITORIA_EXPORTACOES')"><a href="/rh/auditoria/exportacoes"><i class="fas fa-file-export"></i> Exportações</a></li>
+                <li sec:authorize="hasAuthority('MENU_RH_AUDITORIA_REVISOES')"><a href="/rh/auditoria/revisoes"><i class="fas fa-search"></i> Revisões Periódicas</a></li>
               </ul>
             </li>
           </ul>
         </li>
 
-        <!-- Seção Gestão -->
-        <li class="sidebar-section"
-          th:if="${podeAcessarFinanceiro or podeAcessarMarketing or podeAcessarTI or podeAcessarJuridico}">
+        <!-- Seção Gestão (MENU_FINANCEIRO | MENU_MARKETING | MENU_TI | MENU_JURIDICO) -->
+        <li class="sidebar-section" sec:authorize="hasAnyAuthority('MENU_FINANCEIRO','MENU_MARKETING','MENU_TI','MENU_JURIDICO')">
           <div class="sidebar-section-title">Gestão</div>
         </li>
 
-        <!-- Módulo Financeiro -->
-        <li class="has-submenu" th:if="${podeAcessarFinanceiro}">
+        <!-- Módulo Financeiro (MENU_FINANCEIRO) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_FINANCEIRO')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-dollar-sign"></i> Financeiro
           </a>
 
           <ul class="submenu">
             <!-- Dashboard -->
-            <li>
-              <a th:href="@{/financeiro}">
+            <li sec:authorize="hasAuthority('MENU_FINANCEIRO_DASHBOARD')">
+              <a href="/financeiro">
                 <i class="fas fa-coins"></i> Dashboard
               </a>
             </li>
 
             <!-- Contas Bancárias -->
-            <li>
-              <a th:href="@{/financeiro/contas-bancarias}">
+            <li sec:authorize="hasAuthority('MENU_FINANCEIRO_CONTAS_BANCARIAS')">
+              <a href="/financeiro/contas-bancarias">
                 <i class="fas fa-university"></i> Contas Bancárias
               </a>
             </li>
 
             <!-- Contas a Pagar -->
-            <li>
-              <a th:href="@{/financeiro/contas-pagar}">
+            <li sec:authorize="hasAuthority('MENU_FINANCEIRO_CONTAS_PAGAR')">
+              <a href="/financeiro/contas-pagar">
                 <i class="fas fa-money-check-alt"></i> Contas a Pagar
               </a>
             </li>
 
             <!-- Contas a Receber -->
-            <li>
-              <a th:href="@{/financeiro/contas-receber}">
+            <li sec:authorize="hasAuthority('MENU_FINANCEIRO_CONTAS_RECEBER')">
+              <a href="/financeiro/contas-receber">
                 <i class="fas fa-file-invoice-dollar"></i> Contas a Receber
               </a>
             </li>
 
             <!-- Fluxo de Caixa -->
-            <li>
-              <a th:href="@{/financeiro/fluxo-caixa}">
+            <li sec:authorize="hasAuthority('MENU_FINANCEIRO_FLUXO_CAIXA')">
+              <a href="/financeiro/fluxo-caixa">
                 <i class="fas fa-wallet"></i> Fluxo de Caixa
               </a>
             </li>
 
             <!-- Transferências -->
-            <li>
-              <a th:href="@{/financeiro/transferencias}">
+            <li sec:authorize="hasAuthority('MENU_FINANCEIRO_TRANSFERENCIAS')">
+              <a href="/financeiro/transferencias">
                 <i class="fas fa-exchange-alt"></i> Transferências
               </a>
             </li>
 
             <!-- Relatórios -->
-            <li>
-              <a th:href="@{/financeiro/relatorios}">
+            <li sec:authorize="hasAuthority('MENU_FINANCEIRO_RELATORIOS')">
+              <a href="/financeiro/relatorios">
                 <i class="fas fa-chart-bar"></i> Relatórios
               </a>
             </li>
@@ -421,91 +380,91 @@
 
 
 
-        <!-- Módulo Marketing -->
-        <li class="has-submenu" th:if="${podeAcessarMarketing}">
+        <!-- Módulo Marketing (MENU_MARKETING) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_MARKETING')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-bullhorn"></i> Marketing
           </a>
           <ul class="submenu">
-            <li><a href="/marketing"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="/marketing/campanhas"><i class="fas fa-bullhorn"></i> Campanhas</a></li>
-            <li><a href="/marketing/leads"><i class="fas fa-user-plus"></i> Leads</a></li>
-            <li><a href="/marketing/eventos"><i class="fas fa-calendar-alt"></i> Eventos</a></li>
-            <li><a href="/marketing/materiais"><i class="fas fa-images"></i> Materiais</a></li>
+            <li sec:authorize="hasAuthority('MENU_MARKETING_DASHBOARD')"><a href="/marketing"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li sec:authorize="hasAuthority('MENU_MARKETING_CAMPANHAS')"><a href="/marketing/campanhas"><i class="fas fa-bullhorn"></i> Campanhas</a></li>
+            <li sec:authorize="hasAuthority('MENU_MARKETING_LEADS')"><a href="/marketing/leads"><i class="fas fa-user-plus"></i> Leads</a></li>
+            <li sec:authorize="hasAuthority('MENU_MARKETING_EVENTOS')"><a href="/marketing/eventos"><i class="fas fa-calendar-alt"></i> Eventos</a></li>
+            <li sec:authorize="hasAuthority('MENU_MARKETING_MATERIAIS')"><a href="/marketing/materiais"><i class="fas fa-images"></i> Materiais</a></li>
           </ul>
 
         </li>
 
-        <!-- Módulo TI -->
-        <li class="has-submenu" th:if="${podeAcessarTI}">
+        <!-- Módulo Tecnologia (MENU_TI) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_TI')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-laptop-code"></i> Tecnologia
           </a>
           <ul class="submenu">
-            <li><a href="/ti"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="/ti/sistemas"><i class="fas fa-server"></i> Sistemas</a></li>
-            <li><a href="/ti/suporte"><i class="fas fa-headset"></i> Suporte</a></li>
-            <li><a href="/ti/backup"><i class="fas fa-hdd"></i> Backup</a></li>
-            <li><a href="/ti/seguranca"><i class="fas fa-shield-alt"></i> Segurança</a></li>
-            <li><a href="/ti/auditoria"><i class="fas fa-shield-halved"></i> Auditoria TI</a></li>
+            <li sec:authorize="hasAuthority('MENU_TI_DASHBOARD')"><a href="/ti"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li sec:authorize="hasAuthority('MENU_TI_SISTEMAS')"><a href="/ti/sistemas"><i class="fas fa-server"></i> Sistemas</a></li>
+            <li sec:authorize="hasAuthority('MENU_TI_SUPORTE')"><a href="/ti/suporte"><i class="fas fa-headset"></i> Suporte</a></li>
+            <li sec:authorize="hasAuthority('MENU_TI_BACKUP')"><a href="/ti/backup"><i class="fas fa-hdd"></i> Backup</a></li>
+            <li sec:authorize="hasAuthority('MENU_TI_SEGURANCA')"><a href="/ti/seguranca"><i class="fas fa-shield-alt"></i> Segurança</a></li>
+            <li sec:authorize="hasAuthority('MENU_TI_AUDITORIA')"><a href="/ti/auditoria"><i class="fas fa-shield-halved"></i> Auditoria TI</a></li>
           </ul>
         </li>
 
-        <!-- Módulo Jurídico -->
-        <li class="has-submenu" th:if="${podeAcessarJuridico}">
+        <!-- Módulo Jurídico (MENU_JURIDICO) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_JURIDICO')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-balance-scale"></i> Jurídico
           </a>
           <ul class="submenu">
-            <li><a href="/juridico"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="/clientes"><i class="fas fa-users"></i> Clientes</a></li>
+            <li sec:authorize="hasAuthority('MENU_JURIDICO_DASHBOARD')"><a href="/juridico"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li sec:authorize="hasAuthority('MENU_JURIDICO_CLIENTES')"><a href="/clientes"><i class="fas fa-users"></i> Clientes</a></li>
             
             <!-- Previdenciário Submenu -->
-            <li class="has-submenu">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_JURIDICO_PREVIDENCIARIO')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-scale-balanced"></i> Previdenciário (INSS)
               </a>
               <ul class="submenu">
-                 <li><a href="/juridico/previdenciario"><i class="fas fa-list"></i> Listar</a></li>
-                 <li><a href="/juridico/previdenciario/novo"><i class="fas fa-plus"></i> Novo</a></li>
+                 <li sec:authorize="hasAuthority('MENU_JURIDICO_PREVIDENCIARIO_LISTAR')"><a href="/juridico/previdenciario"><i class="fas fa-list"></i> Listar</a></li>
+                 <li sec:authorize="hasAuthority('MENU_JURIDICO_PREVIDENCIARIO_NOVO')"><a href="/juridico/previdenciario/novo"><i class="fas fa-plus"></i> Novo</a></li>
               </ul>
             </li>
 
-            <li><a href="/whatchat"><i class="fab fa-whatsapp"></i> WhaTchat</a></li>
-            <li><a href="/juridico/contratos"><i class="fas fa-file-signature"></i> Contratos</a></li>
+            <li sec:authorize="hasAuthority('MENU_JURIDICO_WHATCHAT')"><a href="/whatchat"><i class="fab fa-whatsapp"></i> WhaTchat</a></li>
+            <li sec:authorize="hasAuthority('MENU_JURIDICO_CONTRATOS')"><a href="/juridico/contratos"><i class="fas fa-file-signature"></i> Contratos</a></li>
             
             <!-- Processos Submenu -->
-            <li class="has-submenu">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_JURIDICO_PROCESSOS')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-gavel"></i> Processos
               </a>
               <ul class="submenu">
-                 <li><a href="/juridico/processos"><i class="fas fa-list"></i> Listar</a></li>
-                 <li><a href="/juridico/processos/novo"><i class="fas fa-plus"></i> Novo Processo</a></li>
+                 <li sec:authorize="hasAuthority('MENU_JURIDICO_PROCESSOS_LISTAR')"><a href="/juridico/processos"><i class="fas fa-list"></i> Listar</a></li>
+                 <li sec:authorize="hasAuthority('MENU_JURIDICO_PROCESSOS_NOVO')"><a href="/juridico/processos/novo"><i class="fas fa-plus"></i> Novo Processo</a></li>
               </ul>
             </li>
 
-            <li><a href="/juridico/compliance"><i class="fas fa-check-circle"></i> Compliance</a></li>
-            <li><a href="/juridico/documentos"><i class="fas fa-folder-open"></i> Documentos</a></li>
+            <li sec:authorize="hasAuthority('MENU_JURIDICO_COMPLIANCE')"><a href="/juridico/compliance"><i class="fas fa-check-circle"></i> Compliance</a></li>
+            <li sec:authorize="hasAuthority('MENU_JURIDICO_DOCUMENTOS')"><a href="/juridico/documentos"><i class="fas fa-folder-open"></i> Documentos</a></li>
 
             <!-- Auditoria Jurídico -->
-            <li class="has-submenu" sec:authorize="hasAnyRole('ADMIN','MASTER','JURIDICO_GERENTE')">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_JURIDICO_AUDITORIA')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-shield-alt"></i> Auditoria
               </a>
               <ul class="submenu">
-                <li><a href="/juridico/auditoria"><i class="fas fa-home"></i> Início</a></li>
-                <li><a href="/juridico/auditoria/acessos"><i class="fas fa-user-check"></i> Log de Acessos</a></li>
-                <li><a href="/juridico/auditoria/alteracoes"><i class="fas fa-edit"></i> Alterações de Dados</a></li>
-                <li><a href="/juridico/auditoria/exportacoes"><i class="fas fa-file-export"></i> Exportações</a></li>
-                <li><a href="/juridico/auditoria/revisoes"><i class="fas fa-search"></i> Revisões Periódicas</a></li>
+                <li sec:authorize="hasAuthority('MENU_JURIDICO_AUDITORIA_INICIO')"><a href="/juridico/auditoria"><i class="fas fa-home"></i> Início</a></li>
+                <li sec:authorize="hasAuthority('MENU_JURIDICO_AUDITORIA_ACESSOS')"><a href="/juridico/auditoria/acessos"><i class="fas fa-user-check"></i> Log de Acessos</a></li>
+                <li sec:authorize="hasAuthority('MENU_JURIDICO_AUDITORIA_ALTERACOES')"><a href="/juridico/auditoria/alteracoes"><i class="fas fa-edit"></i> Alterações de Dados</a></li>
+                <li sec:authorize="hasAuthority('MENU_JURIDICO_AUDITORIA_EXPORTACOES')"><a href="/juridico/auditoria/exportacoes"><i class="fas fa-file-export"></i> Exportações</a></li>
+                <li sec:authorize="hasAuthority('MENU_JURIDICO_AUDITORIA_REVISOES')"><a href="/juridico/auditoria/revisoes"><i class="fas fa-search"></i> Revisões Periódicas</a></li>
               </ul>
             </li>
           </ul>
         </li>
 
         <!-- Cadastros -->
-        <li class="has-submenu">
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_CADASTROS')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-id-card"></i> Cadastros
           </a>
@@ -516,7 +475,7 @@
         </li>
 
         <!-- Utilidades -->
-        <li class="has-submenu">
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_UTILIDADES')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-wrench"></i> Utilidades
           </a>
@@ -524,54 +483,51 @@
             <li><a href="/utilidades/processar-cnpj"><i class="fas fa-tasks"></i> Processar CNPJs (Async)</a></li>
           </ul>
         </li>
-        <!-- Módulo Projetos -->
-        <li class="has-submenu" th:if="${podeAcessarProjetos}">
+        <!-- Módulo Projetos (MENU_PROJETOS) -->
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_PROJETOS')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-project-diagram"></i> Projetos
           </a>
           <ul class="submenu">
             <!-- Geral -->
-            <li class="has-submenu">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_PROJETOS_GERAL')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-folder"></i> Geral
               </a>
               <ul class="submenu">
-                <li><a href="/projetos/geral/listar"><i class="fas fa-list"></i> Listar</a></li>
-                <li th:if="${podeGerenciarProjetos}">
-                  <a href="/projetos/geral/novo"><i class="fas fa-plus"></i> Novo</a>
-                </li>
+                <li sec:authorize="hasAuthority('MENU_PROJETOS_GERAL_LISTAR')"><a href="/projetos/geral/listar"><i class="fas fa-list"></i> Listar</a></li>
+                <li sec:authorize="hasAuthority('MENU_PROJETOS_GERAL_NOVO')"><a href="/projetos/geral/novo"><i class="fas fa-plus"></i> Novo</a></li>
               </ul>
             </li>
 
             <!-- Tarefas -->
-            <li class="has-submenu">
+            <li class="has-submenu" sec:authorize="hasAuthority('MENU_PROJETOS_TAREFAS')">
               <a href="javascript:void(0);" class="submenu-toggle">
                 <i class="fas fa-tasks"></i> Tarefas
               </a>
               <ul class="submenu">
-                <li><a href="/projetos/tarefas/listar"><i class="fas fa-list"></i> Listar</a></li>
-                <li><a href="/projetos/tarefas/atribuicoes"><i class="fas fa-user-check"></i> Atribuições</a></li>
+                <li sec:authorize="hasAuthority('MENU_PROJETOS_TAREFAS_LISTAR')"><a href="/projetos/tarefas/listar"><i class="fas fa-list"></i> Listar</a></li>
+                <li sec:authorize="hasAuthority('MENU_PROJETOS_TAREFAS_ATRIBUICOES')"><a href="/projetos/tarefas/atribuicoes"><i class="fas fa-user-check"></i> Atribuições</a></li>
               </ul>
             </li>
 
             <!-- Equipes -->
-            <li th:if="${podeGerenciarProjetos}"><a href="/projetos/equipes/cadastro"><i class="fas fa-users-cog"></i>
-                Cadastro de Equipes</a></li>
-            <li>
+            <li sec:authorize="hasAuthority('MENU_PROJETOS_EQUIPES_CADASTRAR')"><a href="/projetos/equipes/cadastro"><i class="fas fa-users-cog"></i> Cadastro de Equipes</a></li>
+            <li sec:authorize="hasAuthority('MENU_PROJETOS_EQUIPES_MEMBROS')">
               <a href="/projetos/equipes/membros">
                 <i class="fas fa-users"></i> Membros da Equipe
               </a>
             </li>
 
             <!-- Cronograma -->
-            <li>
+            <li sec:authorize="hasAuthority('MENU_PROJETOS_CRONOGRAMA')">
               <a href="/projetos/cronograma/visualizar">
                 <i class="fas fa-calendar-alt"></i> Cronograma
               </a>
             </li>
 
             <!-- Relatórios -->
-            <li>
+            <li sec:authorize="hasAuthority('MENU_PROJETOS_RELATORIOS')">
               <a href="/projetos/relatorios/desempenho">
                 <i class="fas fa-chart-line"></i> Relatórios de Desempenho
               </a>
@@ -593,59 +549,55 @@
             <li><a href="/solicitacoes/nova"><i class="fas fa-plus"></i> Nova Solicitação</a></li>
             <li><a href="/solicitacoes"><i class="fas fa-list"></i> Minhas Solicitações</a></li>
             <li><a href="/solicitacoes/todas"><i class="fas fa-list-alt"></i> Todas as Solicitações</a></li>
-            <li th:if="${podeGerenciarUsuarios}"><a href="/solicitacoes/pendentes"><i class="fas fa-clock"></i>
-                Pendentes</a></li>
-            <li th:if="${podeGerenciarUsuarios}"><a href="/solicitacoes/dashboard"><i class="fas fa-chart-bar"></i>
-                Dashboard</a></li>
+            <li sec:authorize="hasAuthority('MENU_SERVICOS_SOLICITACOES_GERENCIAR')"><a href="/solicitacoes/pendentes"><i class="fas fa-clock"></i> Pendentes</a></li>
+            <li sec:authorize="hasAuthority('MENU_SERVICOS_SOLICITACOES_DASHBOARD')"><a href="/solicitacoes/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
           </ul>
         </li>
 
         <li><a href="/servicos"><i class="fas fa-tools"></i> Serviços</a></li>
         <li><a href="/agenda"><i class="fas fa-calendar-check"></i> Agenda</a></li>
 
-        <!-- Seção Administrativa -->
-        <li class="sidebar-section" th:if="${podeGerenciarUsuarios or isAdmin or isMaster or isGerencial}">
+        <!-- Seção Administrativa (MENU_ADMIN) -->
+        <li class="sidebar-section" sec:authorize="hasAuthority('MENU_ADMIN')">
           <div class="sidebar-section-title">Administração</div>
         </li>
 
-        <li th:if="${podeGerenciarUsuarios}"><a href="/usuarios/index"><i class="fas fa-user-friends"></i> Usuários</a>
-        </li>
+        <li sec:authorize="hasAuthority('MENU_ADMIN_USUARIOS')"><a href="/usuarios/index"><i class="fas fa-user-friends"></i> Usuários</a></li>
 
         <!-- Gestão de Acesso -->
-        <li class="has-submenu" th:if="${isAdmin or isMaster}">
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_ADMIN_GESTAO_ACESSO')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-user-shield"></i> Gestão de Acesso
           </a>
           <ul class="submenu">
-            <li><a href="/perfis"><i class="fas fa-user-tag"></i> Perfis</a></li>
-            <li><a href="/permissoes"><i class="fas fa-key"></i> Permissões</a></li>
+            <li sec:authorize="hasAuthority('MENU_ADMIN_GESTAO_ACESSO_PERFIS')"><a href="/perfis"><i class="fas fa-user-tag"></i> Perfis</a></li>
+            <li sec:authorize="hasAuthority('MENU_ADMIN_GESTAO_ACESSO_PERMISSOES')"><a href="/permissoes"><i class="fas fa-key"></i> Permissões</a></li>
           </ul>
         </li>
 
-        <li th:if="${isGerencial}"><a href="/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
-        <li th:if="${isAdmin or isMaster}"><a href="/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
-        <li th:if="${isGerencial}"><a href="/metas"><i class="fas fa-bullseye"></i> Metas</a></li>
+        <li sec:authorize="hasAuthority('MENU_ADMIN_RELATORIOS')"><a href="/relatorios"><i class="fas fa-chart-pie"></i> Relatórios</a></li>
+        <li sec:authorize="hasAuthority('MENU_ADMIN_CONFIGURACOES')"><a href="/configuracoes"><i class="fas fa-cogs"></i> Configurações</a></li>
+        <li sec:authorize="hasAuthority('MENU_ADMIN_METAS')"><a href="/metas"><i class="fas fa-bullseye"></i> Metas</a></li>
 
-        <!-- Seção Pessoal -->
-        <li class="sidebar-section" th:if="${!isGerencial}">
+        <!-- Seção Pessoal (MENU_PESSOAL) -->
+        <li class="sidebar-section" sec:authorize="hasAuthority('MENU_PESSOAL')">
           <div class="sidebar-section-title">Pessoal</div>
         </li>
 
-        <li th:if="${!isGerencial}"><a href="/meus-pedidos"><i class="fas fa-clipboard-list"></i> Meus Pedidos</a></li>
-        <li th:if="${!isGerencial}"><a href="/meus-servicos"><i class="fas fa-concierge-bell"></i> Meus Serviços</a>
-        </li>
-        <li th:if="${!isGerencial}"><a href="/favoritos"><i class="fas fa-star"></i> Favoritos</a></li>
-        <li th:if="${!isGerencial}"><a href="/recomendacoes"><i class="fas fa-thumbs-up"></i> Recomendações</a></li>
+        <li sec:authorize="hasAuthority('MENU_PESSOAL_MEUS_PEDIDOS')"><a href="/meus-pedidos"><i class="fas fa-clipboard-list"></i> Meus Pedidos</a></li>
+        <li sec:authorize="hasAuthority('MENU_PESSOAL_MEUS_SERVICOS')"><a href="/meus-servicos"><i class="fas fa-concierge-bell"></i> Meus Serviços</a></li>
+        <li sec:authorize="hasAuthority('MENU_PESSOAL_FAVORITOS')"><a href="/favoritos"><i class="fas fa-star"></i> Favoritos</a></li>
+        <li sec:authorize="hasAuthority('MENU_PESSOAL_RECOMENDACOES')"><a href="/recomendacoes"><i class="fas fa-thumbs-up"></i> Recomendações</a></li>
 
         <!-- Seção Suporte -->
         <li class="sidebar-section">
           <div class="sidebar-section-title">Suporte & Documentos</div>
         </li>
 
-        <li th:if="${!isGerencial}"><a href="/ajuda"><i class="fas fa-question-circle"></i> Central de Ajuda</a></li>
-        <li th:if="${isGerencial}"><a href="/documentos"><i class="fas fa-file-alt"></i> Documentos Gerenciais</a></li>
-        <li th:if="${!isGerencial}"><a href="/documentos"><i class="fas fa-file-alt"></i> Meus Documentos</a></li>
-        <li th:if="${!isGerencial}"><a href="/termos"><i class="fas fa-file-contract"></i> Termos de Uso</a></li>
+        <li sec:authorize="hasAuthority('MENU_AJUDA')"><a href="/ajuda"><i class="fas fa-question-circle"></i> Central de Ajuda</a></li>
+        <li sec:authorize="hasAuthority('MENU_DOCS_GERENCIAL')"><a href="/documentos"><i class="fas fa-file-alt"></i> Documentos Gerenciais</a></li>
+        <li sec:authorize="hasAuthority('MENU_DOCS_PESSOAL')"><a href="/documentos"><i class="fas fa-file-alt"></i> Meus Documentos</a></li>
+        <li sec:authorize="hasAuthority('MENU_DOCS_PESSOAL')"><a href="/termos"><i class="fas fa-file-contract"></i> Termos de Uso</a></li>
         <li><a href="/suporte"><i class="fas fa-life-ring"></i> Suporte</a></li>
 
         <!-- Logout sempre no fim -->

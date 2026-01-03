@@ -376,9 +376,7 @@ public class PerfilController {
             return false;
         }
         return auth.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN") ||
-                        authority.getAuthority().equals("ROLE_MASTER") ||
-                        authority.getAuthority().equals("ROLE_CONFIG_WRITE"));
+                .anyMatch(authority -> authority.getAuthority().equals("MENU_ADMIN_GESTAO_ACESSO_PERFIS"));
     }
 
     /**

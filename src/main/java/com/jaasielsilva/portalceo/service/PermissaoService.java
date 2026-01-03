@@ -263,6 +263,174 @@ public class PermissaoService {
         // Permissões de Configuração
         permissoes.put("ROLE_CONFIG_READ", "Visualizar configurações");
         permissoes.put("ROLE_CONFIG_WRITE", "Alterar configurações");
+
+        // Menus gerais
+        permissoes.put("MENU_DASHBOARD", "Menu Dashboard");
+        permissoes.put("MENU_CLIENTES", "Menu Clientes");
+        permissoes.put("MENU_CLIENTES_LISTAR", "Menu Clientes Listar");
+        permissoes.put("MENU_CLIENTES_NOVO", "Menu Clientes Novo");
+        permissoes.put("MENU_CLIENTES_CONTRATOS_LISTAR", "Menu Clientes Contratos");
+        permissoes.put("MENU_CLIENTES_HISTORICO_INTERACOES", "Menu Clientes Interações");
+        permissoes.put("MENU_CLIENTES_HISTORICO_PEDIDOS", "Menu Clientes Pedidos");
+        permissoes.put("MENU_CLIENTES_AVANCADO_BUSCA", "Menu Clientes Busca Avançada");
+        permissoes.put("MENU_CLIENTES_AVANCADO_RELATORIOS", "Menu Clientes Relatórios");
+        permissoes.put("MENU_VENDAS", "Menu Vendas");
+        permissoes.put("MENU_VENDAS_DASHBOARD", "Menu Vendas Dashboard");
+        permissoes.put("MENU_VENDAS_PDV", "Menu Vendas PDV");
+        permissoes.put("MENU_VENDAS_PEDIDOS", "Menu Vendas Pedidos");
+        permissoes.put("MENU_VENDAS_RELATORIOS", "Menu Vendas Relatórios");
+        permissoes.put("MENU_COMPRAS", "Menu Compras");
+        permissoes.put("MENU_ESTOQUE", "Menu Estoque");
+        permissoes.put("MENU_ESTOQUE_PRODUTOS", "Menu Estoque Produtos");
+        permissoes.put("MENU_ESTOQUE_CATEGORIAS", "Menu Estoque Categorias");
+        permissoes.put("MENU_ESTOQUE_CATEGORIAS_LISTAR", "Menu Estoque Categorias Listar");
+        permissoes.put("MENU_ESTOQUE_CATEGORIAS_NOVO", "Menu Estoque Categorias Novo");
+
+        // Menus RH
+        permissoes.put("MENU_RH", "Menu RH");
+        permissoes.put("MENU_RH_COLABORADORES_LISTAR", "Menu RH Colaboradores Listar");
+        permissoes.put("MENU_RH_COLABORADORES_NOVO", "Menu RH Colaboradores Novo");
+        permissoes.put("MENU_RH_COLABORADORES_ADESAO", "Menu RH Adesão");
+        permissoes.put("MENU_RH_FOLHA", "Menu RH Folha");
+        permissoes.put("MENU_RH_FOLHA_INICIO", "Menu RH Folha Início");
+        permissoes.put("MENU_RH_FOLHA_LISTAR", "Menu RH Folha Listar");
+        permissoes.put("MENU_RH_FOLHA_GERAR", "Menu RH Folha Gerar");
+        permissoes.put("MENU_RH_FOLHA_HOLERITE", "Menu RH Folha Holerite");
+        permissoes.put("MENU_RH_FOLHA_DESCONTOS", "Menu RH Folha Descontos");
+        permissoes.put("MENU_RH_FOLHA_RELATORIOS", "Menu RH Folha Relatórios");
+        permissoes.put("MENU_RH_BENEFICIOS", "Menu RH Benefícios");
+        permissoes.put("MENU_RH_BENEFICIOS_PLANO_SAUDE", "Menu RH Plano de Saúde");
+        permissoes.put("MENU_RH_BENEFICIOS_VALE_TRANSPORTE", "Menu RH VT");
+        permissoes.put("MENU_RH_BENEFICIOS_VALE_REFEICAO", "Menu RH VR");
+        permissoes.put("MENU_RH_BENEFICIOS_ADESAO", "Menu RH Benefícios Adesão");
+        permissoes.put("MENU_RH_WORKFLOW", "Menu RH Workflow");
+        permissoes.put("MENU_RH_WORKFLOW_APROVACAO", "Menu RH Workflow Aprovação");
+        permissoes.put("MENU_RH_WORKFLOW_RELATORIOS", "Menu RH Workflow Relatórios");
+        permissoes.put("MENU_RH_PONTO", "Menu RH Ponto");
+        permissoes.put("MENU_RH_PONTO_REGISTROS", "Menu RH Ponto Registros");
+        permissoes.put("MENU_RH_PONTO_CORRECOES", "Menu RH Ponto Correções");
+        permissoes.put("MENU_RH_PONTO_ESCALAS", "Menu RH Ponto Escalas");
+        permissoes.put("MENU_RH_PONTO_RELATORIOS", "Menu RH Ponto Relatórios");
+        permissoes.put("MENU_RH_FERIAS", "Menu RH Férias");
+        permissoes.put("MENU_RH_FERIAS_SOLICITAR", "Menu RH Férias Solicitar");
+        permissoes.put("MENU_RH_FERIAS_APROVAR", "Menu RH Férias Aprovar");
+        permissoes.put("MENU_RH_FERIAS_PLANEJAMENTO", "Menu RH Férias Planejamento");
+        permissoes.put("MENU_RH_FERIAS_CALENDARIO", "Menu RH Férias Calendário");
+        permissoes.put("MENU_RH_AVALIACAO", "Menu RH Avaliação");
+        permissoes.put("MENU_RH_AVALIACAO_PERIODICIDADE", "Menu RH Avaliação Periodicidade");
+        permissoes.put("MENU_RH_AVALIACAO_FEEDBACKS", "Menu RH Avaliação Feedbacks");
+        permissoes.put("MENU_RH_AVALIACAO_RELATORIOS", "Menu RH Avaliação Relatórios");
+        permissoes.put("MENU_RH_TREINAMENTOS", "Menu RH Treinamentos");
+        permissoes.put("MENU_RH_TREINAMENTOS_CADASTRO", "Menu RH Treinamentos Cadastro");
+        permissoes.put("MENU_RH_TREINAMENTOS_INSCRICAO", "Menu RH Treinamentos Inscrição");
+        permissoes.put("MENU_RH_TREINAMENTOS_CERTIFICADO", "Menu RH Treinamentos Certificado");
+        permissoes.put("MENU_RH_RECRUTAMENTO", "Menu RH Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_CANDIDATOS", "Menu RH Recrutamento Candidatos");
+        permissoes.put("MENU_RH_RECRUTAMENTO_VAGAS", "Menu RH Recrutamento Vagas");
+        permissoes.put("MENU_RH_RECRUTAMENTO_TRIAGEM", "Menu RH Recrutamento Triagem");
+        permissoes.put("MENU_RH_RECRUTAMENTO_ENTREVISTAS", "Menu RH Recrutamento Entrevistas");
+        permissoes.put("MENU_RH_RECRUTAMENTO_HISTORICO", "Menu RH Recrutamento Histórico");
+        permissoes.put("MENU_RH_RECRUTAMENTO_PIPELINE", "Menu RH Recrutamento Pipeline");
+        permissoes.put("MENU_RH_RECRUTAMENTO_RELATORIOS", "Menu RH Recrutamento Relatórios");
+        permissoes.put("MENU_RH_RELATORIOS", "Menu RH Relatórios");
+        permissoes.put("MENU_RH_RELATORIOS_TURNOVER", "Menu RH Relatórios Turnover");
+        permissoes.put("MENU_RH_RELATORIOS_ABSENTEISMO", "Menu RH Relatórios Absenteísmo");
+        permissoes.put("MENU_RH_RELATORIOS_HEADCOUNT", "Menu RH Relatórios Headcount");
+        permissoes.put("MENU_RH_RELATORIOS_INDICADORES", "Menu RH Relatórios Indicadores");
+        permissoes.put("MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES", "Menu RH Relatórios Admissões/Demissões");
+        permissoes.put("MENU_RH_RELATORIOS_FERIAS_BENEFICIOS", "Menu RH Relatórios Férias/Benefícios");
+        permissoes.put("MENU_RH_CONFIGURACOES", "Menu RH Configurações");
+        permissoes.put("MENU_RH_CONFIGURACOES_INICIO", "Menu RH Configurações Início");
+        permissoes.put("MENU_RH_CONFIGURACOES_POLITICAS_FERIAS", "Menu RH Configurações Políticas de Férias");
+        permissoes.put("MENU_RH_CONFIGURACOES_PONTO", "Menu RH Configurações Ponto");
+        permissoes.put("MENU_RH_CONFIGURACOES_INTEGRACOES", "Menu RH Configurações Integrações");
+        permissoes.put("MENU_RH_AUDITORIA", "Menu RH Auditoria");
+        permissoes.put("MENU_RH_AUDITORIA_INICIO", "Menu RH Auditoria Início");
+        permissoes.put("MENU_RH_AUDITORIA_ACESSOS", "Menu RH Auditoria Acessos");
+        permissoes.put("MENU_RH_AUDITORIA_ALTERACOES", "Menu RH Auditoria Alterações");
+        permissoes.put("MENU_RH_AUDITORIA_EXPORTACOES", "Menu RH Auditoria Exportações");
+        permissoes.put("MENU_RH_AUDITORIA_REVISOES", "Menu RH Auditoria Revisões");
+
+        // Menus Financeiro
+        permissoes.put("MENU_FINANCEIRO", "Menu Financeiro");
+        permissoes.put("MENU_FINANCEIRO_DASHBOARD", "Menu Financeiro Dashboard");
+        permissoes.put("MENU_FINANCEIRO_CONTAS_BANCARIAS", "Menu Financeiro Contas Bancárias");
+        permissoes.put("MENU_FINANCEIRO_CONTAS_PAGAR", "Menu Financeiro Contas a Pagar");
+        permissoes.put("MENU_FINANCEIRO_CONTAS_RECEBER", "Menu Financeiro Contas a Receber");
+        permissoes.put("MENU_FINANCEIRO_FLUXO_CAIXA", "Menu Financeiro Fluxo de Caixa");
+        permissoes.put("MENU_FINANCEIRO_TRANSFERENCIAS", "Menu Financeiro Transferências");
+        permissoes.put("MENU_FINANCEIRO_RELATORIOS", "Menu Financeiro Relatórios");
+
+        // Menus Marketing
+        permissoes.put("MENU_MARKETING", "Menu Marketing");
+        permissoes.put("MENU_MARKETING_DASHBOARD", "Menu Marketing Dashboard");
+        permissoes.put("MENU_MARKETING_CAMPANHAS", "Menu Marketing Campanhas");
+        permissoes.put("MENU_MARKETING_LEADS", "Menu Marketing Leads");
+        permissoes.put("MENU_MARKETING_EVENTOS", "Menu Marketing Eventos");
+        permissoes.put("MENU_MARKETING_MATERIAIS", "Menu Marketing Materiais");
+
+        // Menus TI
+        permissoes.put("MENU_TI", "Menu TI");
+        permissoes.put("MENU_TI_DASHBOARD", "Menu TI Dashboard");
+        permissoes.put("MENU_TI_SISTEMAS", "Menu TI Sistemas");
+        permissoes.put("MENU_TI_SUPORTE", "Menu TI Suporte");
+        permissoes.put("MENU_TI_BACKUP", "Menu TI Backup");
+        permissoes.put("MENU_TI_SEGURANCA", "Menu TI Segurança");
+        permissoes.put("MENU_TI_AUDITORIA", "Menu TI Auditoria");
+
+        // Menus Jurídico
+        permissoes.put("MENU_JURIDICO", "Menu Jurídico");
+        permissoes.put("MENU_JURIDICO_DASHBOARD", "Menu Jurídico Dashboard");
+        permissoes.put("MENU_JURIDICO_CLIENTES", "Menu Jurídico Clientes");
+        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO", "Menu Jurídico Previdenciário");
+        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_LISTAR", "Menu Jurídico Previdenciário Listar");
+        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_NOVO", "Menu Jurídico Previdenciário Novo");
+        permissoes.put("MENU_JURIDICO_WHATCHAT", "Menu Jurídico Chat");
+        permissoes.put("MENU_JURIDICO_CONTRATOS", "Menu Jurídico Contratos");
+        permissoes.put("MENU_JURIDICO_PROCESSOS", "Menu Jurídico Processos");
+        permissoes.put("MENU_JURIDICO_PROCESSOS_LISTAR", "Menu Jurídico Processos Listar");
+        permissoes.put("MENU_JURIDICO_PROCESSOS_NOVO", "Menu Jurídico Processos Novo");
+        permissoes.put("MENU_JURIDICO_COMPLIANCE", "Menu Jurídico Compliance");
+        permissoes.put("MENU_JURIDICO_DOCUMENTOS", "Menu Jurídico Documentos");
+        permissoes.put("MENU_JURIDICO_AUDITORIA", "Menu Jurídico Auditoria");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_INICIO", "Menu Jurídico Auditoria Início");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_ACESSOS", "Menu Jurídico Auditoria Acessos");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_ALTERACOES", "Menu Jurídico Auditoria Alterações");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_EXPORTACOES", "Menu Jurídico Auditoria Exportações");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_REVISOES", "Menu Jurídico Auditoria Revisões");
+
+        // Menus Cadastros/Utilidades/Projetos/Serviços/Admin/Pessoal/Ajuda/Documentos
+        permissoes.put("MENU_CADASTROS", "Menu Cadastros");
+        permissoes.put("MENU_UTILIDADES", "Menu Utilidades");
+        permissoes.put("MENU_PROJETOS", "Menu Projetos");
+        permissoes.put("MENU_PROJETOS_GERAL", "Menu Projetos Geral");
+        permissoes.put("MENU_PROJETOS_GERAL_LISTAR", "Menu Projetos Geral Listar");
+        permissoes.put("MENU_PROJETOS_GERAL_NOVO", "Menu Projetos Geral Novo");
+        permissoes.put("MENU_PROJETOS_TAREFAS", "Menu Projetos Tarefas");
+        permissoes.put("MENU_PROJETOS_TAREFAS_LISTAR", "Menu Projetos Tarefas Listar");
+        permissoes.put("MENU_PROJETOS_TAREFAS_ATRIBUICOES", "Menu Projetos Tarefas Atribuições");
+        permissoes.put("MENU_PROJETOS_EQUIPES_CADASTRAR", "Menu Projetos Equipes Cadastrar");
+        permissoes.put("MENU_PROJETOS_EQUIPES_MEMBROS", "Menu Projetos Equipes Membros");
+        permissoes.put("MENU_PROJETOS_CRONOGRAMA", "Menu Projetos Cronograma");
+        permissoes.put("MENU_PROJETOS_RELATORIOS", "Menu Projetos Relatórios");
+        permissoes.put("MENU_SERVICOS_SOLICITACOES_GERENCIAR", "Menu Solicitações de Serviços");
+        permissoes.put("MENU_SERVICOS_SOLICITACOES_DASHBOARD", "Menu Solicitações Dashboard");
+        permissoes.put("MENU_ADMIN", "Menu Administração");
+        permissoes.put("MENU_ADMIN_USUARIOS", "Menu Admin Usuários");
+        permissoes.put("MENU_ADMIN_GESTAO_ACESSO", "Menu Admin Gestão de Acesso");
+        permissoes.put("MENU_ADMIN_GESTAO_ACESSO_PERFIS", "Menu Admin Perfis");
+        permissoes.put("MENU_ADMIN_GESTAO_ACESSO_PERMISSOES", "Menu Admin Permissões");
+        permissoes.put("MENU_ADMIN_RELATORIOS", "Menu Admin Relatórios");
+        permissoes.put("MENU_ADMIN_CONFIGURACOES", "Menu Admin Configurações");
+        permissoes.put("MENU_ADMIN_METAS", "Menu Admin Metas");
+        permissoes.put("MENU_PESSOAL", "Menu Pessoal");
+        permissoes.put("MENU_PESSOAL_MEUS_PEDIDOS", "Menu Pessoal Meus Pedidos");
+        permissoes.put("MENU_PESSOAL_MEUS_SERVICOS", "Menu Pessoal Meus Serviços");
+        permissoes.put("MENU_PESSOAL_FAVORITOS", "Menu Pessoal Favoritos");
+        permissoes.put("MENU_PESSOAL_RECOMENDACOES", "Menu Pessoal Recomendações");
+        permissoes.put("MENU_AJUDA", "Menu Ajuda");
+        permissoes.put("MENU_DOCS_GERENCIAL", "Menu Documentos Gerenciais");
+        permissoes.put("MENU_DOCS_PESSOAL", "Menu Documentos Pessoais");
         
         return permissoes;
     }
@@ -275,23 +443,44 @@ public class PermissaoService {
      * Normaliza o nome da permissão (adiciona ROLE_ se necessário)
      */
     private String normalizarNomePermissao(String nome) {
-        String nomeNormalizado = nome.toUpperCase().trim();
-        if (!nomeNormalizado.startsWith("ROLE_")) {
-            nomeNormalizado = "ROLE_" + nomeNormalizado;
+        String n = nome == null ? "" : nome.toUpperCase().trim();
+        if (n.isEmpty()) return n;
+        if (n.startsWith("ROLE_")) return n;
+        if (n.startsWith("MENU_")) return n;
+        if (n.matches("^(CHAMADO|TECNICO|ADMIN|USUARIO|FINANCEIRO|JURIDICO|MARKETING|ESTOQUE|CLIENTES|VENDAS|COMPRAS|PROJETOS|PESSOAL|DOCS)_.*$")) {
+            return n;
         }
-        return nomeNormalizado;
+        return "ROLE_" + n;
     }
 
     /**
      * Extrai a categoria/módulo de uma permissão baseado no nome
      */
     private String extrairCategoria(String nomePermissao) {
-        if (nomePermissao.startsWith("ROLE_USER")) return "Usuários";
-        if (nomePermissao.startsWith("ROLE_RH")) return "Recursos Humanos";
-        if (nomePermissao.startsWith("ROLE_FINANCEIRO")) return "Financeiro";
-        if (nomePermissao.startsWith("ROLE_RELATORIO")) return "Relatórios";
-        if (nomePermissao.startsWith("ROLE_CONFIG")) return "Configurações";
-        if (nomePermissao.equals("ROLE_ADMIN") || nomePermissao.equals("ROLE_MASTER")) return "Sistema";
+        String n = nomePermissao == null ? "" : nomePermissao.toUpperCase();
+        if (n.startsWith("ROLE_USER")) return "Usuários";
+        if (n.startsWith("ROLE_RH")) return "Recursos Humanos";
+        if (n.startsWith("ROLE_FINANCEIRO")) return "Financeiro";
+        if (n.startsWith("ROLE_RELATORIO")) return "Relatórios";
+        if (n.startsWith("ROLE_CONFIG")) return "Configurações";
+        if (n.equals("ROLE_ADMIN") || n.equals("ROLE_MASTER")) return "Sistema";
+        if (n.startsWith("MENU_FINANCEIRO")) return "Financeiro";
+        if (n.startsWith("MENU_TI")) return "TI";
+        if (n.startsWith("MENU_RH")) return "Recursos Humanos";
+        if (n.startsWith("MENU_MARKETING")) return "Marketing";
+        if (n.startsWith("MENU_JURIDICO")) return "Jurídico";
+        if (n.startsWith("MENU_PROJETOS")) return "Projetos";
+        if (n.startsWith("MENU_ADMIN")) return "Administração";
+        if (n.startsWith("MENU_PESSOAL")) return "Pessoal";
+        if (n.startsWith("MENU_CADASTROS")) return "Cadastros";
+        if (n.startsWith("MENU_UTILIDADES")) return "Utilidades";
+        if (n.startsWith("MENU_AJUDA")) return "Ajuda";
+        if (n.startsWith("MENU_DOCS")) return "Documentos";
+        if (n.startsWith("MENU_CLIENTES")) return "Clientes";
+        if (n.startsWith("MENU_VENDAS")) return "Vendas";
+        if (n.startsWith("MENU_COMPRAS")) return "Compras";
+        if (n.startsWith("MENU_ESTOQUE")) return "Estoque";
+        if (n.startsWith("MENU_SERVICOS")) return "Serviços";
         return "Geral";
     }
 

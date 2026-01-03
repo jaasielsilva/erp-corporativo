@@ -8,6 +8,7 @@ import com.jaasielsilva.portalceo.repository.*;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.CategoriaService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
+import com.jaasielsilva.portalceo.service.PermissaoService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Random;
@@ -146,6 +147,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/chat/**").authenticated()
                                                 .requestMatchers("/api/notifications/**").authenticated()
                                                 .requestMatchers("/rh/colaboradores/adesao/**").authenticated()
+                                                .requestMatchers("/perfis/**").hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERFIS")
+                                                .requestMatchers("/permissoes/**").hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERMISSOES")
                                                 // Páginas de erro
                                                 .requestMatchers("/error", "/error/**").permitAll()
                                                 .anyRequest().authenticated())
@@ -166,6 +169,16 @@ public class SecurityConfig {
                                 .authenticationProvider(authenticationProvider);
 
                 return http.build();
+        }
+
+        @Bean
+        public CommandLineRunner seedPermissoesPadrao(PermissaoService permissaoService) {
+                return args -> {
+                        try {
+                                permissaoService.criarPermissoesPadrao();
+                        } catch (Exception ignored) {
+                        }
+                };
         }
 
         /**

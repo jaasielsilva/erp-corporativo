@@ -369,6 +369,37 @@ public class UsuarioController {
     }
 
     /**
+     * Cria usuário estagiário do Jurídico com perfil e permissões adequadas
+     */
+    @PostMapping("/criar-estagiario-juridico")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> criarEstagiarioJuridico(@RequestBody Map<String, String> payload) {
+        try {
+            String nome = payload.get("nome");
+            String email = payload.get("email");
+            String cpf = payload.get("cpf");
+            Map<String, Object> resp = usuarioService.criarUsuarioEstagiarioJuridico(nome, email, cpf);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/criar-estagiario-ti-financeiro")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> criarEstagiarioTiFinanceiro(@RequestBody Map<String, String> payload) {
+        try {
+            String nome = payload.get("nome");
+            String email = payload.get("email");
+            String cpf = payload.get("cpf");
+            Map<String, Object> resp = usuarioService.criarUsuarioEstagiarioTIComVisaoFinanceiro(nome, email, cpf);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("erro", e.getMessage()));
+        }
+    }
+
+    /**
      * Exibe dados do usuário logado.
      */
     @GetMapping("/relatorio")

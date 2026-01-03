@@ -391,14 +391,12 @@ public class PermissaoController {
      * Verifica se o usuário tem permissão para gerenciar permissões
      */
     private boolean temPermissaoGerenciarPermissoes(Principal principal) {
-        if (principal == null) {
+        Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
             return false;
         }
-
-        // Apenas usuários MASTER podem gerenciar permissões
-        Authentication auth = (Authentication) principal;
         return auth.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_MASTER"));
+                .anyMatch(authority -> authority.getAuthority().equals("MENU_ADMIN_GESTAO_ACESSO_PERMISSOES"));
     }
 
     /**

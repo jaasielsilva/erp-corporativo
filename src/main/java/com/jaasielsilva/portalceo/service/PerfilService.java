@@ -307,4 +307,66 @@ public class PerfilService {
         perfil.setPermissoes(permissoes);
         return perfilRepository.save(perfil);
     }
+
+    /**
+     * Garante a existência de uma permissão; cria se não existir
+     */
+    public Permissao ensurePermissao(String nome, String categoria) {
+        return permissaoRepository.findByNome(nome).orElseGet(() -> {
+            Permissao p = new Permissao();
+            p.setNome(nome);
+            p.setCategoria(categoria);
+            return permissaoRepository.save(p);
+        });
+    }
+
+    /**
+     * Cria (ou retorna) o perfil JURIDICO_ESTAGIARIO com permissões MENU_* do módulo Jurídico
+     */
+    public Perfil ensurePerfilJuridicoEstagiario() {
+        Optional<Perfil> existente = perfilRepository.findByNome("JURIDICO_ESTAGIARIO");
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+        Set<Permissao> perms = new HashSet<>();
+        perms.add(ensurePermissao("MENU_JURIDICO", "Jurídico"));
+        perms.add(ensurePermissao("MENU_JURIDICO_DASHBOARD", "Jurídico"));
+        perms.add(ensurePermissao("MENU_JURIDICO_PROCESSOS", "Jurídico"));
+        perms.add(ensurePermissao("MENU_JURIDICO_PROCESSOS_LISTAR", "Jurídico"));
+        perms.add(ensurePermissao("MENU_JURIDICO_PREVIDENCIARIO", "Jurídico"));
+        perms.add(ensurePermissao("MENU_JURIDICO_PREVIDENCIARIO_LISTAR", "Jurídico"));
+        perms.add(ensurePermissao("MENU_JURIDICO_DOCUMENTOS", "Jurídico"));
+
+        Perfil novo = new Perfil();
+        novo.setNome("JURIDICO_ESTAGIARIO");
+        novo.setPermissoes(perms);
+        return perfilRepository.save(novo);
+    }
+
+    /**
+     * Cria (ou retorna) o perfil TI_ESTAGIARIO_FINANCEIRO_VISUALIZACAO
+     * com authorities de TI e visão mínima do Financeiro
+     */
+    public Perfil ensurePerfilTiEstagiarioFinanceiroVisao() {
+        Optional<Perfil> existente = perfilRepository.findByNome("TI_ESTAGIARIO_FINANCEIRO_VISUALIZACAO");
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+        Set<Permissao> perms = new HashSet<>();
+        // Módulo TI (sidebar)
+        perms.add(ensurePermissao("MENU_TI", "TI"));
+        perms.add(ensurePermissao("MENU_TI_DASHBOARD", "TI"));
+        perms.add(ensurePermissao("MENU_TI_SUPORTE", "TI"));
+        // Visão Financeira mínima (sidebar + operações de leitura)
+        perms.add(ensurePermissao("MENU_FINANCEIRO", "Financeiro"));
+        perms.add(ensurePermissao("MENU_FINANCEIRO_DASHBOARD", "Financeiro"));
+        perms.add(ensurePermissao("MENU_FINANCEIRO_RELATORIOS", "Financeiro"));
+        perms.add(ensurePermissao("FINANCEIRO_VER_SALDO", "Financeiro"));
+        perms.add(ensurePermissao("FINANCEIRO_VER_EXTRATO", "Financeiro"));
+
+        Perfil novo = new Perfil();
+        novo.setNome("TI_ESTAGIARIO_FINANCEIRO_VISUALIZACAO");
+        novo.setPermissoes(perms);
+        return perfilRepository.save(novo);
+    }
 }

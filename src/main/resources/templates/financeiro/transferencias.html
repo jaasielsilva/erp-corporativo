@@ -128,7 +128,8 @@
                                         </td>
                                     </tr>
                                     <tr th:each="transf : ${historicoTransferencias}">
-                                        <td class="ps-4" th:text="${#temporals.format(transf.dataTransferencia, 'dd/MM/yyyy')}">
+                                        <td class="ps-4"
+                                            th:text="${#temporals.format(transf.dataTransferencia, 'dd/MM/yyyy')}">
                                             01/01/2024
                                         </td>
                                         <td>
@@ -194,17 +195,21 @@
                             <label class="form-label">Cliente Destino</label>
                             <select class="form-select" id="clienteDestino" name="clienteDestinoId">
                                 <option value="" selected disabled>Selecione o cliente</option>
-                                <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nomeFantasia != null && !c.nomeFantasia.isBlank() ? c.nomeFantasia : c.nome}"></option>
+                                <option th:each="c : ${clientes}" th:value="${c.id}"
+                                    th:text="${c.nomeFantasia != null && !c.nomeFantasia.isBlank() ? c.nomeFantasia : c.nome}">
+                                </option>
                             </select>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Valor (R$)</label>
-                                <input type="text" class="form-control money" id="valor" name="valor" required placeholder="0,00">
+                                <input type="text" class="form-control money" id="valor" name="valor" required
+                                    placeholder="0,00">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Data</label>
-                                <input type="date" class="form-control" id="dataTransferencia" name="dataTransferencia" required>
+                                <input type="date" class="form-control" id="dataTransferencia" name="dataTransferencia"
+                                    required>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -299,7 +304,7 @@
                 descricao: descricao,
                 observacoes: $('#observacoes').val()
             };
-            
+
             // Obter token CSRF
             const csrfToken = document.cookie.replace(/(?:(?:^|.*;\s*)XSRF-TOKEN\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
@@ -320,15 +325,15 @@
                         },
                         body: JSON.stringify(payload)
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(json => { throw new Error(json.message || 'Erro ao realizar transferência') });
-                        }
-                        return response.json();
-                    })
-                    .catch(error => {
-                        Swal.showValidationMessage(`Falha: ${error.message}`);
-                    });
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(json => { throw new Error(json.message || 'Erro ao realizar transferência') });
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Falha: ${error.message}`);
+                        });
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             }).then((result) => {
@@ -343,7 +348,7 @@
                 }
             });
         }
-        document.getElementById('pagamentoClienteSwitch').addEventListener('change', function() {
+        document.getElementById('pagamentoClienteSwitch').addEventListener('change', function () {
             const isOn = this.checked;
             document.getElementById('grupoContaDestino').classList.toggle('d-none', isOn);
             document.getElementById('contaDestino').required = !isOn;
@@ -352,4 +357,9 @@
         });
     </script>
 </body>
+
+<!-- Scripts da página:  global é carregado no Topbar -->
+<script th:src="@{/js/notifications.js}" defer></script>
+<script src="/js/sidebar.js" defer></script>
+
 </html>

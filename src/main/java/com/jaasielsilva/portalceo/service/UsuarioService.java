@@ -51,6 +51,8 @@ public class UsuarioService {
     private ColaboradorRepository colaboradorRepository;
     @Autowired
     private UsuarioDetailsService usuarioDetailsService;
+    @Autowired
+    private PerfilService perfilService;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String appBaseUrl;
@@ -257,7 +259,7 @@ public class UsuarioService {
                 proximoNumero = Integer.parseInt(ultimaMatricula.substring(3)) + 1;
             } catch (NumberFormatException e) {
                 System.err.println("Erro ao extrair número da matrícula: " + ultimaMatricula);
-                // Fallback para método original
+        // Fallback para método original
                 long totalUsuarios = usuarioRepository.count();
                 proximoNumero = (int) totalUsuarios + 1;
             }
@@ -279,6 +281,70 @@ public class UsuarioService {
         System.out.println("[PERFORMANCE] Matrícula gerada: " + matricula + " em " + tentativas + " tentativas, tempo total: " + (endTime - startTime) + "ms");
         
         return matricula;
+    }
+
+    /**
+     * Cria um usuário estagiário do Jurídico com perfil e permissões adequadas
+     */
+    public Map<String, Object> criarUsuarioEstagiarioJuridico(String nome, String email, String cpf) throws Exception {
+        if (nome == null || email == null || cpf == null) {
+            throw new IllegalArgumentException("Nome, email e CPF são obrigatórios");
+        }
+        if (usuarioRepository.findByEmail(email).isPresent()) {
+            throw new IllegalStateException("Email já cadastrado");
+        }
+        Usuario novo = new Usuario();
+        novo.setNome(nome);
+        novo.setEmail(email);
+        novo.setCpf(cpf);
+        novo.setMatricula(gerarMatriculaUnica());
+        String senhaTemporaria = java.util.UUID.randomUUID().toString().substring(0, 10);
+        novo.setSenha(passwordEncoder.encode(senhaTemporaria));
+        novo.setStatus(Usuario.Status.ATIVO);
+        novo.setNivelAcesso(NivelAcesso.USER);
+        Perfil perfil = perfilService.ensurePerfilJuridicoEstagiario();
+        novo.setPerfis(java.util.Set.of(perfil));
+        salvarUsuario(novo);
+        usuarioDetailsService.evictAuthorities(novo.getEmail());
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("id", novo.getId());
+        resp.put("matricula", novo.getMatricula());
+        resp.put("email", novo.getEmail());
+        resp.put("perfil", perfil.getNome());
+        resp.put("senhaTemporaria", senhaTemporaria);
+        return resp;
+    }
+
+    /**
+     * Cria um usuário Estagiário de TI com visão mínima do Financeiro
+     */
+    public Map<String, Object> criarUsuarioEstagiarioTIComVisaoFinanceiro(String nome, String email, String cpf) throws Exception {
+        if (nome == null || email == null || cpf == null) {
+            throw new IllegalArgumentException("Nome, email e CPF são obrigatórios");
+        }
+        if (usuarioRepository.findByEmail(email).isPresent()) {
+            throw new IllegalStateException("Email já cadastrado");
+        }
+        Usuario novo = new Usuario();
+        novo.setNome(nome);
+        novo.setEmail(email);
+        novo.setCpf(cpf);
+        novo.setMatricula(gerarMatriculaUnica());
+        String senhaTemporaria = java.util.UUID.randomUUID().toString().substring(0, 10);
+        novo.setSenha(passwordEncoder.encode(senhaTemporaria));
+        novo.setStatus(Usuario.Status.ATIVO);
+        novo.setNivelAcesso(NivelAcesso.USER);
+        Perfil perfil = perfilService.ensurePerfilTiEstagiarioFinanceiroVisao();
+        novo.setPerfis(java.util.Set.of(perfil));
+        salvarUsuario(novo);
+        usuarioDetailsService.evictAuthorities(novo.getEmail());
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("id", novo.getId());
+        resp.put("matricula", novo.getMatricula());
+        resp.put("email", novo.getEmail());
+        resp.put("perfil", perfil.getNome());
+        resp.put("senhaTemporaria", senhaTemporaria);
+        return resp;
     }
 
     public boolean usuarioTemPermissaoParaExcluir(String matricula) {

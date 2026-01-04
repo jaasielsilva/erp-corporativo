@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfWriter;
@@ -116,11 +117,15 @@ public class UsuarioController {
     public String cadastrarUsuario(@Valid @ModelAttribute("usuario") Usuario usuario,
             BindingResult bindingResult,
             @RequestParam("confirmSenha") String confirmSenha,
-            @RequestParam("perfilId") Long perfilId,
+            @RequestParam("perfilIds") List<Long> perfilIds,
             Model model) {
 
         if (!usuario.getSenha().equals(confirmSenha)) {
             bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
+        }
+
+        if (perfilIds == null || perfilIds.isEmpty()) {
+            bindingResult.reject("perfil", "Selecione pelo menos um perfil.");
         }
 
         if (bindingResult.hasErrors()) {
@@ -129,8 +134,11 @@ public class UsuarioController {
         }
 
         try {
-            usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
-                    .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
+            Set<Perfil> selecionados = perfilIds.stream()
+                    .map(id -> perfilRepository.findById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado")))
+                    .collect(Collectors.toSet());
+            usuario.setPerfis(selecionados);
 
             if (usuario.getStatus() != Usuario.Status.DEMITIDO) {
                 usuario.setDataDesligamento(null);
@@ -171,7 +179,7 @@ public class UsuarioController {
             @Valid @ModelAttribute("usuario") Usuario usuario,
             BindingResult bindingResult,
             @RequestParam("confirmSenha") String confirmSenha,
-            @RequestParam("perfilId") Long perfilId,
+            @RequestParam("perfilIds") List<Long> perfilIds,
             Model model,
             Principal principal) {
 
@@ -181,6 +189,10 @@ public class UsuarioController {
 
         if (!usuario.getSenha().equals(confirmSenha)) {
             bindingResult.rejectValue("senha", "error.usuario", "As senhas não conferem.");
+        }
+
+        if (perfilIds == null || perfilIds.isEmpty()) {
+            bindingResult.reject("perfil", "Selecione pelo menos um perfil.");
         }
 
         if (bindingResult.hasErrors()) {
@@ -221,8 +233,11 @@ public class UsuarioController {
                 usuario.setNivelAcesso(usuarioBanco.getNivelAcesso());
             }
 
-            usuario.setPerfis(Set.of(perfilRepository.findById(perfilId)
-                    .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado"))));
+            Set<Perfil> selecionados = perfilIds.stream()
+                    .map(pid -> perfilRepository.findById(pid)
+                            .orElseThrow(() -> new IllegalArgumentException("Perfil não encontrado")))
+                    .collect(Collectors.toSet());
+            usuario.setPerfis(selecionados);
 
             usuarioService.salvarUsuario(usuario);
 

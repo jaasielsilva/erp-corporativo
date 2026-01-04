@@ -251,8 +251,7 @@
           <!-- Perfil -->
           <div class="form-group">
             <label for="perfilId">Perfil:</label>
-            <select id="perfilId" name="perfilId" required th:disabled="${usuario.email == 'admin@teste.com'}">
-              <option value="" disabled>-- Selecione um perfil --</option>
+            <select id="perfilId" name="perfilIds" multiple required th:disabled="${usuario.email == 'admin@teste.com'}">
               <option th:each="perfil : ${perfis}" th:value="${perfil.id}" th:text="${perfil.nome}"
                 th:selected="${usuario.perfis.contains(perfil)}"></option>
             </select>

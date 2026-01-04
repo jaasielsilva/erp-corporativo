@@ -114,8 +114,7 @@
           <!-- Perfil -->
           <div class="form-group">
             <label for="perfilId">Perfil:</label>
-            <select id="perfilId" name="perfilId" required>
-              <option value="" disabled selected>-- Selecione um perfil --</option>
+            <select id="perfilId" name="perfilIds" multiple required>
               <option th:each="perfil : ${perfis}" th:value="${perfil.id}" th:text="${perfil.nome}"></option>
             </select>
           </div>

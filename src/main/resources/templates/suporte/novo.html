@@ -842,16 +842,29 @@
             document.getElementById('resumoAssunto').textContent = assunto || '-';
         }
         
-        // Função para mostrar alerta
+        // Função para mostrar alerta (Swal preferencial; fallback para alert bootstrap)
         function mostrarAlerta(tipo, mensagem) {
+            try {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: tipo === 'success' ? 'Sucesso' : (tipo === 'warning' ? 'Atenção' : 'Erro'),
+                        html: mensagem,
+                        icon: tipo === 'success' ? 'success' : (tipo === 'warning' ? 'warning' : 'error'),
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+            } catch (e) {}
             const alertArea = document.getElementById('alertArea');
-            alertArea.innerHTML = `
-                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-                    <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-                    ${mensagem}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
+            if (alertArea) {
+                alertArea.innerHTML = `
+                    <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-${tipo === 'success' ? 'check-circle' : (tipo === 'warning' ? 'exclamation-triangle' : 'times-circle')} me-2"></i>
+                        ${mensagem}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+            }
         }
         
         // Função para enviar formulário
@@ -869,21 +882,45 @@
             try {
                 const response = await fetch('/suporte/chamados/novo', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin',
+                    redirect: 'follow'
                 });
                 
+                if (response.redirected) {
+                    mostrarAlerta('success', 'Chamado criado com sucesso! Redirecionando...');
+                    setTimeout(() => {
+                        window.location.href = response.url;
+                    }, 1200);
+                    return;
+                }
+                
                 if (response.ok) {
-                    mostrarAlerta('Chamado criado com sucesso! Redirecionando...', 'success');
+                    mostrarAlerta('success', 'Chamado criado com sucesso! Redirecionando...');
                     setTimeout(() => {
                         window.location.href = '/suporte/chamados';
-                    }, 2000);
+                    }, 1200);
                 } else {
-                    const errorText = await response.text();
-                    mostrarAlerta('Erro ao criar chamado: ' + errorText, 'danger');
+                    let errorText;
+                    try {
+                        const ct = response.headers.get('content-type') || '';
+                        if (ct.includes('application/json')) {
+                            const data = await response.json();
+                            errorText = data && (data.erro || data.message || JSON.stringify(data));
+                        } else {
+                            errorText = await response.text();
+                        }
+                    } catch(e) {
+                        errorText = 'Falha ao processar resposta do servidor (' + response.status + ').';
+                    }
+                    mostrarAlerta('error', 'Erro ao criar chamado: ' + (errorText || 'tente novamente.'));
                 }
             } catch (error) {
                 console.error('Erro ao enviar formulário:', error);
-                mostrarAlerta('Erro ao criar chamado. Tente novamente.', 'danger');
+                const msg = (error && (error.message || '')).includes('Failed to fetch')
+                    ? 'Falha de conexão ao enviar o chamado. Verifique sua rede e tente novamente.'
+                    : 'Erro ao criar chamado. Tente novamente.';
+                mostrarAlerta('error', msg);
             }
         }
         

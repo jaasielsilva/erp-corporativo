@@ -439,34 +439,62 @@
     
     <script>
         // Funções para ações dos chamados
-        function iniciarAtendimento(id) {
-            console.log('Função iniciarAtendimento chamada com ID:', id);
-            const tecnico = prompt('Nome do técnico responsável:');
-            console.log('Técnico informado:', tecnico);
-            if (tecnico) {
-                atualizarStatusChamado(id, 'iniciar', tecnico);
+        async function iniciarAtendimento(id) {
+            const result = await (typeof Swal !== 'undefined'
+                ? Swal.fire({
+                    title: 'Informe o técnico responsável',
+                    input: 'text',
+                    inputPlaceholder: 'Nome do técnico',
+                    showCancelButton: true,
+                    confirmButtonText: 'Iniciar atendimento',
+                    cancelButtonText: 'Cancelar',
+                    inputValidator: (value) => {
+                        if (!value || !value.trim()) return 'Informe o nome do técnico';
+                    }
+                })
+                : Promise.resolve({ isConfirmed: true, value: window.prompt('Nome do técnico responsável:') }));
+            if (result && result.isConfirmed && result.value) {
+                atualizarStatusChamado(id, 'iniciar', result.value.trim());
             }
         }
         
-        function resolverChamado(id) {
-            console.log('Função resolverChamado chamada com ID:', id);
-            if (confirm('Deseja marcar este chamado como resolvido?')) {
-                atualizarStatusChamado(id, 'resolver');
-            }
+        async function resolverChamado(id) {
+            const confirmar = await (typeof Swal !== 'undefined'
+                ? Swal.fire({
+                    title: 'Deseja marcar este chamado como resolvido?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Marcar como resolvido',
+                    cancelButtonText: 'Cancelar'
+                }).then(r => r.isConfirmed)
+                : Promise.resolve(window.confirm('Deseja marcar este chamado como resolvido?')));
+            if (confirmar) atualizarStatusChamado(id, 'resolver');
         }
         
-        function fecharChamado(id) {
-            console.log('Função fecharChamado chamada com ID:', id);
-            if (confirm('Deseja fechar este chamado definitivamente?')) {
-                atualizarStatusChamado(id, 'fechar');
-            }
+        async function fecharChamado(id) {
+            const confirmar = await (typeof Swal !== 'undefined'
+                ? Swal.fire({
+                    title: 'Deseja fechar este chamado definitivamente?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Fechar chamado',
+                    cancelButtonText: 'Cancelar'
+                }).then(r => r.isConfirmed)
+                : Promise.resolve(window.confirm('Deseja fechar este chamado definitivamente?')));
+            if (confirmar) atualizarStatusChamado(id, 'fechar');
         }
         
-        function reabrirChamado(id) {
-            console.log('Função reabrirChamado chamada com ID:', id);
-            if (confirm('Deseja reabrir este chamado? Ele voltará ao status ABERTO.')) {
-                atualizarStatusChamado(id, 'reabrir');
-            }
+        async function reabrirChamado(id) {
+            const confirmar = await (typeof Swal !== 'undefined'
+                ? Swal.fire({
+                    title: 'Deseja reabrir este chamado? Ele voltará ao status ABERTO.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Reabrir chamado',
+                    cancelButtonText: 'Cancelar'
+                }).then(r => r.isConfirmed)
+                : Promise.resolve(window.confirm('Deseja reabrir este chamado? Ele voltará ao status ABERTO.')));
+            if (confirmar) atualizarStatusChamado(id, 'reabrir');
         }
         
         function atualizarStatusChamado(id, acao, tecnico = null) {
@@ -491,19 +519,29 @@
                     console.log('Enviando requisição AJAX...');
                 },
                 success: function(response) {
-                    console.log('Resposta recebida:', response);
-                    if (response.sucesso) {
-                        console.log('Sucesso! Recarregando página...');
-                        location.reload();
+                    if (response && response.sucesso) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ title: 'Sucesso', html: 'Status atualizado com sucesso!', icon: 'success' })
+                                .then(() => location.reload());
+                        } else {
+                            location.reload();
+                        }
                     } else {
-                        console.error('Erro na resposta:', response.erro);
-                        alert('Erro: ' + response.erro);
+                        const msg = response && response.erro ? response.erro : 'Erro desconhecido';
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ title: 'Erro', html: msg, icon: 'error' });
+                        } else {
+                            alert('Erro: ' + msg);
+                        }
                     }
                 },
-                error: function(xhr, status, error) {
-                    console.error('Erro na requisição AJAX:', { xhr, status, error });
-                    console.error('Response Text:', xhr.responseText);
-                    alert('Erro ao atualizar status do chamado.');
+                error: function(xhr) {
+                    const msg = (xhr && xhr.responseText) ? xhr.responseText : 'Erro ao atualizar status do chamado.';
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ title: 'Erro', html: msg, icon: 'error' });
+                    } else {
+                        alert(msg);
+                    }
                 }
             });
         }

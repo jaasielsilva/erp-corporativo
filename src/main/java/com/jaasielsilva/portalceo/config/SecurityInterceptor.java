@@ -42,7 +42,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String requestURI = request.getRequestURI();
-        addSecurityHeaders(response, requestURI);
+        addSecurityHeaders(request, response, requestURI);
         // Verificar se é uma requisição para APIs de adesão
         if (isAdesaoEndpoint(requestURI)) {
             String clientIp = getClientIp(request);
@@ -80,7 +80,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
     /**
      * Adiciona headers de segurança à resposta
      */
-    private void addSecurityHeaders(HttpServletResponse response, String requestURI) {
+    private void addSecurityHeaders(HttpServletRequest request, HttpServletResponse response, String requestURI) {
         // Prevenir MIME type sniffing
         response.setHeader(HEADER_X_CONTENT_TYPE_OPTIONS, "nosniff");
         boolean isDocs = requestURI != null && requestURI.startsWith("/documentacao");
@@ -90,13 +90,14 @@ public class SecurityInterceptor implements HandlerInterceptor {
         // Política de referrer
         response.setHeader(HEADER_REFERRER_POLICY, "strict-origin-when-cross-origin");
         // Content Security Policy básica
+        boolean isSecure = request != null && request.isSecure();
         String csp = "default-src 'self'; " +
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://ajax.googleapis.com https://code.jquery.com; " +
                 "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
                 "img-src 'self' data: https:; " +
                 "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
                 "connect-src 'self' ws: wss: https://viacep.com.br https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
-                "upgrade-insecure-requests; " +
+                (isSecure ? "upgrade-insecure-requests; " : "") +
                 (isDocs ? "frame-ancestors 'self';" : "frame-ancestors 'none';");
         response.setHeader(HEADER_CONTENT_SECURITY_POLICY, csp);
     }

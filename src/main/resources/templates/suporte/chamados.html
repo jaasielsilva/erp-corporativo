@@ -853,8 +853,17 @@
                     return;
                 }
                 
-                // Confirmar antes de assumir o atendimento
-                if (confirm(`Deseja assumir o atendimento deste chamado como ${usuarioLogado.nome}?`)) {
+                const confirmar = await (typeof Swal !== 'undefined'
+                    ? Swal.fire({
+                        title: 'Deseja assumir o atendimento deste chamado como Master do Sistema?',
+                        html: `Responsável: <strong>${usuarioLogado.nome}</strong>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Assumir atendimento',
+                        cancelButtonText: 'Cancelar'
+                    }).then(r => r.isConfirmed)
+                    : Promise.resolve(window.confirm(`Deseja assumir o atendimento deste chamado como ${usuarioLogado.nome}?`)));
+                if (confirmar) {
                     await atualizarStatusChamado(id, 'EM_ANDAMENTO', { 
                         tecnicoResponsavel: usuarioLogado.nome,
                         tecnicoId: usuarioLogado.id
@@ -868,13 +877,31 @@
         }
 
         async function resolverChamado(id) {
-            if (confirm('Deseja marcar este chamado como resolvido?')) {
+            const confirmar = await (typeof Swal !== 'undefined'
+                ? Swal.fire({
+                    title: 'Deseja marcar este chamado como resolvido?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Marcar como resolvido',
+                    cancelButtonText: 'Cancelar'
+                }).then(r => r.isConfirmed)
+                : Promise.resolve(window.confirm('Deseja marcar este chamado como resolvido?')));
+            if (confirmar) {
                 await atualizarStatusChamado(id, 'RESOLVIDO');
             }
         }
 
         async function fecharChamado(id) {
-            if (confirm('Deseja fechar este chamado definitivamente?')) {
+            const confirmar = await (typeof Swal !== 'undefined'
+                ? Swal.fire({
+                    title: 'Deseja fechar este chamado definitivamente?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Fechar chamado',
+                    cancelButtonText: 'Cancelar'
+                }).then(r => r.isConfirmed)
+                : Promise.resolve(window.confirm('Deseja fechar este chamado definitivamente?')));
+            if (confirmar) {
                 await atualizarStatusChamado(id, 'FECHADO');
             }
         }
@@ -948,23 +975,23 @@
 
         // ===== SISTEMA DE ALERTAS =====
         function mostrarAlerta(tipo, mensagem) {
-            // Criar elemento de alerta
-            const alertDiv = $(`
-                <div class="alert alert-${tipo} alert-dismissible fade show position-fixed" 
-                     style="top: 20px; right: 20px; z-index: 10000; min-width: 300px;">
-                    <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-                    ${mensagem}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `);
-
-            // Adicionar ao body
-            $('body').append(alertDiv);
-
-            // Remover automaticamente após 5 segundos
-            setTimeout(() => {
-                alertDiv.alert('close');
-            }, 5000);
+            const iconMap = { success: 'success', danger: 'error', error: 'error', warning: 'warning', info: 'info' };
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: tipo === 'success' ? 'Sucesso' : (tipo === 'warning' ? 'Atenção' : (tipo === 'info' ? 'Informação' : 'Erro')),
+                    html: mensagem,
+                    icon: iconMap[tipo] || 'info',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            const klass = `alert-${tipo}`;
+            const div = document.createElement('div');
+            div.className = `alert ${klass} alert-dismissible fade show position-fixed`;
+            div.style.cssText = 'top:20px;right:20px;z-index:10000;min-width:300px;';
+            div.innerHTML = `${mensagem}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            document.body.appendChild(div);
+            setTimeout(() => { try { div.remove(); } catch(e){} }, 5000);
         }
     </script>
 </body>

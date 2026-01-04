@@ -24,7 +24,9 @@
           <div class="sidebar-section-title">Principal</div>
         </li>
         <!-- Permissão principal do módulo Dashboard -->
-        <li sec:authorize="hasAuthority('MENU_DASHBOARD')"><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li sec:authorize="hasAnyAuthority('DASHBOARD_EXECUTIVO_VISUALIZAR','DASHBOARD_OPERACIONAL_VISUALIZAR','DASHBOARD_FINANCEIRO_VISUALIZAR')">
+          <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        </li>
 
         <!-- Ícone de Notificações -->
         <li style="position: relative;">

@@ -149,9 +149,12 @@ public class SecurityConfig {
                                                 .requestMatchers("/rh/colaboradores/adesao/**").authenticated()
                                                 .requestMatchers("/perfis/**").hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERFIS")
                                                 .requestMatchers("/permissoes/**").hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERMISSOES")
+                                                .requestMatchers("/dashboard/**").hasAnyAuthority("DASHBOARD_EXECUTIVO_VISUALIZAR","DASHBOARD_OPERACIONAL_VISUALIZAR","DASHBOARD_FINANCEIRO_VISUALIZAR","ROLE_MASTER")
                                                 // Páginas de erro
                                                 .requestMatchers("/error", "/error/**").permitAll()
                                                 .anyRequest().authenticated())
+                                .exceptionHandling(ex -> ex
+                                                .accessDeniedPage("/error/403"))
 
                                 .formLogin(form -> form
                                                 .loginPage("/login")
@@ -371,6 +374,29 @@ public class SecurityConfig {
                                                 return permissaoRepository.save(p);
                                         });
 
+                        // Permissões de Dashboards (Obrigatórias)
+                        Permissao dashExecutivo = permissaoRepository.findByNome("DASHBOARD_EXECUTIVO_VISUALIZAR")
+                                        .orElseGet(() -> {
+                                                Permissao p = new Permissao();
+                                                p.setNome("DASHBOARD_EXECUTIVO_VISUALIZAR");
+                                                p.setCategoria("Dashboard");
+                                                return permissaoRepository.save(p);
+                                        });
+                        Permissao dashOperacional = permissaoRepository.findByNome("DASHBOARD_OPERACIONAL_VISUALIZAR")
+                                        .orElseGet(() -> {
+                                                Permissao p = new Permissao();
+                                                p.setNome("DASHBOARD_OPERACIONAL_VISUALIZAR");
+                                                p.setCategoria("Dashboard");
+                                                return permissaoRepository.save(p);
+                                        });
+                        Permissao dashFinanceiro = permissaoRepository.findByNome("DASHBOARD_FINANCEIRO_VISUALIZAR")
+                                        .orElseGet(() -> {
+                                                Permissao p = new Permissao();
+                                                p.setNome("DASHBOARD_FINANCEIRO_VISUALIZAR");
+                                                p.setCategoria("Dashboard");
+                                                return permissaoRepository.save(p);
+                                        });
+
                         // Permissões Jurídico
                         Permissao roleJuridicoGerente = permissaoRepository.findByNome("ROLE_JURIDICO_GERENTE")
                                         .orElseGet(() -> {
@@ -387,6 +413,8 @@ public class SecurityConfig {
                                                 p.setNome("ADMIN");
                                                 p.setPermissoes(new HashSet<>());
                                                 p.getPermissoes().add(roleAdmin);
+                                                p.getPermissoes().add(dashExecutivo);
+                                                p.getPermissoes().add(dashFinanceiro);
                                                 // Admin não tem acesso financeiro por padrão, apenas MASTER
                                                 return perfilRepository.save(p);
                                         });
@@ -401,6 +429,7 @@ public class SecurityConfig {
                                                 p.getPermissoes().add(finVerSaldo);
                                                 p.getPermissoes().add(finVerExtrato);
                                                 p.getPermissoes().add(finPagar);
+                                                p.getPermissoes().add(dashFinanceiro);
                                                 return perfilRepository.save(p);
                                         });
 
@@ -424,6 +453,7 @@ public class SecurityConfig {
                                                 p.getPermissoes().add(roleUser);
                                                 p.getPermissoes().add(finVerSaldo);
                                                 p.getPermissoes().add(finVerExtrato);
+                                                p.getPermissoes().add(dashFinanceiro);
                                                 // Não paga, não configura
                                                 return perfilRepository.save(p);
                                         });
@@ -437,6 +467,7 @@ public class SecurityConfig {
                                                 p.getPermissoes().add(roleUser);
                                                 p.getPermissoes().add(finVerSaldo); // Pode ver saldo consolidado (ou
                                                                                     // detalhado se preferir)
+                                                p.getPermissoes().add(dashExecutivo);
                                                 return perfilRepository.save(p);
                                         });
 
@@ -459,6 +490,7 @@ public class SecurityConfig {
                                                 p.getPermissoes().add(tecnicoAtenderChamados);
                                                 p.getPermissoes().add(chamadoIniciar);
                                                 p.getPermissoes().add(chamadoAtribuir);
+                                                p.getPermissoes().add(dashOperacional);
                                                 return perfilRepository.save(p);
                                         });
 
@@ -470,6 +502,7 @@ public class SecurityConfig {
                                                 p.getPermissoes().add(roleUser);
                                                 p.getPermissoes().add(tecnicoAtenderChamados);
                                                 p.getPermissoes().add(chamadoIniciar);
+                                                p.getPermissoes().add(dashOperacional);
                                                 return perfilRepository.save(p);
                                         });
 
@@ -482,6 +515,7 @@ public class SecurityConfig {
                                                 p.getPermissoes().add(tecnicoAtenderChamados);
                                                 p.getPermissoes().add(chamadoIniciar);
                                                 p.getPermissoes().add(chamadoAtribuir);
+                                                p.getPermissoes().add(dashOperacional);
                                                 return perfilRepository.save(p);
                                         });
 

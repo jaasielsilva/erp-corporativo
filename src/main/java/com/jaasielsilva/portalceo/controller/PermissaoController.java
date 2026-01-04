@@ -40,7 +40,7 @@ public class PermissaoController {
     public String listar(Model model, Principal principal) {
 
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         List<Permissao> permissoes = permissaoService.listarOrdenadasPorNome();
@@ -63,7 +63,7 @@ public class PermissaoController {
     @GetMapping("/nova")
     public String nova(Model model, Principal principal) {
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         model.addAttribute("permissao", new Permissao());
@@ -79,7 +79,7 @@ public class PermissaoController {
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model, Principal principal) {
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         Optional<Permissao> permissaoOpt = permissaoService.buscarPorId(id);
@@ -105,7 +105,7 @@ public class PermissaoController {
     @GetMapping("/detalhes/{id}")
     public String detalhes(@PathVariable Long id, Model model, Principal principal) {
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         Optional<Permissao> permissaoOpt = permissaoService.buscarPorId(id);
@@ -137,7 +137,7 @@ public class PermissaoController {
             Principal principal) {
 
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -161,7 +161,7 @@ public class PermissaoController {
             Principal principal) {
 
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -189,7 +189,7 @@ public class PermissaoController {
             Principal principal) {
 
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -277,7 +277,7 @@ public class PermissaoController {
     @GetMapping("/criar-lote")
     public String criarLote(Model model, Principal principal) {
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         model.addAttribute("categorias", getCategorias());
@@ -293,7 +293,7 @@ public class PermissaoController {
             Principal principal) {
 
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -328,7 +328,7 @@ public class PermissaoController {
     @PostMapping("/inicializar-padrao")
     public String inicializarPermissoesPadrao(RedirectAttributes redirectAttributes, Principal principal) {
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -352,7 +352,7 @@ public class PermissaoController {
     @GetMapping("/relatorios")
     public String relatorios(Model model, Principal principal) {
         if (!temPermissaoGerenciarPermissoes(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         Map<String, Object> estatisticas = permissaoService.gerarRelatorioEstatisticas();

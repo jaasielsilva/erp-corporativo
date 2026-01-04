@@ -8,6 +8,19 @@ Este guia ensina, passo a passo, como criar usuários para diferentes departamen
 - Booleans de acesso por área (podeAcessarRH, podeAcessarFinanceiro, etc.) determinam visibilidade de menus para usuários não-MASTER: [GlobalControllerAdvice.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/config/GlobalControllerAdvice.java#L306-L343).
 - Perfis e permissões são manipulados por serviços: [PerfilService.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/service/PerfilService.java) e [PermissaoService.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/service/PermissaoService.java).
 
+## Dashboards e Indicadores (Regra Obrigatória)
+- ROLE_USER não libera acesso a dashboards executivos.
+- Dashboards executivos, indicadores financeiros, RH e KPIs estratégicos não devem ser protegidos apenas por ROLE_USER ou por `isAuthenticated()`. Essas telas exigem permissões específicas.
+- Dashboards NÃO devem ser controlados por nível de acesso nem por ROLE_USER.
+- Permissões recomendadas:
+  - DASHBOARD_EXECUTIVO_VISUALIZAR
+  - DASHBOARD_OPERACIONAL_VISUALIZAR
+  - DASHBOARD_FINANCEIRO_VISUALIZAR
+- Como implementar:
+  - Criar as permissões com o serviço de permissões: [PermissaoService.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/service/PermissaoService.java).
+  - Associar as permissões a perfis adequados por departamento usando [PerfilService.java](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/service/PerfilService.java).
+  - Proteger controladores e rotas de dashboards com checagem explícita de authority (ex.: `@PreAuthorize("hasAuthority('DASHBOARD_EXECUTIVO_VISUALIZAR')")`), evitando regras amplas como `isAuthenticated()` ou `hasRole('ROLE_USER')`.
+
 ## Passo a Passo pela Interface
 1. Abrir Administração > Usuários no sidebar.
 2. Clicar em “Cadastro” para abrir o formulário: [UsuarioController.java:cadastrar](file:///c:/Users/jasie/erp-corporativo/src/main/java/com/jaasielsilva/portalceo/controller/UsuarioController.java#L111-L148).

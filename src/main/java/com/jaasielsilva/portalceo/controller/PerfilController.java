@@ -43,7 +43,7 @@ public class PerfilController {
     @GetMapping
     public String listar(Model model, Principal principal) {
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         List<Perfil> perfis = perfilService.listarOrdenadosPorNome();
@@ -62,7 +62,7 @@ public class PerfilController {
     @GetMapping("/novo")
     public String novo(Model model, Principal principal) {
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         model.addAttribute("perfil", new Perfil());
@@ -79,7 +79,7 @@ public class PerfilController {
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model, Principal principal) {
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         Optional<Perfil> perfilOpt = perfilService.buscarPorId(id);
@@ -107,7 +107,7 @@ public class PerfilController {
     @GetMapping("/detalhes/{id}")
     public String detalhes(@PathVariable Long id, Model model, Principal principal) {
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         Optional<Perfil> perfilOpt = perfilService.buscarPorId(id);
@@ -143,7 +143,7 @@ public class PerfilController {
             Principal principal) {
 
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -175,7 +175,7 @@ public class PerfilController {
             Principal principal) {
 
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -209,7 +209,7 @@ public class PerfilController {
             Principal principal) {
 
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         try {
@@ -313,7 +313,7 @@ public class PerfilController {
     @GetMapping("/relatorios")
     public String relatorios(Model model, Principal principal) {
         if (!temPermissaoGerenciarPerfis(principal)) {
-            return "redirect:/dashboard?erro=sem-permissao";
+            return "error/403";
         }
 
         Map<String, Object> estatisticas = perfilService.gerarRelatorioEstatisticas();

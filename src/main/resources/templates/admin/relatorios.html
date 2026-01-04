@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${pageTitle}">Relatórios</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Relatórios</h1>
+    <p>Selecione um módulo para acessar seus relatórios.</p>
+
+    <section>
+      <h2>Financeiro</h2>
+      <p sec:authorize="hasAuthority('MENU_FINANCEIRO')">
+        <a href="/financeiro/relatorios">Abrir Relatórios Financeiros</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Recursos Humanos</h2>
+      <p sec:authorize="hasAuthority('MENU_RH')">
+        <a href="/rh/relatorios/indicadores">Indicadores RH</a> |
+        <a href="/rh/recrutamento/relatorios">Recrutamento</a> |
+        <a href="/rh/treinamentos/relatorios">Treinamentos</a> |
+        <a href="/rh/ponto-escalas/relatorios">Ponto e Escalas</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Marketing</h2>
+      <p sec:authorize="hasAuthority('MENU_MARKETING')">
+        <a href="/marketing/relatorios">Relatórios de Marketing</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Clientes</h2>
+      <p sec:authorize="hasAuthority('MENU_CLIENTES')">
+        <a href="/clientes/avancado/relatorios">Relatórios de Clientes</a>
+      </p>
+    </section>
+  </main>
+</body>
+<html>

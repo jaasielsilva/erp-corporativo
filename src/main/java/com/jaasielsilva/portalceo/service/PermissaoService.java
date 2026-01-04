@@ -260,6 +260,11 @@ public class PermissaoService {
         permissoes.put("ROLE_USER", "Usuário básico");
         permissoes.put("ROLE_MASTER", "Usuário master");
         
+        // Permissões de Dashboards (regras obrigatórias)
+        permissoes.put("DASHBOARD_EXECUTIVO_VISUALIZAR", "Visualizar dashboard executivo");
+        permissoes.put("DASHBOARD_OPERACIONAL_VISUALIZAR", "Visualizar dashboard operacional");
+        permissoes.put("DASHBOARD_FINANCEIRO_VISUALIZAR", "Visualizar dashboard financeiro");
+
         // Permissões de Configuração
         permissoes.put("ROLE_CONFIG_READ", "Visualizar configurações");
         permissoes.put("ROLE_CONFIG_WRITE", "Alterar configurações");

@@ -595,7 +595,7 @@ public String listarSolicitacoes(
             }
 
             if (!usuarioLogado.podeGerenciarUsuarios()) {
-                return "redirect:/dashboard?erro=Acesso negado";
+                return "error/403";
             }
         } catch (Exception e) {
             System.err.println("Erro ao buscar usuário: " + e.getMessage());
@@ -699,7 +699,7 @@ public String listarSolicitacoes(
         }
 
         if (!usuarioLogado.podeGerenciarUsuarios()) {
-            return "redirect:/dashboard?erro=Acesso negado";
+            return "error/403";
         }
 
         Optional<SolicitacaoAcesso> solicitacaoOpt = solicitacaoAcessoService.buscarPorId(id);
@@ -737,8 +737,7 @@ public String listarSolicitacoes(
         }
 
         if (!usuarioLogado.podeGerenciarUsuarios()) {
-            redirectAttributes.addFlashAttribute("erro", "Acesso negado");
-            return "redirect:/dashboard";
+            return "error/403";
         }
 
         try {
@@ -835,8 +834,7 @@ public String listarSolicitacoes(
         }
 
         if (!usuarioLogado.podeGerenciarUsuarios()) {
-            redirectAttributes.addFlashAttribute("erro", "Acesso negado");
-            return "redirect:/dashboard";
+            return "error/403";
         }
 
         try {

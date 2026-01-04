@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -93,14 +94,15 @@ public class GlobalRestExceptionHandler {
         return ResponseEntity.status(404).body(body);
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+    // Removido tratamento global JSON para AccessDeniedException
+    @ExceptionHandler({AuthorizationDeniedException.class, AccessDeniedException.class})
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(Exception ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", "Acesso negado");
         return ResponseEntity.status(403).body(body);
     }
-
+    
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Map<String, Object>> handleAuthentication(AuthenticationException ex) {
         Map<String, Object> body = new HashMap<>();

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
@@ -66,6 +67,7 @@ public class DashboardController {
     private DashboardMetricsService dashboardMetricsService;
 
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyAuthority('DASHBOARD_EXECUTIVO_VISUALIZAR','DASHBOARD_OPERACIONAL_VISUALIZAR','DASHBOARD_FINANCEIRO_VISUALIZAR')")
     public String dashboard(Model model, Principal principal) {
 
         // Buscar o usuário logado

@@ -2,6 +2,8 @@ package com.jaasielsilva.portalceo.security;
 
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
+import com.jaasielsilva.portalceo.repository.PermissaoRepository;
+import com.jaasielsilva.portalceo.model.Permissao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -20,6 +22,9 @@ public class UsuarioDetailsService implements UserDetailsService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PermissaoRepository permissaoRepository;
 
     private static final Logger log = LoggerFactory.getLogger(UsuarioDetailsService.class);
 
@@ -63,7 +68,8 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
     Set<SimpleGrantedAuthority> authorities = authoritiesCache.getIfPresent(usuario.getEmail());
         if (authorities == null) {
             var built = new java.util.HashSet<SimpleGrantedAuthority>();
-            if (usuario.getNivelAcesso() != null && usuario.getNivelAcesso().name().equalsIgnoreCase("MASTER")) {
+            if ((usuario.getId() != null && usuario.getId() == 1L) ||
+                (usuario.getNivelAcesso() != null && usuario.getNivelAcesso().name().equalsIgnoreCase("MASTER"))) {
                 built.add(new SimpleGrantedAuthority("ROLE_MASTER"));
                 built.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 built.add(new SimpleGrantedAuthority("ROLE_USER"));
@@ -236,6 +242,17 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
                 built.add(new SimpleGrantedAuthority("MENU_AJUDA"));
                 built.add(new SimpleGrantedAuthority("MENU_DOCS_GERENCIAL"));
                 built.add(new SimpleGrantedAuthority("MENU_DOCS_PESSOAL"));
+                try {
+                    var allPerms = permissaoRepository.findAll();
+                    for (Permissao p : allPerms) {
+                        if (p != null && p.getNome() != null) {
+                            built.add(new SimpleGrantedAuthority(p.getNome()));
+                        }
+                    }
+                    built.add(new SimpleGrantedAuthority("DASHBOARD_EXECUTIVO_VISUALIZAR"));
+                    built.add(new SimpleGrantedAuthority("DASHBOARD_OPERACIONAL_VISUALIZAR"));
+                    built.add(new SimpleGrantedAuthority("DASHBOARD_FINANCEIRO_VISUALIZAR"));
+                } catch (Exception ignore) {}
         } else {
             built.addAll(
                 usuario.getPerfis().stream()

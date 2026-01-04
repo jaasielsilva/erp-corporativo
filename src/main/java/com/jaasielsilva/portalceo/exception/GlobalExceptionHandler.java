@@ -128,7 +128,7 @@ public class GlobalExceptionHandler {
                                          RedirectAttributes redirectAttributes) {
         
         logger.warn("Acesso negado (Spring Security): {}", ex.getMessage());
-        return "redirect:/acesso-negado";
+        return "error/403";
     }
 
     /**
@@ -142,7 +142,7 @@ public class GlobalExceptionHandler {
         logger.warn("Acesso negado: {}", ex.getMessage());
         redirectAttributes.addFlashAttribute("erro", 
             "Você não tem permissão para realizar esta operação.");
-        return "redirect:/acesso-negado";
+        return "error/403";
     }
 
     /**

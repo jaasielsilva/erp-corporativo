@@ -11,6 +11,7 @@ import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.model.NivelAcesso;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ public class ClienteController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_LISTAR')")
     public String listarClientes(@RequestParam(value = "busca", required = false) String busca,
                                  @RequestParam(value = "status", required = false) String status,
                                  @RequestParam(value = "origem", required = false) String origem,
@@ -50,6 +52,14 @@ public class ClienteController {
         model.addAttribute("busca", busca);
         model.addAttribute("statusFiltro", status);
         model.addAttribute("origemFiltro", origem);
+
+        // Verificações de permissão para o frontend
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR"));
+        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR"));
+        
+        model.addAttribute("podeEditar", podeEditar);
+        model.addAttribute("podeExcluir", podeExcluir);
 
         // Estatísticas para exibir na tela
         model.addAttribute("totalClientes", clienteService.contarTotal());
@@ -105,6 +115,7 @@ public class ClienteController {
     }
 
     @GetMapping("/cadastro")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_NOVO')")
     public String novoCliente(Model model) {
         model.addAttribute("cliente", new Cliente());
         return "clientes/geral/cadastro";
@@ -139,6 +150,7 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}/editar")
+    @PreAuthorize("hasAuthority('CLIENTE_EDITAR')")
     public String editar(@PathVariable Long id, Model model) {
         var cliente = clienteService.buscarPorId(id);
         model.addAttribute("cliente", cliente.orElse(new Cliente()));
@@ -146,6 +158,7 @@ public class ClienteController {
     }
 
     @PostMapping("/{id}/editar")
+    @PreAuthorize("hasAuthority('CLIENTE_EDITAR')")
     public String atualizarCliente(@PathVariable Long id, @ModelAttribute Cliente clienteAtualizado,
             Principal principal) {
         Cliente clienteExistente = clienteService.buscarPorId(id)
@@ -184,6 +197,7 @@ public class ClienteController {
     }
 
     @PostMapping("/{id}/excluir")
+    @PreAuthorize("hasAuthority('CLIENTE_EXCLUIR')")
     public ResponseEntity<?> excluirCliente(
             @PathVariable Long id,
             @RequestHeader("X-Matricula") String matriculaInformada) {
@@ -230,6 +244,7 @@ public class ClienteController {
 
     @GetMapping("/api/select")
     @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_LISTAR')")
     public java.util.Map<String, Object> selecionarClientesApi(
             @RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "tipo", required = false, defaultValue = "") String tipo,

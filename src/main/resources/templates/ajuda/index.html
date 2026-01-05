@@ -3,271 +3,843 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ajuda - ERP Corporativo</title>
+  <title>Central de Ajuda - ERP Corporativo</title>
+  
+  <!-- CSS Dependencies -->
   <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
   <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
   <link rel="stylesheet" th:href="@{/css/notifications.css}" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      --card-hover-transform: translateY(-5px);
+    }
+
+    /* Hero Section */
+    .help-hero {
+      background: var(--primary-gradient);
+      color: white;
+      padding: 3rem 1rem;
+      margin-bottom: 2rem;
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .search-container {
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .search-input {
+      height: 55px;
+      border-radius: 30px;
+      padding-left: 25px;
+      padding-right: 120px;
+      border: none;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      font-size: 1.1rem;
+    }
+
+    .search-btn {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      height: 45px;
+      border-radius: 25px;
+      padding: 0 25px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .search-btn:hover {
+      background: #1d4ed8;
+    }
+
+    /* Topic Cards */
+    .topic-card {
+      border: none;
+      border-radius: 15px;
+      background: white;
+      padding: 1.5rem;
+      height: 100%;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .topic-card:hover {
+      transform: var(--card-hover-transform);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      color: #2563eb;
+    }
+
+    .topic-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 1rem;
+    }
+
+    /* FAQ Accordion */
+    .accordion-button:not(.collapsed) {
+      background-color: #eff6ff;
+      color: #1e40af;
+    }
+    
+    .accordion-button:focus {
+      box-shadow: none;
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    /* Chat Widget */
+    .chat-widget {
+      border: none;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      background: white;
+    }
+    
+    .chat-header {
+      background: #1f2937;
+      color: white;
+      padding: 1rem;
+    }
+
+    .chat-messages {
+      height: 350px;
+      overflow-y: auto;
+      padding: 1rem;
+      background: #f9fafb;
+    }
+
+    .chat-message {
+      margin-bottom: 1rem;
+      max-width: 85%;
+    }
+
+    .chat-message.user {
+      margin-left: auto;
+      background: #3b82f6;
+      color: white;
+      border-radius: 15px 15px 0 15px;
+      padding: 0.8rem;
+    }
+
+    .chat-message.bot {
+      margin-right: auto;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 15px 15px 15px 0;
+      padding: 0.8rem;
+    }
+
+    /* Documentation Section */
+    .docs-nav .nav-link {
+      color: #4b5563;
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .docs-nav .nav-link.active {
+      background-color: #eff6ff;
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .permission-tag {
+      font-family: monospace;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #475569;
+      font-size: 0.85em;
+    }
+  </style>
 </head>
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-    <main class="main-content">
+    <main class="main-content bg-light">
       <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <section class="content-area container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <h1 class="h3 m-0"><i class="fas fa-question-circle me-2"></i> Ajuda</h1>
-            <small class="text-muted">Busque conteúdos, FAQs e vídeos. Se precisar, acione a IA.</small>
+      <!-- Hero Section -->
+      <section class="help-hero text-center">
+        <div class="container">
+          <h1 class="display-6 fw-bold mb-3">Como podemos ajudar você hoje?</h1>
+          <p class="mb-4 text-white-50 fs-5">Encontre tutoriais, documentação e respostas para suas dúvidas.</p>
+          
+          <div class="search-container">
+            <input type="text" id="mainSearchInput" class="form-control search-input" 
+                   placeholder="Digite sua dúvida (ex: como cadastrar cliente, solicitar férias...)"
+                   onkeypress="if(event.key === 'Enter') performSearch()">
+            <button class="search-btn" onclick="performSearch()">
+              <i class="fas fa-search me-2"></i> Buscar
+            </button>
           </div>
-        </div>
-
-        <div class="row g-3">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-book"></i> Documentação de Acessos e Hierarquia</h5>
-              </div>
-              <div class="card-body">
-                <h2 class="h4 mt-2">Como Solicitar Acessos</h2>
-                <p>Solicite acessos informando o módulo e os subníveis necessários. Use solicitações com escopo mínimo para evitar concessões excessivas.</p>
-                <ul>
-                  <li>Acesse: Serviços → Solicitações → Nova Solicitação</li>
-                  <li>No campo módulos, selecione os módulos necessários</li>
-                  <li>No campo subníveis, informe os authorities dos itens desejados (ex.: MENU_CLIENTES_LISTAR)</li>
-                  <li>Após aprovação, o usuário é criado e recebe um perfil custom com apenas as permissões aprovadas</li>
-                </ul>
-
-                <h2 class="h4 mt-4">Exemplo Prático: Clientes</h2>
-                <p>Para acessar apenas Clientes → Geral → Listar:</p>
-                <ul>
-                  <li>Módulo: Clientes</li>
-                  <li>Authorities solicitadas: MENU_CLIENTES, MENU_CLIENTES_LISTAR</li>
-                  <li>Resultado: o usuário verá o módulo Clientes e apenas o item “Listar” dentro de Geral</li>
-                </ul>
-
-                <h2 class="h4 mt-4">Hierarquia do Sidebar</h2>
-
-                <div class="row">
-                  <div class="col-md-6">
-                    <h3 class="h5">Comercial</h3>
-                    <ul>
-                      <li>Clientes
-                        <ul>
-                          <li>Geral: Listar (MENU_CLIENTES_LISTAR), Novo (MENU_CLIENTES_NOVO)</li>
-                          <li>Contratos: Listar (MENU_CLIENTES_CONTRATOS_LISTAR)</li>
-                          <li>Histórico: Interações (MENU_CLIENTES_HISTORICO_INTERACOES), Pedidos (MENU_CLIENTES_HISTORICO_PEDIDOS)</li>
-                          <li>Avançado: Busca (MENU_CLIENTES_AVANCADO_BUSCA), Relatórios (MENU_CLIENTES_AVANCADO_RELATORIOS)</li>
-                        </ul>
-                      </li>
-                      <li>Vendas
-                        <ul>
-                          <li>Dashboard (MENU_VENDAS_DASHBOARD)</li>
-                          <li>PDV (MENU_VENDAS_PDV)</li>
-                          <li>Pedidos (MENU_VENDAS_PEDIDOS)</li>
-                          <li>Relatórios (MENU_VENDAS_RELATORIOS)</li>
-                        </ul>
-                      </li>
-                      <li>Compras
-                        <ul>
-                          <li>Fornecedores (MENU_COMPRAS)</li>
-                        </ul>
-                      </li>
-                    </ul>
-
-                    <h3 class="h5">Operacional</h3>
-                    <ul>
-                      <li>Produtos (MENU_ESTOQUE_PRODUTOS)</li>
-                      <li>Estoque (MENU_ESTOQUE)</li>
-                      <li>Categorias
-                        <ul>
-                          <li>Listar (MENU_ESTOQUE_CATEGORIAS_LISTAR)</li>
-                          <li>Novo (MENU_ESTOQUE_CATEGORIAS_NOVO)</li>
-                        </ul>
-                      </li>
-                    </ul>
-
-                    <h3 class="h5">Recursos Humanos</h3>
-                    <ul>
-                      <li>Colaboradores: Listar (MENU_RH_COLABORADORES_LISTAR), Novo (MENU_RH_COLABORADORES_NOVO), Adesão (MENU_RH_COLABORADORES_ADESAO)</li>
-                      <li>Folha de Pagamento: Início (MENU_RH_FOLHA_INICIO), Listar (MENU_RH_FOLHA_LISTAR), Gerar (MENU_RH_FOLHA_GERAR), Holerite (MENU_RH_FOLHA_HOLERITE), Descontos (MENU_RH_FOLHA_DESCONTOS), Relatórios (MENU_RH_FOLHA_RELATORIOS)</li>
-                      <li>Benefícios: Plano de Saúde (MENU_RH_BENEFICIOS_PLANO_SAUDE), Vale Transporte (MENU_RH_BENEFICIOS_VALE_TRANSPORTE), Vale Refeição (MENU_RH_BENEFICIOS_VALE_REFEICAO), Adesão (MENU_RH_BENEFICIOS_ADESAO)</li>
-                      <li>Workflow: Aprovação (MENU_RH_WORKFLOW_APROVACAO), Relatórios (MENU_RH_WORKFLOW_RELATORIOS)</li>
-                      <li>Ponto e Escalas: Registros (MENU_RH_PONTO_REGISTROS), Correções (MENU_RH_PONTO_CORRECOES), Escalas (MENU_RH_PONTO_ESCALAS), Relatórios (MENU_RH_PONTO_RELATORIOS)</li>
-                      <li>Férias: Solicitar (MENU_RH_FERIAS_SOLICITAR), Aprovar (MENU_RH_FERIAS_APROVAR), Planejamento (MENU_RH_FERIAS_PLANEJAMENTO), Calendário (MENU_RH_FERIAS_CALENDARIO)</li>
-                      <li>Avaliação: Periodicidade (MENU_RH_AVALIACAO_PERIODICIDADE), Feedbacks (MENU_RH_AVALIACAO_FEEDBACKS), Relatórios (MENU_RH_AVALIACAO_RELATORIOS)</li>
-                      <li>Treinamentos: Cadastro (MENU_RH_TREINAMENTOS_CADASTRO), Inscrição (MENU_RH_TREINAMENTOS_INSCRICAO), Certificado (MENU_RH_TREINAMENTOS_CERTIFICADO)</li>
-                      <li>Recrutamento: Candidatos (MENU_RH_RECRUTAMENTO_CANDIDATOS), Vagas (MENU_RH_RECRUTAMENTO_VAGAS), Triagem (MENU_RH_RECRUTAMENTO_TRIAGEM), Entrevistas (MENU_RH_RECRUTAMENTO_ENTREVISTAS), Histórico (MENU_RH_RECRUTAMENTO_HISTORICO), Pipeline (MENU_RH_RECRUTAMENTO_PIPELINE), Relatórios (MENU_RH_RECRUTAMENTO_RELATORIOS)</li>
-                      <li>Relatórios RH: Turnover (MENU_RH_RELATORIOS_TURNOVER), Absenteísmo (MENU_RH_RELATORIOS_ABSENTEISMO), Headcount (MENU_RH_RELATORIOS_HEADCOUNT), Indicadores (MENU_RH_RELATORIOS_INDICADORES), Admissões/Demissões (MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES), Férias e Benefícios (MENU_RH_RELATORIOS_FERIAS_BENEFICIOS)</li>
-                      <li>Configurações: Início (MENU_RH_CONFIGURACOES_INICIO), Políticas de Férias (MENU_RH_CONFIGURACOES_POLITICAS_FERIAS), Ponto (MENU_RH_CONFIGURACOES_PONTO), Integrações (MENU_RH_CONFIGURACOES_INTEGRACOES)</li>
-                      <li>Auditoria RH: Início (MENU_RH_AUDITORIA_INICIO), Log de Acessos (MENU_RH_AUDITORIA_ACESSOS), Alterações (MENU_RH_AUDITORIA_ALTERACOES), Exportações (MENU_RH_AUDITORIA_EXPORTACOES), Revisões (MENU_RH_AUDITORIA_REVISOES)</li>
-                    </ul>
-                  </div>
-
-                  <div class="col-md-6">
-                    <h3 class="h5">Gestão</h3>
-                    <ul>
-                      <li>Financeiro: Dashboard (MENU_FINANCEIRO_DASHBOARD), Contas Bancárias (MENU_FINANCEIRO_CONTAS_BANCARIAS), Contas a Pagar (MENU_FINANCEIRO_CONTAS_PAGAR), Contas a Receber (MENU_FINANCEIRO_CONTAS_RECEBER), Fluxo de Caixa (MENU_FINANCEIRO_FLUXO_CAIXA), Transferências (MENU_FINANCEIRO_TRANSFERENCIAS), Relatórios (MENU_FINANCEIRO_RELATORIOS)</li>
-                      <li>Marketing: Dashboard (MENU_MARKETING_DASHBOARD), Campanhas (MENU_MARKETING_CAMPANHAS), Leads (MENU_MARKETING_LEADS), Eventos (MENU_MARKETING_EVENTOS), Materiais (MENU_MARKETING_MATERIAIS)</li>
-                      <li>Tecnologia: Dashboard (MENU_TI_DASHBOARD), Sistemas (MENU_TI_SISTEMAS), Suporte (MENU_TI_SUPORTE), Backup (MENU_TI_BACKUP), Segurança (MENU_TI_SEGURANCA), Auditoria TI (MENU_TI_AUDITORIA)</li>
-                      <li>Jurídico: Dashboard (MENU_JURIDICO_DASHBOARD), Clientes (MENU_JURIDICO_CLIENTES), Previdenciário (MENU_JURIDICO_PREVIDENCIARIO_LISTAR, NOVO, WHATCHAT), Contratos (MENU_JURIDICO_CONTRATOS), Processos (MENU_JURIDICO_PROCESSOS_LISTAR, NOVO), Compliance (MENU_JURIDICO_COMPLIANCE), Documentos (MENU_JURIDICO_DOCUMENTOS), Auditoria (MENU_JURIDICO_AUDITORIA_INICIO, ACESSOS, ALTERACOES, EXPORTACOES, REVISOES)</li>
-                    </ul>
-
-                    <h3 class="h5">Cadastros & Utilidades</h3>
-                    <ul>
-                      <li>Cadastros: Consultar CNPJ (MENU_CADASTROS)</li>
-                      <li>Utilidades: Processar CNPJs (MENU_UTILIDADES)</li>
-                    </ul>
-
-                    <h3 class="h5">Projetos</h3>
-                    <ul>
-                      <li>Geral: Listar (MENU_PROJETOS_GERAL_LISTAR), Novo (MENU_PROJETOS_GERAL_NOVO)</li>
-                      <li>Tarefas: Listar (MENU_PROJETOS_TAREFAS_LISTAR), Atribuições (MENU_PROJETOS_TAREFAS_ATRIBUICOES)</li>
-                      <li>Equipes: Cadastro (MENU_PROJETOS_EQUIPES_CADASTRAR), Membros (MENU_PROJETOS_EQUIPES_MEMBROS)</li>
-                      <li>Cronograma (MENU_PROJETOS_CRONOGRAMA)</li>
-                      <li>Relatórios (MENU_PROJETOS_RELATORIOS)</li>
-                    </ul>
-
-                    <h3 class="h5">Serviços</h3>
-                    <ul>
-                      <li>Solicitações: Nova, Minhas Solicitações, Todas, Pendentes (MENU_SERVICOS_SOLICITACOES_GERENCIAR), Dashboard (MENU_SERVICOS_SOLICITACOES_DASHBOARD)</li>
-                      <li>Serviços</li>
-                      <li>Agenda</li>
-                    </ul>
-
-                    <h3 class="h5">Administração</h3>
-                    <ul>
-                      <li>Usuários (MENU_ADMIN_USUARIOS)</li>
-                      <li>Gestão de Acesso: Perfis (MENU_ADMIN_GESTAO_ACESSO_PERFIS), Permissões (MENU_ADMIN_GESTAO_ACESSO_PERMISSOES)</li>
-                      <li>Relatórios (MENU_ADMIN_RELATORIOS)</li>
-                      <li>Configurações (MENU_ADMIN_CONFIGURACOES)</li>
-                      <li>Metas (MENU_ADMIN_METAS)</li>
-                    </ul>
-
-                    <h3 class="h5">Pessoal & Suporte</h3>
-                    <ul>
-                      <li>Pessoal: Meus Pedidos (MENU_PESSOAL_MEUS_PEDIDOS), Meus Serviços (MENU_PESSOAL_MEUS_SERVICOS), Favoritos (MENU_PESSOAL_FAVORITOS), Recomendações (MENU_PESSOAL_RECOMENDACOES)</li>
-                      <li>Suporte & Documentos: Central de Ajuda (MENU_AJUDA), Documentos Gerenciais (MENU_DOCS_GERENCIAL), Meus Documentos (MENU_DOCS_PESSOAL), Termos de Uso (MENU_DOCS_PESSOAL), Suporte</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <h2 class="h4 mt-4">Solicitação de Acessos por Módulo</h2>
-                <p>Em cada solicitação, informe o módulo e os authorities desejados. Exemplos por módulo:</p>
-                <ul>
-                  <li>Clientes: MENU_CLIENTES, MENU_CLIENTES_LISTAR, MENU_CLIENTES_CONTRATOS_LISTAR</li>
-                  <li>Vendas: MENU_VENDAS, MENU_VENDAS_PEDIDOS</li>
-                  <li>Estoque: MENU_ESTOQUE_PRODUTOS, MENU_ESTOQUE_CATEGORIAS_LISTAR</li>
-                  <li>RH: MENU_RH_COLABORADORES_LISTAR, MENU_RH_FOLHA_LISTAR, MENU_RH_FERIAS_SOLICITAR</li>
-                  <li>Financeiro: MENU_FINANCEIRO_CONTAS_PAGAR, MENU_FINANCEIRO_RELATORIOS</li>
-                  <li>Marketing: MENU_MARKETING_CAMPANHAS</li>
-                  <li>TI: MENU_TI_SISTEMAS, MENU_TI_AUDITORIA</li>
-                  <li>Jurídico: MENU_JURIDICO_PROCESSOS_LISTAR, MENU_JURIDICO_AUDITORIA_INICIO</li>
-                  <li>Projetos: MENU_PROJETOS_TAREFAS_LISTAR, MENU_PROJETOS_RELATORIOS</li>
-                  <li>Administração: MENU_ADMIN_USUARIOS, MENU_ADMIN_GESTAO_ACESSO_PERFIS</li>
-                  <li>Pessoal: MENU_PESSOAL_MEUS_PEDIDOS</li>
-                  <li>Suporte & Documentos: MENU_AJUDA, MENU_DOCS_PESSOAL</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row g-3 mt-3">
-          <div class="col-md-12">
-            <div class="card">
-              <div class="card-header d-flex align-items-center gap-2">
-                <i class="fas fa-robot text-info"></i>
-                <strong>Assistente Inteligente</strong>
-                <span class="ms-2 text-muted small">Conversa contextual com RAG</span>
-              </div>
-              <div class="card-body">
-                <div id="chatHistory" class="mb-3" style="min-height:160px;"></div>
-                <div class="d-flex gap-2">
-                  <input id="chatInput" class="form-control" placeholder="Pergunte em linguagem natural" />
-                  <button class="btn btn-primary" id="chatSend"><i class="fas fa-paper-plane"></i> Enviar</button>
-                </div>
-                <div class="mt-2 d-flex flex-wrap gap-2">
-                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('impressora travando')">Impressora travando</button>
-                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('como abrir um chamado')">Abrir chamado</button>
-                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('pagar salário')">Pagar salário</button>
-                  <button class="btn btn-sm btn-outline-secondary" onclick="chatQuick('registrar venda no pdv')">Registrar venda</button>
-                </div>
-              </div>
-            </div>
+          
+          <div class="mt-3 text-white-50 small">
+            <span class="me-2">Sugestões:</span>
+            <a href="#" class="text-white text-decoration-underline me-2" onclick="quickSearch('esqueci minha senha')">Senha</a>
+            <a href="#" class="text-white text-decoration-underline me-2" onclick="quickSearch('solicitar acesso')">Acessos</a>
+            <a href="#" class="text-white text-decoration-underline" onclick="quickSearch('abrir chamado')">Suporte</a>
           </div>
         </div>
       </section>
+
+      <div class="container-fluid px-4 pb-5">
+        
+        <!-- Navigation Modules -->
+        <div class="row g-4 mb-5">
+          <div class="col-md-3 col-sm-6">
+            <a href="#doc-comercial" class="topic-card text-center" onclick="showTab('comercial')">
+              <div class="topic-icon bg-blue-100 text-primary mx-auto" style="background-color: #dbeafe;">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h5 class="fw-bold mb-2">Comercial</h5>
+              <p class="text-muted small mb-0">Vendas, Clientes, CRM</p>
+            </a>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <a href="#doc-rh" class="topic-card text-center" onclick="showTab('rh')">
+              <div class="topic-icon bg-green-100 text-success mx-auto" style="background-color: #dcfce7;">
+                <i class="fas fa-users"></i>
+              </div>
+              <h5 class="fw-bold mb-2">Recursos Humanos</h5>
+              <p class="text-muted small mb-0">Férias, Folha, Ponto</p>
+            </a>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <a href="#doc-gestao" class="topic-card text-center" onclick="showTab('gestao')">
+              <div class="topic-icon bg-purple-100 text-warning mx-auto" style="background-color: #f3e8ff; color: #9333ea !important;">
+                <i class="fas fa-briefcase"></i>
+              </div>
+              <h5 class="fw-bold mb-2">Gestão</h5>
+              <p class="text-muted small mb-0">Financeiro, Jurídico</p>
+            </a>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <a href="#doc-ti" class="topic-card text-center" onclick="showTab('ti')">
+              <div class="topic-icon bg-gray-100 text-dark mx-auto" style="background-color: #f3f4f6;">
+                <i class="fas fa-laptop-code"></i>
+              </div>
+              <h5 class="fw-bold mb-2">Tecnologia</h5>
+              <p class="text-muted small mb-0">Suporte, Acessos, Sistemas</p>
+            </a>
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Main Content Column -->
+          <div class="col-lg-8">
+            
+            <!-- Search Results Area -->
+            <div id="searchResultsArea" class="d-none mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Resultados da Busca</h4>
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearSearch()"><i class="fas fa-times"></i> Limpar</button>
+              </div>
+              <div id="resultsList"></div>
+            </div>
+
+            <!-- Content Tabs -->
+            <div class="card border-0 shadow-sm" id="mainDocs">
+              <div class="card-header bg-white border-bottom py-3">
+                <ul class="nav nav-tabs card-header-tabs" id="helpTabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="faq-tab" data-bs-toggle="tab" data-bs-target="#faq-content" type="button" role="tab">Dúvidas Frequentes</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="docs-tab" data-bs-toggle="tab" data-bs-target="#docs-content" type="button" role="tab">Documentação Técnica</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tutorials-tab" data-bs-toggle="tab" data-bs-target="#tutorials-content" type="button" role="tab">Tutoriais</button>
+                  </li>
+                </ul>
+              </div>
+              
+              <div class="card-body p-4">
+                <div class="tab-content">
+                  
+                  <!-- FAQ Tab -->
+                  <div class="tab-pane fade show active" id="faq-content" role="tabpanel">
+                    <div class="accordion" id="accordionFAQ">
+                      <div class="accordion-item border-0 mb-2 shadow-sm rounded overflow-hidden">
+                        <h2 class="accordion-header">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            <i class="fas fa-key me-2 text-primary"></i> Como altero minha senha?
+                          </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                          <div class="accordion-body">
+                            Acesse seu perfil clicando no seu avatar no canto superior direito e selecione "Alterar Senha". Você precisará da sua senha atual.
+                          </div>
+                        </div>
+                      </div>
+                      <div class="accordion-item border-0 mb-2 shadow-sm rounded overflow-hidden">
+                        <h2 class="accordion-header">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            <i class="fas fa-user-plus me-2 text-primary"></i> Como solicitar novo acesso?
+                          </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                          <div class="accordion-body">
+                            Vá para <strong>Serviços > Solicitações > Nova Solicitação</strong>. Selecione o tipo de acesso desejado e justifique a necessidade.
+                          </div>
+                        </div>
+                      </div>
+                      <div class="accordion-item border-0 mb-2 shadow-sm rounded overflow-hidden">
+                        <h2 class="accordion-header">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            <i class="fas fa-umbrella-beach me-2 text-primary"></i> Como agendar férias?
+                          </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                          <div class="accordion-body">
+                            Acesse o módulo <strong>RH > Férias > Solicitar</strong>. Verifique seu saldo disponível e selecione o período desejado no calendário.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Documentation Tab (Migrated Content) -->
+                  <div class="tab-pane fade" id="docs-content" role="tabpanel">
+                    <div class="row">
+                      <div class="col-md-4 border-end">
+                        <div class="nav flex-column nav-pills docs-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                          <button class="nav-link active text-start" data-bs-toggle="pill" data-bs-target="#v-pills-acessos" type="button">Solicitação de Acessos</button>
+                          <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#v-pills-comercial" type="button">Módulo Comercial</button>
+                          <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#v-pills-operacional" type="button">Módulo Operacional</button>
+                          <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#v-pills-rh" type="button">Recursos Humanos</button>
+                          <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#v-pills-gestao" type="button">Gestão & Financeiro</button>
+                        </div>
+                      </div>
+                      <div class="col-md-8">
+                        <div class="tab-content ps-3" id="v-pills-tabContent">
+                          <!-- Acessos -->
+                          <div class="tab-pane fade show active" id="v-pills-acessos">
+                            <h4 class="mb-3">Como Solicitar Acessos</h4>
+                            <p>Solicite acessos informando o módulo e os subníveis necessários. Use solicitações com escopo mínimo.</p>
+                            <div class="alert alert-info">
+                              <i class="fas fa-info-circle me-2"></i> Exemplo: Para acessar <strong>Clientes > Geral > Listar</strong>
+                              <ul class="mb-0 mt-2">
+                                <li>Módulo: Clientes</li>
+                                <li>Authority: <span class="permission-tag">MENU_CLIENTES_LISTAR</span></li>
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <!-- Comercial -->
+                          <div class="tab-pane fade" id="v-pills-comercial">
+                            <h4 class="mb-3">Módulo Comercial</h4>
+                            <h5 class="h6 mt-3">Clientes</h5>
+                            <ul class="list-unstyled">
+                              <li class="mb-2"><span class="permission-tag">MENU_CLIENTES_LISTAR</span> Listagem geral</li>
+                              <li class="mb-2"><span class="permission-tag">MENU_CLIENTES_NOVO</span> Cadastro novo cliente</li>
+                              <li class="mb-2"><span class="permission-tag">MENU_CLIENTES_CONTRATOS_LISTAR</span> Contratos</li>
+                            </ul>
+                            <h5 class="h6 mt-3">Vendas</h5>
+                            <ul class="list-unstyled">
+                              <li class="mb-2"><span class="permission-tag">MENU_VENDAS_PDV</span> Ponto de Venda</li>
+                              <li class="mb-2"><span class="permission-tag">MENU_VENDAS_DASHBOARD</span> Indicadores</li>
+                            </ul>
+                          </div>
+
+                          <!-- Operacional -->
+                          <div class="tab-pane fade" id="v-pills-operacional">
+                            <h4 class="mb-3">Módulo Operacional</h4>
+                            <ul class="list-unstyled">
+                              <li class="mb-2"><span class="permission-tag">MENU_ESTOQUE_PRODUTOS</span> Gestão de Produtos</li>
+                              <li class="mb-2"><span class="permission-tag">MENU_ESTOQUE_CATEGORIAS_LISTAR</span> Categorias</li>
+                            </ul>
+                          </div>
+
+                          <!-- RH -->
+                          <div class="tab-pane fade" id="v-pills-rh">
+                            <h4 class="mb-3">Recursos Humanos</h4>
+                            <div class="table-responsive">
+                              <table class="table table-sm table-hover">
+                                <thead><tr><th>Funcionalidade</th><th>Permissão</th></tr></thead>
+                                <tbody>
+                                  <tr><td>Colaboradores</td><td><span class="permission-tag">MENU_RH_COLABORADORES_LISTAR</span></td></tr>
+                                  <tr><td>Folha de Pagamento</td><td><span class="permission-tag">MENU_RH_FOLHA_LISTAR</span></td></tr>
+                                  <tr><td>Férias</td><td><span class="permission-tag">MENU_RH_FERIAS_SOLICITAR</span></td></tr>
+                                  <tr><td>Ponto</td><td><span class="permission-tag">MENU_RH_PONTO_REGISTROS</span></td></tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          <!-- Gestão -->
+                          <div class="tab-pane fade" id="v-pills-gestao">
+                            <h4 class="mb-3">Gestão & Financeiro</h4>
+                            <p>Funcionalidades para administração e controle financeiro.</p>
+                            <ul class="list-unstyled">
+                              <li class="mb-2"><span class="permission-tag">MENU_FINANCEIRO_DASHBOARD</span> Visão Geral</li>
+                              <li class="mb-2"><span class="permission-tag">MENU_FINANCEIRO_CONTAS_PAGAR</span> Contas a Pagar</li>
+                              <li class="mb-2"><span class="permission-tag">MENU_JURIDICO_PROCESSOS_LISTAR</span> Processos Jurídicos</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tutorials Tab -->
+                  <div class="tab-pane fade" id="tutorials-content" role="tabpanel">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-video text-danger me-2"></i> Primeiro Acesso</h5>
+                            <p class="card-text">Aprenda a configurar seu perfil e alterar sua senha no primeiro login.</p>
+                            <a href="#" class="btn btn-sm btn-outline-primary stretched-link">Ver Tutorial</a>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-file-invoice text-success me-2"></i> Emitir Nota Fiscal</h5>
+                            <p class="card-text">Passo a passo para emissão de NF-e através do módulo financeiro.</p>
+                            <a href="#" class="btn btn-sm btn-outline-primary stretched-link">Ver Tutorial</a>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-user-check text-info me-2"></i> Aprovar Solicitações</h5>
+                            <p class="card-text">Guia para gestores sobre como aprovar ou rejeitar solicitações da equipe.</p>
+                            <a href="#" class="btn btn-sm btn-outline-primary stretched-link">Ver Tutorial</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feedback Section -->
+            <div class="mt-4 p-4 bg-white rounded shadow-sm text-center">
+              <h5 class="mb-3">Esse conteúdo foi útil?</h5>
+              <div class="d-flex justify-content-center gap-3">
+                <button class="btn btn-outline-success px-4" onclick="sendGlobalFeedback(true)"><i class="far fa-thumbs-up me-2"></i> Sim</button>
+                <button class="btn btn-outline-danger px-4" onclick="sendGlobalFeedback(false)"><i class="far fa-thumbs-down me-2"></i> Não</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Sidebar Column (AI & Support) -->
+          <div class="col-lg-4">
+            
+            <!-- AI Chat Widget -->
+            <div class="chat-widget mb-4 sticky-top" style="top: 80px; z-index: 100;">
+              <div class="chat-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="fas fa-robot"></i>
+                  </div>
+                  <span class="fw-bold">Assistente IA</span>
+                </div>
+                <span class="badge bg-success">Online</span>
+              </div>
+              <div class="chat-messages" id="chatHistory">
+                <div class="chat-message bot">
+                  Olá! Sou a IA do ERP Corporativo. Como posso ajudar você hoje?
+                </div>
+              </div>
+              <div class="p-3 bg-white border-top">
+                <div class="input-group">
+                  <input type="text" id="chatInput" class="form-control border-end-0" placeholder="Digite sua pergunta..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                  <button class="btn btn-outline-primary border-start-0" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+                <div class="mt-2 d-flex flex-wrap gap-1">
+                  <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2" style="font-size: 11px;" onclick="chatQuick('Como pedir férias?')">Pedir Férias</button>
+                  <button class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2" style="font-size: 11px;" onclick="chatQuick('Erro no login')">Erro Login</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="card border-0 shadow-sm bg-light">
+              <div class="card-body">
+                <h5 class="card-title fw-bold mb-3">Ainda precisa de ajuda?</h5>
+                <p class="text-muted small mb-3">Se não encontrou o que procurava, entre em contato com nosso time de suporte.</p>
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primary" onclick="openTicket()">
+                    <i class="fas fa-ticket-alt me-2"></i> Abrir Chamado
+                  </button>
+                  <button class="btn btn-outline-dark">
+                    <i class="fab fa-whatsapp me-2"></i> Chat Suporte
+                  </button>
+                </div>
+                <hr>
+                <div class="d-flex align-items-center gap-3">
+                  <i class="fas fa-envelope text-muted"></i>
+                  <small class="text-muted">suporte@erpcorporativo.com</small>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
 
-  <script>
-    async function loadCategories() {
-      const res = await fetch('/api/ajuda/categorias');
-      const cats = await res.json();
-      const select = document.getElementById('categoria');
-      select.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c.slug}">${c.nome}</option>`).join('');
-      const list = document.getElementById('cats');
-      if (list) {
-        list.innerHTML = cats.map(c => `<li><a href="#" onclick="filterBy('${c.slug}')"><i class="fas fa-folder"></i> ${c.nome}</a></li>`).join('');
+  <!-- Scripts -->
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+
+  <script th:inline="javascript">
+    // --- Base de Conhecimento do Sistema (Mapeamento do Sidebar) ---
+    const systemKnowledge = [
+        // Principal
+        { title: "Dashboard Principal", path: "/dashboard", section: "Principal", keywords: ["inicio", "home", "visão geral", "gráficos"], auth: "DASHBOARD_EXECUTIVO_VISUALIZAR" },
+        { title: "Chat Corporativo", path: "/chat", section: "Principal", keywords: ["conversa", "mensagem", "falar", "comunicação"], auth: "" },
+        
+        // Comercial > Clientes
+        { title: "Listar Clientes", path: "/clientes", section: "Comercial > Clientes", keywords: ["ver clientes", "buscar cliente", "tabela clientes", "lista"], auth: "MENU_CLIENTES_LISTAR" },
+        { title: "Novo Cliente", path: "/clientes/cadastro", section: "Comercial > Clientes", keywords: ["criar cliente", "cadastrar cliente", "novo registro"], auth: "MENU_CLIENTES_NOVO" },
+        { title: "Contratos de Clientes", path: "/clientes/contratos/listar", section: "Comercial > Clientes", keywords: ["contrato", "documento", "acordo"], auth: "MENU_CLIENTES_CONTRATOS_LISTAR" },
+        { title: "Histórico de Interações", path: "/clientes/historico/interacoes", section: "Comercial > Clientes", keywords: ["conversas", "atendimentos", "logs"], auth: "MENU_CLIENTES_HISTORICO_INTERACOES" },
+        
+        // Comercial > Vendas
+        { title: "Dashboard de Vendas", path: "/vendas", section: "Comercial > Vendas", keywords: ["metas", "resultados", "performance"], auth: "MENU_VENDAS_DASHBOARD" },
+        { title: "PDV (Ponto de Venda)", path: "/vendas/pdv", section: "Comercial > Vendas", keywords: ["caixa", "frente de loja", "vender"], auth: "MENU_VENDAS_PDV" },
+        { title: "Pedidos de Venda", path: "/vendas/pedidos", section: "Comercial > Vendas", keywords: ["ordens", "solicitações", "acompanhar"], auth: "MENU_VENDAS_PEDIDOS" },
+        
+        // Operacional
+        { title: "Fornecedores", path: "/fornecedores", section: "Operacional > Compras", keywords: ["compras", "parceiros", "suprimentos"], auth: "MENU_COMPRAS" },
+        { title: "Produtos", path: "/produtos", section: "Operacional > Estoque", keywords: ["itens", "mercadorias", "catálogo"], auth: "MENU_ESTOQUE_PRODUTOS" },
+        { title: "Estoque Geral", path: "/estoque", section: "Operacional > Estoque", keywords: ["quantidade", "armazenagem", "saldo"], auth: "MENU_ESTOQUE" },
+        { title: "Categorias de Produtos", path: "/categorias", section: "Operacional > Estoque", keywords: ["grupos", "classificação", "tipos"], auth: "MENU_ESTOQUE_CATEGORIAS_LISTAR" },
+
+        // RH > Colaboradores
+        { title: "Listar Colaboradores", path: "/rh/colaboradores/listar", section: "RH > Colaboradores", keywords: ["funcionários", "empregados", "equipe"], auth: "MENU_RH_COLABORADORES_LISTAR" },
+        { title: "Novo Colaborador", path: "/rh/colaboradores/novo", section: "RH > Colaboradores", keywords: ["contratar", "admitir", "ficha", "registro", "criar funcionario"], auth: "MENU_RH_COLABORADORES_NOVO" },
+        { title: "Adesão de Colaboradores", path: "/rh/colaboradores/adesao", section: "RH > Colaboradores", keywords: ["onboarding", "integração"], auth: "MENU_RH_COLABORADORES_ADESAO" },
+
+        // RH > Folha
+        { title: "Folha de Pagamento", path: "/rh/folha-pagamento", section: "RH > Folha", keywords: ["salário", "pagamento", "holerite", "contracheque"], auth: "MENU_RH_FOLHA_INICIO" },
+        { title: "Gerar Folha", path: "/rh/folha-pagamento/gerar", section: "RH > Folha", keywords: ["calcular", "fechamento", "mensal"], auth: "MENU_RH_FOLHA_GERAR" },
+        
+        // RH > Benefícios
+        { title: "Plano de Saúde", path: "/rh/beneficios/plano-saude", section: "RH > Benefícios", keywords: ["convênio", "médico", "hospital"], auth: "MENU_RH_BENEFICIOS_PLANO_SAUDE" },
+        { title: "Vale Transporte", path: "/rh/beneficios/vale-transporte/listar", section: "RH > Benefícios", keywords: ["vt", "transporte", "ônibus"], auth: "MENU_RH_BENEFICIOS_VALE_TRANSPORTE" },
+
+        // RH > Ponto e Férias
+        { title: "Registros de Ponto", path: "/rh/ponto-escalas/registros", section: "RH > Ponto", keywords: ["bater ponto", "horário", "entrada", "saída"], auth: "MENU_RH_PONTO_REGISTROS" },
+        { title: "Solicitar Férias", path: "/rh/ferias/solicitar", section: "RH > Férias", keywords: ["descanso", "ausência", "requisição"], auth: "MENU_RH_FERIAS_SOLICITAR" },
+        
+        // Gestão > Financeiro
+        { title: "Dashboard Financeiro", path: "/financeiro", section: "Gestão > Financeiro", keywords: ["caixa", "bancos", "saldo"], auth: "MENU_FINANCEIRO_DASHBOARD" },
+        { title: "Contas a Pagar", path: "/financeiro/contas-pagar", section: "Gestão > Financeiro", keywords: ["despesas", "boletos", "pagamentos"], auth: "MENU_FINANCEIRO_CONTAS_PAGAR" },
+        { title: "Contas a Receber", path: "/financeiro/contas-receber", section: "Gestão > Financeiro", keywords: ["receitas", "faturas", "cobrança"], auth: "MENU_FINANCEIRO_CONTAS_RECEBER" },
+        
+        // Gestão > TI
+        { title: "Dashboard TI", path: "/ti", section: "Gestão > TI", keywords: ["infra", "tecnologia", "status"], auth: "MENU_TI_DASHBOARD" },
+        { title: "Sistemas", path: "/ti/sistemas", section: "Gestão > TI", keywords: ["aplicações", "softwares", "servidores"], auth: "MENU_TI_SISTEMAS" },
+        { title: "Suporte TI", path: "/ti/suporte", section: "Gestão > TI", keywords: ["helpdesk", "chamados", "técnico", "atendimento", "abrir chamado"], auth: "MENU_TI_SUPORTE" },
+        
+        // Gestão > Jurídico
+        { title: "Dashboard Jurídico", path: "/juridico", section: "Gestão > Jurídico", keywords: ["processos", "audiências", "prazos"], auth: "MENU_JURIDICO_DASHBOARD" },
+        { title: "Processos", path: "/juridico/processos", section: "Gestão > Jurídico", keywords: ["ações", "tribunal", "judicial"], auth: "MENU_JURIDICO_PROCESSOS_LISTAR" },
+        
+        // Serviços
+        { title: "Nova Solicitação", path: "/solicitacoes/nova", section: "Serviços > Solicitações", keywords: ["pedir", "requerer", "abrir chamado"], auth: "" },
+        { title: "Minhas Solicitações", path: "/solicitacoes", section: "Serviços > Solicitações", keywords: ["acompanhar", "status", "meus pedidos"], auth: "" },
+        { title: "Gerenciar Pendências", path: "/solicitacoes/pendentes", section: "Serviços > Solicitações", keywords: ["aprovar", "fila", "atender"], auth: "MENU_SERVICOS_SOLICITACOES_GERENCIAR" },
+
+        // Administração
+        { title: "Gerenciar Usuários", path: "/usuarios/index", section: "Administração > Usuários", keywords: ["criar usuário", "novo usuário", "login", "senha", "acesso"], auth: "MENU_ADMIN_USUARIOS" },
+        { title: "Perfis de Acesso", path: "/perfis", section: "Administração > Acesso", keywords: ["roles", "grupos", "cargos", "níveis", "perfil"], auth: "MENU_ADMIN_GESTAO_ACESSO_PERFIS" },
+        { title: "Permissões do Sistema", path: "/permissoes", section: "Administração > Acesso", keywords: ["authorities", "regras", "liberações", "permissão"], auth: "MENU_ADMIN_GESTAO_ACESSO_PERMISSOES" },
+        { title: "Configurações Gerais", path: "/configuracoes", section: "Administração > Config", keywords: ["parâmetros", "setup", "sistema"], auth: "MENU_ADMIN_CONFIGURACOES" }
+    ];
+
+    // --- Tabs Handling ---
+    function showTab(category) {
+      const tabEl = document.querySelector('#docs-tab');
+      if(tabEl) {
+          const tab = new bootstrap.Tab(tabEl);
+          tab.show();
       }
+      
+      setTimeout(() => {
+        const pillSelector = '#v-pills-' + category;
+        const pillTrigger = document.querySelector(`button[data-bs-target="${pillSelector}"]`);
+        if(pillTrigger) {
+          const pill = new bootstrap.Tab(pillTrigger);
+          pill.show();
+          document.getElementById('mainDocs').scrollIntoView({behavior: 'smooth'});
+        }
+      }, 200);
     }
 
-    function filterBy(slug) {
-      document.getElementById('categoria').value = slug;
-      doSearch();
+    // --- Search Functionality ---
+    function quickSearch(query) {
+      document.getElementById('mainSearchInput').value = query;
+      performSearch();
+    }
+    
+    function clearSearch() {
+      document.getElementById('mainSearchInput').value = '';
+      document.getElementById('searchResultsArea').classList.add('d-none');
+      document.getElementById('mainDocs').classList.remove('d-none');
     }
 
-    async function doSearch(page=0) {
-      const q = document.getElementById('q').value;
-      const categoria = document.getElementById('categoria').value;
-      const url = new URL(window.location.origin + '/api/ajuda/busca');
-      if (q) url.searchParams.set('q', q);
-      if (categoria) url.searchParams.set('categoria', categoria);
-      url.searchParams.set('page', page);
-      url.searchParams.set('size', 10);
-      const res = await fetch(url);
-      const json = await res.json();
-      const items = json.items || [];
-      const results = document.getElementById('results');
-      const actions = document.getElementById('actions');
-      if (items.length === 0) {
-        actions.classList.remove('d-none');
-        results.innerHTML = `
-          <div class="alert alert-warning" role="alert">
-            <i class="fas fa-info-circle"></i> Nenhum resultado encontrado.
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-primary" onclick="askIA()"><i class="fas fa-robot"></i> Falar com IA</button>
-            <button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>
-          </div>
-        `;
+    async function performSearch() {
+      const query = document.getElementById('mainSearchInput').value.toLowerCase().trim();
+      if (!query) return;
+
+      const resultsArea = document.getElementById('searchResultsArea');
+      const resultsList = document.getElementById('resultsList');
+      const mainDocs = document.getElementById('mainDocs');
+
+      // UI Loading State
+      resultsList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Buscando informações...</p></div>';
+      resultsArea.classList.remove('d-none');
+      mainDocs.classList.add('d-none');
+
+      // 1. Busca Local no SystemKnowledge
+      const localResults = systemKnowledge.filter(item => 
+          item.title.toLowerCase().includes(query) || 
+          item.section.toLowerCase().includes(query) ||
+          item.keywords.some(k => k.includes(query))
+      );
+
+      // Limpa lista para renderizar
+      resultsList.innerHTML = '';
+
+      if (localResults.length > 0) {
+          localResults.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'card mb-2 border-0 shadow-sm';
+            div.innerHTML = `
+                <div class="card-body py-3">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <h5 class="mb-1 text-primary card-title"><i class="fas fa-link me-2"></i>${item.title}</h5>
+                        <small class="text-muted badge bg-light text-dark">${item.section}</small>
+                    </div>
+                    <p class="mb-1 text-secondary small">Acesso rápido: <code class="text-muted">${item.path}</code></p>
+                    <a href="${item.path}" class="stretched-link"></a>
+                </div>
+            `;
+            resultsList.appendChild(div);
+          });
+      }
+
+      // Detecção de Intenção Complexa (Ex: "Como criar usuário...")
+      if (query.includes("criar usuário") || (query.includes("usuário") && query.includes("permissão")) || query.includes("atender chamados")) {
+         showTutorialCard('admin-user-creation');
+         return; 
+      }
+
+      // Se poucos resultados locais, ou nenhum, sugere IA
+      if (localResults.length === 0) {
+          resultsList.innerHTML = `
+            <div class="alert alert-warning">
+              <i class="fas fa-search me-2"></i> Nenhum resultado exato encontrado nos menus.
+              <div class="mt-3">
+                 <p>Tentando buscar na documentação inteligente...</p>
+              </div>
+            </div>
+          `;
+          // Chama IA automaticamente se não achou nada óbvio
+          askIA(query);
       } else {
-        actions.classList.add('d-none');
-        results.innerHTML = items.map(renderItem).join('');
+          // Adiciona rodapé sugerindo IA para mais detalhes
+          const aiHint = document.createElement('div');
+          aiHint.className = 'mt-3 text-center';
+          aiHint.innerHTML = `<button class="btn btn-outline-info btn-sm" onclick="askIA('${query}')"><i class="fas fa-robot me-2"></i> Perguntar à IA sobre "${query}"</button>`;
+          resultsList.appendChild(aiHint);
       }
     }
+    
+    function showTutorialCard(tutorialId) {
+        const resultsList = document.getElementById('resultsList');
+        // Adiciona um card de destaque para o tutorial
+        const tutorialDiv = document.createElement('div');
+        tutorialDiv.className = 'card border-primary mb-4 shadow';
+        tutorialDiv.innerHTML = `
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-graduation-cap me-2"></i> Tutorial Recomendado
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Como Criar Usuário com Permissões Específicas</h5>
+                <p class="card-text">Identificamos que você quer saber como configurar um usuário para funções específicas (ex: Atender Chamados).</p>
+                <button class="btn btn-primary" onclick="openTutorialContent('${tutorialId}')">Ver Passo a Passo Completo</button>
+            </div>
+        `;
+        // Insere no topo
+        resultsList.prepend(tutorialDiv);
+    }
 
-    function renderItem(it) {
-      const tipoIcon = it.tipo === 'VIDEO' ? 'fa-video' : it.tipo === 'FAQ' ? 'fa-question' : 'fa-file-alt';
-      return `
-        <article class="mb-3">
-          <div class="d-flex align-items-center gap-2">
-            <i class="fas ${tipoIcon} text-primary"></i>
-            <strong>${it.titulo}</strong>
-            <span class="ms-auto text-muted small">${it.categoria?.nome || ''}</span>
-          </div>
-          <div class="mt-2 text-secondary">${(it.corpo || '').substring(0, 240)}...</div>
-          <div class="mt-2 d-flex gap-2">
-            <a class="btn btn-sm btn-outline-primary" href="/ajuda/conteudo/${it.id}"><i class="fas fa-external-link-alt"></i> Abrir</a>
-            <button class="btn btn-sm btn-success" onclick="feedback(${it.id}, true)"><i class="fas fa-thumbs-up"></i></button>
-            <button class="btn btn-sm btn-danger" onclick="feedback(${it.id}, false)"><i class="fas fa-thumbs-down"></i></button>
-          </div>
-        </article>
-      `;
+    function openTutorialContent(id) {
+        // Simula abertura de conteúdo de tutorial
+        showTab('tutorials');
+        const content = document.getElementById('tutorials-content');
+        if(id === 'admin-user-creation') {
+            content.innerHTML = `
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="text-primary mb-3"><i class="fas fa-user-plus me-2"></i>Criando Usuário para Atendimento (Exemplo Prático)</h3>
+                        <p>Siga este guia para cadastrar um usuário capaz de atender chamados ou solicitações.</p>
+                        
+                        <div class="alert alert-info"><i class="fas fa-info-circle"></i> Necessário perfil de Administrador.</div>
+
+                        <ol class="list-group list-group-numbered list-group-flush">
+                          <li class="list-group-item">Acesse o menu <strong>Administração > Usuários</strong> (<a href="/usuarios/index">link</a>).</li>
+                          <li class="list-group-item">Clique em <strong>Novo Usuário</strong> e preencha os dados (Nome, Email/Login, Senha).</li>
+                          <li class="list-group-item">
+                            <strong>Configurando o Perfil:</strong>
+                            <p class="mb-1 mt-1">Para atender chamados de TI:</p>
+                            <ul class="small text-muted">
+                                <li>Vá na aba <strong>Perfis</strong>.</li>
+                                <li>Selecione o perfil <strong>"Suporte TI"</strong> (se existir).</li>
+                                <li>Caso não exista, crie um perfil em <a href="/perfis">Gestão de Acesso > Perfis</a> e adicione a permissão <code>MENU_TI_SUPORTE</code>.</li>
+                            </ul>
+                            <p class="mb-1 mt-2">Para atender solicitações gerais:</p>
+                            <ul class="small text-muted">
+                                <li>Adicione a permissão <code>MENU_SERVICOS_SOLICITACOES_GERENCIAR</code> diretamente ou via perfil.</li>
+                            </ul>
+                          </li>
+                          <li class="list-group-item">Salve o registro e peça para o usuário logar.</li>
+                        </ol>
+                    </div>
+                </div>
+                <button class="btn btn-secondary mt-3" onclick="location.reload()">Voltar</button>
+            `;
+        }
+    }
+
+    // --- AI Chat Functionality ---
+    function chatQuick(msg) {
+        document.getElementById('chatInput').value = msg;
+        sendMessage();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value;
+      if (!text.trim()) return;
+
+      addMessage(text, 'user');
+      input.value = '';
+
+      // Show typing indicator
+      const typingId = addMessage('<i class="fas fa-ellipsis-h fa-fade"></i>', 'bot');
+      const statusBadge = document.querySelector('.chat-header .badge');
+
+      try {
+        const token = getXsrfToken();
+        
+        // Tenta conectar com a API Real
+        const res = await fetch('/api/ajuda/ia/generate?query=' + encodeURIComponent(text), {
+            method: 'POST',
+            headers: token ? { 'X-XSRF-TOKEN': token } : {}
+        });
+
+        if (res.status === 401) {
+             updateMessage(typingId, 'Por favor, faça login para continuar.');
+             return;
+        }
+        
+        if (res.status === 404 || res.status === 500) {
+             throw new Error('API Indisponível');
+        }
+
+        const json = await res.json();
+        let reply = json.sections?.resumo || json.resposta || "Desculpe, não consegui processar sua solicitação.";
+        
+        // Sucesso: IA Online
+        if(statusBadge) {
+            statusBadge.className = 'badge bg-success';
+            statusBadge.innerHTML = '<i class="fas fa-brain me-1"></i> IA Online';
+        }
+        
+        updateMessage(typingId, reply);
+
+      } catch (e) {
+        // Falha: IA Offline (Fallback Local)
+        console.warn("IA Offline, usando fallback local:", e);
+        
+        if(statusBadge) {
+            statusBadge.className = 'badge bg-warning text-dark';
+            statusBadge.innerHTML = '<i class="fas fa-wifi-slash me-1"></i> Modo Offline';
+            statusBadge.title = "A IA está indisponível. Respondendo com base de conhecimento local.";
+        }
+
+        let fallbackMsg = "";
+        
+        // Lógica de Fallback Inteligente Local
+        const queryLower = text.toLowerCase();
+        
+        // 1. Busca no SystemKnowledge
+        const match = systemKnowledge.find(k => 
+            k.keywords.some(kw => queryLower.includes(kw)) || 
+            k.title.toLowerCase().includes(queryLower)
+        );
+
+        if(match) {
+            fallbackMsg = `<strong>Modo Offline:</strong> Encontrei uma funcionalidade relacionada: <br>
+                           <i class="fas fa-arrow-right text-primary"></i> <strong>${match.title}</strong><br>
+                           Caminho: <span class="badge bg-light text-dark">${match.section}</span><br>
+                           <a href="${match.path}" class="btn btn-sm btn-outline-primary mt-2">Acessar agora</a>`;
+        } else if (queryLower.includes("senha") || queryLower.includes("acesso")) {
+             fallbackMsg = "Para questões de acesso ou senha, verifique seu perfil no canto superior direito ou contate o suporte.";
+        } else {
+             fallbackMsg = "Desculpe, estou sem conexão com a IA no momento e não encontrei tópicos exatos no menu para sua dúvida. Tente buscar pelo nome do módulo.";
+        }
+        
+        updateMessage(typingId, fallbackMsg);
+      }
+    }
+    
+    function askIA(query) {
+        const chatInput = document.getElementById('chatInput');
+        chatInput.value = query;
+        sendMessage();
+        document.querySelector('.chat-widget').scrollIntoView({behavior: 'smooth'});
+    }
+
+    let msgCounter = 0;
+    function addMessage(text, type) {
+      const history = document.getElementById('chatHistory');
+      const div = document.createElement('div');
+      div.className = `chat-message ${type}`;
+      div.id = 'msg-' + Date.now() + '-' + (msgCounter++);
+      div.innerHTML = text;
+      history.appendChild(div);
+      history.scrollTop = history.scrollHeight;
+      return div.id;
+    }
+
+    function updateMessage(id, text) {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = text;
     }
 
     function getXsrfToken() {
@@ -275,141 +847,16 @@
       return match ? decodeURIComponent(match[1]) : null;
     }
 
-    async function feedback(conteudoId, upvote) {
-      const token = getXsrfToken();
-      const res = await fetch('/api/ajuda/feedback?conteudoId=' + conteudoId + '&upvote=' + upvote, {
-        method: 'POST',
-        headers: token ? { 'X-XSRF-TOKEN': token } : {}
-      });
-      if (res.status === 401) { if (typeof showToast === 'function') { showToast({ title: 'Autenticação', message: 'Faça login para enviar feedback.', priority: 'MEDIUM' }); } return; }
-      if (typeof showToast === 'function') {
-        showToast({ title: 'Ajuda', message: 'Feedback registrado.', priority: 'LOW' });
-      }
+    function sendGlobalFeedback(positive) {
+      const btn = event.target.closest('button');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check"></i>';
+      btn.classList.add('text-success');
+      setTimeout(() => {
+        btn.innerHTML = originalHtml;
+        btn.classList.remove('text-success');
+      }, 2000);
     }
-
-    async function askIA() {
-      const q = document.getElementById('q').value || 'Ajuda';
-      const token = getXsrfToken();
-      const res = await fetch('/api/ajuda/ia/generate?query=' + encodeURIComponent(q), {
-        method: 'POST',
-        headers: token ? { 'X-XSRF-TOKEN': token } : {}
-      });
-      if (res.status === 401) { alert('Faça login para usar a IA.'); return; }
-      const json = await res.json();
-      const results = document.getElementById('results');
-      if (json.sections) {
-        const s = json.sections;
-        const resumo = s.resumo || json.resposta || '';
-        const caminho = s.caminho || '';
-        const passos = (s.passo_a_passo && s.passo_a_passo.items) ? s.passo_a_passo.items : [];
-        const observacoes = (s.observacoes && s.observacoes.items) ? s.observacoes.items : [];
-        const perguntaFinal = s.pergunta_final || '';
-
-        const passosHtml = passos.length ? `<ol class="mb-0">${passos.map(p => `<li>${p}</li>`).join('')}</ol>` : '<span class="text-muted">Sem passos disponíveis</span>';
-        const obsHtml = observacoes.length ? `<ul class="mb-0">${observacoes.map(o => `<li>${o}</li>`).join('')}</ul>` : '<span class="text-muted">Sem observações</span>';
-
-        const sugestoesCards = (json.sugestoes && json.sugestoes.length) ? json.sugestoes.map(sg => `
-          <div class="card mb-2"><div class="card-body p-2">
-            <div class="d-flex align-items-center gap-2">
-              <i class="fas fa-lightbulb text-info"></i>
-              <strong>${sg.titulo}</strong>
-              <span class="ms-auto text-muted small">${sg.categoria}</span>
-            </div>
-          </div></div>`).join('') : '';
-
-        results.innerHTML = `
-          <div class="card mb-3"><div class="card-body">
-            <div class="mb-2"><strong>🔹 Resumo rápido</strong><div>${resumo}</div></div>
-            <div class="mb-2"><strong>🔹 Caminho de navegação</strong><div>${caminho || '<span class="text-muted">Não especificado</span>'}</div></div>
-            <div class="mb-2"><strong>🔹 Passo a passo</strong><div>${passosHtml}</div></div>
-            <div class="mb-2"><strong>🔹 Observações úteis</strong><div>${obsHtml}</div></div>
-            <div class="mb-2"><strong>🔹 Pergunta final</strong><div>${perguntaFinal}</div></div>
-          </div></div>
-        ` + sugestoesCards + (json.abrirChamadoSugerido ? `<button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>` : '');
-      } else {
-        if (json.sugestoes && json.sugestoes.length) {
-          const cards = json.sugestoes.map(s => `
-            <div class="card mb-2"><div class="card-body p-2">
-              <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-lightbulb text-info"></i>
-                <strong>${s.titulo}</strong>
-                <span class="ms-auto text-muted small">${s.categoria}</span>
-              </div>
-            </div></div>`).join('');
-          results.innerHTML = `<div class="alert alert-info"><i class="fas fa-robot"></i> ${json.resposta}</div>` + cards;
-        } else {
-          results.innerHTML = `<div class="alert alert-warning"><i class="fas fa-info-circle"></i> ${json.resposta}</div>
-            <button class="btn btn-outline-secondary" onclick="openTicket()"><i class="fas fa-ticket-alt"></i> Abrir Chamado</button>`;
-        }
-      }
-    }
-
-    async function openTicket() {
-      const q = document.getElementById('q').value || 'Ajuda';
-      const categoria = document.getElementById('categoria').value || 'AJUDA';
-      const token = getXsrfToken();
-      const params = new URLSearchParams();
-      params.set('assunto', 'Ajuda: ' + q);
-      params.set('descricao', 'Origem: Módulo de Ajuda\n\n' + q);
-      params.set('categoria', categoria);
-      params.set('prioridade', 'MEDIA');
-      const res = await fetch('/api/chamados/ajuda', {
-        method: 'POST',
-        headers: token ? { 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': token } : { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params
-      });
-      const results = document.getElementById('results');
-      if (res.status === 401) { results.innerHTML = '<div class="alert alert-danger">Faça login para abrir chamado.</div>'; return; }
-      const json = await res.json();
-      if (json.sucesso) {
-        results.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> Chamado aberto: ${json.numero}</div>`;
-      } else {
-        results.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Erro ao abrir chamado: ${json.erro || json.mensagem}</div>`;
-      }
-    }
-    function chatQuick(q){ const i=document.getElementById('chatInput'); if(i){ i.value=q; chatSend(); } }
-    async function chatSend(){
-      const q = document.getElementById('chatInput') ? document.getElementById('chatInput').value.trim() : ''; if (!q) return;
-      chatAdd('Você', `<div>${q}</div>`);
-      const token = getXsrfToken();
-      const typing = document.createElement('div'); typing.className='text-muted small'; typing.textContent='Assistente está pensando…';
-      document.getElementById('chatHistory').appendChild(typing);
-      try {
-        const res = await fetch('/api/ajuda/ia/generate?query=' + encodeURIComponent(q), { method: 'POST', headers: token ? { 'X-XSRF-TOKEN': token } : {} });
-        typing.remove(); if (res.status === 401) { chatAdd('Assistente','<div>Faça login para usar a IA.</div>'); return; }
-        const json = await res.json(); const s = json.sections || {};
-        const resumo = s.resumo || json.resposta || ''; const caminho = s.caminho || '';
-        const passos = (s.passo_a_passo && s.passo_a_passo.items) ? s.passo_a_passo.items : [];
-        const observacoes = (s.observacoes && s.observacoes.items) ? s.observacoes.items : [];
-        const perguntaFinal = s.pergunta_final || '';
-        const passosHtml = passos.length ? `<ol class="mb-0">${passos.map(p => `<li>${p}</li>`).join('')}</ol>` : '<span class="text-muted">Sem passos disponíveis</span>';
-        const obsHtml = observacoes.length ? `<ul class="mb-0">${observacoes.map(o => `<li>${o}</li>`).join('')}</ul>` : '<span class="text-muted">Sem observações</span>';
-        const sugCards = (json.sugestoes && json.sugestoes.length) ? json.sugestoes.map(sg => `<div class="card mb-2"><div class="card-body p-2"><div class="d-flex align-items-center gap-2"><i class="fas fa-lightbulb text-info"></i><strong>${sg.titulo}</strong><span class="ms-auto text-muted small">${sg.categoria}</span></div></div></div>`).join('') : '';
-        const actions = `<div class=\"mt-2 d-flex flex-wrap gap-2\">` +
-          `<a class=\"btn btn-sm btn-outline-primary\" href=\"/ajuda\"><i class=\"fas fa-book\"></i> Ver FAQs</a>` +
-          `<a class=\"btn btn-sm btn-outline-secondary\" href=\"/ti/suporte\"><i class=\"fas fa-headset\"></i> Suporte TI</a>` +
-          `<button class=\"btn btn-sm btn-outline-success\" onclick=\"openTicket()\"><i class=\"fas fa-ticket-alt\"></i> Abrir Chamado</button>` +
-        `</div>`;
-        const html = `<div class=\"mb-2\"><strong>Resumo</strong><div>${resumo}</div></div>`+
-          `<div class=\"mb-2\"><strong>Navegação</strong><div>${caminho || '<span class=\"text-muted\">Não especificado</span>'}</div></div>`+
-          `<div class=\"mb-2\"><strong>Passos</strong><div>${passosHtml}</div></div>`+
-          `<div class=\"mb-2\"><strong>Observações</strong><div>${obsHtml}</div></div>`+
-          (perguntaFinal ? `<div class=\"mb-2\"><strong>Pergunta</strong><div>${perguntaFinal}</div></div>` : '')+
-          sugCards + actions;
-        chatAdd('Assistente', html);
-        try {
-          const ir = await fetch('/api/navigation/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q }) });
-          if (ir.ok) { const r = await ir.json(); if (r.suggestions && r.suggestions.length) {
-            const top = r.suggestions.slice(0,3).map(s => `<a href=\"${s.routes[0]}\" class=\"btn btn-xs btn-outline-dark\">${s.intent}</a>`).join(' ');
-            chatAdd('Assistente', `<div class=\"small text-muted\">Sugestões de navegação:</div><div class=\"d-flex flex-wrap gap-1\">${top}</div>`);
-          } }
-        } catch (_) {}
-      } catch (e) { typing.remove(); chatAdd('Assistente', '<div>Falha na comunicação com a IA.</div>'); }
-    }
-    function chatAdd(who, html){ const box=document.getElementById('chatHistory'); if(!box) return; const bubble=document.createElement('div'); bubble.className='p-2 rounded mb-2 ' + (who==='Você'?'bg-light':'bg-white border'); bubble.innerHTML = `<div class=\"small text-muted\">${who}</div>` + html; box.appendChild(bubble); box.scrollTop=box.scrollHeight; }
-    document.addEventListener('DOMContentLoaded', function(){ const btn=document.getElementById('chatSend'); if(btn) btn.addEventListener('click', chatSend); const input=document.getElementById('chatInput'); if(input) input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') chatSend(); }); });
-    loadCategories();
-    doSearch();
   </script>
 </body>
 </html>

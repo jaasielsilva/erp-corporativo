@@ -92,6 +92,8 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
                 built.add(new SimpleGrantedAuthority("MENU_CLIENTES"));
                 built.add(new SimpleGrantedAuthority("MENU_CLIENTES_LISTAR"));
                 built.add(new SimpleGrantedAuthority("MENU_CLIENTES_NOVO"));
+                built.add(new SimpleGrantedAuthority("CLIENTE_EDITAR")); // Adicionado
+                built.add(new SimpleGrantedAuthority("CLIENTE_EXCLUIR")); // Adicionado
                 built.add(new SimpleGrantedAuthority("MENU_CLIENTES_CONTRATOS_LISTAR"));
                 built.add(new SimpleGrantedAuthority("MENU_CLIENTES_HISTORICO_INTERACOES"));
                 built.add(new SimpleGrantedAuthority("MENU_CLIENTES_HISTORICO_PEDIDOS"));

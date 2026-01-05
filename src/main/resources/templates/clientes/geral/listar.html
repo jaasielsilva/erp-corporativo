@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
   <meta charset="UTF-8" />
@@ -51,7 +51,7 @@
 
 <body>
   <div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}" class="sidebar"></aside>
+    <div class="sidebar" th:fragment="sidebar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
     <main class="main-content">
       <header th:replace="~{components/topbar :: topbar}"></header>
@@ -162,8 +162,8 @@
           <td class="acoes" style="text-align:center">
             <a href="/clientes/${c.id}/detalhes" class="btn btn-sm btn-info" title="Detalhes"><i class="fas fa-eye"></i></a>
             ${window.podeAcessarJuridico ? `<a href="/juridico/processos/cliente/${c.id}" class="btn btn-sm btn-dark" title="Processos Jurídicos" style="background-color: #2c3e50; border-color: #2c3e50; color: white;"><i class="fas fa-gavel"></i></a>` : ''}
-            <a href="/clientes/${c.id}/editar" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
-            <button type="button" class="btn btn-sm btn-danger" onclick="openDesligamentoModal(${c.id})" title="Excluir"><i class="fas fa-user-times"></i></button>
+            ${window.podeEditar ? `<a href="/clientes/${c.id}/editar" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>` : ''}
+            ${window.podeExcluir ? `<button type="button" class="btn btn-sm btn-danger" onclick="openDesligamentoModal(${c.id})" title="Excluir"><i class="fas fa-user-times"></i></button>` : ''}
           </td>
         </tr>`;
       }).join('');

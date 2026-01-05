@@ -23,7 +23,7 @@
       <section class="content-area">
         <h1>Categorias</h1>
 
-        <a class="button primary mt-3" th:href="@{/categorias/nova}">
+        <a class="button primary mt-3" th:href="@{/categorias/nova}" th:if="${podeEditar}">
           <i class="fas fa-plus-circle"></i> Nova Categoria
         </a>
 
@@ -35,12 +35,21 @@
               <tr>
                 <th>ID</th>
                 <th>Nome</th>
+                <th th:if="${podeEditar or podeExcluir}">Ações</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="c : ${categorias}">
                 <td th:text="${c.id}">ID</td>
                 <td th:text="${c.nome}">Nome</td>
+                <td th:if="${podeEditar or podeExcluir}">
+                    <a th:if="${podeEditar}" th:href="@{/categorias/editar/{id}(id=${c.id})}" class="btn btn-sm btn-warning" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a th:if="${podeExcluir}" th:href="@{/categorias/excluir/{id}(id=${c.id})}" class="btn btn-sm btn-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir esta categoria?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </td>
               </tr>
             </tbody>
           </table>

@@ -15,6 +15,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
@@ -77,6 +79,28 @@ public class DashboardController {
         boolean isAdmin = usuarioLogado != null && usuarioLogado.getPerfis().stream()
                 .anyMatch(p -> p.getNome().equalsIgnoreCase("ADMIN"));
 
+        // Verificar permissões
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean podeVisualizarExecutivo = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("DASHBOARD_EXECUTIVO_VISUALIZAR") || a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean podeVisualizarFinanceiro = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("DASHBOARD_FINANCEIRO_VISUALIZAR") || a.getAuthority().equals("ROLE_FINANCEIRO_READ"))
+                || podeVisualizarExecutivo;
+
+        boolean podeVisualizarOperacional = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("DASHBOARD_OPERACIONAL_VISUALIZAR"))
+                || podeVisualizarExecutivo;
+
+        boolean podeVisualizarRH = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RH_READ") || a.getAuthority().equals("MENU_RH"))
+                || podeVisualizarExecutivo;
+
+        boolean podeVisualizarJuridico = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("MENU_JURIDICO_DASHBOARD") || a.getAuthority().equals("ROLE_JURIDICO_GERENTE"))
+                || podeVisualizarExecutivo;
+
         // ===== DADOS PRINCIPAIS =====
         DashboardMetricsDTO dto = dashboardMetricsService.getMetrics();
 
@@ -103,6 +127,12 @@ public class DashboardController {
         // ===== ADICIONANDO ATRIBUTOS AO MODEL =====
         model.addAttribute("usuarioLogado", usuarioLogado);
         model.addAttribute("isAdmin", isAdmin);
+
+        model.addAttribute("podeVisualizarExecutivo", podeVisualizarExecutivo);
+        model.addAttribute("podeVisualizarFinanceiro", podeVisualizarFinanceiro);
+        model.addAttribute("podeVisualizarOperacional", podeVisualizarOperacional);
+        model.addAttribute("podeVisualizarRH", podeVisualizarRH);
+        model.addAttribute("podeVisualizarJuridico", podeVisualizarJuridico);
 
         model.addAttribute("faturamentoMensal", dto.faturamentoMensalFormatado);
         model.addAttribute("crescimentoFaturamento", dto.crescimentoFaturamento);
@@ -164,21 +194,25 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard/notificacoes")
+    @PreAuthorize("isAuthenticated()")
     public String dashboardNotificacoes(Model model) {
         return "dashboard/notificacoes";
     }
 
     @GetMapping("/dashboard/estatisticas")
+    @PreAuthorize("hasAnyAuthority('DASHBOARD_EXECUTIVO_VISUALIZAR','DASHBOARD_OPERACIONAL_VISUALIZAR','DASHBOARD_FINANCEIRO_VISUALIZAR')")
     public String dashboardEstatisticas(Model model) {
         return "dashboard/estatisticas";
     }
 
     @GetMapping("/dashboard/alertas")
+    @PreAuthorize("isAuthenticated()")
     public String dashboardAlertas(Model model) {
         return "dashboard/alertas";
     }
 
     @GetMapping("/dashboard/api/metrics")
+    @PreAuthorize("hasAnyAuthority('DASHBOARD_EXECUTIVO_VISUALIZAR','DASHBOARD_OPERACIONAL_VISUALIZAR','DASHBOARD_FINANCEIRO_VISUALIZAR')")
     public org.springframework.http.ResponseEntity<DashboardMetricsDTO> apiMetrics(Principal principal) {
         DashboardMetricsDTO dto = dashboardMetricsService.getMetrics();
         return org.springframework.http.ResponseEntity.ok()
@@ -187,6 +221,7 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard/api/system")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public org.springframework.http.ResponseEntity<java.util.Map<String, Object>> apiSystem() {
         Runtime rt = Runtime.getRuntime();
         java.lang.management.RuntimeMXBean mx = java.lang.management.ManagementFactory.getRuntimeMXBean();

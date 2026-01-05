@@ -6,6 +6,7 @@ import com.jaasielsilva.portalceo.model.Colaborador;
 import com.jaasielsilva.portalceo.service.ChamadoService;
 import com.jaasielsilva.portalceo.service.AtribuicaoColaboradorService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -86,6 +87,7 @@ public class ChamadoRestController {
      * Busca chamado por ID como DTO
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<ChamadoDTO> buscarPorId(@PathVariable Long id) {
         try {
             Optional<ChamadoDTO> chamado = chamadoService.buscarPorIdDTO(id);
@@ -127,6 +129,7 @@ public class ChamadoRestController {
      * Lista chamados em andamento como DTO
      */
     @GetMapping("/em-andamento")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<List<ChamadoDTO>> listarEmAndamento() {
         try {
             List<ChamadoDTO> chamados = chamadoService.listarEmAndamentoDTO();
@@ -232,6 +235,7 @@ public class ChamadoRestController {
      * Atribuir colaborador específico ao chamado
      */
     @PostMapping("/{id}/atribuir")
+    @PreAuthorize("hasAuthority('CHAMADO_ATRIBUIR')")
     public ResponseEntity<Map<String, Object>> atribuirColaborador(
             @PathVariable Long id,
             @RequestParam Long colaboradorId) {
@@ -254,6 +258,7 @@ public class ChamadoRestController {
      * Atribuição automática de colaborador
      */
     @PostMapping("/{id}/atribuir-automatico")
+    @PreAuthorize("hasAuthority('CHAMADO_ATRIBUIR')")
     public ResponseEntity<Map<String, Object>> atribuirAutomatico(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -336,6 +341,7 @@ public class ChamadoRestController {
      * Verificar disponibilidade de colaborador
      */
     @GetMapping("/colaborador/{colaboradorId}/disponibilidade")
+    @PreAuthorize("hasAuthority('CHAMADO_ATRIBUIR')")
     public ResponseEntity<Map<String, Object>> verificarDisponibilidade(@PathVariable Long colaboradorId) {
         Map<String, Object> response = new HashMap<>();
         try {
@@ -447,6 +453,7 @@ class ColaboradorRestController {
      * Endpoint temporário para criar colaboradores de TI de teste
      */
     @PostMapping("/tecnicos/criar-teste")
+    @PreAuthorize("hasAuthority('ADMIN_GERENCIAR_USUARIOS')")
     public ResponseEntity<Map<String, Object>> criarColaboradoresTeste() {
         Map<String, Object> response = new HashMap<>();
         try {

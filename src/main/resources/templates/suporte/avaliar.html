@@ -174,7 +174,7 @@
                                 <i class="fas fa-headset"></i> Suporte
                             </a>
                         </li>
-                        <li class="breadcrumb-item">
+                        <li class="breadcrumb-item" th:if="${podeVisualizar}">
                             <a th:href="@{/suporte/chamados}">
                                 <i class="fas fa-list"></i> Chamados
                             </a>

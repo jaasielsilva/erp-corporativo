@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backlog de Chamados - Suporte - ERP Corporativo</title>
+
+    <!-- CSS Files -->
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ===== PADRÃO EMPRESARIAL - CORES CONSISTENTES ===== */
+        :root {
+            --primary-color: #1e293b;
+            --secondary-color: #334155;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --light-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* ===== LAYOUT PRINCIPAL ===== */
+        .content-area {
+            background-color: var(--light-bg);
+            min-height: calc(100vh - 80px);
+            padding: 2rem 0;
+        }
+
+        /* ===== CARDS PADRONIZADOS ===== */
+        .card-empresarial {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .card-empresarial:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header-empresarial {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            padding: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* ===== SCORE BADGE ===== */
+        .badge-score {
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .score-alto {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .score-medio {
+            background-color: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fcd34d;
+        }
+
+        .score-baixo {
+            background-color: #d1fae5;
+            color: #059669;
+            border: 1px solid #6ee7b7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <div class="container-fluid">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800">
+                                <i class="fas fa-tasks text-primary me-2"></i>Backlog de Chamados
+                            </h1>
+                            <p class="text-muted mb-0">Gerenciamento e priorização da fila de atendimento</p>
+                        </div>
+                        <div>
+                            <a href="/suporte" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-arrow-left me-1"></i>Voltar
+                            </a>
+                            <a href="/suporte/chamados" class="btn btn-primary">
+                                <i class="fas fa-list me-1"></i>Todos os Chamados
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Cards de Resumo -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Total no Backlog</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalBacklog}">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Tempo Médio de Espera</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                                 th:text="${metricasBacklog.tempoMedioEspera != null ? #numbers.formatDecimal(metricasBacklog.tempoMedioEspera, 1, 1) + ' min' : '0 min'}">
+                                                0 min
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Score Médio</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                 th:text="${estatisticasBacklog.scoreMedio != null ? #numbers.formatDecimal(estatisticasBacklog.scoreMedio, 1, 1) : '0'}">
+                                                0
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-danger shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                Críticos</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                 th:text="${estatisticasBacklog.chamadosSlaCritico != null ? estatisticasBacklog.chamadosSlaCritico : '0'}">
+                                                0
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Backlog -->
+                    <div class="card card-empresarial mb-4">
+                        <div class="card-header card-header-empresarial d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-list-ol me-2"></i>Fila de Atendimento Priorizada
+                            </h6>
+                            <button class="btn btn-sm btn-light text-primary" onclick="window.location.reload()">
+                                <i class="fas fa-sync-alt me-1"></i>Atualizar
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Posição</th>
+                                            <th>Score</th>
+                                            <th>Chamado</th>
+                                            <th>Assunto</th>
+                                            <th>Prioridade</th>
+                                            <th>Entrada no Backlog</th>
+                                            <th>Tempo Espera</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="item : ${backlogChamados}">
+                                            <td class="align-middle text-center">
+                                                <span class="badge bg-secondary rounded-circle p-2" th:text="${item.posicaoFila}">1</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <span class="badge-score" 
+                                                      th:classappend="${item.scorePrioridade >= 80 ? 'score-alto' : (item.scorePrioridade >= 50 ? 'score-medio' : 'score-baixo')}"
+                                                      th:text="${#numbers.formatDecimal(item.scorePrioridade, 1, 1)}">
+                                                    95.5
+                                                </span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <a th:href="@{/suporte/chamados/{id}(id=${item.chamado.id})}" class="text-decoration-none font-weight-bold" th:text="${item.chamado.numero}">
+                                                    CH-2023-001
+                                                </a>
+                                            </td>
+                                            <td class="align-middle" th:text="${item.chamado.assunto}">Problema na impressora</td>
+                                            <td class="align-middle">
+                                                <span class="badge" 
+                                                      th:classappend="${'bg-' + (item.chamado.prioridade.name() == 'URGENTE' ? 'danger' : (item.chamado.prioridade.name() == 'ALTA' ? 'warning' : (item.chamado.prioridade.name() == 'MEDIA' ? 'info' : 'success')))}"
+                                                      th:text="${item.chamado.prioridade}">
+                                                    ALTA
+                                                </span>
+                                            </td>
+                                            <td class="align-middle" th:text="${#temporals.format(item.dataEntradaBacklog, 'dd/MM/yyyy HH:mm')}">01/01/2023 10:00</td>
+                                            <td class="align-middle" th:text="${item.tempoEsperaMinutos + ' min'}">30 min</td>
+                                            <td class="align-middle">
+                                                <a th:href="@{/suporte/chamados/{id}(id=${item.chamado.id})}" class="btn btn-sm btn-info text-white" title="Visualizar">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <button th:if="${isTecnico}"
+                                                        class="btn btn-sm btn-success" title="Iniciar Atendimento"
+                                                        th:onclick="'iniciarAtendimento(' + ${item.chamado.id} + ')'">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                                <button th:if="${isTecnico}"
+                                                        class="btn btn-sm btn-danger" title="Remover do Backlog"
+                                                        th:onclick="'removerDoBacklog(' + ${item.chamado.id} + ')'">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(backlogChamados)}">
+                                            <td colspan="8" class="text-center py-4 text-muted">
+                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                O backlog está vazio. Ótimo trabalho!
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        function iniciarAtendimento(id) {
+            if (confirm('Deseja iniciar o atendimento deste chamado?')) {
+                // Redireciona para a tela de visualização onde o técnico pode assumir
+                window.location.href = '/suporte/chamados/' + id;
+            }
+        }
+
+        function removerDoBacklog(id) {
+            if (confirm('Tem certeza que deseja remover este chamado do backlog?')) {
+                $.ajax({
+                    url: '/suporte/api/backlog/remover/' + id,
+                    type: 'DELETE',
+                    success: function(response) {
+                        alert('Chamado removido do backlog com sucesso!');
+                        window.location.reload();
+                    },
+                    error: function(xhr) {
+                        alert('Erro ao remover chamado: ' + (xhr.responseJSON ? xhr.responseJSON.erro : 'Erro desconhecido'));
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

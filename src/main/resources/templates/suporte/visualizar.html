@@ -215,22 +215,22 @@
                                 <i class="fas fa-plus me-1"></i> Novo Chamado
                             </a>
                             <div class="btn-group ms-2" role="group">
-                                <button th:if="${chamado.status.name() == 'ABERTO'}" 
+                                <button th:if="${chamado.status.name() == 'ABERTO' and podeIniciar}" 
                                         class="btn btn-success btn-action" 
                                         th:onclick="'iniciarAtendimento(' + ${chamado.id} + ')'">
                                     <i class="fas fa-play me-1"></i> Iniciar Atendimento
                                 </button>
-                                <button th:if="${chamado.status.name() == 'EM_ANDAMENTO'}" 
+                                <button th:if="${chamado.status.name() == 'EM_ANDAMENTO' and podeResolver}" 
                                         class="btn btn-warning btn-action" 
                                         th:onclick="'resolverChamado(' + ${chamado.id} + ')'">
                                     <i class="fas fa-check me-1"></i> Resolver
                                 </button>
-                                <button th:if="${chamado.status.name() == 'RESOLVIDO'}" 
+                                <button th:if="${chamado.status.name() == 'RESOLVIDO' and podeFechar}" 
                                         class="btn btn-secondary btn-action" 
                                         th:onclick="'fecharChamado(' + ${chamado.id} + ')'">
                                     <i class="fas fa-times me-1"></i> Fechar
                                 </button>
-                                <button th:if="${chamado.status.name() == 'FECHADO'}" 
+                                <button th:if="${chamado.status.name() == 'FECHADO' and podeReabrir}" 
                                         class="btn btn-warning btn-action" 
                                         th:onclick="'reabrirChamado(' + ${chamado.id} + ')'">
                                     <i class="fas fa-redo me-1"></i> Reabrir

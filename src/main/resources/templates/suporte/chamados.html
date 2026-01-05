@@ -409,13 +409,10 @@
                     <nav aria-label="breadcrumb" class="breadcrumb-empresarial">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item">
-                                <a href="/suporte">
+                                <a href="/suporte"
                                     <i class="fas fa-headset me-1"></i>Suporte
                                 </a>
-                            </li>
-                            <li class="breadcrumb-item active" aria-current="page">
-                                <i class="fas fa-list me-1"></i>Lista de Chamados
-                            </li>
+                            >/li>
                         </ol>
                     </nav>
 
@@ -431,7 +428,7 @@
                                     <p class="mb-0" style="color: var(--text-secondary);">Gerencie todos os chamados de suporte</p>
                                 </div>
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <a href="/suporte/chamados/novo" class="btn btn-primary-empresarial">
+                                    <a href="/suporte/chamados/novo" class="btn btn-primary-empresarial" th:if="${podeCriar}">
                                         <i class="fas fa-plus"></i> Novo Chamado
                                     </a>
                                     <button class="btn btn-empresarial" style="background: var(--secondary-color); color: white;" onclick="atualizarDados()">
@@ -585,7 +582,7 @@
                                                     <a href="/suporte/chamados/novo" class="btn btn-primary-empresarial mt-3">
                                                         <i class="fas fa-plus"></i> Criar Primeiro Chamado
                                                     </a>
-                                                </div>
+                                                </div>" th:if="${podeCriar}
                                             </td>
                                         </tr>
 
@@ -668,24 +665,24 @@
                                                         class="btn btn-empresarial btn-sm" style="background: var(--info-color); color: white;" title="Visualizar">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <button th:if="${chamado.status.name() == 'ABERTO'}"
+                                                    <button th:if="${chamado.status.name() == 'ABERTO' and podeIniciar}"
                                                         class="btn btn-success-empresarial btn-sm" title="Assumir Atendimento"
                                                         th:onclick="'iniciarAtendimento(' + ${chamado.id} + ')'">
                                                         <i class="fas fa-user-check"></i>
                                                     </button>
-                                                    <button th:if="${chamado.status.name() == 'EM_ANDAMENTO'}"
+                                                    <button th:if="${chamado.status.name() == 'EM_ANDAMENTO' and podeResolver}"
                                                         class="btn btn-warning-empresarial btn-sm" title="Resolver"
                                                         th:onclick="'resolverChamado(' + ${chamado.id} + ')'">
                                                         <i class="fas fa-check"></i>
                                                     </button>
-                                                    <button th:if="${chamado.status.name() == 'RESOLVIDO'}"
+                                                    <button th:if="${chamado.status.name() == 'RESOLVIDO' and podeFechar}"
                                                         class="btn btn-empresarial btn-sm" style="background: var(--secondary-color); color: white;" title="Fechar"
                                                         th:onclick="'fecharChamado(' + ${chamado.id} + ')'">
                                                         <i class="fas fa-times"></i>
                                                     </button>
                                                     <a th:href="@{/suporte/chamados/{id}/avaliar(id=${chamado.id})}"
                                                         class="btn btn-warning-empresarial btn-sm"
-                                                        th:if="${(chamado.status.name() == 'RESOLVIDO' or chamado.status.name() == 'FECHADO') and chamado.avaliacao == null}"
+                                                        th:if="${(chamado.status.name() == 'RESOLVIDO' or chamado.status.name() == 'FECHADO') and chamado.avaliacao == null and podeAvaliar}"
                                                         title="Avaliar atendimento">
                                                         <i class="fas fa-star"></i>
                                                     </a>

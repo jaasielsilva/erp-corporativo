@@ -490,6 +490,14 @@
         let chamados = [];
         let filtroStatus = 'todos';
         let filtroPrioridade = 'todas';
+        
+        // Permissões
+        const PERMISSOES = {
+            podeIniciar: [[${podeIniciar}]],
+            podeResolver: [[${podeResolver}]],
+            podeFechar: [[${podeFechar}]],
+            podeReabrir: [[${podeReabrir}]]
+        };
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
@@ -648,35 +656,49 @@
             
             switch (chamado.status) {
                 case 'ABERTO':
-                    botoes.push(`<button class="action-btn btn-iniciar" onclick="atualizarStatusRapido(${chamado.id}, 'EM_ANDAMENTO')">
-                        <i class="fas fa-user-check me-1"></i>Assumir Atendimento
-                    </button>`);
+                    if (PERMISSOES.podeIniciar) {
+                        botoes.push(`<button class="action-btn btn-iniciar" onclick="atualizarStatusRapido(${chamado.id}, 'EM_ANDAMENTO')">
+                            <i class="fas fa-user-check me-1"></i>Assumir Atendimento
+                        </button>`);
+                    }
                     break;
                 case 'EM_ANDAMENTO':
-                    botoes.push(`<button class="action-btn btn-pausar" onclick="atualizarStatusRapido(${chamado.id}, 'AGUARDANDO_CLIENTE')">
-                        <i class="fas fa-pause me-1"></i>Aguardar Cliente
-                    </button>`);
-                    botoes.push(`<button class="action-btn btn-resolver" onclick="atualizarStatusRapido(${chamado.id}, 'RESOLVIDO')">
-                        <i class="fas fa-check me-1"></i>Resolver
-                    </button>`);
+                    if (PERMISSOES.podeIniciar) {
+                        botoes.push(`<button class="action-btn btn-pausar" onclick="atualizarStatusRapido(${chamado.id}, 'AGUARDANDO_CLIENTE')">
+                            <i class="fas fa-pause me-1"></i>Aguardar Cliente
+                        </button>`);
+                    }
+                    if (PERMISSOES.podeResolver) {
+                        botoes.push(`<button class="action-btn btn-resolver" onclick="atualizarStatusRapido(${chamado.id}, 'RESOLVIDO')">
+                            <i class="fas fa-check me-1"></i>Resolver
+                        </button>`);
+                    }
                     break;
                 case 'AGUARDANDO_CLIENTE':
-                    botoes.push(`<button class="action-btn btn-iniciar" onclick="atualizarStatusRapido(${chamado.id}, 'EM_ANDAMENTO')">
-                        <i class="fas fa-play me-1"></i>Retomar
-                    </button>`);
+                    if (PERMISSOES.podeIniciar) {
+                        botoes.push(`<button class="action-btn btn-iniciar" onclick="atualizarStatusRapido(${chamado.id}, 'EM_ANDAMENTO')">
+                            <i class="fas fa-play me-1"></i>Retomar
+                        </button>`);
+                    }
                     break;
                 case 'RESOLVIDO':
-                    botoes.push(`<button class="action-btn btn-fechar" onclick="atualizarStatusRapido(${chamado.id}, 'FECHADO')">
-                        <i class="fas fa-lock me-1"></i>Fechar
-                    </button>`);
-                    botoes.push(`<button class="action-btn btn-reabrir" onclick="atualizarStatusRapido(${chamado.id}, 'EM_ANDAMENTO')">
-                        <i class="fas fa-undo me-1"></i>Reabrir
-                    </button>`);
+                    if (PERMISSOES.podeFechar) {
+                        botoes.push(`<button class="action-btn btn-fechar" onclick="atualizarStatusRapido(${chamado.id}, 'FECHADO')">
+                            <i class="fas fa-lock me-1"></i>Fechar
+                        </button>`);
+                    }
+                    if (PERMISSOES.podeReabrir) {
+                        botoes.push(`<button class="action-btn btn-reabrir" onclick="atualizarStatusRapido(${chamado.id}, 'EM_ANDAMENTO')">
+                            <i class="fas fa-undo me-1"></i>Reabrir
+                        </button>`);
+                    }
                     break;
                 case 'FECHADO':
-                    botoes.push(`<button class="action-btn btn-reabrir" onclick="atualizarStatusRapido(${chamado.id}, 'ABERTO')">
-                        <i class="fas fa-undo me-1"></i>Reabrir
-                    </button>`);
+                    if (PERMISSOES.podeReabrir) {
+                        botoes.push(`<button class="action-btn btn-reabrir" onclick="atualizarStatusRapido(${chamado.id}, 'ABERTO')">
+                            <i class="fas fa-undo me-1"></i>Reabrir
+                        </button>`);
+                    }
                     break;
             }
             

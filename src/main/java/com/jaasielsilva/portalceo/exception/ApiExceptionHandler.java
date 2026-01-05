@@ -1,5 +1,7 @@
 package com.jaasielsilva.portalceo.exception;
 
+import com.jaasielsilva.portalceo.controller.ChamadoRestController;
+import com.jaasielsilva.portalceo.controller.SuporteApiController;
 import com.jaasielsilva.portalceo.dto.ChamadoStatusResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +19,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Handler específico para APIs REST
+ * Handler específico para APIs REST do módulo de Suporte/Chamados
  * Padroniza respostas de erro em formato JSON para endpoints de API
  */
-@RestControllerAdvice(basePackages = {"com.jaasielsilva.portalceo.controller"})
+@RestControllerAdvice(assignableTypes = {ChamadoRestController.class, SuporteApiController.class})
 public class ApiExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiExceptionHandler.class);

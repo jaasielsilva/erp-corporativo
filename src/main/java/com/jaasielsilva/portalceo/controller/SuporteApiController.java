@@ -9,10 +9,14 @@ import com.jaasielsilva.portalceo.service.ChamadoStateMachine;
 import com.jaasielsilva.portalceo.service.ChamadoAuditoriaService;
 import com.jaasielsilva.portalceo.security.PermissaoBusinessService;
 import com.jaasielsilva.portalceo.security.PerfilUsuario;
+import com.jaasielsilva.portalceo.model.NivelAcesso;
+import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.service.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -43,10 +47,14 @@ public class SuporteApiController {
     @Autowired
     private PermissaoBusinessService permissaoService;
 
+    @Autowired
+    private UsuarioService usuarioService;
+
     /**
      * API para listar chamados - usado pela página de status
      */
     @GetMapping("/chamados")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<List<ChamadoDTO>> listarChamados() {
         try {
             List<ChamadoDTO> chamados = chamadoService.listarTodosDTO();
@@ -62,6 +70,7 @@ public class SuporteApiController {
      * API para atualizar status de chamado - NOVO PADRÃO com validações
      */
     @PutMapping("/chamados/{id}/status")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ChamadoStatusResponse> atualizarStatus(
             @PathVariable Long id,
             @Valid @RequestBody AtualizarStatusRequest request) {
@@ -70,16 +79,36 @@ public class SuporteApiController {
             // Verificar permissão para atualizar status
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
+            String acao = request.getAcao().toLowerCase();
             
-            // Assumindo perfil TECNICO por padrão - em um sistema real, isso viria do banco de dados
-            PerfilUsuario perfil = PerfilUsuario.TECNICO;
+            boolean temPermissao = false;
             
-            if (!permissaoService.podeAtualizarStatus(perfil, request.getAcao())) {
+            switch (acao) {
+                case "iniciar":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_INICIAR"));
+                    break;
+                case "resolver":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_RESOLVER"));
+                    break;
+                case "fechar":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_FECHAR"));
+                    break;
+                case "reabrir":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_REABRIR"));
+                    break;
+                default:
+                    auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS_API", id, username, "Ação inválida: " + acao);
+                    return ResponseEntity.badRequest()
+                        .body(ChamadoStatusResponse.erro("Ação inválida: " + acao));
+            }
+            
+            if (!temPermissao) {
                 auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS_API", id, username, 
                     "Usuário não possui permissão para executar a ação: " + request.getAcao());
                 return ResponseEntity.status(403)
                     .body(ChamadoStatusResponse.erro("Acesso negado: você não possui permissão para executar esta ação"));
             }
+
             // Buscar chamado
             Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(id);
             if (chamadoOpt.isEmpty()) {
@@ -103,7 +132,6 @@ public class SuporteApiController {
 
             // Executar ação baseada no tipo
             Chamado chamadoAtualizado;
-            String acao = request.getAcao().toLowerCase();
             
             switch (acao) {
                 case "iniciar":
@@ -135,9 +163,7 @@ public class SuporteApiController {
                     break;
                     
                 default:
-                    auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS_API", id, null, "Ação inválida: " + acao);
-                    return ResponseEntity.badRequest()
-                        .body(ChamadoStatusResponse.erro("Ação inválida: " + acao));
+                    throw new IllegalArgumentException("Ação inválida: " + acao);
             }
 
             logger.info("Status do chamado {} atualizado de {} para {} via API", 

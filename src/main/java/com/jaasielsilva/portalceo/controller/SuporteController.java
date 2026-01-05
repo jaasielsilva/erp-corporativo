@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -77,9 +78,12 @@ public class SuporteController {
 
     // Dashboard principal do suporte
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public String suporte(Model model) {
         try {
             logger.info("Carregando dashboard de suporte");
+
+            adicionarPermissoesModel(model);
 
             // Estatísticas gerais
             long chamadosAbertos = chamadoService.contarPorStatus(StatusChamado.ABERTO);
@@ -184,9 +188,26 @@ public class SuporteController {
         return "suporte/index";
     }
 
+    private void adicionarPermissoesModel(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            model.addAttribute("podeCriar", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_CRIAR")));
+            model.addAttribute("podeVisualizar", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_VISUALIZAR")));
+            model.addAttribute("podeAtribuir", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_ATRIBUIR")));
+            model.addAttribute("podeIniciar", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_INICIAR")));
+            model.addAttribute("podeResolver", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_RESOLVER")));
+            model.addAttribute("podeFechar", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_FECHAR")));
+            model.addAttribute("podeReabrir", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_REABRIR")));
+            model.addAttribute("podeAvaliar", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_AVALIAR")));
+            model.addAttribute("isTecnico", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("TECNICO_ATENDER_CHAMADOS")));
+            model.addAttribute("isAdmin", auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ADMIN_GERENCIAR_USUARIOS")));
+        }
+    }
+
     // API para dados do gráfico de prioridades
     @GetMapping("/api/prioridades")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getDadosPrioridades() {
         try {
             List<Object[]> estatisticas = chamadoService.getEstatisticasPorPrioridade();
@@ -205,6 +226,7 @@ public class SuporteController {
     // API para dados do gráfico de status
     @GetMapping("/api/status")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getDadosStatus() {
         try {
             List<Object[]> estatisticas = chamadoService.getEstatisticasPorStatus();
@@ -223,6 +245,7 @@ public class SuporteController {
     // API para dados do gráfico de evolução de chamados
     @GetMapping("/api/evolucao-chamados")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getDadosEvolucaoChamados() {
         try {
             List<String> labels = chamadoService.obterLabelsUltimosMeses(12);
@@ -255,6 +278,7 @@ public class SuporteController {
      */
     @GetMapping("/api/tempo-resolucao")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getTempoResolucao() {
         Map<String, Object> response = new HashMap<>();
 
@@ -283,6 +307,7 @@ public class SuporteController {
      */
     @GetMapping("/api/metricas-resolucao")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getMetricasResolucao() {
         Map<String, Object> response = new HashMap<>();
 
@@ -320,6 +345,7 @@ public class SuporteController {
      */
     @GetMapping("/api/tempo-medio-ultimos-dias")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getTempoMedioUltimosDias(@RequestParam(defaultValue = "30") int dias) {
         try {
             Map<String, Object> dados = chamadoService.obterTempoMedioResolucaoUltimosDias(dias);
@@ -336,6 +362,7 @@ public class SuporteController {
     // Endpoint para estatísticas de SLA
     @GetMapping("/api/sla-estatisticas")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> obterEstatisticasSla() {
         try {
             SlaMonitoramentoService.SlaEstatisticas stats = slaMonitoramentoService.calcularEstatisticasSla();
@@ -363,6 +390,7 @@ public class SuporteController {
      */
     @GetMapping("/api/chamados")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> listarChamados() {
         try {
             List<Chamado> chamados = chamadoService.listarTodos();
@@ -384,6 +412,7 @@ public class SuporteController {
      */
     @GetMapping("/api/tempo-medio-primeira-resposta")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getTempoMedioPrimeiraResposta() {
         try {
             Double tempoMedio = chamadoService.calcularTempoMedioPrimeiraResposta();
@@ -406,6 +435,7 @@ public class SuporteController {
      */
     @GetMapping("/api/metricas-sla-periodo")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getMetricasSLAPeriodo(@RequestParam(defaultValue = "30") int dias) {
         Map<String, Object> response = new HashMap<>();
 
@@ -442,6 +472,7 @@ public class SuporteController {
      */
     @GetMapping("/api/metricas-sla-comparativo")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getMetricasSLAComparativo() {
         Map<String, Object> response = new HashMap<>();
 
@@ -475,6 +506,7 @@ public class SuporteController {
      */
     @GetMapping("/api/tendencia-sla")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getTendenciaSLA(@RequestParam(defaultValue = "30") int dias) {
         Map<String, Object> response = new HashMap<>();
 
@@ -497,7 +529,9 @@ public class SuporteController {
 
     // Listar todos os chamados
     @GetMapping("/chamados")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public String listarChamados(Model model) {
+        adicionarPermissoesModel(model);
         try {
             List<Chamado> chamados = chamadoService.listarTodos();
             model.addAttribute("chamados", chamados);
@@ -511,7 +545,9 @@ public class SuporteController {
 
     // Página para gerenciar status dos chamados
     @GetMapping("/status")
+    @PreAuthorize("hasAuthority('TECNICO_ATENDER_CHAMADOS')")
     public String gerenciarStatus(Model model) {
+        adicionarPermissoesModel(model);
         try {
             logger.info("Carregando página de gerenciar status");
 
@@ -542,7 +578,9 @@ public class SuporteController {
 
     // Página para atribuir chamados
     @GetMapping("/atribuir")
+    @PreAuthorize("hasAuthority('CHAMADO_ATRIBUIR')")
     public String atribuirChamados(Model model) {
+        adicionarPermissoesModel(model);
         try {
             logger.info("Carregando página de atribuir chamados");
 
@@ -579,8 +617,11 @@ public class SuporteController {
 
     // Formulário para novo chamado - DEVE VIR ANTES da rota com {id}
     @GetMapping("/chamados/novo")
+    @PreAuthorize("hasAuthority('CHAMADO_CRIAR')")
     public String novoFormulario(Model model) {
         logger.info("Acessando formulário de novo chamado");
+        
+        adicionarPermissoesModel(model);
 
         try {
             // Gera o próximo número do chamado
@@ -601,7 +642,9 @@ public class SuporteController {
 
     // Visualizar chamado específico
     @GetMapping("/chamados/{id}")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public String visualizarChamado(@PathVariable Long id, Model model) {
+        adicionarPermissoesModel(model);
         try {
             Chamado chamado = chamadoService.buscarPorId(id)
                     .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
@@ -618,7 +661,9 @@ public class SuporteController {
 
     // Página de teste para novo chamado
     @GetMapping("/teste-chamado")
+    @PreAuthorize("hasAuthority('ADMIN_GERENCIAR_USUARIOS')")
     public String testeChamado(Model model) {
+        adicionarPermissoesModel(model);
         model.addAttribute("proximoNumero", chamadoService.gerarProximoNumero());
         model.addAttribute("prioridades", Prioridade.values());
         model.addAttribute("chamado", new Chamado());
@@ -628,6 +673,7 @@ public class SuporteController {
     // API para obter categorias e subcategorias
     @GetMapping("/api/categorias")
     @ResponseBody
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CategoriaChamadoDTO>> obterCategorias() {
         try {
             List<CategoriaChamadoDTO> categorias = new ArrayList<>();
@@ -726,6 +772,7 @@ public class SuporteController {
     }
 
     @GetMapping("/teste-simples")
+    @PreAuthorize("hasAuthority('ADMIN_GERENCIAR_USUARIOS')")
     public String testeSimples(Model model) {
         model.addAttribute("proximoNumero", chamadoService.gerarProximoNumero());
         model.addAttribute("prioridades", Prioridade.values());
@@ -734,6 +781,7 @@ public class SuporteController {
     }
 
     @GetMapping("/novo-simples")
+    @PreAuthorize("hasAuthority('ADMIN_GERENCIAR_USUARIOS')")
     public String novoSimples(Model model) {
         try {
             logger.info("Testando template simplificado");
@@ -749,6 +797,7 @@ public class SuporteController {
 
     // Criar novo chamado
     @PostMapping("/chamados/novo")
+    @PreAuthorize("hasAuthority('CHAMADO_CRIAR')")
     public String criarChamado(@ModelAttribute Chamado chamado,
             @RequestParam(value = "anexos", required = false) MultipartFile[] anexos) {
         try {
@@ -789,6 +838,7 @@ public class SuporteController {
     @PostMapping("/chamados/{id}/status")
     @ResponseBody
     @Deprecated
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> atualizarStatusLegacy(
             @PathVariable Long id,
             @RequestParam String acao,
@@ -821,6 +871,7 @@ public class SuporteController {
     // Endpoint PUT para atualizar status (usado pelo JavaScript)
     @PutMapping("/api/chamados/{id}/status")
     @ResponseBody
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> atualizarStatusViaPut(
             @PathVariable Long id,
             @RequestBody Map<String, Object> requestBody) {
@@ -888,6 +939,7 @@ public class SuporteController {
     // Novo endpoint padronizado com validações
     @PostMapping("/api/chamados/{id}/status-padronizado")
     @ResponseBody
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ChamadoStatusResponse> atualizarStatusPadronizado(
             @PathVariable Long id,
             @Valid @RequestBody AtualizarStatusRequest request) {
@@ -896,12 +948,26 @@ public class SuporteController {
             // Verificar permissão para atualizar status
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
+            String acao = request.getAcao().toLowerCase();
 
-            // Assumindo perfil TECNICO por padrão - em um sistema real, isso viria do banco
-            // de dados
-            PerfilUsuario perfil = PerfilUsuario.TECNICO;
+            boolean temPermissao = false;
 
-            if (!permissaoService.podeAtualizarStatus(perfil, request.getAcao())) {
+            switch (acao) {
+                case "iniciar":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_INICIAR"));
+                    break;
+                case "resolver":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_RESOLVER"));
+                    break;
+                case "fechar":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_FECHAR"));
+                    break;
+                case "reabrir":
+                    temPermissao = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CHAMADO_REABRIR"));
+                    break;
+            }
+
+            if (!temPermissao) {
                 auditoriaService.registrarTentativaOperacaoNaoAutorizada("ATUALIZAR_STATUS", id, username,
                         "Usuário não possui permissão para executar a ação: " + request.getAcao());
                 return ResponseEntity.status(403)
@@ -932,7 +998,6 @@ public class SuporteController {
 
             // Executar ação baseada no tipo
             Chamado chamadoAtualizado;
-            String acao = request.getAcao().toLowerCase();
 
             switch (acao) {
                 case "iniciar":
@@ -986,6 +1051,7 @@ public class SuporteController {
 
     // Endpoint de teste para debug do template
     @GetMapping("/chamados/{id}/debug")
+    @PreAuthorize("hasAuthority('ADMIN_GERENCIAR_USUARIOS')")
     public String debugChamado(@PathVariable Long id, Model model) {
         try {
             logger.info("=== DEBUG CHAMADO {} ===", id);
@@ -1006,6 +1072,7 @@ public class SuporteController {
 
     // Página de debug para novo chamado
     @GetMapping("/debug-novo")
+    @PreAuthorize("hasAuthority('ADMIN_GERENCIAR_USUARIOS')")
     public String debugNovo(Model model) {
         try {
             logger.info("=== DEBUG NOVO CHAMADO ===");
@@ -1033,7 +1100,9 @@ public class SuporteController {
 
     // Página para avaliar chamado
     @GetMapping("/chamados/{id}/avaliar")
+    @PreAuthorize("hasAuthority('CHAMADO_AVALIAR')")
     public String avaliarChamado(@PathVariable Long id, Model model) {
+        adicionarPermissoesModel(model);
         try {
             // Buscar chamado por ID
             Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(id);
@@ -1067,6 +1136,7 @@ public class SuporteController {
 
     // Endpoint para dados de avaliações de atendimento
     @GetMapping("/api/avaliacoes-atendimento")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getDadosAvaliacoes() {
         try {
@@ -1121,6 +1191,7 @@ public class SuporteController {
     // Teste de busca de chamado sem template
     @GetMapping("/chamados/{id}/json")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> buscarChamadoJson(@PathVariable Long id) {
         try {
             Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(id);
@@ -1153,9 +1224,12 @@ public class SuporteController {
     // Endpoints específicos para Backlog de Chamados
 
     @GetMapping("/backlog")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public String backlog(Model model) {
         try {
             logger.info("Carregando página do backlog de chamados");
+
+            adicionarPermissoesModel(model);
 
             // Dados do backlog
             Long totalBacklog = backlogChamadoService.contarTotalBacklog();
@@ -1180,6 +1254,7 @@ public class SuporteController {
 
     @GetMapping("/api/backlog")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getBacklogData() {
         try {
             Map<String, Object> response = new HashMap<>();
@@ -1204,6 +1279,7 @@ public class SuporteController {
 
     @GetMapping("/api/backlog/proximo")
     @ResponseBody
+    @PreAuthorize("hasAuthority('TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> getProximoChamado() {
         try {
             Optional<com.jaasielsilva.portalceo.model.BacklogChamado> proximo = backlogChamadoService
@@ -1230,6 +1306,7 @@ public class SuporteController {
 
     @PostMapping("/api/backlog/adicionar/{chamadoId}")
     @ResponseBody
+    @PreAuthorize("hasAuthority('TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<Map<String, Object>> adicionarAoBacklog(@PathVariable Long chamadoId) {
         try {
             Optional<Chamado> chamadoOpt = chamadoService.buscarPorId(chamadoId);
@@ -1280,6 +1357,7 @@ public class SuporteController {
 
     // Teste com template simplificado
     @GetMapping("/chamados/{id}/simples")
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public String visualizarChamadoSimples(@PathVariable Long id, Model model) {
         try {
             Chamado chamado = chamadoService.buscarPorId(id)
@@ -1297,6 +1375,7 @@ public class SuporteController {
 
     @GetMapping("/api/public/debug-dados")
     @ResponseBody
+    @PreAuthorize("hasAuthority('ADMIN_GERENCIAR_USUARIOS')")
     public ResponseEntity<Map<String, Object>> debugDados() {
         Map<String, Object> response = new HashMap<>();
 
@@ -1347,6 +1426,7 @@ public class SuporteController {
     // Endpoint para atribuição automática de chamado
     @PostMapping("/atribuir-automatico/{chamadoId}")
     @ResponseBody
+    @PreAuthorize("hasAuthority('CHAMADO_ATRIBUIR')")
     public ResponseEntity<Map<String, Object>> atribuirAutomatico(@PathVariable Long chamadoId) {
         Map<String, Object> response = new HashMap<>();
 
@@ -1376,8 +1456,39 @@ public class SuporteController {
         } catch (Exception e) {
             logger.error("Erro ao atribuir chamado automaticamente: {}", e.getMessage());
             response.put("success", false);
-            response.put("message", "Erro interno: " + e.getMessage());
+            response.put("message", "Erro ao processar solicitação: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Endpoint para obter dados do usuário atual (usado pelo frontend)
+    @GetMapping("/api/usuario/atual")
+    @ResponseBody
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getUsuarioAtual() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String email = auth.getName();
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+            
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            Usuario usuario = usuarioOpt.get();
+            boolean podeAtender = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("TECNICO_ATENDER_CHAMADOS"));
+            
+            Map<String, Object> dados = new HashMap<>();
+            dados.put("id", usuario.getId());
+            dados.put("nome", usuario.getNome());
+            dados.put("email", usuario.getEmail());
+            dados.put("podeAtenderChamados", podeAtender);
+            
+            return ResponseEntity.ok(dados);
+        } catch (Exception e) {
+            logger.error("Erro ao obter usuário atual: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -1413,6 +1524,7 @@ public class SuporteController {
      */
     @GetMapping("/api/chamados/export/excel")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<String> exportarChamadosExcel(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String prioridade,
@@ -1469,6 +1581,7 @@ public class SuporteController {
      */
     @GetMapping("/api/chamados/export/pdf")
     @ResponseBody
+    @PreAuthorize("hasAnyAuthority('CHAMADO_VISUALIZAR', 'TECNICO_ATENDER_CHAMADOS')")
     public ResponseEntity<byte[]> exportarChamadosPdf(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dataFim,
@@ -1847,6 +1960,7 @@ public class SuporteController {
     // ENDPOINT PARA OBTER USUÁRIO ATUAL
     @GetMapping("/api/usuario/atual")
     @ResponseBody
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> obterUsuarioAtual() {
         try {
             Usuario usuarioLogado = obterUsuarioLogado();

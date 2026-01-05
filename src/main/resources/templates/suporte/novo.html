@@ -735,52 +735,71 @@
             secaoAtual = secao;
         }
         
-        // Função para validar seção atual
+        function obterLabelCampo(el) {
+            const map = {
+                categoriaPrincipal: 'Categoria',
+                prioridade: 'Prioridade',
+                solicitanteNome: 'Nome completo',
+                solicitanteEmail: 'Email',
+                assunto: 'Assunto',
+                descricao: 'Descrição detalhada'
+            };
+            return map[el.id] || el.name || el.id || 'Campo';
+        }
+        function coletarErrosSecao(secao) {
+            const erros = [];
+            const campos = secao.querySelectorAll('[required]');
+            campos.forEach(campo => {
+                const v = (campo.value || '').trim();
+                if (!v) {
+                    campo.classList.add('is-invalid');
+                    erros.push(`${obterLabelCampo(campo)} é obrigatório`);
+                } else {
+                    campo.classList.remove('is-invalid');
+                }
+                if (campo.id === 'solicitanteEmail') {
+                    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (v && !re.test(v)) {
+                        campo.classList.add('is-invalid');
+                        erros.push('Email inválido');
+                    }
+                }
+                if (campo.id === 'assunto' && v && v.length < 5) {
+                    campo.classList.add('is-invalid');
+                    erros.push('Assunto deve ter pelo menos 5 caracteres');
+                }
+                if (campo.id === 'descricao' && v && v.length < 10) {
+                    campo.classList.add('is-invalid');
+                    erros.push('Descrição deve ter pelo menos 10 caracteres');
+                }
+            });
+            return erros;
+        }
+        function mostrarErrosCampos(erros) {
+            const html = `<ul style="text-align:left;margin:0;padding-left:1.2rem;">${erros.map(e=>`<li>${e}</li>`).join('')}</ul>`;
+            mostrarAlerta('error', html);
+        }
         function validarSecaoAtual() {
             const secao = document.getElementById(`secao${secaoAtual}`);
-            const campos = secao.querySelectorAll('[required]');
-            let valido = true;
-            
-            campos.forEach(campo => {
-                if (!campo.value.trim()) {
-                    campo.classList.add('is-invalid');
-                    valido = false;
-                } else {
-                    campo.classList.remove('is-invalid');
-                }
-            });
-            
-            if (!valido) {
-                mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios antes de continuar.');
+            const erros = coletarErrosSecao(secao);
+            if (erros.length) {
+                mostrarErrosCampos(erros);
+                return false;
             }
-            
-            return valido;
+            return true;
         }
         
-        // Função para validar todo o formulário (usada no submit final)
-        function validarFormularioCompleto() {
+        function coletarErrosFormulario() {
             const form = document.getElementById('chamadoForm');
-            const campos = form.querySelectorAll('[required]');
-            let valido = true;
-            
-            campos.forEach(campo => {
-                if (!campo.value.trim()) {
-                    campo.classList.add('is-invalid');
-                    valido = false;
-                } else {
-                    campo.classList.remove('is-invalid');
-                }
-            });
-            
-            // Validação específica para email
-            const email = document.getElementById('solicitanteEmail');
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (email.value && !emailRegex.test(email.value)) {
-                email.classList.add('is-invalid');
-                valido = false;
+            return coletarErrosSecao(form);
+        }
+        function validarFormularioCompleto() {
+            const erros = coletarErrosFormulario();
+            if (erros.length) {
+                mostrarErrosCampos(erros);
+                return false;
             }
-            
-            return valido;
+            return true;
         }
         
         // Função para atualizar subcategorias
@@ -871,10 +890,7 @@
         async function enviarFormulario(event) {
             event.preventDefault();
             
-            if (!validarFormularioCompleto()) {
-                mostrarAlerta('danger', 'Por favor, preencha todos os campos obrigatórios corretamente.');
-                return;
-            }
+            if (!validarFormularioCompleto()) return;
             
             const form = document.getElementById('chamadoForm');
             const formData = new FormData(form);

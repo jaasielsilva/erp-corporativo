@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Ajuda</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container py-4">
+    <h1 class="mb-3">Central de Ajuda</h1>
+    <p class="text-muted">Guia completo de acessos por módulo e subnível do sidebar.</p>
+
+    <h2 class="mt-4">Como Solicitar Acessos</h2>
+    <p>Solicite acessos informando o módulo e os subníveis necessários. Use solicitações com escopo mínimo para evitar concessões excessivas.</p>
+    <ul>
+      <li>Acesse: Serviços → Solicitações → Nova Solicitação</li>
+      <li>No campo módulos, selecione os módulos necessários</li>
+      <li>No campo subníveis, informe os authorities dos itens desejados (ex.: MENU_CLIENTES_LISTAR)</li>
+      <li>Após aprovação, o usuário é criado e recebe um perfil custom com apenas as permissões aprovadas</li>
+    </ul>
+
+    <h2 class="mt-4">Exemplo Prático: Clientes</h2>
+    <p>Para acessar apenas Clientes → Geral → Listar:</p>
+    <ul>
+      <li>Módulo: Clientes</li>
+      <li>Authorities solicitadas: MENU_CLIENTES, MENU_CLIENTES_LISTAR</li>
+      <li>Resultado: o usuário verá o módulo Clientes e apenas o item “Listar” dentro de Geral</li>
+    </ul>
+
+    <h2 class="mt-4">Hierarquia do Sidebar</h2>
+
+    <h3>Comercial</h3>
+    <ul>
+      <li>Clientes
+        <ul>
+          <li>Geral: Listar (MENU_CLIENTES_LISTAR), Novo (MENU_CLIENTES_NOVO)</li>
+          <li>Contratos: Listar (MENU_CLIENTES_CONTRATOS_LISTAR)</li>
+          <li>Histórico: Interações (MENU_CLIENTES_HISTORICO_INTERACOES), Pedidos (MENU_CLIENTES_HISTORICO_PEDIDOS)</li>
+          <li>Avançado: Busca (MENU_CLIENTES_AVANCADO_BUSCA), Relatórios (MENU_CLIENTES_AVANCADO_RELATORIOS)</li>
+        </ul>
+      </li>
+      <li>Vendas
+        <ul>
+          <li>Dashboard (MENU_VENDAS_DASHBOARD)</li>
+          <li>PDV (MENU_VENDAS_PDV)</li>
+          <li>Pedidos (MENU_VENDAS_PEDIDOS)</li>
+          <li>Relatórios (MENU_VENDAS_RELATORIOS)</li>
+        </ul>
+      </li>
+      <li>Compras
+        <ul>
+          <li>Fornecedores (MENU_COMPRAS)</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Operacional</h3>
+    <ul>
+      <li>Produtos (MENU_ESTOQUE_PRODUTOS)</li>
+      <li>Estoque (MENU_ESTOQUE)</li>
+      <li>Categorias
+        <ul>
+          <li>Listar (MENU_ESTOQUE_CATEGORIAS_LISTAR)</li>
+          <li>Novo (MENU_ESTOQUE_CATEGORIAS_NOVO)</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Recursos Humanos</h3>
+    <ul>
+      <li>Colaboradores: Listar (MENU_RH_COLABORADORES_LISTAR), Novo (MENU_RH_COLABORADORES_NOVO), Adesão (MENU_RH_COLABORADORES_ADESAO)</li>
+      <li>Folha de Pagamento: Início (MENU_RH_FOLHA_INICIO), Listar (MENU_RH_FOLHA_LISTAR), Gerar (MENU_RH_FOLHA_GERAR), Holerite (MENU_RH_FOLHA_HOLERITE), Descontos (MENU_RH_FOLHA_DESCONTOS), Relatórios (MENU_RH_FOLHA_RELATORIOS)</li>
+      <li>Benefícios: Plano de Saúde (MENU_RH_BENEFICIOS_PLANO_SAUDE), Vale Transporte (MENU_RH_BENEFICIOS_VALE_TRANSPORTE), Vale Refeição (MENU_RH_BENEFICIOS_VALE_REFEICAO), Adesão (MENU_RH_BENEFICIOS_ADESAO)</li>
+      <li>Workflow: Aprovação (MENU_RH_WORKFLOW_APROVACAO), Relatórios (MENU_RH_WORKFLOW_RELATORIOS)</li>
+      <li>Ponto e Escalas: Registros (MENU_RH_PONTO_REGISTROS), Correções (MENU_RH_PONTO_CORRECOES), Escalas (MENU_RH_PONTO_ESCALAS), Relatórios (MENU_RH_PONTO_RELATORIOS)</li>
+      <li>Férias: Solicitar (MENU_RH_FERIAS_SOLICITAR), Aprovar (MENU_RH_FERIAS_APROVAR), Planejamento (MENU_RH_FERIAS_PLANEJAMENTO), Calendário (MENU_RH_FERIAS_CALENDARIO)</li>
+      <li>Avaliação: Periodicidade (MENU_RH_AVALIACAO_PERIODICIDADE), Feedbacks (MENU_RH_AVALIACAO_FEEDBACKS), Relatórios (MENU_RH_AVALIACAO_RELATORIOS)</li>
+      <li>Treinamentos: Cadastro (MENU_RH_TREINAMENTOS_CADASTRO), Inscrição (MENU_RH_TREINAMENTOS_INSCRICAO), Certificado (MENU_RH_TREINAMENTOS_CERTIFICADO)</li>
+      <li>Recrutamento: Candidatos (MENU_RH_RECRUTAMENTO_CANDIDATOS), Vagas (MENU_RH_RECRUTAMENTO_VAGAS), Triagem (MENU_RH_RECRUTAMENTO_TRIAGEM), Entrevistas (MENU_RH_RECRUTAMENTO_ENTREVISTAS), Histórico (MENU_RH_RECRUTAMENTO_HISTORICO), Pipeline (MENU_RH_RECRUTAMENTO_PIPELINE), Relatórios (MENU_RH_RECRUTAMENTO_RELATORIOS)</li>
+      <li>Relatórios RH: Turnover (MENU_RH_RELATORIOS_TURNOVER), Absenteísmo (MENU_RH_RELATORIOS_ABSENTEISMO), Headcount (MENU_RH_RELATORIOS_HEADCOUNT), Indicadores (MENU_RH_RELATORIOS_INDICADORES), Admissões/Demissões (MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES), Férias e Benefícios (MENU_RH_RELATORIOS_FERIAS_BENEFICIOS)</li>
+      <li>Configurações: Início (MENU_RH_CONFIGURACOES_INICIO), Políticas de Férias (MENU_RH_CONFIGURACOES_POLITICAS_FERIAS), Ponto (MENU_RH_CONFIGURACOES_PONTO), Integrações (MENU_RH_CONFIGURACOES_INTEGRACOES)</li>
+      <li>Auditoria RH: Início (MENU_RH_AUDITORIA_INICIO), Log de Acessos (MENU_RH_AUDITORIA_ACESSOS), Alterações (MENU_RH_AUDITORIA_ALTERACOES), Exportações (MENU_RH_AUDITORIA_EXPORTACOES), Revisões (MENU_RH_AUDITORIA_REVISOES)</li>
+    </ul>
+
+    <h3>Gestão</h3>
+    <ul>
+      <li>Financeiro: Dashboard (MENU_FINANCEIRO_DASHBOARD), Contas Bancárias (MENU_FINANCEIRO_CONTAS_BANCARIAS), Contas a Pagar (MENU_FINANCEIRO_CONTAS_PAGAR), Contas a Receber (MENU_FINANCEIRO_CONTAS_RECEBER), Fluxo de Caixa (MENU_FINANCEIRO_FLUXO_CAIXA), Transferências (MENU_FINANCEIRO_TRANSFERENCIAS), Relatórios (MENU_FINANCEIRO_RELATORIOS)</li>
+      <li>Marketing: Dashboard (MENU_MARKETING_DASHBOARD), Campanhas (MENU_MARKETING_CAMPANHAS), Leads (MENU_MARKETING_LEADS), Eventos (MENU_MARKETING_EVENTOS), Materiais (MENU_MARKETING_MATERIAIS)</li>
+      <li>Tecnologia: Dashboard (MENU_TI_DASHBOARD), Sistemas (MENU_TI_SISTEMAS), Suporte (MENU_TI_SUPORTE), Backup (MENU_TI_BACKUP), Segurança (MENU_TI_SEGURANCA), Auditoria TI (MENU_TI_AUDITORIA)</li>
+      <li>Jurídico: Dashboard (MENU_JURIDICO_DASHBOARD), Clientes (MENU_JURIDICO_CLIENTES), Previdenciário: Listar (MENU_JURIDICO_PREVIDENCIARIO_LISTAR), Novo (MENU_JURIDICO_PREVIDENCIARIO_NOVO), WhaTchat (MENU_JURIDICO_WHATCHAT), Contratos (MENU_JURIDICO_CONTRATOS), Processos: Listar (MENU_JURIDICO_PROCESSOS_LISTAR), Novo (MENU_JURIDICO_PROCESSOS_NOVO), Compliance (MENU_JURIDICO_COMPLIANCE), Documentos (MENU_JURIDICO_DOCUMENTOS), Auditoria: Início (MENU_JURIDICO_AUDITORIA_INICIO), Acessos (MENU_JURIDICO_AUDITORIA_ACESSOS), Alterações (MENU_JURIDICO_AUDITORIA_ALTERACOES), Exportações (MENU_JURIDICO_AUDITORIA_EXPORTACOES), Revisões (MENU_JURIDICO_AUDITORIA_REVISOES)</li>
+    </ul>
+
+    <h3>Cadastros</h3>
+    <ul>
+      <li>Consultar CNPJ (MENU_CADASTROS)</li>
+    </ul>
+
+    <h3>Utilidades</h3>
+    <ul>
+      <li>Processar CNPJs (MENU_UTILIDADES)</li>
+    </ul>
+
+    <h3>Projetos</h3>
+    <ul>
+      <li>Geral: Listar (MENU_PROJETOS_GERAL_LISTAR), Novo (MENU_PROJETOS_GERAL_NOVO)</li>
+      <li>Tarefas: Listar (MENU_PROJETOS_TAREFAS_LISTAR), Atribuições (MENU_PROJETOS_TAREFAS_ATRIBUICOES)</li>
+      <li>Equipes: Cadastro (MENU_PROJETOS_EQUIPES_CADASTRAR), Membros (MENU_PROJETOS_EQUIPES_MEMBROS)</li>
+      <li>Cronograma (MENU_PROJETOS_CRONOGRAMA)</li>
+      <li>Relatórios (MENU_PROJETOS_RELATORIOS)</li>
+    </ul>
+
+    <h3>Serviços</h3>
+    <ul>
+      <li>Solicitações: Nova, Minhas Solicitações, Todas, Pendentes (MENU_SERVICOS_SOLICITACOES_GERENCIAR), Dashboard (MENU_SERVICOS_SOLICITACOES_DASHBOARD)</li>
+      <li>Serviços</li>
+      <li>Agenda</li>
+    </ul>
+
+    <h3>Administração</h3>
+    <ul>
+      <li>Usuários (MENU_ADMIN_USUARIOS)</li>
+      <li>Gestão de Acesso: Perfis (MENU_ADMIN_GESTAO_ACESSO_PERFIS), Permissões (MENU_ADMIN_GESTAO_ACESSO_PERMISSOES)</li>
+      <li>Relatórios (MENU_ADMIN_RELATORIOS)</li>
+      <li>Configurações (MENU_ADMIN_CONFIGURACOES)</li>
+      <li>Metas (MENU_ADMIN_METAS)</li>
+    </ul>
+
+    <h3>Pessoal</h3>
+    <ul>
+      <li>Meus Pedidos (MENU_PESSOAL_MEUS_PEDIDOS)</li>
+      <li>Meus Serviços (MENU_PESSOAL_MEUS_SERVICOS)</li>
+      <li>Favoritos (MENU_PESSOAL_FAVORITOS)</li>
+      <li>Recomendações (MENU_PESSOAL_RECOMENDACOES)</li>
+    </ul>
+
+    <h3>Suporte & Documentos</h3>
+    <ul>
+      <li>Central de Ajuda (MENU_AJUDA)</li>
+      <li>Documentos Gerenciais (MENU_DOCS_GERENCIAL)</li>
+      <li>Meus Documentos (MENU_DOCS_PESSOAL)</li>
+      <li>Termos de Uso (MENU_DOCS_PESSOAL)</li>
+      <li>Suporte</li>
+    </ul>
+
+    <h2 class="mt-4">Solicitação de Acessos por Módulo</h2>
+    <p>Em cada solicitação, informe o módulo e os authorities desejados. Exemplos por módulo:</p>
+    <ul>
+      <li>Clientes: MENU_CLIENTES, MENU_CLIENTES_LISTAR, MENU_CLIENTES_CONTRATOS_LISTAR</li>
+      <li>Vendas: MENU_VENDAS, MENU_VENDAS_PEDIDOS</li>
+      <li>Estoque: MENU_ESTOQUE_PRODUTOS, MENU_ESTOQUE_CATEGORIAS_LISTAR</li>
+      <li>RH: MENU_RH_COLABORADORES_LISTAR, MENU_RH_FOLHA_LISTAR, MENU_RH_FERIAS_SOLICITAR</li>
+      <li>Financeiro: MENU_FINANCEIRO_CONTAS_PAGAR, MENU_FINANCEIRO_RELATORIOS</li>
+      <li>Marketing: MENU_MARKETING_CAMPANHAS</li>
+      <li>TI: MENU_TI_SISTEMAS, MENU_TI_AUDITORIA</li>
+      <li>Jurídico: MENU_JURIDICO_PROCESSOS_LISTAR, MENU_JURIDICO_AUDITORIA_INICIO</li>
+      <li>Projetos: MENU_PROJETOS_TAREFAS_LISTAR, MENU_PROJETOS_RELATORIOS</li>
+      <li>Administração: MENU_ADMIN_USUARIOS, MENU_ADMIN_GESTAO_ACESSO_PERFIS</li>
+      <li>Pessoal: MENU_PESSOAL_MEUS_PEDIDOS</li>
+      <li>Suporte & Documentos: MENU_AJUDA, MENU_DOCS_PESSOAL</li>
+    </ul>
+  </div>
+</body>
+</html>

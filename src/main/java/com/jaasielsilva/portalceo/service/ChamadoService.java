@@ -53,10 +53,8 @@ public class ChamadoService {
 
     // Criar novo chamado
     public Chamado criarChamado(Chamado chamado) {
-        // Gerar número único se não foi definido
-        if (chamado.getNumero() == null || chamado.getNumero().isEmpty()) {
-            chamado.setNumero(gerarProximoNumero());
-        }
+        // Sempre garantir número único no momento da criação
+        chamado.setNumero(gerarNumeroUnico());
         
         // Definir data de abertura se não foi definida
         if (chamado.getDataAbertura() == null) {
@@ -575,9 +573,26 @@ public class ChamadoService {
         }
     }
     
-    // Gerar próximo número de chamado
+    // Gerar próximo número de chamado (compatível com exibição no formulário)
     public String gerarProximoNumero() {
-        return "CH" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        return "CH" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+    }
+    
+    // Gera número único verificando o repositório para evitar duplicidade
+    private String gerarNumeroUnico() {
+        int tentativas = 0;
+        while (tentativas < 10) {
+            String candidato = "CH" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"))
+                    + "-" + Integer.toString((int)(Math.random() * 1296), 36).toUpperCase();
+            if (chamadoRepository.findByNumero(candidato).isEmpty()) {
+                return candidato;
+            }
+            tentativas++;
+            try { Thread.sleep(5); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+        }
+        // Fallback com UUID-like base36 curto
+        String fallback = "CH" + Long.toString(System.currentTimeMillis(), 36).toUpperCase();
+        return fallback;
     }
     
     // Obter dados de evolução de chamados dos últimos 12 meses

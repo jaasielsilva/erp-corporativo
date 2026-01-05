@@ -372,6 +372,208 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div class="mt-4">
+                                            <label class="form-label">
+                                                <i class="fas fa-key me-1"></i>
+                                                <strong>Permissões por Subnível (opcional)</strong>
+                                            </label>
+                                            <input type="hidden" name="authorities" id="authoritiesInput">
+                                            <div class="warning-box">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Selecione subníveis específicos quando a decisão for Aprovar Parcialmente. Se nada for selecionado, o acesso seguirá as regras padrão do perfil.
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).VENDAS)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-shopping-cart me-1"></i> Vendas</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_VENDAS" id="authVendasRoot">
+                                                            <label class="form-check-label" for="authVendasRoot">Exibir módulo Vendas</label>
+                                                        </div>
+                                                        <div class="row mt-2">
+                                                            <div class="col-12">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input authority-check" type="checkbox" value="MENU_VENDAS_DASHBOARD" id="authVendasDashboard">
+                                                                    <label class="form-check-label" for="authVendasDashboard">Dashboard</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input authority-check" type="checkbox" value="MENU_VENDAS_PDV" id="authVendasPDV">
+                                                                    <label class="form-check-label" for="authVendasPDV">PDV</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input authority-check" type="checkbox" value="MENU_VENDAS_PEDIDOS" id="authVendasPedidos">
+                                                                    <label class="form-check-label" for="authVendasPedidos">Pedidos</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).RH)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-users me-1"></i> Recursos Humanos</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_RH" id="authRhRoot">
+                                                            <label class="form-check-label" for="authRhRoot">Exibir módulo RH</label>
+                                                        </div>
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_RH_COLABORADORES_LISTAR" id="authRhColabListar">
+                                                            <label class="form-check-label" for="authRhColabListar">Colaboradores - Listar</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_RH_COLABORADORES_NOVO" id="authRhColabNovo">
+                                                            <label class="form-check-label" for="authRhColabNovo">Colaboradores - Novo</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_RH_FOLHA" id="authRhFolha">
+                                                            <label class="form-check-label" for="authRhFolha">Folha de Pagamento</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_RH_BENEFICIOS" id="authRhBeneficios">
+                                                            <label class="form-check-label" for="authRhBeneficios">Benefícios</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_RH_WORKFLOW" id="authRhWorkflow">
+                                                            <label class="form-check-label" for="authRhWorkflow">Workflow</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).JURIDICO)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-balance-scale me-1"></i> Jurídico</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_JURIDICO" id="authJurRoot">
+                                                            <label class="form-check-label" for="authJurRoot">Exibir módulo Jurídico</label>
+                                                        </div>
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_JURIDICO_PROCESSOS_LISTAR" id="authJurProcListar">
+                                                            <label class="form-check-label" for="authJurProcListar">Processos - Listar</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_JURIDICO_PROCESSOS_NOVO" id="authJurProcNovo">
+                                                            <label class="form-check-label" for="authJurProcNovo">Processos - Novo</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_JURIDICO_COMPLIANCE" id="authJurCompliance">
+                                                            <label class="form-check-label" for="authJurCompliance">Compliance</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_JURIDICO_DOCUMENTOS" id="authJurDocumentos">
+                                                            <label class="form-check-label" for="authJurDocumentos">Documentos</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_JURIDICO_AUDITORIA" id="authJurAuditoria">
+                                                            <label class="form-check-label" for="authJurAuditoria">Auditoria</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).TI)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-laptop-code me-1"></i> Tecnologia</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_TI" id="authTiRoot">
+                                                            <label class="form-check-label" for="authTiRoot">Exibir módulo TI</label>
+                                                        </div>
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_TI_DASHBOARD" id="authTiDashboard">
+                                                            <label class="form-check-label" for="authTiDashboard">Dashboard</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_TI_SISTEMAS" id="authTiSistemas">
+                                                            <label class="form-check-label" for="authTiSistemas">Sistemas</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_TI_SUPORTE" id="authTiSuporte">
+                                                            <label class="form-check-label" for="authTiSuporte">Suporte</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_TI_BACKUP" id="authTiBackup">
+                                                            <label class="form-check-label" for="authTiBackup">Backup</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_TI_SEGURANCA" id="authTiSeguranca">
+                                                            <label class="form-check-label" for="authTiSeguranca">Segurança</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).MARKETING)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-bullhorn me-1"></i> Marketing</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_MARKETING" id="authMktRoot">
+                                                            <label class="form-check-label" for="authMktRoot">Exibir módulo Marketing</label>
+                                                        </div>
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_MARKETING_CAMPANHAS" id="authMktCampanhas">
+                                                            <label class="form-check-label" for="authMktCampanhas">Campanhas</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_MARKETING_ANALYTICS" id="authMktAnalytics">
+                                                            <label class="form-check-label" for="authMktAnalytics">Analytics</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_MARKETING_MATERIAIS" id="authMktMateriais">
+                                                            <label class="form-check-label" for="authMktMateriais">Materiais</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).FINANCEIRO)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-coins me-1"></i> Financeiro</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_FINANCEIRO" id="authFinRoot">
+                                                            <label class="form-check-label" for="authFinRoot">Exibir módulo Financeiro</label>
+                                                        </div>
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_FINANCEIRO_DASHBOARD" id="authFinDashboard">
+                                                            <label class="form-check-label" for="authFinDashboard">Dashboard</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_FINANCEIRO_CONTAS" id="authFinContas">
+                                                            <label class="form-check-label" for="authFinContas">Contas</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_FINANCEIRO_RELATORIOS" id="authFinRelatorios">
+                                                            <label class="form-check-label" for="authFinRelatorios">Relatórios</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).COMPRAS)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-shopping-bag me-1"></i> Compras</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_COMPRAS" id="authComprasRoot">
+                                                            <label class="form-check-label" for="authComprasRoot">Exibir módulo Compras</label>
+                                                        </div>
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_COMPRAS_PEDIDOS" id="authComprasPedidos">
+                                                            <label class="form-check-label" for="authComprasPedidos">Pedidos</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_COMPRAS_FORNECEDORES" id="authComprasFornecedores">
+                                                            <label class="form-check-label" for="authComprasFornecedores">Fornecedores</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" th:if="${solicitacao.modulos.contains(T(com.jaasielsilva.portalceo.model.SolicitacaoAcesso.ModuloSistema).ESTOQUE)}">
+                                                    <div class="border rounded p-3 mb-3">
+                                                        <h6 class="mb-2"><i class="fas fa-boxes me-1"></i> Estoque</h6>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_ESTOQUE" id="authEstoqueRoot">
+                                                            <label class="form-check-label" for="authEstoqueRoot">Exibir módulo Estoque</label>
+                                                        </div>
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_ESTOQUE_PRODUTOS" id="authEstoqueProdutos">
+                                                            <label class="form-check-label" for="authEstoqueProdutos">Produtos</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_ESTOQUE_MOVIMENTACOES" id="authEstoqueMovimentacoes">
+                                                            <label class="form-check-label" for="authEstoqueMovimentacoes">Movimentações</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -544,7 +746,14 @@
             
             if (decisaoSelecionada === 'APROVADO' || decisaoSelecionada === 'APROVADO_PARCIAL') {
                 const email = document.getElementById('emailCorporativo').value;
-                valido = nivelSelecionado && email.trim() !== '';
+                // Atualizar authorities selecionadas
+                const selecionadas = Array.from(document.querySelectorAll('.authority-check:checked')).map(el => el.value);
+                document.getElementById('authoritiesInput').value = selecionadas.join(',');
+                if (decisaoSelecionada === 'APROVADO_PARCIAL') {
+                    valido = nivelSelecionado && email.trim() !== '' && selecionadas.length > 0;
+                } else {
+                    valido = nivelSelecionado && email.trim() !== '';
+                }
             } else if (decisaoSelecionada === 'REJEITADO') {
                 const motivo = document.getElementById('motivoRejeicao').value;
                 valido = motivo.trim() !== '';

@@ -98,60 +98,85 @@
             <p>Selecione os módulos que o usuário deve ter acesso:</p>
 
             <div class="checkbox-group">
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_RH" name="modulos" value="RH">
-                <label for="modulo_RH">
-                  <i class="fas fa-users"></i> Recursos Humanos
-                </label>
+              <!-- RH -->
+              <div class="checkbox-item-group mb-3">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="modulo_RH" name="modulos" value="RH" onchange="toggleSubAuth('RH')">
+                  <label for="modulo_RH"><i class="fas fa-users"></i> Recursos Humanos</label>
+                </div>
+                <div id="sub_RH" class="sub-auth-list ms-4 mt-2" style="display:none;">
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_RH" id="auth_RH" checked class="form-check-input"><label class="form-check-label" for="auth_RH">Acesso ao Módulo</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_RH_FUNCIONARIOS" id="auth_RH_FUNC" class="form-check-input"><label class="form-check-label" for="auth_RH_FUNC">Gestão de Funcionários</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_RH_FOLHA" id="auth_RH_FOLHA" class="form-check-input"><label class="form-check-label" for="auth_RH_FOLHA">Folha de Pagamento</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_RH_PONTO" id="auth_RH_PONTO" class="form-check-input"><label class="form-check-label" for="auth_RH_PONTO">Controle de Ponto</label></div>
+                </div>
               </div>
 
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_FINANCEIRO" name="modulos" value="FINANCEIRO">
-                <label for="modulo_FINANCEIRO">
-                  <i class="fas fa-dollar-sign"></i> Financeiro
-                </label>
+              <!-- FINANCEIRO -->
+              <div class="checkbox-item-group mb-3">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="modulo_FINANCEIRO" name="modulos" value="FINANCEIRO" onchange="toggleSubAuth('FINANCEIRO')">
+                  <label for="modulo_FINANCEIRO"><i class="fas fa-dollar-sign"></i> Financeiro</label>
+                </div>
+                <div id="sub_FINANCEIRO" class="sub-auth-list ms-4 mt-2" style="display:none;">
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_FINANCEIRO" id="auth_FIN" checked class="form-check-input"><label class="form-check-label" for="auth_FIN">Acesso ao Módulo</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_FINANCEIRO_CONTAS_PAGAR" id="auth_FIN_CP" class="form-check-input"><label class="form-check-label" for="auth_FIN_CP">Contas a Pagar</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_FINANCEIRO_CONTAS_RECEBER" id="auth_FIN_CR" class="form-check-input"><label class="form-check-label" for="auth_FIN_CR">Contas a Receber</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_FINANCEIRO_FLUXO_CAIXA" id="auth_FIN_FC" class="form-check-input"><label class="form-check-label" for="auth_FIN_FC">Fluxo de Caixa</label></div>
+                </div>
               </div>
 
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_VENDAS" name="modulos" value="VENDAS">
-                <label for="modulo_VENDAS">
-                  <i class="fas fa-chart-line"></i> Vendas
-                </label>
+              <!-- VENDAS -->
+              <div class="checkbox-item-group mb-3">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="modulo_VENDAS" name="modulos" value="VENDAS" onchange="toggleSubAuth('VENDAS')">
+                  <label for="modulo_VENDAS"><i class="fas fa-chart-line"></i> Vendas</label>
+                </div>
+                <div id="sub_VENDAS" class="sub-auth-list ms-4 mt-2" style="display:none;">
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_VENDAS" id="auth_VENDAS" checked class="form-check-input"><label class="form-check-label" for="auth_VENDAS">Acesso ao Módulo</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_CLIENTES" id="auth_CLIENTES" class="form-check-input"><label class="form-check-label" for="auth_CLIENTES">Gestão de Clientes</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_VENDAS_LISTAR" id="auth_VENDAS_LIST" class="form-check-input"><label class="form-check-label" for="auth_VENDAS_LIST">Listar Vendas</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_VENDAS_CRIAR" id="auth_VENDAS_NEW" class="form-check-input"><label class="form-check-label" for="auth_VENDAS_NEW">Nova Venda</label></div>
+                </div>
               </div>
 
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_COMPRAS" name="modulos" value="COMPRAS">
-                <label for="modulo_COMPRAS">
-                  <i class="fas fa-shopping-cart"></i> Compras
-                </label>
+              <!-- COMPRAS -->
+              <div class="checkbox-item-group mb-3">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="modulo_COMPRAS" name="modulos" value="COMPRAS" onchange="toggleSubAuth('COMPRAS')">
+                  <label for="modulo_COMPRAS"><i class="fas fa-shopping-cart"></i> Compras</label>
+                </div>
+                <div id="sub_COMPRAS" class="sub-auth-list ms-4 mt-2" style="display:none;">
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_COMPRAS" id="auth_COMPRAS" checked class="form-check-input"><label class="form-check-label" for="auth_COMPRAS">Acesso ao Módulo</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_FORNECEDORES" id="auth_FORNECEDORES" class="form-check-input"><label class="form-check-label" for="auth_FORNECEDORES">Gestão de Fornecedores</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_PRODUTOS" id="auth_PRODUTOS" class="form-check-input"><label class="form-check-label" for="auth_PRODUTOS">Gestão de Produtos</label></div>
+                </div>
               </div>
 
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_ESTOQUE" name="modulos" value="ESTOQUE">
-                <label for="modulo_ESTOQUE">
-                  <i class="fas fa-warehouse"></i> Estoque
-                </label>
+              <!-- ESTOQUE -->
+              <div class="checkbox-item-group mb-3">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="modulo_ESTOQUE" name="modulos" value="ESTOQUE" onchange="toggleSubAuth('ESTOQUE')">
+                  <label for="modulo_ESTOQUE"><i class="fas fa-warehouse"></i> Estoque</label>
+                </div>
+                <div id="sub_ESTOQUE" class="sub-auth-list ms-4 mt-2" style="display:none;">
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_ESTOQUE" id="auth_ESTOQUE" checked class="form-check-input"><label class="form-check-label" for="auth_ESTOQUE">Acesso ao Módulo</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_ESTOQUE_MOVIMENTACOES" id="auth_ESTOQUE_MOV" class="form-check-input"><label class="form-check-label" for="auth_ESTOQUE_MOV">Movimentações</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_ESTOQUE_INVENTARIO" id="auth_ESTOQUE_INV" class="form-check-input"><label class="form-check-label" for="auth_ESTOQUE_INV">Inventário</label></div>
+                </div>
               </div>
 
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_MARKETING" name="modulos" value="MARKETING">
-                <label for="modulo_MARKETING">
-                  <i class="fas fa-bullhorn"></i> Marketing
-                </label>
-              </div>
-
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_TI" name="modulos" value="TI">
-                <label for="modulo_TI">
-                  <i class="fas fa-laptop-code"></i> TI
-                </label>
-              </div>
-
-              <div class="checkbox-item">
-                <input type="checkbox" id="modulo_JURIDICO" name="modulos" value="JURIDICO">
-                <label for="modulo_JURIDICO">
-                  <i class="fas fa-balance-scale"></i> Jurídico
-                </label>
+              <!-- TI -->
+              <div class="checkbox-item-group mb-3">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="modulo_TI" name="modulos" value="TI" onchange="toggleSubAuth('TI')">
+                  <label for="modulo_TI"><i class="fas fa-laptop-code"></i> TI</label>
+                </div>
+                <div id="sub_TI" class="sub-auth-list ms-4 mt-2" style="display:none;">
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_TI" id="auth_TI" checked class="form-check-input"><label class="form-check-label" for="auth_TI">Acesso ao Módulo</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_TI_INFRA" id="auth_TI_INFRA" class="form-check-input"><label class="form-check-label" for="auth_TI_INFRA">Infraestrutura</label></div>
+                  <div class="form-check"><input type="checkbox" name="authorities" value="MENU_TI_SUPORTE" id="auth_TI_SUP" class="form-check-input"><label class="form-check-label" for="auth_TI_SUP">Suporte Técnico</label></div>
+                </div>
               </div>
             </div>
           </div>

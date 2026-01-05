@@ -378,7 +378,6 @@
                                                 <i class="fas fa-key me-1"></i>
                                                 <strong>Permissões por Subnível (opcional)</strong>
                                             </label>
-                                            <input type="hidden" name="authorities" id="authoritiesInput">
                                             <div class="warning-box">
                                                 <i class="fas fa-info-circle me-2"></i>
                                                 Selecione subníveis específicos quando a decisão for Aprovar Parcialmente. Se nada for selecionado, o acesso seguirá as regras padrão do perfil.
@@ -388,7 +387,7 @@
                                                     <div class="border rounded p-3 mb-3">
                                                         <h6 class="mb-2"><i class="fas fa-shopping-cart me-1"></i> Vendas</h6>
                                                         <div class="form-check">
-                                                            <input class="form-check-input authority-check" type="checkbox" value="MENU_VENDAS" id="authVendasRoot">
+                                                            <input class="form-check-input authority-check" name="authoritiesAprovadas" type="checkbox" value="MENU_VENDAS" id="authVendasRoot">
                                                             <label class="form-check-label" for="authVendasRoot">Exibir módulo Vendas</label>
                                                         </div>
                                                         <div class="row mt-2">
@@ -748,7 +747,7 @@
                 const email = document.getElementById('emailCorporativo').value;
                 // Atualizar authorities selecionadas
                 const selecionadas = Array.from(document.querySelectorAll('.authority-check:checked')).map(el => el.value);
-                document.getElementById('authoritiesInput').value = selecionadas.join(',');
+                
                 if (decisaoSelecionada === 'APROVADO_PARCIAL') {
                     valido = nivelSelecionado && email.trim() !== '' && selecionadas.length > 0;
                 } else {

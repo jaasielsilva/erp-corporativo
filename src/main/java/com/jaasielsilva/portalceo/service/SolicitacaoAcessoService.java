@@ -113,7 +113,7 @@ public class SolicitacaoAcessoService {
      */
     public SolicitacaoAcesso aprovarSolicitacao(Long solicitacaoId, Usuario aprovador,
             SolicitacaoAcesso.NivelAcesso nivelAprovado,
-            String emailCorporativo, String observacoes) {
+            String emailCorporativo, String observacoes, java.util.Set<String> authoritiesAprovadas) {
         long startTime = System.currentTimeMillis();
         System.out.println("[PERFORMANCE] Iniciando aprovação da solicitação ID: " + solicitacaoId);
         
@@ -132,6 +132,10 @@ public class SolicitacaoAcessoService {
         solicitacao.setNivelAprovado(nivelAprovado);
         solicitacao.setEmailCorporativo(emailCorporativo);
         solicitacao.setObservacoesAprovador(observacoes);
+        
+        if (authoritiesAprovadas != null) {
+            solicitacao.setAuthoritiesAprovadas(authoritiesAprovadas);
+        }
 
         // Salvar a solicitação aprovada
         long saveStart = System.currentTimeMillis();

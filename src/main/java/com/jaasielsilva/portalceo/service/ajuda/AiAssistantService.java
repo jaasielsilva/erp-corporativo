@@ -150,7 +150,32 @@ public class AiAssistantService {
         List<String> observacoes = new ArrayList<>();
         String perguntaFinal = "Deseja ajuda em outro processo?";
 
-        if (!context.isEmpty()) {
+        String q = query == null ? "" : query.toLowerCase();
+        boolean isAccessQuery = q.contains("acesso") || q.contains("permiss");
+        String modulo = null;
+        if (q.contains("financeiro")) modulo = "Financeiro";
+        else if (q.contains("vendas")) modulo = "Vendas";
+        else if (q.contains("rh")) modulo = "Recursos Humanos";
+        else if (q.contains("compras")) modulo = "Compras";
+        else if (q.contains("estoque")) modulo = "Estoque";
+        else if (q.contains("marketing")) modulo = "Marketing";
+        else if (q.contains("ti")) modulo = "Tecnologia";
+        else if (q.contains("jurídico") || q.contains("juridico")) modulo = "Jurídico";
+        else if (q.contains("clientes")) modulo = "Clientes";
+        else if (q.contains("fornecedores")) modulo = "Fornecedores";
+        else if (q.contains("produtos")) modulo = "Produtos";
+
+        if (isAccessQuery) {
+            caminho = "Serviços → Solicitações → Nova Solicitação";
+            passos.add("Acesse Serviços → Solicitações → Nova Solicitação");
+            if (modulo != null) passos.add("Selecione o módulo " + modulo);
+            passos.add("Informe subníveis necessários usando Authorities");
+            passos.add("Explique a justificativa e envie para aprovação");
+            observacoes.add("Use o menor privilégio possível");
+            observacoes.add("Aprovação parcial pode ser aplicada");
+            resumo = "Vou orientar seu uso com base no conteúdo encontrado.";
+            perguntaFinal = "Quer que eu abra um chamado ou detalhe outro processo?";
+        } else if (!context.isEmpty()) {
             AjudaConteudo top = context.get(0);
             caminho = inferPathFromCategory(top.getCategoria() != null ? top.getCategoria().getSlug() : null, top.getTitulo());
             String corpo = top.getCorpo();
@@ -160,6 +185,9 @@ public class AiAssistantService {
                     String t = line.trim();
                     if (t.matches("^\\d+\\.\\s+.*")) {
                         String step = t.replaceFirst("^\\d+\\.\\s+", "").trim();
+                        passos.add(step);
+                    } else if (t.startsWith("- ") || t.startsWith("* ")) {
+                        String step = t.substring(2).trim();
                         passos.add(step);
                     }
                 }
@@ -206,6 +234,12 @@ public class AiAssistantService {
         if (slug.equalsIgnoreCase("impressoras")) return "Menu → Suporte → Chamados → Novo Chamado";
         if (slug.equalsIgnoreCase("usuarios-acesso")) return "Menu → Usuários → Acesso";
         if (slug.equalsIgnoreCase("relatorios")) return "Menu → Relatórios";
+        if (slug.equalsIgnoreCase("documentacao")) {
+            if (titulo != null && titulo.toLowerCase().contains("solicitar")) {
+                return "Serviços → Solicitações → Nova Solicitação";
+            }
+            return "Menu → Documentação";
+        }
         return "";
     }
 }

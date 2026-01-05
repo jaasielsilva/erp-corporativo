@@ -402,6 +402,7 @@ public String listarSolicitacoes(
             @RequestParam String nivelAprovado,
             @RequestParam(required = false) String emailCorporativo,
             @RequestParam(required = false) String observacoesAprovador,
+            @RequestParam(required = false) List<String> authoritiesAprovadas,
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
@@ -418,7 +419,7 @@ public String listarSolicitacoes(
         try {
             SolicitacaoAcesso.NivelAcesso nivel = SolicitacaoAcesso.NivelAcesso.valueOf(nivelAprovado);
             solicitacaoAcessoService.aprovarSolicitacao(id, usuarioLogado, nivel, emailCorporativo,
-                    observacoesAprovador);
+                    observacoesAprovador, authoritiesAprovadas != null ? new java.util.HashSet<>(authoritiesAprovadas) : null);
 
             redirectAttributes.addFlashAttribute("mensagem", "Solicitação aprovada com sucesso!");
         } catch (Exception e) {
@@ -728,6 +729,7 @@ public String listarSolicitacoes(
             @RequestParam(required = false) String nivelAprovado,
             @RequestParam(required = false) String emailCorporativo,
             @RequestParam(required = false) String observacoesAprovador,
+            @RequestParam(required = false) List<String> authoritiesAprovadas,
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
@@ -751,7 +753,7 @@ public String listarSolicitacoes(
 
                 SolicitacaoAcesso.NivelAcesso nivel = SolicitacaoAcesso.NivelAcesso.valueOf(nivelAprovado);
                 SolicitacaoAcesso solicitacao = solicitacaoAcessoService.aprovarSolicitacao(id, usuarioLogado, nivel, emailCorporativo,
-                        observacoesAprovador);
+                        observacoesAprovador, authoritiesAprovadas != null ? new java.util.HashSet<>(authoritiesAprovadas) : null);
                 
                 // Enviar notificação para o solicitante
                 if (solicitacao != null && solicitacao.getColaborador() != null && solicitacao.getColaborador().getEmail() != null) {

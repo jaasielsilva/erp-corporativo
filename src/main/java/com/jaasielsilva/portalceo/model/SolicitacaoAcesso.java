@@ -64,6 +64,13 @@ public class SolicitacaoAcesso {
     @CollectionTable(name = "solicitacao_modulos", joinColumns = @JoinColumn(name = "solicitacao_id"))
     @Column(name = "modulo")
     private Set<ModuloSistema> modulos;
+
+    @ElementCollection
+    @CollectionTable(name = "solicitacao_authorities", joinColumns = @JoinColumn(name = "solicitacao_id"))
+    @Column(name = "authority")
+    private Set<String> authorities = new java.util.HashSet<>();
+
+   
     
     @NotNull(message = "Nível de acesso é obrigatório")
     @Enumerated(EnumType.STRING)
@@ -129,6 +136,11 @@ public class SolicitacaoAcesso {
     @CollectionTable(name = "solicitacao_modulos_aprovados", joinColumns = @JoinColumn(name = "solicitacao_id"))
     @Column(name = "modulo")
     private Set<ModuloSistema> modulosAprovados;
+
+    @ElementCollection
+    @CollectionTable(name = "solicitacao_authorities_aprovadas", joinColumns = @JoinColumn(name = "solicitacao_id"))
+    @Column(name = "authority")
+    private Set<String> authoritiesAprovadas;
     
     @Column(name = "email_corporativo")
     private String emailCorporativo;
@@ -292,25 +304,19 @@ public class SolicitacaoAcesso {
     }
     
     // Getters e Setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getProtocolo() { return protocolo; }
+    public void setProtocolo(String protocolo) { this.protocolo = protocolo; }
     
-    public String getProtocolo() {
-        return protocolo;
-    }
-    
-    public void setProtocolo(String protocolo) {
-        this.protocolo = protocolo;
-    }
-    
-    public String getSolicitanteNome() {
-        return solicitanteNome;
-    }
+    public Set<String> getAuthorities() { return authorities; }
+    public void setAuthorities(Set<String> authorities) { this.authorities = authorities; }
+
+    public Set<String> getAuthoritiesAprovadas() { return authoritiesAprovadas; }
+    public void setAuthoritiesAprovadas(Set<String> authoritiesAprovadas) { this.authoritiesAprovadas = authoritiesAprovadas; }
+
+    public String getSolicitanteNome() { return solicitanteNome; }
     
     public void setSolicitanteNome(String solicitanteNome) {
         this.solicitanteNome = solicitanteNome;

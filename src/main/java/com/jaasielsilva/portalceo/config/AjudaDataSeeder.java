@@ -40,7 +40,67 @@ public class AjudaDataSeeder implements ApplicationRunner {
         ensureCat("usuarios-acesso", "Usuários & Acesso", null);
         ensureCat("documentacao", "Documentação", null);
 
+        // Seed initial content if empty (legacy check)
         if (conteudoRepo.count() == 0) {
+            seedInitialContent(impressoras, chamados);
+        }
+
+        // Ensure documentation content exists (new check)
+        AjudaCategoria documentacao = catRepo.findBySlug("documentacao").orElse(null);
+        if (documentacao != null) {
+            ensureConteudo(documentacao, "Hierarquia de Menus e Permissões (Authorities)", 
+                "Lista completa de módulos e subníveis com seus respectivos códigos de permissão (Authorities):\n\n" +
+                "**Painel Administrativo** (`MENU_ADMIN`)\n" +
+                "**Dashboard** (`MENU_DASHBOARD`)\n" +
+                "**Clientes** (`MENU_CLIENTES`)\n" +
+                "- Geral: `MENU_CLIENTES_LISTAR`\n" +
+                "- Novo Cliente: `MENU_CLIENTES_CRIAR`\n" +
+                "- Histórico: `MENU_CLIENTES_HISTORICO`\n" +
+                "- Relatórios: `MENU_CLIENTES_RELATORIOS`\n\n" +
+                "**Fornecedores** (`MENU_FORNECEDORES`)\n" +
+                "- Geral: `MENU_FORNECEDORES_LISTAR`\n" +
+                "- Novo Fornecedor: `MENU_FORNECEDORES_CRIAR`\n" +
+                "- Contratos: `MENU_FORNECEDORES_CONTRATOS`\n\n" +
+                "**Produtos** (`MENU_PRODUTOS`)\n" +
+                "- Geral: `MENU_PRODUTOS_LISTAR`\n" +
+                "- Novo Produto: `MENU_PRODUTOS_CRIAR`\n" +
+                "- Categorias: `MENU_PRODUTOS_CATEGORIAS`\n" +
+                "- Estoque: `MENU_PRODUTOS_ESTOQUE`\n\n" +
+                "**Vendas** (`MENU_VENDAS`)\n" +
+                "- Nova Venda: `MENU_VENDAS_CRIAR`\n" +
+                "- Histórico: `MENU_VENDAS_HISTORICO`\n" +
+                "- Relatórios: `MENU_VENDAS_RELATORIOS`\n\n" +
+                "**Financeiro** (`MENU_FINANCEIRO`)\n" +
+                "- Contas a Pagar: `MENU_FINANCEIRO_PAGAR`\n" +
+                "- Contas a Receber: `MENU_FINANCEIRO_RECEBER`\n" +
+                "- Fluxo de Caixa: `MENU_FINANCEIRO_CAIXA`\n" +
+                "- Relatórios: `MENU_FINANCEIRO_RELATORIOS`\n\n" +
+                "**RH** (`MENU_RH`)\n" +
+                "- Funcionários: `MENU_RH_FUNCIONARIOS`\n" +
+                "- Folha de Pagamento: `MENU_RH_FOLHA`\n" +
+                "- Ponto: `MENU_RH_PONTO`\n" +
+                "- Benefícios: `MENU_RH_BENEFICIOS`\n\n" +
+                "**Configurações** (`MENU_CONFIGURACOES`)\n" +
+                "- Usuários: `MENU_CONFIGURACOES_USUARIOS`\n" +
+                "- Perfis: `MENU_CONFIGURACOES_PERFIS`\n" +
+                "- Sistema: `MENU_CONFIGURACOES_SISTEMA`\n" +
+                "- Logs: `MENU_CONFIGURACOES_LOGS`",
+                "menus, permissoes, authorities, hierarquia, acesso");
+
+            ensureConteudo(documentacao, "Como Solicitar Acessos e Permissões",
+                "Guia para solicitação de acessos no sistema:\n\n" +
+                "1. Acesse: **Serviços** -> **Solicitações** -> **Nova Solicitação**.\n" +
+                "2. No campo **Módulos**, selecione os módulos macro necessários (ex: Clientes, Financeiro).\n" +
+                "3. No campo **Subníveis**, informe os códigos das permissões específicas desejadas (Authorities).\n" +
+                "   - Exemplo: Para apenas visualizar clientes sem poder criar, solicite `MENU_CLIENTES_LISTAR`.\n" +
+                "   - Exemplo: Para acesso completo a vendas, solicite `MENU_VENDAS` e todos os subníveis (`_CRIAR`, `_HISTORICO`, etc.).\n" +
+                "4. **Importante**: Utilize o princípio do menor privilégio. Solicite apenas o necessário para sua função.\n" +
+                "5. Após a aprovação pelo gestor, um perfil personalizado será criado automaticamente com as permissões exatas solicitadas.",
+                "solicitacao, acesso, permissoes, guia, como solicitar");
+        }
+    }
+
+    private void seedInitialContent(AjudaCategoria impressoras, AjudaCategoria chamados) {
             AjudaConteudo c1 = new AjudaConteudo();
             c1.setCategoria(impressoras);
             c1.setTitulo("Como abrir um chamado para erro de impressora");
@@ -60,7 +120,19 @@ public class AjudaDataSeeder implements ApplicationRunner {
             c2.setPublicado(true);
             c2.setCriadoAt(LocalDateTime.now());
             conteudoRepo.save(c2);
-        }
+    }
+
+    private void ensureConteudo(AjudaCategoria cat, String titulo, String corpo, String tags) {
+        if (conteudoRepo.findByTitulo(titulo).isPresent()) return;
+        AjudaConteudo c = new AjudaConteudo();
+        c.setCategoria(cat);
+        c.setTitulo(titulo);
+        c.setTipo(AjudaConteudo.Tipo.ARTIGO);
+        c.setCorpo(corpo);
+        c.setTags(tags);
+        c.setPublicado(true);
+        c.setCriadoAt(LocalDateTime.now());
+        conteudoRepo.save(c);
     }
 
     private AjudaCategoria ensureCat(String slug, String nome, AjudaCategoria parent) {

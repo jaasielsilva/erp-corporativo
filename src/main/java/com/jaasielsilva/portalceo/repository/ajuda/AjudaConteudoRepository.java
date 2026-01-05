@@ -20,4 +20,6 @@ public interface AjudaConteudoRepository extends JpaRepository<AjudaConteudo, Lo
     @Query(value = "SELECT c FROM AjudaConteudo c LEFT JOIN AjudaFeedback f ON f.conteudo = c AND f.upvote = true WHERE c.publicado = true AND c.categoria = :categoria GROUP BY c ORDER BY (COUNT(f.id) * 2 + COALESCE(c.visualizacoes, 0)) DESC",
            countQuery = "SELECT COUNT(c) FROM AjudaConteudo c WHERE c.publicado = true AND c.categoria = :categoria")
     Page<AjudaConteudo> findByPublicadoTrueAndCategoria(@Param("categoria") AjudaCategoria categoria, Pageable pageable);
+
+    java.util.Optional<AjudaConteudo> findByTitulo(String titulo);
 }

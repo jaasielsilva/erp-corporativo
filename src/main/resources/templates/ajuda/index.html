@@ -751,12 +751,12 @@
 
       // Show typing indicator
       const typingId = addMessage('<i class="fas fa-ellipsis-h fa-fade"></i>', 'bot');
+      const statusBadge = document.querySelector('.chat-header .badge');
 
       try {
         const token = getXsrfToken();
-        // Simulação de resposta inteligente baseada no mapa local para evitar chamadas de API desnecessárias se offline
-        // Mas mantemos o fetch para a API real se disponível
         
+        // Tenta conectar com a API Real
         const res = await fetch('/api/ajuda/ia/generate?query=' + encodeURIComponent(text), {
             method: 'POST',
             headers: token ? { 'X-XSRF-TOKEN': token } : {}
@@ -767,32 +767,51 @@
              return;
         }
         
-        if (res.status === 404) {
-             // Fallback local se a API não existir
-             setTimeout(() => {
-                 let fallbackResponse = "Desculpe, estou operando em modo offline. Tente usar a busca acima.";
-                 if(text.toLowerCase().includes("senha")) fallbackResponse = "Para alterar sua senha, vá em Configurações > Alterar Senha.";
-                 updateMessage(typingId, fallbackResponse);
-             }, 1000);
-             return;
+        if (res.status === 404 || res.status === 500) {
+             throw new Error('API Indisponível');
         }
 
         const json = await res.json();
         let reply = json.sections?.resumo || json.resposta || "Desculpe, não consegui processar sua solicitação.";
+        
+        // Sucesso: IA Online
+        if(statusBadge) {
+            statusBadge.className = 'badge bg-success';
+            statusBadge.innerHTML = '<i class="fas fa-brain me-1"></i> IA Online';
+        }
+        
         updateMessage(typingId, reply);
 
       } catch (e) {
-        // Fallback robusto em caso de erro de rede
-        console.warn("Erro na API de IA:", e);
-        let fallbackMsg = "Não consegui conectar ao servidor de IA. ";
+        // Falha: IA Offline (Fallback Local)
+        console.warn("IA Offline, usando fallback local:", e);
         
-        // Tentativa de resposta local simples baseada em keywords
-        const keywords = text.toLowerCase().split(' ');
-        const match = systemKnowledge.find(k => k.keywords.some(kw => text.toLowerCase().includes(kw)));
+        if(statusBadge) {
+            statusBadge.className = 'badge bg-warning text-dark';
+            statusBadge.innerHTML = '<i class="fas fa-wifi-slash me-1"></i> Modo Offline';
+            statusBadge.title = "A IA está indisponível. Respondendo com base de conhecimento local.";
+        }
+
+        let fallbackMsg = "";
+        
+        // Lógica de Fallback Inteligente Local
+        const queryLower = text.toLowerCase();
+        
+        // 1. Busca no SystemKnowledge
+        const match = systemKnowledge.find(k => 
+            k.keywords.some(kw => queryLower.includes(kw)) || 
+            k.title.toLowerCase().includes(queryLower)
+        );
+
         if(match) {
-            fallbackMsg += `Mas encontrei algo sobre <strong>${match.title}</strong>. Tente acessar: <a href="${match.path}" class="text-white underline">Clique aqui</a>.`;
+            fallbackMsg = `<strong>Modo Offline:</strong> Encontrei uma funcionalidade relacionada: <br>
+                           <i class="fas fa-arrow-right text-primary"></i> <strong>${match.title}</strong><br>
+                           Caminho: <span class="badge bg-light text-dark">${match.section}</span><br>
+                           <a href="${match.path}" class="btn btn-sm btn-outline-primary mt-2">Acessar agora</a>`;
+        } else if (queryLower.includes("senha") || queryLower.includes("acesso")) {
+             fallbackMsg = "Para questões de acesso ou senha, verifique seu perfil no canto superior direito ou contate o suporte.";
         } else {
-            fallbackMsg += "Tente usar a busca principal para encontrar tópicos.";
+             fallbackMsg = "Desculpe, estou sem conexão com a IA no momento e não encontrei tópicos exatos no menu para sua dúvida. Tente buscar pelo nome do módulo.";
         }
         
         updateMessage(typingId, fallbackMsg);
@@ -806,11 +825,12 @@
         document.querySelector('.chat-widget').scrollIntoView({behavior: 'smooth'});
     }
 
+    let msgCounter = 0;
     function addMessage(text, type) {
       const history = document.getElementById('chatHistory');
       const div = document.createElement('div');
       div.className = `chat-message ${type}`;
-      div.id = 'msg-' + Date.now();
+      div.id = 'msg-' + Date.now() + '-' + (msgCounter++);
       div.innerHTML = text;
       history.appendChild(div);
       history.scrollTop = history.scrollHeight;

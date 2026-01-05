@@ -74,7 +74,18 @@ public class AiAssistantService {
             }
         }
 
-        String prompt = "Você é o Assistente Inteligente do Portal CEO. Responda SEMPRE no formato abaixo, usando apenas o contexto fornecido. Se o contexto não for suficiente, responda: 'Não encontrei informações suficientes na base de conhecimento interna. Deseja registrar essa dúvida para melhoria futura?' e sugira abrir um chamado. Formato:\n\n### 🔹 Resumo rápido\n<uma frase>\n\n### 🔹 Caminho de navegação\nMenu → Módulo → Submódulo → Tela\n\n### 🔹 Passo a passo\n1) ...\n2) ...\n3) ...\n\n### 🔹 Observações úteis\n- ...\n- ...\n\n### 🔹 Pergunta final\n<pergunta>\n\nPergunta: " + query + "\n\nContexto:\n" + contexto.toString();
+        // Sempre injetamos o mapa do sistema para garantir que a IA conheça a navegação mesmo com resultados do RAG
+        contexto.append("\n\n").append(buildSystemStructureContext());
+
+        String prompt = "Você é o Assistente Inteligente do Portal CEO. Responda a dúvida do usuário de forma direta e útil.\n" +
+                        "Use o contexto fornecido abaixo. Se o contexto não tiver detalhes exatos, use seu conhecimento geral sobre sistemas ERP corporativos para dar uma orientação plausível, mas avise que é uma sugestão geral.\n" +
+                        "NUNCA responda apenas 'Vou orientar seu uso com base no conteúdo encontrado'. Dê a resposta real.\n\n" +
+                        "Estrutura da resposta desejada:\n" +
+                        "1. Resumo direto da solução.\n" +
+                        "2. Caminho de menu provável (ex: RH > Férias > Solicitar).\n" +
+                        "3. Passo a passo simples.\n\n" +
+                        "Pergunta: " + query + "\n\n" +
+                        "Contexto:\n" + contexto.toString();
 
         String respostaGerada = null;
         Double confianca = 0.6;
@@ -94,6 +105,11 @@ public class AiAssistantService {
             req.put("model", ollamaModel);
             req.put("prompt", prompt);
             req.put("stream", Boolean.FALSE);
+            
+            // Aumentar temperatura para respostas menos robóticas, mas controladas
+            Map<String, Object> options = new HashMap<>();
+            options.put("temperature", 0.3); 
+            req.put("options", options);
 
             Map<?,?> resp = webClient.post()
                     .uri(ollamaUrl + "/api/generate")
@@ -108,9 +124,21 @@ public class AiAssistantService {
                 abrirChamadoSugerido = respostaGerada.isBlank();
             }
         } catch (Exception e) {
-            respostaGerada = (sugestoes.isEmpty() ? "Não encontrei informações suficientes na base de conhecimento interna. Deseja registrar essa dúvida para melhoria futura?" : "Conteúdos relacionados encontrados.");
-            abrirChamadoSugerido = sugestoes.isEmpty();
-            confianca = sugestoes.isEmpty() ? 0.2 : 0.7;
+            // Em caso de erro na IA, tentamos usar o mapa estático para responder
+            String fallback = tryStaticFallback(query);
+            if (fallback != null) {
+                respostaGerada = fallback;
+                abrirChamadoSugerido = false;
+                confianca = 0.8;
+            } else if (!sugestoes.isEmpty()) {
+                 respostaGerada = "Encontrei alguns tópicos que podem ajudar: " + sugestoes.get(0).get("titulo");
+                 abrirChamadoSugerido = false;
+                 confianca = 0.5;
+            } else {
+                 respostaGerada = "Não consegui processar sua solicitação com a IA no momento. Tente buscar por termos como 'Férias', 'Senha' ou 'Acesso' na barra de busca.";
+                 abrirChamadoSugerido = true;
+                 confianca = 0.2;
+            }
         }
 
         AjudaConversaIa conv = new AjudaConversaIa();
@@ -121,7 +149,9 @@ public class AiAssistantService {
         conv.setEscalonado(false);
         conversaRepo.save(conv);
 
-        Map<String,Object> sections = buildSections(query, top, respostaGerada, sugestoes);
+        // Simplificação do buildSections para evitar sobrescrever a resposta da IA com templates vazios
+        Map<String,Object> sections = new LinkedHashMap<>();
+        sections.put("resumo", respostaGerada); 
 
         Map<String,Object> out = new LinkedHashMap<>();
         out.put("resposta", respostaGerada);
@@ -198,6 +228,51 @@ public class AiAssistantService {
         sections.put("observacoes", obsObj);
         sections.put("pergunta_final", perguntaFinal);
         return sections;
+    }
+
+    private String tryStaticFallback(String query) {
+        String q = query.toLowerCase();
+        if (q.contains("férias") || q.contains("ferias")) return "Para solicitar ou gerenciar férias, acesse o menu **RH > Férias** (`/ferias`). Lá você encontra opções para solicitar, aprovar e consultar histórico.";
+        if (q.contains("cliente")) return "Para gerenciar clientes, acesse o menu **Comercial > Clientes** (`/clientes`). Você pode listar, criar e editar registros de clientes.";
+        if (q.contains("senha") || q.contains("acesso")) return "Para alterar sua senha ou dados pessoais, vá em **Pessoal > Meu Perfil** (`/perfil`). Para problemas de acesso, abra um chamado em **Suporte > Abrir Chamado**.";
+        if (q.contains("chamado") || q.contains("suporte")) return "Para abrir um chamado de suporte ou reportar erros, acesse **Suporte > Abrir Chamado** (`/chamados/novo`).";
+        if (q.contains("usuario") || q.contains("usuário")) return "Para gerenciar usuários (apenas Administradores), acesse **Administração > Usuários** (`/usuarios/index`).";
+        if (q.contains("ponto") || q.contains("folha")) return "Para consultar ponto ou folha de pagamento, acesse o menu **RH > Ponto** ou **RH > Folha**.";
+        if (q.contains("fornecedor")) return "Para gerenciar fornecedores, acesse **Gestão > Fornecedores** (`/fornecedores`).";
+        return null;
+    }
+
+    private String buildSystemStructureContext() {
+        return "Mapa Completo do Sistema (Use para indicar caminhos):\n" +
+               "1. Módulo PRINCIPAL:\n" +
+               "   - Dashboard: /dashboard (Visão geral, Gráficos)\n\n" +
+               "2. Módulo COMERCIAL:\n" +
+               "   - Clientes: /clientes (Listar, Criar, Editar Clientes)\n" +
+               "   - Oportunidades: /oportunidades (Funil de Vendas)\n\n" +
+               "3. Módulo OPERACIONAL:\n" +
+               "   - Projetos: /projetos (Gestão de Projetos)\n" +
+               "   - Tarefas: /tarefas (Minhas Tarefas, Kanban)\n\n" +
+               "4. Módulo RH (Recursos Humanos):\n" +
+               "   - Colaboradores: /colaboradores (Cadastro de Funcionários)\n" +
+               "   - Férias: /ferias (Solicitar Férias, Aprovar Férias)\n" +
+               "   - Ponto: /ponto (Registro de Ponto, Espelho)\n" +
+               "   - Folha: /folha (Holerites, Pagamentos)\n\n" +
+               "5. Módulo GESTÃO:\n" +
+               "   - Contratos: /contratos (Gestão Contratual)\n" +
+               "   - Fornecedores: /fornecedores (Base de Fornecedores)\n\n" +
+               "6. Módulo SERVIÇOS:\n" +
+               "   - Gerenciar Serviços: /servicos\n" +
+               "   - Catálogo: /servicos/catalogo\n\n" +
+               "7. Módulo ADMINISTRAÇÃO (Apenas Admins):\n" +
+               "   - Usuários: /usuarios/index (Criar Usuário, Resetar Senha)\n" +
+               "   - Gestão de Acesso > Perfis: /perfis (Criar Perfil, Definir Permissões)\n" +
+               "   - Gestão de Acesso > Permissões: /permissoes\n\n" +
+               "8. Módulo PESSOAL:\n" +
+               "   - Meu Perfil: /perfil (Alterar Senha, Dados Pessoais)\n" +
+               "   - Meus Chamados: /meus-chamados (Acompanhar solicitações)\n\n" +
+               "9. Módulo SUPORTE:\n" +
+               "   - Documentos: /documentos\n" +
+               "   - Abrir Chamado: /chamados/novo (Reportar Erro, Solicitar Acesso)\n";
     }
 
     private String inferPathFromCategory(String slug, String titulo) {

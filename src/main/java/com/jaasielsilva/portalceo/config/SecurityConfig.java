@@ -8,6 +8,7 @@ import com.jaasielsilva.portalceo.repository.*;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.CategoriaService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
+import com.jaasielsilva.portalceo.service.MapaPermissaoService;
 import com.jaasielsilva.portalceo.service.PermissaoService;
 import java.math.BigDecimal;
 import java.util.List;
@@ -175,10 +176,11 @@ public class SecurityConfig {
         }
 
         @Bean
-        public CommandLineRunner seedPermissoesPadrao(PermissaoService permissaoService) {
+        public CommandLineRunner seedPermissoesPadrao(PermissaoService permissaoService, MapaPermissaoService mapaPermissaoService) {
                 return args -> {
                         try {
                                 permissaoService.criarPermissoesPadrao();
+                                mapaPermissaoService.sincronizarPermissoes();
                         } catch (Exception ignored) {
                         }
                 };

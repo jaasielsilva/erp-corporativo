@@ -19,6 +19,7 @@ public class AiAssistantService {
     @Autowired private HelpService helpService;
     @Autowired private RagService ragService;
     @Autowired private AjudaConversaIaRepository conversaRepo;
+    @Autowired private com.jaasielsilva.portalceo.service.MapaPermissaoService mapaPermissaoService;
     private final WebClient webClient = WebClient.builder().build();
 
     @Value("${ollama.enabled:false}")
@@ -260,6 +261,164 @@ public class AiAssistantService {
 
     private String tryStaticFallback(String query) {
         String q = query.toLowerCase();
+        
+        // Tenta usar o Mapa de Permissões para responder dinamicamente
+        try {
+            mapaPermissaoService.sincronizarPermissoes();
+            List<com.jaasielsilva.portalceo.model.MapaPermissao> mapa = mapaPermissaoService.listarTodos();
+            
+            // Lógica para responder "Qual permissão precisa para X?"
+            if (q.contains("permissão") || q.contains("permissao") || q.contains("authority") || q.contains("acesso")) {
+                // Palavras irrelevantes para a busca (stop words)
+                List<String> stopWords = Arrays.asList(
+                    "qual", "que", "permissão", "permissao", "precisa", "necessária", "necessaria", 
+                    "para", "acessar", "a", "o", "as", "os", "de", "do", "da", "em", "no", "na", 
+                    "tela", "menu", "modulo", "módulo", "sistema", "ter", "tal", "uma", "um"
+                );
+                
+                // Expansão de sinônimos para melhorar a busca
+                Map<String, List<String>> sinonimos = new HashMap<>();
+                sinonimos.put("cadastrar", Arrays.asList("novo", "criar", "adicionar", "incluir", "inserir", "create", "new", "add"));
+                sinonimos.put("editar", Arrays.asList("alterar", "atualizar", "modificar", "corrigir", "update", "edit"));
+                sinonimos.put("excluir", Arrays.asList("remover", "deletar", "apagar", "cancelar", "delete", "remove"));
+                sinonimos.put("listar", Arrays.asList("ver", "visualizar", "consultar", "buscar", "pesquisar", "list", "read", "view", "index"));
+                sinonimos.put("clientes", Arrays.asList("cliente", "consumidor"));
+                sinonimos.put("colaboradores", Arrays.asList("colaborador", "funcionario", "funcionário", "equipe", "time"));
+                sinonimos.put("usuarios", Arrays.asList("usuario", "usuário"));
+                sinonimos.put("fornecedores", Arrays.asList("fornecedor", "parceiro"));
+                sinonimos.put("produtos", Arrays.asList("produto", "item", "mercadoria"));
+                sinonimos.put("relatorio", Arrays.asList("exportar", "imprimir", "gerar", "report"));
+
+                String[] tokens = q.split("\\s+");
+                List<String> termosRelevantes = new ArrayList<>();
+                for (String token : tokens) {
+                    String limpo = token.replaceAll("[^a-zA-Z0-9áéíóúÁÉÍÓÚàÀãÃõÕçÇêÊôÔ]", "").toLowerCase();
+                    if (limpo.length() > 2 && !stopWords.contains(limpo)) {
+                        termosRelevantes.add(limpo);
+                        // Adiciona sinônimos se houver
+                        if (sinonimos.containsKey(limpo)) {
+                            termosRelevantes.addAll(sinonimos.get(limpo));
+                        }
+                        // Busca reversa: se o token for um dos valores do mapa, adiciona a chave (canonicalização)
+                        for (Map.Entry<String, List<String>> entry : sinonimos.entrySet()) {
+                            if (entry.getValue().contains(limpo)) {
+                                termosRelevantes.add(entry.getKey());
+                            }
+                        }
+                    }
+                }
+                                     
+                if (!termosRelevantes.isEmpty()) {
+                    com.jaasielsilva.portalceo.model.MapaPermissao melhorMatch = null;
+                    int melhorScore = 0;
+                    
+                    for (com.jaasielsilva.portalceo.model.MapaPermissao item : mapa) {
+                        int score = 0;
+                        String rec = item.getRecurso().toLowerCase();
+                        String desc = item.getDescricao().toLowerCase();
+                        String mod = item.getModulo().toLowerCase();
+                        String perm = item.getPermissao().toLowerCase();
+                        
+                        for (String termo : termosRelevantes) {
+                            if (rec.contains(termo)) score += 10;
+                            if (desc.contains(termo)) score += 8; // Aumentado peso da descrição
+                            if (mod.contains(termo)) score += 2;
+                            if (perm.contains(termo)) score += 10; // Alta relevância se bater na permissão técnica
+                            
+                            // Bônus para match exato de palavra inteira (evita "menu" dar match em "menu_clientes" com score baixo)
+                            if (rec.equals(termo) || perm.equals(termo)) score += 15;
+                        }
+                        
+                        // Penalidade para itens muito genéricos se a busca for específica
+                        if (termosRelevantes.size() > 1 && (rec.equals("menu geral") || rec.equals("menu " + mod))) {
+                             score -= 5;
+                        }
+                        
+                        if (score > melhorScore) {
+                            melhorScore = score;
+                            melhorMatch = item;
+                        }
+                    }
+                    
+                    if (melhorMatch != null && melhorScore >= 10) { // Aumentado threshold mínimo para evitar falsos positivos fracos
+                         StringBuilder sb = new StringBuilder();
+                         sb.append("✅ **Permissão Encontrada**\n\n");
+                         sb.append("Para acessar **").append(melhorMatch.getRecurso()).append("** (").append(melhorMatch.getModulo()).append("), é necessário:\n\n");
+                         sb.append("🔑 **Permissão:** `").append(melhorMatch.getPermissao()).append("`\n");
+                         
+                         if (melhorMatch.getPerfis() != null && !melhorMatch.getPerfis().isEmpty()) {
+                             sb.append("👤 **Perfis com acesso:** ").append(melhorMatch.getPerfis()).append("\n");
+                         } else {
+                             sb.append("👤 **Perfis:** Nenhum perfil padrão configurado explicitamente.\n");
+                         }
+                         
+                         sb.append("\n_Caso precise deste acesso, solicite ao administrador informando o código da permissão acima._");
+                         return sb.toString();
+                    }
+                }
+            }
+            
+            // Identifica o módulo na pergunta
+            String moduloAlvo = null;
+            if (q.contains("rh") || q.contains("recursos humanos")) moduloAlvo = "RH";
+            else if (q.contains("financeiro")) moduloAlvo = "Financeiro";
+            else if (q.contains("comercial") || q.contains("clientes")) moduloAlvo = "Comercial";
+            else if (q.contains("vendas")) moduloAlvo = "Vendas";
+            else if (q.contains("marketing")) moduloAlvo = "Marketing";
+            else if (q.contains("estoque") || q.contains("compras")) moduloAlvo = "Estoque";
+            else if (q.contains("ti") || q.contains("tecnologia")) moduloAlvo = "TI";
+            else if (q.contains("juridico") || q.contains("jurídico")) moduloAlvo = "Jurídico";
+            else if (q.contains("projetos")) moduloAlvo = "Projetos";
+            else if (q.contains("admin")) moduloAlvo = "Administração";
+            
+            // Se encontrou um módulo e a pergunta é sobre "opções", "menu", "o que tem", "listar"
+            if (moduloAlvo != null && (q.contains("opç") || q.contains("menu") || q.contains("tem") || q.contains("func") || q.contains("quais"))) {
+                StringBuilder resposta = new StringBuilder();
+                resposta.append("Aqui estão as opções disponíveis no módulo **").append(moduloAlvo).append("**:\n\n");
+                
+                // Lista para armazenar itens únicos e formatados
+                Set<String> itensUnicos = new TreeSet<>();
+                
+                for (com.jaasielsilva.portalceo.model.MapaPermissao item : mapa) {
+                    if (item.getModulo().equalsIgnoreCase(moduloAlvo)) {
+                        // Filtra apenas itens relevantes para o usuário final
+                        if (item.getTipo() == com.jaasielsilva.portalceo.model.MapaPermissao.TipoRecurso.MENU || 
+                            item.getTipo() == com.jaasielsilva.portalceo.model.MapaPermissao.TipoRecurso.TELA ||
+                            item.getTipo() == com.jaasielsilva.portalceo.model.MapaPermissao.TipoRecurso.RELATORIO) {
+                            
+                            // Usa a descrição limpa se disponível, ou o recurso
+                            String nomeExibicao = item.getDescricao();
+                            if (nomeExibicao == null || nomeExibicao.contains("Permissão para menu") || nomeExibicao.startsWith("Menu ")) {
+                                nomeExibicao = item.getRecurso();
+                            }
+                            
+                            // Limpa prefixos comuns para melhorar a leitura
+                            nomeExibicao = nomeExibicao.replace("Menu ", "").replace("Tela ", "");
+                            
+                            // Capitaliza primeira letra
+                            if (nomeExibicao.length() > 0) {
+                                nomeExibicao = nomeExibicao.substring(0, 1).toUpperCase() + nomeExibicao.substring(1);
+                            }
+                            
+                            itensUnicos.add(nomeExibicao);
+                        }
+                    }
+                }
+                
+                if (!itensUnicos.isEmpty()) {
+                    for (String item : itensUnicos) {
+                        // Ignora itens muito genéricos ou repetitivos
+                        if (item.equalsIgnoreCase("Rh") || item.equalsIgnoreCase(moduloAlvo)) continue;
+                        
+                        resposta.append("- ").append(item).append("\n");
+                    }
+                    return resposta.toString();
+                }
+            }
+        } catch (Exception e) {
+            // Ignora erro e segue para fallback estático
+        }
+
         if (q.contains("férias") || q.contains("ferias")) return "Para solicitar ou gerenciar férias, acesse o menu **RH > Férias** (`/ferias`). Lá você encontra opções para solicitar, aprovar e consultar histórico.";
         if (q.contains("cliente")) return "Para gerenciar clientes, acesse o menu **Comercial > Clientes** (`/clientes`). Você pode listar, criar e editar registros de clientes.";
         if (q.contains("senha") || q.contains("acesso")) return "Para alterar sua senha ou dados pessoais, vá em **Pessoal > Meu Perfil** (`/perfil`). Para problemas de acesso, abra um chamado em **Suporte > Abrir Chamado**.";
@@ -271,6 +430,52 @@ public class AiAssistantService {
     }
 
     private String buildSystemStructureContext() {
+        try {
+            // Tenta obter o mapa dinâmico do banco de dados
+            mapaPermissaoService.sincronizarPermissoes(); // Garante dados frescos
+            List<com.jaasielsilva.portalceo.model.MapaPermissao> mapa = mapaPermissaoService.listarTodos();
+            
+            if (mapa.isEmpty()) {
+                return buildStaticSystemStructureContext();
+            }
+            
+            // Agrupa por módulo
+            Map<String, List<com.jaasielsilva.portalceo.model.MapaPermissao>> porModulo = new TreeMap<>();
+            for (com.jaasielsilva.portalceo.model.MapaPermissao item : mapa) {
+                porModulo.computeIfAbsent(item.getModulo(), k -> new ArrayList<>()).add(item);
+            }
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append("Mapa Completo e Atualizado do Sistema (Baseado nas Permissões Reais):\n");
+            
+            for (Map.Entry<String, List<com.jaasielsilva.portalceo.model.MapaPermissao>> entry : porModulo.entrySet()) {
+                sb.append("\n=== Módulo ").append(entry.getKey().toUpperCase()).append(" ===\n");
+                
+                // Agrupa por recurso para evitar repetições excessivas
+                Map<String, String> recursosUnicos = new TreeMap<>();
+                for (com.jaasielsilva.portalceo.model.MapaPermissao item : entry.getValue()) {
+                    // Foca principalmente em Menus e Telas para navegação
+                    if (item.getTipo() == com.jaasielsilva.portalceo.model.MapaPermissao.TipoRecurso.MENU || 
+                        item.getTipo() == com.jaasielsilva.portalceo.model.MapaPermissao.TipoRecurso.TELA) {
+                        recursosUnicos.put(item.getRecurso(), item.getDescricao());
+                    }
+                }
+                
+                for (Map.Entry<String, String> rec : recursosUnicos.entrySet()) {
+                    sb.append("   - ").append(rec.getKey())
+                      .append(": ").append(rec.getValue()).append("\n");
+                }
+            }
+            
+            return sb.toString();
+            
+        } catch (Exception e) {
+            // Fallback em caso de erro no banco
+            return buildStaticSystemStructureContext();
+        }
+    }
+
+    private String buildStaticSystemStructureContext() {
         return "Mapa Completo do Sistema (Use para indicar caminhos):\n" +
                "1. Módulo PRINCIPAL:\n" +
                "   - Dashboard: /dashboard (Visão geral, Gráficos)\n\n" +

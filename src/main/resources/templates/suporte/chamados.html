@@ -516,7 +516,7 @@
                                     <option value="BAIXA">Baixa</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3"
                                 <label class="form-label fw-semibold" style="color: var(--text-primary);">Técnico</label>
                                 <input type="text" class="form-control form-control-empresarial" id="filtroTecnico" placeholder="Nome do técnico">
                             </div>
@@ -579,10 +579,10 @@
                                                     <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                                     <h5>Nenhum chamado encontrado</h5>
                                                     <p class="mb-0">Não há chamados cadastrados no sistema.</p>
-                                                    <a href="/suporte/chamados/novo" class="btn btn-primary-empresarial mt-3">
+                                                    <a href="/suporte/chamados/novo" class="btn btn-primary-empresarial mt-3" th:if="${podeCriar}">
                                                         <i class="fas fa-plus"></i> Criar Primeiro Chamado
                                                     </a>
-                                                </div>" th:if="${podeCriar}
+                                                </div>
                                             </td>
                                         </tr>
 
@@ -727,7 +727,7 @@
             mostrarLoading(true);
             
             try {
-                const response = await fetch('/suporte/api/chamados');
+                const response = await fetch('/api/suporte/chamados');
                 if (response.ok) {
                     chamadosData = await response.json();
                     renderizarDados();
@@ -852,7 +852,7 @@
                 
                 const confirmar = await (typeof Swal !== 'undefined'
                     ? Swal.fire({
-                        title: 'Deseja assumir o atendimento deste chamado como Master do Sistema?',
+                        title: 'Deseja assumir o atendimento deste chamado?',
                         html: `Responsável: <strong>${usuarioLogado.nome}</strong>`,
                         icon: 'question',
                         showCancelButton: true,
@@ -860,10 +860,10 @@
                         cancelButtonText: 'Cancelar'
                     }).then(r => r.isConfirmed)
                     : Promise.resolve(window.confirm(`Deseja assumir o atendimento deste chamado como ${usuarioLogado.nome}?`)));
+                
                 if (confirmar) {
-                    await atualizarStatusChamado(id, 'EM_ANDAMENTO', { 
-                        tecnicoResponsavel: usuarioLogado.nome,
-                        tecnicoId: usuarioLogado.id
+                    await atualizarStatusChamado(id, 'iniciar', { 
+                        tecnicoResponsavel: usuarioLogado.nome
                     });
                 }
                 
@@ -884,7 +884,7 @@
                 }).then(r => r.isConfirmed)
                 : Promise.resolve(window.confirm('Deseja marcar este chamado como resolvido?')));
             if (confirmar) {
-                await atualizarStatusChamado(id, 'RESOLVIDO');
+                await atualizarStatusChamado(id, 'resolver');
             }
         }
 
@@ -899,23 +899,23 @@
                 }).then(r => r.isConfirmed)
                 : Promise.resolve(window.confirm('Deseja fechar este chamado definitivamente?')));
             if (confirmar) {
-                await atualizarStatusChamado(id, 'FECHADO');
+                await atualizarStatusChamado(id, 'fechar');
             }
         }
 
         // ===== ATUALIZAÇÃO DE STATUS =====
-        async function atualizarStatusChamado(id, novoStatus, dadosAdicionais = {}) {
+        async function atualizarStatusChamado(id, acao, dadosAdicionais = {}) {
             mostrarLoading(true);
 
             try {
-                const response = await fetch(`/suporte/api/chamados/${id}/status`, {
+                const response = await fetch(`/api/suporte/chamados/${id}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        status: novoStatus,
+                        acao: acao,
                         ...dadosAdicionais
                     })
                 });

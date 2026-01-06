@@ -1461,36 +1461,7 @@ public class SuporteController {
         }
     }
 
-    // Endpoint para obter dados do usuário atual (usado pelo frontend)
-    @GetMapping("/api/usuario/atual")
-    @ResponseBody
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Map<String, Object>> getUsuarioAtual() {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String email = auth.getName();
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-            
-            if (usuarioOpt.isEmpty()) {
-                return ResponseEntity.status(401).build();
-            }
-            
-            Usuario usuario = usuarioOpt.get();
-            boolean podeAtender = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("TECNICO_ATENDER_CHAMADOS"));
-            
-            Map<String, Object> dados = new HashMap<>();
-            dados.put("id", usuario.getId());
-            dados.put("nome", usuario.getNome());
-            dados.put("email", usuario.getEmail());
-            dados.put("podeAtenderChamados", podeAtender);
-            
-            return ResponseEntity.ok(dados);
-        } catch (Exception e) {
-            logger.error("Erro ao obter usuário atual: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
-    }
+
 
     // Método auxiliar para obter usuário logado
     private Usuario obterUsuarioLogado() {
@@ -1961,7 +1932,7 @@ public class SuporteController {
     @GetMapping("/api/usuario/atual")
     @ResponseBody
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Map<String, Object>> obterUsuarioAtual() {
+    public ResponseEntity<Map<String, Object>> getUsuarioAtual() {
         try {
             Usuario usuarioLogado = obterUsuarioLogado();
 
@@ -1969,14 +1940,6 @@ public class SuporteController {
                 return ResponseEntity.status(401)
                         .body(Map.of("erro", "Usuário não autenticado"));
             }
-
-            // --- LOG TEMPORÁRIO: VER PERFIS E PERMISSÕES ---
-            usuarioLogado.getPerfis().forEach(perfil -> {
-                System.out.println("Perfil: " + perfil.getNome());
-                if (perfil.getPermissoes() != null) {
-                    perfil.getPermissoes().forEach(p -> System.out.println(" - Permissão: " + p.getNome()));
-                }
-            });
 
             // Verificar se usuário pode atender chamados
             boolean podeAtenderChamados = permissaoService.podeGerenciarChamados(usuarioLogado);

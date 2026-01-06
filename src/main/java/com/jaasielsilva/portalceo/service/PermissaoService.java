@@ -229,198 +229,208 @@ public class PermissaoService {
     /**
      * Define as permissões padrão do sistema
      */
-    private Map<String, String> getPermissoesPadrao() {
+    public Map<String, String> getPermissoesPadrao() {
         Map<String, String> permissoes = new HashMap<>();
         
-        // Permissões de Usuários
-        permissoes.put("ROLE_USER_READ", "Visualizar usuários");
-        permissoes.put("ROLE_USER_WRITE", "Criar/editar usuários");
-        permissoes.put("ROLE_USER_DELETE", "Excluir usuários");
-        permissoes.put("ROLE_USER_ADMIN", "Administrar usuários");
-        
-        // Permissões de RH
-        permissoes.put("ROLE_RH_READ", "Visualizar RH");
-        permissoes.put("ROLE_RH_WRITE", "Criar/editar RH");
-        permissoes.put("ROLE_RH_DELETE", "Excluir RH");
-        permissoes.put("ROLE_RH_ADMIN", "Administrar RH");
-        
-        // Permissões Financeiras
-        permissoes.put("ROLE_FINANCEIRO_READ", "Visualizar financeiro");
-        permissoes.put("ROLE_FINANCEIRO_WRITE", "Criar/editar financeiro");
-        permissoes.put("ROLE_FINANCEIRO_DELETE", "Excluir financeiro");
-        permissoes.put("ROLE_FINANCEIRO_ADMIN", "Administrar financeiro");
-        
-        // Permissões de Relatórios
-        permissoes.put("ROLE_RELATORIO_READ", "Visualizar relatórios");
-        permissoes.put("ROLE_RELATORIO_EXPORT", "Exportar relatórios");
-        permissoes.put("ROLE_RELATORIO_ADMIN", "Administrar relatórios");
-        
-        // Permissões de Sistema
-        permissoes.put("ROLE_ADMIN", "Administrador do sistema");
-        permissoes.put("ROLE_USER", "Usuário básico");
-        permissoes.put("ROLE_MASTER", "Usuário master");
-        
-        // Permissões de Dashboards (regras obrigatórias)
-        permissoes.put("DASHBOARD_EXECUTIVO_VISUALIZAR", "Visualizar dashboard executivo");
-        permissoes.put("DASHBOARD_OPERACIONAL_VISUALIZAR", "Visualizar dashboard operacional");
-        permissoes.put("DASHBOARD_FINANCEIRO_VISUALIZAR", "Visualizar dashboard financeiro");
+        // --- Dashboards ---
+        permissoes.put("DASHBOARD_EXECUTIVO_VISUALIZAR", "Visualizar Dashboard Executivo");
+        permissoes.put("DASHBOARD_OPERACIONAL_VISUALIZAR", "Visualizar Dashboard Operacional");
+        permissoes.put("DASHBOARD_FINANCEIRO_VISUALIZAR", "Visualizar Dashboard Financeiro");
 
-        // Permissões de Configuração
-        permissoes.put("ROLE_CONFIG_READ", "Visualizar configurações");
-        permissoes.put("ROLE_CONFIG_WRITE", "Alterar configurações");
-
-        // Menus gerais
-        permissoes.put("MENU_DASHBOARD", "Menu Dashboard");
+        // --- Comercial ---
         permissoes.put("MENU_CLIENTES", "Menu Clientes");
-        permissoes.put("MENU_CLIENTES_LISTAR", "Menu Clientes Listar");
-        permissoes.put("MENU_CLIENTES_NOVO", "Menu Clientes Novo");
-        permissoes.put("MENU_CLIENTES_CONTRATOS_LISTAR", "Menu Clientes Contratos");
-        permissoes.put("MENU_CLIENTES_HISTORICO_INTERACOES", "Menu Clientes Interações");
-        permissoes.put("MENU_CLIENTES_HISTORICO_PEDIDOS", "Menu Clientes Pedidos");
-        permissoes.put("MENU_CLIENTES_AVANCADO_BUSCA", "Menu Clientes Busca Avançada");
-        permissoes.put("MENU_CLIENTES_AVANCADO_RELATORIOS", "Menu Clientes Relatórios");
+        permissoes.put("MENU_CLIENTES_LISTAR", "Listar Clientes");
+        permissoes.put("MENU_CLIENTES_NOVO", "Novo Cliente");
+        permissoes.put("MENU_CLIENTES_CONTRATOS_LISTAR", "Listar Contratos");
+        permissoes.put("MENU_CLIENTES_HISTORICO_INTERACOES", "Histórico de Interações");
+        permissoes.put("MENU_CLIENTES_HISTORICO_PEDIDOS", "Histórico de Pedidos");
+        permissoes.put("MENU_CLIENTES_AVANCADO_BUSCA", "Busca Avançada Clientes");
+        permissoes.put("MENU_CLIENTES_AVANCADO_RELATORIOS", "Relatórios Clientes");
+        
         permissoes.put("MENU_VENDAS", "Menu Vendas");
-        permissoes.put("MENU_VENDAS_DASHBOARD", "Menu Vendas Dashboard");
-        permissoes.put("MENU_VENDAS_PDV", "Menu Vendas PDV");
-        permissoes.put("MENU_VENDAS_PEDIDOS", "Menu Vendas Pedidos");
-        permissoes.put("MENU_VENDAS_RELATORIOS", "Menu Vendas Relatórios");
+        permissoes.put("MENU_VENDAS_DASHBOARD", "Dashboard Vendas");
+        permissoes.put("MENU_VENDAS_PDV", "PDV Vendas");
+        permissoes.put("MENU_VENDAS_PEDIDOS", "Pedidos Vendas");
+        permissoes.put("MENU_VENDAS_RELATORIOS", "Relatórios Vendas");
+
+        // --- Compras / Estoque ---
         permissoes.put("MENU_COMPRAS", "Menu Compras");
         permissoes.put("MENU_ESTOQUE", "Menu Estoque");
-        permissoes.put("MENU_ESTOQUE_PRODUTOS", "Menu Estoque Produtos");
-        permissoes.put("MENU_ESTOQUE_CATEGORIAS", "Menu Estoque Categorias");
-        permissoes.put("MENU_ESTOQUE_CATEGORIAS_LISTAR", "Menu Estoque Categorias Listar");
-        permissoes.put("MENU_ESTOQUE_CATEGORIAS_NOVO", "Menu Estoque Categorias Novo");
+        permissoes.put("MENU_ESTOQUE_PRODUTOS", "Produtos Estoque");
+        permissoes.put("MENU_ESTOQUE_CATEGORIAS", "Categorias Estoque");
+        permissoes.put("MENU_ESTOQUE_CATEGORIAS_LISTAR", "Listar Categorias");
+        permissoes.put("MENU_ESTOQUE_CATEGORIAS_NOVO", "Nova Categoria");
 
-        // Menus RH
+        // --- Recursos Humanos (RH) ---
         permissoes.put("MENU_RH", "Menu RH");
-        permissoes.put("MENU_RH_COLABORADORES_LISTAR", "Menu RH Colaboradores Listar");
-        permissoes.put("MENU_RH_COLABORADORES_NOVO", "Menu RH Colaboradores Novo");
-        permissoes.put("MENU_RH_COLABORADORES_ADESAO", "Menu RH Adesão");
-        permissoes.put("MENU_RH_FOLHA", "Menu RH Folha");
-        permissoes.put("MENU_RH_FOLHA_INICIO", "Menu RH Folha Início");
-        permissoes.put("MENU_RH_FOLHA_LISTAR", "Menu RH Folha Listar");
-        permissoes.put("MENU_RH_FOLHA_GERAR", "Menu RH Folha Gerar");
-        permissoes.put("MENU_RH_FOLHA_HOLERITE", "Menu RH Folha Holerite");
-        permissoes.put("MENU_RH_FOLHA_DESCONTOS", "Menu RH Folha Descontos");
-        permissoes.put("MENU_RH_FOLHA_RELATORIOS", "Menu RH Folha Relatórios");
-        permissoes.put("MENU_RH_BENEFICIOS", "Menu RH Benefícios");
-        permissoes.put("MENU_RH_BENEFICIOS_PLANO_SAUDE", "Menu RH Plano de Saúde");
-        permissoes.put("MENU_RH_BENEFICIOS_VALE_TRANSPORTE", "Menu RH VT");
-        permissoes.put("MENU_RH_BENEFICIOS_VALE_REFEICAO", "Menu RH VR");
-        permissoes.put("MENU_RH_BENEFICIOS_ADESAO", "Menu RH Benefícios Adesão");
-        permissoes.put("MENU_RH_WORKFLOW", "Menu RH Workflow");
-        permissoes.put("MENU_RH_WORKFLOW_APROVACAO", "Menu RH Workflow Aprovação");
-        permissoes.put("MENU_RH_WORKFLOW_RELATORIOS", "Menu RH Workflow Relatórios");
-        permissoes.put("MENU_RH_PONTO", "Menu RH Ponto");
-        permissoes.put("MENU_RH_PONTO_REGISTROS", "Menu RH Ponto Registros");
-        permissoes.put("MENU_RH_PONTO_CORRECOES", "Menu RH Ponto Correções");
-        permissoes.put("MENU_RH_PONTO_ESCALAS", "Menu RH Ponto Escalas");
-        permissoes.put("MENU_RH_PONTO_RELATORIOS", "Menu RH Ponto Relatórios");
-        permissoes.put("MENU_RH_FERIAS", "Menu RH Férias");
-        permissoes.put("MENU_RH_FERIAS_SOLICITAR", "Menu RH Férias Solicitar");
-        permissoes.put("MENU_RH_FERIAS_APROVAR", "Menu RH Férias Aprovar");
-        permissoes.put("MENU_RH_FERIAS_PLANEJAMENTO", "Menu RH Férias Planejamento");
-        permissoes.put("MENU_RH_FERIAS_CALENDARIO", "Menu RH Férias Calendário");
-        permissoes.put("MENU_RH_AVALIACAO", "Menu RH Avaliação");
-        permissoes.put("MENU_RH_AVALIACAO_PERIODICIDADE", "Menu RH Avaliação Periodicidade");
-        permissoes.put("MENU_RH_AVALIACAO_FEEDBACKS", "Menu RH Avaliação Feedbacks");
-        permissoes.put("MENU_RH_AVALIACAO_RELATORIOS", "Menu RH Avaliação Relatórios");
-        permissoes.put("MENU_RH_TREINAMENTOS", "Menu RH Treinamentos");
-        permissoes.put("MENU_RH_TREINAMENTOS_CADASTRO", "Menu RH Treinamentos Cadastro");
-        permissoes.put("MENU_RH_TREINAMENTOS_INSCRICAO", "Menu RH Treinamentos Inscrição");
-        permissoes.put("MENU_RH_TREINAMENTOS_CERTIFICADO", "Menu RH Treinamentos Certificado");
-        permissoes.put("MENU_RH_RECRUTAMENTO", "Menu RH Recrutamento");
-        permissoes.put("MENU_RH_RECRUTAMENTO_CANDIDATOS", "Menu RH Recrutamento Candidatos");
-        permissoes.put("MENU_RH_RECRUTAMENTO_VAGAS", "Menu RH Recrutamento Vagas");
-        permissoes.put("MENU_RH_RECRUTAMENTO_TRIAGEM", "Menu RH Recrutamento Triagem");
-        permissoes.put("MENU_RH_RECRUTAMENTO_ENTREVISTAS", "Menu RH Recrutamento Entrevistas");
-        permissoes.put("MENU_RH_RECRUTAMENTO_HISTORICO", "Menu RH Recrutamento Histórico");
-        permissoes.put("MENU_RH_RECRUTAMENTO_PIPELINE", "Menu RH Recrutamento Pipeline");
-        permissoes.put("MENU_RH_RECRUTAMENTO_RELATORIOS", "Menu RH Recrutamento Relatórios");
-        permissoes.put("MENU_RH_RELATORIOS", "Menu RH Relatórios");
-        permissoes.put("MENU_RH_RELATORIOS_TURNOVER", "Menu RH Relatórios Turnover");
-        permissoes.put("MENU_RH_RELATORIOS_ABSENTEISMO", "Menu RH Relatórios Absenteísmo");
-        permissoes.put("MENU_RH_RELATORIOS_HEADCOUNT", "Menu RH Relatórios Headcount");
-        permissoes.put("MENU_RH_RELATORIOS_INDICADORES", "Menu RH Relatórios Indicadores");
-        permissoes.put("MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES", "Menu RH Relatórios Admissões/Demissões");
-        permissoes.put("MENU_RH_RELATORIOS_FERIAS_BENEFICIOS", "Menu RH Relatórios Férias/Benefícios");
-        permissoes.put("MENU_RH_CONFIGURACOES", "Menu RH Configurações");
-        permissoes.put("MENU_RH_CONFIGURACOES_INICIO", "Menu RH Configurações Início");
-        permissoes.put("MENU_RH_CONFIGURACOES_POLITICAS_FERIAS", "Menu RH Configurações Políticas de Férias");
-        permissoes.put("MENU_RH_CONFIGURACOES_PONTO", "Menu RH Configurações Ponto");
-        permissoes.put("MENU_RH_CONFIGURACOES_INTEGRACOES", "Menu RH Configurações Integrações");
-        permissoes.put("MENU_RH_AUDITORIA", "Menu RH Auditoria");
-        permissoes.put("MENU_RH_AUDITORIA_INICIO", "Menu RH Auditoria Início");
-        permissoes.put("MENU_RH_AUDITORIA_ACESSOS", "Menu RH Auditoria Acessos");
-        permissoes.put("MENU_RH_AUDITORIA_ALTERACOES", "Menu RH Auditoria Alterações");
-        permissoes.put("MENU_RH_AUDITORIA_EXPORTACOES", "Menu RH Auditoria Exportações");
-        permissoes.put("MENU_RH_AUDITORIA_REVISOES", "Menu RH Auditoria Revisões");
+        
+        // Colaboradores
+        permissoes.put("MENU_RH_COLABORADORES_LISTAR", "Listar Colaboradores");
+        permissoes.put("MENU_RH_COLABORADORES_NOVO", "Novo Colaborador");
+        permissoes.put("MENU_RH_COLABORADORES_ADESAO", "Adesão Colaboradores");
+        
+        // Folha
+        permissoes.put("MENU_RH_FOLHA", "Menu Folha de Pagamento");
+        permissoes.put("MENU_RH_FOLHA_INICIO", "Início Folha");
+        permissoes.put("MENU_RH_FOLHA_LISTAR", "Listar Folha");
+        permissoes.put("MENU_RH_FOLHA_GERAR", "Gerar Folha");
+        permissoes.put("MENU_RH_FOLHA_HOLERITE", "Holerite");
+        permissoes.put("MENU_RH_FOLHA_DESCONTOS", "Descontos Folha");
+        permissoes.put("MENU_RH_FOLHA_RELATORIOS", "Relatórios Folha");
+        
+        // Benefícios
+        permissoes.put("MENU_RH_BENEFICIOS", "Menu Benefícios");
+        permissoes.put("MENU_RH_BENEFICIOS_PLANO_SAUDE", "Plano de Saúde");
+        permissoes.put("MENU_RH_BENEFICIOS_VALE_TRANSPORTE", "Vale Transporte");
+        permissoes.put("MENU_RH_BENEFICIOS_VALE_REFEICAO", "Vale Refeição");
+        permissoes.put("MENU_RH_BENEFICIOS_ADESAO", "Adesão Benefícios");
+        
+        // Workflow
+        permissoes.put("MENU_RH_WORKFLOW", "Menu Workflow");
+        permissoes.put("MENU_RH_WORKFLOW_APROVACAO", "Aprovação Workflow");
+        permissoes.put("MENU_RH_WORKFLOW_RELATORIOS", "Relatórios Workflow");
+        
+        // Ponto
+        permissoes.put("MENU_RH_PONTO", "Menu Ponto");
+        permissoes.put("MENU_RH_PONTO_REGISTROS", "Registros Ponto");
+        permissoes.put("MENU_RH_PONTO_CORRECOES", "Correções Ponto");
+        permissoes.put("MENU_RH_PONTO_ESCALAS", "Escalas Ponto");
+        permissoes.put("MENU_RH_PONTO_RELATORIOS", "Relatórios Ponto");
+        
+        // Férias
+        permissoes.put("MENU_RH_FERIAS", "Menu Férias");
+        permissoes.put("MENU_RH_FERIAS_SOLICITAR", "Solicitar Férias");
+        permissoes.put("MENU_RH_FERIAS_APROVAR", "Aprovar Férias");
+        permissoes.put("MENU_RH_FERIAS_PLANEJAMENTO", "Planejamento Férias");
+        permissoes.put("MENU_RH_FERIAS_CALENDARIO", "Calendário Férias");
+        
+        // Avaliação
+        permissoes.put("MENU_RH_AVALIACAO", "Menu Avaliação");
+        permissoes.put("MENU_RH_AVALIACAO_PERIODICIDADE", "Periodicidade Avaliação");
+        permissoes.put("MENU_RH_AVALIACAO_FEEDBACKS", "Feedbacks Avaliação");
+        permissoes.put("MENU_RH_AVALIACAO_RELATORIOS", "Relatórios Avaliação");
+        
+        // Treinamentos
+        permissoes.put("MENU_RH_TREINAMENTOS", "Menu Treinamentos");
+        permissoes.put("MENU_RH_TREINAMENTOS_CADASTRO", "Cadastro Treinamentos");
+        permissoes.put("MENU_RH_TREINAMENTOS_INSCRICAO", "Inscrição Treinamentos");
+        permissoes.put("MENU_RH_TREINAMENTOS_CERTIFICADO", "Certificado Treinamentos");
+        
+        // Recrutamento
+        permissoes.put("MENU_RH_RECRUTAMENTO", "Menu Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_CANDIDATOS", "Candidatos Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_VAGAS", "Vagas Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_TRIAGEM", "Triagem Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_ENTREVISTAS", "Entrevistas Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_HISTORICO", "Histórico Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_PIPELINE", "Pipeline Recrutamento");
+        permissoes.put("MENU_RH_RECRUTAMENTO_RELATORIOS", "Relatórios Recrutamento");
+        
+        // Relatórios RH
+        permissoes.put("MENU_RH_RELATORIOS", "Menu Relatórios RH");
+        permissoes.put("MENU_RH_RELATORIOS_TURNOVER", "Turnover RH");
+        permissoes.put("MENU_RH_RELATORIOS_ABSENTEISMO", "Absenteísmo RH");
+        permissoes.put("MENU_RH_RELATORIOS_HEADCOUNT", "Headcount RH");
+        permissoes.put("MENU_RH_RELATORIOS_INDICADORES", "Indicadores RH");
+        permissoes.put("MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES", "Admissões/Demissões RH");
+        permissoes.put("MENU_RH_RELATORIOS_FERIAS_BENEFICIOS", "Relatórios Férias/Benefícios");
+        
+        // Configurações RH
+        permissoes.put("MENU_RH_CONFIGURACOES", "Menu Configurações RH");
+        permissoes.put("MENU_RH_CONFIGURACOES_INICIO", "Início Configurações RH");
+        permissoes.put("MENU_RH_CONFIGURACOES_POLITICAS_FERIAS", "Políticas Férias");
+        permissoes.put("MENU_RH_CONFIGURACOES_PONTO", "Parâmetros Ponto");
+        permissoes.put("MENU_RH_CONFIGURACOES_INTEGRACOES", "Integrações RH");
+        
+        // Auditoria RH
+        permissoes.put("MENU_RH_AUDITORIA", "Menu Auditoria RH");
+        permissoes.put("MENU_RH_AUDITORIA_INICIO", "Início Auditoria RH");
+        permissoes.put("MENU_RH_AUDITORIA_ACESSOS", "Log Acessos RH");
+        permissoes.put("MENU_RH_AUDITORIA_ALTERACOES", "Alterações Dados RH");
+        permissoes.put("MENU_RH_AUDITORIA_EXPORTACOES", "Exportações RH");
+        permissoes.put("MENU_RH_AUDITORIA_REVISOES", "Revisões Periódicas RH");
 
-        // Menus Financeiro
+        // --- Financeiro ---
         permissoes.put("MENU_FINANCEIRO", "Menu Financeiro");
-        permissoes.put("MENU_FINANCEIRO_DASHBOARD", "Menu Financeiro Dashboard");
-        permissoes.put("MENU_FINANCEIRO_CONTAS_BANCARIAS", "Menu Financeiro Contas Bancárias");
-        permissoes.put("MENU_FINANCEIRO_CONTAS_PAGAR", "Menu Financeiro Contas a Pagar");
-        permissoes.put("MENU_FINANCEIRO_CONTAS_RECEBER", "Menu Financeiro Contas a Receber");
-        permissoes.put("MENU_FINANCEIRO_FLUXO_CAIXA", "Menu Financeiro Fluxo de Caixa");
-        permissoes.put("MENU_FINANCEIRO_TRANSFERENCIAS", "Menu Financeiro Transferências");
-        permissoes.put("MENU_FINANCEIRO_RELATORIOS", "Menu Financeiro Relatórios");
+        permissoes.put("MENU_FINANCEIRO_DASHBOARD", "Dashboard Financeiro");
+        permissoes.put("MENU_FINANCEIRO_CONTAS_BANCARIAS", "Contas Bancárias");
+        permissoes.put("MENU_FINANCEIRO_CONTAS_PAGAR", "Contas a Pagar");
+        permissoes.put("MENU_FINANCEIRO_CONTAS_RECEBER", "Contas a Receber");
+        permissoes.put("MENU_FINANCEIRO_FLUXO_CAIXA", "Fluxo de Caixa");
+        permissoes.put("MENU_FINANCEIRO_TRANSFERENCIAS", "Transferências Financeiras");
+        permissoes.put("MENU_FINANCEIRO_RELATORIOS", "Relatórios Financeiros");
 
-        // Menus Marketing
+        // --- Marketing ---
         permissoes.put("MENU_MARKETING", "Menu Marketing");
-        permissoes.put("MENU_MARKETING_DASHBOARD", "Menu Marketing Dashboard");
-        permissoes.put("MENU_MARKETING_CAMPANHAS", "Menu Marketing Campanhas");
-        permissoes.put("MENU_MARKETING_LEADS", "Menu Marketing Leads");
-        permissoes.put("MENU_MARKETING_EVENTOS", "Menu Marketing Eventos");
-        permissoes.put("MENU_MARKETING_MATERIAIS", "Menu Marketing Materiais");
+        permissoes.put("MENU_MARKETING_DASHBOARD", "Dashboard Marketing");
+        permissoes.put("MENU_MARKETING_CAMPANHAS", "Campanhas Marketing");
+        permissoes.put("MENU_MARKETING_LEADS", "Leads Marketing");
+        permissoes.put("MENU_MARKETING_EVENTOS", "Eventos Marketing");
+        permissoes.put("MENU_MARKETING_MATERIAIS", "Materiais Marketing");
 
-        // Menus TI
+        // --- Tecnologia (TI) ---
         permissoes.put("MENU_TI", "Menu TI");
-        permissoes.put("MENU_TI_DASHBOARD", "Menu TI Dashboard");
-        permissoes.put("MENU_TI_SISTEMAS", "Menu TI Sistemas");
-        permissoes.put("MENU_TI_SUPORTE", "Menu TI Suporte");
-        permissoes.put("MENU_TI_BACKUP", "Menu TI Backup");
-        permissoes.put("MENU_TI_SEGURANCA", "Menu TI Segurança");
-        permissoes.put("MENU_TI_AUDITORIA", "Menu TI Auditoria");
+        permissoes.put("MENU_TI_DASHBOARD", "Dashboard TI");
+        permissoes.put("MENU_TI_SISTEMAS", "Sistemas TI");
+        permissoes.put("MENU_TI_SUPORTE", "Suporte TI");
+        permissoes.put("MENU_TI_BACKUP", "Backup TI");
+        permissoes.put("MENU_TI_SEGURANCA", "Segurança TI");
+        permissoes.put("MENU_TI_AUDITORIA", "Auditoria TI");
 
-        // Menus Jurídico
+        // --- Jurídico ---
         permissoes.put("MENU_JURIDICO", "Menu Jurídico");
-        permissoes.put("MENU_JURIDICO_DASHBOARD", "Menu Jurídico Dashboard");
-        permissoes.put("MENU_JURIDICO_CLIENTES", "Menu Jurídico Clientes");
-        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO", "Menu Jurídico Previdenciário");
-        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_LISTAR", "Menu Jurídico Previdenciário Listar");
-        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_NOVO", "Menu Jurídico Previdenciário Novo");
-        permissoes.put("MENU_JURIDICO_WHATCHAT", "Menu Jurídico Chat");
-        permissoes.put("MENU_JURIDICO_CONTRATOS", "Menu Jurídico Contratos");
-        permissoes.put("MENU_JURIDICO_PROCESSOS", "Menu Jurídico Processos");
-        permissoes.put("MENU_JURIDICO_PROCESSOS_LISTAR", "Menu Jurídico Processos Listar");
-        permissoes.put("MENU_JURIDICO_PROCESSOS_NOVO", "Menu Jurídico Processos Novo");
-        permissoes.put("MENU_JURIDICO_COMPLIANCE", "Menu Jurídico Compliance");
-        permissoes.put("MENU_JURIDICO_DOCUMENTOS", "Menu Jurídico Documentos");
-        permissoes.put("MENU_JURIDICO_AUDITORIA", "Menu Jurídico Auditoria");
-        permissoes.put("MENU_JURIDICO_AUDITORIA_INICIO", "Menu Jurídico Auditoria Início");
-        permissoes.put("MENU_JURIDICO_AUDITORIA_ACESSOS", "Menu Jurídico Auditoria Acessos");
-        permissoes.put("MENU_JURIDICO_AUDITORIA_ALTERACOES", "Menu Jurídico Auditoria Alterações");
-        permissoes.put("MENU_JURIDICO_AUDITORIA_EXPORTACOES", "Menu Jurídico Auditoria Exportações");
-        permissoes.put("MENU_JURIDICO_AUDITORIA_REVISOES", "Menu Jurídico Auditoria Revisões");
+        permissoes.put("MENU_JURIDICO_DASHBOARD", "Dashboard Jurídico");
+        permissoes.put("MENU_JURIDICO_CLIENTES", "Clientes Jurídico");
+        
+        // Previdenciário
+        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO", "Menu Previdenciário");
+        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_LISTAR", "Listar Previdenciário");
+        permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_NOVO", "Novo Previdenciário");
+        
+        permissoes.put("MENU_JURIDICO_WHATCHAT", "WhaTchat Jurídico");
+        permissoes.put("MENU_JURIDICO_CONTRATOS", "Contratos Jurídico");
+        
+        // Processos
+        permissoes.put("MENU_JURIDICO_PROCESSOS", "Menu Processos");
+        permissoes.put("MENU_JURIDICO_PROCESSOS_LISTAR", "Listar Processos");
+        permissoes.put("MENU_JURIDICO_PROCESSOS_NOVO", "Novo Processo");
+        
+        permissoes.put("MENU_JURIDICO_COMPLIANCE", "Compliance Jurídico");
+        permissoes.put("MENU_JURIDICO_DOCUMENTOS", "Documentos Jurídico");
+        
+        // Auditoria Jurídico
+        permissoes.put("MENU_JURIDICO_AUDITORIA", "Menu Auditoria Jurídico");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_INICIO", "Início Auditoria Jurídico");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_ACESSOS", "Log Acessos Jurídico");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_ALTERACOES", "Alterações Dados Jurídico");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_EXPORTACOES", "Exportações Jurídico");
+        permissoes.put("MENU_JURIDICO_AUDITORIA_REVISOES", "Revisões Periódicas Jurídico");
 
-        // Menus Cadastros/Utilidades/Projetos/Serviços/Admin/Pessoal/Ajuda/Documentos
+        // --- Cadastros / Utilidades ---
         permissoes.put("MENU_CADASTROS", "Menu Cadastros");
         permissoes.put("MENU_UTILIDADES", "Menu Utilidades");
+
+        // --- Projetos ---
         permissoes.put("MENU_PROJETOS", "Menu Projetos");
-        permissoes.put("MENU_PROJETOS_GERAL", "Menu Projetos Geral");
-        permissoes.put("MENU_PROJETOS_GERAL_LISTAR", "Menu Projetos Geral Listar");
-        permissoes.put("MENU_PROJETOS_GERAL_NOVO", "Menu Projetos Geral Novo");
-        permissoes.put("MENU_PROJETOS_TAREFAS", "Menu Projetos Tarefas");
-        permissoes.put("MENU_PROJETOS_TAREFAS_LISTAR", "Menu Projetos Tarefas Listar");
-        permissoes.put("MENU_PROJETOS_TAREFAS_ATRIBUICOES", "Menu Projetos Tarefas Atribuições");
-        permissoes.put("MENU_PROJETOS_EQUIPES_CADASTRAR", "Menu Projetos Equipes Cadastrar");
-        permissoes.put("MENU_PROJETOS_EQUIPES_MEMBROS", "Menu Projetos Equipes Membros");
-        permissoes.put("MENU_PROJETOS_CRONOGRAMA", "Menu Projetos Cronograma");
-        permissoes.put("MENU_PROJETOS_RELATORIOS", "Menu Projetos Relatórios");
-        permissoes.put("MENU_SERVICOS_SOLICITACOES_GERENCIAR", "Menu Solicitações de Serviços");
-        permissoes.put("MENU_SERVICOS_SOLICITACOES_DASHBOARD", "Menu Solicitações Dashboard");
-        permissoes.put("MENU_ADMIN", "Menu Administração");
+        permissoes.put("MENU_PROJETOS_GERAL", "Geral Projetos");
+        permissoes.put("MENU_PROJETOS_GERAL_LISTAR", "Listar Projetos");
+        permissoes.put("MENU_PROJETOS_GERAL_NOVO", "Novo Projeto");
+        
+        permissoes.put("MENU_PROJETOS_TAREFAS", "Tarefas Projetos");
+        permissoes.put("MENU_PROJETOS_TAREFAS_LISTAR", "Listar Tarefas");
+        permissoes.put("MENU_PROJETOS_TAREFAS_ATRIBUICOES", "Atribuições Tarefas");
+        
+        permissoes.put("MENU_PROJETOS_EQUIPES_CADASTRAR", "Cadastrar Equipes");
+        permissoes.put("MENU_PROJETOS_EQUIPES_MEMBROS", "Membros Equipe");
+        permissoes.put("MENU_PROJETOS_CRONOGRAMA", "Cronograma Projetos");
+        permissoes.put("MENU_PROJETOS_RELATORIOS", "Relatórios Projetos");
+
+        // --- Serviços ---
+        permissoes.put("MENU_SERVICOS_SOLICITACOES_GERENCIAR", "Gerenciar Solicitações");
+        permissoes.put("MENU_SERVICOS_SOLICITACOES_DASHBOARD", "Dashboard Solicitações");
+
+        // --- Administração ---
+        permissoes.put("MENU_ADMIN", "Menu Admin");
         permissoes.put("MENU_ADMIN_USUARIOS", "Menu Admin Usuários");
         permissoes.put("MENU_ADMIN_GESTAO_ACESSO", "Menu Admin Gestão de Acesso");
         permissoes.put("MENU_ADMIN_GESTAO_ACESSO_PERFIS", "Menu Admin Perfis");
@@ -428,15 +438,48 @@ public class PermissaoService {
         permissoes.put("MENU_ADMIN_RELATORIOS", "Menu Admin Relatórios");
         permissoes.put("MENU_ADMIN_CONFIGURACOES", "Menu Admin Configurações");
         permissoes.put("MENU_ADMIN_METAS", "Menu Admin Metas");
+
+        // --- Pessoal ---
         permissoes.put("MENU_PESSOAL", "Menu Pessoal");
-        permissoes.put("MENU_PESSOAL_MEUS_PEDIDOS", "Menu Pessoal Meus Pedidos");
-        permissoes.put("MENU_PESSOAL_MEUS_SERVICOS", "Menu Pessoal Meus Serviços");
-        permissoes.put("MENU_PESSOAL_FAVORITOS", "Menu Pessoal Favoritos");
-        permissoes.put("MENU_PESSOAL_RECOMENDACOES", "Menu Pessoal Recomendações");
-        permissoes.put("MENU_AJUDA", "Menu Ajuda");
-        permissoes.put("MENU_DOCS_GERENCIAL", "Menu Documentos Gerenciais");
-        permissoes.put("MENU_DOCS_PESSOAL", "Menu Documentos Pessoais");
+        permissoes.put("MENU_PESSOAL_MEUS_PEDIDOS", "Meus Pedidos");
+        permissoes.put("MENU_PESSOAL_MEUS_SERVICOS", "Meus Serviços");
+        permissoes.put("MENU_PESSOAL_FAVORITOS", "Favoritos");
+        permissoes.put("MENU_PESSOAL_RECOMENDACOES", "Recomendações");
+
+        // --- Suporte & Documentos ---
+        permissoes.put("MENU_AJUDA", "Central de Ajuda");
+        permissoes.put("MENU_DOCS_GERENCIAL", "Documentos Gerenciais");
+        permissoes.put("MENU_DOCS_PESSOAL", "Documentos Pessoais");
+
         
+        // --- Permissões Gerais (Legado) ---
+        permissoes.put("ROLE_USER_READ", "Visualizar usuários");
+        permissoes.put("ROLE_USER_WRITE", "Criar/editar usuários");
+        permissoes.put("ROLE_USER_DELETE", "Excluir usuários");
+        permissoes.put("ROLE_USER_ADMIN", "Administrar usuários");
+        
+        permissoes.put("ROLE_RH_READ", "Visualizar RH");
+        permissoes.put("ROLE_RH_WRITE", "Criar/editar RH");
+        permissoes.put("ROLE_RH_DELETE", "Excluir RH");
+        permissoes.put("ROLE_RH_ADMIN", "Administrar RH");
+        
+        permissoes.put("ROLE_FINANCEIRO_READ", "Visualizar financeiro");
+        permissoes.put("ROLE_FINANCEIRO_WRITE", "Criar/editar financeiro");
+        permissoes.put("ROLE_FINANCEIRO_DELETE", "Excluir financeiro");
+        permissoes.put("ROLE_FINANCEIRO_ADMIN", "Administrar financeiro");
+        
+        permissoes.put("ROLE_RELATORIO_READ", "Visualizar relatórios");
+        permissoes.put("ROLE_RELATORIO_EXPORT", "Exportar relatórios");
+        permissoes.put("ROLE_RELATORIO_ADMIN", "Administrar relatórios");
+        
+        permissoes.put("ROLE_ADMIN", "Administrador do sistema");
+        permissoes.put("ROLE_USER", "Usuário básico");
+        permissoes.put("ROLE_MASTER", "Usuário master");
+
+        // Permissões de Configuração
+        permissoes.put("ROLE_CONFIG_READ", "Visualizar configurações");
+        permissoes.put("ROLE_CONFIG_WRITE", "Alterar configurações");
+
         return permissoes;
     }
 

@@ -51,7 +51,7 @@
 
 <body>
   <div class="app-container">
-    <div class="sidebar" th:fragment="sidebar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
     <main class="main-content">
       <header th:replace="~{components/topbar :: topbar}"></header>

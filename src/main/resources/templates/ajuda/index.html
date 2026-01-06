@@ -323,7 +323,7 @@
                     <div class="row">
                       <div class="col-md-4 border-end">
                         <div class="nav flex-column nav-pills docs-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                          <button class="nav-link active text-start" data-bs-toggle="pill" data-bs-target="#v-pills-acessos" type="button">Solicitação de Acessos</button>
+                          <button class="nav-link active text-start" data-bs-toggle="pill" data-bs-target="#v-pills-ti" type="button">Tecnologia & Acessos</button>
                           <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#v-pills-comercial" type="button">Módulo Comercial</button>
                           <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#v-pills-operacional" type="button">Módulo Operacional</button>
                           <button class="nav-link text-start" data-bs-toggle="pill" data-bs-target="#v-pills-rh" type="button">Recursos Humanos</button>
@@ -332,10 +332,21 @@
                       </div>
                       <div class="col-md-8">
                         <div class="tab-content ps-3" id="v-pills-tabContent">
-                          <!-- Acessos -->
-                          <div class="tab-pane fade show active" id="v-pills-acessos">
-                            <h4 class="mb-3">Como Solicitar Acessos</h4>
-                            <p>Solicite acessos informando o módulo e os subníveis necessários. Use solicitações com escopo mínimo.</p>
+                          <!-- Tecnologia & Acessos -->
+                          <div class="tab-pane fade show active" id="v-pills-ti">
+                            <h4 class="mb-3">Tecnologia & Acessos</h4>
+                            <p>Informações sobre suporte técnico, sistemas e gestão de acessos.</p>
+                            
+                            <h5 class="h6 mt-3 text-primary"><i class="fas fa-headset me-2"></i>Suporte Técnico & Sistemas</h5>
+                            <p class="small text-muted">Para reportar problemas, acessar sistemas ou solicitar serviços de TI:</p>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-2"><i class="fas fa-angle-right me-2 text-secondary"></i><a href="#" onclick="chatQuick('abrir chamado')">Abrir Chamado via Chat</a></li>
+                                <li class="mb-2"><i class="fas fa-angle-right me-2 text-secondary"></i><a href="/ti/suporte">Painel de Suporte</a></li>
+                                <li class="mb-2"><i class="fas fa-angle-right me-2 text-secondary"></i><a href="/ti/sistemas">Catálogo de Sistemas</a></li>
+                            </ul>
+
+                            <h5 class="h6 mt-3 text-primary"><i class="fas fa-key me-2"></i>Solicitação de Acessos</h5>
+                            <p class="small text-muted">Solicite acessos informando o módulo e os subníveis necessários. Use solicitações com escopo mínimo.</p>
                             <div class="alert alert-info">
                               <i class="fas fa-info-circle me-2"></i> Exemplo: Para acessar <strong>Clientes > Geral > Listar</strong>
                               <ul class="mb-0 mt-2">
@@ -494,70 +505,115 @@
   <script src="/js/bootstrap.bundle.min.js"></script>
 
   <script th:inline="javascript">
-    // --- Base de Conhecimento do Sistema (Mapeamento do Sidebar) ---
+    // --- Base de Conhecimento do Sistema (Mapeamento Completo do Sidebar) ---
     const systemKnowledge = [
-        // Principal
-        { title: "Dashboard Principal", path: "/dashboard", section: "Principal", keywords: ["inicio", "home", "visão geral", "gráficos"], auth: "DASHBOARD_EXECUTIVO_VISUALIZAR" },
-        { title: "Chat Corporativo", path: "/chat", section: "Principal", keywords: ["conversa", "mensagem", "falar", "comunicação"], auth: "" },
-        
-        // Comercial > Clientes
-        { title: "Listar Clientes", path: "/clientes", section: "Comercial > Clientes", keywords: ["ver clientes", "buscar cliente", "tabela clientes", "lista"], auth: "MENU_CLIENTES_LISTAR" },
+        // === PRINCIPAL ===
+        { title: "Dashboard Principal", path: "/dashboard", section: "Principal", keywords: ["inicio", "home", "visão geral", "gráficos", "kpi"], auth: "DASHBOARD_EXECUTIVO_VISUALIZAR" },
+        { title: "Chat Corporativo", path: "/chat", section: "Principal", keywords: ["conversa", "mensagem", "falar", "comunicação", "chat"], auth: "" },
+        { title: "Central de Ajuda", path: "/ajuda", section: "Principal", keywords: ["suporte", "faq", "tutoriais", "dúvidas"], auth: "" },
+
+        // === COMERCIAL ===
+        // Clientes
+        { title: "Listar Clientes", path: "/clientes", section: "Comercial > Clientes", keywords: ["ver clientes", "buscar cliente", "tabela clientes", "cadastro clientes"], auth: "MENU_CLIENTES_LISTAR" },
         { title: "Novo Cliente", path: "/clientes/cadastro", section: "Comercial > Clientes", keywords: ["criar cliente", "cadastrar cliente", "novo registro"], auth: "MENU_CLIENTES_NOVO" },
-        { title: "Contratos de Clientes", path: "/clientes/contratos/listar", section: "Comercial > Clientes", keywords: ["contrato", "documento", "acordo"], auth: "MENU_CLIENTES_CONTRATOS_LISTAR" },
-        { title: "Histórico de Interações", path: "/clientes/historico/interacoes", section: "Comercial > Clientes", keywords: ["conversas", "atendimentos", "logs"], auth: "MENU_CLIENTES_HISTORICO_INTERACOES" },
-        
-        // Comercial > Vendas
-        { title: "Dashboard de Vendas", path: "/vendas", section: "Comercial > Vendas", keywords: ["metas", "resultados", "performance"], auth: "MENU_VENDAS_DASHBOARD" },
-        { title: "PDV (Ponto de Venda)", path: "/vendas/pdv", section: "Comercial > Vendas", keywords: ["caixa", "frente de loja", "vender"], auth: "MENU_VENDAS_PDV" },
-        { title: "Pedidos de Venda", path: "/vendas/pedidos", section: "Comercial > Vendas", keywords: ["ordens", "solicitações", "acompanhar"], auth: "MENU_VENDAS_PEDIDOS" },
-        
-        // Operacional
-        { title: "Fornecedores", path: "/fornecedores", section: "Operacional > Compras", keywords: ["compras", "parceiros", "suprimentos"], auth: "MENU_COMPRAS" },
-        { title: "Produtos", path: "/produtos", section: "Operacional > Estoque", keywords: ["itens", "mercadorias", "catálogo"], auth: "MENU_ESTOQUE_PRODUTOS" },
-        { title: "Estoque Geral", path: "/estoque", section: "Operacional > Estoque", keywords: ["quantidade", "armazenagem", "saldo"], auth: "MENU_ESTOQUE" },
-        { title: "Categorias de Produtos", path: "/categorias", section: "Operacional > Estoque", keywords: ["grupos", "classificação", "tipos"], auth: "MENU_ESTOQUE_CATEGORIAS_LISTAR" },
+        { title: "Contratos de Clientes", path: "/clientes/contratos/listar", section: "Comercial > Clientes", keywords: ["contrato", "documento", "acordo", "vigência"], auth: "MENU_CLIENTES_CONTRATOS_LISTAR" },
+        { title: "Histórico de Interações", path: "/clientes/historico/interacoes", section: "Comercial > Clientes", keywords: ["conversas", "atendimentos", "logs", "contatos"], auth: "MENU_CLIENTES_HISTORICO_INTERACOES" },
+        { title: "Histórico de Pedidos", path: "/clientes/historico/pedidos", section: "Comercial > Clientes", keywords: ["compras anteriores", "histórico de vendas"], auth: "MENU_CLIENTES_HISTORICO_PEDIDOS" },
+        { title: "Busca Avançada de Clientes", path: "/clientes/avancado/busca", section: "Comercial > Clientes", keywords: ["pesquisa detalhada", "filtros avançados"], auth: "MENU_CLIENTES_AVANCADO_BUSCA" },
+        { title: "Relatórios de Clientes", path: "/clientes/avancado/relatorios", section: "Comercial > Clientes", keywords: ["estatísticas clientes", "dados demográficos"], auth: "MENU_CLIENTES_AVANCADO_RELATORIOS" },
 
-        // RH > Colaboradores
-        { title: "Listar Colaboradores", path: "/rh/colaboradores/listar", section: "RH > Colaboradores", keywords: ["funcionários", "empregados", "equipe"], auth: "MENU_RH_COLABORADORES_LISTAR" },
+        // Vendas
+        { title: "Dashboard de Vendas", path: "/vendas", section: "Comercial > Vendas", keywords: ["metas", "resultados", "performance vendas", "indicadores vendas"], auth: "MENU_VENDAS_DASHBOARD" },
+        { title: "PDV (Ponto de Venda)", path: "/vendas/pdv", section: "Comercial > Vendas", keywords: ["caixa", "frente de loja", "vender", "cupom"], auth: "MENU_VENDAS_PDV" },
+        { title: "Pedidos de Venda", path: "/vendas/pedidos", section: "Comercial > Vendas", keywords: ["ordens", "solicitações", "acompanhar pedidos"], auth: "MENU_VENDAS_PEDIDOS" },
+        { title: "Relatórios de Vendas", path: "/vendas/relatorios", section: "Comercial > Vendas", keywords: ["fechamento", "vendas por período", "curva abc"], auth: "MENU_VENDAS_RELATORIOS" },
+
+        // === COMPRAS ===
+        { title: "Gerenciar Fornecedores", path: "/fornecedores", section: "Compras", keywords: ["compras", "parceiros", "suprimentos", "fornecedor"], auth: "MENU_COMPRAS" },
+
+        // === OPERACIONAL (ESTOQUE) ===
+        { title: "Gestão de Produtos", path: "/produtos", section: "Operacional", keywords: ["itens", "mercadorias", "catálogo", "preços"], auth: "MENU_ESTOQUE_PRODUTOS" },
+        { title: "Controle de Estoque", path: "/estoque", section: "Operacional", keywords: ["quantidade", "armazenagem", "saldo", "inventário", "movimentação"], auth: "MENU_ESTOQUE" },
+        { title: "Listar Categorias", path: "/categorias", section: "Operacional > Categorias", keywords: ["grupos", "classificação", "família de produtos"], auth: "MENU_ESTOQUE_CATEGORIAS_LISTAR" },
+        { title: "Nova Categoria", path: "/categorias/nova", section: "Operacional > Categorias", keywords: ["criar categoria", "adicionar grupo"], auth: "MENU_ESTOQUE_CATEGORIAS_NOVO" },
+
+        // === RECURSOS HUMANOS (RH) ===
+        // Colaboradores
+        { title: "Listar Colaboradores", path: "/rh/colaboradores/listar", section: "RH > Colaboradores", keywords: ["funcionários", "empregados", "equipe", "staff"], auth: "MENU_RH_COLABORADORES_LISTAR" },
         { title: "Novo Colaborador", path: "/rh/colaboradores/novo", section: "RH > Colaboradores", keywords: ["contratar", "admitir", "ficha", "registro", "criar funcionario"], auth: "MENU_RH_COLABORADORES_NOVO" },
-        { title: "Adesão de Colaboradores", path: "/rh/colaboradores/adesao", section: "RH > Colaboradores", keywords: ["onboarding", "integração"], auth: "MENU_RH_COLABORADORES_ADESAO" },
+        { title: "Adesão de Colaboradores", path: "/rh/colaboradores/adesao", section: "RH > Colaboradores", keywords: ["onboarding", "integração", "admissão digital"], auth: "MENU_RH_COLABORADORES_ADESAO" },
 
-        // RH > Folha
-        { title: "Folha de Pagamento", path: "/rh/folha-pagamento", section: "RH > Folha", keywords: ["salário", "pagamento", "holerite", "contracheque"], auth: "MENU_RH_FOLHA_INICIO" },
-        { title: "Gerar Folha", path: "/rh/folha-pagamento/gerar", section: "RH > Folha", keywords: ["calcular", "fechamento", "mensal"], auth: "MENU_RH_FOLHA_GERAR" },
-        
-        // RH > Benefícios
-        { title: "Plano de Saúde", path: "/rh/beneficios/plano-saude", section: "RH > Benefícios", keywords: ["convênio", "médico", "hospital"], auth: "MENU_RH_BENEFICIOS_PLANO_SAUDE" },
-        { title: "Vale Transporte", path: "/rh/beneficios/vale-transporte/listar", section: "RH > Benefícios", keywords: ["vt", "transporte", "ônibus"], auth: "MENU_RH_BENEFICIOS_VALE_TRANSPORTE" },
+        // Folha de Pagamento
+        { title: "Folha de Pagamento (Início)", path: "/rh/folha-pagamento", section: "RH > Folha", keywords: ["salário", "pagamento", "resumo folha"], auth: "MENU_RH_FOLHA_INICIO" },
+        { title: "Listar Folhas", path: "/rh/folha-pagamento/listar", section: "RH > Folha", keywords: ["histórico folha", "competências"], auth: "MENU_RH_FOLHA_LISTAR" },
+        { title: "Gerar Folha", path: "/rh/folha-pagamento/gerar", section: "RH > Folha", keywords: ["calcular", "fechamento", "mensal", "processar folha"], auth: "MENU_RH_FOLHA_GERAR" },
+        { title: "Holerites", path: "/rh/folha-pagamento/holerite", section: "RH > Folha", keywords: ["contracheque", "recibo de pagamento", "comprovante renda"], auth: "MENU_RH_FOLHA_HOLERITE" },
+        { title: "Gestão de Descontos", path: "/rh/folha-pagamento/descontos", section: "RH > Folha", keywords: ["faltas", "adiantamentos", "empréstimos"], auth: "MENU_RH_FOLHA_DESCONTOS" },
+        { title: "Relatórios da Folha", path: "/rh/folha-pagamento/relatorios", section: "RH > Folha", keywords: ["custo folha", "analítico", "sintético"], auth: "MENU_RH_FOLHA_RELATORIOS" },
 
-        // RH > Ponto e Férias
-        { title: "Registros de Ponto", path: "/rh/ponto-escalas/registros", section: "RH > Ponto", keywords: ["bater ponto", "horário", "entrada", "saída"], auth: "MENU_RH_PONTO_REGISTROS" },
-        { title: "Solicitar Férias", path: "/rh/ferias/solicitar", section: "RH > Férias", keywords: ["descanso", "ausência", "requisição"], auth: "MENU_RH_FERIAS_SOLICITAR" },
-        
-        // Gestão > Financeiro
-        { title: "Dashboard Financeiro", path: "/financeiro", section: "Gestão > Financeiro", keywords: ["caixa", "bancos", "saldo"], auth: "MENU_FINANCEIRO_DASHBOARD" },
-        { title: "Contas a Pagar", path: "/financeiro/contas-pagar", section: "Gestão > Financeiro", keywords: ["despesas", "boletos", "pagamentos"], auth: "MENU_FINANCEIRO_CONTAS_PAGAR" },
-        { title: "Contas a Receber", path: "/financeiro/contas-receber", section: "Gestão > Financeiro", keywords: ["receitas", "faturas", "cobrança"], auth: "MENU_FINANCEIRO_CONTAS_RECEBER" },
-        
-        // Gestão > TI
-        { title: "Dashboard TI", path: "/ti", section: "Gestão > TI", keywords: ["infra", "tecnologia", "status"], auth: "MENU_TI_DASHBOARD" },
-        { title: "Sistemas", path: "/ti/sistemas", section: "Gestão > TI", keywords: ["aplicações", "softwares", "servidores"], auth: "MENU_TI_SISTEMAS" },
-        { title: "Suporte TI", path: "/ti/suporte", section: "Gestão > TI", keywords: ["helpdesk", "chamados", "técnico", "atendimento", "abrir chamado"], auth: "MENU_TI_SUPORTE" },
-        
-        // Gestão > Jurídico
-        { title: "Dashboard Jurídico", path: "/juridico", section: "Gestão > Jurídico", keywords: ["processos", "audiências", "prazos"], auth: "MENU_JURIDICO_DASHBOARD" },
-        { title: "Processos", path: "/juridico/processos", section: "Gestão > Jurídico", keywords: ["ações", "tribunal", "judicial"], auth: "MENU_JURIDICO_PROCESSOS_LISTAR" },
-        
-        // Serviços
-        { title: "Nova Solicitação", path: "/solicitacoes/nova", section: "Serviços > Solicitações", keywords: ["pedir", "requerer", "abrir chamado"], auth: "" },
-        { title: "Minhas Solicitações", path: "/solicitacoes", section: "Serviços > Solicitações", keywords: ["acompanhar", "status", "meus pedidos"], auth: "" },
-        { title: "Gerenciar Pendências", path: "/solicitacoes/pendentes", section: "Serviços > Solicitações", keywords: ["aprovar", "fila", "atender"], auth: "MENU_SERVICOS_SOLICITACOES_GERENCIAR" },
+        // Benefícios
+        { title: "Plano de Saúde", path: "/rh/beneficios/plano-saude", section: "RH > Benefícios", keywords: ["convênio", "médico", "hospital", "unimed", "bradesco"], auth: "MENU_RH_BENEFICIOS_PLANO_SAUDE" },
+        { title: "Vale Transporte", path: "/rh/beneficios/vale-transporte/listar", section: "RH > Benefícios", keywords: ["vt", "transporte", "ônibus", "metro"], auth: "MENU_RH_BENEFICIOS_VALE_TRANSPORTE" },
+        { title: "Vale Refeição/Alimentação", path: "/rh/beneficios/vale-refeicao/listar", section: "RH > Benefícios", keywords: ["vr", "va", "ticket", "sodexo"], auth: "MENU_RH_BENEFICIOS_VALE_REFEICAO" },
+        { title: "Adesão a Benefícios", path: "/rh/beneficios/adesao", section: "RH > Benefícios", keywords: ["incluir benefício", "optar benefício"], auth: "MENU_RH_BENEFICIOS_ADESAO" },
 
-        // Administração
-        { title: "Gerenciar Usuários", path: "/usuarios/index", section: "Administração > Usuários", keywords: ["criar usuário", "novo usuário", "login", "senha", "acesso"], auth: "MENU_ADMIN_USUARIOS" },
-        { title: "Perfis de Acesso", path: "/perfis", section: "Administração > Acesso", keywords: ["roles", "grupos", "cargos", "níveis", "perfil"], auth: "MENU_ADMIN_GESTAO_ACESSO_PERFIS" },
-        { title: "Permissões do Sistema", path: "/permissoes", section: "Administração > Acesso", keywords: ["authorities", "regras", "liberações", "permissão"], auth: "MENU_ADMIN_GESTAO_ACESSO_PERMISSOES" },
-        { title: "Configurações Gerais", path: "/configuracoes", section: "Administração > Config", keywords: ["parâmetros", "setup", "sistema"], auth: "MENU_ADMIN_CONFIGURACOES" }
+        // Workflow
+        { title: "Aprovação de Processos", path: "/rh/workflow/aprovacao", section: "RH > Workflow", keywords: ["aprovar", "pendências", "workflow", "autorizar"], auth: "MENU_RH_WORKFLOW_APROVACAO" },
+        { title: "Relatórios de Workflow", path: "/rh/workflow/relatorios", section: "RH > Workflow", keywords: ["status processos", "tempo aprovação"], auth: "MENU_RH_WORKFLOW_RELATORIOS" },
+
+        // Ponto e Escalas
+        { title: "Registros de Ponto", path: "/rh/ponto-escalas/registros", section: "RH > Ponto", keywords: ["bater ponto", "horário", "entrada", "saída", "espelho ponto"], auth: "MENU_RH_PONTO_REGISTROS" },
+        { title: "Correção de Ponto", path: "/rh/ponto-escalas/correcoes", section: "RH > Ponto", keywords: ["ajuste ponto", "esqueci de bater", "abono"], auth: "MENU_RH_PONTO_CORRECOES" },
+        { title: "Escalas de Trabalho", path: "/rh/ponto-escalas/escalas", section: "RH > Ponto", keywords: ["turno", "horário trabalho", "escala"], auth: "MENU_RH_PONTO_ESCALAS" },
+        { title: "Relatórios de Ponto", path: "/rh/ponto-escalas/relatorios", section: "RH > Ponto", keywords: ["banco de horas", "horas extras", "atrasos"], auth: "MENU_RH_PONTO_RELATORIOS" },
+
+        // Férias
+        { title: "Solicitar Férias", path: "/rh/ferias/solicitar", section: "RH > Férias", keywords: ["descanso", "ausência", "requisição férias", "marcar férias"], auth: "MENU_RH_FERIAS_SOLICITAR" },
+        { title: "Aprovar Férias", path: "/rh/ferias/aprovar", section: "RH > Férias", keywords: ["autorizar férias", "gestão férias"], auth: "MENU_RH_FERIAS_APROVAR" },
+        { title: "Planejamento de Férias", path: "/rh/ferias/planejamento", section: "RH > Férias", keywords: ["mapa férias", "programação"], auth: "MENU_RH_FERIAS_PLANEJAMENTO" },
+        { title: "Calendário de Férias", path: "/rh/ferias/calendario", section: "RH > Férias", keywords: ["agenda", "quem está de férias"], auth: "MENU_RH_FERIAS_CALENDARIO" },
+
+        // Avaliação
+        { title: "Periodicidade de Avaliação", path: "/rh/avaliacao/periodicidade", section: "RH > Avaliação", keywords: ["ciclo avaliação", "período"], auth: "MENU_RH_AVALIACAO_PERIODICIDADE" },
+        { title: "Feedbacks", path: "/rh/avaliacao/feedbacks", section: "RH > Avaliação", keywords: ["retorno", "avaliação desempenho", "feedback 1:1"], auth: "MENU_RH_AVALIACAO_FEEDBACKS" },
+        { title: "Relatórios de Avaliação", path: "/rh/avaliacao/relatorios", section: "RH > Avaliação", keywords: ["performance", "9box", "competências"], auth: "MENU_RH_AVALIACAO_RELATORIOS" },
+
+        // Treinamentos
+        { title: "Cadastro de Treinamentos", path: "/rh/treinamentos/cadastro", section: "RH > Treinamentos", keywords: ["novo curso", "criar treinamento"], auth: "MENU_RH_TREINAMENTOS_CADASTRO" },
+        { title: "Inscrição em Treinamentos", path: "/rh/treinamentos/inscricao", section: "RH > Treinamentos", keywords: ["participar", "inscrever", "matrícula"], auth: "MENU_RH_TREINAMENTOS_INSCRICAO" },
+        { title: "Meus Certificados", path: "/rh/treinamentos/certificado", section: "RH > Treinamentos", keywords: ["diploma", "comprovante", "conclusão"], auth: "MENU_RH_TREINAMENTOS_CERTIFICADO" },
+
+        // Recrutamento (R&S)
+        { title: "Banco de Candidatos", path: "/rh/recrutamento/candidatos", section: "RH > R&S", keywords: ["currículos", "talentos", "banco de talentos"], auth: "MENU_RH_RECRUTAMENTO_CANDIDATOS" },
+        { title: "Gestão de Vagas", path: "/rh/recrutamento/vagas", section: "RH > R&S", keywords: ["abrir vaga", "novas oportunidades", "posições"], auth: "MENU_RH_RECRUTAMENTO_VAGAS" },
+        { title: "Triagem de Currículos", path: "/rh/recrutamento/triagem", section: "RH > R&S", keywords: ["seleção", "filtrar candidatos"], auth: "MENU_RH_RECRUTAMENTO_TRIAGEM" },
+        { title: "Entrevistas", path: "/rh/recrutamento/entrevistas", section: "RH > R&S", keywords: ["agendar entrevista", "processo seletivo"], auth: "MENU_RH_RECRUTAMENTO_ENTREVISTAS" },
+        { title: "Histórico de Seleção", path: "/rh/recrutamento/historico", section: "RH > R&S", keywords: ["logs seleção", "antigos processos"], auth: "MENU_RH_RECRUTAMENTO_HISTORICO" },
+        { title: "Pipeline de Contratação", path: "/rh/recrutamento/pipeline", section: "RH > R&S", keywords: ["funil contratação", "kanban"], auth: "MENU_RH_RECRUTAMENTO_PIPELINE" },
+        { title: "Relatórios de R&S", path: "/rh/recrutamento/relatorios", section: "RH > R&S", keywords: ["tempo contratação", "eficácia fontes"], auth: "MENU_RH_RECRUTAMENTO_RELATORIOS" },
+
+        // Relatórios Estratégicos RH
+        { title: "Relatório de Turnover", path: "/rh/relatorios/turnover", section: "RH > Relatórios", keywords: ["rotatividade", "saídas"], auth: "MENU_RH_RELATORIOS_TURNOVER" },
+        { title: "Relatório de Absenteísmo", path: "/rh/relatorios/absenteismo", section: "RH > Relatórios", keywords: ["faltas", "ausências"], auth: "MENU_RH_RELATORIOS_ABSENTEISMO" },
+        { title: "Headcount", path: "/rh/relatorios/headcount", section: "RH > Relatórios", keywords: ["contagem", "total colaboradores"], auth: "MENU_RH_RELATORIOS_HEADCOUNT" },
+        { title: "Indicadores RH", path: "/rh/relatorios/indicadores", section: "RH > Relatórios", keywords: ["kpi rh", "dashboard rh"], auth: "MENU_RH_RELATORIOS_INDICADORES" },
+        { title: "Admissões e Demissões", path: "/rh/relatorios/admissoes-demissoes", section: "RH > Relatórios", keywords: ["entradas e saídas", "movimentação"], auth: "MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES" },
+        { title: "Relatório Férias e Benefícios", path: "/rh/relatorios/ferias-beneficios", section: "RH > Relatórios", keywords: ["custo benefícios", "provisão férias"], auth: "MENU_RH_RELATORIOS_FERIAS_BENEFICIOS" },
+
+        // Configurações RH
+        { title: "Configurações RH", path: "/rh/configuracoes", section: "RH > Config", keywords: ["ajustes rh", "setup rh"], auth: "MENU_RH_CONFIGURACOES_INICIO" },
+        { title: "Políticas de Férias", path: "/rh/configuracoes/politicas-ferias", section: "RH > Config", keywords: ["regras férias", "dias direito"], auth: "MENU_RH_CONFIGURACOES_POLITICAS_FERIAS" },
+        { title: "Parâmetros de Ponto", path: "/rh/configuracoes/ponto", section: "RH > Config", keywords: ["tolerância", "jornada", "regras ponto"], auth: "MENU_RH_CONFIGURACOES_PONTO" },
+        { title: "Integrações RH", path: "/rh/configuracoes/integracoes", section: "RH > Config", keywords: ["api", "sistemas externos"], auth: "MENU_RH_CONFIGURACOES_INTEGRACOES" },
+
+        // Auditoria RH
+        { title: "Auditoria RH", path: "/rh/auditoria", section: "RH > Auditoria", keywords: ["compliance", "segurança"], auth: "MENU_RH_AUDITORIA_INICIO" },
+        { title: "Log de Acessos RH", path: "/rh/auditoria/acessos", section: "RH > Auditoria", keywords: ["quem acessou", "rastreabilidade"], auth: "MENU_RH_AUDITORIA_ACESSOS" },
+
+        // === ADMINISTRAÇÃO ===
+        { title: "Gerenciar Usuários", path: "/usuarios/index", section: "Administração", keywords: ["criar usuário", "novo usuário", "login", "senha", "acesso"], auth: "MENU_ADMIN_USUARIOS" },
+        { title: "Perfis de Acesso", path: "/perfis", section: "Administração", keywords: ["roles", "grupos", "cargos", "níveis", "perfil"], auth: "MENU_ADMIN_GESTAO_ACESSO_PERFIS" },
+        { title: "Permissões do Sistema", path: "/permissoes", section: "Administração", keywords: ["authorities", "regras", "liberações", "permissão"], auth: "MENU_ADMIN_GESTAO_ACESSO_PERMISSOES" }
     ];
 
     // --- Tabs Handling ---

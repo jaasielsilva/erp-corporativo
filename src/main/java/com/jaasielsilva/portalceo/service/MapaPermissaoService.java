@@ -131,11 +131,20 @@ public class MapaPermissaoService {
         
         // Dashboard
         salvarMapeamento("Dashboard", "Gráfico de Adesão", TipoRecurso.GRAFICO, "ROLE_DASHBOARD_ADESAO_VISUALIZAR", "Visualizar gráfico de adesão");
-        salvarMapeamento("Dashboard", "Dashboard Executivo", TipoRecurso.TELA, "DASHBOARD_EXECUTIVO_VISUALIZAR", "Acesso à dashboard executiva");
+        salvarMapeamento("Dashboard", "Dashboard Executivo", TipoRecurso.TELA, "DASHBOARD_EXECUTIVO_VISUALIZAR", "Acesso à dashboard executiva e visão geral");
+        salvarMapeamento("Dashboard", "Card Financeiro", TipoRecurso.GRAFICO, "DASHBOARD_FINANCEIRO_VISUALIZAR", "Visualizar indicadores financeiros no dashboard");
+        salvarMapeamento("Dashboard", "Card Operacional", TipoRecurso.GRAFICO, "DASHBOARD_OPERACIONAL_VISUALIZAR", "Visualizar métricas operacionais no dashboard");
+        salvarMapeamento("Dashboard", "Card RH", TipoRecurso.GRAFICO, "ROLE_RH_READ", "Visualizar métricas de RH no dashboard");
+        salvarMapeamento("Dashboard", "Card Jurídico", TipoRecurso.GRAFICO, "MENU_JURIDICO_DASHBOARD", "Visualizar métricas jurídicas no dashboard");
         
         // RH
         salvarMapeamento("RH", "Menu RH", TipoRecurso.MENU, "MENU_RH", "Acesso ao módulo de Recursos Humanos");
         salvarMapeamento("RH", "Visualizar Colaboradores", TipoRecurso.TELA, "ROLE_RH_READ", "Visualizar lista de colaboradores");
+        
+        // Operacional / Fornecedores
+        salvarMapeamento("Compras", "Cadastrar Fornecedor", TipoRecurso.TELA, "MENU_FORNECEDOR_CADASTRAR", "Tela para cadastro de novos fornecedores. Acesse: /fornecedores/novo");
+        salvarMapeamento("Compras", "Listar Fornecedores", TipoRecurso.TELA, "MENU_FORNECEDOR_LISTAR", "Tela de listagem de fornecedores. Acesse: /fornecedores");
+        salvarMapeamento("Compras", "Contratos de Fornecedores", TipoRecurso.TELA, "MENU_FORNECEDOR_CONTRATOS", "Gerenciamento de contratos com fornecedores. Acesse: /fornecedores/contratos");
     }
     
     private void salvarMapeamento(String modulo, String recurso, TipoRecurso tipo, String permissao, String descricao) {

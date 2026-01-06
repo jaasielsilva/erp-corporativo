@@ -267,13 +267,16 @@ public class AiAssistantService {
             mapaPermissaoService.sincronizarPermissoes();
             List<com.jaasielsilva.portalceo.model.MapaPermissao> mapa = mapaPermissaoService.listarTodos();
             
-            // Lógica para responder "Qual permissão precisa para X?"
-            if (q.contains("permissão") || q.contains("permissao") || q.contains("authority") || q.contains("acesso")) {
+            // Lógica para responder "Qual permissão precisa para X?" ou perguntas de "Como fazer X?"
+            if (q.contains("permissão") || q.contains("permissao") || q.contains("authority") || q.contains("acesso") ||
+                q.contains("cadastrar") || q.contains("novo") || q.contains("criar") || q.contains("onde") || q.contains("como") ||
+                q.contains("gerenciar") || q.contains("visualizar")) {
                 // Palavras irrelevantes para a busca (stop words)
                 List<String> stopWords = Arrays.asList(
                     "qual", "que", "permissão", "permissao", "precisa", "necessária", "necessaria", 
                     "para", "acessar", "a", "o", "as", "os", "de", "do", "da", "em", "no", "na", 
-                    "tela", "menu", "modulo", "módulo", "sistema", "ter", "tal", "uma", "um"
+                    "tela", "menu", "modulo", "módulo", "sistema", "ter", "tal", "uma", "um",
+                    "pra", "pro", "perfil", "acesso", "usuario", "usuário"
                 );
                 
                 // Expansão de sinônimos para melhorar a busca
@@ -360,6 +363,29 @@ public class AiAssistantService {
             
             // Identifica o módulo na pergunta
             String moduloAlvo = null;
+
+            // Lógica específica para pergunta sobre Cards do Dashboard
+            if (q.contains("dashboard") && (q.contains("card") || q.contains("cards") || q.contains("permiss"))) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("📊 **Permissões do Dashboard**\n\n");
+                sb.append("Sim, os cards da tela principal estão mapeados. Aqui estão as permissões necessárias para cada seção:\n\n");
+                
+                for (com.jaasielsilva.portalceo.model.MapaPermissao item : mapa) {
+                    if (item.getModulo().equalsIgnoreCase("Dashboard") || 
+                       (item.getModulo().equalsIgnoreCase("RH") && item.getRecurso().contains("Card")) ||
+                       (item.getRecurso().contains("Card") && item.getRecurso().contains("Dashboard"))) {
+                        
+                        sb.append("🔹 **").append(item.getRecurso()).append("**\n");
+                        sb.append("   🔑 `").append(item.getPermissao()).append("`\n");
+                        if (item.getPerfis() != null && !item.getPerfis().isEmpty()) {
+                            sb.append("   👤 ").append(item.getPerfis()).append("\n");
+                        }
+                        sb.append("\n");
+                    }
+                }
+                return sb.toString();
+            }
+
             if (q.contains("rh") || q.contains("recursos humanos")) moduloAlvo = "RH";
             else if (q.contains("financeiro")) moduloAlvo = "Financeiro";
             else if (q.contains("comercial") || q.contains("clientes")) moduloAlvo = "Comercial";
@@ -425,7 +451,7 @@ public class AiAssistantService {
         if (q.contains("chamado") || q.contains("suporte")) return "Para abrir um chamado de suporte ou reportar erros, acesse **Suporte > Abrir Chamado** (`/chamados/novo`).";
         if (q.contains("usuario") || q.contains("usuário")) return "Para gerenciar usuários (apenas Administradores), acesse **Administração > Usuários** (`/usuarios/index`).";
         if (q.contains("ponto") || q.contains("folha")) return "Para consultar ponto ou folha de pagamento, acesse o menu **RH > Ponto** ou **RH > Folha**.";
-        if (q.contains("fornecedor")) return "Para gerenciar fornecedores, acesse **Gestão > Fornecedores** (`/fornecedores`).";
+        // if (q.contains("fornecedor")) return "Para gerenciar fornecedores, acesse **Gestão > Fornecedores** (`/fornecedores`).";
         return null;
     }
 

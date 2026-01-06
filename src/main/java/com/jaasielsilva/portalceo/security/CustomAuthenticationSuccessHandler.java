@@ -73,7 +73,50 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             }
         });
 
-        // Redireciona para dashboard
-        response.sendRedirect("/dashboard");
+        // Redirecionamento Inteligente baseado em permissões
+        String targetUrl = determineTargetUrl(authentication);
+        response.sendRedirect(targetUrl);
+    }
+
+    private String determineTargetUrl(Authentication authentication) {
+        // 1. Dashboard Principal (Prioridade Máxima)
+        boolean hasMainDashboard = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("DASHBOARD_EXECUTIVO_VISUALIZAR") ||
+                               a.getAuthority().equals("DASHBOARD_OPERACIONAL_VISUALIZAR") ||
+                               a.getAuthority().equals("DASHBOARD_FINANCEIRO_VISUALIZAR") ||
+                               a.getAuthority().equals("ROLE_MASTER") ||
+                               a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (hasMainDashboard) {
+            return "/dashboard";
+        }
+
+        // 2. Dashboards Setoriais
+        if (hasAuthority(authentication, "MENU_VENDAS_DASHBOARD")) return "/vendas";
+        if (hasAuthority(authentication, "MENU_FINANCEIRO_DASHBOARD")) return "/financeiro";
+        if (hasAuthority(authentication, "MENU_TI_DASHBOARD")) return "/ti";
+        if (hasAuthority(authentication, "MENU_JURIDICO_DASHBOARD")) return "/juridico";
+
+        // 3. Módulos Operacionais (Listagens Principais)
+        if (hasAuthority(authentication, "MENU_CLIENTES_LISTAR")) return "/clientes";
+        if (hasAuthority(authentication, "MENU_VENDAS_PEDIDOS")) return "/vendas/pedidos";
+        if (hasAuthority(authentication, "MENU_COMPRAS")) return "/fornecedores";
+        if (hasAuthority(authentication, "MENU_ESTOQUE_PRODUTOS")) return "/produtos";
+
+        // 4. Recursos Humanos (Prioridade para funcionalidades de gestão)
+        if (hasAuthority(authentication, "MENU_RH_COLABORADORES_LISTAR")) return "/rh/colaboradores/listar";
+        if (hasAuthority(authentication, "MENU_RH_FOLHA_LISTAR")) return "/rh/folha-pagamento/listar";
+        if (hasAuthority(authentication, "MENU_RH_RECRUTAMENTO_VAGAS")) return "/rh/recrutamento/vagas";
+
+        // 5. Serviços (Acesso Básico)
+        if (hasAuthority(authentication, "MENU_SERVICOS_SOLICITACOES_GERENCIAR")) return "/solicitacoes/pendentes";
+        
+        // 6. Fallback seguro (Ajuda ou Perfil)
+        return "/ajuda";
+    }
+
+    private boolean hasAuthority(Authentication authentication, String authority) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(authority));
     }
 }

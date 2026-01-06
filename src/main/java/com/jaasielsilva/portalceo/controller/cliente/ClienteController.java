@@ -35,7 +35,7 @@ public class ClienteController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('MENU_CLIENTES_LISTAR')")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_LISTAR') or hasRole('ADMIN') or hasRole('MASTER')")
     public String listarClientes(@RequestParam(value = "busca", required = false) String busca,
                                  @RequestParam(value = "status", required = false) String status,
                                  @RequestParam(value = "origem", required = false) String origem,
@@ -78,6 +78,7 @@ public class ClienteController {
 
     @GetMapping("/api/listar")
     @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_LISTAR') or hasRole('ADMIN') or hasRole('MASTER')")
     public ResponseEntity<Map<String, Object>> listarAjax(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
@@ -144,6 +145,7 @@ public class ClienteController {
     }
 
     @PostMapping("/salvar")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_NOVO') or hasRole('ADMIN') or hasRole('MASTER')")
     public String salvar(@ModelAttribute Cliente cliente) {
         clienteService.salvar(cliente);
         return "redirect:/clientes";

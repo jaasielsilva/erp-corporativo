@@ -11,6 +11,7 @@ import com.jaasielsilva.portalceo.service.AuditoriaJuridicoLogService;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import com.jaasielsilva.portalceo.repository.juridico.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -56,6 +57,7 @@ public class JuridicoController {
     private final com.jaasielsilva.portalceo.repository.juridico.DocumentoModeloRepository documentoModeloRepository;
     private final com.jaasielsilva.portalceo.service.DocumentTemplateService documentTemplateService;
     private final AuditoriaJuridicoLogService auditoriaJuridicoLogService;
+    private final ResourceLoader resourceLoader;
 
     @Value("${app.upload.path:uploads}")
     private String uploadBasePath;
@@ -1789,6 +1791,17 @@ public class JuridicoController {
             }
 
             Map<String, String> placeholders = new HashMap<>();
+            
+            // Resolve logo path
+            String logoPath = "";
+            try {
+                org.springframework.core.io.Resource logoRes = resourceLoader.getResource("classpath:static/img/logo-empresa.png");
+                if (logoRes.exists()) {
+                    logoPath = logoRes.getFile().toURI().toString();
+                }
+            } catch (Exception ignored) {}
+            placeholders.put("logo_path", logoPath);
+
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
             placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
             placeholders.put("escritorio_endereco",
@@ -1855,6 +1868,17 @@ public class JuridicoController {
             }
 
             Map<String, String> placeholders = new HashMap<>();
+
+            // Resolve logo path
+            String logoPath = "";
+            try {
+                org.springframework.core.io.Resource logoRes = resourceLoader.getResource("classpath:static/img/logo-empresa.png");
+                if (logoRes.exists()) {
+                    logoPath = logoRes.getFile().toURI().toString();
+                }
+            } catch (Exception ignored) {}
+            placeholders.put("logo_path", logoPath);
+
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
             placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
             placeholders.put("escritorio_endereco",
@@ -2682,17 +2706,7 @@ public class JuridicoController {
                     <table class="header-table">
                       <tr>
                         <td class="header-logo-cell">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80">
-                               <!-- Scale Body -->
-                               <path d="M50 10 L50 85 M20 25 L80 25" stroke="#002244" stroke-width="4" fill="none" />
-                               <!-- Pans -->
-                               <path d="M20 25 L20 60 M80 25 L80 60" stroke="#C5A059" stroke-width="2" fill="none" />
-                               <path d="M10 60 Q20 75 30 60 Z" fill="#C5A059" opacity="0.9" />
-                               <path d="M70 60 Q80 75 90 60 Z" fill="#C5A059" opacity="0.9" />
-                               <!-- Base -->
-                               <path d="M35 85 L65 85 L50 65 Z" fill="#002244" />
-                               <circle cx="50" cy="10" r="3" fill="#002244" />
-                            </svg>
+                            <img src="{{logo_path}}" style="width: 140px; height: auto;" alt="Logo" />
                         </td>
                         <td class="header-text-cell">
                             <div class="header-title">ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA</div>
@@ -2746,8 +2760,13 @@ public class JuridicoController {
                     body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
                     .center { text-align: center; }
                     .title { font-size: 18px; font-weight: 700; margin: 18px 0 14px; letter-spacing: 0.4px; }
-                    .header { margin-bottom: 14px; }
-                    .header .line { margin: 2px 0; }
+                    .header { margin-bottom: 30px; }
+                    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                    .header-logo-cell { width: 100px; vertical-align: middle; text-align: left; }
+                    .header-text-cell { vertical-align: middle; text-align: center; padding-right: 100px; }
+                    .header-title { font-weight: bold; font-size: 14px; text-transform: uppercase; color: #002244; }
+                    .header-subtitle { font-weight: bold; font-style: italic; font-size: 12px; margin-top: 5px; color: #002244; }
+                    .separator { border-bottom: 2px solid #002244; margin-top: 5px; margin-bottom: 30px; }
                     .p { margin: 8px 0; line-height: 1.55; text-align: justify; }
                     .label { font-weight: 700; }
                     .obj { white-space: pre-wrap; }
@@ -2761,11 +2780,19 @@ public class JuridicoController {
                   </style>
                 </head>
                 <body>
-                  <div class="header center">
-                    <div class="line"><b>{{escritorio_razao_social}}</b></div>
-                    <div class="line">{{escritorio_nome_advogado}}</div>
-                    <div class="line">{{escritorio_endereco}}</div>
-                    <div class="line">{{escritorio_telefone}}</div>
+                  <div class="header">
+                    <table class="header-table">
+                      <tr>
+                        <td class="header-logo-cell">
+                            <img src="{{logo_path}}" style="width: 140px; height: auto;" alt="Logo" />
+                        </td>
+                        <td class="header-text-cell">
+                            <div class="header-title">{{escritorio_razao_social}}</div>
+                            <div class="header-subtitle">{{escritorio_nome_advogado}}</div>
+                        </td>
+                      </tr>
+                    </table>
+                    <div class="separator"></div>
                   </div>
 
                   <div class="title center">CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS</div>

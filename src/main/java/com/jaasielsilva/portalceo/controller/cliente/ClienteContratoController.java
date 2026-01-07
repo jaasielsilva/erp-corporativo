@@ -5,6 +5,7 @@ import com.jaasielsilva.portalceo.model.StatusContrato;
 import com.jaasielsilva.portalceo.model.TipoContrato;
 import com.jaasielsilva.portalceo.service.ClienteContratoService;
 import com.jaasielsilva.portalceo.service.ClienteService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ public class ClienteContratoController {
     }
 
     @GetMapping({ "", "/listar" })
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_CONTRATOS_LISTAR')")
     public String listarContratosClientes(@RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "tipo", required = false) String tipo,
@@ -61,6 +63,7 @@ public class ClienteContratoController {
     }
 
     @GetMapping("/{id}/detalhes")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_CONTRATOS_LISTAR')")
     public String detalhesContratoCliente(@PathVariable Long id, Model model) {
         Contrato contrato = clienteContratoService.buscarContratoCliente(id);
         model.addAttribute("contrato", contrato);
@@ -77,6 +80,7 @@ public class ClienteContratoController {
 
     @GetMapping("/api/{id}")
     @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_CONTRATOS_LISTAR')")
     public ResponseEntity<Map<String, Object>> getContratoDetalhesApi(@PathVariable Long id) {
         Contrato contrato = clienteContratoService.buscarContratoCliente(id);
         if (contrato == null) {
@@ -107,6 +111,7 @@ public class ClienteContratoController {
 
     @GetMapping("/api/listar")
     @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_CONTRATOS_LISTAR')")
     public ResponseEntity<Map<String, Object>> listarContratosClientesApi(
             @RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "status", required = false) String status,

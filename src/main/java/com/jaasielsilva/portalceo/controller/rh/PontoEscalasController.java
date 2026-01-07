@@ -69,7 +69,7 @@ public class PontoEscalasController {
     private final java.util.Map<String, java.util.Map<String, Object>> gerarJobs = new java.util.concurrent.ConcurrentHashMap<>();
 
     @GetMapping("/registros")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_GERENCIAL')")
     public String paginaRegistros() {
         return "rh/ponto-escalas/registros";
     }

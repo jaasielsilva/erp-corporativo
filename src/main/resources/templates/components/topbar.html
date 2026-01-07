@@ -183,8 +183,17 @@
                     var polled = false;
                     window.__jobPollTimer = setInterval(function(){
                         fetch('/rh/ponto-escalas/api/escalas/gerar-automatico/status?jobId=' + encodeURIComponent(jobId))
-                            .then(function(r){ return r.json(); })
+                            .then(function(r){
+                                if (r.status === 403 || r.status === 401) {
+                                    clearInterval(window.__jobPollTimer);
+                                    window.__jobPollTimer = null;
+                                    localStorage.removeItem('gerarJobId');
+                                    return null;
+                                }
+                                return r.json();
+                            })
                             .then(function(st){
+                                if (!st) return;
                                 if (st && st.success && st.running === false && !polled) {
                                     polled = true;
                                     try { clearInterval(window.__jobPollTimer); } catch(e){}

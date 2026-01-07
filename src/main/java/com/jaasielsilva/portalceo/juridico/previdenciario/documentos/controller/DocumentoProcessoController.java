@@ -26,7 +26,7 @@ import java.io.IOException;
 @Controller
 @RequestMapping("/juridico/previdenciario")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL','ROLE_JURIDICO')")
+@PreAuthorize("hasAnyAuthority('MENU_JURIDICO_PREVIDENCIARIO', 'ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL','ROLE_JURIDICO','ROLE_ESTAGIARIO_JURIDICO')")
 public class DocumentoProcessoController {
 
     private final DocumentoProcessoService documentoProcessoService;

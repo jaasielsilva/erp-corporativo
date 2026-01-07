@@ -14,14 +14,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClienteInsightService {
 
-    private final ClienteService clienteService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private ClienteService clienteService;
+
     private final ClienteContratoService clienteContratoService;
     private final PedidoRepository pedidoRepository;
 
-    public ClienteInsightService(ClienteService clienteService,
+    public ClienteInsightService(
             ClienteContratoService clienteContratoService,
             PedidoRepository pedidoRepository) {
-        this.clienteService = clienteService;
         this.clienteContratoService = clienteContratoService;
         this.pedidoRepository = pedidoRepository;
     }

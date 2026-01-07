@@ -20,11 +20,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClienteHistoricoService {
 
-    private final ClienteService clienteService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private ClienteService clienteService;
+
     private final PedidoRepository pedidoRepository;
 
-    public ClienteHistoricoService(ClienteService clienteService, PedidoRepository pedidoRepository) {
-        this.clienteService = clienteService;
+    public ClienteHistoricoService(PedidoRepository pedidoRepository) {
         this.pedidoRepository = pedidoRepository;
     }
 

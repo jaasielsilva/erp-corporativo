@@ -18,6 +18,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/juridico/processos")
 @RequiredArgsConstructor
+@org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('MENU_JURIDICO_PROCESSOS', 'ROLE_ADMIN', 'ROLE_MASTER')")
 public class ProcessoJuridicoController {
 
     private final ProcessoJuridicoService processoService;
@@ -25,6 +26,7 @@ public class ProcessoJuridicoController {
     private final ClienteService clienteService;
 
     @GetMapping("/novo")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('MENU_JURIDICO_PROCESSOS_NOVO', 'ROLE_ADMIN', 'ROLE_MASTER')")
     public String novo(@RequestParam(value = "clienteId", required = false) Long clienteId,
                        @RequestParam(value = "id", required = false) Long id,
                        Model model) {

@@ -40,7 +40,7 @@ import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.Proces
 @Controller
 @RequestMapping("/juridico/previdenciario")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL','ROLE_JURIDICO')")
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_GERENCIAL','ROLE_JURIDICO','ROLE_ESTAGIARIO_JURIDICO')")
 public class ProcessoPrevidenciarioController {
 
     private final ProcessoPrevidenciarioService processoService;
@@ -58,6 +58,7 @@ public class ProcessoPrevidenciarioController {
     }
 
     @GetMapping("/novo")
+    @PreAuthorize("hasAnyAuthority('MENU_JURIDICO_PREVIDENCIARIO_NOVO', 'ROLE_ADMIN', 'ROLE_MASTER')")
     public String novo(Model model, Authentication authentication) {
         List<EtapaWorkflow> etapas = workflowService.listarEtapasOrdenadas();
         Integer ordemCadastro = etapas.stream()

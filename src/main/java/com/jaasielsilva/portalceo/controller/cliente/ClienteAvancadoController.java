@@ -4,6 +4,7 @@ import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.service.ClienteContratoService;
 import com.jaasielsilva.portalceo.service.ClienteInsightService;
 import com.jaasielsilva.portalceo.service.ClienteService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,19 +22,21 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/clientes/avancado")
 public class ClienteAvancadoController {
 
-    private final ClienteService clienteService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private ClienteService clienteService;
+
     private final ClienteInsightService clienteInsightService;
     private final ClienteContratoService clienteContratoService;
 
-    public ClienteAvancadoController(ClienteService clienteService,
+    public ClienteAvancadoController(
             ClienteInsightService clienteInsightService,
             ClienteContratoService clienteContratoService) {
-        this.clienteService = clienteService;
         this.clienteInsightService = clienteInsightService;
         this.clienteContratoService = clienteContratoService;
     }
 
     @GetMapping("/busca")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_AVANCADO_BUSCA')")
     public String buscaAvancada(@RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "tipoCliente", required = false) String tipoCliente,
@@ -59,6 +62,7 @@ public class ClienteAvancadoController {
     }
 
     @GetMapping("/relatorios")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_AVANCADO_RELATORIOS')")
     public String relatorios(Model model) {
         Map<String, Long> statusClientes = clienteInsightService.distribuicaoStatusClientes();
         Map<String, Object> contratosClientes = clienteInsightService.overviewContratosClientes();
@@ -77,6 +81,7 @@ public class ClienteAvancadoController {
 
     @GetMapping("/api/busca")
     @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_AVANCADO_BUSCA')")
     public ResponseEntity<Map<String, Object>> buscaAvancadaApi(
             @RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "status", required = false) String status,

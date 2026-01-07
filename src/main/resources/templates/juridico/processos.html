@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,16 +19,17 @@
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
-            
+
             <section class="content-area">
                 <div class="container-fluid py-4">
-                    
+
                     <!-- Header Moderno -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb mb-1">
-                                    <li class="breadcrumb-item"><a href="/juridico" class="text-decoration-none text-muted small">Jurídico</a></li>
+                                    <li class="breadcrumb-item"><a href="/juridico"
+                                            class="text-decoration-none text-muted small">Jurídico</a></li>
                                     <li class="breadcrumb-item active" aria-current="page">Processos</li>
                                 </ol>
                             </nav>
@@ -46,8 +48,10 @@
                             <div class="row g-3 align-items-center">
                                 <div class="col-md-3">
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-filter text-muted"></i></span>
-                                        <select id="filtroStatusProcesso" class="form-select border-start-0 ps-0 bg-light">
+                                        <span class="input-group-text bg-light border-end-0"><i
+                                                class="fas fa-filter text-muted"></i></span>
+                                        <select id="filtroStatusProcesso"
+                                            class="form-select border-start-0 ps-0 bg-light">
                                             <option value="">Todos os Status</option>
                                             <option value="EM_ANDAMENTO">Em Andamento</option>
                                             <option value="SUSPENSO">Suspensos</option>
@@ -57,41 +61,53 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                                        <input id="filtroBuscaProcesso" class="form-control border-start-0 ps-0 bg-light" type="text" placeholder="Buscar por número, parte ou assunto..." />
+                                        <span class="input-group-text bg-light border-end-0"><i
+                                                class="fas fa-search text-muted"></i></span>
+                                        <input id="filtroBuscaProcesso"
+                                            class="form-control border-start-0 ps-0 bg-light" type="text"
+                                            placeholder="Buscar por número, parte ou assunto..." />
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <button id="btnBuscarProcessos" class="btn btn-outline-primary w-100"><i class="fas fa-search me-2"></i> Filtrar</button>
+                                    <button id="btnBuscarProcessos" class="btn btn-outline-primary w-100"><i
+                                            class="fas fa-search me-2"></i> Filtrar</button>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold ps-4">Número</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Tipo / Tribunal</th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold ps-4">Número
+                                        </th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Tipo / Tribunal
+                                        </th>
                                         <th class="border-top-0 text-muted small text-uppercase fw-bold">Parte</th>
                                         <th class="border-top-0 text-muted small text-uppercase fw-bold">Assunto</th>
                                         <th class="border-top-0 text-muted small text-uppercase fw-bold">Status</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Data Abertura</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-end pe-4">Ações</th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Data Abertura
+                                        </th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-end pe-4">
+                                            Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="procTableBody">
-                                    <tr><td colspan="7" class="text-center text-muted py-5">Carregando processos...</td></tr>
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-5">Carregando processos...</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <div class="card-footer bg-white border-top-0 py-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-muted small" id="procPageInfo">Carregando...</div>
                                 <div class="btn-group">
-                                    <button class="btn btn-outline-secondary btn-sm rounded-start-pill" id="procPrev" disabled><i class="fas fa-chevron-left"></i> Anterior</button>
-                                    <button class="btn btn-outline-secondary btn-sm rounded-end-pill" id="procNext" disabled>Próximo <i class="fas fa-chevron-right"></i></button>
+                                    <button class="btn btn-outline-secondary btn-sm rounded-start-pill" id="procPrev"
+                                        disabled><i class="fas fa-chevron-left"></i> Anterior</button>
+                                    <button class="btn btn-outline-secondary btn-sm rounded-end-pill" id="procNext"
+                                        disabled>Próximo <i class="fas fa-chevron-right"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -104,12 +120,14 @@
     </div>
 
     <!-- Offcanvas de Detalhes do Processo (Inovação Jurídica) -->
-    <div class="offcanvas offcanvas-end process-offcanvas" tabindex="-1" id="procDetailOffcanvas" aria-labelledby="procDetailOffcanvasLabel">
+    <div class="offcanvas offcanvas-end process-offcanvas" tabindex="-1" id="procDetailOffcanvas"
+        aria-labelledby="procDetailOffcanvasLabel">
         <div class="offcanvas-header">
             <div>
                 <h5 class="offcanvas-title fw-bold" id="procDetailOffcanvasLabel">Detalhes do Processo</h5>
                 <div class="process-meta">
-                    <span id="procDetailNumeroHeader" class="badge bg-white text-dark bg-opacity-25">0000000-00.0000.0.00.0000</span>
+                    <span id="procDetailNumeroHeader"
+                        class="badge bg-white text-dark bg-opacity-25">0000000-00.0000.0.00.0000</span>
                     <span id="procDetailStatusHeader" class="badge bg-success">EM ANDAMENTO</span>
                 </div>
             </div>
@@ -119,10 +137,12 @@
             <!-- Navegação em Abas Modernas -->
             <ul class="nav nav-tabs modern-tabs px-3 pt-2" id="procTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tab-resumo" data-bs-toggle="tab" data-bs-target="#content-resumo" type="button" role="tab">Resumo</button>
+                    <button class="nav-link active" id="tab-resumo" data-bs-toggle="tab"
+                        data-bs-target="#content-resumo" type="button" role="tab">Resumo</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-timeline" data-bs-toggle="tab" data-bs-target="#content-timeline" type="button" role="tab">Timeline</button>
+                    <button class="nav-link" id="tab-timeline" data-bs-toggle="tab" data-bs-target="#content-timeline"
+                        type="button" role="tab">Timeline</button>
                 </li>
             </ul>
 
@@ -166,8 +186,10 @@
                         <div class="col-md-6">
                             <div class="info-card border-0 bg-light">
                                 <div class="info-label">Ações Rápidas</div>
-                                <a id="btnDetalhesCompleto" href="#" class="btn btn-sm btn-outline-info w-100 mb-2"><i class="fas fa-external-link-alt"></i> Ver Detalhes</a>
-                                <a id="btnEditarOffcanvas" href="#" class="btn btn-sm btn-outline-primary w-100 mb-2"><i class="fas fa-edit"></i> Editar Completo</a>
+                                <a id="btnDetalhesCompleto" href="#" class="btn btn-sm btn-outline-info w-100 mb-2"><i
+                                        class="fas fa-external-link-alt"></i> Ver Detalhes</a>
+                                <a id="btnEditarOffcanvas" href="#" class="btn btn-sm btn-outline-primary w-100 mb-2"><i
+                                        class="fas fa-edit"></i> Editar Completo</a>
                             </div>
                         </div>
                     </div>
@@ -183,12 +205,15 @@
                     </div>
 
                     <!-- Form Inline de Nova Movimentação (Oculto por padrão) -->
-                    <div id="formAndamento" class="card mb-4 border-0 shadow-sm bg-light d-none" style="border-radius: 12px;">
+                    <div id="formAndamento" class="card mb-4 border-0 shadow-sm bg-light d-none"
+                        style="border-radius: 12px;">
                         <div class="card-body">
                             <h6 class="card-title mb-3 text-primary fw-bold">Registrar Movimentação</h6>
                             <div class="row g-2">
                                 <div class="col-md-8">
-                                    <input type="text" id="andamentoTitulo" class="form-control form-control-sm border-0 shadow-sm" placeholder="Título (ex: Conclusão para Sentença)" required>
+                                    <input type="text" id="andamentoTitulo"
+                                        class="form-control form-control-sm border-0 shadow-sm"
+                                        placeholder="Título (ex: Conclusão para Sentença)" required>
                                 </div>
                                 <div class="col-md-4">
                                     <select id="andamentoTipo" class="form-select form-select-sm border-0 shadow-sm">
@@ -200,11 +225,15 @@
                                     </select>
                                 </div>
                                 <div class="col-12">
-                                    <textarea id="andamentoDescricao" class="form-control form-control-sm border-0 shadow-sm" rows="2" placeholder="Detalhes..."></textarea>
+                                    <textarea id="andamentoDescricao"
+                                        class="form-control form-control-sm border-0 shadow-sm" rows="2"
+                                        placeholder="Detalhes..."></textarea>
                                 </div>
                                 <div class="col-12 text-end mt-2">
-                                    <button type="button" class="btn btn-sm btn-light me-1" id="btnCancelarAndamento">Cancelar</button>
-                                    <button type="button" class="btn btn-sm btn-success" id="btnSalvarAndamento">Salvar</button>
+                                    <button type="button" class="btn btn-sm btn-light me-1"
+                                        id="btnCancelarAndamento">Cancelar</button>
+                                    <button type="button" class="btn btn-sm btn-success"
+                                        id="btnSalvarAndamento">Salvar</button>
                                 </div>
                             </div>
                         </div>
@@ -222,15 +251,10 @@
         </div>
     </div>
 
-    <script src="/js/sidebar.js" defer></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script th:src="@{/js/notifications.js}"></script>
+
     <script>
         // Configuração do Toastr
-        if(typeof toastr !== 'undefined') {
+        if (typeof toastr !== 'undefined') {
             toastr.options = {
                 "closeButton": true,
                 "progressBar": true,
@@ -257,7 +281,7 @@
             el.value = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        $(function() {
+        $(function () {
 
             // Listagem dinâmica de processos
             let procPage = 0;
@@ -274,9 +298,9 @@
                 items.forEach(p => {
                     const status = p.status || '—';
                     let statusClass = 'bg-secondary';
-                    if(status === 'EM_ANDAMENTO') statusClass = 'bg-success';
-                    else if(status === 'SUSPENSO') statusClass = 'bg-warning text-dark';
-                    else if(status === 'ENCERRADO') statusClass = 'bg-dark';
+                    if (status === 'EM_ANDAMENTO') statusClass = 'bg-success';
+                    else if (status === 'SUSPENSO') statusClass = 'bg-warning text-dark';
+                    else if (status === 'ENCERRADO') statusClass = 'bg-dark';
 
                     $tbody.append(`
                         <tr data-id="${p.id || ''}">
@@ -317,7 +341,7 @@
                 const status = $('#filtroStatusProcesso').val();
                 const search = $('#filtroBuscaProcesso').val()?.trim();
                 $('#procTableBody').html('<tr><td colspan="7" class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><br>Carregando processos...</td></tr>');
-                
+
                 $.get('/juridico/api/processos', { status, search, page, size: procSize })
                     .done(res => {
                         procPage = res.page || 0;
@@ -334,8 +358,8 @@
             // Event Listeners
             $('#btnBuscarProcessos').click(() => carregarProcessos(0));
             $('#filtroStatusProcesso').change(() => carregarProcessos(0));
-            $('#filtroBuscaProcesso').keypress(function(e) {
-                if(e.which == 13) carregarProcessos(0);
+            $('#filtroBuscaProcesso').keypress(function (e) {
+                if (e.which == 13) carregarProcessos(0);
             });
 
             $('#procPrev').click(() => {
@@ -346,11 +370,11 @@
             });
 
             // Delegate events for dynamic buttons
-            $(document).on('click', '.proc-detail', function() {
+            $(document).on('click', '.proc-detail', function () {
                 const id = $(this).data('id');
                 abrirDetalhesProcesso(id);
             });
-            $(document).on('click', '.proc-ganho', async function() {
+            $(document).on('click', '.proc-ganho', async function () {
                 const id = $(this).data('id');
                 const r = await Swal.fire({
                     title: 'Registrar ganho de causa',
@@ -362,7 +386,7 @@
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Vencimento</label>
-                                <input id="swVencimento" type="date" class="form-control" value="${new Date().toISOString().slice(0,10)}">
+                                <input id="swVencimento" type="date" class="form-control" value="${new Date().toISOString().slice(0, 10)}">
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Número do documento (opcional)</label>
@@ -405,30 +429,30 @@
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify(r.value)
                 })
-                .done(res => { notify('success', 'Registrado', 'Ganho registrado e lançado em Contas a Receber.'); })
-                .fail(xhr => {
-                    let msg = 'Falha ao registrar ganho';
-                    try {
-                        if (xhr.responseJSON && xhr.responseJSON.erro) {
-                            msg = xhr.responseJSON.erro;
-                        } else if (xhr.responseText) {
-                            const maybeJson = JSON.parse(xhr.responseText);
-                            if (maybeJson && maybeJson.erro) msg = maybeJson.erro;
-                            else msg = xhr.responseText;
-                        } else if (xhr.statusText) {
-                            msg = xhr.statusText;
+                    .done(res => { notify('success', 'Registrado', 'Ganho registrado e lançado em Contas a Receber.'); })
+                    .fail(xhr => {
+                        let msg = 'Falha ao registrar ganho';
+                        try {
+                            if (xhr.responseJSON && xhr.responseJSON.erro) {
+                                msg = xhr.responseJSON.erro;
+                            } else if (xhr.responseText) {
+                                const maybeJson = JSON.parse(xhr.responseText);
+                                if (maybeJson && maybeJson.erro) msg = maybeJson.erro;
+                                else msg = xhr.responseText;
+                            } else if (xhr.statusText) {
+                                msg = xhr.statusText;
+                            }
+                        } catch (e) {
+                            if (xhr.responseText) msg = xhr.responseText;
                         }
-                    } catch(e) {
-                        if (xhr.responseText) msg = xhr.responseText;
-                    }
-                    notify('error', 'Erro', msg);
-                });
+                        notify('error', 'Erro', msg);
+                    });
             });
 
             // Inicialização
             carregarProcessos(0);
 
-            (function autoOpenFromQuery(){
+            (function autoOpenFromQuery() {
                 try {
                     const params = new URLSearchParams(window.location.search);
                     const openId = params.get('openProcessId');
@@ -438,19 +462,19 @@
                             setTimeout(() => abrirDetalhesProcesso(idNum), 200);
                         }
                     }
-                } catch(e) {}
+                } catch (e) { }
             })();
 
             // --- Lógica do Offcanvas (Timeline, etc) ---
-            
+
             function setProcDetail(id, data) {
                 // Header Metadados
                 $('#procDetailNumeroHeader').text(data && data.numero ? data.numero : '0000000-00.0000.0.00.0000');
                 $('#procDetailStatusHeader')
                     .text(data && data.status ? data.status : 'EM ANDAMENTO')
                     .removeClass('bg-success bg-warning bg-secondary text-dark text-white bg-dark')
-                    .addClass(data && data.status === 'SUSPENSO' ? 'bg-warning text-dark' : 
-                             (data && data.status === 'ENCERRADO' ? 'bg-dark text-white' : 'bg-success text-white'));
+                    .addClass(data && data.status === 'SUSPENSO' ? 'bg-warning text-dark' :
+                        (data && data.status === 'ENCERRADO' ? 'bg-dark text-white' : 'bg-success text-white'));
 
                 // Detalhes Cards
                 $('#procDetailTipo').text(data && data.tipo ? data.tipo : '—');
@@ -458,11 +482,11 @@
                 $('#procDetailParte').text(data && data.parte ? data.parte : '—');
                 $('#procDetailAssunto').text(data && data.assunto ? data.assunto : '—');
                 $('#procDetailDataAbertura').text(data && data.dataAbertura ? new Date(data.dataAbertura).toLocaleDateString('pt-BR') : '—');
-                
+
                 // Botão Editar no Offcanvas
                 $('#btnEditarOffcanvas').attr('href', `/juridico/processos/novo?id=${id}`);
                 $('#btnDetalhesCompleto').attr('href', `/juridico/processos/${id}/detalhes`);
-                
+
                 $('#procDetailOffcanvas').attr('data-proc-id', id);
             }
 
@@ -477,7 +501,7 @@
 
                 items.forEach(item => {
                     const tipoClass = (item.tipo || 'ANDAMENTO').toLowerCase();
-                    
+
                     // Ícones mais sofisticados
                     let iconClass = 'fa-circle';
                     if (item.tipo === 'INICIAL') iconClass = 'fa-file-signature';
@@ -488,12 +512,12 @@
                     // Formatar data se possível
                     let dataFormatada = item.data;
                     try {
-                        if(item.data && item.data.includes('T')) {
+                        if (item.data && item.data.includes('T')) {
                             const d = new Date(item.data);
-                            dataFormatada = d.toLocaleDateString('pt-BR', {day: '2-digit', month: 'short', year: 'numeric'}) + 
-                                          ' às ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                            dataFormatada = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) +
+                                ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                         }
-                    } catch(e) {}
+                    } catch (e) { }
 
                     $container.append(`
                         <div class="timeline-item-modern ${tipoClass}">
@@ -583,7 +607,7 @@
                     });
                 } else {
                     // Generic
-                     mocks.push({
+                    mocks.push({
                         data: new Date(now.getTime() - 86400000 * 10).toISOString(),
                         titulo: "Movimentação de Processo",
                         descricao: "Processo em análise pelo juiz.",
@@ -603,19 +627,19 @@
 
             function abrirDetalhesProcesso(id) {
                 if (!id) return;
-                
+
                 // Reset e mostra Offcanvas
                 setProcDetail(id, null);
                 $('#timelineContainer').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Carregando histórico...</p></div>');
-                
+
                 const offcanvasEl = document.getElementById('procDetailOffcanvas');
                 if (offcanvasEl) {
                     const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
                     offcanvas.show();
-                    
+
                     // Reset tab to first one
                     const firstTabEl = document.querySelector('#procTabs button[data-bs-target="#content-resumo"]');
-                    if(firstTabEl) {
+                    if (firstTabEl) {
                         const tab = new bootstrap.Tab(firstTabEl);
                         tab.show();
                     }
@@ -625,7 +649,7 @@
                 $.get(`/juridico/api/processos/${id}`)
                     .done(res => {
                         setProcDetail(id, res);
-                        
+
                         // 2. Fetch Timeline
                         $.get(`/juridico/api/processos/${id}/timeline`)
                             .done(timeline => {
@@ -641,23 +665,23 @@
             }
 
             // --- Lógica de Novo Andamento (Simples) ---
-            $('#btnNovoAndamento').click(function() {
+            $('#btnNovoAndamento').click(function () {
                 $('#formAndamento').removeClass('d-none');
             });
 
-            $('#btnCancelarAndamento').click(function() {
+            $('#btnCancelarAndamento').click(function () {
                 $('#formAndamento').addClass('d-none');
                 $('#andamentoTitulo').val('');
                 $('#andamentoDescricao').val('');
             });
 
-            $('#btnSalvarAndamento').click(function() {
+            $('#btnSalvarAndamento').click(function () {
                 const titulo = $('#andamentoTitulo').val();
                 const descricao = $('#andamentoDescricao').val();
                 const tipo = $('#andamentoTipo').val();
                 const procId = $('#procDetailOffcanvas').attr('data-proc-id');
 
-                if(!titulo || !descricao) {
+                if (!titulo || !descricao) {
                     notify('warning', 'Atenção', 'Preencha título e descrição.');
                     return;
                 }
@@ -672,7 +696,7 @@
                         descricao: descricao,
                         tipo: tipo
                     }),
-                    success: function() {
+                    success: function () {
                         notify('success', 'Sucesso', 'Movimentação registrada!');
                         $('#btnCancelarAndamento').click();
                         // Reload timeline
@@ -680,10 +704,10 @@
                             .done(timeline => {
                                 // Need to fetch process type again or store it. 
                                 // For now just re-render whatever comes back.
-                                renderTimeline(timeline, ''); 
+                                renderTimeline(timeline, '');
                             });
                     },
-                    error: function() {
+                    error: function () {
                         // Fallback visual para teste sem backend
                         notify('success', 'Sucesso', 'Movimentação registrada (Simulação)!');
                         $('#btnCancelarAndamento').click();
@@ -696,4 +720,14 @@
         });
     </script>
 </body>
+
+<!-- Scripts da página: global é carregado no Topbar -->
+
+<script src="/js/sidebar.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/notifications.js}"></script>
+
 </html>

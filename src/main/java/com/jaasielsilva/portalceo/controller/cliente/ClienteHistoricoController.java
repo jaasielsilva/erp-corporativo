@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.controller.cliente;
 
 import com.jaasielsilva.portalceo.model.Pedido;
 import com.jaasielsilva.portalceo.service.ClienteHistoricoService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class ClienteHistoricoController {
     }
 
     @GetMapping("/interacoes")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_HISTORICO_INTERACOES')")
     public String listarInteracoes(@RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "canal", required = false) String canal,
             Model model) {
@@ -41,6 +43,7 @@ public class ClienteHistoricoController {
     }
 
     @GetMapping("/pedidos")
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_HISTORICO_PEDIDOS')")
     public String listarPedidos(@RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "status", required = false) String status,
             Model model) {
@@ -70,6 +73,7 @@ public class ClienteHistoricoController {
 
     @GetMapping("/api/interacoes")
     @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_HISTORICO_INTERACOES')")
     public ResponseEntity<Map<String, Object>> listarInteracoesApi(
             @RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "canal", required = false) String canal,
@@ -104,6 +108,7 @@ public class ClienteHistoricoController {
 
     @GetMapping("/api/pedidos")
     @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_HISTORICO_PEDIDOS')")
     public ResponseEntity<Map<String, Object>> listarPedidosApi(
             @RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "status", required = false) String status,

@@ -20,6 +20,7 @@ import java.util.Optional;
 @Service
 public class ClienteService {
 
+    // Service para gerenciamento de clientes
     @Autowired
     private ClienteRepository repository;
 

@@ -73,6 +73,20 @@
                     </a>
                 </div>
 
+                <!-- Feedback de Sucesso -->
+                <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${sucesso}">Operação realizada com sucesso!</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Feedback de Erro -->
+                <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:text="${erro}">Ocorreu um erro ao processar a operação.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
                 <!-- Cards Resumo -->
                 <div class="row mb-4">
                     <div class="col-md-4">
@@ -157,8 +171,15 @@
                         <tbody>
                             <tr th:each="conta : ${contas}">
                                 <td>
-                                    <div class="fw-bold" th:text="${conta.fornecedor != null ? conta.fornecedor.nomeFantasia : conta.descricao}">Fornecedor</div>
-                                    <div th:if="${conta.fornecedor != null}" class="small text-muted" th:text="${conta.descricao}">Descrição</div>
+                                    <div class="fw-bold">
+                                        <span th:if="${conta.tipoBeneficiario == null || conta.tipoBeneficiario.name() == 'FORNECEDOR'}"
+                                              th:text="${conta.fornecedor != null ? conta.fornecedor.nomeFantasia : conta.descricao}"></span>
+                                        <span th:if="${conta.tipoBeneficiario != null && conta.tipoBeneficiario.name() == 'COLABORADOR'}"
+                                              th:text="${conta.colaborador != null ? conta.colaborador.nome : conta.descricao}"></span>
+                                        <span th:if="${conta.tipoBeneficiario != null && conta.tipoBeneficiario.name() == 'OUTROS'}"
+                                              th:text="${conta.descricao}"></span>
+                                    </div>
+                                    <div class="small text-muted" th:text="${conta.descricao}">Descrição</div>
                                 </td>
                                 <td th:text="${conta.dataVencimento != null ? #temporals.format(conta.dataVencimento, 'dd/MM/yyyy') : '-'}">
                                     30/10/2025</td>

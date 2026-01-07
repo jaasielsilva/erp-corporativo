@@ -36,6 +36,9 @@ public class ContaPagarController {
     private FornecedorService fornecedorService;
 
     @Autowired
+    private com.jaasielsilva.portalceo.service.ColaboradorService colaboradorService;
+
+    @Autowired
     private com.jaasielsilva.portalceo.service.ContaBancariaService contaBancariaService;
 
     // ================= LISTAR =================
@@ -117,8 +120,10 @@ public class ContaPagarController {
     public String novoForm(Model model) {
         model.addAttribute("contaPagar", new ContaPagar());
         model.addAttribute("fornecedores", fornecedorService.listarTodos());
+        model.addAttribute("colaboradores", colaboradorService.listarAtivos());
         model.addAttribute("categorias", ContaPagar.CategoriaContaPagar.values());
         model.addAttribute("statusOptions", ContaPagar.StatusContaPagar.values());
+        model.addAttribute("tiposBeneficiario", ContaPagar.TipoBeneficiario.values());
         model.addAttribute("pageTitle", "Nova Conta a Pagar");
         return "financeiro/contas-pagar/conta-pagar-form";
     }

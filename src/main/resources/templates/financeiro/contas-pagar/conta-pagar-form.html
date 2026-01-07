@@ -48,6 +48,20 @@
                 </div>
             </div>
 
+            <!-- Feedback de Sucesso -->
+            <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${sucesso}">Operação realizada com sucesso!</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Feedback de Erro -->
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${erro}">Ocorreu um erro ao processar a operação.</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
             <div class="card shadow-sm">
                 <div class="card-body">
                     <form th:action="@{/financeiro/contas-pagar/salvar}" th:object="${contaPagar}" method="post" novalidate>
@@ -155,5 +169,34 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="/js/sidebar.js" defer></script>
 <script th:src="@{/js/notifications.js}" defer></script>
+<script>
+    function toggleBeneficiario() {
+        const tipos = document.getElementsByName('tipoBeneficiario');
+        let tipoSelecionado = 'FORNECEDOR';
+        for(const tipo of tipos) {
+            if(tipo.checked) {
+                tipoSelecionado = tipo.value;
+                break;
+            }
+        }
+
+        const containerFornecedor = document.getElementById('containerFornecedor');
+        const containerColaborador = document.getElementById('containerColaborador');
+
+        if (tipoSelecionado === 'FORNECEDOR') {
+            containerFornecedor.classList.remove('d-none');
+            containerColaborador.classList.add('d-none');
+        } else if (tipoSelecionado === 'COLABORADOR') {
+            containerFornecedor.classList.add('d-none');
+            containerColaborador.classList.remove('d-none');
+        } else {
+            containerFornecedor.classList.add('d-none');
+            containerColaborador.classList.add('d-none');
+        }
+    }
+
+    // Inicializar estado ao carregar
+    document.addEventListener('DOMContentLoaded', toggleBeneficiario);
+</script>
 </body>
 </html>

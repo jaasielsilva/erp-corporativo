@@ -33,6 +33,15 @@ public class ContaPagar extends BaseEntity {
     @JoinColumn(name = "fornecedor_id")
     private Fornecedor fornecedor;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "colaborador_id")
+    private Colaborador colaborador;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_beneficiario", nullable = false)
+    private TipoBeneficiario tipoBeneficiario = TipoBeneficiario.FORNECEDOR;
+
     @NotNull(message = "O valor é obrigatório")
     @PositiveOrZero(message = "O valor deve ser positivo ou zero")
     @Column(nullable = false, precision = 15, scale = 2)
@@ -140,6 +149,22 @@ public class ContaPagar extends BaseEntity {
         }
     }
 
+    public enum TipoBeneficiario {
+        FORNECEDOR("Fornecedor"),
+        COLABORADOR("Colaborador"),
+        OUTROS("Outros");
+
+        private final String descricao;
+
+        TipoBeneficiario(String descricao) {
+            this.descricao = descricao;
+        }
+
+        public String getDescricao() {
+            return descricao;
+        }
+    }
+
     public enum CategoriaContaPagar {
         FORNECEDORES("Fornecedores"),
         SALARIOS("Salários"),
@@ -174,6 +199,9 @@ public class ContaPagar extends BaseEntity {
         }
         if (categoria == null) {
             categoria = CategoriaContaPagar.OUTROS;
+        }
+        if (tipoBeneficiario == null) {
+            tipoBeneficiario = TipoBeneficiario.FORNECEDOR;
         }
         if (dataEmissao == null) {
             dataEmissao = LocalDate.now();

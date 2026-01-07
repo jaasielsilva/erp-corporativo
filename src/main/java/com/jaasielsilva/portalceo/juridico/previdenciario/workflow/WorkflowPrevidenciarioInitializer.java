@@ -72,7 +72,8 @@ public class WorkflowPrevidenciarioInitializer implements CommandLineRunner {
                 if (origem == null || destino == null) {
                         return;
                 }
-                List<String> roles = List.of("JURIDICO", "GERENCIAL", "ADMINISTRADOR", "ADMIN", "MASTER");
+                List<String> roles = List.of("JURIDICO", "GERENCIAL", "ADMINISTRADOR", "ADMIN", "MASTER",
+                                "ESTAGIARIO_JURIDICO");
                 List<TransicaoWorkflow> existentes = transicaoRepository
                                 .findByEtapaOrigem_CodigoAndEtapaDestino_Codigo(origem.getCodigo(),
                                                 destino.getCodigo());

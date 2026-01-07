@@ -37,3 +37,14 @@ uploads/
 upload/
 **/uploads/**
 **/upload/**
+
+### Arquivos Sensiveis e Logs ###
+cookies.txt
+cookies2.txt
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+

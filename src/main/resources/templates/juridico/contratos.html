@@ -224,6 +224,13 @@
                                                         <i class="fas fa-sync-alt"></i>
                                                     </button>
 
+                                                    <a th:href="${c.linkAssinaturaEmpresa}" target="_blank"
+                                                        class="btn btn-outline-dark"
+                                                        title="Assinar como Empresa (Autentique)"
+                                                        th:if="${c.linkAssinaturaEmpresa != null and c.status.name() == 'APROVADO'}">
+                                                        <i class="fas fa-signature"></i>
+                                                    </a>
+
                                                     <button class="btn btn-outline-success btn-acao" title="Ativar"
                                                         th:if="${c.status.name() == 'ASSINADO'}"
                                                         th:attr="data-id=${c.id}" data-action="ativar">

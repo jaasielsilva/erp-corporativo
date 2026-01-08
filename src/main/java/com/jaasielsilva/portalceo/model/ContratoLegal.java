@@ -116,6 +116,9 @@ public class ContratoLegal {
     @Column(length = 500)
     private String linkAssinatura;
 
+    @Column(length = 500)
+    private String linkAssinaturaEmpresa;
+
     @Column(length = 100)
     private String versaoContrato = "1.0";
 

@@ -150,6 +150,7 @@ public class ContratoLegalService {
         if (resultado != null) {
             contrato.setAutentiqueId(resultado.get("id"));
             contrato.setLinkAssinatura(resultado.get("link"));
+            contrato.setLinkAssinaturaEmpresa(resultado.get("linkEmpresa"));
             return contratoRepository.save(contrato);
         } else {
             throw new RuntimeException("Falha ao enviar documento para a Autentique");

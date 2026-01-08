@@ -82,37 +82,37 @@ public class AutentiqueService {
                 List<Map<String, Object>> signatures = (List<Map<String, Object>>) createDocument.get("signatures");
                 String publicId = null;
                 String signatureLink = null;
+                String companyLink = null;
 
                 if (signatures != null) {
                     for (Map<String, Object> sig : signatures) {
                         Map<String, Object> user = (Map<String, Object>) sig.get("user");
-                        if (user != null && signerEmail.equalsIgnoreCase((String) user.get("email"))) {
-                            publicId = (String) sig.get("public_id");
+                        if (user != null) {
+                            String email = (String) user.get("email");
                             Map<String, Object> linkObj = (Map<String, Object>) sig.get("link");
-                            if (linkObj != null) {
-                                signatureLink = (String) linkObj.get("short_link");
+                            String link = linkObj != null ? (String) linkObj.get("short_link") : null;
+
+                            if (signerEmail.equalsIgnoreCase(email)) {
+                                publicId = (String) sig.get("public_id");
+                                signatureLink = link;
+                            } else if (companyEmail.equalsIgnoreCase(email)) {
+                                companyLink = link;
                             }
-                            break;
                         }
                     }
 
-                    // Fallback para o primeiro se não encontrar pelo e-mail
-                    if (signatureLink == null && !signatures.isEmpty()) {
-                        Map<String, Object> first = signatures.get(0);
-                        publicId = (String) first.get("public_id");
-                        Map<String, Object> linkObj = (Map<String, Object>) first.get("link");
-                        if (linkObj != null) {
-                            signatureLink = (String) linkObj.get("short_link");
-                        }
+                    // Fallback para o primeiro se não encontrar o publicId
+                    if (publicId == null && !signatures.isEmpty()) {
+                        publicId = (String) signatures.get(0).get("public_id");
                     }
                 }
 
                 Map<String, String> result = new HashMap<>();
                 result.put("id", (String) createDocument.get("id"));
                 result.put("publicId", publicId);
-                // Se não conseguimos o short_link, usamos o padrão como fallback
                 result.put("link", signatureLink != null ? signatureLink
                         : "https://www.autentique.com.br/v2/documento/" + publicId);
+                result.put("linkEmpresa", companyLink);
 
                 log.info("Documento enviado com sucesso. ID: {}", result.get("id"));
                 return result;

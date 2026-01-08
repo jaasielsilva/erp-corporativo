@@ -86,15 +86,19 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold ps-4">Número
-                                        </th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Tipo / Tribunal
-                                        </th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Parte</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Assunto</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Status</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold">Data Abertura
-                                        </th>
+                                        <th
+                                            class="border-top-0 text-muted small text-uppercase fw-bold ps-4 text-center">
+                                            Número</th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
+                                            Tipo / Tribunal</th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
+                                            Parte</th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
+                                            Assunto</th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
+                                            Status</th>
+                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
+                                            Data Abertura</th>
                                         <th class="border-top-0 text-muted small text-uppercase fw-bold text-end pe-4">
                                             Ações</th>
                                     </tr>
@@ -310,25 +314,25 @@
                     else if (status === 'ENCERRADO') statusClass = 'bg-dark';
 
                     $tbody.append(`
-                        <tr data-id="${p.id || ''}">
-                            <td class="ps-4 fw-medium text-dark">${p.numero || '—'}</td>
-                            <td>
+                        <tr class="cursor-pointer proc-row" data-id="${p.id || ''}">
+                            <td class="ps-4 fw-medium text-dark text-center">${p.numero || '—'}</td>
+                            <td class="text-center">
                                 <div class="fw-bold text-dark">${p.tipo || '—'}</div>
                                 <div class="small text-muted">${p.tribunal || '—'}</div>
                             </td>
-                            <td>${p.parte || '—'}</td>
-                            <td><span class="d-inline-block text-truncate" style="max-width: 200px;" title="${p.assunto || ''}">${p.assunto || '—'}</span></td>
-                            <td><span class="badge ${statusClass} rounded-pill font-monospace">${status}</span></td>
-                            <td>${p.dataAbertura ? new Date(p.dataAbertura).toLocaleDateString('pt-BR') : '—'}</td>
+                            <td class="text-center">${p.parte || '—'}</td>
+                            <td class="text-center"><span class="d-inline-block text-truncate" style="max-width: 200px;" title="${p.assunto || ''}">${p.assunto || '—'}</span></td>
+                            <td class="text-center"><span class="badge ${statusClass} rounded-pill font-monospace">${status}</span></td>
+                            <td class="text-center">${p.dataAbertura ? new Date(p.dataAbertura).toLocaleDateString('pt-BR') : '—'}</td>
                             <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-secondary proc-detail" type="button" data-id="${p.id}" title="Visualizar Rápido">
+                                <div class="d-flex gap-2 justify-content-end w-100">
+                                    <button class="btn btn-sm btn-info text-white proc-detail" type="button" data-id="${p.id}" title="Visualizar Rápido">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <a href="/juridico/processos/novo?id=${p.id}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                    <a href="/juridico/processos/novo?id=${p.id}" class="btn btn-sm btn-warning" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="btn btn-sm btn-outline-success proc-ganho" type="button" data-id="${p.id}" title="Registrar ganho de causa">
+                                    <button class="btn btn-sm btn-success proc-ganho" type="button" data-id="${p.id}" title="Registrar ganho de causa">
                                         <i class="fas fa-hand-holding-usd"></i>
                                     </button>
                                 </div>
@@ -376,10 +380,14 @@
                 if (procPage < procTotalPages - 1) carregarProcessos(procPage + 1);
             });
 
-            // Delegate events for dynamic buttons
-            $(document).on('click', '.proc-detail', function () {
+            // Delegate events for dynamic buttons (Unified Row Click)
+            $(document).on('click', '.proc-row, .proc-detail', function (e) {
+                // Prevent opening details if clicking on action buttons
+                if ($(e.target).closest('.proc-ganho').length > 0) return;
+                if ($(e.target).closest('a').length > 0 && !$(e.target).closest('.proc-detail').length) return;
+
                 const id = $(this).data('id');
-                abrirDetalhesProcesso(id);
+                if (id) abrirDetalhesProcesso(id);
             });
             $(document).on('click', '.proc-ganho', async function () {
                 const id = $(this).data('id');
@@ -436,7 +444,10 @@
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify(r.value)
                 })
-                    .done(res => { notify('success', 'Registrado', 'Ganho registrado e lançado em Contas a Receber.'); })
+                    .done(res => {
+                        notify('success', 'Registrado', 'Ganho registrado e lançado em Contas a Receber.');
+                        carregarProcessos(procPage);
+                    })
                     .fail(xhr => {
                         let msg = 'Falha ao registrar ganho';
                         try {

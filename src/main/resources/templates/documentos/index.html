@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,8 @@
   <link href="/css/sidebar.css" rel="stylesheet">
   <link href="/css/notifications.css" rel="stylesheet">
   <meta name="description" content="Portal centralizado para visualização e download de documentos corporativos.">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
@@ -132,8 +134,15 @@
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.7;
+      }
     }
 
     /* Notification Dropdown */
@@ -403,6 +412,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -429,11 +439,30 @@
       flex-shrink: 0;
     }
 
-    .doc-icon.pdf { background: rgba(239, 68, 68, 0.1); color: var(--doc-pdf); }
-    .doc-icon.docx { background: rgba(59, 130, 246, 0.1); color: var(--doc-word); }
-    .doc-icon.xlsx { background: rgba(34, 197, 94, 0.1); color: var(--doc-excel); }
-    .doc-icon.pptx { background: rgba(249, 115, 22, 0.1); color: var(--doc-ppt); }
-    .doc-icon.other { background: rgba(107, 114, 128, 0.1); color: var(--doc-default); }
+    .doc-icon.pdf {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--doc-pdf);
+    }
+
+    .doc-icon.docx {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--doc-word);
+    }
+
+    .doc-icon.xlsx {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--doc-excel);
+    }
+
+    .doc-icon.pptx {
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--doc-ppt);
+    }
+
+    .doc-icon.other {
+      background: rgba(107, 114, 128, 0.1);
+      color: var(--doc-default);
+    }
 
     .card-content {
       flex: 1;
@@ -484,6 +513,36 @@
       display: flex;
       align-items: center;
       gap: 0.25rem;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .doc-tag {
+      font-size: 0.65rem;
+      background-color: var(--secondary);
+      color: var(--secondary-foreground);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .card-processo-link {
+      font-size: 0.75rem;
+      color: var(--primary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .card-processo-link:hover {
+      text-decoration: underline;
     }
 
     .card-actions {
@@ -566,8 +625,13 @@
     }
 
     @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
     }
 
     .skeleton-card {
@@ -630,6 +694,7 @@
         opacity: 0;
         transform: scale(0.95);
       }
+
       to {
         opacity: 1;
         transform: scale(1);
@@ -711,6 +776,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -755,249 +821,354 @@
     }
   </style>
 </head>
+
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
     <main class="main-content">
       <header th:replace="~{components/topbar :: topbar}"></header>
       <section class="content-area">
-  <!-- Header (local da página) -->
-  <header class="header">
-    <div class="header-content">
-      <div class="header-left">
-        <div class="header-icon">
-          <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
+        <!-- Header (local da página) -->
+        <header class="header">
+          <div class="header-content">
+            <div class="header-left">
+              <div class="header-icon">
+                <svg class="icon icon-lg" viewBox="0 0 24 24">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                  <path d="M8 7h6" />
+                  <path d="M8 11h8" />
+                </svg>
+              </div>
+              <div>
+                <h1 class="header-title">Portal de Documentos</h1>
+                <p class="header-subtitle" id="totalCount">Carregando...</p>
+              </div>
+            </div>
+            <div class="header-right">
+              <button class="btn btn-secondary" onclick="openUploadModal()">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" x2="12" y1="3" y2="15" />
+                </svg>
+                Upload
+              </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main">
+          <!-- Filters -->
+          <div class="filters-section">
+            <div class="filters-row">
+              <div class="search-container">
+                <svg class="icon search-icon" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+                <input type="text" class="search-input" id="searchInput"
+                  placeholder="Buscar por nome, categoria ou autor...">
+                <button class="search-clear" id="searchClear">
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div class="select-container">
+                <svg class="icon select-icon" viewBox="0 0 24 24">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+                <select class="select" id="typeFilter">
+                  <option value="">Todos os tipos</option>
+                  <option value="pdf">PDF</option>
+                  <option value="docx">Word</option>
+                  <option value="xlsx">Excel</option>
+                  <option value="pptx">PowerPoint</option>
+                </select>
+                <svg class="icon select-arrow" viewBox="0 0 24 24">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </div>
+              <div class="select-container">
+                <svg class="icon select-icon" viewBox="0 0 24 24">
+                  <path d="m3 16 4 4 4-4" />
+                  <path d="M7 20V4" />
+                  <path d="m21 8-4-4-4 4" />
+                  <path d="M17 4v16" />
+                </svg>
+                <select class="select" id="sortBy">
+                  <option value="dataModificacao">Data de modificação</option>
+                  <option value="nome">Nome</option>
+                  <option value="tamanho">Tamanho</option>
+                </select>
+                <svg class="icon select-arrow" viewBox="0 0 24 24">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </div>
+              <button class="sort-btn" id="sortOrderBtn" title="Alternar ordem">
+                <svg class="icon" id="sortOrderIcon" viewBox="0 0 24 24">
+                  <path d="m3 8 4-4 4 4" />
+                  <path d="M7 4v16" />
+                  <path d="M11 12h4" />
+                  <path d="M11 16h7" />
+                  <path d="M11 20h10" />
+                </svg>
+              </button>
+            </div>
+            <div class="category-filters" id="categoryFilters"></div>
+          </div>
+
+          <!-- Results Count -->
+          <p class="results-count" id="resultsCount"></p>
+
+          <!-- Document Grid -->
+          <div class="document-grid" id="documentGrid"></div>
         </div>
-        <div>
-          <h1 class="header-title">Portal de Documentos</h1>
-          <p class="header-subtitle" id="totalCount">Carregando...</p>
+
+        <!-- Preview Modal -->
+        <div class="modal-overlay" id="modalOverlay">
+          <div class="modal">
+            <div class="modal-header">
+              <div class="modal-title">
+                <div class="doc-icon" id="modalIcon"></div>
+                <h3 id="modalTitle"></h3>
+              </div>
+              <div class="modal-actions">
+                <button class="btn btn-outline" id="modalDownload">
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                  Baixar
+                </button>
+                <button class="btn btn-outline" id="modalClose">
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+          </div>
         </div>
-      </div>
-      
-    </div>
-  </header>
 
-  <!-- Main Content -->
-  <div class="main">
-    <!-- Filters -->
-    <div class="filters-section">
-      <div class="filters-row">
-        <div class="search-container">
-          <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, categoria ou autor...">
-          <button class="search-clear" id="searchClear">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
+        <!-- Upload Modal -->
+        <div class="modal-overlay" id="uploadModalOverlay">
+          <div class="modal" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+              <div class="modal-title">
+                <h3 style="margin:0">Novo Documento</h3>
+              </div>
+              <button class="btn btn-outline" onclick="closeUploadModal()">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body" style="background: var(--card); padding: 1.5rem;">
+              <form id="uploadForm" onsubmit="handleUpload(event)">
+                <div class="mb-3">
+                  <label class="form-label">Arquivo</label>
+                  <input type="file" class="form-control" name="file" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Título</label>
+                  <input type="text" class="form-control" name="titulo" required
+                    placeholder="Ex: Contrato de Prestação de Serviços">
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Categoria</label>
+                    <select class="form-select" name="categoria" required>
+                      <option value="Contratos">Contratos</option>
+                      <option value="Procurações">Procurações</option>
+                      <option value="Petições">Petições</option>
+                      <option value="Documentos Pessoais">Documentos Pessoais</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">ID do Processo (Opcional)</label>
+                    <input type="number" class="form-control" name="processoId" placeholder="Ex: 123">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Tags (separadas por vírgula)</label>
+                  <input type="text" class="form-control" name="tags" placeholder="Ex: urgente, pendente, assinado">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Descrição</label>
+                  <textarea class="form-control" name="descricao" rows="3"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem;">
+                  <button type="button" class="btn btn-outline" onclick="closeUploadModal()">Cancelar</button>
+                  <button type="submit" class="btn btn-secondary">Upload</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-        <div class="select-container">
-          <svg class="icon select-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          <select class="select" id="typeFilter">
-            <option value="">Todos os tipos</option>
-            <option value="pdf">PDF</option>
-            <option value="docx">Word</option>
-            <option value="xlsx">Excel</option>
-            <option value="pptx">PowerPoint</option>
-          </select>
-          <svg class="icon select-arrow" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-        </div>
-        <div class="select-container">
-          <svg class="icon select-icon" viewBox="0 0 24 24"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
-          <select class="select" id="sortBy">
-            <option value="dataModificacao">Data de modificação</option>
-            <option value="nome">Nome</option>
-            <option value="tamanho">Tamanho</option>
-          </select>
-          <svg class="icon select-arrow" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-        </div>
-        <button class="sort-btn" id="sortOrderBtn" title="Alternar ordem">
-          <svg class="icon" id="sortOrderIcon" viewBox="0 0 24 24"><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/><path d="M11 12h4"/><path d="M11 16h7"/><path d="M11 20h10"/></svg>
-        </button>
-      </div>
-      <div class="category-filters" id="categoryFilters"></div>
-    </div>
 
-    <!-- Results Count -->
-    <p class="results-count" id="resultsCount"></p>
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Document Grid -->
-    <div class="document-grid" id="documentGrid"></div>
-  </div>
+        <script>
+          window.PODE_PREVIEW = false;
+          window.PODE_DOWNLOAD = false;
+        </script>
+        <script th:inline="javascript">
+          var IS_ADMIN = /*[[${isAdmin}]]*/ false;
+          var IS_MASTER = /*[[${isMaster}]]*/ false;
+          var IS_RH = /*[[${isRH}]]*/ false;
+          var IS_JURIDICO = /*[[${isJuridico}]]*/ false;
+          window.PODE_PREVIEW = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
+          window.PODE_DOWNLOAD = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
+        </script>
+        <script>
+          // Integração com APIs reais
 
-  <!-- Preview Modal -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">
-          <div class="doc-icon" id="modalIcon"></div>
-          <h3 id="modalTitle"></h3>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-outline" id="modalDownload">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-            Baixar
-          </button>
-          <button class="btn btn-outline" id="modalClose">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
-    </div>
-  </div>
+          // State
+          let documents = [];
+          let searchTerm = '';
+          let selectedCategory = null;
+          let selectedType = '';
+          let sortBy = 'criadoEm';
+          let sortOrder = 'desc';
+          let currentPreviewDoc = null;
+          let pageIndex = 0;
+          let pageSize = 12;
 
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
+          // DOM Elements
+          const searchInput = document.getElementById('searchInput');
+          const searchClear = document.getElementById('searchClear');
+          const typeFilter = document.getElementById('typeFilter');
+          const sortBySelect = document.getElementById('sortBy');
+          const sortOrderBtn = document.getElementById('sortOrderBtn');
+          const sortOrderIcon = document.getElementById('sortOrderIcon');
+          const categoryFilters = document.getElementById('categoryFilters');
+          const documentGrid = document.getElementById('documentGrid');
+          const resultsCount = document.getElementById('resultsCount');
+          const totalCount = document.getElementById('totalCount');
+          const modalOverlay = document.getElementById('modalOverlay');
+          const modalTitle = document.getElementById('modalTitle');
+          const modalIcon = document.getElementById('modalIcon');
+          const modalBody = document.getElementById('modalBody');
+          const modalClose = document.getElementById('modalClose');
+          const modalDownload = document.getElementById('modalDownload');
+          const toastContainer = document.getElementById('toastContainer');
 
-  <script>
-    window.PODE_PREVIEW = false;
-    window.PODE_DOWNLOAD = false;
-  </script>
-  <script th:inline="javascript">
-    var IS_ADMIN = /*[[${isAdmin}]]*/ false;
-    var IS_MASTER = /*[[${isMaster}]]*/ false;
-    var IS_RH = /*[[${isRH}]]*/ false;
-    var IS_JURIDICO = /*[[${isJuridico}]]*/ false;
-    window.PODE_PREVIEW = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
-    window.PODE_DOWNLOAD = IS_ADMIN || IS_MASTER || IS_RH || IS_JURIDICO;
-  </script>
-  <script>
-    // Integração com APIs reais
+          // Utils
+          function formatFileSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+          }
 
-    // State
-    let documents = [];
-    let searchTerm = '';
-    let selectedCategory = null;
-    let selectedType = '';
-    let sortBy = 'criadoEm';
-    let sortOrder = 'desc';
-    let currentPreviewDoc = null;
-    let pageIndex = 0;
-    let pageSize = 12;
+          function timeAgo(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
 
-    // DOM Elements
-    const searchInput = document.getElementById('searchInput');
-    const searchClear = document.getElementById('searchClear');
-    const typeFilter = document.getElementById('typeFilter');
-    const sortBySelect = document.getElementById('sortBy');
-    const sortOrderBtn = document.getElementById('sortOrderBtn');
-    const sortOrderIcon = document.getElementById('sortOrderIcon');
-    const categoryFilters = document.getElementById('categoryFilters');
-    const documentGrid = document.getElementById('documentGrid');
-    const resultsCount = document.getElementById('resultsCount');
-    const totalCount = document.getElementById('totalCount');
-    const modalOverlay = document.getElementById('modalOverlay');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalIcon = document.getElementById('modalIcon');
-    const modalBody = document.getElementById('modalBody');
-    const modalClose = document.getElementById('modalClose');
-    const modalDownload = document.getElementById('modalDownload');
-    const toastContainer = document.getElementById('toastContainer');
+            const intervals = [
+              { label: 'ano', seconds: 31536000 },
+              { label: 'mês', seconds: 2592000, plural: 'meses' },
+              { label: 'dia', seconds: 86400 },
+              { label: 'hora', seconds: 3600 },
+              { label: 'minuto', seconds: 60 },
+            ];
 
-    // Utils
-    function formatFileSize(bytes) {
-      if (bytes < 1024) return `${bytes} B`;
-      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    }
+            for (const interval of intervals) {
+              const count = Math.floor(seconds / interval.seconds);
+              if (count >= 1) {
+                const plural = interval.plural || interval.label + 's';
+                return `há ${count} ${count === 1 ? interval.label : plural}`;
+              }
+            }
+            return 'agora mesmo';
+          }
 
-    function timeAgo(dateStr) {
-      const date = new Date(dateStr);
-      const now = new Date();
-      const seconds = Math.floor((now - date) / 1000);
-      
-      const intervals = [
-        { label: 'ano', seconds: 31536000 },
-        { label: 'mês', seconds: 2592000, plural: 'meses' },
-        { label: 'dia', seconds: 86400 },
-        { label: 'hora', seconds: 3600 },
-        { label: 'minuto', seconds: 60 },
-      ];
+          function getDocIcon(tipo) {
+            const icons = {
+              pdf: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+              docx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+              xlsx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>',
+              pptx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+              img: '<svg class="icon icon-lg" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><circle cx="8" cy="10" r="2"/><path d="m21 15-5-5L5 21"/></svg>'
+            };
+            return icons[tipo] || icons.pdf;
+          }
 
-      for (const interval of intervals) {
-        const count = Math.floor(seconds / interval.seconds);
-        if (count >= 1) {
-          const plural = interval.plural || interval.label + 's';
-          return `há ${count} ${count === 1 ? interval.label : plural}`;
-        }
-      }
-      return 'agora mesmo';
-    }
+          function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${message}`;
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+          }
 
-    function getDocIcon(tipo) {
-      const icons = {
-        pdf: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
-        docx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
-        xlsx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>',
-        pptx: '<svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
-        img: '<svg class="icon icon-lg" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><circle cx="8" cy="10" r="2"/><path d="m21 15-5-5L5 21"/></svg>'
-      };
-      return icons[tipo] || icons.pdf;
-    }
+          // Get categories
+          async function fetchMetrics() {
+            try {
+              const r = await fetch('/juridico/api/documentos/metrics');
+              const m = await r.json();
+              const total = m.total || 0;
+              const cats = m.categorias || [];
+              totalCount.textContent = `${total} documento${total !== 1 ? 's' : ''} disponível${total !== 1 ? 'is' : ''}`;
+              renderCategoriesFromMetrics(cats);
+            } catch { }
+          }
 
-    function showToast(message) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${message}`;
-      toastContainer.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
+          // Filter and sort documents
+          async function fetchDocuments(page = 0) {
+            const params = new URLSearchParams();
+            if (selectedCategory) params.set('categoria', selectedCategory);
+            if (searchTerm) params.set('search', searchTerm);
+            params.set('page', page);
+            params.set('size', pageSize);
+            const r = await fetch(`/juridico/api/documentos?${params.toString()}`);
+            const payload = await r.json();
+            documents = (payload.content || []).map(d => ({
+              id: d.id,
+              nome: d.titulo || 'Documento',
+              categoria: d.categoria || 'Documentos',
+              descricao: d.descricao || '',
+              caminhoArquivo: d.caminhoArquivo || '',
+              criadoEm: d.criadoEm || null,
+              tipo: inferTipo(d),
+              tags: d.tags || [],
+              processoId: d.processoId,
+              processoNumero: d.processoNumero
+            }));
+            renderDocuments(documents);
+            renderPagination(payload);
+          }
 
-    // Get categories
-    async function fetchMetrics() {
-      try {
-        const r = await fetch('/juridico/api/documentos/metrics');
-        const m = await r.json();
-        const total = m.total || 0;
-        const cats = m.categorias || [];
-        totalCount.textContent = `${total} documento${total !== 1 ? 's' : ''} disponível${total !== 1 ? 'is' : ''}`;
-        renderCategoriesFromMetrics(cats);
-      } catch {}
-    }
+          function inferTipo(d) {
+            const ct = (d.contentType || '').toLowerCase();
+            const fn = (d.originalFilename || '').toLowerCase();
+            const c = (d.caminhoArquivo || '').toLowerCase();
+            if (ct.includes('pdf') || fn.endsWith('.pdf') || c.endsWith('.pdf')) return 'pdf';
+            if (ct.includes('word') || fn.endsWith('.doc') || fn.endsWith('.docx') || c.endsWith('.doc') || c.endsWith('.docx')) return 'docx';
+            if (ct.includes('excel') || fn.endsWith('.xls') || fn.endsWith('.xlsx') || c.endsWith('.xls') || c.endsWith('.xlsx')) return 'xlsx';
+            if (ct.includes('powerpoint') || fn.endsWith('.ppt') || fn.endsWith('.pptx') || c.endsWith('.ppt') || c.endsWith('.pptx')) return 'pptx';
+            if (ct.startsWith('image/') || fn.endsWith('.png') || fn.endsWith('.jpg') || fn.endsWith('.jpeg') || c.endsWith('.png') || c.endsWith('.jpg') || c.endsWith('.jpeg')) return 'img';
+            return 'pdf';
+          }
 
-    // Filter and sort documents
-    async function fetchDocuments(page=0) {
-      const params = new URLSearchParams();
-      if (selectedCategory) params.set('categoria', selectedCategory);
-      if (searchTerm) params.set('search', searchTerm);
-      params.set('page', page);
-      params.set('size', pageSize);
-      const r = await fetch(`/juridico/api/documentos?${params.toString()}`);
-      const payload = await r.json();
-      documents = (payload.content || []).map(d => ({
-        id: d.id,
-        nome: d.titulo || 'Documento',
-        categoria: d.categoria || 'Documentos',
-        descricao: d.descricao || '',
-        caminhoArquivo: d.caminhoArquivo || '',
-        criadoEm: d.criadoEm || null,
-        tipo: inferTipo(d)
-      }));
-      renderDocuments(documents);
-      renderPagination(payload);
-    }
+          // Get recent documents
+          function getRecentDocuments() {
+            return [...documents]
+              .sort((a, b) => new Date(b.dataModificacao) - new Date(a.dataModificacao))
+              .slice(0, 3);
+          }
 
-    function inferTipo(d) {
-      const ct = (d.contentType || '').toLowerCase();
-      const fn = (d.originalFilename || '').toLowerCase();
-      const c = (d.caminhoArquivo || '').toLowerCase();
-      if (ct.includes('pdf') || fn.endsWith('.pdf') || c.endsWith('.pdf')) return 'pdf';
-      if (ct.includes('word') || fn.endsWith('.doc') || fn.endsWith('.docx') || c.endsWith('.doc') || c.endsWith('.docx')) return 'docx';
-      if (ct.includes('excel') || fn.endsWith('.xls') || fn.endsWith('.xlsx') || c.endsWith('.xls') || c.endsWith('.xlsx')) return 'xlsx';
-      if (ct.includes('powerpoint') || fn.endsWith('.ppt') || fn.endsWith('.pptx') || c.endsWith('.ppt') || c.endsWith('.pptx')) return 'pptx';
-      if (ct.startsWith('image/') || fn.endsWith('.png') || fn.endsWith('.jpg') || fn.endsWith('.jpeg') || c.endsWith('.png') || c.endsWith('.jpg') || c.endsWith('.jpeg')) return 'img';
-      return 'pdf';
-    }
-
-    // Get recent documents
-    function getRecentDocuments() {
-      return [...documents]
-        .sort((a, b) => new Date(b.dataModificacao) - new Date(a.dataModificacao))
-        .slice(0, 3);
-    }
-
-    // Render functions
-    function renderCategoriesFromMetrics(categories) {
-      categoryFilters.innerHTML = `
+          // Render functions
+          function renderCategoriesFromMetrics(categories) {
+            categoryFilters.innerHTML = `
         <button class="category-btn ${!selectedCategory ? 'active' : ''}" data-category="">
           <svg class="icon" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
           Todos
@@ -1009,22 +1180,22 @@
           </button>
         `).join('')}
       `;
-      categoryFilters.querySelectorAll('.category-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const category = btn.dataset.category;
-          selectedCategory = category || null;
-          fetchDocuments(0);
-          fetchMetrics();
-        });
-      });
-    }
+            categoryFilters.querySelectorAll('.category-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const category = btn.dataset.category;
+                selectedCategory = category || null;
+                fetchDocuments(0);
+                fetchMetrics();
+              });
+            });
+          }
 
-    function renderDocuments(list) {
-      const filtered = list;
-      const hasFilters = searchTerm || selectedCategory || selectedType;
-      resultsCount.textContent = `${filtered.length} documento${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}${hasFilters ? ' com os filtros aplicados' : ''}`;
-      if (filtered.length === 0) {
-        documentGrid.innerHTML = `
+          function renderDocuments(list) {
+            const filtered = list;
+            const hasFilters = searchTerm || selectedCategory || selectedType;
+            resultsCount.textContent = `${filtered.length} documento${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}${hasFilters ? ' com os filtros aplicados' : ''}`;
+            if (filtered.length === 0) {
+              documentGrid.innerHTML = `
           <div class="empty-state" style="grid-column: 1 / -1;">
             <div class="empty-icon">
               <svg class="icon icon-xl" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
@@ -1036,11 +1207,11 @@
             ${hasFilters ? '<button class="btn btn-outline" onclick="clearFilters()"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Limpar filtros</button>' : ''}
           </div>
         `;
-        return;
-      }
+              return;
+            }
 
-      const canPreview = window.PODE_PREVIEW === true;
-      documentGrid.innerHTML = filtered.map(doc => `
+            const canPreview = window.PODE_PREVIEW === true;
+            documentGrid.innerHTML = filtered.map(doc => `
         <div class="document-card" data-id="${doc.id}">
           <div class="card-header">
             <div class="doc-icon ${doc.tipo}">
@@ -1055,6 +1226,16 @@
               <div class="card-info">
                 <span class="card-info-item"><svg class="icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>${doc.criadoEm ? new Date(doc.criadoEm).toLocaleDateString() : ''}</span>
               </div>
+              ${doc.tags && doc.tags.length > 0 ? `
+              <div class="card-tags">
+                ${doc.tags.map(t => `<span class="doc-tag">${t}</span>`).join('')}
+              </div>` : ''}
+              ${doc.processoId ? `
+              <div>
+                <a href="/juridico/processos?openProcessId=${doc.processoId}" class="card-processo-link">
+                  <i class="fas fa-gavel"></i> Processo ${doc.processoNumero || ''}
+                </a>
+              </div>` : ''}
             </div>
           </div>
           <div class="card-actions">
@@ -1066,24 +1247,24 @@
           </div>
         </div>
       `).join('');
-    }
+          }
 
-    function renderPagination(payload) {
-      const containerId = 'resultsCount';
-      const totalPages = payload.totalPages || 0;
-      const totalElements = payload.totalElements || 0;
-      const number = payload.page || 0;
-      const hasPrev = number > 0;
-      const hasNext = number + 1 < totalPages;
-      const el = document.getElementById('resultsCount');
-      let html = `<span class="pagination-info">Página ${number + 1} de ${Math.max(totalPages, 1)} (${totalElements} documentos)</span> `;
-      html += hasPrev ? `<a class="btn btn-outline" href="#" onclick="goToPage(${number - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-outline disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
-      html += hasNext ? ` <a class="btn btn-outline" href="#" onclick="goToPage(${number + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : ` <span class="btn btn-outline disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
-      el.innerHTML = html;
-    }
+          function renderPagination(payload) {
+            const containerId = 'resultsCount';
+            const totalPages = payload.totalPages || 0;
+            const totalElements = payload.totalElements || 0;
+            const number = payload.page || 0;
+            const hasPrev = number > 0;
+            const hasNext = number + 1 < totalPages;
+            const el = document.getElementById('resultsCount');
+            let html = `<span class="pagination-info">Página ${number + 1} de ${Math.max(totalPages, 1)} (${totalElements} documentos)</span> `;
+            html += hasPrev ? `<a class="btn btn-outline" href="#" onclick="goToPage(${number - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : `<span class="btn btn-outline disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+            html += hasNext ? ` <a class="btn btn-outline" href="#" onclick="goToPage(${number + 1});return false;">Próxima <i class="fas fa-chevron-right"></i></a>` : ` <span class="btn btn-outline disabled">Próxima <i class="fas fa-chevron-right"></i></span>`;
+            el.innerHTML = html;
+          }
 
-    function renderLoading() {
-      documentGrid.innerHTML = Array(4).fill('').map(() => `
+          function renderLoading() {
+            documentGrid.innerHTML = Array(4).fill('').map(() => `
         <div class="skeleton-card">
           <div class="card-header">
             <div class="skeleton skeleton-icon"></div>
@@ -1098,22 +1279,22 @@
           </div>
         </div>
       `).join('');
-    }
+          }
 
-    // Actions
-    function previewDoc(id) {
-      const doc = documents.find(d => d.id === id);
-      if (!doc) return;
-      currentPreviewDoc = doc;
-      modalTitle.textContent = doc.nome;
-      modalIcon.className = `doc-icon ${doc.tipo}`;
-      modalIcon.innerHTML = getDocIcon(doc.tipo);
-      if (doc.tipo === 'pdf') {
-        modalBody.innerHTML = `<iframe src="/juridico/documentos/preview/${id}#toolbar=0" title="${doc.nome}"></iframe>`;
-      } else if (doc.tipo === 'img') {
-        modalBody.innerHTML = `<img src="/juridico/documentos/preview/${id}" alt="${doc.nome}" style="max-width:100%;height:auto"/>`;
-      } else {
-        modalBody.innerHTML = `
+          // Actions
+          function previewDoc(id) {
+            const doc = documents.find(d => d.id === id);
+            if (!doc) return;
+            currentPreviewDoc = doc;
+            modalTitle.textContent = doc.nome;
+            modalIcon.className = `doc-icon ${doc.tipo}`;
+            modalIcon.innerHTML = getDocIcon(doc.tipo);
+            if (doc.tipo === 'pdf') {
+              modalBody.innerHTML = `<iframe src="/juridico/documentos/preview/${id}#toolbar=0" title="${doc.nome}"></iframe>`;
+            } else if (doc.tipo === 'img') {
+              modalBody.innerHTML = `<img src="/juridico/documentos/preview/${id}" alt="${doc.nome}" style="max-width:100%;height:auto"/>`;
+            } else {
+              modalBody.innerHTML = `
           <div class="modal-placeholder">
             <div class="doc-icon ${doc.tipo}" style="width:80px;height:80px;">
               ${getDocIcon(doc.tipo).replace('icon-lg', 'icon-xl')}
@@ -1126,103 +1307,150 @@
             </button>
           </div>
         `;
-      }
-      modalOverlay.classList.add('open');
-    }
+            }
+            modalOverlay.classList.add('open');
+          }
 
-    function downloadDoc(id) {
-      const doc = documents.find(d => d.id === id);
-      if (!doc) return;
-      const url = `/juridico/documentos/download/${id}`;
-      try {
-        window.open(url, '_blank');
-      } catch (e) {
-        showToast('Falha ao iniciar download');
-      }
-    }
+          function downloadDoc(id) {
+            const doc = documents.find(d => d.id === id);
+            if (!doc) return;
+            const url = `/juridico/documentos/download/${id}`;
+            try {
+              window.open(url, '_blank');
+            } catch (e) {
+              showToast('Falha ao iniciar download');
+            }
+          }
 
-    function closeModal() {
-      modalOverlay.classList.remove('open');
-      currentPreviewDoc = null;
-    }
+          function closeModal() {
+            modalOverlay.classList.remove('open');
+            currentPreviewDoc = null;
+          }
 
-    function clearFilters() {
-      searchInput.value = '';
-      searchTerm = '';
-      selectedCategory = null;
-      selectedType = '';
-      typeFilter.value = '';
-      searchClear.classList.remove('visible');
-      fetchMetrics();
-      fetchDocuments(0);
-    }
+          function clearFilters() {
+            searchInput.value = '';
+            searchTerm = '';
+            selectedCategory = null;
+            selectedType = '';
+            typeFilter.value = '';
+            searchClear.classList.remove('visible');
+            fetchMetrics();
+            fetchDocuments(0);
+          }
 
-    // Event Listeners
-    searchInput.addEventListener('input', (e) => {
-      searchTerm = e.target.value;
-      searchClear.classList.toggle('visible', searchTerm.length > 0);
-      renderDocuments();
-    });
+          // Event Listeners
+          searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            searchClear.classList.toggle('visible', searchTerm.length > 0);
+            renderDocuments();
+          });
 
-    searchClear.addEventListener('click', () => {
-      searchInput.value = '';
-      searchTerm = '';
-      searchClear.classList.remove('visible');
-      renderDocuments();
-    });
+          searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            searchTerm = '';
+            searchClear.classList.remove('visible');
+            renderDocuments();
+          });
 
-    typeFilter.addEventListener('change', (e) => {
-      selectedType = e.target.value;
-      renderDocuments();
-    });
+          typeFilter.addEventListener('change', (e) => {
+            selectedType = e.target.value;
+            renderDocuments();
+          });
 
-    sortBySelect.addEventListener('change', (e) => {
-      sortBy = e.target.value;
-      documents.sort((a, b) => {
-        let comparison = 0;
-        if (sortBy === 'nome') comparison = a.nome.localeCompare(b.nome);
-        else if (sortBy === 'criadoEm') comparison = new Date(a.criadoEm) - new Date(b.criadoEm);
-        else comparison = 0;
-        return sortOrder === 'asc' ? comparison : -comparison;
-      });
-      renderDocuments(documents);
-    });
+          sortBySelect.addEventListener('change', (e) => {
+            sortBy = e.target.value;
+            documents.sort((a, b) => {
+              let comparison = 0;
+              if (sortBy === 'nome') comparison = a.nome.localeCompare(b.nome);
+              else if (sortBy === 'criadoEm') comparison = new Date(a.criadoEm) - new Date(b.criadoEm);
+              else comparison = 0;
+              return sortOrder === 'asc' ? comparison : -comparison;
+            });
+            renderDocuments(documents);
+          });
 
-    sortOrderBtn.addEventListener('click', () => {
-      sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-      sortOrderIcon.innerHTML = sortOrder === 'asc' 
-        ? '<path d="m3 8 4-4 4 4"/><path d="M7 4v16"/><path d="M11 12h4"/><path d="M11 16h7"/><path d="M11 20h10"/>'
-        : '<path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/>';
-      documents.reverse();
-      renderDocuments(documents);
-    });
+          sortOrderBtn.addEventListener('click', () => {
+            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            sortOrderIcon.innerHTML = sortOrder === 'asc'
+              ? '<path d="m3 8 4-4 4 4"/><path d="M7 4v16"/><path d="M11 12h4"/><path d="M11 16h7"/><path d="M11 20h10"/>'
+              : '<path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/>';
+            documents.reverse();
+            renderDocuments(documents);
+          });
 
 
-    modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) closeModal();
-    });
+          modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+          });
 
-    modalClose.addEventListener('click', closeModal);
+          modalClose.addEventListener('click', closeModal);
 
-    modalDownload.addEventListener('click', () => {
-      if (currentPreviewDoc) downloadDoc(currentPreviewDoc.id);
-    });
+          modalDownload.addEventListener('click', () => {
+            if (currentPreviewDoc) downloadDoc(currentPreviewDoc.id);
+          });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
-    });
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+          });
 
-    // Initialize
-    async function init() {
-      renderLoading();
-      await fetchMetrics();
-      await fetchDocuments(0);
-    }
+          // Initialize
+          async function init() {
+            renderLoading();
+            await fetchMetrics();
+            await fetchDocuments(0);
+          }
 
-    function goToPage(p) { pageIndex = Math.max(0, p); fetchDocuments(pageIndex); }
+          function goToPage(p) { pageIndex = Math.max(0, p); fetchDocuments(pageIndex); }
 
-    init();
-  </script>
+          // Upload Logic
+          const uploadModal = document.getElementById('uploadModalOverlay');
+
+          function openUploadModal() {
+            uploadModal.classList.add('open');
+          }
+
+          function closeUploadModal() {
+            uploadModal.classList.remove('open');
+            document.getElementById('uploadForm').reset();
+          }
+
+          uploadModal.addEventListener('click', (e) => {
+            if (e.target === uploadModal) closeUploadModal();
+          });
+
+          async function handleUpload(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Enviando...';
+
+            try {
+              const r = await fetch('/juridico/api/documentos/upload', {
+                method: 'POST',
+                body: formData
+              });
+              if (r.ok) {
+                showToast('Documento enviado com sucesso!');
+                closeUploadModal();
+                fetchMetrics();
+                fetchDocuments(0);
+              } else {
+                const err = await r.json();
+                showToast('Erro: ' + (err.erro || 'Falha no upload'));
+              }
+            } catch (ex) {
+              showToast('Erro de conexão');
+            } finally {
+              submitBtn.disabled = false;
+              submitBtn.textContent = originalText;
+            }
+          }
+
+          init();
+        </script>
       </section>
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
@@ -1231,4 +1459,5 @@
   <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 </body>
+
 </html>

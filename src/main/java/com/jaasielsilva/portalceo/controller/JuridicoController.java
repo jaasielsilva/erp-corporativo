@@ -546,23 +546,73 @@ public class JuridicoController {
         return "juridico/documentos";
     }
 
-    @PostMapping("/documentos/upload")
+    @PostMapping("/api/documentos/upload")
     @ResponseBody
-    public ResponseEntity<?> uploadDocumento(@RequestParam String titulo,
+    public ResponseEntity<?> uploadDocumentoApi(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam String titulo,
             @RequestParam String categoria,
-            @RequestParam String descricao,
+            @RequestParam(required = false) String descricao,
+            @RequestParam(required = false) String tags,
+            @RequestParam(required = false) Long processoId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // Simular upload de documento
-        Map<String, Object> documento = new HashMap<>();
-        documento.put("id", System.currentTimeMillis());
-        documento.put("titulo", titulo);
-        documento.put("categoria", categoria);
-        documento.put("descricao", descricao);
-        documento.put("status", "ATIVO");
-        documento.put("autor", userDetails.getUsername());
-        documento.put("dataUpload", LocalDateTime.now());
+        try {
+            System.out
+                    .println(">>> INICIANDO UPLOAD: " + file.getOriginalFilename() + " (" + file.getSize() + " bytes)");
+            // 1. Save File
+            java.nio.file.Path dir = java.nio.file.Paths.get(uploadBasePath, "juridico", "documentos");
+            java.nio.file.Files.createDirectories(dir);
+            System.out.println(">>> DIRETORIO DE UPLOAD: " + dir.toAbsolutePath().toString());
 
-        return ResponseEntity.ok(documento);
+            String sanitized = java.util.UUID.randomUUID() + "_" + (file.getOriginalFilename() == null
+                    ? "doc"
+                    : file.getOriginalFilename().replaceAll("[^a-zA-Z0-9_\\.\\-]", "_"));
+            java.nio.file.Path target = dir.resolve(sanitized);
+            file.transferTo(target.toFile());
+            System.out.println(">>> ARQUIVO SALVO EM: " + target.toAbsolutePath().toString());
+
+            // 2. Create Entity
+            com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico doc = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
+            doc.setTitulo(titulo);
+            doc.setCategoria(categoria);
+            doc.setDescricao(descricao);
+            doc.setAutor(userDetails != null ? userDetails.getUsername() : "Sistema");
+            doc.setCriadoEm(LocalDateTime.now());
+            doc.setCaminhoArquivo(target.toString());
+            doc.setContentType(file.getContentType());
+            doc.setOriginalFilename(file.getOriginalFilename());
+            doc.setTamanho(file.getSize());
+
+            // 3. Process Tags
+            if (tags != null && !tags.isBlank()) {
+                String[] tagArray = tags.split(",");
+                for (String t : tagArray) {
+                    if (!t.trim().isEmpty()) {
+                        doc.getTags().add(t.trim());
+                    }
+                }
+            }
+
+            // 4. Link Processo
+            if (processoId != null) {
+                processoJuridicoRepository.findById(processoId).ifPresent(doc::setProcesso);
+            }
+
+            // 5. Save
+            com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico saved = documentoJuridicoRepository.save(doc);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", saved.getId());
+            response.put("titulo", saved.getTitulo());
+            response.put("categoria", saved.getCategoria());
+            response.put("status", "ATIVO");
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao fazer upload", "detalhes", e.getMessage()));
+        }
     }
 
     // =============== APIs ===============
@@ -1461,12 +1511,15 @@ public class JuridicoController {
     public ResponseEntity<Map<String, Object>> listarDocumentosApi(
             @RequestParam(value = "categoria", required = false) String categoria,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "tag", required = false) String tag,
+            @RequestParam(value = "processoId", required = false) Long processoId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "criadoEm"));
         Page<com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico> docs = documentoJuridicoRepository
                 .findAll(pageable);
         List<Map<String, Object>> content = new ArrayList<>();
+
         for (var d : docs.getContent()) {
             if (categoria != null && !categoria.isBlank()) {
                 String cat = categoria.toLowerCase();
@@ -1480,6 +1533,16 @@ public class JuridicoController {
                 if (!texto.contains(termo))
                     continue;
             }
+            if (tag != null && !tag.isBlank()) {
+                if (d.getTags() == null || d.getTags().stream().noneMatch(t -> t.equalsIgnoreCase(tag))) {
+                    continue;
+                }
+            }
+            if (processoId != null) {
+                if (d.getProcesso() == null || !d.getProcesso().getId().equals(processoId)) {
+                    continue;
+                }
+            }
             Map<String, Object> m = new HashMap<>();
             m.put("id", d.getId());
             m.put("titulo", d.getTitulo());
@@ -1489,6 +1552,8 @@ public class JuridicoController {
             m.put("criadoEm", d.getCriadoEm());
             m.put("contentType", d.getContentType());
             m.put("originalFilename", d.getOriginalFilename());
+            m.put("tags", d.getTags());
+            m.put("processoId", d.getProcesso() != null ? d.getProcesso().getId() : null);
             content.add(m);
         }
         Map<String, Object> payload = new HashMap<>();
@@ -2128,21 +2193,6 @@ public class JuridicoController {
 
     private String nvlOr(String v, String fallback) {
         return !isBlank(v) ? v.trim() : (fallback != null ? fallback : "");
-    }
-
-    @PostMapping("/api/documentos/upload")
-    @ResponseBody
-    public ResponseEntity<?> uploadDocumentoApi(@RequestBody Map<String, Object> body,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico d = new com.jaasielsilva.portalceo.model.juridico.DocumentoJuridico();
-        d.setTitulo(String.valueOf(body.getOrDefault("titulo", "Documento")));
-        d.setCategoria(String.valueOf(body.getOrDefault("categoria", "Contrato")));
-        d.setDescricao(String.valueOf(body.getOrDefault("descricao", "")));
-        d.setCaminhoArquivo(String.valueOf(body.getOrDefault("caminhoArquivo", "")));
-        d.setCriadoEm(java.time.LocalDateTime.now());
-        d.setAutor(userDetails != null ? userDetails.getUsername() : null);
-        documentoJuridicoRepository.save(d);
-        return ResponseEntity.ok(Map.of("id", d.getId()));
     }
 
     @PostMapping("/api/documentos/upload-multipart")

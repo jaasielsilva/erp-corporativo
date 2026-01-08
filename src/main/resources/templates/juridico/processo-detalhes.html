@@ -12,6 +12,10 @@
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="/css/corporate.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <th:block th:if="${_csrf != null}">
+        <meta name="_csrf" th:content="${_csrf.token}" />
+        <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    </th:block>
 
     <style>
         .form-card {
@@ -142,6 +146,12 @@
                                             <button class="nav-link" id="audiencias-tab" data-bs-toggle="tab"
                                                 data-bs-target="#audiencias" type="button" role="tab">
                                                 <i class="fas fa-gavel me-2"></i>Audiências
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="documentos-tab" data-bs-toggle="tab"
+                                                data-bs-target="#documentos" type="button" role="tab">
+                                                <i class="fas fa-file-alt me-2"></i>Documentos
                                             </button>
                                         </li>
                                     </ul>
@@ -278,6 +288,23 @@
                                                     <div class="mb-3"><i class="fas fa-gavel fa-3x opacity-25"></i>
                                                     </div>
                                                     <p class="mb-0">Nenhuma audiência agendada.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Aba Documentos -->
+                                        <div class="tab-pane fade" id="documentos" role="tabpanel">
+                                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                                <h5 class="mb-0 fw-bold text-secondary">Documentos Vinculados</h5>
+                                                <button
+                                                    th:if="${processo.status != null && processo.status.name() != 'ENCERRADO'}"
+                                                    class="btn btn-sm btn-primary" onclick="abrirModalDocumento()">
+                                                    <i class="fas fa-upload me-2"></i>Anexar Documento
+                                                </button>
+                                            </div>
+                                            <div id="listaDocumentos" class="list-group list-group-flush">
+                                                <div class="text-center py-4"><span
+                                                        class="spinner-border spinner-border-sm"></span> Carregando...
                                                 </div>
                                             </div>
                                         </div>
@@ -577,6 +604,129 @@
                 });
             }
         });
+        // ======================== Aba Documentos ========================
+        function carregarDocumentos() {
+            const container = $('#listaDocumentos');
+            $.get('/juridico/api/documentos?processoId=' + processoId, function (data) {
+                const docs = data.content || [];
+                if (docs.length === 0) {
+                    container.html('<div class="text-center text-muted py-4"><i class="fas fa-file-excel fa-3x opacity-25 mb-3 d-block"></i>Nenhum documento vinculado.</div>');
+                    return;
+                }
+                let html = '';
+                docs.forEach(doc => {
+                    html += `
+                            <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle-sm bg-light text-secondary me-3" style="width:40px;height:40px;font-size:1.2rem">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold"><a href="/juridico/documentos/download/${doc.id}" target="_blank" class="text-decoration-none text-dark">${doc.titulo}</a></h6>
+                                        <small class="text-muted">
+                                            ${doc.categoria || 'Geral'} • ${new Date(doc.criadoEm).toLocaleDateString()}
+                                            ${doc.tags && doc.tags.length ? '• ' + doc.tags.map(t => `<span class="badge bg-secondary-subtle text-secondary me-1" style="font-size:0.65rem">${t}</span>`).join('') : ''}
+                                        </small>
+                                    </div>
+                                </div>
+                                <a href="/juridico/documentos/download/${doc.id}" class="btn btn-sm btn-outline-secondary" title="Baixar">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                         `;
+                });
+                container.html(html);
+            }).fail(function () {
+                container.html('<div class="text-center text-danger py-4">Erro ao carregar documentos.</div>');
+            });
+        }
+
+        // Carregar ao abrir a aba
+        document.getElementById('documentos-tab').addEventListener('shown.bs.tab', carregarDocumentos);
+
+        // ======================== Modal Novo Documento (Simplificado) ========================
+        window.abrirModalDocumento = async function () {
+            const { value: formValues } = await Swal.fire({
+                title: 'Anexar Documento',
+                html: `
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Arquivo</label>
+                                <input id="swFile" type="file" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Título</label>
+                                <input id="swDocTitulo" class="form-control" placeholder="Titulo do documento">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Categoria</label>
+                                <select id="swDocCategoria" class="form-select">
+                                    <option value="Petições">Petições</option>
+                                    <option value="Provas">Provas</option>
+                                    <option value="Decisões">Decisões</option>
+                                    <option value="Contratos">Contratos</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tags</label>
+                                <input id="swDocTags" class="form-control" placeholder="Separadas por vírgula">
+                            </div>
+                        </div>
+                    `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Upload',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const fileInput = document.getElementById('swFile');
+                    const titulo = document.getElementById('swDocTitulo').value;
+                    const categoria = document.getElementById('swDocCategoria').value;
+                    const tags = document.getElementById('swDocTags').value;
+
+                    if (!fileInput.files.length || !titulo) {
+                        Swal.showValidationMessage('Selecione um arquivo e informe o título');
+                        return false;
+                    }
+                    return { file: fileInput.files[0], titulo, categoria, tags };
+                }
+            });
+
+            if (formValues) {
+                const formData = new FormData();
+                formData.append('file', formValues.file);
+                formData.append('titulo', formValues.titulo);
+                formData.append('categoria', formValues.categoria);
+                formData.append('tags', formValues.tags);
+                formData.append('processoId', processoId);
+
+                Swal.fire({ title: 'Enviando...', didOpen: () => Swal.showLoading() });
+
+                $.ajax({
+                    url: '/juridico/api/documentos/upload',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function (xhr) {
+                        const token = $("meta[name='_csrf']").attr("content");
+                        const header = $("meta[name='_csrf_header']").attr("content");
+                        if (token && header) {
+                            xhr.setRequestHeader(header, token);
+                        }
+                    },
+                    success: function () {
+                        Swal.fire('Sucesso!', 'Documento anexado.', 'success');
+                        carregarDocumentos();
+                    },
+                    error: function (xhr) {
+                        const msg = xhr.responseText ? JSON.parse(xhr.responseText).erro : 'Falha no upload.';
+                        Swal.fire('Erro!', msg, 'error');
+                    }
+                });
+            }
+        };
+
         /*]]>*/
     </script>
 </body>

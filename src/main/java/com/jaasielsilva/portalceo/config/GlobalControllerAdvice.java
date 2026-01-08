@@ -19,9 +19,9 @@ public class GlobalControllerAdvice {
     private Usuario usuarioCache;
     private String emailCache;
 
-    public GlobalControllerAdvice(UsuarioRepository usuarioRepository, 
-                                  com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService,
-                                  com.jaasielsilva.portalceo.service.ContratoLegalService contratoLegalService) {
+    public GlobalControllerAdvice(UsuarioRepository usuarioRepository,
+            com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService,
+            com.jaasielsilva.portalceo.service.ContratoLegalService contratoLegalService) {
         this.usuarioRepository = usuarioRepository;
         this.processoJuridicoService = processoJuridicoService;
         this.contratoLegalService = contratoLegalService;
@@ -30,22 +30,25 @@ public class GlobalControllerAdvice {
     @ModelAttribute("alertasJuridicosGlobais")
     public java.util.List<String> alertasJuridicosGlobais() {
         Usuario usuario = usuarioLogado();
-        // Apenas carrega alertas se o usuário estiver logado e tiver acesso ao jurídico (assumindo acesso básico por enquanto)
+        // Apenas carrega alertas se o usuário estiver logado e tiver acesso ao jurídico
+        // (assumindo acesso básico por enquanto)
         if (usuario == null) {
             return java.util.Collections.emptyList();
         }
-        
+
         java.util.List<String> alertas = new java.util.ArrayList<>();
         java.time.LocalDate amanha = java.time.LocalDate.now().plusDays(1);
-        
+
         try {
             // Contratos vencendo amanhã
-            java.util.List<com.jaasielsilva.portalceo.model.ContratoLegal> proximosVencimentos = contratoLegalService.findContratosVencendoEm(2);
+            java.util.List<com.jaasielsilva.portalceo.model.ContratoLegal> proximosVencimentos = contratoLegalService
+                    .findContratosVencendoEm(2);
             if (proximosVencimentos != null) {
                 for (com.jaasielsilva.portalceo.model.ContratoLegal c : proximosVencimentos) {
                     if (c.getDataVencimento() != null && c.getDataVencimento().isEqual(amanha)) {
-                        alertas.add("O contrato <strong>" + c.getTitulo() + "</strong> vence amanhã (" + 
-                            c.getDataVencimento().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ").");
+                        alertas.add("O contrato <strong>" + c.getTitulo() + "</strong> vence amanhã (" +
+                                c.getDataVencimento().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                + ").");
                     }
                 }
             }
@@ -62,21 +65,25 @@ public class GlobalControllerAdvice {
                         } else if (prazoObj instanceof String) {
                             try {
                                 prazoData = java.time.LocalDate.parse((String) prazoObj);
-                            } catch (Exception e) {}
+                            } catch (Exception e) {
+                            }
                         }
-                        
+
                         if (prazoData != null && prazoData.isEqual(amanha)) {
                             String processIdStr = String.valueOf(p.get("id"));
                             String url = "/juridico/processos?openProcessId=" + processIdStr;
-                            alertas.add("O processo <strong>" + p.get("numero") + "</strong> tem um prazo vencendo amanhã. " +
-                                    "<a href=\"" + url + "\" class=\"ms-2\" style=\"text-decoration: underline;\">Abrir processo</a>");
+                            alertas.add("O processo <strong>" + p.get("numero")
+                                    + "</strong> tem um prazo vencendo amanhã. " +
+                                    "<a href=\"" + url
+                                    + "\" class=\"ms-2\" style=\"text-decoration: underline;\">Abrir processo</a>");
                         }
                     }
                 }
             }
 
             // Audiências amanhã
-            java.util.List<java.util.Map<String, Object>> audiencias = processoJuridicoService.obterProximasAudiencias(2);
+            java.util.List<java.util.Map<String, Object>> audiencias = processoJuridicoService
+                    .obterProximasAudiencias(2);
             if (audiencias != null) {
                 for (java.util.Map<String, Object> a : audiencias) {
                     Object dataObj = a.get("dataHora");
@@ -87,13 +94,17 @@ public class GlobalControllerAdvice {
                         } else if (dataObj instanceof String) {
                             try {
                                 dataHora = java.time.LocalDateTime.parse((String) dataObj);
-                            } catch (Exception e) {}
+                            } catch (Exception e) {
+                            }
                         }
-                        
+
                         if (dataHora != null && dataHora.toLocalDate().isEqual(amanha)) {
-                            String horaFormatada = dataHora.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                            String horaFormatada = dataHora
+                                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
                             String processoNum = (String) a.get("processoNumero");
-                            alertas.add("Audiência amanhã às <strong>" + horaFormatada + "</strong> no processo <strong>" + (processoNum != null ? processoNum : "N/A") + "</strong>.");
+                            alertas.add(
+                                    "Audiência amanhã às <strong>" + horaFormatada + "</strong> no processo <strong>"
+                                            + (processoNum != null ? processoNum : "N/A") + "</strong>.");
                         }
                     }
                 }
@@ -226,7 +237,8 @@ public class GlobalControllerAdvice {
         Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
-            return cargoNome.contains("financeiro") || cargoNome.contains("contabil") || cargoNome.contains("contábil") ||
+            return cargoNome.contains("financeiro") || cargoNome.contains("contabil") || cargoNome.contains("contábil")
+                    ||
                     cargoNome.contains("tesouraria") || cargoNome.contains("controller");
         }
         return false;
@@ -249,7 +261,7 @@ public class GlobalControllerAdvice {
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("estoque") || cargoNome.contains("almoxarifado") ||
-                    cargoNome.contains("logistica") || cargoNome.contains("logística") || 
+                    cargoNome.contains("logistica") || cargoNome.contains("logística") ||
                     cargoNome.contains("armazem") || cargoNome.contains("armazém");
         }
         return false;
@@ -261,7 +273,8 @@ public class GlobalControllerAdvice {
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
             return cargoNome.contains("compras") || cargoNome.contains("suprimentos") ||
-                    cargoNome.contains("procurement") || cargoNome.contains("aquisicoes") || cargoNome.contains("aquisições");
+                    cargoNome.contains("procurement") || cargoNome.contains("aquisicoes")
+                    || cargoNome.contains("aquisições");
         }
         return false;
     }
@@ -271,7 +284,8 @@ public class GlobalControllerAdvice {
         Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
-            return cargoNome.contains("marketing") || cargoNome.contains("comunicacao") || cargoNome.contains("comunicação") ||
+            return cargoNome.contains("marketing") || cargoNome.contains("comunicacao")
+                    || cargoNome.contains("comunicação") ||
                     cargoNome.contains("publicidade") || cargoNome.contains("branding");
         }
         return false;
@@ -294,8 +308,8 @@ public class GlobalControllerAdvice {
         Usuario usuario = usuarioLogado(); // Garantir que o usuário seja carregado
         if (usuario != null && usuario.getCargo() != null) {
             String cargoNome = usuario.getCargo().getNome().toLowerCase();
-            return cargoNome.contains("juridico") || cargoNome.contains("jurídico") || 
-                    cargoNome.contains("advogado") || cargoNome.contains("legal") || 
+            return cargoNome.contains("juridico") || cargoNome.contains("jurídico") ||
+                    cargoNome.contains("advogado") || cargoNome.contains("legal") ||
                     cargoNome.contains("compliance");
         }
         return false;
@@ -322,7 +336,8 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("podeAcessarEstoque")
     public boolean podeAcessarEstoque() {
-        return isEstoque() || possuiPerfilComPrefixo("ESTOQUE") || isCompras() || isGerencial() || isMaster() || isAdmin();
+        return isEstoque() || possuiPerfilComPrefixo("ESTOQUE") || isCompras() || isGerencial() || isMaster()
+                || isAdmin();
     }
 
     @ModelAttribute("podeAcessarCompras")

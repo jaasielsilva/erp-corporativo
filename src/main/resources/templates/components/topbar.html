@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8"> <!-- define UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- responsivo -->
     <title>Topbar - ERP Corporativo</title>
-    <link rel="stylesheet" href="/css/fontawesome.min.css"/>
+    <link rel="stylesheet" href="/css/fontawesome.min.css" />
 </head>
+
 <body>
     <header class="topbar" th:fragment="topbar" th:inline="text">
         <style>
@@ -29,21 +31,25 @@
             }
 
             /* Fix Toast/Alert Size - Match /juridico (Toastr) */
-            #global-toast, .notification-toast, .toast-container .toast {
+            #global-toast,
+            .notification-toast,
+            .toast-container .toast {
                 width: 300px !important;
                 min-width: 300px !important;
-                max-width: 90vw !important; /* Mobile safe */
+                max-width: 90vw !important;
+                /* Mobile safe */
                 padding: 8px 12px !important;
                 font-size: 12px !important;
                 border-radius: 4px !important;
-                box-shadow: 0 0 12px rgba(0,0,0,0.175) !important;
+                box-shadow: 0 0 12px rgba(0, 0, 0, 0.175) !important;
                 /* Reset wide widths */
                 right: 12px !important;
             }
-            
+
             /* Toast positioning */
             #global-toast {
-                top: 70px !important; /* Below topbar */
+                top: 70px !important;
+                /* Below topbar */
                 z-index: 9999 !important;
             }
 
@@ -52,11 +58,13 @@
                 .topbar {
                     padding: 0 15px !important;
                 }
+
                 .topbar .menu-toggle {
                     display: flex !important;
                     align-items: center;
                     justify-content: center;
                 }
+
                 .topbar-title h1 {
                     font-size: 18px !important;
                 }
@@ -76,26 +84,27 @@
             </a>
 
             <!-- Usuário -->
-            <a th:if="${usuarioLogado != null}"
-               th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}"
-               class="user-initial" title="Meu Perfil"
-               th:text="${usuarioLogado.nome.substring(0,1).toUpperCase()}">U</a>
-            <a th:if="${usuarioLogado == null}"
-               href="/usuarios"
-               class="user-initial" title="Usuário">
-               U
+            <a th:if="${usuarioLogado != null}" th:href="@{/usuarios/{id}/editar(id=${usuarioLogado.id})}"
+                class="user-initial" title="Meu Perfil"
+                th:text="${usuarioLogado.nome.substring(0,1).toUpperCase()}">U</a>
+            <a th:if="${usuarioLogado == null}" href="/usuarios" class="user-initial" title="Usuário">
+                U
             </a>
             <span class="user-name" th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}">Usuário</span>
         </div>
 
         <!-- Email do usuário para WebSocket global (injeta via Thymeleaf corretamente) -->
-        <div data-user-email="[[${#httpServletRequest.remoteUser != null ? #httpServletRequest.remoteUser : ''}]]" style="display:none;"></div>
+        <div data-user-email="[[${#httpServletRequest.remoteUser != null ? #httpServletRequest.remoteUser : ''}]]"
+            style="display:none;"></div>
 
         <!-- Toast global padronizado -->
         <div id="global-toast" class="notification-toast priority-medium" style="display:none;">
             <div class="toast-icon"><i class="fas fa-info-circle"></i></div>
-            <div class="toast-content"><p id="global-toast-body">Mensagem</p></div>
-            <button type="button" class="toast-close" aria-label="Fechar" onclick="(function(){var t=document.getElementById('global-toast'); if(t){ t.classList.remove('show'); t.style.display='none'; }})()">&times;</button>
+            <div class="toast-content">
+                <p id="global-toast-body">Mensagem</p>
+            </div>
+            <button type="button" class="toast-close" aria-label="Fechar"
+                onclick="(function(){var t=document.getElementById('global-toast'); if(t){ t.classList.remove('show'); t.style.display='none'; }})()">&times;</button>
         </div>
 
         <!-- jQuery fallback (para toasts) -->
@@ -110,39 +119,39 @@
         <!-- Cliente WebSocket global para toasts -->
         <script src="/js/websocket-notifications.js"></script>
         <script>
-            (function(){
+            (function () {
                 if (typeof window.Swal === 'undefined') {
                     var sw = document.createElement('script');
                     sw.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
                     document.head.appendChild(sw);
                 }
-                function showGlobalResult(st){
+                function showGlobalResult(st) {
                     try {
                         var total = st.total || 0;
                         var ok = st.processados || 0;
                         var logs = Array.isArray(st.logs) ? st.logs : [];
-                        var erros = logs.filter(function(l){ return l && l.status === 'erro'; });
+                        var erros = logs.filter(function (l) { return l && l.status === 'erro'; });
                         var pageSize = 10;
                         var page = 0;
                         var baseHtml =
-                          '<div><strong>Processados:</strong> ' + ok + ' de ' + total + '</div>' +
-                          (erros.length ? (
-                            '<div class="mt-2"><strong>Falhas (' + erros.length + '):</strong>' +
-                            '<div id="errorsContainer" style="max-height:220px;overflow:auto;border:1px solid #eee;padding:6px;border-radius:4px"></div>' +
-                            '<div class="mt-2 d-flex justify-content-between align-items-center">' +
-                              '<button id="errPrev" class="btn btn-sm btn-outline-secondary">Anterior</button>' +
-                              '<span id="errPageInfo" class="small text-muted"></span>' +
-                              '<button id="errNext" class="btn btn-sm btn-outline-secondary">Próxima</button>' +
-                            '</div>' +
-                            '</div>'
-                          ) : '');
-                        function renderPage(){
+                            '<div><strong>Processados:</strong> ' + ok + ' de ' + total + '</div>' +
+                            (erros.length ? (
+                                '<div class="mt-2"><strong>Falhas (' + erros.length + '):</strong>' +
+                                '<div id="errorsContainer" style="max-height:220px;overflow:auto;border:1px solid #eee;padding:6px;border-radius:4px"></div>' +
+                                '<div class="mt-2 d-flex justify-content-between align-items-center">' +
+                                '<button id="errPrev" class="btn btn-sm btn-outline-secondary">Anterior</button>' +
+                                '<span id="errPageInfo" class="small text-muted"></span>' +
+                                '<button id="errNext" class="btn btn-sm btn-outline-secondary">Próxima</button>' +
+                                '</div>' +
+                                '</div>'
+                            ) : '');
+                        function renderPage() {
                             var start = page * pageSize;
                             var slice = erros.slice(start, start + pageSize);
                             var container = document.getElementById('errorsContainer');
                             var info = document.getElementById('errPageInfo');
                             if (container) {
-                                container.innerHTML = slice.map(function(e){
+                                container.innerHTML = slice.map(function (e) {
                                     return '<div>- ' + (e.colaborador || '-') + ' (' + (e.colaboradorId || '-') + ') • ' + (e.exception || '') + ' • ' + (e.mensagem || '') + '</div>';
                                 }).join('') || '<div>Nenhum erro</div>';
                             }
@@ -155,18 +164,18 @@
                             if (prev) prev.disabled = page === 0;
                             if (next) next.disabled = (page + 1) * pageSize >= erros.length;
                         }
-                        function showSwal(){
+                        function showSwal() {
                             if (typeof Swal !== 'undefined') {
                                 Swal.fire({
                                     title: st.success ? 'Sucesso' : 'Concluído com falhas',
                                     html: baseHtml,
                                     icon: st.success ? 'success' : 'warning',
-                                    didOpen: function(){
+                                    didOpen: function () {
                                         renderPage();
                                         var prev = document.getElementById('errPrev');
                                         var next = document.getElementById('errNext');
-                                        if (prev) prev.addEventListener('click', function(){ if (page > 0) { page--; renderPage(); } });
-                                        if (next) next.addEventListener('click', function(){ if ((page + 1) * pageSize < erros.length) { page++; renderPage(); } });
+                                        if (prev) prev.addEventListener('click', function () { if (page > 0) { page--; renderPage(); } });
+                                        if (next) next.addEventListener('click', function () { if ((page + 1) * pageSize < erros.length) { page++; renderPage(); } });
                                     }
                                 });
                             } else if (typeof window.globalToast === 'function') {
@@ -174,16 +183,16 @@
                             }
                         }
                         showSwal();
-                    } catch(e){}
+                    } catch (e) { }
                 }
-                function pollJob(jobId){
+                function pollJob(jobId) {
                     if (window.__jobPollTimer && window.__jobPollingJobId === jobId) { return; }
-                    if (window.__jobPollTimer) { try { clearInterval(window.__jobPollTimer); } catch(e){} }
+                    if (window.__jobPollTimer) { try { clearInterval(window.__jobPollTimer); } catch (e) { } }
                     window.__jobPollingJobId = jobId;
                     var polled = false;
-                    window.__jobPollTimer = setInterval(function(){
+                    window.__jobPollTimer = setInterval(function () {
                         fetch('/rh/ponto-escalas/api/escalas/gerar-automatico/status?jobId=' + encodeURIComponent(jobId))
-                            .then(function(r){
+                            .then(function (r) {
                                 if (r.status === 403 || r.status === 401) {
                                     clearInterval(window.__jobPollTimer);
                                     window.__jobPollTimer = null;
@@ -192,21 +201,21 @@
                                 }
                                 return r.json();
                             })
-                            .then(function(st){
+                            .then(function (st) {
                                 if (!st) return;
                                 if (st && st.success && st.running === false && !polled) {
                                     polled = true;
-                                    try { clearInterval(window.__jobPollTimer); } catch(e){}
+                                    try { clearInterval(window.__jobPollTimer); } catch (e) { }
                                     window.__jobPollTimer = null;
                                     window.__jobPollingJobId = null;
                                     try {
                                         localStorage.setItem('gerarJobAlertShown', jobId);
                                         localStorage.removeItem('gerarJobId');
-                                    } catch(e){}
+                                    } catch (e) { }
                                     showGlobalResult(st);
                                 }
                             })
-                            .catch(function(){});
+                            .catch(function () { });
                     }, 2000);
                 }
                 try {
@@ -215,20 +224,20 @@
                     if (existing && existing !== shown) {
                         if (!window.__jobPollTimer || window.__jobPollingJobId !== existing) { pollJob(existing); }
                     }
-                    window.__globalJobListener = setInterval(function(){
+                    window.__globalJobListener = setInterval(function () {
                         try {
                             var jid = localStorage.getItem('gerarJobId');
                             var shownId = localStorage.getItem('gerarJobAlertShown');
                             if (jid && jid !== shownId) {
                                 if (!window.__jobPollTimer || window.__jobPollingJobId !== jid) { pollJob(jid); }
                             }
-                        } catch(e){}
+                        } catch (e) { }
                     }, 5000);
-                } catch(e){}
+                } catch (e) { }
             })();
         </script>
         <script>
-            window.globalToast = function(message, icon, level){
+            window.globalToast = function (message, icon, level) {
                 try {
                     var toast = document.getElementById('global-toast');
                     var body = document.getElementById('global-toast-body');
@@ -238,257 +247,315 @@
                     if (msg.length > 140) msg = msg.substring(0, 137) + '…';
                     body.textContent = msg;
                     iconEl.className = icon ? icon : 'fas fa-info-circle';
-                    toast.classList.remove('priority-low','priority-medium','priority-high');
+                    toast.classList.remove('priority-low', 'priority-medium', 'priority-high');
                     var lvl = (level || 'medium').toLowerCase();
                     toast.classList.add('priority-' + (lvl === 'error' ? 'high' : lvl));
                     toast.style.display = 'block';
                     // animação show
                     toast.classList.add('show');
                     clearTimeout(window.__globalToastTimer);
-                    window.__globalToastTimer = setTimeout(function(){ toast.classList.remove('show'); toast.style.display='none'; }, 4000);
-                } catch (e) {}
+                    window.__globalToastTimer = setTimeout(function () { toast.classList.remove('show'); toast.style.display = 'none'; }, 4000);
+                } catch (e) { }
             };
         </script>
 
-    <!-- Toast Container para Alertas Globais Jurídicos -->
-    <div id="juridico-toast-container" th:if="${alertasJuridicosGlobais != null and !alertasJuridicosGlobais.isEmpty()}" 
-         class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-        
-        <!-- Fallback CSS para páginas sem Bootstrap (ex: Dashboard) -->
-        <style>
-            /* Se o Bootstrap não estiver carregado, essas classes precisam de definição básica */
-            .toast-container.position-fixed { position: fixed; }
-            .toast-container.top-0 { top: 0; }
-            .toast-container.end-0 { right: 0; }
-            .toast-container.p-3 { padding: 1rem; }
-            
-            /* Estilo base do Toast se não houver Bootstrap */
-            .toast:not(.show):not(.hide) { 
-                /* Em bootstrap puro, toast tem display none por padrão, mas nosso script controla isso */
-                /* display: none; */ 
-            }
-            .toast {
-                background-color: #fff;
-                border: 1px solid rgba(0,0,0,.1);
-                border-radius: .25rem;
-                box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-                min-width: 350px;
-                max-width: 100%;
-                font-size: .875rem;
-                pointer-events: auto;
-                background-clip: padding-box;
-                margin-bottom: .75rem;
-                display: none; /* JS vai mostrar */
-            }
-            .toast.show { display: block; opacity: 1; }
-            
-            .toast-header {
-                display: flex;
-                align-items: center;
-                padding: .5rem .75rem;
-                color: #6c757d;
-                background-color: rgba(255,255,255,.85);
-                background-clip: padding-box;
-                border-bottom: 1px solid rgba(0,0,0,.05);
-                border-top-left-radius: calc(.25rem - 1px);
-                border-top-right-radius: calc(.25rem - 1px);
-            }
-            .toast-body { padding: .75rem; word-wrap: break-word; }
-            
-            /* Utilitários básicos usados no HTML */
-            .me-auto { margin-right: auto !important; }
-            .me-2 { margin-right: .5rem !important; }
-            .mt-1 { margin-top: .25rem !important; }
-            .text-warning { color: #ffc107 !important; }
-            .text-dark { color: #212529 !important; }
-            .text-muted { color: #6c757d !important; }
-            .fw-medium { font-weight: 500 !important; }
-            .border-bottom-0 { border-bottom: 0 !important; }
-            .d-flex { display: flex !important; }
-            .align-items-start { align-items: flex-start !important; }
-            
-            /* Botão de fechar */
-            .btn-close {
-                box-sizing: content-box;
-                width: 1em;
-                height: 1em;
-                padding: .25em .25em;
-                color: #000;
-                background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
-                border: 0;
-                border-radius: .25rem;
-                opacity: .5;
-                cursor: pointer;
-            }
-            .btn-close:hover { opacity: .75; }
-        </style>
+        <!-- Toast Container para Alertas Globais Jurídicos -->
+        <div id="juridico-toast-container"
+            th:if="${alertasJuridicosGlobais != null and !alertasJuridicosGlobais.isEmpty()}"
+            class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
 
-        <div th:each="alerta : ${alertasJuridicosGlobais}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
-            <div class="toast-header border-bottom-0">
-                <i class="fas fa-bell text-warning me-2"></i>
-                <strong class="me-auto text-dark">Lembrete Jurídico</strong>
-                <small class="text-muted">Amanhã</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body py-3">
-                <div class="d-flex align-items-start">
-                    <div class="me-2 mt-1 text-warning"><i class="fas fa-circle fa-xs"></i></div>
-                    <div th:utext="${alerta}" class="fw-medium text-secondary"></div>
-                </div>
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary btn-snooze-1h">Lembrar em 1h</button>
-                    <button type="button" class="btn btn-sm btn-outline-dark btn-marcar-lido">Marcar como lido</button>
-                </div>
-            </div>
-        </div>
-        <script>
-            // Auto-show toasts on any page
-            document.addEventListener('DOMContentLoaded', function() {
-                var container = document.getElementById('juridico-toast-container');
-                if (container) {
-                    // Move to body to avoid stacking context issues (transform, overflow, etc.)
-                    document.body.appendChild(container);
-                    
-                    var toastElList = [].slice.call(container.querySelectorAll('.toast'));
-                    
-                    function getSnoozes(){
-                        try { return JSON.parse(localStorage.getItem('juridicoSnoozes') || '{}'); } catch(e){ return {}; }
-                    }
-                    function saveSnooze(key, until){
-                        var s = getSnoozes(); s[key] = until; localStorage.setItem('juridicoSnoozes', JSON.stringify(s));
-                    }
-                    function isSnoozed(key){
-                        var s = getSnoozes(); var until = s[key] || 0; return Number(until) > Date.now();
-                    }
-                    function getReads(){
-                        try { return JSON.parse(localStorage.getItem('juridicoReads') || '{}'); } catch(e){ return {}; }
-                    }
-                    function saveRead(key){
-                        var r = getReads(); r[key] = true; localStorage.setItem('juridicoReads', JSON.stringify(r));
-                    }
-                    function isRead(key){
-                        var r = getReads(); return !!r[key];
-                    }
-                    function getAlertKey(el){
-                        try {
-                            var content = el.querySelector('.fw-medium');
-                            var raw = content ? (content.innerText || content.textContent || '').trim() : (el.innerText || '').trim();
-                            var hash = 0;
-                            for (var i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
-                            return 'juridico:' + hash;
-                        } catch(e){ return 'juridico:' + Math.random().toString(36).slice(2); }
-                    }
-                    
-                    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-                        toastElList.map(function(toastEl) {
-                            var key = getAlertKey(toastEl);
-                            var t = new bootstrap.Toast(toastEl, { autohide: false });
-                            if (!isSnoozed(key) && !isRead(key)) {
-                                t.show();
-                            } else {
-                                try { t.hide(); } catch(e){} 
-                                toastEl.classList.remove('show'); 
-                                toastEl.style.display = 'none';
-                            }
-                            var btn = toastEl.querySelector('.btn-snooze-1h');
-                            if (btn) {
-                                btn.addEventListener('click', function(){
-                                    var k = getAlertKey(toastEl);
-                                    saveSnooze(k, Date.now() + 60 * 60 * 1000);
-                                    try { t.hide(); } catch(e){}
-                                    toastEl.classList.remove('show');
-                                    toastEl.style.display = 'none';
-                                });
-                            }
-                            var btnResolve = toastEl.querySelector('.btn-resolver-agora');
-                            if (btnResolve) {
-                                btnResolve.addEventListener('click', function(){
-                                    var link = toastEl.querySelector('.fw-medium a[href]');
-                                    var k = getAlertKey(toastEl);
-                                    saveRead(k);
-                                    try { t.hide(); } catch(e){}
-                                    toastEl.classList.remove('show');
-                                    toastEl.style.display = 'none';
-                                    if (link && link.getAttribute('href')) {
-                                        window.location.href = link.getAttribute('href');
-                                    }
-                                });
-                            }
-                            var btnRead = toastEl.querySelector('.btn-marcar-lido');
-                            if (btnRead) {
-                                btnRead.addEventListener('click', function(){
-                                    var k = getAlertKey(toastEl);
-                                    saveRead(k);
-                                    try { t.hide(); } catch(e){}
-                                    toastEl.classList.remove('show');
-                                    toastEl.style.display = 'none';
-                                });
-                            }
-                            return t;
-                        });
-                    } else {
-                        // Fallback for pages without Bootstrap JS
-                        toastElList.forEach(function(el) {
-                            var key = getAlertKey(el);
-                            if (!isSnoozed(key) && !isRead(key)) {
-                                el.classList.add('show');
-                                el.style.display = 'block';
-                                el.style.opacity = '1';
-                                el.style.backgroundColor = '#fff';
-                                el.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
-                                el.style.marginBottom = '0.75rem';
-                            } else {
-                                el.classList.remove('show');
-                                el.style.display = 'none';
-                            }
-                            
-                            // Manual close handler
-                            var btn = el.querySelector('.btn-close');
-                            if(btn) {
-                                btn.style.cursor = 'pointer';
-                                btn.onclick = function(){ 
-                                    el.style.display = 'none'; 
-                                    el.classList.remove('show');
-                                };
-                            }
-                            var snoozeBtn = el.querySelector('.btn-snooze-1h');
-                            if (snoozeBtn) {
-                                snoozeBtn.addEventListener('click', function(){
-                                    var k = getAlertKey(el);
-                                    saveSnooze(k, Date.now() + 60 * 60 * 1000);
-                                    el.classList.remove('show');
-                                    el.style.display = 'none';
-                                });
-                            }
-                            var resolveBtn = el.querySelector('.btn-resolver-agora');
-                            if (resolveBtn) {
-                                resolveBtn.addEventListener('click', function(){
-                                    var link = el.querySelector('.fw-medium a[href]');
-                                    var k = getAlertKey(el);
-                                    saveRead(k);
-                                    el.classList.remove('show');
-                                    el.style.display = 'none';
-                                    if (link && link.getAttribute('href')) {
-                                        window.location.href = link.getAttribute('href');
-                                    }
-                                });
-                            }
-                            var readBtn = el.querySelector('.btn-marcar-lido');
-                            if (readBtn) {
-                                readBtn.addEventListener('click', function(){
-                                    var k = getAlertKey(el);
-                                    saveRead(k);
-                                    el.classList.remove('show');
-                                    el.style.display = 'none';
-                                });
-                            }
-                        });
-                    }
+            <!-- Fallback CSS para páginas sem Bootstrap (ex: Dashboard) -->
+            <style>
+                /* Se o Bootstrap não estiver carregado, essas classes precisam de definição básica */
+                .toast-container.position-fixed {
+                    position: fixed;
                 }
-            });
-        </script>
-    </div>
+
+                .toast-container.top-0 {
+                    top: 0;
+                }
+
+                .toast-container.end-0 {
+                    right: 0;
+                }
+
+                .toast-container.p-3 {
+                    padding: 1rem;
+                }
+
+                /* Estilo base do Toast se não houver Bootstrap */
+                .toast:not(.show):not(.hide) {
+                    /* Em bootstrap puro, toast tem display none por padrão, mas nosso script controla isso */
+                    /* display: none; */
+                }
+
+                .toast {
+                    background-color: #fff;
+                    border: 1px solid rgba(0, 0, 0, .1);
+                    border-radius: .25rem;
+                    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+                    min-width: 350px;
+                    max-width: 100%;
+                    font-size: .875rem;
+                    pointer-events: auto;
+                    background-clip: padding-box;
+                    margin-bottom: .75rem;
+                    display: none;
+                    /* JS vai mostrar */
+                }
+
+                .toast.show {
+                    display: block;
+                    opacity: 1;
+                }
+
+                .toast-header {
+                    display: flex;
+                    align-items: center;
+                    padding: .5rem .75rem;
+                    color: #6c757d;
+                    background-color: rgba(255, 255, 255, .85);
+                    background-clip: padding-box;
+                    border-bottom: 1px solid rgba(0, 0, 0, .05);
+                    border-top-left-radius: calc(.25rem - 1px);
+                    border-top-right-radius: calc(.25rem - 1px);
+                }
+
+                .toast-body {
+                    padding: .75rem;
+                    word-wrap: break-word;
+                }
+
+                /* Utilitários básicos usados no HTML */
+                .me-auto {
+                    margin-right: auto !important;
+                }
+
+                .me-2 {
+                    margin-right: .5rem !important;
+                }
+
+                .mt-1 {
+                    margin-top: .25rem !important;
+                }
+
+                .text-warning {
+                    color: #ffc107 !important;
+                }
+
+                .text-dark {
+                    color: #212529 !important;
+                }
+
+                .text-muted {
+                    color: #6c757d !important;
+                }
+
+                .fw-medium {
+                    font-weight: 500 !important;
+                }
+
+                .border-bottom-0 {
+                    border-bottom: 0 !important;
+                }
+
+                .d-flex {
+                    display: flex !important;
+                }
+
+                .align-items-start {
+                    align-items: flex-start !important;
+                }
+
+                /* Botão de fechar */
+                .btn-close {
+                    box-sizing: content-box;
+                    width: 1em;
+                    height: 1em;
+                    padding: .25em .25em;
+                    color: #000;
+                    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+                    border: 0;
+                    border-radius: .25rem;
+                    opacity: .5;
+                    cursor: pointer;
+                }
+
+                .btn-close:hover {
+                    opacity: .75;
+                }
+            </style>
+
+            <div th:each="alerta : ${alertasJuridicosGlobais}" class="toast" role="alert" aria-live="assertive"
+                aria-atomic="true" data-bs-autohide="false">
+                <div class="toast-header border-bottom-0">
+                    <i class="fas fa-bell text-warning me-2"></i>
+                    <strong class="me-auto text-dark">Lembrete Jurídico</strong>
+                    <small class="text-muted">Amanhã</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body py-3">
+                    <div class="d-flex align-items-start">
+                        <div class="me-2 mt-1 text-warning"><i class="fas fa-circle fa-xs"></i></div>
+                        <div th:utext="${alerta}" class="fw-medium text-secondary"></div>
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary btn-snooze-1h">Lembrar em
+                            1h</button>
+                        <button type="button" class="btn btn-sm btn-outline-dark btn-marcar-lido">Marcar como
+                            lido</button>
+                    </div>
+                </div>
+            </div>
+            <script>
+                // Auto-show toasts on any page
+                document.addEventListener('DOMContentLoaded', function () {
+                    var container = document.getElementById('juridico-toast-container');
+                    if (container) {
+                        // Move to body to avoid stacking context issues (transform, overflow, etc.)
+                        document.body.appendChild(container);
+
+                        var toastElList = [].slice.call(container.querySelectorAll('.toast'));
+
+                        function getSnoozes() {
+                            try { return JSON.parse(localStorage.getItem('juridicoSnoozes') || '{}'); } catch (e) { return {}; }
+                        }
+                        function saveSnooze(key, until) {
+                            var s = getSnoozes(); s[key] = until; localStorage.setItem('juridicoSnoozes', JSON.stringify(s));
+                        }
+                        function isSnoozed(key) {
+                            var s = getSnoozes(); var until = s[key] || 0; return Number(until) > Date.now();
+                        }
+                        function getReads() {
+                            try { return JSON.parse(localStorage.getItem('juridicoReads') || '{}'); } catch (e) { return {}; }
+                        }
+                        function saveRead(key) {
+                            var r = getReads(); r[key] = true; localStorage.setItem('juridicoReads', JSON.stringify(r));
+                        }
+                        function isRead(key) {
+                            var r = getReads(); return !!r[key];
+                        }
+                        function getAlertKey(el) {
+                            try {
+                                var content = el.querySelector('.fw-medium');
+                                var raw = content ? (content.innerText || content.textContent || '').trim() : (el.innerText || '').trim();
+                                var hash = 0;
+                                for (var i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
+                                return 'juridico:' + hash;
+                            } catch (e) { return 'juridico:' + Math.random().toString(36).slice(2); }
+                        }
+
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+                            toastElList.map(function (toastEl) {
+                                var key = getAlertKey(toastEl);
+                                var t = new bootstrap.Toast(toastEl, { autohide: false });
+                                if (!isSnoozed(key) && !isRead(key)) {
+                                    t.show();
+                                } else {
+                                    try { t.hide(); } catch (e) { }
+                                    toastEl.classList.remove('show');
+                                    toastEl.style.display = 'none';
+                                }
+                                var btn = toastEl.querySelector('.btn-snooze-1h');
+                                if (btn) {
+                                    btn.addEventListener('click', function () {
+                                        var k = getAlertKey(toastEl);
+                                        saveSnooze(k, Date.now() + 60 * 60 * 1000);
+                                        try { t.hide(); } catch (e) { }
+                                        toastEl.classList.remove('show');
+                                        toastEl.style.display = 'none';
+                                    });
+                                }
+                                var btnResolve = toastEl.querySelector('.btn-resolver-agora');
+                                if (btnResolve) {
+                                    btnResolve.addEventListener('click', function () {
+                                        var link = toastEl.querySelector('.fw-medium a[href]');
+                                        var k = getAlertKey(toastEl);
+                                        saveRead(k);
+                                        try { t.hide(); } catch (e) { }
+                                        toastEl.classList.remove('show');
+                                        toastEl.style.display = 'none';
+                                        if (link && link.getAttribute('href')) {
+                                            window.location.href = link.getAttribute('href');
+                                        }
+                                    });
+                                }
+                                var btnRead = toastEl.querySelector('.btn-marcar-lido');
+                                if (btnRead) {
+                                    btnRead.addEventListener('click', function () {
+                                        var k = getAlertKey(toastEl);
+                                        saveRead(k);
+                                        try { t.hide(); } catch (e) { }
+                                        toastEl.classList.remove('show');
+                                        toastEl.style.display = 'none';
+                                    });
+                                }
+                                return t;
+                            });
+                        } else {
+                            // Fallback for pages without Bootstrap JS
+                            toastElList.forEach(function (el) {
+                                var key = getAlertKey(el);
+                                if (!isSnoozed(key) && !isRead(key)) {
+                                    el.classList.add('show');
+                                    el.style.display = 'block';
+                                    el.style.opacity = '1';
+                                    el.style.backgroundColor = '#fff';
+                                    el.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
+                                    el.style.marginBottom = '0.75rem';
+                                } else {
+                                    el.classList.remove('show');
+                                    el.style.display = 'none';
+                                }
+
+                                // Manual close handler
+                                var btn = el.querySelector('.btn-close');
+                                if (btn) {
+                                    btn.style.cursor = 'pointer';
+                                    btn.onclick = function () {
+                                        el.style.display = 'none';
+                                        el.classList.remove('show');
+                                    };
+                                }
+                                var snoozeBtn = el.querySelector('.btn-snooze-1h');
+                                if (snoozeBtn) {
+                                    snoozeBtn.addEventListener('click', function () {
+                                        var k = getAlertKey(el);
+                                        saveSnooze(k, Date.now() + 60 * 60 * 1000);
+                                        el.classList.remove('show');
+                                        el.style.display = 'none';
+                                    });
+                                }
+                                var resolveBtn = el.querySelector('.btn-resolver-agora');
+                                if (resolveBtn) {
+                                    resolveBtn.addEventListener('click', function () {
+                                        var link = el.querySelector('.fw-medium a[href]');
+                                        var k = getAlertKey(el);
+                                        saveRead(k);
+                                        el.classList.remove('show');
+                                        el.style.display = 'none';
+                                        if (link && link.getAttribute('href')) {
+                                            window.location.href = link.getAttribute('href');
+                                        }
+                                    });
+                                }
+                                var readBtn = el.querySelector('.btn-marcar-lido');
+                                if (readBtn) {
+                                    readBtn.addEventListener('click', function () {
+                                        var k = getAlertKey(el);
+                                        saveRead(k);
+                                        el.classList.remove('show');
+                                        el.style.display = 'none';
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            </script>
+        </div>
     </header>
 
 </body>
+
 </html>

@@ -25,9 +25,15 @@
       <section class="content-area">
         <h1>Fornecedores</h1>
 
-        <a class="button primary mt-3" th:href="@{/fornecedores/novo}">
-          <i class="fas fa-plus-circle"></i> Novo Fornecedor
-        </a>
+        <a class="btn btn-primary btn-sm mt-3" th:href="@{/fornecedores/novo}"><i class="fas fa-plus-circle"></i> Novo
+          Fornecedor</a>
+
+        <a class="btn btn-primary btn-sm" th:if="${hasPrevious}"
+          th:href="@{/fornecedores(page=${currentPage - 1}, size=${20})}"><i class="fas fa-chevron-left"></i>
+          Anterior</a>
+        <a class="btn btn-primary btn-sm" th:if="${hasNext}"
+          th:href="@{/fornecedores(page=${currentPage + 1}, size=${20})}">Próximo <i
+            class="fas fa-chevron-right"></i></a>
 
         <article class="card mt-3">
           <h3>Lista de Fornecedores</h3>
@@ -134,8 +140,8 @@
     });
   </script>
   <script src="/js/sidebar.js" defer></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script th:src="@{/js/notifications.js}"></script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script th:src="@{/js/notifications.js}"></script>
 
 </body>
 

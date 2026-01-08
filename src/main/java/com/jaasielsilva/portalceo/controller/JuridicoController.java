@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -617,7 +618,12 @@ public class JuridicoController {
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
                     m.put("tipo", "Processo");
                     m.put("descricao", a.getDescricao());
-                    m.put("data", a.getDataHora());
+                    // Formata a data para um padrão mais amigável no frontend
+                    m.put("data",
+                            a.getDataHora() != null
+                                    ? a.getDataHora().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                                    : "");
+                    m.put("etapa", a.getTipoEtapa() != null ? a.getTipoEtapa().name() : "ANDAMENTO");
                     m.put("usuario", a.getUsuario());
                     return m;
                 }).toList();

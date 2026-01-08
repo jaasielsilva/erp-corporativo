@@ -12,6 +12,7 @@
 .process-item.urgent{border-left-color:#dc3545}
 .activity-item.recent{border-left-color:#28a745}
 .page-header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:2rem 0;margin-bottom:2rem;border-radius:10px}
+.text-purple{color:#6f42c1!important}
 
 /* --- Inovação Jurídica --- */
 

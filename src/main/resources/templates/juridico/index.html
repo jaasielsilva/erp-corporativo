@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${pageTitle} + ' - ERP Corporativo'">Jurídico - Dashboard - ERP Corporativo</title>
-    
+
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
@@ -33,7 +33,8 @@
                             <div class="metric-card" id="metric-contratos-ativos">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="metric-value" id="contratosAtivos" th:text="${contratosAtivos}">45</div>
+                                        <div class="metric-value" id="contratosAtivos" th:text="${contratosAtivos}">45
+                                        </div>
                                         <div class="metric-label">Contratos Ativos</div>
                                     </div>
                                     <div class="metric-icon">
@@ -46,7 +47,8 @@
                             <div class="metric-card" id="metric-processos-andamento">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="metric-value" id="processosAndamento" th:text="${processosAndamento}">12</div>
+                                        <div class="metric-value" id="processosAndamento"
+                                            th:text="${processosAndamento}">12</div>
                                         <div class="metric-label">Processos em Andamento</div>
                                     </div>
                                     <div class="metric-icon">
@@ -59,7 +61,8 @@
                             <div class="metric-card" id="metric-prazos-vencendo">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="metric-value" id="prazosVencendo" th:text="${prazosVencendo}">8</div>
+                                        <div class="metric-value" id="prazosVencendo" th:text="${prazosVencendo}">8
+                                        </div>
                                         <div class="metric-label">Prazos Vencendo</div>
                                     </div>
                                     <div class="metric-icon">
@@ -72,7 +75,8 @@
                             <div class="metric-card" id="metric-alertas-compliance">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="metric-value" id="alertasCompliance" th:text="${alertasCompliance}">3</div>
+                                        <div class="metric-value" id="alertasCompliance" th:text="${alertasCompliance}">
+                                            3</div>
                                         <div class="metric-label">Alertas Compliance</div>
                                     </div>
                                     <div class="metric-icon">
@@ -130,22 +134,29 @@
                         <!-- Contratos Próximos ao Vencimento -->
                         <div class="col-md-6">
                             <div class="status-card">
-                                <h5><i class="fas fa-exclamation-triangle text-warning"></i> Contratos Próximos ao Vencimento</h5>
-                                <div class="mt-3" th:if="${contratosVencimento != null and !contratosVencimento.isEmpty()}">
+                                <h5><i class="fas fa-exclamation-triangle text-warning"></i> Contratos Próximos ao
+                                    Vencimento</h5>
+                                <div class="mt-3"
+                                    th:if="${contratosVencimento != null and !contratosVencimento.isEmpty()}">
                                     <div th:each="contrato : ${contratosVencimento}" class="contract-item expiring">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
-                                                <h6 class="mb-1" th:text="${contrato.titulo}">Contrato de Prestação de Serviços</h6>
-                                                <small class="text-muted" th:text="${contrato.contraparte}">TechCorp Ltda</small>
+                                                <h6 class="mb-1" th:text="${contrato.titulo}">Contrato de Prestação de
+                                                    Serviços</h6>
+                                                <small class="text-muted" th:text="${contrato.contraparte}">TechCorp
+                                                    Ltda</small>
                                                 <div class="mt-1">
-                                                    <span class="badge bg-warning" th:text="${contrato.diasRestantes} + ' dias'">15 dias</span>
-                                                    <span class="badge bg-info" th:text="${contrato.valor}">R$ 50.000,00</span>
+                                                    <span class="badge bg-warning"
+                                                        th:text="${contrato.diasRestantes} + ' dias'">15 dias</span>
+                                                    <span class="badge bg-info" th:text="${contrato.valor}">R$
+                                                        50.000,00</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div th:if="${contratosVencimento == null or contratosVencimento.isEmpty()}" class="text-center text-muted py-3">
+                                <div th:if="${contratosVencimento == null or contratosVencimento.isEmpty()}"
+                                    class="text-center text-muted py-3">
                                     <i class="fas fa-check-circle fa-2x mb-2"></i>
                                     <p>Nenhum contrato próximo ao vencimento</p>
                                 </div>
@@ -158,12 +169,16 @@
                                 <h5><i class="fas fa-fire text-danger"></i> Processos com Prazos Urgentes</h5>
                                 <div class="mt-3">
                                     <div id="processosUrgentesList"></div>
-                                    <div class="d-flex justify-content-between align-items-center mt-2" id="processosUrgentesPagination" style="display:none;">
-                                        <button class="btn btn-sm btn-outline-secondary" id="prevUrgentes">Anterior</button>
+                                    <div class="d-flex justify-content-between align-items-center mt-2"
+                                        id="processosUrgentesPagination" style="display:none;">
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                            id="prevUrgentes">Anterior</button>
                                         <span id="pageInfoUrgentes" class="text-muted"></span>
-                                        <button class="btn btn-sm btn-outline-secondary" id="nextUrgentes">Próximo</button>
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                            id="nextUrgentes">Próximo</button>
                                     </div>
-                                    <div class="text-center text-muted py-3" id="processosUrgentesEmpty" style="display:none;">
+                                    <div class="text-center text-muted py-3" id="processosUrgentesEmpty"
+                                        style="display:none;">
                                         <i class="fas fa-check-circle fa-2x mb-2"></i>
                                         <p>Nenhum processo com prazo urgente</p>
                                     </div>
@@ -179,12 +194,16 @@
                                 <h5><i class="fas fa-history"></i> Últimas Atividades</h5>
                                 <div class="mt-3">
                                     <div id="ultimasAtividadesList"></div>
-                                    <div class="d-flex justify-content-between align-items-center mt-2" id="ultimasAtividadesPagination" style="display:none;">
-                                        <button class="btn btn-sm btn-outline-secondary" id="prevAtividades">Anterior</button>
+                                    <div class="d-flex justify-content-between align-items-center mt-2"
+                                        id="ultimasAtividadesPagination" style="display:none;">
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                            id="prevAtividades">Anterior</button>
                                         <span id="pageInfoAtividades" class="text-muted"></span>
-                                        <button class="btn btn-sm btn-outline-secondary" id="nextAtividades">Próximo</button>
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                            id="nextAtividades">Próximo</button>
                                     </div>
-                                    <div class="text-center text-muted py-3" id="ultimasAtividadesEmpty" style="display:none;">
+                                    <div class="text-center text-muted py-3" id="ultimasAtividadesEmpty"
+                                        style="display:none;">
                                         <i class="fas fa-inbox fa-2x mb-2"></i>
                                         <p>Nenhuma atividade recente</p>
                                     </div>
@@ -202,7 +221,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
-    
+
     <script>
 
         // Atualização automática do dashboard
@@ -223,7 +242,7 @@
         setInterval(atualizarDashboard, 300000);
 
         // Animação de entrada dos cards
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const cards = document.querySelectorAll('.metric-card, .quick-action-card, .status-card');
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
@@ -238,72 +257,98 @@
             let urgentesSize = 5;
             let atividadesPage = 0;
             let atividadesSize = 10;
-            function renderUrgentes(data){
+            function renderUrgentes(data) {
                 const list = document.getElementById('processosUrgentesList');
                 const empty = document.getElementById('processosUrgentesEmpty');
                 const pag = document.getElementById('processosUrgentesPagination');
                 list.innerHTML = '';
-                if(!data || !data.content || data.content.length===0){
+                if (!data || !data.content || data.content.length === 0) {
                     empty.style.display = 'block';
                     pag.style.display = 'none';
                     return;
                 }
                 empty.style.display = 'none';
                 pag.style.display = 'flex';
-                document.getElementById('pageInfoUrgentes').textContent = (data.page+1)+"/"+data.totalPages;
-                data.content.forEach(p=>{
+                document.getElementById('pageInfoUrgentes').textContent = (data.page + 1) + "/" + data.totalPages;
+                data.content.forEach(p => {
                     const div = document.createElement('div');
                     div.className = 'process-item urgent';
-                    div.innerHTML = '<div class="d-flex justify-content-between align-items-start"><div><h6 class="mb-1">'+(p.numero||'')+'</h6><small class="text-muted">'+(p.parte||'')+'</small><div class="mt-1"><span class="badge bg-danger">'+(p.proximoPrazo||'')+'</span><span class="badge bg-secondary ms-1">'+(p.acao||'')+'</span></div></div></div>';
+                    div.innerHTML = '<div class="d-flex justify-content-between align-items-start"><div><h6 class="mb-1">' + (p.numero || '') + '</h6><small class="text-muted">' + (p.parte || '') + '</small><div class="mt-1"><span class="badge bg-danger">' + (p.proximoPrazo || '') + '</span><span class="badge bg-secondary ms-1">' + (p.acao || '') + '</span></div></div></div>';
                     list.appendChild(div);
                 });
-                document.getElementById('prevUrgentes').disabled = data.page<=0;
-                document.getElementById('nextUrgentes').disabled = data.page>=data.totalPages-1;
+                document.getElementById('prevUrgentes').disabled = data.page <= 0;
+                document.getElementById('nextUrgentes').disabled = data.page >= data.totalPages - 1;
             }
-            function loadUrgentes(){
-                fetch('/juridico/api/processos-urgentes?page='+urgentesPage+'&size='+urgentesSize)
-                    .then(r=>r.json())
+            function loadUrgentes() {
+                fetch('/juridico/api/processos-urgentes?page=' + urgentesPage + '&size=' + urgentesSize)
+                    .then(r => r.json())
                     .then(renderUrgentes)
-                    .catch(()=>{});
+                    .catch(() => { });
             }
-            document.getElementById('prevUrgentes').addEventListener('click',function(){
-                if(urgentesPage>0){ urgentesPage--; loadUrgentes(); }
+            document.getElementById('prevUrgentes').addEventListener('click', function () {
+                if (urgentesPage > 0) { urgentesPage--; loadUrgentes(); }
             });
-            document.getElementById('nextUrgentes').addEventListener('click',function(){
+            document.getElementById('nextUrgentes').addEventListener('click', function () {
                 urgentesPage++; loadUrgentes();
             });
-            function renderAtividades(data){
+            function renderAtividades(data) {
                 const list = document.getElementById('ultimasAtividadesList');
                 const empty = document.getElementById('ultimasAtividadesEmpty');
                 const pag = document.getElementById('ultimasAtividadesPagination');
                 list.innerHTML = '';
-                if(!data || !data.content || data.content.length===0){
+                if (!data || !data.content || data.content.length === 0) {
                     empty.style.display = 'block';
                     pag.style.display = 'none';
                     return;
                 }
                 empty.style.display = 'none';
                 pag.style.display = 'flex';
-                document.getElementById('pageInfoAtividades').textContent = (data.page+1)+"/"+data.totalPages;
-                data.content.forEach(a=>{
+                document.getElementById('pageInfoAtividades').textContent = (data.page + 1) + "/" + data.totalPages;
+                data.content.forEach(a => {
                     const div = document.createElement('div');
                     div.className = 'activity-item recent';
-                    div.innerHTML = '<div class="d-flex justify-content-between align-items-center"><div><h6 class="mb-1">'+(a.descricao||'')+'</h6><small class="text-muted"><i class="fas fa-user"></i> '+(a.usuario||'')+' <i class="fas fa-clock ms-2"></i> '+(a.data||'')+'</small></div><span class="badge bg-primary">'+(a.tipo||'')+'</span></div>';
+
+                    // Mapeamento de ícones por tipo de etapa
+                    let iconClass = 'fa-clock';
+                    let iconColor = 'text-secondary';
+
+                    switch (a.etapa) {
+                        case 'INICIAL': iconClass = 'fa-plus-circle'; iconColor = 'text-primary'; break;
+                        case 'AUDIENCIA': iconClass = 'fa-gavel'; iconColor = 'text-purple'; break;
+                        case 'IMPORTANTE': iconClass = 'fa-exclamation-circle'; iconColor = 'text-warning'; break;
+                        case 'FINAL': iconClass = 'fa-check-circle'; iconColor = 'text-success'; break;
+                    }
+
+                    div.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <div class="d-flex align-items-center">
+                                <i class="fas ${iconClass} ${iconColor} me-3 fs-5"></i>
+                                <div>
+                                    <h6 class="mb-0 fw-bold">${a.descricao || ''}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user-circle me-1"></i> ${a.usuario || 'Sistema'}
+                                        <i class="fas fa-calendar-alt ms-3 me-1"></i> ${a.data || ''}
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-primary border">${a.tipo || 'Atividade'}</span>
+                        </div>
+                    `;
                     list.appendChild(div);
                 });
-                document.getElementById('prevAtividades').disabled = data.page<=0;
-                document.getElementById('nextAtividades').disabled = data.page>=data.totalPages-1;
+                document.getElementById('prevAtividades').disabled = data.page <= 0;
+                document.getElementById('nextAtividades').disabled = data.page >= data.totalPages - 1;
             }
-            function loadAtividades(){
-                fetch('/juridico/api/ultimas-atividades?page='+atividadesPage+'&size='+atividadesSize)
-                    .then(r=>r.json())
+            function loadAtividades() {
+                fetch('/juridico/api/ultimas-atividades?page=' + atividadesPage + '&size=' + atividadesSize)
+                    .then(r => r.json())
                     .then(renderAtividades)
-                    .catch(()=>{});
+                    .catch(() => { });
             }
-            document.getElementById('prevAtividades').addEventListener('click',function(){
-                if(atividadesPage>0){ atividadesPage--; loadAtividades(); }
+            document.getElementById('prevAtividades').addEventListener('click', function () {
+                if (atividadesPage > 0) { atividadesPage--; loadAtividades(); }
             });
-            document.getElementById('nextAtividades').addEventListener('click',function(){
+            document.getElementById('nextAtividades').addEventListener('click', function () {
                 atividadesPage++; loadAtividades();
             });
             loadUrgentes();
@@ -311,4 +356,5 @@
         });
     </script>
 </body>
+
 </html>

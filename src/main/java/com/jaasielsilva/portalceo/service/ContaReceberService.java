@@ -130,6 +130,10 @@ public class ContaReceberService {
             throw new IllegalStateException("Não é possível receber uma conta cancelada");
         }
 
+        if (conta.getStatus() == ContaReceber.StatusContaReceber.RECEBIDA) {
+            throw new IllegalStateException("Esta conta já foi totalmente recebida.");
+        }
+
         BigDecimal valorTotalDevido = conta.getValorTotal();
         BigDecimal novoValorRecebido = conta.getValorRecebido().add(valorRecebido);
 
@@ -149,7 +153,8 @@ public class ContaReceberService {
 
         ContaReceber contaSalva = contaReceberRepository.save(conta);
         FluxoCaixa fluxoRecebimento = criarEntradaFluxoCaixaRecebimento(contaSalva, valorRecebido, usuario);
-        contabilidadeService.registrarRecebimento(contaSalva, valorRecebido, null, fluxoRecebimento != null ? fluxoRecebimento.getId() : null);
+        contabilidadeService.registrarRecebimento(contaSalva, valorRecebido, null,
+                fluxoRecebimento != null ? fluxoRecebimento.getId() : null);
         registrarHistorico(contaSalva, usuario, "RECEBIMENTO_REGISTRADO", observacoes);
 
         return contaSalva;
@@ -187,8 +192,7 @@ public class ContaReceberService {
     public void processarJurosMultas() {
         LocalDate hoje = LocalDate.now();
         List<ContaReceber> contasVencidas = contaReceberRepository.findByDataVencimentoBeforeAndStatusIn(
-                hoje, List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL)
-        );
+                hoje, List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL));
 
         for (ContaReceber conta : contasVencidas) {
             calcularJurosMulta(conta, hoje);
@@ -224,8 +228,7 @@ public class ContaReceberService {
     public List<ContaReceber> findVencidas() {
         return contaReceberRepository.findVencidas(
                 LocalDate.now(),
-                List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL)
-        );
+                List.of(ContaReceber.StatusContaReceber.PENDENTE, ContaReceber.StatusContaReceber.PARCIAL));
     }
 
     @Transactional(readOnly = true)
@@ -268,18 +271,17 @@ public class ContaReceberService {
                         status -> {
                             Long count = contaReceberRepository.countByStatus(status);
                             return count != null ? count : 0L;
-                        }
-                ));
+                        }));
     }
 
     @Transactional(readOnly = true)
-    public Map<ContaReceber.CategoriaContaReceber, BigDecimal> getRecebimentosPorCategoria(LocalDate inicio, LocalDate fim) {
+    public Map<ContaReceber.CategoriaContaReceber, BigDecimal> getRecebimentosPorCategoria(LocalDate inicio,
+            LocalDate fim) {
         List<Object[]> results = contaReceberRepository.sumValorRecebidoByCategoriaPeriodo(inicio, fim);
         return results.stream()
                 .collect(Collectors.toMap(
                         row -> (ContaReceber.CategoriaContaReceber) row[0],
-                        row -> (BigDecimal) row[1]
-                ));
+                        row -> (BigDecimal) row[1]));
     }
 
     @Transactional(readOnly = true)
@@ -321,8 +323,7 @@ public class ContaReceberService {
                 "ate30dias", contaReceberRepository.getAgingData(hoje.minusDays(30), hoje),
                 "de31a60dias", contaReceberRepository.getAgingData(hoje.minusDays(60), hoje.minusDays(31)),
                 "de61a90dias", contaReceberRepository.getAgingData(hoje.minusDays(90), hoje.minusDays(61)),
-                "acima90dias", contaReceberRepository.getAgingData(LocalDate.of(1900, 1, 1), hoje.minusDays(91))
-        );
+                "acima90dias", contaReceberRepository.getAgingData(LocalDate.of(1900, 1, 1), hoje.minusDays(91)));
     }
 
     // ---------------- Novo: Resumo para o front ----------------
@@ -333,9 +334,9 @@ public class ContaReceberService {
                 "pendentes", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.PENDENTE),
                 "parciais", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.PARCIAL),
                 "inadimplentes", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.INADIMPLENTE),
-                "recebidas", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.RECEBIDA)
-        ).entrySet().stream()
-         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() != null ? e.getValue() : 0L));
+                "recebidas", contaReceberRepository.countByStatus(ContaReceber.StatusContaReceber.RECEBIDA)).entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() != null ? e.getValue() : 0L));
     }
 
     @Transactional(readOnly = true)
@@ -409,7 +410,8 @@ public class ContaReceberService {
         fluxoCaixaRepository.save(fluxo);
     }
 
-    private FluxoCaixa criarEntradaFluxoCaixaRecebimento(ContaReceber conta, BigDecimal valorRecebido, Usuario usuario) {
+    private FluxoCaixa criarEntradaFluxoCaixaRecebimento(ContaReceber conta, BigDecimal valorRecebido,
+            Usuario usuario) {
         FluxoCaixa fluxo = new FluxoCaixa();
         fluxo.setData(LocalDate.now());
         fluxo.setTipoMovimento(FluxoCaixa.TipoMovimento.ENTRADA);

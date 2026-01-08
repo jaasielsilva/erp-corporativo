@@ -26,6 +26,9 @@ public class AutentiqueService {
     @Value("${autentique.api.url}")
     private String apiUrl;
 
+    @Value("${autentique.api.company-email:silvajasiel30@gmail.com}")
+    private String companyEmail;
+
     private final WebClient webClient;
 
     public AutentiqueService(WebClient.Builder webClientBuilder) {
@@ -50,7 +53,7 @@ public class AutentiqueService {
                 return null;
             }
 
-            String companyEmail = "silvajasiel30@gmail.com";
+            // O email da empresa já está definido como campo da classe
 
             // Document e Signers inputs para a mutation
             String operations = "{\"query\": \"mutation createDocument($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) { createDocument(document: $document, signers: $signers, file: $file) { id name signatures { public_id user { email } link { short_link } } } }\", \"variables\": { \"document\": { \"name\": \""

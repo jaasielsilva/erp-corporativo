@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}" />
     <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
     <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+    <link rel="stylesheet" th:href="@{/css/corporate.css}" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 </head>
 
@@ -39,13 +40,32 @@
                 <div th:if="${sucesso}" class="alert alert-success" th:text="${sucesso}"></div>
                 <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
 
+                <!-- Filtros e Busca -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="filtroBusca" class="form-control border-start-0" placeholder="Buscar por cliente ou protocolo...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filtroStatus" class="form-select">
+                            <option value="">Todos os status</option>
+                            <option value="ABERTO">Aberto</option>
+                            <option value="EM_ANDAMENTO">Em Andamento</option>
+                            <option value="SUSPENSO">Suspenso</option>
+                            <option value="ENCERRADO">Encerrado</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
-                                    <tr>
-                                        <th style="width: 90px;">#</th>
+                                    <tr class="text-center align-middle">
+                                        <th style="width: 120px;">Processo</th>
                                         <th>Cliente</th>
                                         <th>Etapa</th>
                                         <th>Status</th>
@@ -53,40 +73,15 @@
                                         <th style="width: 180px;">Abertura</th>
                                         <th style="width: 140px;">Decisão</th>
                                         <th style="width: 140px;">Valor da causa</th>
-                                        <th style="width: 120px;"></th>
+                                        <th style="width: 120px;">Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr th:if="${processos == null || processos.isEmpty()}">
-                                        <td colspan="7" class="text-center text-muted py-4">Nenhum processo cadastrado
-                                        </td>
-                                    </tr>
-                                    <tr th:each="p : ${processos}">
-                                        <td th:text="${p.id}">1</td>
-                                        <td th:text="${p.cliente != null ? p.cliente.nome : '—'}">Cliente</td>
-                                        <td>
-                                            <span class="badge bg-secondary" th:text="${p.etapaAtual}">CADASTRO</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info" th:text="${p.statusAtual}">ABERTO</span>
-                                        </td>
-                                        <td th:text="${p.responsavel != null ? p.responsavel.nome : '—'}">Responsável
-                                        </td>
-                                        <td
-                                            th:text="${p.dataAbertura != null ? T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy HH:mm').format(p.dataAbertura) : '—'}">
-                                            —</td>
-                                        <td>
-                                            <span class="badge bg-secondary"
-                                                th:text="${p.resultadoDecisao != null ? p.resultadoDecisao : '—'}">—</span>
-                                        </td>
-                                        <td
-                                            th:text="${p.valorCausa != null ? 'R$ ' + #numbers.formatDecimal(p.valorCausa, 1, 'POINT', 2, 'COMMA') : '—'}">
-                                            —</td>
-                                        <td class="text-end">
-                                            <a class="btn btn-sm btn-outline-primary"
-                                                th:href="@{'/juridico/previdenciario/' + ${p.id}}">
-                                                <i class="fas fa-eye me-1"></i>Detalhes
-                                            </a>
+                                <tbody id="procTableBody">
+                                    <!-- Conteúdo carregado via AJAX -->
+                                    <tr>
+                                        <td colspan="9" class="text-center py-5">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
+                                            <p class="text-muted mb-0">Carregando processos...</p>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -94,12 +89,113 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Paginação -->
+                <nav aria-label="Navegação de página" class="mt-3">
+                    <ul class="pagination justify-content-center" id="pagination">
+                    </ul>
+                </nav>
             </section>
 
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
 
+    <!-- Offcanvas de Detalhes do Processo (Inovação Jurídica) -->
+    <div class="offcanvas offcanvas-end process-offcanvas" tabindex="-1" id="procDetailOffcanvas"
+        aria-labelledby="procDetailOffcanvasLabel">
+        <div class="offcanvas-header">
+            <div>
+                <h5 class="offcanvas-title fw-bold" id="procDetailOffcanvasLabel">Detalhes do Processo</h5>
+                <div class="process-meta">
+                    <span id="procDetailNumeroHeader"
+                        class="badge bg-white text-dark bg-opacity-25">0000000-00.0000.0.00.0000</span>
+                    <span id="procDetailStatusHeader" class="badge bg-success">EM ANDAMENTO</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <!-- Navegação em Abas Modernas -->
+            <ul class="nav nav-tabs modern-tabs px-3 pt-2" id="procTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-resumo" data-bs-toggle="tab"
+                        data-bs-target="#content-resumo" type="button" role="tab">Resumo</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-timeline" data-bs-toggle="tab" data-bs-target="#content-timeline"
+                        type="button" role="tab">Timeline</button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-4">
+                <!-- Conteúdo Resumo -->
+                <div class="tab-pane fade show active" id="content-resumo" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-12 mb-2">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Informações Gerais</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label"><i class="fas fa-balance-scale me-1"></i> Etapa Atual</div>
+                                <div class="info-value" id="procDetailEtapa">—</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label"><i class="fas fa-tag me-1"></i> Tipo</div>
+                                <div class="info-value" id="procDetailTipo">Previdenciária</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="info-card">
+                                <div class="info-label"><i class="fas fa-user-friends me-1"></i> Parte Contrária</div>
+                                <div class="info-value" id="procDetailParte">INSS</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="info-card">
+                                <div class="info-label"><i class="fas fa-file-alt me-1"></i> Protocolo INSS</div>
+                                <div class="info-value" id="procDetailProtocolo">—</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label"><i class="far fa-calendar-alt me-1"></i> Abertura</div>
+                                <div class="info-value" id="procDetailDataAbertura">—</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card border-0 bg-light">
+                                <div class="info-label">Ações Rápidas</div>
+                                <a id="btnDetalhesCompleto" href="#" class="btn btn-sm btn-outline-info w-100 mb-2"><i
+                                        class="fas fa-external-link-alt"></i> Ver Detalhes</a>
+                                <a id="btnEditarOffcanvas" href="#" class="btn btn-sm btn-outline-primary w-100 mb-2"><i
+                                        class="fas fa-edit"></i> Editar Completo</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conteúdo Timeline -->
+                <div class="tab-pane fade" id="content-timeline" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-0">Linha do Tempo</h6>
+                    </div>
+
+                    <div id="timelineContainer" class="timeline-modern">
+                        <!-- Timeline items injected via JS -->
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                            <p>Carregando histórico...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/sidebar.js}"></script>
@@ -107,6 +203,14 @@
     <script th:inline="javascript">
         const sucessoMsg = /*[[${sucesso}]]*/ null;
         const erroMsg = /*[[${erro}]]*/ null;
+        
+        // Estado da paginação
+        let currentPage = 0;
+        let currentSize = 10;
+        let currentSearch = '';
+        let currentStatus = '';
+        let debounceTimer;
+
         if (typeof Swal !== 'undefined') {
             if (sucessoMsg) {
                 Swal.fire({ icon: 'success', title: 'Sucesso', text: sucessoMsg });
@@ -115,6 +219,279 @@
                 Swal.fire({ icon: 'error', title: 'Erro', text: erroMsg });
             }
         }
+
+        $(function () {
+            // --- DEFINIÇÃO DE FUNÇÕES ---
+
+            // Função para carregar processos
+            window.loadProcessos = function(page) {
+                currentPage = page;
+                $('#procTableBody').html('<tr><td colspan="9" class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i><p class="text-muted mb-0">Carregando processos...</p></td></tr>');
+                
+                const params = new URLSearchParams({
+                    page: page,
+                    size: currentSize
+                });
+                
+                if (currentSearch) params.append('search', currentSearch);
+                if (currentStatus) params.append('status', currentStatus);
+
+                fetch(`/juridico/previdenciario/api/processos?${params.toString()}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        renderRows(data.content);
+                        renderPagination(data);
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar processos:', error);
+                        $('#procTableBody').html('<tr><td colspan="9" class="text-center py-5 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p class="mb-0">Erro ao carregar dados.</p></td></tr>');
+                    });
+            };
+
+            // Renderizar linhas da tabela
+            function renderRows(processos) {
+                const tbody = $('#procTableBody');
+                tbody.empty();
+
+                if (!processos || processos.length === 0) {
+                    tbody.html('<tr><td colspan="9" class="text-center py-5"><p class="text-muted mb-0">Nenhum processo encontrado.</p></td></tr>');
+                    return;
+                }
+
+                processos.forEach(p => {
+                    // Badge de Status
+                    let statusBadgeClass = 'bg-secondary';
+                    if (p.statusAtual === 'EM_ANDAMENTO') statusBadgeClass = 'bg-success';
+                    else if (p.statusAtual === 'SUSPENSO') statusBadgeClass = 'bg-warning text-dark';
+                    else if (p.statusAtual === 'ENCERRADO') statusBadgeClass = 'bg-dark';
+
+                    // Formatar data
+                    let dataAbertura = '—';
+                    let anoAbertura = new Date().getFullYear();
+                    if (p.dataAbertura) {
+                        const d = new Date(p.dataAbertura);
+                        dataAbertura = d.toLocaleDateString('pt-BR');
+                        anoAbertura = d.getFullYear();
+                    }
+                    
+                    // Padronizar ID (ex: 0004/2026)
+                    const idPadrao = String(p.id).padStart(4, '0') + '/' + anoAbertura;
+                    
+                    // Formatar valor
+                    let valorCausa = '—';
+                    if (p.valorCausa !== null && p.valorCausa !== undefined) {
+                         valorCausa = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valorCausa);
+                    }
+
+                    const html = `
+                        <tr class="proc-row cursor-pointer text-center align-middle" data-id="${p.id}" style="cursor: pointer;">
+                            <td><span class="fw-bold text-secondary">${idPadrao}</span></td>
+                            <td class="fw-bold text-primary">${p.cliente ? p.cliente.nome : '—'}</td>
+                            <td><span class="badge bg-light text-dark border">${p.etapaAtual || '—'}</span></td>
+                            <td><span class="badge ${statusBadgeClass}">${p.statusAtual || '—'}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center justify-content-center" style="display: flex !important; align-items: center !important; justify-content: center !important;">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; min-width: 32px; font-weight: bold; display: flex !important; justify-content: center !important; align-items: center !important;">
+                                        ${p.responsavel && p.responsavel.nome ? p.responsavel.nome.charAt(0) : '?'}
+                                    </div>
+                                    <small class="text-nowrap">${p.responsavel ? p.responsavel.nome : '—'}</small>
+                                </div>
+                            </td>
+                            <td>${dataAbertura}</td>
+                            <td>${p.resultadoDecisao || '—'}</td>
+                            <td>${valorCausa}</td>
+                            <td>
+                                <a href="/juridico/previdenciario/${p.id}" class="btn btn-sm btn-light" onclick="event.stopPropagation()">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(html);
+                });
+            }
+
+            // Renderizar paginação
+            function renderPagination(data) {
+                const el = $('#pagination');
+                el.empty();
+                
+                const totalPages = data.totalPages || 0;
+                const totalElements = data.totalElements || 0;
+                const page = data.currentPage || 0;
+                
+                if (totalElements === 0) return;
+
+                // Anterior
+                const prevDisabled = !data.hasPrevious ? 'disabled' : '';
+                el.append(`
+                    <li class="page-item ${prevDisabled}">
+                        <a class="page-link" href="#" onclick="loadProcessos(${page - 1}); return false;">Anterior</a>
+                    </li>
+                `);
+
+                // Páginas
+                let startPage = Math.max(0, page - 2);
+                let endPage = Math.min(totalPages - 1, page + 2);
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const active = i === page ? 'active' : '';
+                    el.append(`
+                        <li class="page-item ${active}">
+                            <a class="page-link" href="#" onclick="loadProcessos(${i}); return false;">${i + 1}</a>
+                        </li>
+                    `);
+                }
+
+                // Próxima
+                const nextDisabled = !data.hasNext ? 'disabled' : '';
+                el.append(`
+                    <li class="page-item ${nextDisabled}">
+                        <a class="page-link" href="#" onclick="loadProcessos(${page + 1}); return false;">Próxima</a>
+                    </li>
+                `);
+                
+                // Info
+                el.after(`<div class="text-center mt-2 text-muted small">Mostrando página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</div>`);
+            }
+
+            // --- INICIALIZAÇÃO ---
+
+            // Inicializar carga
+            loadProcessos(0);
+
+            // Listeners de filtro
+            $('#filtroBusca').on('input', function() {
+                clearTimeout(debounceTimer);
+                currentSearch = $(this).val();
+                debounceTimer = setTimeout(() => loadProcessos(0), 500);
+            });
+
+            $('#filtroStatus').on('change', function() {
+                currentStatus = $(this).val();
+                loadProcessos(0);
+            });
+
+            // --- OFF CANVAS LOGIC (MANTIDA) ---
+
+            // Função para abrir detalhes
+            function abrirDetalhesProcesso(id) {
+                if (!id) return;
+                
+                // Reset e mostra Offcanvas
+                $('#procDetailNumeroHeader').text('Carregando...');
+                $('#procDetailStatusHeader').text('...');
+                $('#procDetailEtapa').text('...');
+                $('#procDetailProtocolo').text('...');
+                $('#procDetailDataAbertura').text('...');
+                
+                $('#timelineContainer').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Carregando histórico...</p></div>');
+
+                const offcanvasEl = document.getElementById('procDetailOffcanvas');
+                if (offcanvasEl) {
+                    const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+                    offcanvas.show();
+                    
+                    // Reset tab
+                    const firstTabEl = document.querySelector('#procTabs button[data-bs-target="#content-resumo"]');
+                    if (firstTabEl) {
+                        const tab = new bootstrap.Tab(firstTabEl);
+                        tab.show();
+                    }
+                }
+
+                // 1. Fetch Detalhes
+                $.get(`/juridico/previdenciario/api/processos/${id}`)
+                    .done(res => {
+                        $('#procDetailNumeroHeader').text(res.numero || 'Novo Processo');
+                        
+                        const status = res.status || '—';
+                        const statusBadge = $('#procDetailStatusHeader');
+                        statusBadge.text(status);
+                        statusBadge.removeClass('bg-success bg-warning bg-secondary bg-dark text-dark text-white');
+                        
+                        if (status === 'EM_ANDAMENTO') statusBadge.addClass('bg-success text-white');
+                        else if (status === 'SUSPENSO') statusBadge.addClass('bg-warning text-dark');
+                        else if (status === 'ENCERRADO') statusBadge.addClass('bg-dark text-white');
+                        else statusBadge.addClass('bg-secondary text-white');
+
+                        $('#procDetailEtapa').text(res.etapa || '—');
+                        $('#procDetailProtocolo').text(res.numero || '—');
+                        $('#procDetailDataAbertura').text(res.dataAbertura ? new Date(res.dataAbertura).toLocaleDateString('pt-BR') : '—');
+
+                        // Links de ação
+                        $('#btnDetalhesCompleto').attr('href', `/juridico/previdenciario/${id}`);
+                        $('#btnEditarOffcanvas').attr('href', `/juridico/previdenciario/${id}`); 
+
+                        // 2. Fetch Timeline
+                        $.get(`/juridico/previdenciario/api/processos/${id}/historico`)
+                            .done(timeline => {
+                                renderTimeline(timeline);
+                            })
+                            .fail(() => {
+                                renderTimeline([]);
+                            });
+                    })
+                    .fail(() => {
+                        // notify('error', 'Erro', 'Não foi possível carregar os detalhes.');
+                    });
+            }
+
+            function renderTimeline(items) {
+                const $container = $('#timelineContainer');
+                $container.empty();
+
+                if (!items || items.length === 0) {
+                    $container.html('<div class="text-center text-muted py-4"><p>Nenhum histórico disponível.</p></div>');
+                    return;
+                }
+
+                items.forEach(item => {
+                    let iconClass = 'fa-circle';
+                    if (item.titulo && item.titulo.includes('ABERTURA')) iconClass = 'fa-file-signature';
+                    else if (item.titulo && item.titulo.includes('DECISAO')) iconClass = 'fa-gavel';
+                    
+                    let dataFormatada = item.data;
+                    try {
+                        if (item.data) {
+                            const d = new Date(item.data);
+                            dataFormatada = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+                                ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        }
+                    } catch (e) { }
+
+                    $container.append(`
+                        <div class="timeline-item-modern">
+                            <div class="timeline-icon-modern">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div class="timeline-content-modern">
+                                <span class="timeline-date-modern">${dataFormatada || '—'}</span>
+                                <h5 class="timeline-title-modern">${item.titulo || 'Evento'}</h5>
+                                <div class="timeline-desc-modern">${item.descricao || ''}</div>
+                                ${item.usuario ? `<small class="text-muted mt-2 d-block border-top pt-2"><i class="fas fa-user-circle me-1"></i> ${item.usuario}</small>` : ''}
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            // Click na linha
+            $(document).on('click', '.proc-row', function (e) {
+                // Se clicou num link ou botão dentro da linha, não abre o offcanvas
+                if ($(e.target).closest('a').length > 0 || $(e.target).closest('button').length > 0) return;
+                
+                const id = $(this).data('id');
+                if (id) abrirDetalhesProcesso(id);
+            });
+            
+            // Auto open from URL param
+            const params = new URLSearchParams(window.location.search);
+            const openId = params.get('openProcessId');
+            if (openId) {
+                abrirDetalhesProcesso(openId);
+            }
+        });
     </script>
 </body>
 

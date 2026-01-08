@@ -7,6 +7,7 @@
     <title th:text="${pageTitle} ?: 'Processo Previdenciário'">Processo Previdenciário</title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
     <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/corporate.css}" />
     <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
     <link rel="stylesheet" th:href="@{/css/notifications.css}" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
@@ -50,259 +51,288 @@
 
                 
 
-                <div class="row g-3">
-                    <div class="col-lg-8">
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <div class="text-muted small">Status</div>
-                                        <div class="fw-semibold" th:text="${statusAtualFmt}">—
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="text-muted small">Etapa atual</div>
-                                        <div class="fw-semibold" th:text="${etapaAtualFmt}">CADASTRO</div>
-                                    </div>
-                                    <div>
-                                        <div class="text-muted small">Abertura</div>
-                                        <div class="fw-semibold" th:text="${dataAberturaFmt}">—
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="text-muted small">Valor da causa</div>
-                                        <div class="fw-semibold" 
-                                             th:text="${processo.valorCausa != null ? 'R$ ' + #numbers.formatDecimal(processo.valorCausa, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
-                                    </div>
-                                    <div>
-                                        <div class="text-muted small">Valor concedido</div>
-                                        <div class="fw-semibold"
-                                             th:text="${processo.valorConcedido != null ? 'R$ ' + #numbers.formatDecimal(processo.valorConcedido, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
-                                    </div>
-
-                                </div>
-                                <hr />
-
-                                <div class="d-flex flex-wrap gap-2">
-                                    <div th:each="e : ${etapas}">
-                                        <span class="badge"
-                                            th:classappend="${ordemEtapaAtual != null && e.ordem != null && e.ordem < ordemEtapaAtual} ? ' bg-success' : (${ordemEtapaAtual != null && e.ordem != null && e.ordem == ordemEtapaAtual} ? ' bg-primary' : ' bg-secondary')"
-                                            th:text="${e.codigo}">ETAPA</span>
-                                    </div>
-                                </div>
+                <!-- Summary Card (Always Visible) -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small">Status</div>
+                                <div class="fw-semibold" th:text="${statusAtualFmt}">—</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Etapa atual</div>
+                                <div class="fw-semibold" th:text="${etapaAtualFmt}">CADASTRO</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Abertura</div>
+                                <div class="fw-semibold" th:text="${dataAberturaFmt}">—</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Valor da causa</div>
+                                <div class="fw-semibold" 
+                                     th:text="${processo.valorCausa != null ? 'R$ ' + #numbers.formatDecimal(processo.valorCausa, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Valor concedido</div>
+                                <div class="fw-semibold"
+                                     th:text="${processo.valorConcedido != null ? 'R$ ' + #numbers.formatDecimal(processo.valorConcedido, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
                             </div>
                         </div>
-
-                        <div class="card" th:if="${modoCriacao}">
-                            <div class="card-header fw-semibold"><i class="fas fa-pen-to-square me-2"></i>Cadastro</div>
-                            <div class="card-body">
-                                <form action="/juridico/previdenciario/salvar" method="post">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Cliente</label>
-                                            <select class="form-select" name="clienteId" required>
-                                                <option value="" selected disabled>Selecione</option>
-                                                <option th:each="c : ${clientes}" th:value="${c.id}"
-                                                    th:text="${c.nome}">Cliente</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Responsável</label>
-                                            <select class="form-select" name="responsavelId" required>
-                                                <option value="" selected disabled>Selecione</option>
-                                                <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${u.nome}"
-                                                    th:selected="${usuarioPadraoId != null && u.id == usuarioPadraoId}">
-                                                    Usuário</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3 d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save me-2"></i>Salvar
-                                        </button>
-                                        <a class="btn btn-outline-secondary"
-                                            href="/juridico/previdenciario">Cancelar</a>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div th:if="${!modoCriacao}" class="card mb-3">
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="fw-semibold"><i class="fas fa-paperclip me-2"></i>Documentos</div>
-                                    <a class="btn btn-sm btn-outline-secondary"
-                                        th:if="${etapaAtual != null && etapaAtual.name() == 'ANALISE' && documentos != null && !documentos.isEmpty()}"
-                                        th:href="@{/juridico/previdenciario/{id}/documentos.zip(id=${processo.id})}">
-                                        <i class="fas fa-file-zipper me-2"></i>Baixar para análise
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div th:if="${permiteAnexo}" class="mb-3">
-                                    <form
-                                        th:action="@{/juridico/previdenciario/{id}/anexar-documento(id=${processo.id})}"
-                                        method="post" enctype="multipart/form-data">
-                                        <div class="row g-2 align-items-end">
-                                            <div class="col-md-4">
-                                                <label class="form-label">Tipo</label>
-                                                <select class="form-select" name="tipoDocumento" required>
-                                                    <option value="" selected disabled>Selecione</option>
-                                                    <option th:each="t : ${tiposDocumento}" th:value="${t}"
-                                                        th:text="${t}">RG</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Arquivo</label>
-                                                <input type="file" class="form-control" name="arquivo" required />
-                                            </div>
-                                            <div class="col-md-2 d-grid">
-                                                <button class="btn btn-outline-primary" type="submit">
-                                                    <i class="fas fa-upload me-2"></i>Anexar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Tipo</th>
-                                                <th>Enviado por</th>
-                                                <th>Data</th>
-                                                <th>Caminho</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:if="${documentos == null || documentos.isEmpty()}">
-                                                <td colspan="4" class="text-center text-muted py-3">Nenhum documento
-                                                    anexado</td>
-                                            </tr>
-                                            <tr th:each="d : ${documentos}">
-                                                <td><span class="badge bg-secondary"
-                                                        th:text="${d.tipoDocumento}">RG</span></td>
-                                                <td th:text="${d.enviadoPor != null ? d.enviadoPor.nome : '—'}">—</td>
-                                                <td
-                                                    th:text="${d.dataUpload != null ? #temporals.format(d.dataUpload, 'dd/MM/yyyy HH:mm') : '—'}">
-                                                    —</td>
-                                                <td class="text-truncate" style="max-width: 320px;"
-                                                    th:text="${d.caminhoArquivo}">—</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div th:if="${!modoCriacao && etapaAtual != null && etapaAtual.name() == 'DECISAO'}" class="card mb-3">
-                            <div class="card-header fw-semibold"><i class="fas fa-balance-scale me-2"></i>Decisão do processo</div>
-                            <div class="card-body">
-                                <form th:action="@{/juridico/previdenciario/{id}/decisao(id=${processo.id})}" method="post">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Resultado</label>
-                                            <select class="form-select" name="resultado">
-                                                <option value="" th:selected="${processo.resultadoDecisao == null}">Selecione</option>
-                                                <option th:each="r : ${tiposDecisao}" th:value="${r}" th:text="${r}"
-                                                        th:selected="${processo.resultadoDecisao != null && processo.resultadoDecisao == r}">DEFERIDO</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Ganhou a causa?</label>
-                                            <div class="form-check mt-2">
-                                                <input class="form-check-input" type="checkbox" name="ganhouCausa" th:checked="${processo.ganhouCausa}">
-                                                <label class="form-check-label">Sim</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Data da decisão</label>
-                                            <input type="date" class="form-control" name="dataDecisao" th:value="${processo.dataDecisao}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Valor da causa</label>
-                                            <input type="text" class="form-control" name="valorCausa" 
-                                                   th:value="${processo.valorCausa != null ? #numbers.formatDecimal(processo.valorCausa, 1, 'POINT', 2, 'COMMA') : ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Valor concedido</label>
-                                            <input type="text" class="form-control" name="valorConcedido" 
-                                                   th:value="${processo.valorConcedido != null ? #numbers.formatDecimal(processo.valorConcedido, 1, 'POINT', 2, 'COMMA') : ''}">
-                                        </div>
-                                        <div class="col-md-12">
-                                            <label class="form-label">Observação</label>
-                                            <textarea class="form-control" rows="3" name="observacaoDecisao" th:text="${processo.observacaoDecisao}"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3">
-                                        <button type="submit" class="btn btn-outline-primary">
-                                            <i class="fas fa-save me-2"></i>Salvar decisão
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div th:if="${!modoCriacao && etapaAtual != null && etapaAtual.name() == 'PROTOCOLO_INSS'}"
-                            class="card mb-3">
-                            <div class="card-header fw-semibold"><i class="fas fa-stamp me-2"></i>Protocolo INSS</div>
-                            <div class="card-body">
-                                <form th:action="@{/juridico/previdenciario/{id}/protocolo-inss(id=${processo.id})}"
-                                    method="post">
-                                    <div class="row g-3">
-                                        <div class="col-md-5">
-                                            <label class="form-label">Número do protocolo</label>
-                                            <input class="form-control" name="numeroProtocolo"
-                                                th:value="${processo.numeroProtocolo}" />
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">Data do protocolo</label>
-                                            <input type="date" class="form-control" name="dataProtocolo"
-                                                th:value="${processo.dataProtocolo}" />
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">URL (Meu INSS)</label>
-                                            <input type="url" class="form-control" name="urlMeuInss"
-                                                th:value="${processo.urlMeuInss}" />
-                                        </div>
-                                    </div>
-                                    <div class="mt-3">
-                                        <button type="submit" class="btn btn-outline-primary">
-                                            <i class="fas fa-save me-2"></i>Salvar protocolo
-                                        </button>
-                                    </div>
-                                </form>
+                        <hr />
+                        <div class="d-flex flex-wrap gap-2">
+                            <div th:each="e : ${etapas}">
+                                <span class="badge"
+                                    th:classappend="${ordemEtapaAtual != null && e.ordem != null && e.ordem < ordemEtapaAtual} ? ' bg-success' : (${ordemEtapaAtual != null && e.ordem != null && e.ordem == ordemEtapaAtual} ? ' bg-primary' : ' bg-secondary')"
+                                    th:text="${e.codigo}">ETAPA</span>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="col-lg-4" th:if="${!modoCriacao}">
-                        <div class="card">
-                            <div class="card-header fw-semibold"><i class="fas fa-history me-2"></i>Histórico</div>
-                            <div class="card-body p-0">
-                                <div class="timeline-modern px-3 pt-3" th:if="${historico != null && !historico.isEmpty()}">
-                                    <div th:each="h : ${historico}" class="timeline-item-modern comum">
-                                        <div class="timeline-icon-modern">
-                                            <i class="fas fa-circle"></i>
+                <!-- Creation Mode -->
+                <div class="card" th:if="${modoCriacao}">
+                    <div class="card-header fw-semibold"><i class="fas fa-pen-to-square me-2"></i>Cadastro</div>
+                    <div class="card-body">
+                        <form action="/juridico/previdenciario/salvar" method="post">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Cliente</label>
+                                    <select class="form-select" name="clienteId" required>
+                                        <option value="" selected disabled>Selecione</option>
+                                        <option th:each="c : ${clientes}" th:value="${c.id}"
+                                            th:text="${c.nome}">Cliente</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Responsável</label>
+                                    <select class="form-select" name="responsavelId" required>
+                                        <option value="" selected disabled>Selecione</option>
+                                        <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${u.nome}"
+                                            th:selected="${usuarioPadraoId != null && u.id == usuarioPadraoId}">
+                                            Usuário</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Salvar
+                                </button>
+                                <a class="btn btn-outline-secondary"
+                                    href="/juridico/previdenciario">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- View/Edit Mode with Tabs -->
+                <div th:if="${!modoCriacao}">
+                    <ul class="nav nav-tabs mb-3" id="processoTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="detalhes-tab" data-bs-toggle="tab" data-bs-target="#detalhes" type="button" role="tab" aria-controls="detalhes" aria-selected="true">
+                                <i class="fas fa-list-check me-2"></i>Ações
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos" type="button" role="tab" aria-controls="documentos" aria-selected="false">
+                                <i class="fas fa-paperclip me-2"></i>Documentos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="false">
+                                <i class="fas fa-history me-2"></i>Histórico
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="processoTabsContent">
+                        <!-- Tab 1: Ações -->
+                        <div class="tab-pane fade show active" id="detalhes" role="tabpanel" aria-labelledby="detalhes-tab">
+                            <!-- Decisão -->
+                            <div th:if="${etapaAtual != null && etapaAtual.name() == 'DECISAO'}" class="card mb-3">
+                                <div class="card-header fw-semibold"><i class="fas fa-balance-scale me-2"></i>Decisão do processo</div>
+                                <div class="card-body">
+                                    <form th:action="@{/juridico/previdenciario/{id}/decisao(id=${processo.id})}" method="post">
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Resultado</label>
+                                                <select class="form-select" name="resultado">
+                                                    <option value="" th:selected="${processo.resultadoDecisao == null}">Selecione</option>
+                                                    <option th:each="r : ${tiposDecisao}" th:value="${r}" th:text="${r}"
+                                                            th:selected="${processo.resultadoDecisao != null && processo.resultadoDecisao == r}">DEFERIDO</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Ganhou a causa?</label>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" name="ganhouCausa" th:checked="${processo.ganhouCausa}">
+                                                    <label class="form-check-label">Sim</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Data da decisão</label>
+                                                <input type="date" class="form-control" name="dataDecisao" th:value="${processo.dataDecisao}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Valor da causa</label>
+                                                <input type="text" class="form-control" name="valorCausa" 
+                                                       th:value="${processo.valorCausa != null ? #numbers.formatDecimal(processo.valorCausa, 1, 'POINT', 2, 'COMMA') : ''}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Valor concedido</label>
+                                                <input type="text" class="form-control" name="valorConcedido" 
+                                                       th:value="${processo.valorConcedido != null ? #numbers.formatDecimal(processo.valorConcedido, 1, 'POINT', 2, 'COMMA') : ''}">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label">Observação</label>
+                                                <textarea class="form-control" rows="3" name="observacaoDecisao" th:text="${processo.observacaoDecisao}"></textarea>
+                                            </div>
                                         </div>
-                                        <div class="timeline-content-modern">
-                                            <span class="timeline-date-modern" 
-                                                  th:text="${h.dataEvento != null ? #temporals.format(h.dataEvento, 'dd/MM/yyyy HH:mm') : '—'}">Data</span>
-                                            <h5 class="timeline-title-modern" th:text="${h.evento}">Evento</h5>
-                                            <div class="timeline-desc-modern" 
-                                                 th:if="${h.observacao != null && !#strings.isEmpty(h.observacao)}"
-                                                 th:text="${h.observacao}">Obs</div>
-                                            <small class="text-muted mt-2 d-block border-top pt-2">
-                                                <i class="fas fa-user-circle me-1"></i> 
-                                                <span th:text="${h.usuario != null ? h.usuario.nome : '—'}">Usuário</span>
-                                            </small>
+                                        <div class="mt-3">
+                                            <button type="submit" class="btn btn-outline-primary">
+                                                <i class="fas fa-save me-2"></i>Salvar decisão
+                                            </button>
                                         </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Protocolo INSS -->
+                            <div th:if="${etapaAtual != null && etapaAtual.name() == 'PROTOCOLO_INSS'}" class="card mb-3">
+                                <div class="card-header fw-semibold"><i class="fas fa-stamp me-2"></i>Protocolo INSS</div>
+                                <div class="card-body">
+                                    <form th:action="@{/juridico/previdenciario/{id}/protocolo-inss(id=${processo.id})}" method="post">
+                                        <div class="row g-3">
+                                            <div class="col-md-5">
+                                                <label class="form-label">Número do protocolo</label>
+                                                <input class="form-control" name="numeroProtocolo" th:value="${processo.numeroProtocolo}" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Data do protocolo</label>
+                                                <input type="date" class="form-control" name="dataProtocolo" th:value="${processo.dataProtocolo}" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">URL (Meu INSS)</label>
+                                                <input type="url" class="form-control" name="urlMeuInss" th:value="${processo.urlMeuInss}" />
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="submit" class="btn btn-outline-primary">
+                                                <i class="fas fa-save me-2"></i>Salvar protocolo
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div th:if="${!((etapaAtual != null && etapaAtual.name() == 'DECISAO') || (etapaAtual != null && etapaAtual.name() == 'PROTOCOLO_INSS'))}" class="text-center text-muted py-5 border rounded bg-light">
+                                <div th:if="${etapaAtual != null && etapaAtual.name() == 'FINALIZADO'}">
+                                    <i class="fas fa-flag-checkered fa-3x mb-3 text-success opacity-50"></i>
+                                    <p class="mb-0 fw-semibold">Processo Finalizado</p>
+                                    <small>Todas as etapas foram concluídas com sucesso.</small>
+                                </div>
+                                <div th:unless="${etapaAtual != null && etapaAtual.name() == 'FINALIZADO'}">
+                                    <i class="fas fa-check-circle fa-3x mb-3 opacity-25"></i>
+                                    <p class="mb-0">Nenhuma ação pendente para esta etapa.</p>
+                                    <small>Aguarde a conclusão ou utilize o botão <strong>"Mudar etapa"</strong> no topo da página para avançar.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Documentos -->
+                        <div class="tab-pane fade" id="documentos" role="tabpanel" aria-labelledby="documentos-tab">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-semibold"><i class="fas fa-paperclip me-2"></i>Documentos</div>
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                            th:if="${etapaAtual != null && etapaAtual.name() == 'ANALISE' && documentos != null && !documentos.isEmpty()}"
+                                            th:href="@{/juridico/previdenciario/{id}/documentos.zip(id=${processo.id})}">
+                                            <i class="fas fa-file-zipper me-2"></i>Baixar para análise
+                                        </a>
                                     </div>
                                 </div>
-                                <div th:if="${historico == null || historico.isEmpty()}" class="text-center text-muted py-4">
-                                    <div class="mb-3"><i class="fas fa-history fa-3x opacity-25"></i></div>
-                                    <p class="mb-0">Sem eventos registrados.</p>
+                                <div class="card-body">
+                                    <div th:if="${permiteAnexo}" class="mb-3">
+                                        <form th:action="@{/juridico/previdenciario/{id}/anexar-documento(id=${processo.id})}"
+                                            method="post" enctype="multipart/form-data">
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Tipo</label>
+                                                    <select class="form-select" name="tipoDocumento" required>
+                                                        <option value="" selected disabled>Selecione</option>
+                                                        <option th:each="t : ${tiposDocumento}" th:value="${t}"
+                                                            th:text="${t}">RG</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Arquivo</label>
+                                                    <input type="file" class="form-control" name="arquivo" required />
+                                                </div>
+                                                <div class="col-md-2 d-grid">
+                                                    <button class="btn btn-outline-primary" type="submit">
+                                                        <i class="fas fa-upload me-2"></i>Anexar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Tipo</th>
+                                                    <th>Enviado por</th>
+                                                    <th>Data</th>
+                                                    <th>Caminho</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:if="${documentos == null || documentos.isEmpty()}">
+                                                    <td colspan="4" class="text-center text-muted py-3">Nenhum documento anexado</td>
+                                                </tr>
+                                                <tr th:each="d : ${documentos}">
+                                                    <td><span class="badge bg-secondary" th:text="${d.tipoDocumento}">RG</span></td>
+                                                    <td th:text="${d.enviadoPor != null ? d.enviadoPor.nome : '—'}">—</td>
+                                                    <td th:text="${d.dataUpload != null ? #temporals.format(d.dataUpload, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                                                    <td class="text-truncate" style="max-width: 320px;" th:text="${d.caminhoArquivo}">—</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Histórico -->
+                        <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+                            <div class="card mb-3">
+                                <div class="card-header fw-semibold"><i class="fas fa-history me-2"></i>Histórico</div>
+                                <div class="card-body p-0">
+                                    <div class="timeline-modern px-3 pt-3" th:if="${historico != null && !historico.isEmpty()}">
+                                        <div th:each="h : ${historico}" class="timeline-item-modern comum">
+                                            <div class="timeline-icon-modern">
+                                                <i class="fas fa-circle"></i>
+                                            </div>
+                                            <div class="timeline-content-modern">
+                                                <span class="timeline-date-modern" 
+                                                      th:text="${h.dataEvento != null ? #temporals.format(h.dataEvento, 'dd/MM/yyyy HH:mm') : '—'}">Data</span>
+                                                <h5 class="timeline-title-modern" th:text="${h.evento}">Evento</h5>
+                                                <div class="timeline-desc-modern" 
+                                                     th:if="${h.observacao != null && !#strings.isEmpty(h.observacao)}"
+                                                     th:text="${h.observacao}">Obs</div>
+                                                <small class="text-muted mt-2 d-block border-top pt-2">
+                                                    <i class="fas fa-user-circle me-1"></i> 
+                                                    <span th:text="${h.usuario != null ? h.usuario.nome : '—'}">Usuário</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:if="${historico == null || historico.isEmpty()}" class="text-center text-muted py-4">
+                                        <div class="mb-3"><i class="fas fa-history fa-3x opacity-25"></i></div>
+                                        <p class="mb-0">Sem eventos registrados.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -314,6 +344,7 @@
         </main>
     </div>
 
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/sidebar.js}"></script>

@@ -22,6 +22,9 @@ import com.jaasielsilva.portalceo.service.ContaReceberService;
 import com.jaasielsilva.portalceo.model.ContaReceber;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 public class ProcessoPrevidenciarioService {
@@ -35,6 +38,19 @@ public class ProcessoPrevidenciarioService {
     @Transactional(readOnly = true)
     public List<ProcessoPrevidenciario> listar() {
         return processoRepository.findAllByOrderByDataAberturaDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProcessoPrevidenciario> buscarComFiltros(String status, String search, Pageable pageable) {
+        ProcessoPrevidenciarioStatus statusEnum = null;
+        if (status != null && !status.isEmpty()) {
+            try {
+                statusEnum = ProcessoPrevidenciarioStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                // ignore invalid status
+            }
+        }
+        return processoRepository.buscarComFiltros(statusEnum, search, pageable);
     }
 
     @Transactional(readOnly = true)

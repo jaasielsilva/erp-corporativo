@@ -123,13 +123,16 @@ public class ProcessoPrevidenciarioController {
                     java.util.stream.Stream.concat(paraFrente.stream(), paraTras.stream()).toList());
         }
 
-        model.addAttribute("pageTitle", "Processo Previdenciário #" + processo.getId());
+        String ano = processo.getDataAbertura() != null ? String.valueOf(processo.getDataAbertura().getYear()) : String.valueOf(LocalDate.now().getYear());
+        String idFormatado = String.format("%04d", processo.getId()) + "/" + ano;
+
+        model.addAttribute("pageTitle", "Processo Previdenciário " + idFormatado);
         model.addAttribute("modoCriacao", false);
         model.addAttribute("processo", processo);
         model.addAttribute("dataAberturaFmt", processo.getDataAbertura() != null
                 ? DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(processo.getDataAbertura())
                 : "—");
-        model.addAttribute("processoNumeroFmt", "Processo #" + processo.getId());
+        model.addAttribute("processoNumeroFmt", "Processo " + idFormatado);
         model.addAttribute("statusAtualFmt",
                 processo.getStatusAtual() != null ? processo.getStatusAtual().name() : "—");
         model.addAttribute("etapaAtualFmt", processo.getEtapaAtual() != null ? processo.getEtapaAtual().name() : "—");
@@ -207,7 +210,9 @@ public class ProcessoPrevidenciarioController {
             ProcessoPrevidenciario p = processoService.buscarPorId(id);
             Map<String, Object> m = new HashMap<>();
             m.put("id", p.getId());
-            m.put("numero", p.getNumeroProtocolo() != null ? p.getNumeroProtocolo() : ("Processo #" + p.getId()));
+            String ano = p.getDataAbertura() != null ? String.valueOf(p.getDataAbertura().getYear()) : String.valueOf(LocalDate.now().getYear());
+            String idFormatado = String.format("%04d", p.getId()) + "/" + ano;
+            m.put("numero", p.getNumeroProtocolo() != null ? p.getNumeroProtocolo() : ("Processo " + idFormatado));
             m.put("tipo", "Previdenciária");
             m.put("tribunal", "—");
             m.put("parte", "Instituto Nacional do Seguro Social – INSS");
@@ -220,6 +225,43 @@ public class ProcessoPrevidenciarioController {
         } catch (Exception e) {
             return ResponseEntity.status(404).body(Map.of("erro", "Processo previdenciário não encontrado"));
         }
+    }
+
+    @GetMapping("/api/processos")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarAjax(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "search", required = false) String search) {
+        
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(page, 0), Math.min(Math.max(size, 1), 100), org.springframework.data.domain.Sort.by("dataAbertura").descending());
+        
+        org.springframework.data.domain.Page<ProcessoPrevidenciario> pagina = processoService.buscarComFiltros(status, search, pageable);
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("content", pagina.getContent().stream().map(this::toDTO).collect(Collectors.toList()));
+        resp.put("currentPage", pagina.getNumber());
+        resp.put("totalPages", pagina.getTotalPages());
+        resp.put("totalElements", pagina.getTotalElements());
+        resp.put("hasPrevious", pagina.hasPrevious());
+        resp.put("hasNext", pagina.hasNext());
+        
+        return ResponseEntity.ok(resp);
+    }
+    
+    private Map<String, Object> toDTO(ProcessoPrevidenciario p) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", p.getId());
+        m.put("cliente", Map.of("nome", p.getCliente() != null ? p.getCliente().getNome() : "—"));
+        m.put("etapaAtual", p.getEtapaAtual() != null ? p.getEtapaAtual().name() : "—");
+        m.put("statusAtual", p.getStatusAtual() != null ? p.getStatusAtual().name() : "—");
+        m.put("responsavel", Map.of("nome", p.getResponsavel() != null ? p.getResponsavel().getNome() : "—"));
+        m.put("dataAbertura", p.getDataAbertura());
+        m.put("resultadoDecisao", p.getResultadoDecisao());
+        m.put("valorCausa", p.getValorCausa());
+        return m;
     }
 
     @GetMapping("/api/processos/{id}/historico")

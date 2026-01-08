@@ -76,6 +76,39 @@
             background: rgba(102, 126, 234, 0.08);
         }
 
+        /* Hover and Click effects for Quick Template Buttons */
+        .btn-template-action {
+            display: inline-block;
+            font-weight: 400;
+            line-height: 1.5;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #dee2e6;
+            background-color: #fff !important;
+            color: #212529;
+        }
+        
+        .btn-template-action:hover {
+            background-color: #f0f4ff !important;
+            border-color: #764ba2 !important;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            color: #0d6efd !important;
+        }
+
+        .btn-template-action:active {
+            transform: scale(0.95);
+            background-color: #e9ecef !important;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.125);
+        }
+
         @media (max-width: 768px) {
             .upload-area {
                 padding: 20px 10px;
@@ -92,170 +125,177 @@
             <section class="content-area">
                 <div class="container-fluid py-4">
 
-                    <!-- Templates rápidos (Prioridade) -->
-                    <div class="card p-3 mb-4 shadow-sm">
-                        <h5><i class="fas fa-bolt"></i> Templates rápidos</h5>
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-6 position-relative">
-                                <label class="form-label fw-semibold">Cliente (PF)</label>
-                                <input id="procClienteBusca" class="form-control" type="text" autocomplete="off"
-                                    placeholder="Buscar cliente por nome, email ou CPF" />
-                                <input id="procClienteId" type="hidden" />
-                                <div id="procClienteResultados" class="template-search-results d-none"></div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Documento</label>
-                                <input class="form-control" type="text" value="PROCURAÇÃO AD JUDICIA" readonly />
-                            </div>
-                            <div class="col-md-3 d-grid">
-                                <button id="btnGerarProcuracaoAdJudicia" type="button" class="btn btn-primary">
-                                    <i class="fas fa-file-pdf"></i> Gerar PDF
-                                </button>
-                            </div>
+                    <!-- Header e Ações Principais -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h4 class="mb-1"><i class="fas fa-folder-open me-2 text-primary"></i>Biblioteca de Documentos</h4>
+                            <p class="text-muted mb-0 small">Gestão de arquivos e modelos jurídicos</p>
                         </div>
-                        <div class="row g-3 align-items-end mt-1">
-                            <div class="col-md-6"></div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Documento</label>
-                                <input class="form-control" type="text"
-                                    value="CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS" readonly />
-                            </div>
-                            <div class="col-md-3 d-grid">
-                                <button id="btnGerarContratoPrestacaoServicosAdvocaticios" type="button"
-                                    class="btn btn-primary">
-                                    <i class="fas fa-file-pdf"></i> Gerar PDF
-                                </button>
-                            </div>
-                        </div>
-                        <div id="procClienteSelecionadoResumo" class="small text-muted mt-2">Nenhum cliente selecionado.
+                        <div class="d-flex gap-2">
+                             <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#templatesCollapse" aria-expanded="false" aria-controls="templatesCollapse">
+                                <i class="fas fa-magic me-2"></i>Gerador de Documentos
+                            </button>
+                            <button onclick="abrirUploadSwal()" class="btn btn-primary shadow-sm">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Novo Documento
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Filtros e Listagem -->
-                    <div class="card p-3 mb-4 shadow-sm">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0"><i class="fas fa-list"></i> Documentos</h5>
-                            <button type="button" class="btn btn-success btn-sm" onclick="abrirUploadSwal()">
-                                <i class="fas fa-cloud-upload-alt"></i> Novo Upload
-                            </button>
-                        </div>
-                        <!-- Filtros -->
-                        <form id="formFiltroDocs" autocomplete="off">
-                            <div class="row g-3 align-items-end mb-2">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Categoria</label>
-                                    <select id="filtroDocCategoria" class="form-select">
-                                        <option value="">Todas</option>
-                                        <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}"
-                                            th:text="${c.nome}"></option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Busca</label>
-                                    <input id="filtroDocBusca" class="form-control" type="text"
-                                        placeholder="Título ou descrição" />
-                                </div>
-                                <div class="col-md-3 d-grid">
-                                    <button id="btnBuscarDocs" type="button" class="btn btn-primary"><i
-                                            class="fas fa-search"></i> Buscar</button>
+                    <!-- Templates Rápidos (Collapsible) -->
+                    <div class="collapse mb-4" id="templatesCollapse">
+                        <div class="card border-0 shadow-sm bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold text-primary mb-3"><i class="fas fa-bolt me-2"></i>Templates Rápidos</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-5 position-relative d-flex flex-column justify-content-end">
+                                        <label class="form-label fw-semibold small">Cliente (PF)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-user-search text-muted"></i></span>
+                                            <input id="procClienteBusca" class="form-control border-start-0" type="text" autocomplete="off" placeholder="Buscar por nome ou CPF..." />
+                                        </div>
+                                        <input id="procClienteId" type="hidden" />
+                                        <div id="procClienteResultados" class="template-search-results d-none shadow-sm"></div>
+                                        <div id="procClienteSelecionadoResumo" class="small text-muted mt-1 ms-1 position-absolute top-100 start-0">Nenhum cliente selecionado.</div>
+                                    </div>
+                                    <div class="col-md-7 d-flex flex-column justify-content-end">
+                                        <label class="form-label fw-semibold small">Gerar PDF</label>
+                                        <div class="d-flex gap-2">
+                                            <button id="btnGerarProcuracaoAdJudicia" type="button" class="btn-template-action flex-grow-1 text-start">
+                                                <i class="fas fa-file-contract text-danger me-2"></i>Procuração Ad Judicia
+                                            </button>
+                                            <button id="btnGerarContratoPrestacaoServicosAdvocaticios" type="button" class="btn-template-action flex-grow-1 text-start">
+                                                <i class="fas fa-file-signature text-primary me-2"></i>Contrato Honorários
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </form>
+                        </div>
+                    </div>
 
-                        <!-- Tabela -->
-                        <div id="docsLoading" class="loading-spinner d-none"><i
-                                class='fas fa-spinner fa-spin fa-2x'></i> Carregando...</div>
-                        <div class="table-responsive mt-2">
-                            <table class="table table-striped align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Título</th>
+                    <!-- Card Principal: Filtros e Tabela -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-0">
+                            
+                            <!-- Barra de Filtros -->
+                            <div class="p-3 border-bottom bg-light bg-opacity-50">
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                            <input type="text" id="filtroDocBusca" class="form-control border-start-0" placeholder="Buscar por título, descrição ou autor...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="filtroDocCategoria" class="form-select">
+                                            <option value="">Todas as categorias</option>
+                                            <option th:each="c : ${categoriasDocumentos}" th:value="${c.nome}" th:text="${c.nome}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button onclick="carregarDocs(0)" class="btn btn-light border w-100 fw-semibold text-primary">
+                                            <i class="fas fa-filter me-1"></i> Filtrar
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <span class="text-muted small align-middle mt-2 d-inline-block">
+                                            <i class="fas fa-file me-1"></i> <span th:text="${totalDocumentos ?: 0}">0</span> arquivos
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabela -->
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 align-middle">
+                                    <thead class="bg-light text-secondary">
+                                        <tr class="text-center small text-uppercase fw-bold">
+                                            <th style="width: 10%;" class="border-bottom-0">Protocolo</th>
+                                            <th style="width: 35%;" class="text-start border-bottom-0">Documento</th>
+                                            <th style="width: 15%;" class="border-bottom-0">Categoria</th>
+                                            <th style="width: 15%;" class="border-bottom-0">Autor</th>
+                                            <th style="width: 15%;" class="border-bottom-0">Data</th>
+                                            <th style="width: 10%;" class="text-end border-bottom-0 pe-4">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="docsTableBody" class="border-top-0 text-center">
+                                        <!-- Loading State -->
+                                        <tr class="loading-spinner">
+                                            <td colspan="6" class="py-5 text-center text-muted">
+                                                <i class="fas fa-circle-notch fa-spin fa-2x mb-2"></i>
+                                                <p class="mb-0 small">Carregando documentos...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Paginação -->
+                            <div class="d-flex justify-content-between align-items-center p-3 border-top bg-light bg-opacity-10">
+                                <span id="docsPageInfo" class="text-muted small fw-semibold">Página 1 de 1</span>
+                                <div class="btn-group shadow-sm">
+                                    <button id="docsPrev" class="btn btn-white border btn-sm px-3" onclick="mudarPaginaDocs(-1)" disabled>
+                                        <i class="fas fa-chevron-left me-1"></i> Anterior
+                                    </button>
+                                    <button id="docsNext" class="btn btn-white border btn-sm px-3" onclick="mudarPaginaDocs(1)" disabled>
+                                        Próximo <i class="fas fa-chevron-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Modelos (Bottom) -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold text-secondary"><i class="fas fa-copy me-2 text-warning"></i>Modelos Oficiais</h6>
+                            <button th:if="${isAdmin or isMaster}" onclick="abrirModeloSwal()" class="btn btn-sm btn-light text-primary fw-semibold border">
+                                <i class="fas fa-plus me-1"></i> Novo Modelo
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle text-center">
+                                <thead class="bg-light text-secondary">
+                                    <tr class="small text-uppercase fw-bold">
+                                        <th class="text-start ps-4">Nome do Modelo</th>
                                         <th>Categoria</th>
-                                        <th>Descrição</th>
-                                        <th>Arquivo</th>
-                                        <th>Criado em</th>
-                                        <th>Ações</th>
+                                        <th>Versão</th>
+                                        <th class="text-end pe-4">Opções</th>
                                     </tr>
                                 </thead>
-                                <tbody id="docsTableBody">
-                                    <!-- Conteúdo dinâmico -->
-                                    <tr>
-                                        <td colspan="6" class="text-muted text-center">Use os filtros para listar
-                                            documentos.</td>
+                                <tbody id="modelosTableBody">
+                                    <tr th:if="${modelosDocumentos == null or modelosDocumentos.isEmpty()}">
+                                        <td colspan="4" class="text-center py-4 text-muted">Nenhum modelo cadastrado.</td>
+                                    </tr>
+                                    <tr th:each="m : ${modelosDocumentos}">
+                                        <td class="text-start ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-3 fs-4 text-primary opacity-75"><i class="fas fa-file-contract"></i></div>
+                                                <div>
+                                                    <div class="fw-semibold text-dark" th:text="${m.nome}">Contrato</div>
+                                                    <div class="small text-muted">Modelo Oficial</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border fw-normal" th:text="${m.categoria}">Geral</span></td>
+                                        <td><span class="badge bg-info bg-opacity-10 text-info border fw-normal" th:text="'v' + ${m.versao}">v1.0</span></td>
+                                        <td class="text-end pe-4">
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-primary" data-action="modelo-usar" th:data-id="${m.id}" title="Gerar Documento a partir deste modelo">
+                                                    <i class="fas fa-magic me-1"></i> Gerar
+                                                </button>
+                                                <a th:href="@{/juridico/api/modelos/{id}/download(id=${m.id})}" class="btn btn-sm btn-white border text-secondary" title="Baixar Modelo">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Paginação -->
-                        <nav aria-label="Paginação de documentos"
-                            class="mt-2 d-flex justify-content-between align-items-center">
-                            <span id="docsPageInfo" class="small">Página 1 de 1</span>
-                            <ul class="pagination mb-0">
-                                <li class="page-item"><button id="docsPrev" type="button" class="page-link">&laquo;
-                                        Anterior</button></li>
-                                <li class="page-item"><button id="docsNext" type="button" class="page-link">Próxima
-                                        &raquo;</button></li>
-                            </ul>
-                        </nav>
-
                     </div>
 
-                    <!-- Modelos de Documentos -->
-                    <div class="card p-3 shadow-sm mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0"><i class='fas fa-file-alt'></i> Modelos de Documentos</h5>
-                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="abrirModeloSwal()">
-                                <i class="fas fa-plus"></i> Novo Modelo
-                            </button>
-                        </div>
-                        <ul th:if="${modelosDocumentos != null and !modelosDocumentos.isEmpty()}"
-                            class='list-group list-group-flush mt-2'>
-                            <li th:each='m : ${modelosDocumentos}'
-                                class='list-group-item d-flex justify-content-between align-items-center'>
-                                <span class="d-flex flex-column">
-                                    <span><b th:text='${m.nome}'>Modelo</b> -
-                                        <small th:text="|Categoria: ${m.categoria}|">Categoria</small></span>
-                                    <span class="d-flex gap-2 mt-1">
-                                        <span th:text="|v${m.versao}|" class='badge bg-secondary'></span>
-                                        <span th:if="${m.status != null}" th:text="${m.status}"
-                                            class='badge bg-info'></span>
-                                    </span>
-                                </span>
-                                <button class='btn btn-sm btn-outline-primary' th:attr="data-id=${m.id}"
-                                    data-action="modelo-usar"><i class='fas fa-pen'></i> Usar</button>
-                            </li>
-                        </ul>
-                        <div th:if="${modelosDocumentos == null or modelosDocumentos.isEmpty()}" class='text-muted'>
-                            Nenhum modelo disponível.</div>
-                    </div>
-
-                    <!-- Documentos Recentes -->
-                    <div class="card p-3 shadow-sm mb-4">
-                        <h5><i class="fas fa-clock"></i> Documentos Recentes</h5>
-                        <th:block th:if="${documentosRecentes != null and !documentosRecentes.isEmpty()}">
-                            <ul class="list-group list-group-flush mt-2">
-                                <li th:each="d : ${documentosRecentes}"
-                                    class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><b th:text="${d.titulo}">Título</b> -
-                                        <small th:text="|Categoria: ${d.categoria}|">Categoria</small></span>
-                                    <span class="d-flex align-items-center gap-2">
-                                        <span
-                                            th:text="${#temporals.format(d.dataUpload, 'yyyy-MM-dd HH:mm')}">Data</span>
-                                        <span>|</span>
-                                        <span>Autor: <span th:text="${d.autor} ?: '—'">—</span></span>
-                                        <a th:href="@{|/juridico/documentos/download/${d.id}|}"
-                                            class="btn btn-sm btn-outline-primary" title="Baixar"><i
-                                                class="fas fa-download"></i></a>
-                                    </span>
-                                </li>
-                            </ul>
-                        </th:block>
-                        <span th:if="${documentosRecentes == null or documentosRecentes.isEmpty()}"
-                            class="text-muted">Nenhum documento recente.</span>
-                    </div>
-
-                </div><!-- container-fluid -->
+                </div>
             </section>
 
             <!-- Footer -->
@@ -496,34 +536,67 @@
                 const $tbody = $('#docsTableBody');
                 $tbody.empty();
                 if (!items || items.length === 0) {
-                    $tbody.append('<tr><td colspan=\"6\" class=\"text-center text-muted\">Nenhum documento encontrado.</td></tr>');
+                    $tbody.append('<tr><td colspan=\"6\" class=\"text-center py-4 text-muted\">Nenhum documento encontrado.</td></tr>');
                     return;
                 }
-                items.forEach(d => {
+                items.forEach((d, index) => {
                     const lower = (d.caminhoArquivo || '').toLowerCase();
                     const ct = (d.contentType || '').toLowerCase();
                     const fn = (d.originalFilename || '').toLowerCase();
                     const isPdf = ct.includes('pdf') || lower.endsWith('.pdf') || fn.endsWith('.pdf');
                     const isImg = ct.startsWith('image/') || lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || fn.endsWith('.png') || fn.endsWith('.jpg') || fn.endsWith('.jpeg');
-                    let linkHtml = '<span class="text-muted">—</span>';
-                    if (isPdf || isImg) {
-                        if (CAN_PREVIEW) {
-                            linkHtml = `<a href="/juridico/documentos/preview/${d.id}" target="_blank"><i class='fas fa-eye'></i> Visualizar</a>`;
-                        } else if (CAN_DOWNLOAD) {
-                            linkHtml = `<a href="/juridico/documentos/download/${d.id}" target="_blank"><i class='fas fa-download'></i> Baixar</a>`;
-                        }
+                    const isWord = ct.includes('word') || lower.endsWith('.doc') || lower.endsWith('.docx') || fn.endsWith('.doc') || fn.endsWith('.docx');
+                    
+                    let iconClass = 'fa-file';
+                    let iconColor = 'text-secondary';
+                    if (isPdf) { iconClass = 'fa-file-pdf'; iconColor = 'text-danger'; }
+                    else if (isImg) { iconClass = 'fa-file-image'; iconColor = 'text-info'; }
+                    else if (isWord) { iconClass = 'fa-file-word'; iconColor = 'text-primary'; }
+
+                    const actions = `
+                        <div class="d-flex justify-content-end gap-1">
+                            ${CAN_PREVIEW && (isPdf || isImg) ? `<a class="btn btn-sm btn-white border text-secondary" href="/juridico/documentos/preview/${d.id}" target="_blank" title="Visualizar"><i class="fas fa-eye"></i></a>` : ''}
+                            ${CAN_DOWNLOAD ? `<a class="btn btn-sm btn-white border text-primary" href="/juridico/documentos/download/${d.id}" target="_blank" title="Baixar"><i class="fas fa-download"></i></a>` : ''}
+                            <button type="button" class="btn btn-sm btn-white border text-danger" data-action="doc-excluir" data-id="${d.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </div>`;
+
+                    // Formatação
+                    const docIdFormatted = d.id ? '#' + String(d.id).padStart(4, '0') : '—';
+                    const dataCriado = d.criadoEm ? new Date(d.criadoEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+
+                    // Tratamento visual do Autor
+                    let autorDisplay;
+                    if (d.autor && d.autor.trim() !== '' && d.autor.toLowerCase() !== 'sistema') {
+                        // Autor Humano
+                        autorDisplay = `
+                            <div class="d-inline-flex align-items-center gap-1 text-secondary" title="${d.autor}">
+                                <i class="fas fa-user-circle text-primary opacity-75"></i>
+                                <span class="d-inline-block text-truncate" style="max-width: 120px;">${d.autor}</span>
+                            </div>`;
                     } else {
-                        if (CAN_DOWNLOAD) {
-                            linkHtml = `<a href="/juridico/documentos/download/${d.id}" target="_blank"><i class='fas fa-download'></i> Baixar</a>`;
-                        }
+                        // Sistema / Automático
+                        autorDisplay = `
+                            <span class="badge bg-light text-secondary border fw-normal" title="Gerado automaticamente pelo sistema">
+                                <i class="fas fa-robot me-1"></i>Sistema
+                            </span>`;
                     }
+
                     $tbody.append(`
-                <tr>
-                    <td>${d.titulo || '—'}</td>
-                    <td>${d.categoria || '—'}</td>
-                    <td>${d.descricao || '—'}</td>
-                    <td>${linkHtml}</td>
-                    <td>${d.criadoEm || '—'}</td>
+                <tr class="align-middle">
+                    <td class="text-center text-muted small font-monospace">${docIdFormatted}</td>
+                    <td class="text-start">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3 fs-4 ${iconColor}"><i class="fas ${iconClass}"></i></div>
+                            <div>
+                                <div class="fw-semibold text-dark">${d.titulo || 'Sem título'}</div>
+                                <div class="small text-muted text-truncate" style="max-width: 250px;">${d.descricao || d.originalFilename || '—'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-light text-dark border fw-normal">${d.categoria || 'Geral'}</span></td>
+                    <td>${autorDisplay}</td>
+                    <td class="small text-secondary">${dataCriado}</td>
+                    <td>${actions}</td>
                 </tr>`);
                 });
             }
@@ -543,25 +616,11 @@
                         docsPage = res.page || 0;
                         docsTotalPages = res.totalPages || 1;
                         renderDocs(res.content);
-                        (function decorateActions(list) {
-                            const $rows = $('#docsTableBody tr');
-                            $rows.each(function (idx) {
-                                const d = list[idx];
-                                if (!d) return;
-                                const actions = `
-                            <div class="d-flex gap-1">
-                                ${CAN_PREVIEW ? `<a class="btn btn-sm btn-outline-secondary" href="/juridico/documentos/preview/${d.id}" target="_blank" title="Visualizar"><i class="fas fa-eye"></i></a>` : ''}
-                                ${CAN_DOWNLOAD ? `<a class="btn btn-sm btn-outline-primary" href="/juridico/documentos/download/${d.id}" target="_blank" title="Baixar"><i class="fas fa-download"></i></a>` : ''}
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-action="doc-excluir" data-id="${d.id}"><i class="fas fa-trash"></i></button>
-                            </div>`;
-                                $(this).append(`<td>${actions}</td>`);
-                            });
-                        })(res.content);
                         atualizarDocsPaginacao();
                     })
                     .fail(() => {
                         notify('error', 'Falha ao listar', 'Não foi possível carregar os documentos.', 'high');
-                        $('#docsTableBody').html('<tr><td colspan=\"6\" class=\"text-center text-muted\">Erro ao carregar documentos.</td></tr>');
+                        $('#docsTableBody').html('<tr><td colspan=\"6\" class=\"text-center py-4 text-muted\">Erro ao carregar documentos.</td></tr>');
                     })
                     .always(() => showDocsLoading(false));
             }
@@ -588,6 +647,8 @@
             let procDebounce = null;
             let procSelecionado = null;
 
+            let lastSearchResults = []; // Armazena resultados da busca para acesso ao selecionar
+
             function hideProcResultados() {
                 $('#procClienteResultados').addClass('d-none').empty();
             }
@@ -613,6 +674,7 @@
                     $.get('/clientes/avancado/api/busca', { busca: q, tipoCliente: 'PF', ativo: true, size: 8, page: 0 })
                         .done(res => {
                             const items = (res && res.content) ? res.content : [];
+                            lastSearchResults = items; // Guarda para uso no click
                             const $box = $('#procClienteResultados');
                             $box.empty();
                             if (!items.length) {
@@ -642,9 +704,13 @@
             $(document).on('click', '#procClienteResultados .template-search-item', function () {
                 const id = $(this).attr('data-id');
                 if (!id) return;
-                const nome = $(this).find('.fw-semibold').text();
-                setProcSelecionado({ id, nome });
-                $('#procClienteBusca').val(nome);
+                // Busca o objeto completo nos resultados armazenados
+                const cliente = lastSearchResults.find(c => c.id == id);
+                if (cliente) {
+                    setProcSelecionado(cliente);
+                    const nome = cliente.nomeFantasia || cliente.nome || '';
+                    $('#procClienteBusca').val(nome);
+                }
                 hideProcResultados();
             });
 
@@ -747,59 +813,76 @@
 
             $(document).on('click', '[data-action="modelo-usar"]', function () {
                 const id = $(this).attr('data-id');
-                const modalHtml = `
-        <div class="modal fade" id="gerarDocumentoModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">Gerar Documento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <div class="mb-2">
-                  <label class="form-label">Título *</label>
-                  <input type="text" class="form-control" id="gerarTitulo" maxlength="120"/>
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Categoria</label>
-                  <select class="form-select" id="gerarCategoria">
-                    <option value="">(usar a do modelo)</option>
-                    ${($('#filtroDocCategoria option').map((i, o) => `<option value="${$(o).val()}">${$(o).text()}</option>`).get()).join('')}
-                  </select>
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Descrição</label>
-                  <input type="text" class="form-control" id="gerarDescricao" maxlength="200"/>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="gerarConfirmBtn">Gerar</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
-                $('body').append(modalHtml);
-                const modal = new bootstrap.Modal(document.getElementById('gerarDocumentoModal'));
-                modal.show();
-                $('#gerarConfirmBtn').on('click', function () {
-                    const titulo = $('#gerarTitulo').val()?.trim();
-                    const categoria = $('#gerarCategoria').val();
-                    const descricao = $('#gerarDescricao').val()?.trim();
-                    if (!titulo) { notify('error', 'Campos obrigatórios', 'Informe o título.'); return; }
-                    $.post('/juridico/api/documentos/gerar', { modeloId: id, titulo, categoria, descricao })
-                        .done(res => {
-                            notify('success', 'Documento gerado', res.id ? `ID ${res.id}` : 'Concluído');
-                            modal.hide();
-                            $('#gerarDocumentoModal').remove();
-                            setTimeout(() => carregarDocs(0), 800);
-                        })
-                        .fail(xhr => {
-                            const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao gerar documento';
-                            notify('error', 'Erro', msg, 'high');
+                const categoriasOptions = $('#filtroDocCategoria option').map((i, o) => {
+                    const val = $(o).val();
+                    const text = $(o).text();
+                    return val ? `<option value="${val}">${text}</option>` : '';
+                }).get().join('');
+
+                Swal.fire({
+                    title: 'Gerar Documento',
+                    html: `
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Título *</label>
+                                <input id="swal-titulo" class="form-control" placeholder="Ex: Contrato de Prestação de Serviços">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Categoria</label>
+                                <select id="swal-categoria" class="form-select">
+                                    <option value="">(usar a do modelo)</option>
+                                    ${categoriasOptions}
+                                </select>
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label fw-semibold">Descrição</label>
+                                <input id="swal-descricao" class="form-control" placeholder="Breve descrição do documento">
+                            </div>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Gerar',
+                    cancelButtonText: 'Cancelar',
+                    focusConfirm: false,
+                    preConfirm: () => {
+                        const titulo = document.getElementById('swal-titulo').value;
+                        const categoria = document.getElementById('swal-categoria').value;
+                        const descricao = document.getElementById('swal-descricao').value;
+
+                        if (!titulo) {
+                            Swal.showValidationMessage('O título é obrigatório');
+                            return false;
+                        }
+                        return { titulo, categoria, descricao };
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const { titulo, categoria, descricao } = result.value;
+                        
+                        Swal.fire({
+                            title: 'Gerando...',
+                            text: 'Aguarde enquanto o documento é criado.',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
                         });
+
+                        $.post('/juridico/api/documentos/gerar', { modeloId: id, titulo, categoria, descricao })
+                            .done(res => {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Sucesso!',
+                                    text: 'Documento gerado com sucesso.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                setTimeout(() => carregarDocs(0), 1000);
+                            })
+                            .fail(xhr => {
+                                const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Falha ao gerar documento';
+                                Swal.fire('Erro', msg, 'error');
+                            });
+                    }
                 });
-                $('#gerarDocumentoModal').on('hidden.bs.modal', function () { $('#gerarDocumentoModal').remove(); });
             });
 
             $(document).on('click', '[data-action="doc-detalhes"]', function () {

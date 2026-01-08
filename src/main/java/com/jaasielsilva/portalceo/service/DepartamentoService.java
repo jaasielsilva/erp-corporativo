@@ -18,6 +18,10 @@ public class DepartamentoService {
         return departamentoRepository.findAll();
     }
 
+    public List<DepartamentoRepository.DepartamentoIdNomeProjection> listarParaDropdown() {
+        return departamentoRepository.findAllIdNome();
+    }
+
     public Departamento findById(Long id) {
         return departamentoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Departamento não encontrado: " + id));

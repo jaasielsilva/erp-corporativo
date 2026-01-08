@@ -455,7 +455,7 @@ public class FinanceiroController {
 
             response.put("status", "success");
             response.put("mensagem", "Pagamento registrado com sucesso");
-            response.put("conta", conta);
+            // response.put("conta", conta); // Removido para evitar erro de serialização de proxy Hibernate
 
             return ResponseEntity.ok(response);
 

@@ -508,30 +508,11 @@ public class JuridicoController {
             // Ignorar erro na migração
         }
 
-        if (documentoModeloRepository.count() == 0) {
-            try {
-                String baseDirModelos = System.getProperty("user.dir") + java.io.File.separator + "uploads"
-                        + java.io.File.separator + "juridico" + java.io.File.separator + "modelos";
-                java.nio.file.Path dirM = java.nio.file.Paths.get(baseDirModelos);
-                java.nio.file.Files.createDirectories(dirM);
-                // Arquivo placeholder
-                java.nio.file.Path target = dirM.resolve("procuracao_ad_judicia_v1.docx");
-                if (!java.nio.file.Files.exists(target)) {
-                    java.nio.file.Files.write(target, new byte[0]);
-                }
-                com.jaasielsilva.portalceo.model.juridico.DocumentoModelo novo = new com.jaasielsilva.portalceo.model.juridico.DocumentoModelo();
-                novo.setNome("Procuração Ad Judicia");
-                novo.setCategoria("Procurações");
-                novo.setVersao("1.0");
-                novo.setStatus(com.jaasielsilva.portalceo.model.juridico.ModeloStatus.PUBLICADO);
-                novo.setArquivoModelo(target.toString());
-                novo.setDataCriacao(java.time.LocalDateTime.now());
-                novo.setDataPublicacao(java.time.LocalDateTime.now());
-                documentoModeloRepository.save(novo);
-            } catch (Exception ignored) {
-            }
-        }
-        java.util.List<java.util.Map<String, Object>> modelosVm = documentoModeloRepository.findAll().stream()
+        java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> todosModelos = documentoModeloRepository.findAll();
+        boolean temOutrosModelos = todosModelos.stream().anyMatch(m -> !m.getNome().equals("Procuração Ad Judicia"));
+
+        java.util.List<java.util.Map<String, Object>> modelosVm = todosModelos.stream()
+                .filter(m -> !temOutrosModelos || !m.getNome().equals("Procuração Ad Judicia"))
                 .map(m -> {
                     java.util.Map<String, Object> vm = new java.util.HashMap<>();
                     vm.put("id", m.getId());
@@ -544,6 +525,33 @@ public class JuridicoController {
         model.addAttribute("modelosDocumentos", modelosVm);
         model.addAttribute("documentosPendentes", getDocumentosPendentesAssinatura());
         return "juridico/documentos";
+    }
+
+    @GetMapping("/api/modelos/{id}/download")
+    public ResponseEntity<?> downloadModelo(@PathVariable Long id) {
+        return documentoModeloRepository.findById(id).map(modelo -> {
+            try {
+                if (modelo.getArquivoModelo() == null) {
+                    return ResponseEntity.notFound().build();
+                }
+                java.nio.file.Path path = java.nio.file.Paths.get(modelo.getArquivoModelo());
+                if (!java.nio.file.Files.exists(path)) {
+                    return ResponseEntity.notFound().build();
+                }
+                org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+                String contentType = java.nio.file.Files.probeContentType(path);
+                if (contentType == null)
+                    contentType = "application/octet-stream";
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + path.getFileName().toString() + "\"")
+                        .body(resource);
+            } catch (Exception e) {
+                return ResponseEntity.status(500).build();
+            }
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/api/documentos/upload")
@@ -1742,30 +1750,6 @@ public class JuridicoController {
                 .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Modelo não encontrado")));
     }
 
-    @GetMapping("/modelos/download/{id}")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadModelo(@PathVariable Long id) {
-        return documentoModeloRepository.findById(id)
-                .map(m -> {
-                    try {
-                        java.nio.file.Path path = java.nio.file.Paths.get(m.getArquivoModelo());
-                        if (!java.nio.file.Files.exists(path)) {
-                            return ResponseEntity.status(404).body((org.springframework.core.io.Resource) null);
-                        }
-                        String contentType = java.nio.file.Files.probeContentType(path);
-                        org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(
-                                path);
-                        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-                        headers.setContentType(
-                                contentType != null ? org.springframework.http.MediaType.parseMediaType(contentType)
-                                        : org.springframework.http.MediaType.APPLICATION_OCTET_STREAM);
-                        headers.setContentDispositionFormData("attachment", path.getFileName().toString());
-                        return ResponseEntity.ok().headers(headers).body(resource);
-                    } catch (Exception e) {
-                        return ResponseEntity.status(500).body((org.springframework.core.io.Resource) null);
-                    }
-                })
-                .orElseGet(() -> ResponseEntity.status(404).body((org.springframework.core.io.Resource) null));
-    }
 
     @PostMapping("/api/documentos/gerar")
     @ResponseBody

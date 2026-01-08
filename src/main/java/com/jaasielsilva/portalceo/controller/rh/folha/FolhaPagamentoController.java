@@ -109,7 +109,8 @@ public class FolhaPagamentoController {
         PageRequest pageable = PageRequest.of(page, 10, Sort.by("nome").ascending());
         Page<com.jaasielsilva.portalceo.model.Colaborador> colaboradoresPage = colaboradorService.listarAtivosPaginado(pageable);
         model.addAttribute("colaboradores", colaboradoresPage);
-        model.addAttribute("departamentos", departamentoService.listarTodos());
+        // Otimização: Usar projeção para dropdown
+        model.addAttribute("departamentos", departamentoService.listarParaDropdown());
         
         // Verificar se já existe folha para o mês atual
         LocalDate hoje = LocalDate.now();
@@ -539,18 +540,26 @@ public class FolhaPagamentoController {
     @GetMapping("/relatorios")
     public String relatorios(@RequestParam(name = "tipoFolha", required = false) String tipoFolha,
                              Model model) {
-        model.addAttribute("departamentos", departamentoService.listarTodos());
-        model.addAttribute("folhasRecentes", folhaPagamentoService.buscarFolhasRecentes());
+        // Otimização: Carregar apenas projeção de ID e Nome dos departamentos
+        model.addAttribute("departamentos", departamentoService.listarParaDropdown());
+        
+        // Limitar a quantidade de folhas recentes buscadas para reduzir carga
+        // Otimização: Usar projeção
+        model.addAttribute("folhasRecentes", folhaPagamentoService.buscarFolhasRecentesResumo());
         
         // Dados do mês atual para resumo
         LocalDate hoje = LocalDate.now();
         Optional<FolhaPagamento> folhaAtual;
         String tipoKey = tipoFolha == null || tipoFolha.isBlank() ? "normal" : tipoFolha.toLowerCase();
+        
+        // Otimização: Evitar queries desnecessárias se não for o caso comum
         if ("ferias".equals(tipoKey) || "decimo_terceiro".equals(tipoKey)) {
             folhaAtual = folhaPagamentoService.buscarPorMesAnoTipo(hoje.getMonthValue(), hoje.getYear(), tipoKey);
         } else {
             folhaAtual = folhaPagamentoService.buscarPorMesAno(hoje.getMonthValue(), hoje.getYear());
         }
+        
+        // Otimização: calcularResumoFolha agora usa cache implementado no Service
         if (folhaAtual.isPresent()) {
             model.addAttribute("resumoAtual", holeriteService.calcularResumoFolha(folhaAtual.get().getId()));
         }

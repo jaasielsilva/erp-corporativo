@@ -10,99 +10,209 @@
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    </head>
+    <style>
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+        .border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+        .border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+        .border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+        
+        .text-primary { color: #4e73df !important; }
+        .text-success { color: #1cc88a !important; }
+        .text-info { color: #36b9cc !important; }
+        .text-warning { color: #f6c23e !important; }
+        
+        .bg-primary-light { background-color: rgba(78, 115, 223, 0.1); }
+        .bg-success-light { background-color: rgba(28, 200, 138, 0.1); }
+        .bg-info-light { background-color: rgba(54, 185, 204, 0.1); }
+        .bg-warning-light { background-color: rgba(246, 194, 62, 0.1); }
+        
+        .card { border: none; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); border-radius: 0.5rem; }
+        .card-header { background-color: #f8f9fc; border-bottom: 1px solid #e3e6f0; }
+        
+        .page-header { margin-bottom: 1.5rem; }
+    </style>
+</head>
 <body>
     <div class="app-container">
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
-            <section class="content-area">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 py-3">
-                            <h1 class="display-6 text-muted"><i class="fas fa-tachometer-alt"></i> Indicadores de Desempenho</h1>
-                            <p class="text-muted">Resumo das avaliações de desempenho por período.</p>
+            <section class="content-area bg-light">
+                <div class="container-fluid p-4">
+                    
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-chart-line me-2 text-primary"></i>Indicadores de Desempenho</h1>
+                            <p class="text-muted mb-0 mt-1">Visão geral das avaliações e métricas de RH</p>
                         </div>
+                        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary shadow-sm">
+                            <i class="fas fa-print fa-sm text-gray-50"></i> Imprimir
+                        </button>
                     </div>
 
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label for="inicio" class="form-label">Início</label>
-                            <input type="date" id="inicio" class="form-control" />
+                    <!-- Filters -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter me-1"></i> Filtros de Período</h6>
                         </div>
-                        <div class="col-md-3">
-                            <label for="fim" class="form-label">Fim</label>
-                            <input type="date" id="fim" class="form-control" />
-                        </div>
-                        <div class="col-md-3">
-                            <button id="btn-aplicar" class="btn btn-primary"><i class="fas fa-filter"></i> Aplicar</button>
-                        </div>
-                    </div>
-
-                    <div class="row mt-4">
-                        <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="fas fa-list"></i> Total de Avaliações</h5>
-                                    <div id="totalAvaliacoes" class="display-6 text-muted">0</div>
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label for="inicio" class="form-label small font-weight-bold text-uppercase text-muted">Data Inicial</label>
+                                    <input type="date" id="inicio" class="form-control bg-light border-0 small">
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="fas fa-paper-plane"></i> Submetidas</h5>
-                                    <div id="submetidas" class="display-6 text-muted">0</div>
+                                <div class="col-md-4">
+                                    <label for="fim" class="form-label small font-weight-bold text-uppercase text-muted">Data Final</label>
+                                    <input type="date" id="fim" class="form-control bg-light border-0 small">
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="fas fa-check-circle"></i> Aprovadas</h5>
-                                    <div id="aprovadas" class="display-6 text-muted">0</div>
+                                <div class="col-md-4">
+                                    <button id="btn-aplicar" class="btn btn-primary w-100 shadow-sm">
+                                        <i class="fas fa-sync-alt me-1"></i> Atualizar Dashboard
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="fas fa-star-half-alt"></i> Média de Notas</h5>
-                                    <div id="mediaNotas" class="display-6 text-muted">0.0</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Content Row (KPIs) -->
+                    <div class="row mb-4">
 
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <div class="card shadow-sm">
+                        <!-- Total Avaliações Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary h-100 py-2">
                                 <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <h5 class="card-title"><i class="fas fa-chart-line"></i> Série 12 meses</h5>
-                                        <div>
-                                            <label for="serieFim" class="form-label">Fim</label>
-                                            <input type="date" id="serieFim" class="form-control" aria-label="Fim da série">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Avaliações</div>
+                                            <div class="h3 mb-0 font-weight-bold text-gray-800" id="totalAvaliacoes">0</div>
+                                            <small class="text-muted">No período</small>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="icon-circle bg-primary-light text-primary">
+                                                <i class="fas fa-clipboard-list fa-2x"></i>
+                                            </div>
                                         </div>
                                     </div>
-                                    <canvas id="chartSerie" height="140" aria-label="Série histórica de indicadores" role="img"></canvas>
-                                    <div id="metodologia" class="mt-2 text-muted"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submetidas Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Submetidas</div>
+                                            <div class="h3 mb-0 font-weight-bold text-gray-800" id="submetidas">0</div>
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col-auto">
+                                                    <small class="text-muted mr-2" id="submetidasPct">0%</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="icon-circle bg-info-light text-info">
+                                                <i class="fas fa-paper-plane fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aprovadas Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Aprovadas</div>
+                                            <div class="h3 mb-0 font-weight-bold text-gray-800" id="aprovadas">0</div>
+                                            <small class="text-muted" id="aprovadasPct">0% taxa aprovação</small>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="icon-circle bg-success-light text-success">
+                                                <i class="fas fa-check-circle fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Média Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Média Geral</div>
+                                            <div class="h3 mb-0 font-weight-bold text-gray-800" id="mediaNotas">0.0</div>
+                                            <small class="text-muted">Escala 0-10</small>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="icon-circle bg-warning-light text-warning">
+                                                <i class="fas fa-star fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Chart Row -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Evolução Histórica (Últimos 12 Meses)</h6>
+                                    <div class="dropdown no-arrow">
+                                        <small class="text-muted" id="periodoSerie"></small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-area" style="position: relative; height: 400px; width: 100%;">
+                                        <canvas id="chartSerie"></canvas>
+                                    </div>
+                                    <hr>
+                                    <div class="small text-muted mt-3">
+                                        <i class="fas fa-info-circle me-1"></i> 
+                                        <span id="metodologia">Carregando informações metodológicas...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
+    
     <script src="/js/sidebar.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script th:src="@{/js/notifications.js}"></script>
     <script>
+        // Configurações globais do Chart.js para estilo
+        Chart.defaults.font.family = 'Nunito, -apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+        Chart.defaults.color = '#858796';
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('pt-BR').format(num);
+        }
+
         function defaultDates() {
             const today = new Date();
             const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
@@ -111,49 +221,186 @@
         }
 
         async function carregarDados() {
-            const inicio = document.getElementById('inicio').value;
-            const fim = document.getElementById('fim').value;
-            const res = await fetch(`/api/rh/relatorios/indicadores?inicio=${inicio}&fim=${fim}`);
-            if (!res.ok) { return; }
-            const data = await res.json();
-            document.getElementById('totalAvaliacoes').textContent = data.totalAvaliacoes;
-            document.getElementById('submetidas').textContent = data.submetidas;
-            document.getElementById('aprovadas').textContent = data.aprovadas;
-            document.getElementById('mediaNotas').textContent = Number(data.mediaNotas).toFixed(2);
+            const btn = document.getElementById('btn-aplicar');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
+            btn.disabled = true;
+
+            try {
+                const inicio = document.getElementById('inicio').value;
+                const fim = document.getElementById('fim').value;
+                
+                // Carregar KPI cards
+                const res = await fetch(`/api/rh/relatorios/indicadores?inicio=${inicio}&fim=${fim}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    const total = data.totalAvaliacoes || 0;
+                    const submetidas = data.submetidas || 0;
+                    const aprovadas = data.aprovadas || 0;
+                    
+                    // Animação simples de números poderia ser adicionada aqui
+                    document.getElementById('totalAvaliacoes').textContent = formatNumber(total);
+                    document.getElementById('submetidas').textContent = formatNumber(submetidas);
+                    document.getElementById('aprovadas').textContent = formatNumber(aprovadas);
+                    document.getElementById('mediaNotas').textContent = Number(data.mediaNotas || 0).toFixed(2);
+                    
+                    // Calcular porcentagens
+                    const subPct = total > 0 ? (submetidas / total * 100) : 0;
+                    const aprPct = submetidas > 0 ? (aprovadas / submetidas * 100) : 0;
+                    
+                    document.getElementById('submetidasPct').textContent = `${subPct.toFixed(1)}% do total`;
+                    document.getElementById('aprovadasPct').textContent = `${aprPct.toFixed(1)}% das submetidas`;
+                }
+
+                // Carregar Série Histórica (usando a data fim selecionada como referência)
+                const resSerie = await fetch(`/api/rh/relatorios/indicadores/serie-12m?fim=${fim}`);
+                if (resSerie.ok) {
+                    const d = await resSerie.json();
+                    renderChart(d);
+                    
+                    if (d.metodologia) {
+                        document.getElementById('metodologia').textContent = `Metodologia: ${d.metodologia}. Fontes: ${d.fontes}.`;
+                    }
+                    
+                    // Atualizar label do período
+                    if (d.inicio && d.fim) {
+                        document.getElementById('periodoSerie').textContent = `Período: ${new Date(d.inicio).toLocaleDateString('pt-BR')} a ${new Date(d.fim).toLocaleDateString('pt-BR')}`;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                // Mostrar notificação de erro se possível
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
-        async function carregarSerie() {
-            const fim = document.getElementById('serieFim').value || document.getElementById('fim').value;
-            const res = await fetch(`/api/rh/relatorios/indicadores/serie-12m?fim=${fim}`);
-            if (!res.ok) { return; }
-            const d = await res.json();
+        function renderChart(d) {
             let labels = Object.keys(d.serie || {});
-            labels = labels.sort();
+            labels = labels.sort(); // Garantir ordem cronológica
+            
+            // Format labels para ser mais legível (Ex: 2023-01 -> Jan/23)
+            const formattedLabels = labels.map(l => {
+                const parts = l.split('-');
+                if(parts.length === 2) {
+                    const date = new Date(parts[0], parts[1] - 1);
+                    return date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+                }
+                return l;
+            });
+
             const total = labels.map(l => d.serie[l]?.total ?? 0);
             const sub = labels.map(l => d.serie[l]?.submetidas ?? 0);
             const apr = labels.map(l => d.serie[l]?.aprovadas ?? 0);
             const med = labels.map(l => d.serie[l]?.media ?? 0);
+
             const ctx = document.getElementById('chartSerie');
             if (window.serieChart) window.serieChart.destroy();
+
             window.serieChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels, datasets: [
-                        { label: 'Total', data: total, borderColor: '#3b82f6', tension: 0.2 },
-                        { label: 'Submetidas', data: sub, borderColor: '#6366f1', tension: 0.2 },
-                        { label: 'Aprovadas', data: apr, borderColor: '#10b981', tension: 0.2 },
-                        { label: 'Média', data: med, borderColor: '#f59e0b', tension: 0.2, yAxisID: 'y2' }
-                    ] },
-                options: { responsive: true, maintainAspectRatio: true, interaction: { mode: 'index', intersect: false },
-                    scales: { y: { beginAtZero: true }, y2: { beginAtZero: true, position: 'right' } } }
+                data: { 
+                    labels: formattedLabels, 
+                    datasets: [
+                        { 
+                            label: 'Total Avaliações', 
+                            data: total, 
+                            borderColor: '#4e73df', 
+                            backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                            pointRadius: 3,
+                            pointBackgroundColor: '#4e73df',
+                            pointBorderColor: '#4e73df',
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#4e73df',
+                            pointHoverBorderColor: '#4e73df',
+                            pointHitRadius: 10,
+                            pointBorderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        { 
+                            label: 'Submetidas', 
+                            data: sub, 
+                            borderColor: '#36b9cc', 
+                            pointRadius: 3,
+                            pointBackgroundColor: '#36b9cc',
+                            pointBorderColor: '#36b9cc',
+                            tension: 0.3,
+                            fill: false
+                        },
+                        { 
+                            label: 'Aprovadas', 
+                            data: apr, 
+                            borderColor: '#1cc88a', 
+                            pointRadius: 3,
+                            pointBackgroundColor: '#1cc88a',
+                            pointBorderColor: '#1cc88a',
+                            tension: 0.3,
+                            fill: false
+                        },
+                        { 
+                            label: 'Média Notas', 
+                            data: med, 
+                            borderColor: '#f6c23e', 
+                            borderDash: [5, 5],
+                            pointRadius: 3,
+                            pointBackgroundColor: '#f6c23e',
+                            pointBorderColor: '#f6c23e',
+                            tension: 0.3,
+                            yAxisID: 'y2',
+                            fill: false
+                        }
+                    ] 
+                },
+                options: { 
+                    maintainAspectRatio: false, 
+                    layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            backgroundColor: "rgb(255,255,255)",
+                            bodyColor: "#858796",
+                            titleMarginBottom: 10,
+                            titleColor: '#6e707e',
+                            titleFont: { size: 14 },
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            xPadding: 15,
+                            yPadding: 15,
+                            displayColors: true,
+                            caretPadding: 10,
+                        },
+                    },
+                    scales: { 
+                        x: { 
+                            grid: { display: false, drawBorder: false },
+                            ticks: { maxTicksLimit: 12 }
+                        },
+                        y: { 
+                            ticks: { maxTicksLimit: 5, padding: 10 },
+                            grid: { color: "rgb(234, 236, 244)", zeroLineColor: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] }
+                        }, 
+                        y2: { 
+                            position: 'right', 
+                            beginAtZero: true, 
+                            max: 10,
+                            grid: { display: false },
+                            ticks: { callback: function(value) { return value + ' pts'; } }
+                        } 
+                    } 
+                }
             });
-            document.getElementById('metodologia').textContent = `Metodologia: ${d.metodologia}. Fontes: ${d.fontes}.`;
         }
-        document.getElementById('serieFim').addEventListener('change', carregarSerie);
+
         document.getElementById('btn-aplicar').addEventListener('click', carregarDados);
+        
+        // Inicialização
         defaultDates();
         carregarDados();
-        document.getElementById('serieFim').value = document.getElementById('fim').value;
-        carregarSerie();
     </script>
 </body>
 </html>

@@ -238,13 +238,18 @@
                         } else {
                             let errorMsg = 'Erro desconhecido';
                             try {
-                                const data = await res.json();
-                                errorMsg = data.mensagem || data.error || JSON.stringify(data);
-                            } catch (e) {
-                                errorMsg = await res.text();
-                                if (errorMsg.includes('<!DOCTYPE html>')) {
-                                    errorMsg = 'Erro interno do servidor. Verifique os logs.';
+                                const txt = await res.text();
+                                try {
+                                    const data = JSON.parse(txt);
+                                    errorMsg = data.mensagem || data.error || JSON.stringify(data);
+                                } catch (e) {
+                                    errorMsg = txt;
+                                    if (errorMsg.includes('<!DOCTYPE html>')) {
+                                        errorMsg = 'Erro interno do servidor. Verifique os logs.';
+                                    }
                                 }
+                            } catch (e) {
+                                console.error('Erro ao processar resposta de erro:', e);
                             }
                             
                             Swal.fire({

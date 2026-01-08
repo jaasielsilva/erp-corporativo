@@ -1363,6 +1363,14 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
         return folhaPagamentoRepository.findFolhasRecentes(anoInicio);
     }
 
+    /**
+     * Busca resumo de folhas recentes (últimos 2 anos) - Otimizado para listagens
+     */
+    public List<FolhaPagamentoRepository.FolhaResumoProjection> buscarFolhasRecentesResumo() {
+        Integer anoInicio = LocalDate.now().getYear() - 2;
+        return folhaPagamentoRepository.findFolhasRecentesResumo(anoInicio);
+    }
+
     public void pause(String jobId) {
         // lógica para pausar o job
         System.out.println("Pausando job: " + jobId);

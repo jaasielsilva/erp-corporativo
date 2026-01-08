@@ -144,10 +144,18 @@ public class HoleriteService {
         return holeriteRepository.existsByColaboradorAndFolhaPagamento(colaborador, folha);
     }
 
+    private final java.util.Map<Long, CacheItem<ResumoFolhaDTO>> resumoCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long CACHE_TTL_MS = java.util.concurrent.TimeUnit.MINUTES.toMillis(30);
+
     /**
-     * Calcula totais de uma folha de pagamento
+     * Calcula totais de uma folha de pagamento (com cache)
      */
     public ResumoFolhaDTO calcularResumoFolha(Long folhaId) {
+        CacheItem<ResumoFolhaDTO> item = resumoCache.get(folhaId);
+        if (item != null && !item.isExpired()) {
+            return item.value;
+        }
+
         Double totalLiquido = holeriteRepository.sumSalarioLiquidoByFolha(folhaId);
         Double totalProventos = holeriteRepository.sumTotalProventosByFolha(folhaId);
         Double totalDescontos = holeriteRepository.sumTotalDescontosByFolha(folhaId);
@@ -159,7 +167,19 @@ public class HoleriteService {
         resumo.setTotalDescontos(totalDescontos != null ? BigDecimal.valueOf(totalDescontos) : BigDecimal.ZERO);
         resumo.setQuantidadeHolerites(quantidadeHolerites != null ? quantidadeHolerites : 0L);
 
+        resumoCache.put(folhaId, new CacheItem<>(resumo, System.currentTimeMillis() + CACHE_TTL_MS));
         return resumo;
+    }
+
+    public void invalidarCacheResumo(Long folhaId) {
+        resumoCache.remove(folhaId);
+    }
+
+    private static class CacheItem<T> {
+        T value;
+        long expiry;
+        CacheItem(T value, long expiry) { this.value = value; this.expiry = expiry; }
+        boolean isExpired() { return System.currentTimeMillis() > expiry; }
     }
 
     /**

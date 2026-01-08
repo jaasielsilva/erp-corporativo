@@ -1,17 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link th:href="@{/css/style.css}" rel="stylesheet">
-    <link th:href="@{/css/sidebar.css}" rel="stylesheet">
-    <link href="/css/notifications.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagamentos do Fornecedor</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link href="/css/notifications.css" rel="stylesheet">
 </head>
-<body>
-    <h1> tela de pagamento dos fornecedores</h1>
 
+<body class="bg-light">
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
+    <main class="main-content">
+        <!-- Topbar -->
+        <header th:replace="~{components/topbar :: topbar}"></header>
+
+        <!-- Main Content -->
+        <div class="container-fluid p-4">
+            
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/fornecedores}" class="text-decoration-none">Fornecedores</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Pagamentos de <span th:text="${fornecedor.razaoSocial}"></span></li>
+                </ol>
+            </nav>
+
+            <!-- Card Content -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="fas fa-money-bill-wave me-2"></i>Histórico de Pagamentos
+                    </h5>
+                    <a th:href="@{/fornecedores}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Voltar
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase fw-bold">
+                                <tr>
+                                    <th class="ps-4">Vencimento</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-end pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(pagamentos)}">
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="fas fa-file-invoice-dollar fa-3x mb-3 text-secondary opacity-50"></i>
+                                        <p class="mb-0">Nenhum pagamento encontrado para este fornecedor.</p>
+                                    </td>
+                                </tr>
+                                <tr th:each="pagamento : ${pagamentos}">
+                                    <td class="ps-4" th:text="${#temporals.format(pagamento.dataVencimento, 'dd/MM/yyyy')}"></td>
+                                    <td th:text="${pagamento.descricao}"></td>
+                                    <td th:text="${'R$ ' + #numbers.formatDecimal(pagamento.valorOriginal, 1, 'POINT', 2, 'COMMA')}"></td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill" 
+                                              th:classappend="${pagamento.status.name() == 'PAGA' ? 'bg-success' : (pagamento.status.name() == 'PENDENTE' ? 'bg-warning text-dark' : 'bg-danger')}"
+                                              th:text="${pagamento.status}">
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                         <a th:href="@{'/financeiro/contas-pagar/detalhes/' + ${pagamento.id}}" class="btn btn-sm btn-info text-white" title="Ver Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white py-3 border-top-0">
+                     <!-- Pagination would go here -->
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Footer -->
+        <footer th:replace="~{components/footer :: footer}" class="mt-auto"></footer>
+    </main>
+  </div>
+
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/notifications.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
 

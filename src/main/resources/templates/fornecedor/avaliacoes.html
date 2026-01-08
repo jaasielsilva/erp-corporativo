@@ -2,65 +2,148 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Avaliações do Fornecedor - ERP Corporativo</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link href="/css/notifications.css" rel="stylesheet">
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+    <meta charset="UTF-8">
+    <title>Avaliações do Fornecedor - Painel do CEO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 e FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Estilos Globais -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
-  <div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+<body class="bg-light">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <main class="main-content">
-      <header th:replace="~{components/topbar :: topbar}"></header>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <section class="content-area">
-        <h1>Avaliações do Fornecedor <span th:text="${fornecedor.razaoSocial}"></span></h1>
+            <div class="container-fluid p-4">
+                
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Home</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/fornecedores}" class="text-decoration-none">Fornecedores</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Avaliações de <span th:text="${fornecedor.razaoSocial}"></span></li>
+                    </ol>
+                </nav>
 
-        <a class="button primary" th:href="@{'/fornecedor/' + ${fornecedor.id} + '/avaliacoes/novo'}">
-          <i class="fas fa-plus-circle"></i> Nova Avaliação
-        </a>
+                <!-- Feedback Messages -->
+                <script th:inline="javascript">
+                    (function () {
+                        var msgSucesso = /*[[${msgSucesso}]]*/ null;
+                        var msgErro = /*[[${msgErro}]]*/ null;
+                        var erroParam = /*[[${param.erro != null ? param.erro[0] : null}]]*/ null;
 
-        <table class="table-list mt-3">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Data</th>
-              <th>Comentário</th>
-              <th>Nota</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:each="avaliacao : ${avaliacoes}">
-              <td th:text="${avaliacao.id}"></td>
-              <td th:text="${avaliacao.data}"></td>
-              <td th:text="${avaliacao.comentario}"></td>
-              <td th:text="${avaliacao.nota}"></td>
-              <td>
-                <a th:href="@{'/fornecedor/' + ${fornecedor.id} + '/avaliacoes/editar/' + ${avaliacao.id}}">Editar</a> |
-                <a th:href="@{'/fornecedor/' + ${fornecedor.id} + '/avaliacoes/excluir/' + ${avaliacao.id}}"
-                   onclick="return confirm('Confirma exclusão?')">Excluir</a>
-              </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(avaliacoes)}">
-              <td colspan="5">Nenhuma avaliação encontrada.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+                        function show(icon, title, text) {
+                            if (!text) return;
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: icon, title: title, text: text, confirmButtonText: 'OK' });
+                            }
+                        }
 
-      <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-  </div>
+                        if (msgSucesso) show('success', 'Sucesso', msgSucesso);
+                        else if (msgErro) show('error', 'Erro', msgErro);
+                        else if (erroParam) show('error', 'Erro', erroParam);
+                    })();
+                </script>
 
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="fas fa-star me-2"></i>Histórico de Avaliações
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/fornecedores}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i> Voltar
+                            </a>
+                            <a th:href="@{'/fornecedor/' + ${fornecedor.id} + '/avaliacoes/novo'}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus-circle me-1"></i> Nova Avaliação
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light text-muted small text-uppercase fw-bold">
+                                    <tr>
+                                        <th class="text-center">ID</th>
+                                        <th>Data</th>
+                                        <th>Comentário</th>
+                                        <th class="text-center">Nota</th>
+                                        <th class="text-end pe-4">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="avaliacao : ${avaliacoes}">
+                                        <td class="text-center fw-bold text-secondary" th:text="${avaliacao.id}"></td>
+                                        <td th:text="${#temporals.format(avaliacao.data, 'dd/MM/yyyy')}"></td>
+                                        <td th:text="${avaliacao.comentario}" class="text-truncate" style="max-width: 300px;"></td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-star me-1"></i><span th:text="${avaliacao.nota}"></span>
+                                            </span>
+                                        </td>
+                                        
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <a th:href="@{'/fornecedor/' + ${fornecedor.id} + '/avaliacoes/editar/' + ${avaliacao.id}}"
+                                                   class="btn btn-sm btn-warning" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        th:onclick="|confirmarExclusaoAvaliacao(${fornecedor.id}, ${avaliacao.id})|" title="Excluir">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(avaliacoes)}">
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <div class="mb-3"><i class="far fa-star fa-3x opacity-25"></i></div>
+                                            <p class="mb-0">Nenhuma avaliação registrada para este fornecedor.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    
+    <script>
+        async function confirmarExclusaoAvaliacao(fornecedorId, avaliacaoId) {
+            const r = await Swal.fire({
+                title: 'Confirmar exclusão',
+                text: 'Deseja excluir esta avaliação?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Excluir',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            });
+            if (r.isConfirmed) {
+                window.location.href = `/fornecedor/${fornecedorId}/avaliacoes/excluir/${avaliacaoId}`;
+            }
+        }
+    </script>
 </body>
-
 </html>

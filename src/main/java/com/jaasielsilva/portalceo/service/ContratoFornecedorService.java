@@ -1,5 +1,6 @@
 package com.jaasielsilva.portalceo.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,18 @@ public class ContratoFornecedorService {
     
     @Autowired
     private ContratoFornecedorRepository contratoRepo;
+
+    public String gerarProximoNumeroContrato() {
+        int year = LocalDate.now().getYear();
+        ContratoFornecedor ultimoContrato = contratoRepo.findTopByOrderByIdDesc();
+        
+        long proximoId = 1;
+        if (ultimoContrato != null && ultimoContrato.getId() != null) {
+            proximoId = ultimoContrato.getId() + 1;
+        }
+        
+        return String.format("%d%04d", year, proximoId);
+    }
 
     public List<ContratoFornecedor> findByFornecedor(Fornecedor fornecedor) {
         return contratoRepo.findByFornecedor(fornecedor);

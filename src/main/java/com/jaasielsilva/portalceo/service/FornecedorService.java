@@ -9,8 +9,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FornecedorService {
@@ -45,6 +45,14 @@ public class FornecedorService {
      * Salva ou atualiza um fornecedor.
      */
     public Fornecedor salvar(Fornecedor fornecedor) {
+        if (fornecedor.getCnpj() != null && !fornecedor.getCnpj().isBlank()) {
+            Optional<Fornecedor> existente = fornecedorRepository.findByCnpj(fornecedor.getCnpj());
+            if (existente.isPresent()) {
+                if (fornecedor.getId() == null || !existente.get().getId().equals(fornecedor.getId())) {
+                    throw new IllegalArgumentException("Já existe um fornecedor cadastrado com o CNPJ " + fornecedor.getCnpj());
+                }
+            }
+        }
         return fornecedorRepository.save(fornecedor);
     }
 
@@ -52,8 +60,8 @@ public class FornecedorService {
      * Busca fornecedor por ID, ou lança exceção se não encontrado.
      */
     public Fornecedor findById(Long id) {
-    return fornecedorRepository.findById(id).orElse(null);
-}
+        return fornecedorRepository.findById(id).orElse(null);
+    }
 
     /**
      * Marca o fornecedor como inativo (exclusão lógica).

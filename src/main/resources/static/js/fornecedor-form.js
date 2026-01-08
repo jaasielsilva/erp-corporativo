@@ -1,12 +1,13 @@
-  document.addEventListener('DOMContentLoaded', function () {
-    // Aplicar máscaras
-    VMasker(document.querySelector("[name='cnpj']")).maskPattern("99.999.999/9999-99");
-    VMasker(document.querySelector("[name='telefone']")).maskPattern("(99) 9999-9999");
-    VMasker(document.querySelector("[name='celular']")).maskPattern("(99) 99999-9999");
-    VMasker(document.querySelector("[name='cep']")).maskPattern("99999-999");
+document.addEventListener('DOMContentLoaded', function () {
+  if (window.jQuery && typeof window.jQuery.fn.mask === 'function') {
+    window.jQuery("[name='cnpj']").mask('00.000.000/0000-00');
+    window.jQuery("[name='cep']").mask('00000-000');
+    window.jQuery("[name='telefone']").mask('(00) 0000-0000');
+    window.jQuery("[name='celular']").mask('(00) 00000-0000');
+  }
 
-    // Auto preencher endereço via ViaCEP
-    const cepInput = document.querySelector("[name='cep']");
+  const cepInput = document.querySelector("[name='cep']");
+  if (cepInput) {
     cepInput.addEventListener("blur", function () {
       const cep = this.value.replace(/\D/g, '');
       if (cep.length !== 8) return;
@@ -14,25 +15,43 @@
       fetch(`https://viacep.com.br/ws/${cep}/json/`)
         .then(res => res.json())
         .then(data => {
-          if (data.erro) return;
+          if (data && data.erro) {
+            if (typeof window.Swal !== 'undefined') {
+              Swal.fire({ icon: 'warning', title: 'CEP não encontrado', text: 'Verifique o CEP digitado.' });
+            }
+            return;
+          }
 
-          document.querySelector("[name='rua']").value = data.logradouro || '';
-          document.querySelector("[name='bairro']").value = data.bairro || '';
-          document.querySelector("[name='cidade']").value = data.localidade || '';
-          document.querySelector("[name='estado']").value = data.uf || '';
+          const rua = document.querySelector("[name='rua']");
+          const bairro = document.querySelector("[name='bairro']");
+          const cidade = document.querySelector("[name='cidade']");
+          const estado = document.querySelector("[name='estado']");
+
+          if (rua) rua.value = (data && data.logradouro) || '';
+          if (bairro) bairro.value = (data && data.bairro) || '';
+          if (cidade) cidade.value = (data && data.localidade) || '';
+          if (estado) estado.value = (data && data.uf) || '';
         })
-        .catch(err => console.error("Erro ao buscar CEP:", err));
+        .catch(() => {
+          if (typeof window.Swal !== 'undefined') {
+            Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível consultar o CEP agora.' });
+          }
+        });
     });
+  }
 
-    // Validação: pelo menos um telefone deve ser preenchido
-    const form = document.querySelector("form");
+  const form = document.getElementById("formFornecedor") || document.querySelector("form");
+  if (form) {
     form.addEventListener("submit", function (e) {
-      const tel = document.querySelector("[name='telefone']").value.trim();
-      const cel = document.querySelector("[name='celular']").value.trim();
+      const tel = (document.querySelector("[name='telefone']") || {}).value || '';
+      const cel = (document.querySelector("[name='celular']") || {}).value || '';
 
-      if (!tel && !cel) {
+      if (!tel.trim() && !cel.trim()) {
         e.preventDefault();
-        alert("Preencha pelo menos Telefone ou Celular.");
+        if (typeof window.Swal !== 'undefined') {
+          Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Preencha pelo menos Telefone ou Celular.' });
+        }
       }
     });
-  });
+  }
+});

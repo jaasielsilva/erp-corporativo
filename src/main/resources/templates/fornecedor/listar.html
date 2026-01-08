@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fornecedores - Painel do CEO</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fornecedores - Painel do CEO</title>
 
-  <!-- Ícones e estilos -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-  <link rel="stylesheet" th:href="@{/css/fornecedor.css}" />
-  <link href="/css/notifications.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Ícones e estilos -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="/css/corporate.css" rel="stylesheet">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Toastr for notifications -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-
 <body>
   <div class="app-container">
     <aside th:replace="~{components/sidebar :: sidebar}"></aside>
@@ -23,126 +24,227 @@
       <header th:replace="~{components/topbar :: topbar}"></header>
 
       <section class="content-area">
-        <h1>Fornecedores</h1>
+        <div class="container-fluid py-4">
+            <!-- Header Moderno -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-1">
+                            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted small">Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Fornecedores</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-6 text-muted mb-0"><i class="fas fa-truck"></i> Fornecedores</h1>
+                </div>
+                <a th:href="@{/fornecedores/novo}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fas fa-plus me-2"></i> Novo Fornecedor
+                </a>
+            </div>
 
-        <a class="btn btn-primary btn-sm mt-3" th:href="@{/fornecedores/novo}"><i class="fas fa-plus-circle"></i> Novo
-          Fornecedor</a>
+            <script th:inline="javascript">
+                (function () {
+                    var msgSucesso = /*[[${msgSucesso}]]*/ null;
+                    var msgErro = /*[[${msgErro}]]*/ null;
+                    var erroParam = /*[[${param.erro != null ? param.erro[0] : null}]]*/ null;
 
-        <a class="btn btn-primary btn-sm" th:if="${hasPrevious}"
-          th:href="@{/fornecedores(page=${currentPage - 1}, size=${20})}"><i class="fas fa-chevron-left"></i>
-          Anterior</a>
-        <a class="btn btn-primary btn-sm" th:if="${hasNext}"
-          th:href="@{/fornecedores(page=${currentPage + 1}, size=${20})}">Próximo <i
-            class="fas fa-chevron-right"></i></a>
+                    function show(icon, title, text) {
+                        if (!text) return;
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: icon, title: title, text: text, confirmButtonText: 'OK' });
+                        }
+                    }
 
-        <article class="card mt-3">
-          <h3>Lista de Fornecedores</h3>
+                    if (msgSucesso) show('success', 'Sucesso', msgSucesso);
+                    else if (msgErro) show('error', 'Erro', msgErro);
+                    else if (erroParam) show('error', 'Erro', erroParam);
+                })();
+            </script>
 
-          <table class="table-list">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Razão Social</th>
-                <th>CNPJ</th>
-                <th>Telefone</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:each="f : ${fornecedores}">
-                <td th:text="${f.id}">ID</td>
-                <td th:text="${f.razaoSocial}">Razão Social</td>
-                <td th:text="${f.cnpj}">CNPJ</td>
-                <td th:text="${f.telefone}">Telefone</td>
-                <td th:text="${f.email}">Email</td>
-                <td>
-                  <span th:text="${f.ativo} ? 'Ativo' : 'Inativo'"
-                    th:classappend="${f.ativo} ? 'status-ativo' : 'status-inativo'">
-                  </span>
+            <!-- Filtros -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <form th:action="@{/fornecedores}" method="get" class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label for="busca" class="form-label text-muted small fw-bold">Buscar</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="busca" name="busca" th:value="${busca}" placeholder="Nome, CNPJ, Email...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label text-muted small fw-bold">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="" th:selected="${statusFiltro == null or statusFiltro == ''}">Todos</option>
+                                <option value="ATIVO" th:selected="${statusFiltro == 'ATIVO'}">Ativo</option>
+                                <option value="INATIVO" th:selected="${statusFiltro == 'INATIVO'}">Inativo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-                </td>
-                <td>
-                  <div class="acoes-btns">
-                    <a th:href="@{'/fornecedores/editar/' + ${f.id}}" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </a>
-                    <a th:href="@{'/fornecedores/' + ${f.id} + '/contratos'}" title="Ver Contratos">
-                      <i class="fas fa-file-contract"></i>
-                    </a>
+            <!-- Loading -->
+            <div id="loading" class="text-center py-4" style="display:none">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                <p class="mt-2 text-muted">Carregando fornecedores...</p>
+            </div>
 
-
-                    <a th:href="@{'/fornecedor/' + ${f.id} + '/avaliacoes'}" title="Ver Avaliações">
-                      <i class="fas fa-star"></i>
-                    </a>
-                    <a href="javascript:void(0);" th:attr="data-id=${f.id}" title="Excluir"
-                      onclick="abrirModalExcluir(this)">
-                      <i class="fas fa-trash-alt"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Paginação estilizada -->
-          <div class="paginacao mt-3" th:if="${totalPages > 1}">
-            <a class="button primary" th:if="${hasPrevious}"
-              th:href="@{/fornecedores(page=${currentPage - 1}, size=${20})}">
-              <i class="fas fa-chevron-left"></i> Anterior
-            </a>
-
-            <span style="margin: 0 15px;" th:text="${(currentPage + 1)} + ' / ' + ${totalPages}">Página</span>
-
-            <a class="button primary" th:if="${hasNext}"
-              th:href="@{/fornecedores(page=${currentPage + 1}, size=${20})}">
-              Próximo <i class="fas fa-chevron-right"></i>
-            </a>
-          </div>
-
-        </article>
+            <!-- Card de Listagem -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase fw-bold">
+                                <tr>
+                                    <th class="text-center">ID</th>
+                                    <th>Razão Social</th>
+                                    <th>CNPJ</th>
+                                    <th>Telefone</th>
+                                    <th>Email</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-end pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fornecedoresBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Paginação -->
+                <div id="pagination" class="card-footer bg-white border-top-0 py-3"></div>
+            </div>
+        </div>
       </section>
 
       <footer th:replace="~{components/footer :: footer}"></footer>
     </main>
   </div>
 
-  <!-- Modal de Confirmação de Exclusão -->
-  <div id="modal-excluir" class="modal" style="display: none;">
-    <div class="modal-content">
-      <h3>Tem certeza que deseja excluir este fornecedor?</h3>
-      <div style="margin-top: 20px; text-align: right;">
-        <button id="confirmarExcluirBtn" class="button danger">Excluir</button>
-        <button onclick="fecharModalExcluir()" class="button">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Scripts -->
-  <script>
-    let fornecedorIdParaExcluir = null;
-
-    function abrirModalExcluir(el) {
-      fornecedorIdParaExcluir = el.getAttribute("data-id");
-      document.getElementById("modal-excluir").style.display = "flex";
-    }
-
-    function fecharModalExcluir() {
-      fornecedorIdParaExcluir = null;
-      document.getElementById("modal-excluir").style.display = "none";
-    }
-
-    document.getElementById("confirmarExcluirBtn").addEventListener("click", () => {
-      if (fornecedorIdParaExcluir) {
-        window.location.href = `/fornecedores/excluir/${fornecedorIdParaExcluir}`;
-      }
-    });
-  </script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
   <script src="/js/sidebar.js" defer></script>
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script th:src="@{/js/notifications.js}"></script>
+  <script>
+      async function confirmarExclusaoFornecedor(id) {
+          const r = await Swal.fire({
+              title: 'Confirmar exclusão',
+              text: 'Tem certeza que deseja excluir este fornecedor?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Excluir',
+              cancelButtonText: 'Cancelar',
+              confirmButtonColor: '#dc3545'
+          });
+          if (r.isConfirmed) {
+              window.location.href = `/fornecedores/excluir/${id}`;
+          }
+      }
+  </script>
+  
+  <script th:inline="javascript">
+        window.statusFiltro = /*[[${statusFiltro}]]*/ '';
+        window.buscaInicial = /*[[${busca}]]*/ '';
+    </script>
+    <script>
+        let currentPage = 0;
+        let query = window.buscaInicial || '';
+        
+        function showLoading(show) {
+            const el = document.getElementById('loading');
+            if (el) el.style.display = show ? 'block' : 'none';
+        }
 
+        function statusBadgeClass(status) {
+            const s = (status || '').toUpperCase();
+            if (s === 'ATIVO') return 'badge rounded-pill bg-success-subtle text-success-emphasis';
+            return 'badge rounded-pill bg-secondary-subtle text-secondary-emphasis';
+        }
+
+        function renderRows(items) {
+            const tbody = document.getElementById('fornecedoresBody');
+            tbody.innerHTML = '';
+            if (!items || items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted"><div class="mb-3"><i class="fas fa-box-open fa-3x opacity-25"></i></div><p class="mb-0">Nenhum fornecedor encontrado.</p></td></tr>';
+                return;
+            }
+            const rows = items.map(f => {
+                const badge = statusBadgeClass(f.status);
+                return `<tr>
+                    <td class="text-center fw-bold text-primary">${f.id}</td>
+                    <td>${f.razaoSocial || '-'}</td>
+                    <td>${f.cnpj || '-'}</td>
+                    <td>${f.telefone || '-'}</td>
+                    <td>${f.email || '-'}</td>
+                    <td class="text-center"><span class="${badge}">${f.status === 'ATIVO' ? 'Ativo' : 'Inativo'}</span></td>
+                    <td class="pe-4">
+                        <div class="d-flex gap-2 w-100 justify-content-end">
+                            <a href="/fornecedores/editar/${f.id}" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+                            <a href="/fornecedores/${f.id}/contratos" class="btn btn-sm btn-info" title="Ver Contratos"><i class="fas fa-file-contract"></i></a>
+                            <a href="/fornecedor/${f.id}/avaliacoes" class="btn btn-sm btn-secondary" title="Ver Avaliações"><i class="fas fa-star"></i></a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="confirmarExclusaoFornecedor(${f.id})" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+            tbody.innerHTML = rows;
+        }
+
+        function renderPagination(data) {
+            const el = document.getElementById('pagination');
+            const totalPages = data.totalPages || 0;
+            const totalElements = data.totalElements || 0;
+            const page = data.currentPage || 0;
+            const hasPrev = !!data.hasPrevious;
+            const hasNext = !!data.hasNext;
+            
+            if (totalPages <= 1 && totalElements > 0) {
+                 el.innerHTML = '';
+            }
+
+            let html = `<div class="d-flex justify-content-between align-items-center">
+                        <span class="pagination-info">
+                            Página ${page + 1} de ${Math.max(totalPages, 1)}
+                            (${totalElements} fornecedores)
+                        </span>
+                        <div class="pagination-nav">`;
+            
+            html += hasPrev ? 
+                `<a class="btn btn-secondary" href="#" onclick="loadFornecedores(${page - 1});return false;"><i class="fas fa-chevron-left"></i> Anterior</a>` : 
+                `<span class="btn btn-secondary disabled"><i class="fas fa-chevron-left"></i> Anterior</span>`;
+            
+            html += `<span class="mx-2"></span>`;
+
+            html += hasNext ? 
+                `<a class="btn btn-secondary" href="#" onclick="loadFornecedores(${page + 1});return false;">Próximo <i class="fas fa-chevron-right"></i></a>` : 
+                `<span class="btn btn-secondary disabled">Próximo <i class="fas fa-chevron-right"></i></span>`;
+
+            html += `</div></div>`;
+            el.innerHTML = html;
+        }
+
+        function loadFornecedores(page = 0) {
+            currentPage = page;
+            const statusParam = window.statusFiltro || '';
+            
+            showLoading(true);
+            fetch(`/fornecedores/api/listar?page=${page}&size=10&q=${encodeURIComponent(query)}&status=${encodeURIComponent(statusParam)}`)
+                .then(r => r.json())
+                .then(data => { renderRows(data.content); renderPagination(data); })
+                .catch(err => { 
+                    console.error(err);
+                    renderRows([]); 
+                    renderPagination({ currentPage: 0, totalPages: 1, totalElements: 0, hasPrevious: false, hasNext: false }); 
+                })
+                .finally(() => showLoading(false));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFornecedores(0);
+        });
+    </script>
 </body>
-
 </html>

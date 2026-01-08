@@ -2,81 +2,151 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Contrato - Formulário - Painel do CEO</title>
+    <meta charset="UTF-8">
+    <title th:text="${contrato.id != null ? 'Editar Contrato' : 'Novo Contrato'} + ' - Painel do CEO'">Painel do CEO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Ícones e estilos -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-  <link href="/css/notifications.css" rel="stylesheet">
-  <link rel="stylesheet" th:href="@{/css/fornecedor.css}" />
+    <!-- Bootstrap 5 e FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Estilos Globais -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
-  <div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+<body class="bg-light">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <main class="main-content">
-      <header th:replace="~{components/topbar :: topbar}"></header>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <section class="content-area">
-        <h1 th:text="${contrato.id != null} ? 'Editar Contrato' : 'Novo Contrato'"></h1>
+            <div class="container-fluid p-4">
+                
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Home</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/fornecedores}" class="text-decoration-none">Fornecedores</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{'/fornecedores/' + ${contrato.fornecedor.id} + '/contratos'}" class="text-decoration-none">Contratos</a></li>
+                        <li class="breadcrumb-item active" aria-current="page" th:text="${contrato.id != null ? 'Editar Contrato' : 'Novo Contrato'}"></li>
+                    </ol>
+                </nav>
 
-        <form th:action="@{/fornecedores/contratos/salvar}" th:object="${contrato}" method="post" class="form-card">
-          <input type="hidden" th:field="*{id}" />
-          <input type="hidden" th:field="*{fornecedor.id}" />
+                <!-- Feedback Messages -->
+                <script th:inline="javascript">
+                    (function () {
+                        var msgSucesso = /*[[${msgSucesso}]]*/ null;
+                        var msgErro = /*[[${msgErro}]]*/ null;
+                        var erroParam = /*[[${param.erro != null ? param.erro[0] : null}]]*/ null;
 
-          <label for="numeroContrato">Número do Contrato:</label>
-          <input id="numeroContrato" type="text" th:field="*{numeroContrato}" pattern="\d*" title="Somente números"
-            required oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                        function show(icon, title, text) {
+                            if (!text) return;
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: icon, title: title, text: text, confirmButtonText: 'OK' });
+                            }
+                        }
 
-          <label for="dataInicio">Data Início:</label>
-          <input id="dataInicio" type="date" th:field="*{dataInicio}" required />
+                        if (msgSucesso) show('success', 'Sucesso', msgSucesso);
+                        else if (msgErro) show('error', 'Erro', msgErro);
+                        else if (erroParam) show('error', 'Erro', erroParam);
+                    })();
+                </script>
 
-          <label for="dataFim">Data Fim:</label>
-          <input id="dataFim" type="date" th:field="*{dataFim}" />
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="fas" th:classappend="${contrato.id != null ? 'fa-edit' : 'fa-plus-circle'}"></i>
+                            <span th:text="${contrato.id != null ? 'Editar Contrato' : 'Novo Contrato'}"></span>
+                        </h5>
+                        <small class="text-muted">Fornecedor: <strong th:text="${contrato.fornecedor.razaoSocial}"></strong></small>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/fornecedores/contratos/salvar}" th:object="${contrato}" method="post" class="needs-validation" novalidate>
+                            <input type="hidden" th:field="*{id}" />
+                            <input type="hidden" th:field="*{fornecedor.id}" />
 
-          <label>Valor:</label>
-          <input type="text" id="valorFormatado" name="valorFormatado" th:value="${contrato.valor}" />
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Número do Contrato</label>
+                                    <input type="text" th:field="*{numeroContrato}" class="form-control bg-light" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Data Início <span class="text-danger">*</span></label>
+                                    <input type="date" th:field="*{dataInicio}" class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Data Fim</label>
+                                    <input type="date" th:field="*{dataFim}" class="form-control">
+                                </div>
+                            </div>
 
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Valor (R$)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="text" id="valorFormatado" name="valorFormatado" th:value="${contrato.valor}" class="form-control" placeholder="0,00">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Status</label>
+                                    <select th:field="*{status}" class="form-select">
+                                        <option value="Ativo">Ativo</option>
+                                        <option value="Inativo">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
 
-          <label for="status">Status:</label>
-          <select id="status" th:field="*{status}">
-            <option value="Ativo" selected>Ativo</option>
-            <option value="Inativo">Inativo</option>
-          </select>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Descrição / Objeto</label>
+                                <textarea th:field="*{descricao}" class="form-control" rows="4" placeholder="Detalhes do contrato..."></textarea>
+                            </div>
 
-          <label for="descricao">Descrição:</label>
-          <textarea id="descricao" th:field="*{descricao}"></textarea>
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <a th:href="@{'/fornecedores/' + ${contrato.fornecedor.id} + '/contratos'}" class="btn btn-light border">
+                                    <i class="fas fa-arrow-left me-1"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-1"></i> Salvar Contrato
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-          <button type="submit" class="button primary mt-3">Salvar</button>
-          <a th:href="@{'/fornecedores/' + ${contrato.fornecedor.id} + '/contratos'}" class="button mt-3">
-            <i class="fas fa-arrow-left"></i> Voltar
-          </a>
-        </form>
-      </section>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
+    </div>
 
-      <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-  </div>
+    <!-- Scripts -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    
+    <script>
+        const inputValor = document.getElementById('valorFormatado');
 
-  <script>
-    const inputValor = document.getElementById('valorFormatado');
-
-    inputValor.addEventListener('input', function () {
-      let value = this.value.replace(/\D/g, '');
-      value = (value / 100).toFixed(2) + '';
-      value = value.replace('.', ',');
-      value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      this.value = 'R$ ' + value;
-    });
-  </script>
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
-
+        inputValor.addEventListener('input', function () {
+            let value = this.value.replace(/\D/g, '');
+            value = (value / 100).toFixed(2) + '';
+            value = value.replace('.', ',');
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            this.value = value;
+        });
+        
+        // Formatar valor inicial se existir
+        document.addEventListener('DOMContentLoaded', function() {
+            if(inputValor.value && !inputValor.value.includes(',')) {
+                 let val = parseFloat(inputValor.value).toFixed(2);
+                 inputValor.value = val.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+        });
+    </script>
 </body>
-
 </html>

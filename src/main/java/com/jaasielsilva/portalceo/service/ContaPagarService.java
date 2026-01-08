@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.service;
 
 import com.jaasielsilva.portalceo.model.ContaPagar;
 import com.jaasielsilva.portalceo.model.FluxoCaixa;
+import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.model.HistoricoContaPagar;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.ContaBancariaRepository;
@@ -81,6 +82,10 @@ public class ContaPagarService {
 
     public List<ContaPagar> listarPorPeriodo(LocalDate inicio, LocalDate fim) {
         return contaPagarRepository.findByPeriodo(inicio, fim);
+    }
+
+    public List<ContaPagar> listarPorFornecedor(Fornecedor fornecedor) {
+        return contaPagarRepository.findByFornecedorOrderByDataVencimento(fornecedor);
     }
 
     public List<HistoricoContaPagar> listarHistorico(Long contaId) {
@@ -185,6 +190,10 @@ public class ContaPagarService {
         if (contaBancariaId != null) {
             contaBancaria = contaBancariaRepository.findById(contaBancariaId)
                     .orElseThrow(() -> new IllegalArgumentException("Conta bancária não encontrada"));
+
+            if (contaBancaria.getSaldo().compareTo(valorPago) < 0) {
+                throw new IllegalArgumentException("Saldo insuficiente na conta bancária selecionada.");
+            }
 
             contaBancaria.setSaldo(contaBancaria.getSaldo().subtract(valorPago));
             contaBancariaRepository.save(contaBancaria);

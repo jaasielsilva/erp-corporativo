@@ -2,123 +2,153 @@
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Contratos do Fornecedor - Painel do CEO</title>
+    <meta charset="UTF-8">
+    <title>Contratos do Fornecedor - Painel do CEO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Ícones e estilos -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
-  <link href="/css/notifications.css" rel="stylesheet">
-  <link rel="stylesheet" th:href="@{/css/fornecedor.css}" />
+    <!-- Bootstrap 5 e FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Estilos Globais -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link href="/css/notifications.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
-  <div class="app-container">
-    <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+<body class="bg-light">
+    <div class="app-container">
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
-    <main class="main-content">
-      <header th:replace="~{components/topbar :: topbar}"></header>
+        <main class="main-content">
+            <header th:replace="~{components/topbar :: topbar}"></header>
 
-      <section class="content-area">
-        <h1>Contratos do Fornecedor <span th:text="${fornecedor.razaoSocial}">Fornecedor</span></h1>
+            <div class="container-fluid p-4">
+                
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Home</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/fornecedores}" class="text-decoration-none">Fornecedores</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Contratos de <span th:text="${fornecedor.razaoSocial}"></span></li>
+                    </ol>
+                </nav>
 
-        <a class="button primary mt-3" th:href="@{'/fornecedores/' + ${fornecedor.id} + '/contratos/novo'}">
-          <i class="fas fa-plus-circle"></i> Novo Contrato
-        </a>
-         <a class="button mt-3" th:href="@{/fornecedores}">
-          <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-        <article class="card mt-3">
-          <h3>Lista de Contratos</h3>
+                <!-- Feedback Messages -->
+                <script th:inline="javascript">
+                    (function () {
+                        var msgSucesso = /*[[${msgSucesso}]]*/ null;
+                        var msgErro = /*[[${msgErro}]]*/ null;
+                        var erroParam = /*[[${param.erro != null ? param.erro[0] : null}]]*/ null;
 
-          <table class="table-list">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Número</th>
-                <th>Data Início</th>
-                <th>Data Fim</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr th:each="contrato : ${contratos}">
-                <td th:text="${contrato.id}"></td>
-                <td th:text="${contrato.numeroContrato}"></td>
-                <td th:text="${contrato.dataInicio}"></td>
-                <td th:text="${contrato.dataFim}"></td>
-                <td th:text="${contrato.valor}"></td>
+                        function show(icon, title, text) {
+                            if (!text) return;
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: icon, title: title, text: text, confirmButtonText: 'OK' });
+                            }
+                        }
 
-                <td>
-                  <span th:text="${contrato.status}"
-                    th:classappend="${contrato.status == 'Ativo'} ? 'status-ativo' : 'status-inativo'"></span>
-                </td>
-                <td>
-                  <div class="acoes-btns">
-                    <a th:href="@{'/fornecedores/' + ${fornecedor.id} + '/contratos/editar'(idContrato=${contrato.id})}"
-                      title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </a>
-                    <a href="javascript:void(0);" th:attr="data-id=${contrato.id}" title="Excluir"
-                      onclick="abrirModalExcluir(this)">
-                      <i class="fas fa-trash-alt"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              <tr th:if="${#lists.isEmpty(contratos)}">
-                <td colspan="7" style="text-align:center;">Nenhum contrato cadastrado.</td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-      </section>
+                        if (msgSucesso) show('success', 'Sucesso', msgSucesso);
+                        else if (msgErro) show('error', 'Erro', msgErro);
+                        else if (erroParam) show('error', 'Erro', erroParam);
+                    })();
+                </script>
 
-      <footer th:replace="~{components/footer :: footer}"></footer>
-    </main>
-  </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="fas fa-file-contract me-2"></i>Contratos Cadastrados
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/fornecedores}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i> Voltar
+                            </a>
+                            <a th:href="@{'/fornecedores/' + ${fornecedor.id} + '/contratos/novo'}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus-circle me-1"></i> Novo Contrato
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light text-muted small text-uppercase fw-bold">
+                                    <tr>
+                                        <th class="text-center">ID</th>
+                                        <th>Número</th>
+                                        <th>Início</th>
+                                        <th>Fim</th>
+                                        <th>Valor</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end pe-4">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="contrato : ${contratos}">
+                                        <td class="text-center fw-bold text-secondary" th:text="${contrato.id}"></td>
+                                        <td th:text="${contrato.numeroContrato}"></td>
+                                        <td th:text="${#temporals.format(contrato.dataInicio, 'dd/MM/yyyy')}"></td>
+                                        <td th:text="${contrato.dataFim != null ? #temporals.format(contrato.dataFim, 'dd/MM/yyyy') : '-'}"></td>
+                                        <td th:text="${'R$ ' + #numbers.formatDecimal(contrato.valor, 1, 'POINT', 2, 'COMMA')}"></td>
+                                        
+                                        <td class="text-center">
+                                            <span th:class="${contrato.status == 'Ativo' ? 'badge rounded-pill bg-success-subtle text-success-emphasis' : 'badge rounded-pill bg-danger-subtle text-danger-emphasis'}"
+                                                  th:text="${contrato.status}">
+                                            </span>
+                                        </td>
+                                        
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <a th:href="@{'/fornecedores/' + ${fornecedor.id} + '/contratos/editar'(idContrato=${contrato.id})}"
+                                                   class="btn btn-sm btn-warning" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        th:onclick="|confirmarExclusaoContrato(${contrato.id})|" title="Excluir">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(contratos)}">
+                                        <td colspan="7" class="text-center py-5 text-muted">
+                                            <div class="mb-3"><i class="fas fa-file-signature fa-3x opacity-25"></i></div>
+                                            <p class="mb-0">Nenhum contrato encontrado para este fornecedor.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  <!-- Modal de Confirmação de Exclusão -->
-  <div id="modal-excluir" class="modal" style="display: none;">
-    <div class="modal-content">
-      <h3>Tem certeza que deseja excluir este contrato?</h3>
-      <div style="margin-top: 20px; text-align: right;">
-        <button id="confirmarExcluirBtn" class="button danger">Excluir</button>
-        <button onclick="fecharModalExcluir()" class="button">Cancelar</button>
-      </div>
+            <footer th:replace="~{components/footer :: footer}"></footer>
+        </main>
     </div>
-  </div>
 
-  <!-- Scripts -->
-  <script>
-    let contratoIdParaExcluir = null;
-
-    function abrirModalExcluir(el) {
-      contratoIdParaExcluir = el.getAttribute("data-id");
-      document.getElementById("modal-excluir").style.display = "flex";
-    }
-
-    function fecharModalExcluir() {
-      contratoIdParaExcluir = null;
-      document.getElementById("modal-excluir").style.display = "none";
-    }
-
-    document.getElementById("confirmarExcluirBtn").addEventListener("click", () => {
-      if (contratoIdParaExcluir) {
-        window.location.href = `/fornecedores/contratos/excluir/${contratoIdParaExcluir}`;
-      }
-    });
-  </script>
-
-
-
-  <script th:src="@{/js/notifications.js}"></script>
-  <script th:src="@{/js/sidebar.js}"></script>
-
+    <!-- Scripts -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    
+    <script>
+        async function confirmarExclusaoContrato(id) {
+            const r = await Swal.fire({
+                title: 'Confirmar exclusão',
+                text: 'Tem certeza que deseja excluir este contrato?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Excluir',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            });
+            if (r.isConfirmed) {
+                window.location.href = `/fornecedores/contratos/excluir/${id}`;
+            }
+        }
+    </script>
 </body>
-
 </html>

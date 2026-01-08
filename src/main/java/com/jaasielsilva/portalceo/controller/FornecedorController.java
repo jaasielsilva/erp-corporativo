@@ -1,16 +1,22 @@
 package com.jaasielsilva.portalceo.controller;
 
+import com.jaasielsilva.portalceo.model.ContaPagar;
 import com.jaasielsilva.portalceo.model.ContratoFornecedor;
 import com.jaasielsilva.portalceo.model.Fornecedor;
 import com.jaasielsilva.portalceo.service.ContratoFornecedorService;
 import com.jaasielsilva.portalceo.service.FornecedorService;
+import com.jaasielsilva.portalceo.service.ContaPagarService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +31,9 @@ public class FornecedorController {
 
     @Autowired
     private ContratoFornecedorService contratoService;
+
+    @Autowired
+    private ContaPagarService contaPagarService;
 
     /**
      * Lista fornecedores ativos, paginados.
@@ -62,17 +71,32 @@ public class FornecedorController {
      * Salva ou atualiza um fornecedor no banco de dados.
      */
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute Fornecedor fornecedor) {
-        fornecedorService.salvar(fornecedor);
-        return "redirect:/fornecedores";
+    public String salvar(@ModelAttribute Fornecedor fornecedor, RedirectAttributes redirectAttributes, Model model) {
+        try {
+            boolean edicao = fornecedor.getId() != null;
+            fornecedorService.salvar(fornecedor);
+            redirectAttributes.addFlashAttribute("msgSucesso", edicao ? "Fornecedor atualizado com sucesso." : "Fornecedor cadastrado com sucesso.");
+            return "redirect:/fornecedores";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("msgErro", e.getMessage());
+            return "fornecedor/form";
+        } catch (Exception e) {
+            model.addAttribute("msgErro", "Erro ao salvar fornecedor: " + e.getMessage());
+            return "fornecedor/form";
+        }
     }
 
     /**
      * Exibe o formulário de edição de um fornecedor pelo ID.
      */
     @GetMapping("/editar/{id}")
-    public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("fornecedor", fornecedorService.findById(id));
+    public String editar(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        Fornecedor fornecedor = fornecedorService.findById(id);
+        if (fornecedor == null) {
+            redirectAttributes.addFlashAttribute("msgErro", "Fornecedor não encontrado.");
+            return "redirect:/fornecedores";
+        }
+        model.addAttribute("fornecedor", fornecedor);
         return "fornecedor/form";
     }
 
@@ -81,9 +105,31 @@ public class FornecedorController {
      */
     @GetMapping("/excluir/{id}")
     public String excluirFornecedor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        fornecedorService.excluir(id);
-        redirectAttributes.addFlashAttribute("msgSucesso", "Fornecedor excluído com sucesso.");
-        return "redirect:/fornecedores?page=0&size=20";
+        try {
+            fornecedorService.excluir(id);
+            redirectAttributes.addFlashAttribute("msgSucesso", "Fornecedor excluído com sucesso.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("msgErro", "Erro ao excluir fornecedor: " + e.getMessage());
+        }
+        return "redirect:/fornecedores";
+    }
+
+    // --- Pagamentos ---
+
+    /**
+     * Lista todos os pagamentos (contas a pagar) de um fornecedor específico.
+     */
+    @GetMapping("/{id}/pagamentos")
+    public String listarPagamentos(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        Fornecedor fornecedor = fornecedorService.findById(id);
+        if (fornecedor == null) {
+            redirectAttributes.addFlashAttribute("msgErro", "Fornecedor não encontrado.");
+            return "redirect:/fornecedores";
+        }
+        List<ContaPagar> pagamentos = contaPagarService.listarPorFornecedor(fornecedor);
+        model.addAttribute("fornecedor", fornecedor);
+        model.addAttribute("pagamentos", pagamentos);
+        return "fornecedor/pagamentos";
     }
 
     // --- Contratos ---
@@ -92,10 +138,11 @@ public class FornecedorController {
      * Lista todos os contratos de um fornecedor específico.
      */
     @GetMapping("/{id}/contratos")
-    public String listarContratos(@PathVariable Long id, Model model) {
+    public String listarContratos(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         Fornecedor fornecedor = fornecedorService.findById(id);
         if (fornecedor == null) {
-            return "redirect:/fornecedores?erro=FornecedorNaoEncontrado";
+            redirectAttributes.addFlashAttribute("msgErro", "Fornecedor não encontrado.");
+            return "redirect:/fornecedores";
         }
         List<ContratoFornecedor> contratos = contratoService.findByFornecedor(fornecedor);
         model.addAttribute("fornecedor", fornecedor);
@@ -124,6 +171,7 @@ public class FornecedorController {
         }
         ContratoFornecedor contrato = new ContratoFornecedor();
         contrato.setFornecedor(fornecedor);
+        contrato.setNumeroContrato(contratoService.gerarProximoNumeroContrato());
         contrato.setDataInicio(LocalDate.now());
         model.addAttribute("contrato", contrato);
         return "fornecedor/contrato-form";
@@ -143,9 +191,9 @@ public class FornecedorController {
                 contrato.setValor(new BigDecimal(cleaned));
             }
             contratoService.salvar(contrato);
+            redirectAttributes.addFlashAttribute("msgSucesso", "Contrato salvo com sucesso.");
             return "redirect:/fornecedores/" + contrato.getFornecedor().getId() + "/contratos";
         } catch (Exception e) {
-            e.printStackTrace(); // Substituir por log.error se usar Logger
             redirectAttributes.addFlashAttribute("msgErro", "Erro ao salvar contrato: " + e.getMessage());
             return "redirect:/fornecedores/" + contrato.getFornecedor().getId() + "/contratos/novo";
         }
@@ -158,11 +206,15 @@ public class FornecedorController {
     public String editarContrato(
             @PathVariable Long fornecedorId,
             @RequestParam("idContrato") Long contratoId,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
-        ContratoFornecedor contrato = contratoService.findById(contratoId);
-        if (contrato == null) {
-            return "redirect:/fornecedores/" + fornecedorId + "/contratos?erro=ContratoNaoEncontrado";
+        ContratoFornecedor contrato;
+        try {
+            contrato = contratoService.findById(contratoId);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("msgErro", "Contrato não encontrado.");
+            return "redirect:/fornecedores/" + fornecedorId + "/contratos";
         }
 
         model.addAttribute("contrato", contrato);
@@ -173,10 +225,12 @@ public class FornecedorController {
      * Exibe o formulário para editar um contrato diretamente pelo ID do contrato.
      */
     @GetMapping("/contratos/editar/{contratoId}")
-    public String editarContratoDireto(@PathVariable Long contratoId, Model model) {
-        ContratoFornecedor contrato = contratoService.findById(contratoId);
-
-        if (contrato == null) {
+    public String editarContratoDireto(@PathVariable Long contratoId, Model model, RedirectAttributes redirectAttributes) {
+        ContratoFornecedor contrato;
+        try {
+            contrato = contratoService.findById(contratoId);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("msgErro", "Contrato não encontrado.");
             return "redirect:/fornecedores";
         }
 
@@ -188,10 +242,55 @@ public class FornecedorController {
      * Exclui um contrato pelo ID e redireciona para os contratos do fornecedor.
      */
     @GetMapping("/contratos/excluir/{contratoId}")
-    public String excluirContrato(@PathVariable Long contratoId) {
-        Long fornecedorId = contratoService.findById(contratoId).getFornecedor().getId();
-        contratoService.excluir(contratoId);
-        return "redirect:/fornecedores/" + fornecedorId + "/contratos";
+    public String excluirContrato(@PathVariable Long contratoId, RedirectAttributes redirectAttributes) {
+        Long fornecedorId = null;
+        try {
+            fornecedorId = contratoService.findById(contratoId).getFornecedor().getId();
+            contratoService.excluir(contratoId);
+            redirectAttributes.addFlashAttribute("msgSucesso", "Contrato excluído com sucesso.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("msgErro", "Erro ao excluir contrato: " + e.getMessage());
+        }
+        if (fornecedorId != null) {
+            return "redirect:/fornecedores/" + fornecedorId + "/contratos";
+        }
+        return "redirect:/fornecedores";
+    }
+
+    @GetMapping("/api/listar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> listarAjax(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "q", required = false) String q,
+            @RequestParam(name = "status", required = false) String status) {
+        try {
+            Page<Fornecedor> pagina = fornecedorService.listarPaginado(q, status, page, size);
+
+            List<Map<String, Object>> content = pagina.getContent().stream().map(f -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", f.getId());
+                m.put("razaoSocial", f.getRazaoSocial());
+                m.put("cnpj", f.getCnpj());
+                m.put("telefone", f.getTelefone());
+                m.put("email", f.getEmail());
+                m.put("status", f.getStatus());
+                m.put("ativo", f.getAtivo());
+                return m;
+            }).collect(Collectors.toList());
+
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("content", content);
+            resp.put("currentPage", pagina.getNumber());
+            resp.put("totalPages", pagina.getTotalPages());
+            resp.put("totalElements", pagina.getTotalElements());
+            resp.put("hasPrevious", pagina.hasPrevious());
+            resp.put("hasNext", pagina.hasNext());
+            
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+             return ResponseEntity.status(500).body(Map.of("erro", "Falha ao carregar fornecedores: " + e.getMessage()));
+        }
     }
 
 }

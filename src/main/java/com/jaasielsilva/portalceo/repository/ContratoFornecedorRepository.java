@@ -11,5 +11,7 @@ import com.jaasielsilva.portalceo.model.Fornecedor;
 @Repository
 public interface ContratoFornecedorRepository extends JpaRepository<ContratoFornecedor, Long> {
     List<ContratoFornecedor> findByFornecedor(Fornecedor fornecedor);
+    
+    ContratoFornecedor findTopByOrderByIdDesc();
 }
 

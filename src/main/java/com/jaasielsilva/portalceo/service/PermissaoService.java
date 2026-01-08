@@ -83,7 +83,7 @@ public class PermissaoService {
 
         // Atualiza os dados
         permissaoExistente.setNome(nomeNormalizado);
-        
+
         return permissaoRepository.save(permissaoExistente);
     }
 
@@ -96,15 +96,14 @@ public class PermissaoService {
 
         // Verifica se a permissão está sendo usada por algum perfil
         long perfisComPermissao = perfilRepository.findAll().stream()
-                .mapToLong(perfil -> perfil.getPermissoes() != null && 
-                    perfil.getPermissoes().contains(permissao) ? 1 : 0)
+                .mapToLong(perfil -> perfil.getPermissoes() != null &&
+                        perfil.getPermissoes().contains(permissao) ? 1 : 0)
                 .sum();
 
         if (perfisComPermissao > 0) {
             throw new IllegalStateException(
-                String.format("Não é possível excluir a permissão '%s' pois está sendo usada por %d perfil(s)", 
-                    permissao.getNome(), perfisComPermissao)
-            );
+                    String.format("Não é possível excluir a permissão '%s' pois está sendo usada por %d perfil(s)",
+                            permissao.getNome(), perfisComPermissao));
         }
 
         // Verifica se é uma permissão do sistema que não pode ser excluída
@@ -125,10 +124,10 @@ public class PermissaoService {
     public List<Perfil> listarPerfisComPermissao(Long permissaoId) {
         Permissao permissao = permissaoRepository.findById(permissaoId)
                 .orElseThrow(() -> new RuntimeException("Permissão não encontrada"));
-        
+
         return perfilRepository.findAll().stream()
-                .filter(perfil -> perfil.getPermissoes() != null && 
-                    perfil.getPermissoes().contains(permissao))
+                .filter(perfil -> perfil.getPermissoes() != null &&
+                        perfil.getPermissoes().contains(permissao))
                 .collect(Collectors.toList());
     }
 
@@ -163,12 +162,12 @@ public class PermissaoService {
     public Map<String, List<Permissao>> listarPorCategoria() {
         List<Permissao> permissoes = permissaoRepository.findAll();
         Map<String, List<Permissao>> categorias = new HashMap<>();
-        
+
         for (Permissao permissao : permissoes) {
             String categoria = extrairCategoria(permissao.getNome());
             categorias.computeIfAbsent(categoria, k -> new ArrayList<>()).add(permissao);
         }
-        
+
         return categorias;
     }
 
@@ -178,31 +177,31 @@ public class PermissaoService {
     public Map<String, Object> gerarRelatorioEstatisticas() {
         List<Permissao> permissoes = permissaoRepository.findAll();
         Map<String, Object> relatorio = new HashMap<>();
-        
+
         relatorio.put("totalPermissoes", permissoes.size());
         relatorio.put("totalPerfis", perfilRepository.count());
-        
+
         Map<String, Long> perfisComPermissao = new HashMap<>();
         Map<String, String> categoriasPermissoes = new HashMap<>();
-        
+
         for (Permissao permissao : permissoes) {
             long perfis = contarPerfisComPermissao(permissao.getId());
             String categoria = extrairCategoria(permissao.getNome());
-            
+
             perfisComPermissao.put(permissao.getNome(), perfis);
             categoriasPermissoes.put(permissao.getNome(), categoria);
         }
-        
+
         String permissaoMaisUsada = permissoes.stream()
                 .max(Comparator.comparingLong(p -> perfisComPermissao.getOrDefault(p.getNome(), 0L)))
                 .map(Permissao::getNome)
                 .orElse(null);
-        
+
         relatorio.put("perfisComPermissao", perfisComPermissao);
         relatorio.put("categoriasPermissoes", categoriasPermissoes);
         relatorio.put("permissoesPorCategoria", listarPorCategoria());
         relatorio.put("permissaoMaisUsada", permissaoMaisUsada);
-        
+
         return relatorio;
     }
 
@@ -215,7 +214,7 @@ public class PermissaoService {
      */
     public void criarPermissoesPadrao() {
         Map<String, String> permissoesPadrao = getPermissoesPadrao();
-        
+
         for (Map.Entry<String, String> entry : permissoesPadrao.entrySet()) {
             String nome = entry.getKey();
             if (permissaoRepository.findByNome(nome).isEmpty()) {
@@ -231,7 +230,7 @@ public class PermissaoService {
      */
     public Map<String, String> getPermissoesPadrao() {
         Map<String, String> permissoes = new HashMap<>();
-        
+
         // --- Dashboards ---
         permissoes.put("DASHBOARD_EXECUTIVO_VISUALIZAR", "Visualizar Dashboard Executivo");
         permissoes.put("DASHBOARD_OPERACIONAL_VISUALIZAR", "Visualizar Dashboard Operacional");
@@ -246,7 +245,7 @@ public class PermissaoService {
         permissoes.put("MENU_CLIENTES_HISTORICO_PEDIDOS", "Histórico de Pedidos");
         permissoes.put("MENU_CLIENTES_AVANCADO_BUSCA", "Busca Avançada Clientes");
         permissoes.put("MENU_CLIENTES_AVANCADO_RELATORIOS", "Relatórios Clientes");
-        
+
         permissoes.put("MENU_VENDAS", "Menu Vendas");
         permissoes.put("MENU_VENDAS_DASHBOARD", "Dashboard Vendas");
         permissoes.put("MENU_VENDAS_PDV", "PDV Vendas");
@@ -263,12 +262,12 @@ public class PermissaoService {
 
         // --- Recursos Humanos (RH) ---
         permissoes.put("MENU_RH", "Menu RH");
-        
+
         // Colaboradores
         permissoes.put("MENU_RH_COLABORADORES_LISTAR", "Listar Colaboradores");
         permissoes.put("MENU_RH_COLABORADORES_NOVO", "Novo Colaborador");
         permissoes.put("MENU_RH_COLABORADORES_ADESAO", "Adesão Colaboradores");
-        
+
         // Folha
         permissoes.put("MENU_RH_FOLHA", "Menu Folha de Pagamento");
         permissoes.put("MENU_RH_FOLHA_INICIO", "Início Folha");
@@ -277,45 +276,45 @@ public class PermissaoService {
         permissoes.put("MENU_RH_FOLHA_HOLERITE", "Holerite");
         permissoes.put("MENU_RH_FOLHA_DESCONTOS", "Descontos Folha");
         permissoes.put("MENU_RH_FOLHA_RELATORIOS", "Relatórios Folha");
-        
+
         // Benefícios
         permissoes.put("MENU_RH_BENEFICIOS", "Menu Benefícios");
         permissoes.put("MENU_RH_BENEFICIOS_PLANO_SAUDE", "Plano de Saúde");
         permissoes.put("MENU_RH_BENEFICIOS_VALE_TRANSPORTE", "Vale Transporte");
         permissoes.put("MENU_RH_BENEFICIOS_VALE_REFEICAO", "Vale Refeição");
         permissoes.put("MENU_RH_BENEFICIOS_ADESAO", "Adesão Benefícios");
-        
+
         // Workflow
         permissoes.put("MENU_RH_WORKFLOW", "Menu Workflow");
         permissoes.put("MENU_RH_WORKFLOW_APROVACAO", "Aprovação Workflow");
         permissoes.put("MENU_RH_WORKFLOW_RELATORIOS", "Relatórios Workflow");
-        
+
         // Ponto
         permissoes.put("MENU_RH_PONTO", "Menu Ponto");
         permissoes.put("MENU_RH_PONTO_REGISTROS", "Registros Ponto");
         permissoes.put("MENU_RH_PONTO_CORRECOES", "Correções Ponto");
         permissoes.put("MENU_RH_PONTO_ESCALAS", "Escalas Ponto");
         permissoes.put("MENU_RH_PONTO_RELATORIOS", "Relatórios Ponto");
-        
+
         // Férias
         permissoes.put("MENU_RH_FERIAS", "Menu Férias");
         permissoes.put("MENU_RH_FERIAS_SOLICITAR", "Solicitar Férias");
         permissoes.put("MENU_RH_FERIAS_APROVAR", "Aprovar Férias");
         permissoes.put("MENU_RH_FERIAS_PLANEJAMENTO", "Planejamento Férias");
         permissoes.put("MENU_RH_FERIAS_CALENDARIO", "Calendário Férias");
-        
+
         // Avaliação
         permissoes.put("MENU_RH_AVALIACAO", "Menu Avaliação");
         permissoes.put("MENU_RH_AVALIACAO_PERIODICIDADE", "Periodicidade Avaliação");
         permissoes.put("MENU_RH_AVALIACAO_FEEDBACKS", "Feedbacks Avaliação");
         permissoes.put("MENU_RH_AVALIACAO_RELATORIOS", "Relatórios Avaliação");
-        
+
         // Treinamentos
         permissoes.put("MENU_RH_TREINAMENTOS", "Menu Treinamentos");
         permissoes.put("MENU_RH_TREINAMENTOS_CADASTRO", "Cadastro Treinamentos");
         permissoes.put("MENU_RH_TREINAMENTOS_INSCRICAO", "Inscrição Treinamentos");
         permissoes.put("MENU_RH_TREINAMENTOS_CERTIFICADO", "Certificado Treinamentos");
-        
+
         // Recrutamento
         permissoes.put("MENU_RH_RECRUTAMENTO", "Menu Recrutamento");
         permissoes.put("MENU_RH_RECRUTAMENTO_CANDIDATOS", "Candidatos Recrutamento");
@@ -325,7 +324,7 @@ public class PermissaoService {
         permissoes.put("MENU_RH_RECRUTAMENTO_HISTORICO", "Histórico Recrutamento");
         permissoes.put("MENU_RH_RECRUTAMENTO_PIPELINE", "Pipeline Recrutamento");
         permissoes.put("MENU_RH_RECRUTAMENTO_RELATORIOS", "Relatórios Recrutamento");
-        
+
         // Relatórios RH
         permissoes.put("MENU_RH_RELATORIOS", "Menu Relatórios RH");
         permissoes.put("MENU_RH_RELATORIOS_TURNOVER", "Turnover RH");
@@ -334,14 +333,14 @@ public class PermissaoService {
         permissoes.put("MENU_RH_RELATORIOS_INDICADORES", "Indicadores RH");
         permissoes.put("MENU_RH_RELATORIOS_ADMISSOES_DEMISSOES", "Admissões/Demissões RH");
         permissoes.put("MENU_RH_RELATORIOS_FERIAS_BENEFICIOS", "Relatórios Férias/Benefícios");
-        
+
         // Configurações RH
         permissoes.put("MENU_RH_CONFIGURACOES", "Menu Configurações RH");
         permissoes.put("MENU_RH_CONFIGURACOES_INICIO", "Início Configurações RH");
         permissoes.put("MENU_RH_CONFIGURACOES_POLITICAS_FERIAS", "Políticas Férias");
         permissoes.put("MENU_RH_CONFIGURACOES_PONTO", "Parâmetros Ponto");
         permissoes.put("MENU_RH_CONFIGURACOES_INTEGRACOES", "Integrações RH");
-        
+
         // Auditoria RH
         permissoes.put("MENU_RH_AUDITORIA", "Menu Auditoria RH");
         permissoes.put("MENU_RH_AUDITORIA_INICIO", "Início Auditoria RH");
@@ -381,23 +380,28 @@ public class PermissaoService {
         permissoes.put("MENU_JURIDICO", "Menu Jurídico");
         permissoes.put("MENU_JURIDICO_DASHBOARD", "Dashboard Jurídico");
         permissoes.put("MENU_JURIDICO_CLIENTES", "Clientes Jurídico");
-        
+
         // Previdenciário
         permissoes.put("MENU_JURIDICO_PREVIDENCIARIO", "Menu Previdenciário");
         permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_LISTAR", "Listar Previdenciário");
         permissoes.put("MENU_JURIDICO_PREVIDENCIARIO_NOVO", "Novo Previdenciário");
-        
+
         permissoes.put("MENU_JURIDICO_WHATCHAT", "WhaTchat Jurídico");
         permissoes.put("MENU_JURIDICO_CONTRATOS", "Contratos Jurídico");
-        
+
         // Processos
         permissoes.put("MENU_JURIDICO_PROCESSOS", "Menu Processos");
         permissoes.put("MENU_JURIDICO_PROCESSOS_LISTAR", "Listar Processos");
         permissoes.put("MENU_JURIDICO_PROCESSOS_NOVO", "Novo Processo");
-        
+
+        // Exportação
+        permissoes.put("JURIDICO_CONTRATOS_EXPORTAR", "Exportar Contratos Jurídicos");
+        permissoes.put("JURIDICO_PROCESSOS_EXPORTAR", "Exportar Processos Jurídicos");
+        permissoes.put("JURIDICO_PREVIDENCIARIO_EXPORTAR", "Exportar Processos Previdenciários");
+
         permissoes.put("MENU_JURIDICO_COMPLIANCE", "Compliance Jurídico");
         permissoes.put("MENU_JURIDICO_DOCUMENTOS", "Documentos Jurídico");
-        
+
         // Auditoria Jurídico
         permissoes.put("MENU_JURIDICO_AUDITORIA", "Menu Auditoria Jurídico");
         permissoes.put("MENU_JURIDICO_AUDITORIA_INICIO", "Início Auditoria Jurídico");
@@ -415,11 +419,11 @@ public class PermissaoService {
         permissoes.put("MENU_PROJETOS_GERAL", "Geral Projetos");
         permissoes.put("MENU_PROJETOS_GERAL_LISTAR", "Listar Projetos");
         permissoes.put("MENU_PROJETOS_GERAL_NOVO", "Novo Projeto");
-        
+
         permissoes.put("MENU_PROJETOS_TAREFAS", "Tarefas Projetos");
         permissoes.put("MENU_PROJETOS_TAREFAS_LISTAR", "Listar Tarefas");
         permissoes.put("MENU_PROJETOS_TAREFAS_ATRIBUICOES", "Atribuições Tarefas");
-        
+
         permissoes.put("MENU_PROJETOS_EQUIPES_CADASTRAR", "Cadastrar Equipes");
         permissoes.put("MENU_PROJETOS_EQUIPES_MEMBROS", "Membros Equipe");
         permissoes.put("MENU_PROJETOS_CRONOGRAMA", "Cronograma Projetos");
@@ -451,27 +455,26 @@ public class PermissaoService {
         permissoes.put("MENU_DOCS_GERENCIAL", "Documentos Gerenciais");
         permissoes.put("MENU_DOCS_PESSOAL", "Documentos Pessoais");
 
-        
         // --- Permissões Gerais (Legado) ---
         permissoes.put("ROLE_USER_READ", "Visualizar usuários");
         permissoes.put("ROLE_USER_WRITE", "Criar/editar usuários");
         permissoes.put("ROLE_USER_DELETE", "Excluir usuários");
         permissoes.put("ROLE_USER_ADMIN", "Administrar usuários");
-        
+
         permissoes.put("ROLE_RH_READ", "Visualizar RH");
         permissoes.put("ROLE_RH_WRITE", "Criar/editar RH");
         permissoes.put("ROLE_RH_DELETE", "Excluir RH");
         permissoes.put("ROLE_RH_ADMIN", "Administrar RH");
-        
+
         permissoes.put("ROLE_FINANCEIRO_READ", "Visualizar financeiro");
         permissoes.put("ROLE_FINANCEIRO_WRITE", "Criar/editar financeiro");
         permissoes.put("ROLE_FINANCEIRO_DELETE", "Excluir financeiro");
         permissoes.put("ROLE_FINANCEIRO_ADMIN", "Administrar financeiro");
-        
+
         permissoes.put("ROLE_RELATORIO_READ", "Visualizar relatórios");
         permissoes.put("ROLE_RELATORIO_EXPORT", "Exportar relatórios");
         permissoes.put("ROLE_RELATORIO_ADMIN", "Administrar relatórios");
-        
+
         permissoes.put("ROLE_ADMIN", "Administrador do sistema");
         permissoes.put("ROLE_USER", "Usuário básico");
         permissoes.put("ROLE_MASTER", "Usuário master");
@@ -492,10 +495,14 @@ public class PermissaoService {
      */
     private String normalizarNomePermissao(String nome) {
         String n = nome == null ? "" : nome.toUpperCase().trim();
-        if (n.isEmpty()) return n;
-        if (n.startsWith("ROLE_")) return n;
-        if (n.startsWith("MENU_")) return n;
-        if (n.matches("^(CHAMADO|TECNICO|ADMIN|USUARIO|FINANCEIRO|JURIDICO|MARKETING|ESTOQUE|CLIENTES|VENDAS|COMPRAS|PROJETOS|PESSOAL|DOCS)_.*$")) {
+        if (n.isEmpty())
+            return n;
+        if (n.startsWith("ROLE_"))
+            return n;
+        if (n.startsWith("MENU_"))
+            return n;
+        if (n.matches(
+                "^(CHAMADO|TECNICO|ADMIN|USUARIO|FINANCEIRO|JURIDICO|MARKETING|ESTOQUE|CLIENTES|VENDAS|COMPRAS|PROJETOS|PESSOAL|DOCS)_.*$")) {
             return n;
         }
         return "ROLE_" + n;
@@ -506,29 +513,52 @@ public class PermissaoService {
      */
     private String extrairCategoria(String nomePermissao) {
         String n = nomePermissao == null ? "" : nomePermissao.toUpperCase();
-        if (n.startsWith("ROLE_USER")) return "Usuários";
-        if (n.startsWith("ROLE_RH")) return "Recursos Humanos";
-        if (n.startsWith("ROLE_FINANCEIRO")) return "Financeiro";
-        if (n.startsWith("ROLE_RELATORIO")) return "Relatórios";
-        if (n.startsWith("ROLE_CONFIG")) return "Configurações";
-        if (n.equals("ROLE_ADMIN") || n.equals("ROLE_MASTER")) return "Sistema";
-        if (n.startsWith("MENU_FINANCEIRO")) return "Financeiro";
-        if (n.startsWith("MENU_TI")) return "TI";
-        if (n.startsWith("MENU_RH")) return "Recursos Humanos";
-        if (n.startsWith("MENU_MARKETING")) return "Marketing";
-        if (n.startsWith("MENU_JURIDICO")) return "Jurídico";
-        if (n.startsWith("MENU_PROJETOS")) return "Projetos";
-        if (n.startsWith("MENU_ADMIN")) return "Administração";
-        if (n.startsWith("MENU_PESSOAL")) return "Pessoal";
-        if (n.startsWith("MENU_CADASTROS")) return "Cadastros";
-        if (n.startsWith("MENU_UTILIDADES")) return "Utilidades";
-        if (n.startsWith("MENU_AJUDA")) return "Ajuda";
-        if (n.startsWith("MENU_DOCS")) return "Documentos";
-        if (n.startsWith("MENU_CLIENTES")) return "Clientes";
-        if (n.startsWith("MENU_VENDAS")) return "Vendas";
-        if (n.startsWith("MENU_COMPRAS")) return "Compras";
-        if (n.startsWith("MENU_ESTOQUE")) return "Estoque";
-        if (n.startsWith("MENU_SERVICOS")) return "Serviços";
+        if (n.startsWith("ROLE_USER"))
+            return "Usuários";
+        if (n.startsWith("ROLE_RH"))
+            return "Recursos Humanos";
+        if (n.startsWith("ROLE_FINANCEIRO"))
+            return "Financeiro";
+        if (n.startsWith("ROLE_RELATORIO"))
+            return "Relatórios";
+        if (n.startsWith("ROLE_CONFIG"))
+            return "Configurações";
+        if (n.equals("ROLE_ADMIN") || n.equals("ROLE_MASTER"))
+            return "Sistema";
+        if (n.startsWith("MENU_FINANCEIRO"))
+            return "Financeiro";
+        if (n.startsWith("MENU_TI"))
+            return "TI";
+        if (n.startsWith("MENU_RH"))
+            return "Recursos Humanos";
+        if (n.startsWith("MENU_MARKETING"))
+            return "Marketing";
+        if (n.startsWith("MENU_JURIDICO"))
+            return "Jurídico";
+        if (n.startsWith("MENU_PROJETOS"))
+            return "Projetos";
+        if (n.startsWith("MENU_ADMIN"))
+            return "Administração";
+        if (n.startsWith("MENU_PESSOAL"))
+            return "Pessoal";
+        if (n.startsWith("MENU_CADASTROS"))
+            return "Cadastros";
+        if (n.startsWith("MENU_UTILIDADES"))
+            return "Utilidades";
+        if (n.startsWith("MENU_AJUDA"))
+            return "Ajuda";
+        if (n.startsWith("MENU_DOCS"))
+            return "Documentos";
+        if (n.startsWith("MENU_CLIENTES"))
+            return "Clientes";
+        if (n.startsWith("MENU_VENDAS"))
+            return "Vendas";
+        if (n.startsWith("MENU_COMPRAS"))
+            return "Compras";
+        if (n.startsWith("MENU_ESTOQUE"))
+            return "Estoque";
+        if (n.startsWith("MENU_SERVICOS"))
+            return "Serviços";
         return "Geral";
     }
 
@@ -537,8 +567,7 @@ public class PermissaoService {
      */
     private boolean isPermissaoSistema(String nome) {
         Set<String> permissoesSistema = Set.of(
-            "ROLE_ADMIN", "ROLE_USER", "ROLE_MASTER"
-        );
+                "ROLE_ADMIN", "ROLE_USER", "ROLE_MASTER");
         return permissoesSistema.contains(nome.toUpperCase());
     }
 
@@ -555,7 +584,7 @@ public class PermissaoService {
      */
     public List<Permissao> criarPermissoes(List<String> nomes) {
         List<Permissao> permissoesCriadas = new ArrayList<>();
-        
+
         for (String nome : nomes) {
             String nomeNormalizado = normalizarNomePermissao(nome);
             if (permissaoRepository.findByNome(nomeNormalizado).isEmpty()) {
@@ -564,13 +593,14 @@ public class PermissaoService {
                 permissoesCriadas.add(permissaoRepository.save(permissao));
             }
         }
-        
+
         return permissoesCriadas;
     }
 
     public List<Permissao> sugerirPermissoesPorModulosENivel(List<String> modulos, String nivel) {
         Set<String> sugeridas = new HashSet<>();
-        boolean gerencial = nivel != null && Set.of("MASTER","ADMIN","GERENTE","COORDENADOR","SUPERVISOR").contains(nivel.toUpperCase());
+        boolean gerencial = nivel != null
+                && Set.of("MASTER", "ADMIN", "GERENTE", "COORDENADOR", "SUPERVISOR").contains(nivel.toUpperCase());
         sugeridas.add("ROLE_USER");
         if (modulos != null) {
             for (String m : modulos) {
@@ -615,8 +645,10 @@ public class PermissaoService {
         }
         if (nivel != null) {
             String n = nivel.toUpperCase();
-            if (n.equals("MASTER")) sugeridas.add("ROLE_MASTER");
-            if (n.equals("ADMIN")) sugeridas.add("ROLE_ADMIN");
+            if (n.equals("MASTER"))
+                sugeridas.add("ROLE_MASTER");
+            if (n.equals("ADMIN"))
+                sugeridas.add("ROLE_ADMIN");
         }
         List<Permissao> resultado = new ArrayList<>();
         for (String nome : sugeridas) {

@@ -10,6 +10,7 @@ import com.jaasielsilva.portalceo.service.NotificationService;
 import com.jaasielsilva.portalceo.service.AuditoriaJuridicoLogService;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import com.jaasielsilva.portalceo.repository.juridico.*;
+import com.jaasielsilva.portalceo.service.AutentiqueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
@@ -27,7 +28,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -37,6 +38,7 @@ import java.util.*;
 @Controller
 @RequestMapping("/juridico")
 @RequiredArgsConstructor
+@Slf4j
 public class JuridicoController {
 
     private final ContratoLegalService contratoLegalService;
@@ -108,17 +110,18 @@ public class JuridicoController {
         // Alertas imediatos (para popup)
         List<String> alertas = new ArrayList<>();
         LocalDate amanha = LocalDate.now().plusDays(1);
-        
+
         // Contratos vencendo amanhã
         if (proximosVencimentos != null) {
             for (ContratoLegal c : proximosVencimentos) {
                 if (c.getDataVencimento() != null && c.getDataVencimento().isEqual(amanha)) {
-                    alertas.add("O contrato <strong>" + c.getTitulo() + "</strong> vence amanhã (" + 
-                        c.getDataVencimento().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ").");
+                    alertas.add("O contrato <strong>" + c.getTitulo() + "</strong> vence amanhã (" +
+                            c.getDataVencimento().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                            + ").");
                 }
             }
         }
-        
+
         // Processos com prazos urgentes (amanhã)
         List<Map<String, Object>> urgentes = processoJuridicoService.obterProcessosUrgentes(7); // Pega próximos 7 dias
         if (urgentes != null) {
@@ -131,16 +134,18 @@ public class JuridicoController {
                     } else if (prazoObj instanceof String) {
                         try {
                             prazoData = LocalDate.parse((String) prazoObj);
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
-                    
+
                     if (prazoData != null && prazoData.isEqual(amanha)) {
-                        alertas.add("O processo <strong>" + p.get("numero") + "</strong> tem um prazo vencendo amanhã.");
+                        alertas.add(
+                                "O processo <strong>" + p.get("numero") + "</strong> tem um prazo vencendo amanhã.");
                     }
                 }
             }
         }
-        
+
         // Audiências amanhã
         List<Map<String, Object>> audiencias = processoJuridicoService.obterProximasAudiencias(2);
         if (audiencias != null) {
@@ -153,18 +158,20 @@ public class JuridicoController {
                     } else if (dataObj instanceof String) {
                         try {
                             dataHora = LocalDateTime.parse((String) dataObj);
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
-                    
+
                     if (dataHora != null && dataHora.toLocalDate().isEqual(amanha)) {
-                         String horaFormatada = dataHora.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
-                         String processoNum = (String) a.get("processoNumero");
-                         alertas.add("Audiência amanhã às <strong>" + horaFormatada + "</strong> no processo <strong>" + (processoNum != null ? processoNum : "N/A") + "</strong>.");
+                        String horaFormatada = dataHora.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                        String processoNum = (String) a.get("processoNumero");
+                        alertas.add("Audiência amanhã às <strong>" + horaFormatada + "</strong> no processo <strong>"
+                                + (processoNum != null ? processoNum : "N/A") + "</strong>.");
                     }
                 }
             }
         }
-        
+
         model.addAttribute("alertasImediatos", alertas);
 
         return "juridico/index";
@@ -212,6 +219,9 @@ public class JuridicoController {
             model.addAttribute("statusContrato", ContratoLegal.StatusContrato.values());
             model.addAttribute("tiposContrato", ContratoLegal.TipoContrato.values());
 
+            // Add client list for the footer form/modal
+            model.addAttribute("listaClientes", clienteService.listarTodos());
+
             // Estatísticas reais de contratos
             model.addAttribute("estatisticasStatus", contratoLegalService.getEstatisticasPorStatus());
             model.addAttribute("valorTotalAtivos", contratoLegalService.calcularValorTotalAtivos());
@@ -242,6 +252,20 @@ public class JuridicoController {
         return "juridico/contrato-detalhe";
     }
 
+    @PostMapping("/contratos/{id}/enviar-assinatura")
+    @ResponseBody
+    public ResponseEntity<?> enviarParaAssinatura(@PathVariable Long id) {
+        try {
+            ContratoLegal contrato = contratoLegalService.enviarParaAssinatura(id);
+            return ResponseEntity.ok(Map.of(
+                    "mensagem", "Contrato enviado para assinatura com sucesso!",
+                    "link", contrato.getLinkAssinatura(),
+                    "autentiqueId", contrato.getAutentiqueId()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("erro", e.getMessage()));
+        }
+    }
+
     @PostMapping("/contratos")
     @ResponseBody
     public ResponseEntity<?> criarContrato(@RequestParam String titulo,
@@ -254,6 +278,8 @@ public class JuridicoController {
             @RequestParam(required = false, defaultValue = "false") Boolean renovacaoAutomatica,
             @RequestParam(required = false, defaultValue = "30") Integer prazoNotificacao,
             @RequestParam(required = false) String numeroContrato,
+            @RequestParam(required = false) Long clienteId,
+            @RequestParam(required = false) MultipartFile arquivo,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             // Obter usuário logado
@@ -282,6 +308,30 @@ public class JuridicoController {
             if (valorContrato != null && !valorContrato.isBlank()) {
                 String vc = valorContrato.replace(".", "").replace(",", ".");
                 contrato.setValorContrato(new BigDecimal(vc));
+            }
+
+            // Associar cliente se selecionado
+            if (clienteId != null) {
+                clienteService.buscarPorId(clienteId).ifPresent(contrato::setCliente);
+            }
+
+            // Processar arquivo se enviado
+            if (arquivo != null && !arquivo.isEmpty()) {
+                try {
+                    String fileName = "CONTRATO_" + System.currentTimeMillis() + "_" + arquivo.getOriginalFilename();
+                    String uploadDir = uploadBasePath + "/juridico/contratos";
+                    java.io.File dir = new java.io.File(uploadDir);
+                    if (!dir.exists())
+                        dir.mkdirs();
+
+                    java.nio.file.Path targetPath = java.nio.file.Paths.get(uploadDir, fileName);
+                    java.nio.file.Files.copy(arquivo.getInputStream(), targetPath,
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                    contrato.setCaminhoArquivo(targetPath.toString());
+                } catch (java.io.IOException e) {
+                    log.error("Erro ao salvar arquivo do contrato", e);
+                }
             }
 
             // Associar usuário
@@ -440,10 +490,11 @@ public class JuridicoController {
 
         // Migração/Correção automática do modelo fictício para o real
         try {
-            java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> ficticios = documentoModeloRepository.findAll().stream()
-                .filter(m -> "Modelo de Contrato de Prestação de Serviços".equals(m.getNome()))
-                .collect(java.util.stream.Collectors.toList());
-            
+            java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> ficticios = documentoModeloRepository
+                    .findAll().stream()
+                    .filter(m -> "Modelo de Contrato de Prestação de Serviços".equals(m.getNome()))
+                    .collect(java.util.stream.Collectors.toList());
+
             for (com.jaasielsilva.portalceo.model.juridico.DocumentoModelo m : ficticios) {
                 m.setNome("Procuração Ad Judicia");
                 m.setCategoria("Procurações");
@@ -861,20 +912,22 @@ public class JuridicoController {
     @PostMapping("/api/processos/{id}/ganho")
     @ResponseBody
     public ResponseEntity<?> registrarGanhoDeCausa(@PathVariable Long id,
-                                                   @RequestBody Map<String, Object> body,
-                                                   @ModelAttribute("usuarioLogado") com.jaasielsilva.portalceo.model.Usuario usuario) {
+            @RequestBody Map<String, Object> body,
+            @ModelAttribute("usuarioLogado") com.jaasielsilva.portalceo.model.Usuario usuario) {
         return processoJuridicoRepository.findById(id)
                 .map(processo -> {
                     try {
                         if (processo.getCliente() == null) {
-                            return ResponseEntity.badRequest().body(Map.of("erro", "Vincule um cliente ao processo antes de registrar ganho"));
+                            return ResponseEntity.badRequest()
+                                    .body(Map.of("erro", "Vincule um cliente ao processo antes de registrar ganho"));
                         }
                         String valorStrRaw = String.valueOf(body.getOrDefault("valor", "")).trim();
                         String valorStr = valorStrRaw.replaceAll("[^0-9,\\.]", "");
                         if (valorStr.isEmpty()) {
                             return ResponseEntity.badRequest().body(Map.of("erro", "Informe o valor da indenização"));
                         }
-                        java.math.BigDecimal valor = new java.math.BigDecimal(valorStr.replace(".", "").replace(",", "."));
+                        java.math.BigDecimal valor = new java.math.BigDecimal(
+                                valorStr.replace(".", "").replace(",", "."));
                         String vencimentoStr = String.valueOf(body.getOrDefault("vencimento", "")).trim();
                         java.time.LocalDate vencimento;
                         if (vencimentoStr.isEmpty()) {
@@ -897,7 +950,8 @@ public class JuridicoController {
                         conta.setDataEmissao(java.time.LocalDate.now());
                         conta.setDataVencimento(vencimento);
                         conta.setTipo(com.jaasielsilva.portalceo.model.ContaReceber.TipoContaReceber.SERVICO);
-                        conta.setCategoria(com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber.JURIDICO);
+                        conta.setCategoria(
+                                com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber.JURIDICO);
                         conta.setNumeroDocumento(numeroDocumento.isEmpty() ? null : numeroDocumento);
                         conta.setObservacoes(observacoes.isEmpty() ? null : observacoes);
                         com.jaasielsilva.portalceo.model.ContaReceber saved;
@@ -906,23 +960,26 @@ public class JuridicoController {
                         } catch (Exception ex) {
                             String m = ex.getMessage() != null ? ex.getMessage() : "";
                             if (m.contains("Data truncated for column 'categoria'")) {
-                                conta.setCategoria(com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber.SERVICO);
+                                conta.setCategoria(
+                                        com.jaasielsilva.portalceo.model.ContaReceber.CategoriaContaReceber.SERVICO);
                                 saved = contaReceberService.save(conta, usuario);
-                                processo.setStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO);
+                                processo.setStatus(
+                                        com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO);
                                 processoJuridicoRepository.save(processo);
                                 return ResponseEntity.ok(Map.of(
                                         "id", saved.getId(),
                                         "descricao", saved.getDescricao(),
-                                        "aviso", "Categoria JURIDICO não suportada no banco, registrado como SERVICO"
-                                ));
+                                        "aviso", "Categoria JURIDICO não suportada no banco, registrado como SERVICO"));
                             }
                             throw ex;
                         }
-                        processo.setStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO);
+                        processo.setStatus(
+                                com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO);
                         processoJuridicoRepository.save(processo);
                         return ResponseEntity.ok(Map.of("id", saved.getId(), "descricao", saved.getDescricao()));
                     } catch (Exception e) {
-                        return ResponseEntity.status(400).body(Map.of("erro", "Falha ao registrar ganho: " + e.getMessage()));
+                        return ResponseEntity.status(400)
+                                .body(Map.of("erro", "Falha ao registrar ganho: " + e.getMessage()));
                     }
                 })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado")));
@@ -936,7 +993,8 @@ public class JuridicoController {
         p.setNumero(String.valueOf(body.getOrDefault("numero", "")));
         String tipoStr = String.valueOf(body.getOrDefault("tipo", "OUTROS"));
         try {
-            p.setTipo(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.TipoAcaoJuridica.valueOf(tipoStr.toUpperCase()));
+            p.setTipo(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.TipoAcaoJuridica
+                    .valueOf(tipoStr.toUpperCase()));
         } catch (IllegalArgumentException e) {
             p.setTipo(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.TipoAcaoJuridica.OUTROS);
         }
@@ -1037,11 +1095,12 @@ public class JuridicoController {
     @ResponseBody
     public ResponseEntity<?> obterTimeline(@PathVariable Long id) {
         // Combina andamentos e audiências para formar a linha do tempo
-        List<com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso> andamentos = processoJuridicoService.listarAndamentos(id);
-        
+        List<com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso> andamentos = processoJuridicoService
+                .listarAndamentos(id);
+
         // Transformar para um formato simples para o front
         List<Map<String, Object>> timeline = new ArrayList<>();
-        
+
         for (var a : andamentos) {
             Map<String, Object> item = new HashMap<>();
             item.put("data", a.getDataHora());
@@ -1054,40 +1113,42 @@ public class JuridicoController {
         }
 
         // Ordenar por data (decrescente)
-        timeline.sort((a, b) -> ((LocalDateTime)b.get("data")).compareTo((LocalDateTime)a.get("data")));
+        timeline.sort((a, b) -> ((LocalDateTime) b.get("data")).compareTo((LocalDateTime) a.get("data")));
 
         return ResponseEntity.ok(timeline);
     }
 
     @PostMapping("/api/processos/{id}/andamentos")
     @ResponseBody
-    public ResponseEntity<?> adicionarAndamento(@PathVariable Long id, 
-                                              @RequestBody Map<String, Object> body,
-                                              @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<?> adicionarAndamento(@PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso andamento = new com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso();
             andamento.setProcessoId(id);
             andamento.setTitulo((String) body.get("titulo"));
             andamento.setDescricao((String) body.get("descricao"));
-            
+
             String tipoStr = (String) body.get("tipo");
             if (tipoStr != null) {
                 try {
-                    andamento.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.valueOf(tipoStr));
+                    andamento.setTipoEtapa(
+                            com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.valueOf(tipoStr));
                 } catch (Exception e) {
-                    andamento.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.ANDAMENTO);
+                    andamento.setTipoEtapa(
+                            com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.ANDAMENTO);
                 }
             } else {
                 andamento.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.ANDAMENTO);
             }
-            
+
             // Tenta pegar a data do body ou usa agora
             String dataStr = (String) body.get("dataHora");
             if (dataStr != null && !dataStr.isBlank()) {
                 try {
                     andamento.setDataHora(LocalDateTime.parse(dataStr));
                 } catch (Exception e) {
-                     andamento.setDataHora(LocalDateTime.now());
+                    andamento.setDataHora(LocalDateTime.now());
                 }
             } else {
                 andamento.setDataHora(LocalDateTime.now());
@@ -1123,8 +1184,10 @@ public class JuridicoController {
                 return ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado"));
             }
             var atual = procOpt.get();
-            if (atual.getStatus() == com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
-                return ResponseEntity.status(403).body(Map.of("erro", "Processo encerrado: utilize o fluxo de reabertura"));
+            if (atual
+                    .getStatus() == com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("erro", "Processo encerrado: utilize o fluxo de reabertura"));
             }
             com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso st = com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso
                     .valueOf(status);
@@ -1139,23 +1202,24 @@ public class JuridicoController {
     @PostMapping("/api/processos/{id}/reabrir")
     @ResponseBody
     public ResponseEntity<?> reabrirProcesso(@PathVariable Long id,
-                                             @RequestBody Map<String, Object> body,
-                                             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
         try {
             var procOpt = processoJuridicoRepository.findById(id);
             if (procOpt.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado"));
             }
             var processo = procOpt.get();
-            if (processo.getStatus() != com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
-                return ResponseEntity.badRequest().body(Map.of("erro", "Somente processos encerrados podem ser reabertos"));
+            if (processo
+                    .getStatus() != com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("erro", "Somente processos encerrados podem ser reabertos"));
             }
-            boolean autorizado = userDetails != null && userDetails.getAuthorities().stream().anyMatch(a ->
-                    a.getAuthority().equals("ROLE_ADMIN") ||
-                    a.getAuthority().equals("ROLE_MASTER") ||
-                    a.getAuthority().equals("ROLE_JURIDICO") ||
-                    a.getAuthority().equals("ROLE_GERENCIAL")
-            );
+            boolean autorizado = userDetails != null && userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") ||
+                            a.getAuthority().equals("ROLE_MASTER") ||
+                            a.getAuthority().equals("ROLE_JURIDICO") ||
+                            a.getAuthority().equals("ROLE_GERENCIAL"));
             if (!autorizado) {
                 return ResponseEntity.status(403).body(Map.of("erro", "Usuário sem permissão para reabrir processo"));
             }
@@ -1791,15 +1855,17 @@ public class JuridicoController {
             }
 
             Map<String, String> placeholders = new HashMap<>();
-            
+
             // Resolve logo path
             String logoPath = "";
             try {
-                org.springframework.core.io.Resource logoRes = resourceLoader.getResource("classpath:static/img/logo-empresa.png");
+                org.springframework.core.io.Resource logoRes = resourceLoader
+                        .getResource("classpath:static/img/logo-empresa.png");
                 if (logoRes.exists()) {
                     logoPath = logoRes.getFile().toURI().toString();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             placeholders.put("logo_path", logoPath);
 
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
@@ -1872,11 +1938,13 @@ public class JuridicoController {
             // Resolve logo path
             String logoPath = "";
             try {
-                org.springframework.core.io.Resource logoRes = resourceLoader.getResource("classpath:static/img/logo-empresa.png");
+                org.springframework.core.io.Resource logoRes = resourceLoader
+                        .getResource("classpath:static/img/logo-empresa.png");
                 if (logoRes.exists()) {
                     logoPath = logoRes.getFile().toURI().toString();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             placeholders.put("logo_path", logoPath);
 
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
@@ -2123,11 +2191,13 @@ public class JuridicoController {
         return documentoJuridicoRepository.findById(id)
                 .map(d -> {
                     try {
-                        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-                        
+                        String username = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                                .getAuthentication().getName();
+
                         String ip = "0.0.0.0";
                         try {
-                            org.springframework.web.context.request.ServletRequestAttributes attrs = (org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+                            org.springframework.web.context.request.ServletRequestAttributes attrs = (org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder
+                                    .getRequestAttributes();
                             if (attrs != null) {
                                 jakarta.servlet.http.HttpServletRequest request = attrs.getRequest();
                                 ip = request.getRemoteAddr();
@@ -2138,21 +2208,20 @@ public class JuridicoController {
                             }
                         } catch (Exception ignored) {
                         }
-                        
+
                         auditoriaJuridicoLogService.registrar(
-                            "DOCUMENTOS",
-                            "EXCLUSAO",
-                            "Documento ID " + d.getId(),
-                            username,
-                            ip,
-                            "Exclusão do documento: " + d.getTitulo(),
-                            true
-                        );
+                                "DOCUMENTOS",
+                                "EXCLUSAO",
+                                "Documento ID " + d.getId(),
+                                username,
+                                ip,
+                                "Exclusão do documento: " + d.getTitulo(),
+                                true);
                     } catch (Exception e) {
                         // Log erro de auditoria mas não impede exclusão
                         System.err.println("Erro ao registrar auditoria de exclusão: " + e.getMessage());
                     }
-                    
+
                     documentoJuridicoRepository.delete(d);
                     return ResponseEntity.ok(Map.of("id", id, "excluido", true));
                 })
@@ -2336,6 +2405,24 @@ public class JuridicoController {
         } catch (Exception e) {
             return ResponseEntity.status(500)
                     .body(Map.of("erro", "Falha ao ativar contrato", "detalhes", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/contratos/{id}/sincronizar")
+    @ResponseBody
+    public ResponseEntity<?> sincronizarContrato(@PathVariable Long id) {
+        try {
+            ContratoLegal atualizado = contratoLegalService.sincronizarStatusAutentique(id);
+            String mensagem = "ASSINADO".equals(atualizado.getStatus().name())
+                    ? "Contrato sincronizado e ASSINADO!"
+                    : "Contrato sincronizado, mas ainda pendente de assinaturas.";
+            return ResponseEntity.ok(Map.of(
+                    "id", atualizado.getId(),
+                    "status", atualizado.getStatus(),
+                    "mensagem", mensagem));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Falha ao sincronizar com Autentique", "detalhes", e.getMessage()));
         }
     }
 

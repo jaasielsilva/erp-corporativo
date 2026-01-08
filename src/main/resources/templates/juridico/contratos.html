@@ -48,9 +48,15 @@
                                 <label class="form-label fw-semibold">Número do Contrato</label>
                                 <input class="form-control" type="text" name="numero" placeholder="Ex.: CT-2025-001" />
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <button class="btn btn-primary w-100" type="submit"><i
                                         class="fas fa-search me-2"></i>Filtrar</button>
+                            </div>
+                            <div class="col-md-2"
+                                th:if="${#authorization.expression('hasAuthority(''JURIDICO_CONTRATOS_EXPORTAR'')')}">
+                                <a th:href="@{/api/juridico/relatorios/contratos/export}" class="btn btn-success w-100">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar
+                                </a>
                             </div>
                         </div>
                     </form>
@@ -63,6 +69,14 @@
                                 <label class="form-label fw-semibold">Título</label>
                                 <input id="titulo" class="form-control" type="text" placeholder="Descrição breve"
                                     required />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Cliente (Signatário)</label>
+                                <select id="clienteId" class="form-select">
+                                    <option value="">Selecione um cliente...</option>
+                                    <option th:each="cl : ${listaClientes}" th:value="${cl.id}"
+                                        th:text="|${cl.nome} (${cl.email})|"></option>
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold">Tipo</label>
@@ -102,6 +116,11 @@
                                 <label class="form-label">Descrição</label>
                                 <textarea id="descricao" class="form-control" rows="2"
                                     placeholder="Cláusulas e observações"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Arquivo do Contrato (PDF)</label>
+                                <input id="arquivoContrato" class="form-control" type="file" accept=".pdf" />
+                                <div class="form-text">Obrigatório para envio à Autentique.</div>
                             </div>
                         </div>
                         <div class="mt-3">
@@ -185,10 +204,24 @@
                                                         <i class="fas fa-check"></i>
                                                     </button>
 
-                                                    <button class="btn btn-outline-dark btn-acao" title="Assinar"
+                                                    <button class="btn btn-outline-dark btn-acao" title="Assinar Manual"
                                                         th:if="${c.status.name() == 'APROVADO'}"
                                                         th:attr="data-id=${c.id}" data-action="assinar">
                                                         <i class="fas fa-pen-nib"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-primary btn-acao"
+                                                        title="Enviar para Assinatura Autentique"
+                                                        th:if="${c.status.name() == 'APROVADO'}"
+                                                        th:attr="data-id=${c.id}" data-action="enviar-autentique">
+                                                        <i class="fas fa-envelope-open-text"></i>
+                                                    </button>
+
+                                                    <button class="btn btn-outline-info btn-acao"
+                                                        title="Sincronizar Autentique"
+                                                        th:if="${c.autentiqueId != null and c.status.name() == 'APROVADO'}"
+                                                        th:attr="data-id=${c.id}" data-action="sincronizar-autentique">
+                                                        <i class="fas fa-sync-alt"></i>
                                                     </button>
 
                                                     <button class="btn btn-outline-success btn-acao" title="Ativar"
@@ -334,18 +367,30 @@
                     valorContrato: $('#valorContrato').val(),
                     prazoNotificacao: $('#prazoNotificacao').val(),
                     renovacaoAutomatica: $('#renovacaoAutomatica').is(':checked'),
-                    descricao: $('#descricao').val()?.trim()
+                    descricao: $('#descricao').val()?.trim(),
+                    clienteId: $('#clienteId').val(),
+                    arquivo: $('#arquivoContrato')[0].files[0]
                 };
 
                 // Validações mínimas
                 setInvalid($('#titulo'), !payload.titulo);
+                setInvalid($('#clienteId'), !payload.clienteId);
                 const brDataStr = $('#dataInicio').val();
                 const dataValida = isValidBRDate(brDataStr);
                 setInvalid($('#dataInicio'), !dataValida);
-                if (!payload.titulo || !dataValida) {
-                    notify('error', 'Campos obrigatórios', 'Preencha Título e Data de Início (DD/MM/AAAA).');
+
+                if (!payload.titulo || !dataValida || !payload.clienteId) {
+                    notify('error', 'Campos obrigatórios', 'Preencha Título, Cliente e Data de Início.');
                     return;
                 }
+
+                // FormData para suportar upload de arquivo
+                const formData = new FormData();
+                Object.keys(payload).forEach(key => {
+                    if (payload[key] !== undefined && payload[key] !== null) {
+                        formData.append(key, payload[key]);
+                    }
+                });
 
                 // Desabilita botão durante envio
                 const originalHtml = $btn.html();
@@ -354,7 +399,9 @@
                 $.ajax({
                     url: '/juridico/contratos',
                     method: 'POST',
-                    data: payload,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
                     success: function (res) {
                         notify('success', 'Contrato criado', `Número: ${res.numeroContrato || res.id}`, 'low', { durationMs: 6000 });
                         // Recarrega mantendo filtros atuais com leve atraso para ver o toast
@@ -446,6 +493,77 @@
                         executarAcaoContrato(id, 'assinar', { dataAssinatura });
                         break;
                     }
+                    case 'enviar-autentique': {
+                        const $btn = $(this);
+                        Swal.fire({
+                            title: 'Enviar para Autentique?',
+                            text: "O contrato será enviado para o e-mail do cliente para assinatura digital.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Sim, enviar!',
+                            cancelButtonText: 'Cancelar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                Swal.fire({
+                                    title: 'Enviando...',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+
+                                $.ajax({
+                                    url: `/juridico/contratos/${id}/enviar-assinatura`,
+                                    method: 'POST',
+                                    success: function (res) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Sucesso!',
+                                            text: res.mensagem,
+                                            footer: `<a href="${res.link}" target="_blank">Ver documento na Autentique</a>`
+                                        }).then(() => {
+                                            window.location.reload();
+                                        });
+                                    },
+                                    error: function (xhr) {
+                                        const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao enviar para Autentique';
+                                        Swal.fire('Erro!', msg, 'error');
+                                    }
+                                });
+                            }
+                        });
+                        break;
+                    }
+                    case 'sincronizar-autentique': {
+                        Swal.fire({
+                            title: 'Sincronizando...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: `/juridico/contratos/${id}/sincronizar`,
+                            method: 'PUT',
+                            success: function (res) {
+                                Swal.fire({
+                                    icon: res.status === 'ASSINADO' ? 'success' : 'info',
+                                    title: 'Sincronização',
+                                    text: res.mensagem
+                                }).then(() => {
+                                    if (res.status === 'ASSINADO') {
+                                        window.location.reload();
+                                    }
+                                });
+                            },
+                            error: function (xhr) {
+                                const msg = xhr.responseJSON && xhr.responseJSON.erro ? xhr.responseJSON.erro : 'Erro ao sincronizar';
+                                Swal.fire('Erro!', msg, 'error');
+                            }
+                        });
+                        break;
+                    }
                     case 'ativar':
                         executarAcaoContrato(id, 'ativar');
                         break;
@@ -484,7 +602,7 @@
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label">Data da rescisão (DD/MM/AAAA)</label>
-                                        <input id="swDataResc" class="form-control" placeholder="DD/MM/AAAA">
+                                        <input id="swDataResc" class="form-control" placeholder="DD/MM/AAAA" inputmode="numeric">
                                     </div>
                                 </div>
                             `,
@@ -492,6 +610,11 @@
                             showCancelButton: true,
                             confirmButtonText: 'Rescindir',
                             cancelButtonText: 'Cancelar',
+                            didOpen: () => {
+                                const el = document.getElementById('swDataResc');
+                                el.addEventListener('input', () => maskDateBR(el));
+                                el.addEventListener('blur', () => maskDateBR(el));
+                            },
                             preConfirm: () => {
                                 const motivo = document.getElementById('swMotivoResc').value || '';
                                 const dt = document.getElementById('swDataResc').value || '';
@@ -518,7 +641,7 @@
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label">Novo valor (R$)</label>
-                                        <input id="swNovoValor" class="form-control" placeholder="Ex.: 1500,00">
+                                        <input id="swNovoValor" class="form-control" placeholder="Ex.: 1.500,00">
                                     </div>
                                 </div>
                             `,
@@ -526,6 +649,13 @@
                             showCancelButton: true,
                             confirmButtonText: 'Renovar',
                             cancelButtonText: 'Cancelar',
+                            didOpen: () => {
+                                const el = document.getElementById('swNovoValor');
+                                if (el) {
+                                    el.addEventListener('input', () => formatBRL(el));
+                                    el.addEventListener('blur', () => formatBRL(el));
+                                }
+                            },
                             preConfirm: () => {
                                 const mesesStr = document.getElementById('swDuracaoMeses').value;
                                 const novasDuracaoMeses = mesesStr ? parseInt(mesesStr, 10) : null;

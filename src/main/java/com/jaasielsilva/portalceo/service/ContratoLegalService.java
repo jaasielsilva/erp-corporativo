@@ -29,7 +29,8 @@ public class ContratoLegalService {
     public ContratoAlertaRepository alertaRepository;
     @Autowired
     public NotificationService notificationService;
-    
+    @Autowired
+    private AutentiqueService autentiqueService;
 
     // CRUD Operations
     public ContratoLegal save(ContratoLegal contrato) {
@@ -121,6 +122,58 @@ public class ContratoLegalService {
         contrato.setDataAssinatura(dataAssinatura);
 
         return contratoRepository.save(contrato);
+    }
+
+    @Transactional
+    public ContratoLegal enviarParaAssinatura(Long id) {
+        ContratoLegal contrato = contratoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+
+        if (!contrato.podeSerAssinado()) {
+            throw new IllegalStateException(
+                    "Contrato não pode ser enviado para assinatura no status atual: " + contrato.getStatus());
+        }
+
+        if (contrato.getCliente() == null || contrato.getCliente().getEmail() == null) {
+            throw new IllegalArgumentException("Cliente do contrato não possui e-mail cadastrado para assinatura");
+        }
+
+        if (contrato.getCaminhoArquivo() == null) {
+            throw new IllegalArgumentException("Documento PDF do contrato não encontrado para envio");
+        }
+
+        Map<String, String> resultado = autentiqueService.enviarDocumento(
+                contrato.getCaminhoArquivo(),
+                contrato.getTitulo(),
+                contrato.getCliente().getEmail());
+
+        if (resultado != null) {
+            contrato.setAutentiqueId(resultado.get("id"));
+            contrato.setLinkAssinatura(resultado.get("link"));
+            return contratoRepository.save(contrato);
+        } else {
+            throw new RuntimeException("Falha ao enviar documento para a Autentique");
+        }
+    }
+
+    @Transactional
+    public ContratoLegal sincronizarStatusAutentique(Long id) {
+        ContratoLegal contrato = contratoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Contrato não encontrado"));
+
+        if (contrato.getAutentiqueId() == null) {
+            throw new IllegalStateException("Contrato não possui vínculo com a Autentique");
+        }
+
+        boolean assinado = autentiqueService.verificarSeEstaAssinado(contrato.getAutentiqueId());
+
+        if (assinado) {
+            contrato.setStatus(ContratoLegal.StatusContrato.ASSINADO);
+            contrato.setDataAssinatura(LocalDate.now());
+            return contratoRepository.save(contrato);
+        }
+
+        return contrato;
     }
 
     @Transactional

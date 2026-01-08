@@ -24,9 +24,16 @@
                         <h1 class="h4 mb-1"><i class="fas fa-scale-balanced me-2"></i>Previdenciário (INSS)</h1>
                         <p class="text-muted mb-0">Processos e andamento por etapa</p>
                     </div>
-                    <a class="btn btn-primary" href="/juridico/previdenciario/novo">
-                        <i class="fas fa-plus me-2"></i>Novo processo
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/api/juridico/relatorios/previdenciario/export}"
+                            th:if="${#authorization.expression('hasAuthority(''JURIDICO_PREVIDENCIARIO_EXPORTAR'')')}"
+                            class="btn btn-outline-success">
+                            <i class="fas fa-file-excel me-2"></i>Exportar
+                        </a>
+                        <a class="btn btn-primary" href="/juridico/previdenciario/novo">
+                            <i class="fas fa-plus me-2"></i>Novo processo
+                        </a>
+                    </div>
                 </div>
 
                 <div th:if="${sucesso}" class="alert alert-success" th:text="${sucesso}"></div>
@@ -69,9 +76,12 @@
                                             th:text="${p.dataAbertura != null ? T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy HH:mm').format(p.dataAbertura) : '—'}">
                                             —</td>
                                         <td>
-                                            <span class="badge bg-secondary" th:text="${p.resultadoDecisao != null ? p.resultadoDecisao : '—'}">—</span>
+                                            <span class="badge bg-secondary"
+                                                th:text="${p.resultadoDecisao != null ? p.resultadoDecisao : '—'}">—</span>
                                         </td>
-                                        <td th:text="${p.valorCausa != null ? 'R$ ' + #numbers.formatDecimal(p.valorCausa, 1, 'POINT', 2, 'COMMA') : '—'}">—</td>
+                                        <td
+                                            th:text="${p.valorCausa != null ? 'R$ ' + #numbers.formatDecimal(p.valorCausa, 1, 'POINT', 2, 'COMMA') : '—'}">
+                                            —</td>
                                         <td class="text-end">
                                             <a class="btn btn-sm btn-outline-primary"
                                                 th:href="@{'/juridico/previdenciario/' + ${p.id}}">

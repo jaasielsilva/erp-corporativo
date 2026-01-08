@@ -137,8 +137,10 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/ajuda/**").authenticated()
                                                 // Endpoints que DEVEM ser autenticados
                                                 .requestMatchers("/api/rh/**").authenticated()
-                                                .requestMatchers(HttpMethod.POST, "/documentacao/export-md/**").permitAll()
-                                                .requestMatchers(HttpMethod.GET, "/documentacao/export-md/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/documentacao/export-md/**")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/documentacao/export-md/**")
+                                                .permitAll()
                                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")
                                                 .permitAll()
@@ -148,9 +150,14 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/chat/**").authenticated()
                                                 .requestMatchers("/api/notifications/**").authenticated()
                                                 .requestMatchers("/rh/colaboradores/adesao/**").authenticated()
-                                                .requestMatchers("/perfis/**").hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERFIS")
-                                                .requestMatchers("/permissoes/**").hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERMISSOES")
-                                                .requestMatchers("/dashboard/**").hasAnyAuthority("DASHBOARD_EXECUTIVO_VISUALIZAR","DASHBOARD_OPERACIONAL_VISUALIZAR","DASHBOARD_FINANCEIRO_VISUALIZAR","ROLE_MASTER")
+                                                .requestMatchers("/perfis/**")
+                                                .hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERFIS")
+                                                .requestMatchers("/permissoes/**")
+                                                .hasAuthority("MENU_ADMIN_GESTAO_ACESSO_PERMISSOES")
+                                                .requestMatchers("/dashboard/**")
+                                                .hasAnyAuthority("DASHBOARD_EXECUTIVO_VISUALIZAR",
+                                                                "DASHBOARD_OPERACIONAL_VISUALIZAR",
+                                                                "DASHBOARD_FINANCEIRO_VISUALIZAR", "ROLE_MASTER")
                                                 // Páginas de erro
                                                 .requestMatchers("/error", "/error/**").permitAll()
                                                 .anyRequest().authenticated())
@@ -176,7 +183,8 @@ public class SecurityConfig {
         }
 
         @Bean
-        public CommandLineRunner seedPermissoesPadrao(PermissaoService permissaoService, MapaPermissaoService mapaPermissaoService) {
+        public CommandLineRunner seedPermissoesPadrao(PermissaoService permissaoService,
+                        MapaPermissaoService mapaPermissaoService) {
                 return args -> {
                         try {
                                 permissaoService.criarPermissoesPadrao();
@@ -443,6 +451,15 @@ public class SecurityConfig {
                                                 p.setPermissoes(new HashSet<>());
                                                 p.getPermissoes().add(roleUser);
                                                 p.getPermissoes().add(roleJuridicoGerente);
+
+                                                // Permissões de Exportação
+                                                permissaoRepository.findByNome("JURIDICO_CONTRATOS_EXPORTAR")
+                                                                .ifPresent(p.getPermissoes()::add);
+                                                permissaoRepository.findByNome("JURIDICO_PROCESSOS_EXPORTAR")
+                                                                .ifPresent(p.getPermissoes()::add);
+                                                permissaoRepository.findByNome("JURIDICO_PREVIDENCIARIO_EXPORTAR")
+                                                                .ifPresent(p.getPermissoes()::add);
+
                                                 return perfilRepository.save(p);
                                         });
 

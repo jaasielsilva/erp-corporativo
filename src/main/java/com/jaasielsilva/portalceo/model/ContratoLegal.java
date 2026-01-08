@@ -111,6 +111,12 @@ public class ContratoLegal {
     private String caminhoArquivo;
 
     @Column(length = 100)
+    private String autentiqueId;
+
+    @Column(length = 500)
+    private String linkAssinatura;
+
+    @Column(length = 100)
     private String versaoContrato = "1.0";
 
     @Column(length = 2000)

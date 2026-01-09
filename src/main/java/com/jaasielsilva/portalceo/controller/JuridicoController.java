@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -1516,6 +1517,7 @@ public class JuridicoController {
     // =============== APIs de Documentos ===============
     @GetMapping("/api/documentos")
     @ResponseBody
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> listarDocumentosApi(
             @RequestParam(value = "categoria", required = false) String categoria,
             @RequestParam(value = "search", required = false) String search,

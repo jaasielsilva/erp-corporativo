@@ -593,12 +593,20 @@
                     url: url,
                     type: 'POST',
                     data: data,
+                    beforeSend: function (xhr) {
+                        const token = $("meta[name='_csrf']").attr("content");
+                        const header = $("meta[name='_csrf_header']").attr("content");
+                        if (token && header) {
+                            xhr.setRequestHeader(header, token);
+                        }
+                    },
                     success: function () {
                         Swal.fire('Sucesso!', 'Registro salvo com sucesso.', 'success').then(() => {
                             window.location.reload();
                         });
                     },
-                    error: function () {
+                    error: function (xhr) {
+                        console.error('Erro ao salvar:', xhr);
                         Swal.fire('Erro!', 'Não foi possível salvar os dados.', 'error');
                     }
                 });

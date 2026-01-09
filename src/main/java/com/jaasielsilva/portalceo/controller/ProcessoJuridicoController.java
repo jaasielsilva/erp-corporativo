@@ -6,6 +6,7 @@ import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService;
 import com.jaasielsilva.portalceo.juridico.previdenciario.processo.service.ProcessoPrevidenciarioService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/juridico/processos")
 @RequiredArgsConstructor
+@Slf4j
 @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('MENU_JURIDICO_PROCESSOS', 'ROLE_ADMIN', 'ROLE_MASTER')")
 public class ProcessoJuridicoController {
 
@@ -116,10 +118,12 @@ public class ProcessoJuridicoController {
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute ProcessoJuridico processo, RedirectAttributes redirectAttributes) {
         try {
-            processoService.salvar(processo);
+            ProcessoJuridico salvo = processoService.salvar(processo);
+            log.info("Processo salvo com sucesso: ID {}", salvo.getId());
             redirectAttributes.addFlashAttribute("mensagem", "Processo salvo com sucesso!");
-            return "redirect:/juridico/processos/cliente/" + processo.getCliente().getId();
+            return "redirect:/juridico/processos/" + salvo.getId() + "/detalhes";
         } catch (Exception e) {
+            log.error("Erro ao salvar processo", e);
             redirectAttributes.addFlashAttribute("erro", "Erro ao salvar processo: " + e.getMessage());
             return "redirect:/juridico/processos/novo";
         }

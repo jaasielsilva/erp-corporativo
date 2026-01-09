@@ -370,20 +370,6 @@ public class JuridicoController {
     public String processos(Model model) {
         model.addAttribute("pageTitle", "Processos Jurídicos");
         model.addAttribute("moduleCSS", "juridico");
-
-        model.addAttribute("processosAndamento", processoJuridicoService.listarPorStatus(
-                com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO));
-        model.addAttribute("processosSuspensos", processoJuridicoService
-                .listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.SUSPENSO));
-        model.addAttribute("processosEncerrados", processoJuridicoService
-                .listarPorStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.ENCERRADO));
-
-        // Próximas audiências
-        model.addAttribute("proximasAudiencias", processoJuridicoService.obterProximasAudiencias(30));
-
-        // Prazos críticos
-        model.addAttribute("prazosCriticos", processoJuridicoService.obterPrazosCriticos(7));
-
         return "juridico/processos";
     }
 
@@ -489,25 +475,6 @@ public class JuridicoController {
                 })
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("documentosRecentes", recentes);
-
-        // Migração/Correção automática do modelo fictício para o real
-        try {
-            java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> ficticios = documentoModeloRepository
-                    .findAll().stream()
-                    .filter(m -> "Modelo de Contrato de Prestação de Serviços".equals(m.getNome()))
-                    .collect(java.util.stream.Collectors.toList());
-
-            for (com.jaasielsilva.portalceo.model.juridico.DocumentoModelo m : ficticios) {
-                m.setNome("Procuração Ad Judicia");
-                m.setCategoria("Procurações");
-                m.setVersao("1.0");
-                m.setStatus(com.jaasielsilva.portalceo.model.juridico.ModeloStatus.PUBLICADO);
-                m.setDataPublicacao(java.time.LocalDateTime.now());
-                documentoModeloRepository.save(m);
-            }
-        } catch (Exception e) {
-            // Ignorar erro na migração
-        }
 
         java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> todosModelos = documentoModeloRepository.findAll();
         boolean temOutrosModelos = todosModelos.stream().anyMatch(m -> !m.getNome().equals("Procuração Ad Judicia"));

@@ -67,12 +67,16 @@ public class ProcessoJuridicoService {
     public List<Map<String, Object>> obterProcessosUrgentes(int dias) {
         LocalDate hoje = LocalDate.now();
         LocalDate limite = hoje.plusDays(dias);
-        return prazoRepo.findByCumpridoFalseAndDataLimiteBetween(hoje, limite)
-                .stream()
+        List<PrazoJuridico> prazos = prazoRepo.findByCumpridoFalseAndDataLimiteBetween(hoje, limite);
+        
+        Set<Long> processoIds = prazos.stream().map(PrazoJuridico::getProcessoId).collect(Collectors.toSet());
+        Map<Long, ProcessoJuridico> processosMap = processoRepo.findAllById(processoIds).stream()
+            .collect(Collectors.toMap(ProcessoJuridico::getId, p -> p));
+
+        return prazos.stream()
                 .map(p -> {
-                    Optional<ProcessoJuridico> procOpt = processoRepo.findById(p.getProcessoId());
-                    if (procOpt.isEmpty()) return null;
-                    ProcessoJuridico proc = procOpt.get();
+                    ProcessoJuridico proc = processosMap.get(p.getProcessoId());
+                    if (proc == null) return null;
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", proc.getId());
                     m.put("numero", proc.getNumero());
@@ -89,18 +93,23 @@ public class ProcessoJuridicoService {
     public List<Map<String, Object>> obterProximasAudiencias(int dias) {
         LocalDateTime inicio = LocalDateTime.now();
         LocalDateTime fim = inicio.plusDays(dias);
-        return audienciaRepo.findByDataHoraBetween(inicio, fim)
-                .stream()
+        List<Audiencia> audiencias = audienciaRepo.findByDataHoraBetween(inicio, fim);
+
+        Set<Long> processoIds = audiencias.stream().map(Audiencia::getProcessoId).collect(Collectors.toSet());
+        Map<Long, ProcessoJuridico> processosMap = processoRepo.findAllById(processoIds).stream()
+            .collect(Collectors.toMap(ProcessoJuridico::getId, p -> p));
+
+        return audiencias.stream()
                 .map(a -> {
-                    Optional<ProcessoJuridico> procOpt = processoRepo.findById(a.getProcessoId());
+                    ProcessoJuridico proc = processosMap.get(a.getProcessoId());
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", a.getId());
                     m.put("processoId", a.getProcessoId());
                     m.put("dataHora", a.getDataHora());
                     m.put("tipo", a.getTipo());
                     m.put("observacoes", a.getObservacoes());
-                    m.put("processoNumero", procOpt.map(ProcessoJuridico::getNumero).orElse(null));
-                    m.put("parte", procOpt.map(ProcessoJuridico::getParte).orElse(null));
+                    m.put("processoNumero", proc != null ? proc.getNumero() : null);
+                    m.put("parte", proc != null ? proc.getParte() : null);
                     return m;
                 })
                 .collect(Collectors.toList());

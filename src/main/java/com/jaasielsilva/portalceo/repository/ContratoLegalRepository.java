@@ -43,7 +43,7 @@ public interface ContratoLegalRepository extends JpaRepository<ContratoLegal, Lo
     @Query("SELECT c FROM ContratoLegal c WHERE c.dataVencimento <= :data AND c.status = 'ATIVO' ORDER BY c.dataVencimento")
     List<ContratoLegal> findContratosVencidos(@Param("data") LocalDate data);
 
-    @Query("SELECT c FROM ContratoLegal c WHERE c.dataVencimento BETWEEN :hoje AND :futuro AND c.status = 'ATIVO' ORDER BY c.dataVencimento")
+    @Query("SELECT c FROM ContratoLegal c LEFT JOIN FETCH c.cliente LEFT JOIN FETCH c.fornecedor WHERE c.dataVencimento BETWEEN :hoje AND :futuro AND c.status = 'ATIVO' ORDER BY c.dataVencimento")
     List<ContratoLegal> findContratosVencendoEm(@Param("hoje") LocalDate hoje, @Param("futuro") LocalDate futuro);
 
     @Query("SELECT c FROM ContratoLegal c WHERE c.renovacaoAutomatica = true AND c.dataVencimento BETWEEN :hoje AND :futuro ORDER BY c.dataVencimento")

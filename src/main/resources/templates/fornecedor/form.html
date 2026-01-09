@@ -173,39 +173,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script src="/js/sidebar.js" defer></script>
     <script th:src="@{/js/notifications.js}"></script>
-    
-    <script>
-        $(document).ready(function(){
-            $('#cnpj').mask('00.000.000/0000-00');
-            $('#telefone').mask('(00) 0000-0000');
-            $('#celular').mask('(00) 00000-0000');
-            $('#cep').mask('00000-000');
-            
-            // Busca CEP
-            $('#cep').blur(function() {
-                var cep = $(this).val().replace(/\D/g, '');
-                if (cep != "") {
-                    var validacep = /^[0-9]{8}$/;
-                    if(validacep.test(cep)) {
-                        $("#rua").val("...");
-                        $("#bairro").val("...");
-                        $("#cidade").val("...");
-                        $("#estado").val("...");
-                        
-                        $.getJSON("https://viacep.com.br/ws/"+ cep +"/json/?callback=?", function(dados) {
-                            if (!("erro" in dados)) {
-                                $("#rua").val(dados.logradouro);
-                                $("#bairro").val(dados.bairro);
-                                $("#cidade").val(dados.localidade);
-                                $("#estado").val(dados.uf);
-                            } else {
-                                Swal.fire('Erro', 'CEP não encontrado.', 'error');
-                            }
-                        });
-                    }
-                }
-            });
-        });
-    </script>
+    <script th:src="@{/js/fornecedor-form.js}"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ logging:
   level:
     root: INFO
     org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: INFO
     org.springframework.messaging: DEBUG
     org.springframework.web.socket: DEBUG
     com.jaasielsilva.portalceo: DEBUG

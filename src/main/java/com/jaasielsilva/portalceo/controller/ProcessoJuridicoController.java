@@ -9,12 +9,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/juridico/processos")
@@ -64,33 +66,31 @@ public class ProcessoJuridicoController {
     // --- Endpoints para Sub-recursos (Andamentos, Prazos, Audiências) ---
 
     @PostMapping("/andamentos/salvar")
-    public String salvarAndamento(@RequestParam Long processoId, 
+    @ResponseBody
+    public ResponseEntity<?> salvarAndamento(@RequestParam Long processoId, 
                                   @RequestParam String titulo,
                                   @RequestParam String descricao,
-                                  @RequestParam(defaultValue = "ANDAMENTO") String tipoEtapa,
-                                  RedirectAttributes redirectAttributes) {
+                                  @RequestParam(defaultValue = "ANDAMENTO") String tipoEtapa) {
         try {
             processoService.adicionarAndamento(processoId, titulo, descricao, tipoEtapa);
-            redirectAttributes.addFlashAttribute("mensagem", "Andamento registrado!");
+            return ResponseEntity.ok(Map.of("mensagem", "Andamento registrado!"));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao salvar andamento.");
+            return ResponseEntity.badRequest().body(Map.of("erro", "Erro ao salvar andamento: " + e.getMessage()));
         }
-        return "redirect:/juridico/processos/" + processoId + "/detalhes";
     }
 
     @PostMapping("/prazos/salvar")
-    public String salvarPrazo(@RequestParam Long processoId,
+    @ResponseBody
+    public ResponseEntity<?> salvarPrazo(@RequestParam Long processoId,
                               @RequestParam String dataLimite,
                               @RequestParam String descricao,
-                              @RequestParam String responsabilidade,
-                              RedirectAttributes redirectAttributes) {
+                              @RequestParam String responsabilidade) {
         try {
             processoService.adicionarPrazo(processoId, dataLimite, descricao, responsabilidade);
-            redirectAttributes.addFlashAttribute("mensagem", "Prazo registrado!");
+            return ResponseEntity.ok(Map.of("mensagem", "Prazo registrado!"));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao salvar prazo.");
+            return ResponseEntity.badRequest().body(Map.of("erro", "Erro ao salvar prazo: " + e.getMessage()));
         }
-        return "redirect:/juridico/processos/" + processoId + "/detalhes";
     }
 
     @PostMapping("/prazos/concluir")
@@ -101,18 +101,17 @@ public class ProcessoJuridicoController {
     }
 
     @PostMapping("/audiencias/salvar")
-    public String salvarAudiencia(@RequestParam Long processoId,
+    @ResponseBody
+    public ResponseEntity<?> salvarAudiencia(@RequestParam Long processoId,
                                   @RequestParam String dataHora,
                                   @RequestParam String tipo,
-                                  @RequestParam String observacoes,
-                                  RedirectAttributes redirectAttributes) {
+                                  @RequestParam String observacoes) {
         try {
             processoService.adicionarAudiencia(processoId, dataHora, tipo, observacoes);
-            redirectAttributes.addFlashAttribute("mensagem", "Audiência agendada!");
+            return ResponseEntity.ok(Map.of("mensagem", "Audiência agendada!"));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao agendar audiência.");
+            return ResponseEntity.badRequest().body(Map.of("erro", "Erro ao agendar audiência: " + e.getMessage()));
         }
-        return "redirect:/juridico/processos/" + processoId + "/detalhes";
     }
 
     @PostMapping("/salvar")

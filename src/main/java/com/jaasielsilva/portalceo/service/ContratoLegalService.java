@@ -482,7 +482,7 @@ public class ContratoLegalService {
 
     @Transactional(readOnly = true)
     public Map<ContratoLegal.TipoContrato, Long> getEstatisticasPorTipo() {
-        List<Object[]> results = contratoRepository.countByTipo();
+        List<Object[]> results = contratoRepository.getContratosPorTipoGrouped();
         return results.stream()
                 .collect(Collectors.toMap(
                         row -> (ContratoLegal.TipoContrato) row[0],

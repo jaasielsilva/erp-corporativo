@@ -62,13 +62,13 @@ public interface ContratoLegalRepository extends JpaRepository<ContratoLegal, Lo
     BigDecimal sumValorMensalAtivos();
 
     @Query("SELECT c.tipo, COUNT(c) FROM ContratoLegal c GROUP BY c.tipo ORDER BY COUNT(c) DESC")
-    List<Object[]> countByTipo();
+    List<Object[]> getContratosPorTipoGrouped();
 
     @Query("SELECT c.status, COUNT(c) FROM ContratoLegal c GROUP BY c.status ORDER BY COUNT(c) DESC")
-    List<Object[]> countByStatus();
+    List<Object[]> getContratosPorStatusGrouped();
 
     @Query("SELECT c.prioridade, COUNT(c) FROM ContratoLegal c GROUP BY c.prioridade ORDER BY COUNT(c) DESC")
-    List<Object[]> countByPrioridade();
+    List<Object[]> getContratosPorPrioridadeGrouped();
 
     @Query("SELECT DATE(c.dataCriacao), COUNT(c) FROM ContratoLegal c WHERE c.dataCriacao BETWEEN :inicio AND :fim GROUP BY DATE(c.dataCriacao) ORDER BY DATE(c.dataCriacao)")
     List<Object[]> getContratosCriadosPorDia(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);

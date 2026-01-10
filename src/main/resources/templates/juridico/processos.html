@@ -263,6 +263,14 @@
     </div>
 
 
+    <!-- Scripts Essenciais -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script src="/js/sidebar.js" defer></script>
+
     <script>
         // Configuração do Toastr
         if (typeof toastr !== 'undefined') {
@@ -738,14 +746,5 @@
         });
     </script>
 </body>
-
-<!-- Scripts da página: global é carregado no Topbar -->
-
-<script src="/js/sidebar.js" defer></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/notifications.js}"></script>
 
 </html>

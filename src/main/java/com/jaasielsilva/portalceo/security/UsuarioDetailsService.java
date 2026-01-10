@@ -34,6 +34,12 @@ public class UsuarioDetailsService implements UserDetailsService {
                     .expireAfterWrite(java.time.Duration.ofMinutes(3))
                     .build();
 
+    // Cache para todas as permissões (evita findAll repetitivo para admins)
+    private final com.github.benmanes.caffeine.cache.Cache<String, java.util.List<Permissao>> allPermissionsCache =
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+                    .expireAfterWrite(java.time.Duration.ofMinutes(30))
+                    .build();
+
     public void evictAuthorities(String email) {
         if (email != null) {
             authoritiesCache.invalidate(email);
@@ -245,10 +251,14 @@ public UserDetails loadUserByUsername(String username) throws UsernameNotFoundEx
                 built.add(new SimpleGrantedAuthority("MENU_DOCS_GERENCIAL"));
                 built.add(new SimpleGrantedAuthority("MENU_DOCS_PESSOAL"));
                 try {
-                    var allPerms = permissaoRepository.findAll();
-                    for (Permissao p : allPerms) {
-                        if (p != null && p.getNome() != null) {
-                            built.add(new SimpleGrantedAuthority(p.getNome()));
+                    // Usa cache para evitar ir ao banco buscar todas as permissões a cada login de admin
+                    java.util.List<Permissao> allPerms = allPermissionsCache.get("ALL", k -> permissaoRepository.findAll());
+                    
+                    if (allPerms != null) {
+                        for (Permissao p : allPerms) {
+                            if (p != null && p.getNome() != null) {
+                                built.add(new SimpleGrantedAuthority(p.getNome()));
+                            }
                         }
                     }
                     built.add(new SimpleGrantedAuthority("DASHBOARD_EXECUTIVO_VISUALIZAR"));

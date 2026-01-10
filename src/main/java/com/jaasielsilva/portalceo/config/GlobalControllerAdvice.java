@@ -16,8 +16,6 @@ public class GlobalControllerAdvice {
     private final UsuarioRepository usuarioRepository;
     private final com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService;
     private final com.jaasielsilva.portalceo.service.ContratoLegalService contratoLegalService;
-    private Usuario usuarioCache;
-    private String emailCache;
 
     public GlobalControllerAdvice(UsuarioRepository usuarioRepository,
             com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService processoJuridicoService,
@@ -124,21 +122,29 @@ public class GlobalControllerAdvice {
         // Verifica se está autenticado e não é usuário anonimo
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
             String email = auth.getName();
-
-            // Cache simples para evitar múltiplas consultas na mesma requisição
-            if (usuarioCache != null && email.equals(emailCache)) {
-                return usuarioCache;
+            
+            // Tenta recuperar do request atual para evitar múltiplas consultas na mesma requisição
+            org.springframework.web.context.request.RequestAttributes requestAttributes = 
+                org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            
+            if (requestAttributes != null) {
+                Usuario usuarioRequest = (Usuario) requestAttributes.getAttribute("USUARIO_LOGADO_CACHE", 
+                    org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+                if (usuarioRequest != null) {
+                    return usuarioRequest;
+                }
             }
 
             Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
-            usuarioCache = usuario.orElse(null);
-            emailCache = email;
-            return usuarioCache;
+            if (usuario.isPresent()) {
+                if (requestAttributes != null) {
+                    requestAttributes.setAttribute("USUARIO_LOGADO_CACHE", usuario.get(), 
+                        org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+                }
+                return usuario.get();
+            }
         }
 
-        // Limpar cache se não autenticado
-        usuarioCache = null;
-        emailCache = null;
         return null;
     }
 

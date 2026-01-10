@@ -19,8 +19,8 @@ public class MapaPermissaoController {
 
     @GetMapping
     public ResponseEntity<List<MapaPermissao>> listarMapeamento() {
-        // Força a sincronização para garantir que os dados estejam atualizados ao acessar
-        mapaPermissaoService.sincronizarPermissoes();
+        // Removida sincronização forçada a cada requisição para evitar gargalos de performance
+        // A sincronização ocorre na inicialização da aplicação (@PostConstruct)
         
         List<MapaPermissao> mapeamento = mapaPermissaoService.listarTodos();
         return ResponseEntity.ok(mapeamento);

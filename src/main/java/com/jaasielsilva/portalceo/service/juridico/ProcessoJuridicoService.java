@@ -209,7 +209,7 @@ public class ProcessoJuridicoService {
     }
 
     @Transactional
-    public AndamentoProcesso adicionarAndamento(Long processoId, String titulo, String descricao, String tipoEtapa) {
+    public AndamentoProcesso adicionarAndamento(Long processoId, String titulo, String descricao, String tipoEtapa, String usuarioNome) {
         ProcessoJuridico proc = processoRepo.findById(processoId)
                 .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
         if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
@@ -225,7 +225,7 @@ public class ProcessoJuridicoService {
             a.setTipoEtapa(AndamentoProcesso.TipoEtapa.ANDAMENTO);
         }
         a.setDataHora(LocalDateTime.now());
-        a.setUsuario("Sistema"); 
+        a.setUsuario(usuarioNome != null ? usuarioNome : "Sistema"); 
         return andamentoRepo.save(a);
     }
 

@@ -5,11 +5,14 @@ import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService;
 import com.jaasielsilva.portalceo.juridico.previdenciario.processo.service.ProcessoPrevidenciarioService;
+import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +31,7 @@ public class ProcessoJuridicoController {
     private final ProcessoJuridicoService processoService;
     private final ProcessoPrevidenciarioService processoPrevidenciarioService;
     private final ClienteService clienteService;
+    private final UsuarioRepository usuarioRepository;
 
     @GetMapping("/novo")
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyAuthority('MENU_JURIDICO_PROCESSOS_NOVO', 'ROLE_ADMIN', 'ROLE_MASTER')")
@@ -70,9 +74,17 @@ public class ProcessoJuridicoController {
     public ResponseEntity<?> salvarAndamento(@RequestParam Long processoId, 
                                   @RequestParam String titulo,
                                   @RequestParam String descricao,
-                                  @RequestParam(defaultValue = "ANDAMENTO") String tipoEtapa) {
+                                  @RequestParam(defaultValue = "ANDAMENTO") String tipoEtapa,
+                                  @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            processoService.adicionarAndamento(processoId, titulo, descricao, tipoEtapa);
+            String usuarioNome = "Sistema";
+            if (userDetails != null) {
+                usuarioNome = usuarioRepository.findByEmail(userDetails.getUsername())
+                        .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
+                        .map(u -> u.getNome())
+                        .orElse(userDetails.getUsername());
+            }
+            processoService.adicionarAndamento(processoId, titulo, descricao, tipoEtapa, usuarioNome);
             return ResponseEntity.ok(Map.of("mensagem", "Andamento registrado!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("erro", "Erro ao salvar andamento: " + e.getMessage()));

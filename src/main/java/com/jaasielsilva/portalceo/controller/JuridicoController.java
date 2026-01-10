@@ -1193,7 +1193,14 @@ public class JuridicoController {
                 andamento.setDataHora(LocalDateTime.now());
             }
 
-            andamento.setUsuario(userDetails != null ? userDetails.getUsername() : "Sistema");
+            String usuarioNome = "Sistema";
+            if (userDetails != null) {
+                usuarioNome = usuarioRepository.findByEmail(userDetails.getUsername())
+                        .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
+                        .map(u -> u.getNome())
+                        .orElse(userDetails.getUsername());
+            }
+            andamento.setUsuario(usuarioNome);
 
             processoJuridicoService.adicionarAndamento(andamento);
             return ResponseEntity.ok(Map.of("mensagem", "Movimentação registrada com sucesso!"));

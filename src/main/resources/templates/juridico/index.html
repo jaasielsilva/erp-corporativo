@@ -319,14 +319,17 @@
                         case 'FINAL': iconClass = 'fa-check-circle'; iconColor = 'text-success'; break;
                     }
 
-                    const displayText = (a.titulo ? a.titulo + (a.descricao ? ' - ' : '') : '') + (a.descricao || '');
+                    const tituloExibicao = a.titulo || a.descricao || 'Sem descrição';
+                    const tooltip = (a.titulo ? a.titulo + '\n' : '') + (a.descricao || '');
 
                     div.innerHTML = `
                         <div class="d-flex justify-content-between align-items-center w-100">
                             <div class="d-flex align-items-center" style="overflow: hidden;">
                                 <i class="fas ${iconClass} ${iconColor} me-3 fs-5 flex-shrink-0"></i>
                                 <div style="min-width: 0;">
-                                    <h6 class="mb-0 fw-bold text-truncate" title="${displayText}">${displayText}</h6>
+                                    <h6 class="mb-0 fw-bold text-truncate" title="${tooltip}">${tituloExibicao}</h6>
+                                    ${a.titulo && a.descricao && a.titulo !== a.descricao ? 
+                                      `<div class="small text-muted text-truncate" title="${a.descricao}">${a.descricao}</div>` : ''}
                                     <small class="text-muted">
                                         <i class="fas fa-user-circle me-1"></i> ${a.usuario || 'Sistema'}
                                         <i class="fas fa-calendar-alt ms-3 me-1"></i> ${a.data || ''}

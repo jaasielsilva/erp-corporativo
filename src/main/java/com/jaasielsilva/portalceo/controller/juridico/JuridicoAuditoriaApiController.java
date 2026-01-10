@@ -2,6 +2,9 @@ package com.jaasielsilva.portalceo.controller.juridico;
 
 import com.jaasielsilva.portalceo.model.AuditoriaJuridicoLog;
 import com.jaasielsilva.portalceo.service.AuditoriaJuridicoLogService;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -33,15 +36,16 @@ public class JuridicoAuditoriaApiController {
     }
 
     @PostMapping("/logs")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
-    public ResponseEntity<Map<String, Object>> registrar(
-            @RequestParam String categoria,
-            @RequestParam String acao,
-            @RequestParam(required = false) String recurso,
-            @RequestParam(required = false) String usuario,
-            @RequestParam(required = false) String ip,
-            @RequestParam(required = false) String detalhes,
-            @RequestParam(required = false) Boolean sucesso) {
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
+    public ResponseEntity<Map<String, Object>> registrar(@RequestBody Map<String, Object> payload,
+            HttpServletRequest request) {
+        String categoria = (String) payload.get("categoria");
+        String acao = (String) payload.get("acao");
+        String recurso = (String) payload.get("recurso");
+        String usuario = (String) payload.get("usuario");
+        String ip = (String) payload.get("ip");
+        String detalhes = (String) payload.get("detalhes");
+        Boolean sucesso = (Boolean) payload.get("sucesso");
         AuditoriaJuridicoLog log = auditoriaService.registrar(categoria, acao, recurso, usuario, ip, detalhes, sucesso);
         return ResponseEntity.ok(Map.of("success", true, "id", log.getId()));
     }

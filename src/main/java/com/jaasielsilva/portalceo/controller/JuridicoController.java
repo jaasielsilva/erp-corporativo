@@ -41,6 +41,7 @@ import java.util.*;
 @RequestMapping("/juridico")
 @RequiredArgsConstructor
 @Slf4j
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MASTER', 'ROLE_GERENCIAL', 'ROLE_JURIDICO', 'ROLE_JURIDICO_GERENTE', 'ROLE_ESTAGIARIO_JURIDICO')")
 public class JuridicoController {
 
     private final ContratoLegalService contratoLegalService;
@@ -476,7 +477,8 @@ public class JuridicoController {
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("documentosRecentes", recentes);
 
-        java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> todosModelos = documentoModeloRepository.findAll();
+        java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> todosModelos = documentoModeloRepository
+                .findAll();
         boolean temOutrosModelos = todosModelos.stream().anyMatch(m -> !m.getNome().equals("Procuração Ad Judicia"));
 
         java.util.List<java.util.Map<String, Object>> modelosVm = todosModelos.stream()
@@ -506,7 +508,8 @@ public class JuridicoController {
                 if (!java.nio.file.Files.exists(path)) {
                     return ResponseEntity.notFound().build();
                 }
-                org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+                org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(
+                        path.toUri());
                 String contentType = java.nio.file.Files.probeContentType(path);
                 if (contentType == null)
                     contentType = "application/octet-stream";
@@ -1543,7 +1546,8 @@ public class JuridicoController {
             m.put("criadoEm", d.getCriadoEm());
             m.put("contentType", d.getContentType());
             m.put("originalFilename", d.getOriginalFilename());
-            // Inicializa a coleção lazy dentro da transação para evitar LazyInitializationException
+            // Inicializa a coleção lazy dentro da transação para evitar
+            // LazyInitializationException
             m.put("tags", d.getTags() != null ? new ArrayList<>(d.getTags()) : new ArrayList<>());
             m.put("processoId", d.getProcesso() != null ? d.getProcesso().getId() : null);
             content.add(m);
@@ -1734,7 +1738,6 @@ public class JuridicoController {
                 .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Modelo não encontrado")));
     }
 
-
     @PostMapping("/api/documentos/gerar")
     @ResponseBody
     public ResponseEntity<?> gerarDocumentoAPartirDeModelo(@RequestParam Long modeloId,
@@ -1774,7 +1777,7 @@ public class JuridicoController {
 
     @PostMapping("/api/documentos/{id}/personalizar")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<?> personalizarDocumento(@PathVariable Long id,
             @RequestBody java.util.Map<String, Object> body,
             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
@@ -1951,7 +1954,7 @@ public class JuridicoController {
     @GetMapping(value = "/api/templates/contrato-prestacao-servicos-advocaticios/pdf", produces = {
             MediaType.APPLICATION_PDF_VALUE, MediaType.APPLICATION_JSON_VALUE })
     @ResponseBody
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<?> gerarContratoPrestacaoServicosAdvocaticiosPdf(@RequestParam Long clienteId,
             @RequestParam(required = false) String objeto,
             @RequestParam(required = false) String testemunha1,
@@ -2253,7 +2256,7 @@ public class JuridicoController {
     }
 
     @GetMapping("/documentos/download/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<org.springframework.core.io.Resource> downloadDocumento(@PathVariable Long id) {
         return documentoJuridicoRepository.findById(id)
                 .map(d -> {
@@ -2291,7 +2294,7 @@ public class JuridicoController {
     }
 
     @GetMapping("/documentos/preview/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<org.springframework.core.io.Resource> previewDocumento(@PathVariable Long id) {
         return documentoJuridicoRepository.findById(id)
                 .map(d -> {

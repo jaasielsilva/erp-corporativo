@@ -19,7 +19,7 @@ public class JuridicoAuditoriaController {
     private AuditoriaJuridicoLogService auditoriaService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
     public String index(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "Jurídico");
         model.addAttribute("titulo", "Auditoria Jurídico - Início");
@@ -34,7 +34,7 @@ public class JuridicoAuditoriaController {
     }
 
     @GetMapping("/acessos")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
     public String acessos(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "Jurídico");
         model.addAttribute("titulo", "Auditoria Jurídico - Log de Acessos");
@@ -50,7 +50,7 @@ public class JuridicoAuditoriaController {
     }
 
     @GetMapping("/alteracoes")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
     public String alteracoes(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "Jurídico");
         model.addAttribute("titulo", "Auditoria Jurídico - Alterações de Dados");
@@ -66,7 +66,7 @@ public class JuridicoAuditoriaController {
     }
 
     @GetMapping("/exportacoes")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
     public String exportacoes(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "Jurídico");
         model.addAttribute("titulo", "Auditoria Jurídico - Exportações");
@@ -82,7 +82,7 @@ public class JuridicoAuditoriaController {
     }
 
     @GetMapping("/revisoes")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO_GERENTE')")
     public String revisoes(Model model, HttpServletRequest request) {
         model.addAttribute("modulo", "Jurídico");
         model.addAttribute("titulo", "Auditoria Jurídico - Revisões Periódicas");

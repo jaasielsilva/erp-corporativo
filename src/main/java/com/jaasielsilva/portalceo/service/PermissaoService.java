@@ -205,6 +205,52 @@ public class PermissaoService {
         return relatorio;
     }
 
+    public List<Permissao> sugerirPermissoesPorModulosENivel(List<String> modulos, String nivel) {
+        if (modulos == null || modulos.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Permissao> todas = permissaoRepository.findAll();
+        List<Permissao> sugeridas = new ArrayList<>();
+
+        for (Permissao p : todas) {
+            boolean moduloMatch = false;
+            String nomeUpper = p.getNome().toUpperCase();
+            
+            for (String mod : modulos) {
+                String modUpper = mod.toUpperCase();
+                if (nomeUpper.contains(modUpper)) {
+                    moduloMatch = true;
+                    break;
+                }
+                // Heurísticas de mapeamento
+                if (modUpper.equals("JURIDICO") && nomeUpper.contains("JURIDICO")) moduloMatch = true;
+                if (modUpper.equals("RH") && nomeUpper.contains("_RH_")) moduloMatch = true;
+                if (modUpper.equals("FINANCEIRO") && nomeUpper.contains("FINANCEIRO")) moduloMatch = true;
+                if (modUpper.equals("TI") && nomeUpper.contains("_TI_")) moduloMatch = true;
+                if (modUpper.equals("COMERCIAL") && (nomeUpper.contains("VENDAS") || nomeUpper.contains("CLIENTES"))) moduloMatch = true;
+            }
+
+            if (moduloMatch) {
+                boolean nivelMatch = true;
+                if ("BASICO".equalsIgnoreCase(nivel)) {
+                    if (nomeUpper.contains("EXCLUIR") || nomeUpper.contains("CONFIG") || nomeUpper.contains("ADMIN") || nomeUpper.contains("GERENCIAR")) {
+                        nivelMatch = false;
+                    }
+                } else if ("GERENTE".equalsIgnoreCase(nivel)) {
+                    if (nomeUpper.contains("ADMIN")) {
+                        nivelMatch = false;
+                    }
+                }
+                
+                if (nivelMatch) {
+                    sugeridas.add(p);
+                }
+            }
+        }
+        return sugeridas;
+    }
+
     // ===============================
     // MÉTODOS DE INICIALIZAÇÃO
     // ===============================

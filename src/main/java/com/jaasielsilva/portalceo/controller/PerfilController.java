@@ -223,6 +223,49 @@ public class PerfilController {
         return "redirect:/perfis";
     }
 
+    /**
+     * Exclui múltiplos perfis em lote
+     */
+    @PostMapping("/excluir/lote")
+    public String excluirLote(@RequestParam("ids") List<Long> ids,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
+        if (!temPermissaoGerenciarPerfis(principal)) {
+            return "error/403";
+        }
+
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erro", "Nenhum perfil selecionado para exclusão.");
+            return "redirect:/perfis";
+        }
+
+        int sucesso = 0;
+        int erro = 0;
+
+        for (Long id : ids) {
+            try {
+                if (perfilService.podeSerModificado(id)) {
+                    perfilService.excluir(id);
+                    sucesso++;
+                } else {
+                    erro++;
+                }
+            } catch (Exception e) {
+                erro++;
+            }
+        }
+
+        if (sucesso > 0) {
+            redirectAttributes.addFlashAttribute("sucesso", sucesso + " perfil(is) excluído(s) com sucesso!");
+        }
+        if (erro > 0) {
+            redirectAttributes.addFlashAttribute("alerta", erro + " perfil(is) não puderam ser excluídos (protegidos ou erro).");
+        }
+
+        return "redirect:/perfis";
+    }
+
     // ===============================
     // ENDPOINTS AJAX
     // ===============================

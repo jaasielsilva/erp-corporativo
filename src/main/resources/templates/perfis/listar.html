@@ -10,26 +10,10 @@
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <style>
-        .page-header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            border-radius: .5rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .stat-card {
-            background: white;
-            border-radius: .5rem;
-            padding: 1rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
-            border: 1px solid rgba(0,0,0,.125);
-        }
-        .quick-actions .btn {
-            min-width: 180px;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="/css/perfis.css" rel="stylesheet">
 </head>
 
 <body>
@@ -46,6 +30,22 @@
 
             <section class="content-area">
                 <div class="container-fluid">
+
+                    <!-- Feedback Messages -->
+                    <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i><span th:text="${sucesso}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i><span th:text="${erro}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <div th:if="${alerta}" class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${alerta}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <!-- Page Header -->
                     <div class="page-header d-flex justify-content-between align-items-center">
                         <div>
                             <h1 class="h3 mb-1"><i class="fas fa-user-tag"></i> Gerenciar Perfis</h1>
@@ -61,65 +61,128 @@
                         </div>
                     </div>
 
+                    <!-- Stats & Search -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
                             <div class="stat-card text-center">
-                                <div class="mb-1"><i class="fas fa-layer-group text-primary"></i></div>
-                                <div th:text="${relatorio.totalPerfis}">0</div>
-                                <div class="text-muted">Perfis</div>
+                                <div class="mb-1"><i class="fas fa-layer-group text-primary fa-2x"></i></div>
+                                <div class="h4 mb-0" th:text="${relatorio.totalPerfis}">0</div>
+                                <div class="text-muted small">Perfis Cadastrados</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="stat-card text-center">
-                                <div class="mb-1"><i class="fas fa-users text-success"></i></div>
-                                <div th:text="${relatorio.totalUsuarios}">0</div>
-                                <div class="text-muted">Usuários</div>
+                                <div class="mb-1"><i class="fas fa-users text-success fa-2x"></i></div>
+                                <div class="h4 mb-0" th:text="${relatorio.totalUsuarios}">0</div>
+                                <div class="text-muted small">Usuários Ativos</div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="stat-card">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="fw-semibold"><i class="fas fa-chart-pie text-info"></i> Usuários por Perfil</div>
-                                    <div>
-                                        <input id="searchInput" class="form-control form-control-sm" placeholder="Buscar perfil...">
+                            <div class="stat-card h-100 d-flex flex-column justify-content-center">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="fw-semibold"><i class="fas fa-search text-info me-2"></i> Buscar Perfil
                                     </div>
                                 </div>
+                                <input id="searchInput" class="form-control" placeholder="Digite o nome do perfil...">
                             </div>
                         </div>
                     </div>
 
-                    <div class="card shadow">
-                        <div class="card-body">
+                    <!-- Table Card -->
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-secondary"><i class="fas fa-list me-2"></i> Lista de Perfis</h5>
+
+                            <!-- Bulk Actions -->
+                            <div class="bulk-actions" id="bulkActionsToolbar">
+                                <span class="me-2 text-muted"><span id="selectedCount">0</span> selecionados</span>
+                                <button type="button" class="btn btn-danger btn-sm" id="btnBulkDelete">
+                                    <i class="fas fa-trash-alt"></i> Excluir Selecionados
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-hover" id="perfisTable">
-                                    <thead>
+                                <table class="table table-hover table-striped mb-0 align-middle" id="perfisTable">
+                                    <thead class="bg-light">
                                         <tr>
+                                            <th style="width: 40px;" class="text-center">
+                                                <input type="checkbox" class="form-check-input" id="checkAll">
+                                            </th>
                                             <th>Perfil</th>
                                             <th>Usuários</th>
                                             <th>Permissões</th>
                                             <th>Status</th>
-                                            <th>Ações</th>
+                                            <th class="text-end">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        <tr th:if="${#lists.isEmpty(perfis)}">
+                                            <td colspan="6" class="text-center py-5 text-muted">
+                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                Nenhum perfil encontrado.
+                                            </td>
+                                        </tr>
                                         <tr th:each="p : ${perfis}">
-                                            <td>
-                                                <span class="fw-semibold" th:text="${p.nome}">NOME</span>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input row-checkbox"
+                                                    th:value="${p.id}"
+                                                    th:if="${!#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}">
+                                                <i class="fas fa-lock text-muted"
+                                                    th:if="${#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}"
+                                                    title="Perfil de Sistema"></i>
                                             </td>
-                                            <td th:text="${#maps.containsKey(relatorio.usuariosPorPerfil, p.nome) ? relatorio.usuariosPorPerfil[p.nome] : 0}">0</td>
-                                            <td th:text="${#maps.containsKey(relatorio.permissoesPorPerfil, p.nome) ? relatorio.permissoesPorPerfil[p.nome] : 0}">0</td>
                                             <td>
-                                                <span th:if="${#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}" class="badge bg-danger">Sistema</span>
-                                                <span th:unless="${#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}" class="badge bg-success">Personalizado</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-initial rounded bg-light text-primary me-3 fw-bold p-2"
+                                                        th:text="${#strings.substring(p.nome,0,1)}">A</div>
+                                                    <div>
+                                                        <span class="fw-bold text-dark" th:text="${p.nome}">NOME</span>
+                                                        <div class="small text-muted" th:if="${p.descricao}"
+                                                            th:text="${p.descricao}"></div>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a th:href="@{/perfis/detalhes/{id}(id=${p.id})}" class="btn btn-outline-info"><i class="fas fa-eye"></i></a>
-                                                    <a th:href="@{/perfis/editar/{id}(id=${p.id})}" class="btn btn-outline-warning"
-                                                       th:if="${!#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}"><i class="fas fa-edit"></i></a>
-                                                    <form th:action="@{/perfis/excluir/{id}(id=${p.id})}" method="post" th:if="${!#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}">
-                                                        <button type="submit" class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                                    </form>
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    <span
+                                                        th:text="${#maps.containsKey(relatorio.usuariosPorPerfil, p.nome) ? relatorio.usuariosPorPerfil[p.nome] : 0}">0</span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="fas fa-key me-1"></i>
+                                                    <span
+                                                        th:text="${#maps.containsKey(relatorio.permissoesPorPerfil, p.nome) ? relatorio.permissoesPorPerfil[p.nome] : 0}">0</span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    th:if="${#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}"
+                                                    class="badge bg-danger"><i class="fas fa-shield-alt me-1"></i>
+                                                    Sistema</span>
+                                                <span
+                                                    th:unless="${#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}"
+                                                    class="badge bg-success"><i class="fas fa-check-circle me-1"></i>
+                                                    Personalizado</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a th:href="@{/perfis/detalhes/{id}(id=${p.id})}"
+                                                        class="btn btn-outline-info" title="Ver Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a th:href="@{/perfis/editar/{id}(id=${p.id})}"
+                                                        class="btn btn-outline-warning" title="Editar"
+                                                        th:if="${!#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-danger btn-excluir"
+                                                        th:if="${!#lists.contains({'ADMIN','USER','MASTER','GERENTE'}, p.nome)}"
+                                                        th:data-id="${p.id}" th:data-nome="${p.nome}" title="Excluir">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -127,11 +190,23 @@
                                 </table>
                             </div>
                         </div>
+                        <div class="card-footer bg-white py-3">
+                            <small class="text-muted"><i class="fas fa-info-circle me-1"></i> Perfis do Sistema não
+                                podem ser excluídos ou editados diretamente.</small>
+                        </div>
                     </div>
 
+                    <!-- Hidden Forms -->
                     <form id="formCriarJuridico" th:action="@{/perfis/salvar}" method="post" class="d-none">
                         <input type="hidden" name="nome" value="JURIDICO">
                     </form>
+
+                    <form id="formExcluir" action="" method="post" class="d-none"></form>
+
+                    <form id="formBulkDelete" th:action="@{/perfis/excluir/lote}" method="post" class="d-none">
+                        <div id="bulkDeleteInputs"></div>
+                    </form>
+
                 </div>
             </section>
 
@@ -145,17 +220,114 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:inline="none">
-        $(function(){
+        $(function () {
+            // DataTables Initialization
             const table = $('#perfisTable').DataTable({
                 language: { url: 'https://cdn.jsdelivr.net/npm/datatables.net-plugins@1.13.6/i18n/pt-BR.json' },
                 pageLength: 10,
-                order: [[0, 'asc']]
+                order: [[1, 'asc']], // Order by Name column
+                columnDefs: [
+                    { orderable: false, targets: [0, 5] } // Disable sorting on checkbox and actions
+                ]
             });
-            $('#searchInput').on('keyup', function(){ table.search(this.value).draw(); });
-            $('#btnCriarJuridico').on('click', function(){
+
+            // Custom Search
+            $('#searchInput').on('keyup', function () { table.search(this.value).draw(); });
+
+            // Create Juridico Profile
+            $('#btnCriarJuridico').on('click', function () {
                 $('#formCriarJuridico').submit();
             });
+
+            // Single Delete Action
+            $('.btn-excluir').on('click', function () {
+                const id = $(this).data('id');
+                const nome = $(this).data('nome');
+
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: `Deseja realmente excluir o perfil "${nome}"? Esta ação não pode ser desfeita.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('#formExcluir');
+                        form.attr('action', `/perfis/excluir/${id}`);
+                        form.submit();
+                    }
+                });
+            });
+
+            // Bulk Actions Logic
+            function updateBulkActions() {
+                const checkedCount = $('.row-checkbox:checked').length;
+                $('#selectedCount').text(checkedCount);
+                if (checkedCount > 0) {
+                    $('#bulkActionsToolbar').fadeIn();
+                } else {
+                    $('#bulkActionsToolbar').fadeOut();
+                }
+
+                // Update "Check All" state
+                const totalCheckboxes = $('.row-checkbox').length;
+                $('#checkAll').prop('checked', totalCheckboxes > 0 && checkedCount === totalCheckboxes);
+                $('#checkAll').prop('indeterminate', checkedCount > 0 && checkedCount < totalCheckboxes);
+            }
+
+            // Check All Handler
+            $('#checkAll').on('change', function () {
+                $('.row-checkbox').prop('checked', this.checked);
+                updateBulkActions();
+            });
+
+            // Row Checkbox Handler
+            $(document).on('change', '.row-checkbox', function () {
+                updateBulkActions();
+            });
+
+            // Bulk Delete Handler
+            $('#btnBulkDelete').on('click', function () {
+                const selectedIds = [];
+                $('.row-checkbox:checked').each(function () {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) return;
+
+                Swal.fire({
+                    title: 'Excluir Selecionados?',
+                    text: `Deseja excluir ${selectedIds.length} perfil(is)?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sim, excluir tudo!',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('#formBulkDelete');
+                        const container = $('#bulkDeleteInputs');
+                        container.empty();
+
+                        selectedIds.forEach(id => {
+                            container.append(`<input type="hidden" name="ids" value="${id}">`);
+                        });
+
+                        form.submit();
+                    }
+                });
+            });
+
+            // Auto-hide alerts
+            setTimeout(function () {
+                $('.alert').fadeOut('slow');
+            }, 5000);
         });
     </script>
     <script th:src="@{/js/notifications.js}"></script>

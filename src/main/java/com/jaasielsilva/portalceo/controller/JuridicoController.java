@@ -1844,7 +1844,7 @@ public class JuridicoController {
 
     @PostMapping("/api/documentos/gerar-pdf")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<?> gerarDocumentoPdf(@RequestParam String titulo,
             @RequestBody java.util.Map<String, Object> body,
             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
@@ -1881,7 +1881,7 @@ public class JuridicoController {
     @GetMapping(value = "/api/templates/procuracao-ad-judicia/pdf", produces = { MediaType.APPLICATION_PDF_VALUE,
             MediaType.APPLICATION_JSON_VALUE })
     @ResponseBody
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_MASTER','ROLE_RH','ROLE_JURIDICO')")
     public ResponseEntity<?> gerarProcuracaoAdJudiciaPdf(@RequestParam Long clienteId,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {

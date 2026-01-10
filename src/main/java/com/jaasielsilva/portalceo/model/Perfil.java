@@ -20,6 +20,9 @@ public class Perfil {
     @Column(nullable = false, unique = true)
     private String nome;  // ex: ADMIN, USUARIO, GERENTE
 
+    @Column(length = 500)
+    private String descricao;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "perfil_permissao",
             joinColumns = @JoinColumn(name = "perfil_id"),

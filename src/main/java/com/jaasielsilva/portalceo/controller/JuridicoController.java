@@ -643,6 +643,7 @@ public class JuridicoController {
                 .map(a -> {
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
                     m.put("tipo", "Processo");
+                    m.put("titulo", a.getTitulo());
                     m.put("descricao", a.getDescricao());
                     // Formata a data para um padrão mais amigável no frontend
                     m.put("data",
@@ -1069,7 +1070,7 @@ public class JuridicoController {
             return ResponseEntity.badRequest().body(Map.of("erro", "Processo encerrado não permite novas audiências"));
         }
         com.jaasielsilva.portalceo.model.juridico.Audiencia a = new com.jaasielsilva.portalceo.model.juridico.Audiencia();
-        a.setProcessoId(id);
+        a.setProcesso(proc);
         Object dh = body.get("dataHora");
         if (dh != null && !String.valueOf(dh).isBlank()) {
             a.setDataHora(java.time.LocalDateTime.parse(String.valueOf(dh)));
@@ -1102,7 +1103,7 @@ public class JuridicoController {
             return ResponseEntity.badRequest().body(Map.of("erro", "Processo encerrado não permite novos prazos"));
         }
         com.jaasielsilva.portalceo.model.juridico.PrazoJuridico pz = new com.jaasielsilva.portalceo.model.juridico.PrazoJuridico();
-        pz.setProcessoId(id);
+        pz.setProcesso(proc);
         Object dl = body.get("dataLimite");
         if (dl != null && !String.valueOf(dl).isBlank()) {
             pz.setDataLimite(java.time.LocalDate.parse(String.valueOf(dl)));
@@ -1156,8 +1157,14 @@ public class JuridicoController {
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
+            var procOpt = processoJuridicoRepository.findById(id);
+            if (procOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado"));
+            }
+            var proc = procOpt.get();
+
             com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso andamento = new com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso();
-            andamento.setProcessoId(id);
+            andamento.setProcesso(proc);
             andamento.setTitulo((String) body.get("titulo"));
             andamento.setDescricao((String) body.get("descricao"));
 
@@ -1269,7 +1276,7 @@ public class JuridicoController {
             processo.setStatus(destino);
             processoJuridicoRepository.save(processo);
             com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso reg = new com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso();
-            reg.setProcessoId(processo.getId());
+            reg.setProcesso(processo);
             reg.setTitulo("Reabertura do processo");
             reg.setDescricao(justificativa);
             reg.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.IMPORTANTE);

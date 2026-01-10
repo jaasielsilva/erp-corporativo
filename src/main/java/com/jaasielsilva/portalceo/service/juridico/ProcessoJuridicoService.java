@@ -69,13 +69,18 @@ public class ProcessoJuridicoService {
         LocalDate limite = hoje.plusDays(dias);
         List<PrazoJuridico> prazos = prazoRepo.findByCumpridoFalseAndDataLimiteBetween(hoje, limite);
         
-        Set<Long> processoIds = prazos.stream().map(PrazoJuridico::getProcessoId).collect(Collectors.toSet());
+        Set<Long> processoIds = prazos.stream()
+                .filter(p -> p.getProcesso() != null)
+                .map(p -> p.getProcesso().getId())
+                .collect(Collectors.toSet());
+        
         Map<Long, ProcessoJuridico> processosMap = processoRepo.findAllById(processoIds).stream()
             .collect(Collectors.toMap(ProcessoJuridico::getId, p -> p));
 
         return prazos.stream()
                 .map(p -> {
-                    ProcessoJuridico proc = processosMap.get(p.getProcessoId());
+                    if (p.getProcesso() == null) return null;
+                    ProcessoJuridico proc = processosMap.get(p.getProcesso().getId());
                     if (proc == null) return null;
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", proc.getId());
@@ -95,16 +100,21 @@ public class ProcessoJuridicoService {
         LocalDateTime fim = inicio.plusDays(dias);
         List<Audiencia> audiencias = audienciaRepo.findByDataHoraBetween(inicio, fim);
 
-        Set<Long> processoIds = audiencias.stream().map(Audiencia::getProcessoId).collect(Collectors.toSet());
+        Set<Long> processoIds = audiencias.stream()
+                .filter(a -> a.getProcesso() != null)
+                .map(a -> a.getProcesso().getId())
+                .collect(Collectors.toSet());
+                
         Map<Long, ProcessoJuridico> processosMap = processoRepo.findAllById(processoIds).stream()
             .collect(Collectors.toMap(ProcessoJuridico::getId, p -> p));
 
         return audiencias.stream()
                 .map(a -> {
-                    ProcessoJuridico proc = processosMap.get(a.getProcessoId());
+                    if (a.getProcesso() == null) return null;
+                    ProcessoJuridico proc = processosMap.get(a.getProcesso().getId());
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", a.getId());
-                    m.put("processoId", a.getProcessoId());
+                    m.put("processoId", a.getProcesso().getId());
                     m.put("dataHora", a.getDataHora());
                     m.put("tipo", a.getTipo());
                     m.put("observacoes", a.getObservacoes());
@@ -112,6 +122,7 @@ public class ProcessoJuridicoService {
                     m.put("parte", proc != null ? proc.getParte() : null);
                     return m;
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -156,8 +167,12 @@ public class ProcessoJuridicoService {
     @Transactional
     public PrazoJuridico concluirPrazo(Long prazoId) {
         PrazoJuridico p = prazoRepo.findById(prazoId).orElseThrow(() -> new IllegalArgumentException("Prazo não encontrado"));
-        ProcessoJuridico proc = processoRepo.findById(p.getProcessoId())
-                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+        ProcessoJuridico proc = p.getProcesso();
+        
+        if (proc == null) {
+            throw new IllegalArgumentException("Processo não encontrado");
+        }
+        
         if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
             throw new IllegalStateException("Não é possível modificar prazos de processos encerrados");
         }
@@ -182,8 +197,11 @@ public class ProcessoJuridicoService {
 
     @Transactional
     public AndamentoProcesso adicionarAndamento(AndamentoProcesso andamento) {
-        ProcessoJuridico proc = processoRepo.findById(andamento.getProcessoId())
-                .orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
+        if (andamento.getProcesso() == null) {
+            throw new IllegalArgumentException("Processo não informado");
+        }
+        ProcessoJuridico proc = andamento.getProcesso();
+        
         if (proc.getStatus() == ProcessoJuridico.StatusProcesso.ENCERRADO) {
             throw new IllegalStateException("Não é possível adicionar eventos a processos encerrados");
         }
@@ -198,7 +216,7 @@ public class ProcessoJuridicoService {
             throw new IllegalStateException("Não é possível adicionar eventos a processos encerrados");
         }
         AndamentoProcesso a = new AndamentoProcesso();
-        a.setProcessoId(processoId);
+        a.setProcesso(proc);
         a.setTitulo(titulo);
         a.setDescricao(descricao);
         try {
@@ -207,7 +225,6 @@ public class ProcessoJuridicoService {
             a.setTipoEtapa(AndamentoProcesso.TipoEtapa.ANDAMENTO);
         }
         a.setDataHora(LocalDateTime.now());
-        // TODO: Pegar usuário logado
         a.setUsuario("Sistema"); 
         return andamentoRepo.save(a);
     }
@@ -220,10 +237,14 @@ public class ProcessoJuridicoService {
             throw new IllegalStateException("Não é possível adicionar prazos a processos encerrados");
         }
         PrazoJuridico p = new PrazoJuridico();
-        p.setProcessoId(processoId);
+        p.setProcesso(proc);
         p.setDescricao(descricao);
         p.setResponsabilidade(responsabilidade);
-        p.setDataLimite(LocalDate.parse(dataLimite));
+        try {
+            p.setDataLimite(LocalDate.parse(dataLimite));
+        } catch (Exception e) {
+            p.setDataLimite(LocalDate.now().plusDays(15));
+        }
         p.setCumprido(false);
         return prazoRepo.save(p);
     }
@@ -236,7 +257,7 @@ public class ProcessoJuridicoService {
             throw new IllegalStateException("Não é possível agendar audiências em processos encerrados");
         }
         Audiencia a = new Audiencia();
-        a.setProcessoId(processoId);
+        a.setProcesso(proc);
         a.setDataHora(LocalDateTime.parse(dataHora));
         a.setTipo(tipo);
         a.setObservacoes(observacoes);

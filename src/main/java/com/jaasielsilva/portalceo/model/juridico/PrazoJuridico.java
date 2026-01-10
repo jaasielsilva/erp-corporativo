@@ -8,7 +8,10 @@ public class PrazoJuridico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long processoId;
+    @ManyToOne
+    @JoinColumn(name = "processo_id")
+    private ProcessoJuridico processo;
+    
     private LocalDate dataLimite;
     private String descricao;
     private String responsabilidade;
@@ -16,8 +19,10 @@ public class PrazoJuridico {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public Long getProcessoId() { return processoId; }
-    public void setProcessoId(Long processoId) { this.processoId = processoId; }
+    
+    public ProcessoJuridico getProcesso() { return processo; }
+    public void setProcesso(ProcessoJuridico processo) { this.processo = processo; }
+    
     public LocalDate getDataLimite() { return dataLimite; }
     public void setDataLimite(LocalDate dataLimite) { this.dataLimite = dataLimite; }
     public String getDescricao() { return descricao; }

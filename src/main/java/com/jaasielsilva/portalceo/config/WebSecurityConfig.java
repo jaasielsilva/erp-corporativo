@@ -17,9 +17,20 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     
     @Autowired
     private UsuarioLogadoInterceptor usuarioLogadoInterceptor;
+
+    @Autowired
+    private com.jaasielsilva.portalceo.interceptor.MaintenanceInterceptor maintenanceInterceptor;
     
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // Registrar interceptor de manutenção (Primeiro da fila)
+        registry.addInterceptor(maintenanceInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns(
+                    "/css/**", "/js/**", "/images/**", "/fonts/**", "/favicon.ico", 
+                    "/login", "/manutencao", "/api/admin/**"
+                );
+
         // Registrar interceptor de segurança para todas as URLs
         registry.addInterceptor(securityInterceptor)
                 .addPathPatterns("/**")

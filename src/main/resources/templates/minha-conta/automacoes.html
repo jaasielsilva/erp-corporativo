@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Minhas Automações - Portal CEO</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <section class="content-area p-4">
+                <div class="container-fluid">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-magic me-2"></i>Minhas Automações</h1>
+                            <p class="text-muted">Configure gatilhos automáticos para facilitar seu dia a dia.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="criarAutomacao()">
+                            <i class="fas fa-plus me-1"></i> Nova Automação
+                        </button>
+                    </div>
+
+                    <!-- Mensagens de Sucesso -->
+                    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <span th:text="${successMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Lista de Automações -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="ps-4">Gatilho (Quando acontecer...)</th>
+                                                    <th>Ação (Então faça...)</th>
+                                                    <th>Status</th>
+                                                    <th class="text-end pe-4">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:if="${#lists.isEmpty(automations)}">
+                                                    <td colspan="4" class="text-center py-5 text-muted">
+                                                        <i class="fas fa-robot fa-3x mb-3 d-block opacity-25"></i>
+                                                        Nenhuma automação configurada ainda.
+                                                    </td>
+                                                </tr>
+                                                <tr th:each="rule : ${automations}">
+                                                    <td class="ps-4">
+                                                        <span class="badge bg-warning text-dark me-2">GATILHO</span>
+                                                        <strong th:switch="${rule.eventType}">
+                                                            <span th:case="${T(com.jaasielsilva.portalceo.model.automation.AutomationEventType).CLIENTE_INATIVO}">Cliente Inativo (+30 dias sem compra)</span>
+                                                            <span th:case="${T(com.jaasielsilva.portalceo.model.automation.AutomationEventType).CONTRATO_VENCENDO}">Contrato Vencendo (30 dias)</span>
+                                                            <span th:case="*">[[${rule.eventType}]]</span>
+                                                        </strong>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-success me-2">AÇÃO</span>
+                                                        <span th:switch="${rule.actionType}">
+                                                            <span th:case="${T(com.jaasielsilva.portalceo.model.automation.AutomationActionType).EMAIL_ALERT}">Enviar E-mail</span>
+                                                            <span th:case="${T(com.jaasielsilva.portalceo.model.automation.AutomationActionType).SYSTEM_NOTIFICATION}">Notificação no Sistema</span>
+                                                            <span th:case="*">[[${rule.actionType}]]</span>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-primary">Ativo</span>
+                                                        <small class="d-block text-muted" th:text="${'🔔 às ' + rule.executionTime}">🔔 às 08:00</small>
+                                                    </td>
+                                                    <td class="text-end pe-4">
+                                                        <form th:action="@{/minha-conta/automacoes/delete/{id}(id=${rule.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Excluir">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        async function criarAutomacao() {
+            const steps = ['1', '2', '3'];
+            const Queue = Swal.mixin({
+                progressSteps: steps,
+                confirmButtonText: 'Próximo >',
+                cancelButtonText: 'Cancelar',
+                showCancelButton: true,
+                currentProgressStep: 0
+            });
+
+            // Passo 1: Gatilho
+            const { value: eventType } = await Queue.fire({
+                title: '1. Quando acontecer isso:',
+                input: 'select',
+                inputOptions: {
+                    'CLIENTE_INATIVO': 'Cliente Inativo (+30 dias sem compra)',
+                    'CONTRATO_VENCENDO': 'Contrato Próximo do Vencimento (30 dias)'
+                },
+                inputPlaceholder: 'Selecione um gatilho',
+                currentProgressStep: 0
+            });
+
+            if (!eventType) return;
+
+            // Passo 2: Ação
+            const { value: actionType } = await Queue.fire({
+                title: '2. Faça isso:',
+                input: 'select',
+                inputOptions: {
+                    'EMAIL_ALERT': 'Me envie um E-mail de Alerta',
+                    'SYSTEM_NOTIFICATION': 'Me notifique no Sistema (Sininho)'
+                },
+                inputPlaceholder: 'Selecione uma ação',
+                currentProgressStep: 1
+            });
+
+            if (!actionType) return;
+
+            // Passo 3: Horário
+            const { value: executionTime } = await Queue.fire({
+                title: '3. Em qual horário?',
+                input: 'select',
+                inputOptions: {
+                    '08:00': '08:00 (Início do expediente)',
+                    '09:00': '09:00',
+                    '10:00': '10:00',
+                    '11:00': '11:00',
+                    '14:00': '14:00 (Após almoço)',
+                    '15:00': '15:00',
+                    '16:00': '16:00',
+                    '17:00': '17:00',
+                    '18:00': '18:00'
+                },
+                inputValue: '08:00',
+                inputPlaceholder: 'Selecione o horário',
+                confirmButtonText: 'Criar Regra',
+                currentProgressStep: 2
+            });
+
+            if (!executionTime) return;
+
+            // Envio
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/minha-conta/automacoes/create';
+            
+            const inputEvent = document.createElement('input');
+            inputEvent.name = 'eventType';
+            inputEvent.value = eventType;
+            
+            const inputAction = document.createElement('input');
+            inputAction.name = 'actionType';
+            inputAction.value = actionType;
+
+            const inputTime = document.createElement('input');
+            inputTime.name = 'executionTime';
+            inputTime.value = executionTime;
+
+            form.appendChild(inputEvent);
+            form.appendChild(inputAction);
+            form.appendChild(inputTime);
+            document.body.appendChild(form);
+            
+            Swal.fire({
+                title: 'Criando...',
+                timer: 1000,
+                didOpen: () => {
+                    Swal.showLoading();
+                    form.submit();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

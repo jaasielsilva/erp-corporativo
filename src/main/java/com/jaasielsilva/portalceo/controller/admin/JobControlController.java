@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.controller.admin;
 
 import com.jaasielsilva.portalceo.service.BacklogChamadoService;
 import com.jaasielsilva.portalceo.service.SlaMonitoramentoService;
+import com.jaasielsilva.portalceo.service.automation.ClientInactivityService;
 import com.jaasielsilva.portalceo.service.admin.SystemReportService;
 import com.jaasielsilva.portalceo.service.ti.SistemaMetricasColetorService;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +20,18 @@ public class JobControlController {
     private final BacklogChamadoService backlogService;
     private final SistemaMetricasColetorService metricsService;
     private final SystemReportService reportService;
+    private final ClientInactivityService clientInactivityService;
 
     public JobControlController(SlaMonitoramentoService slaService,
                                 BacklogChamadoService backlogService,
                                 SistemaMetricasColetorService metricsService,
-                                SystemReportService reportService) {
+                                SystemReportService reportService,
+                                ClientInactivityService clientInactivityService) {
         this.slaService = slaService;
         this.backlogService = backlogService;
         this.metricsService = metricsService;
         this.reportService = reportService;
+        this.clientInactivityService = clientInactivityService;
     }
 
     @PostMapping("/run/sla")
@@ -67,6 +71,16 @@ public class JobControlController {
             return ResponseEntity.ok("Relatório gerado e enviado por e-mail.");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Erro ao gerar relatório: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/run/client-inactivity")
+    public ResponseEntity<String> runClientInactivityJob() {
+        try {
+            clientInactivityService.forcarVerificacao();
+            return ResponseEntity.ok("Verificação de inatividade executada. Alertas enviados.");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erro: " + e.getMessage());
         }
     }
 }

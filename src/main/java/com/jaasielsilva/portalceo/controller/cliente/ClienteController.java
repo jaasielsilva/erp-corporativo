@@ -55,8 +55,8 @@ public class ClienteController {
 
         // Verificações de permissão para o frontend
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR"));
-        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR"));
+        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
         
         model.addAttribute("podeEditar", podeEditar);
         model.addAttribute("podeExcluir", podeExcluir);
@@ -141,6 +141,14 @@ public class ClienteController {
         Cliente cliente = clienteOpt.get();
         model.addAttribute("cliente", cliente);
 
+        // Verificações de permissão para o frontend
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+        
+        model.addAttribute("podeEditar", podeEditar);
+        model.addAttribute("podeExcluir", podeExcluir);
+
         // Usa o template geral de detalhes
         return "clientes/geral/detalhes";
     }
@@ -215,9 +223,9 @@ public class ClienteController {
 
         Usuario usuarioLogado = usuarioLogadoOpt.get();
 
-        if (usuarioLogado.getNivelAcesso() != NivelAcesso.ADMIN) {
+        if (!usuarioLogado.getNivelAcesso().ehAdministrativo()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("erro", "Apenas administradores podem excluir clientes."));
+                    .body(Map.of("erro", "Apenas administradores ou master podem excluir clientes."));
         }
 
         if (!usuarioLogado.getMatricula().equalsIgnoreCase(matriculaInformada)) {

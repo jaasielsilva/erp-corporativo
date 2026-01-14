@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
 
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
   <!-- Seu CSS padrão -->
@@ -101,25 +103,15 @@
     </main>
   </div>
 
-  <!-- Modal Exclusão -->
-  <div id="modal-excluir" class="modal">
-    <div class="modal-content">
-      <h3>Digite sua matrícula de administrador para confirmar:</h3>
-      <input type="text" id="matriculaInput" placeholder="Matrícula admin" />
-      <div id="msgErroMatricula"></div>
-      <div id="msgSucessoExcluir"></div>
-      <button class="btn btn-danger" data-action="confirmar-exclusao" onclick="validarEExcluir()"><i
-          class="fas fa-trash-alt"></i> Confirmar exclusão</button>
-      <button class="btn btn-secondary" onclick="closeDesligamentoModal()"><i class="fas fa-times"></i>
-        Cancelar</button>
-    </div>
-  </div>
+  <!-- Modal Exclusão Removido (Substituído por SweetAlert2) -->
 
   <script th:inline="javascript">
     window.statusFiltro = /*[[${statusFiltro}]]*/ '';
     window.origemFiltro = /*[[${origemFiltro}]]*/ '';
     window.buscaInicial = /*[[${busca}]]*/ '';
     window.podeAcessarJuridico = /*[[${podeAcessarJuridico}]]*/ false;
+    window.podeEditar = /*[[${podeEditar}]]*/ false;
+    window.podeExcluir = /*[[${podeExcluir}]]*/ false;
   </script>
   <script>
     let currentPage = 0;
@@ -163,7 +155,7 @@
             <a href="/clientes/${c.id}/detalhes" class="btn btn-sm btn-info" title="Detalhes"><i class="fas fa-eye"></i></a>
             ${window.podeAcessarJuridico ? `<a href="/juridico/processos/cliente/${c.id}" class="btn btn-sm btn-dark" title="Processos Jurídicos" style="background-color: #2c3e50; border-color: #2c3e50; color: white;"><i class="fas fa-gavel"></i></a>` : ''}
             ${window.podeEditar ? `<a href="/clientes/${c.id}/editar" class="btn btn-sm btn-warning" title="Editar"><i class="fas fa-edit"></i></a>` : ''}
-            ${window.podeExcluir ? `<button type="button" class="btn btn-sm btn-danger" onclick="openDesligamentoModal(${c.id})" title="Excluir"><i class="fas fa-user-times"></i></button>` : ''}
+            ${window.podeExcluir ? `<button type="button" class="btn btn-sm btn-danger" onclick="confirmarExclusao(${c.id})" title="Excluir"><i class="fas fa-user-times"></i></button>` : ''}
           </td>
         </tr>`;
       }).join('');
@@ -223,71 +215,55 @@
       loadClientes(0);
     });
 
-    let clienteIdParaExcluir = null;
-    function openDesligamentoModal(id) {
-      clienteIdParaExcluir = id;
-      const modal = document.getElementById('modal-excluir');
-      if (modal) modal.style.display = 'flex';
-      const matriculaInput = document.getElementById('matriculaInput');
-      if (matriculaInput) matriculaInput.value = '';
-      const msgErro = document.getElementById('msgErroMatricula');
-      const msgSucesso = document.getElementById('msgSucessoExcluir');
-      if (msgErro) { msgErro.style.display = 'none'; msgErro.textContent = ''; }
-      if (msgSucesso) { msgSucesso.style.display = 'none'; msgSucesso.textContent = ''; }
-      const btn = document.querySelector('#modal-excluir button[data-action="confirmar-exclusao"]');
-      if (btn) btn.disabled = false;
-    }
-
-    function closeDesligamentoModal() {
-      clienteIdParaExcluir = null;
-      const modal = document.getElementById('modal-excluir');
-      if (modal) modal.style.display = 'none';
-      const matriculaInput = document.getElementById('matriculaInput');
-      if (matriculaInput) matriculaInput.value = '';
-      const msgErro = document.getElementById('msgErroMatricula');
-      const msgSucesso = document.getElementById('msgSucessoExcluir');
-      if (msgErro) { msgErro.style.display = 'none'; msgErro.textContent = ''; }
-      if (msgSucesso) { msgSucesso.style.display = 'none'; msgSucesso.textContent = ''; }
-      const btn = document.querySelector('#modal-excluir button[data-action="confirmar-exclusao"]');
-      if (btn) btn.disabled = false;
-    }
-
-    async function validarEExcluir() {
-      const matriculaInput = document.getElementById('matriculaInput');
-      const matricula = matriculaInput ? matriculaInput.value.trim() : '';
-      const msgErro = document.getElementById('msgErroMatricula');
-      const msgSucesso = document.getElementById('msgSucessoExcluir');
-      const btnConfirmar = document.querySelector('#modal-excluir button[data-action="confirmar-exclusao"]');
-
-      if (msgErro) { msgErro.style.display = 'none'; msgErro.textContent = ''; }
-      if (msgSucesso) { msgSucesso.style.display = 'none'; msgSucesso.textContent = ''; }
-      if (!matricula) {
-        if (msgErro) { msgErro.textContent = 'Digite a matrícula do administrador.'; msgErro.style.display = 'block'; }
-        return;
-      }
-      if (btnConfirmar) btnConfirmar.disabled = true;
-
-      try {
-        const response = await fetch('/clientes/' + clienteIdParaExcluir + '/excluir', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Matricula': matricula }
-        });
-        if (response.ok) {
-          if (msgSucesso) { msgSucesso.textContent = 'Cliente excluído com sucesso!'; msgSucesso.style.display = 'block'; }
-          setTimeout(() => { closeDesligamentoModal(); window.location.href = '/clientes'; }, 1500);
-        } else {
-          let errorText = 'Erro ao excluir cliente. Contate o ADMINISTRADOR DO SISTEMA.';
-          try { const errorData = await response.json(); if (errorData.erro) errorText = errorData.erro; } catch { }
-          if (msgErro) { msgErro.textContent = errorText; msgErro.style.display = 'block'; }
-          if (btnConfirmar) btnConfirmar.disabled = false;
+    function confirmarExclusao(id) {
+      Swal.fire({
+        title: 'Confirmar Exclusão',
+        text: 'Digite sua matrícula de ADMINISTRADOR para confirmar a inativação deste cliente:',
+        input: 'text',
+        inputPlaceholder: 'Sua Matrícula',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Cancelar',
+        showLoaderOnConfirm: true,
+        preConfirm: (matricula) => {
+          if (!matricula) {
+            Swal.showValidationMessage('A matrícula é obrigatória');
+            return false;
+          }
+          return fetch(`/clientes/${id}/excluir`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Matricula': matricula
+            }
+          })
+          .then(async response => {
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}));
+              throw new Error(data.erro || 'Erro ao excluir cliente');
+            }
+            return response.json();
+          })
+          .catch(error => {
+            Swal.showValidationMessage(`Erro: ${error.message}`);
+          });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            title: 'Excluído!',
+            text: 'O cliente foi inativado com sucesso.',
+            icon: 'success'
+          }).then(() => {
+            loadClientes(currentPage);
+          });
         }
-      } catch (error) {
-        if (msgErro) { msgErro.textContent = 'Erro de rede ou servidor: ' + error.message; msgErro.style.display = 'block'; }
-        if (btnConfirmar) btnConfirmar.disabled = false;
-      }
+      });
     }
-  </script>
-
   </script>
 
   <!-- Seu JS de notificações -->

@@ -443,6 +443,19 @@ public class NotificationService {
         emailService.enviarEmail(destinatario, assunto, corpo);
     }
 
+    public void enviarNotificacao(String emailDestinatario, String titulo, String mensagem) {
+        Usuario usuario = usuarioRepository.findByEmail(emailDestinatario).orElse(null);
+        if (usuario != null) {
+            createNotification(
+                "automation_alert",
+                titulo,
+                mensagem,
+                Notification.Priority.MEDIUM,
+                usuario
+            );
+        }
+    }
+
     // ===== MÉTODOS MIGRADOS DO NotificacaoService =====
 
     /**

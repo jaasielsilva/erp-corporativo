@@ -1888,17 +1888,7 @@ public class JuridicoController {
 
             Map<String, String> placeholders = new HashMap<>();
 
-            // Resolve logo path
-            String logoPath = "";
-            try {
-                org.springframework.core.io.Resource logoRes = resourceLoader
-                        .getResource("classpath:static/img/logo-empresa.png");
-                if (logoRes.exists()) {
-                    logoPath = logoRes.getFile().toURI().toString();
-                }
-            } catch (Exception ignored) {
-            }
-            placeholders.put("logo_path", logoPath);
+            placeholders.put("logo_path", resolveLogoDataUri());
 
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
             placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
@@ -1967,17 +1957,7 @@ public class JuridicoController {
 
             Map<String, String> placeholders = new HashMap<>();
 
-            // Resolve logo path
-            String logoPath = "";
-            try {
-                org.springframework.core.io.Resource logoRes = resourceLoader
-                        .getResource("classpath:static/img/logo-empresa.png");
-                if (logoRes.exists()) {
-                    logoPath = logoRes.getFile().toURI().toString();
-                }
-            } catch (Exception ignored) {
-            }
-            placeholders.put("logo_path", logoPath);
+            placeholders.put("logo_path", resolveLogoDataUri());
 
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
             placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
@@ -2943,5 +2923,21 @@ public class JuridicoController {
                 </body>
                 </html>
                 """;
+    }
+
+    private String resolveLogoDataUri() {
+        try {
+            org.springframework.core.io.Resource logoRes = resourceLoader
+                    .getResource("classpath:static/img/logo-empresa.png");
+            if (logoRes.exists()) {
+                try (java.io.InputStream is = logoRes.getInputStream()) {
+                    byte[] bytes = is.readAllBytes();
+                    String base64 = java.util.Base64.getEncoder().encodeToString(bytes);
+                    return "data:image/png;base64," + base64;
+                }
+            }
+        } catch (Exception e) {
+        }
+        return "";
     }
 }

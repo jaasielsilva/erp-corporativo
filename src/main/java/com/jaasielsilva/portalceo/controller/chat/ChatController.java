@@ -52,6 +52,10 @@ public class ChatController {
                 boolean isOnline = chatSessionService.isUserOnline(u.getId());
                 map.put("online", isOnline);
                 
+                if (u.getUltimoAcesso() != null) {
+                    map.put("lastSeen", u.getUltimoAcesso());
+                }
+                
                 return map;
             })
             .collect(Collectors.<Map<String, Object>>toList());

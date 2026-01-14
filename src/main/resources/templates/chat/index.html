@@ -335,6 +335,17 @@
                 
                 contacts.forEach(contact => {
                     const statusClass = contact.online ? 'online' : '';
+                    let subtitle = '';
+                    if (contact.online) {
+                        subtitle = 'Online agora';
+                    } else if (contact.lastSeen) {
+                        const d = new Date(contact.lastSeen);
+                        const dataStr = d.toLocaleDateString('pt-BR');
+                        const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        subtitle = 'Visto por último em ' + dataStr + ' às ' + horaStr;
+                    } else {
+                        subtitle = 'Clique para conversar';
+                    }
                     const html = `
                         <div class="contact-item" onclick="selectContact(${contact.id}, '${contact.name}', '${contact.avatar}')" id="contact-${contact.id}">
                             <div class="position-relative">
@@ -343,7 +354,7 @@
                             </div>
                             <div class="contact-info">
                                 <div class="contact-name">${contact.name}</div>
-                                <div class="last-message">Clique para conversar</div>
+                                <div class="last-message">${subtitle}</div>
                             </div>
                         </div>
                     `;

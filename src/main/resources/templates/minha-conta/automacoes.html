@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,6 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -22,7 +24,7 @@
 
             <section class="content-area p-4">
                 <div class="container-fluid">
-                    
+
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-magic me-2"></i>Minhas Automações</h1>
@@ -40,7 +42,8 @@
                     </div>
 
                     <!-- Variável oculta para erro -->
-                    <div th:if="${errorMessage}" id="error-message-hidden" th:text="${errorMessage}" style="display: none;"></div>
+                    <div th:if="${errorMessage}" id="error-message-hidden" th:text="${errorMessage}"
+                        style="display: none;"></div>
 
                     <!-- Lista de Automações -->
                     <div class="row">
@@ -67,57 +70,78 @@
                                                 <tr th:each="rule : ${automations}" th:if="${rule != null}">
                                                     <td class="ps-4">
                                                         <span class="badge bg-warning text-dark me-2">GATILHO</span>
-                                                        <strong th:if="${rule.eventType != null}" th:switch="${rule.eventType}">
-                                                            <span th:case="'CLIENTE_INATIVO'">Cliente Inativo (+30 dias sem compra)</span>
-                                                            <span th:case="'CONTRATO_VENCENDO'">Contrato Vencendo (30 dias)</span>
+                                                        <strong th:if="${rule.eventType != null}"
+                                                            th:switch="${rule.eventType}">
+                                                            <span th:case="'CLIENTE_INATIVO'">Cliente Inativo (+30 dias
+                                                                sem compra)</span>
+                                                            <span th:case="'CONTRATO_VENCENDO'">Contrato Vencendo (30
+                                                                dias)</span>
                                                             <span th:case="*">[[${rule.eventType}]]</span>
                                                         </strong>
-                                                        <strong th:unless="${rule.eventType != null}" class="text-danger">
+                                                        <strong th:unless="${rule.eventType != null}"
+                                                            class="text-danger">
                                                             <i class="fas fa-exclamation-triangle"></i> Gatilho Inválido
                                                         </strong>
-                                                        <div class="small text-muted mt-1" th:if="${rule.executionTime != null}">
-                                                            <i class="far fa-clock me-1"></i> Executa às [[${rule.executionTime}]]
+                                                        <div class="small text-muted mt-1"
+                                                            th:if="${rule.executionTime != null}">
+                                                            <i class="far fa-clock me-1"></i> Executa às
+                                                            [[${rule.executionTime}]]
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-success me-2">AÇÃO</span>
-                                                        <span th:if="${rule.actionType != null}" th:switch="${rule.actionType}">
+                                                        <span th:if="${rule.actionType != null}"
+                                                            th:switch="${rule.actionType}">
                                                             <span th:case="'EMAIL_ALERT'">Enviar E-mail</span>
-                                                            <span th:case="'SYSTEM_NOTIFICATION'">Notificação no Sistema</span>
+                                                            <span th:case="'SYSTEM_NOTIFICATION'">Notificação no
+                                                                Sistema</span>
                                                             <span th:case="*">[[${rule.actionType}]]</span>
                                                         </span>
-                                                        <span th:unless="${rule.actionType != null}" class="text-danger">Ação não definida</span>
+                                                        <span th:unless="${rule.actionType != null}"
+                                                            class="text-danger">Ação não definida</span>
                                                     </td>
                                                     <td>
-                                                        <div class="form-check form-switch d-flex justify-content-center">
-                                                            <input class="form-check-input" type="checkbox" role="switch" 
-                                                                   th:id="'switch-' + ${rule.id}"
-                                                                   th:checked="${rule.active}"
-                                                                   th:onchange="'toggleStatus(' + ${rule.id} + ')'">
-                                                            <label class="form-check-label ms-2" th:for="'switch-' + ${rule.id}" 
-                                                                   th:id="'label-' + ${rule.id}"
-                                                                   th:text="${rule.active ? 'Ativo' : 'Pausado'}"></label>
+                                                        <div
+                                                            class="form-check form-switch d-flex justify-content-center">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                role="switch" th:id="'switch-' + ${rule.id}"
+                                                                th:checked="${rule.active}"
+                                                                th:onchange="'toggleStatus(' + ${rule.id} + ')'">
+                                                            <label class="form-check-label ms-2"
+                                                                th:for="'switch-' + ${rule.id}"
+                                                                th:id="'label-' + ${rule.id}"
+                                                                th:text="${rule.active ? 'Ativo' : 'Pausado'}"></label>
                                                         </div>
                                                     </td>
                                                     <td class="text-end pe-4">
-                                                        <button type="button" class="btn btn-outline-secondary btn-sm me-1" title="Histórico" th:onclick="'verHistorico(' + ${rule.id} + ')'">
+
+                                                        <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm me-1"
+                                                            title="Histórico" data-id="[[${rule.id}]]"
+                                                            onclick="verHistorico(this)">
                                                             <i class="fas fa-history"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-warning btn-sm me-1" title="Editar" 
-                                                                th:onclick="'editarAutomacao(' + ${rule.id} + ', \'' + ${rule.eventType} + '\', \'' + ${rule.actionType} + '\', \'' + ${rule.executionTime} + '\')'">
+
+                                                        <button type="button"
+                                                            class="btn btn-outline-warning btn-sm me-1" title="Editar"
+                                                            data-id="[[${rule.id}]]" data-event="[[${rule.eventType}]]"
+                                                            data-action="[[${rule.actionType}]]"
+                                                            data-time="[[${rule.executionTime}]]"
+                                                            onclick="editarAutomacao(this)">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <!-- Botão de teste comentado conforme solicitado
-                                                        <button type="button" class="btn btn-outline-info btn-sm me-1" title="Testar Agora" th:onclick="'testarAutomacao(' + ${rule.id} + ')'">
-                                                            <i class="fas fa-paper-plane"></i>
-                                                        </button>
-                                                        -->
-                                                        <form th:action="@{/minha-conta/automacoes/delete/{id}(id=${rule.id})}" method="post" class="d-inline">
-                                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Excluir">
+
+                                                        <form
+                                                            th:action="@{/minha-conta/automacoes/delete/{id}(id=${rule.id})}"
+                                                            method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                                title="Excluir">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         </form>
+
                                                     </td>
+
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -138,7 +162,7 @@
 
     <script>
         // Verificar se existe mensagem de erro e exibir SweetAlert
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const errorDiv = document.getElementById('error-message-hidden');
             if (errorDiv) {
                 const msg = errorDiv.innerText;
@@ -161,7 +185,7 @@
         async function editarAutomacao(id, currentEvent, currentAction, currentTime) {
             // Ajustar formato de hora se vier com segundos (08:00:00 -> 08:00)
             const timeFormatted = currentTime.length > 5 ? currentTime.substring(0, 5) : currentTime;
-            
+
             executarWizardCriacaoEdicao({
                 id: id,
                 event: currentEvent,
@@ -173,7 +197,7 @@
         async function executarWizardCriacaoEdicao(dadosEdicao) {
             const isEdit = !!dadosEdicao;
             const steps = ['1', '2', '3'];
-            
+
             const Queue = Swal.mixin({
                 progressSteps: steps,
                 confirmButtonText: 'Próximo >',
@@ -239,11 +263,11 @@
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = isEdit ? `/minha-conta/automacoes/update/${dadosEdicao.id}` : '/minha-conta/automacoes/create';
-            
+
             const inputEvent = document.createElement('input');
             inputEvent.name = 'eventType';
             inputEvent.value = eventType;
-            
+
             const inputAction = document.createElement('input');
             inputAction.name = 'actionType';
             inputAction.value = actionType;
@@ -256,7 +280,7 @@
             form.appendChild(inputAction);
             form.appendChild(inputTime);
             document.body.appendChild(form);
-            
+
             Swal.fire({
                 title: isEdit ? 'Atualizando...' : 'Criando...',
                 timer: 1000,
@@ -268,7 +292,7 @@
         }
 
         /* Função de teste comentada */
-        
+
         function verHistorico(id) {
             Swal.fire({
                 title: 'Histórico de Execuções',
@@ -285,9 +309,9 @@
                                 content.innerHTML = '<p class="text-muted">Nenhuma execução registrada ainda.</p>';
                                 return;
                             }
-                            
+
                             let html = '<table class="table table-sm text-start" style="font-size: 0.9em;"><thead><tr><th>Data/Hora</th><th>Status</th><th>Mensagem</th></tr></thead><tbody>';
-                            
+
                             logs.forEach(log => {
                                 const statusColor = log.status === 'SUCCESS' ? 'text-success' : 'text-danger';
                                 const icon = log.status === 'SUCCESS' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
@@ -297,7 +321,7 @@
                                     <td>${log.message}</td>
                                 </tr>`;
                             });
-                            
+
                             html += '</tbody></table>';
                             content.innerHTML = html;
                         })
@@ -307,11 +331,11 @@
                 }
             });
         }
-        
+
         function toggleStatus(id) {
             const switchEl = document.getElementById('switch-' + id);
             const labelEl = document.getElementById('label-' + id);
-            
+
             // Feedback visual imediato (opcional, ou espera o fetch)
             const isChecked = switchEl.checked;
             labelEl.innerText = isChecked ? 'Salvando...' : 'Salvando...';
@@ -324,7 +348,7 @@
                 .then(data => {
                     // Atualiza label com status real
                     labelEl.innerText = data.active ? 'Ativo' : 'Pausado';
-                    
+
                     const toast = Swal.mixin({
                         toast: true,
                         position: 'top-end',
@@ -332,7 +356,7 @@
                         timer: 2000,
                         timerProgressBar: true
                     });
-                    
+
                     toast.fire({
                         icon: 'success',
                         title: data.message
@@ -342,7 +366,7 @@
                     // Reverte em caso de erro
                     switchEl.checked = !isChecked;
                     labelEl.innerText = !isChecked ? 'Ativo' : 'Pausado';
-                    
+
                     Swal.fire({
                         icon: 'error',
                         title: 'Erro',
@@ -350,6 +374,7 @@
                     });
                 });
         }
-     </script>
+    </script>
 </body>
+
 </html>

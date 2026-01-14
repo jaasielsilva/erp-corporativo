@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
+import java.util.Properties;
 
 @Service
 public class EmailService {
@@ -21,10 +23,39 @@ public class EmailService {
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     @Autowired
-    private JavaMailSender mailSender;
+    private JavaMailSender defaultMailSender;
+
+    @Autowired
+    private ConfiguracaoService configuracaoService;
 
     @Value("${spring.mail.username}")
-    private String mailFrom;
+    private String defaultMailFrom;
+
+    private JavaMailSender getMailSender() {
+        String dbHost = configuracaoService.getValor("smtp_host", "");
+        
+        if (dbHost != null && !dbHost.isEmpty()) {
+            JavaMailSenderImpl sender = new JavaMailSenderImpl();
+            sender.setHost(dbHost);
+            sender.setPort(Integer.parseInt(configuracaoService.getValor("smtp_port", "587")));
+            sender.setUsername(configuracaoService.getValor("smtp_username", ""));
+            sender.setPassword(configuracaoService.getValor("smtp_password", ""));
+
+            Properties props = sender.getJavaMailProperties();
+            props.put("mail.transport.protocol", "smtp");
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.debug", "true");
+
+            return sender;
+        }
+        return defaultMailSender;
+    }
+
+    private String getMailFrom() {
+        String dbFrom = configuracaoService.getValor("smtp_from", "");
+        return (dbFrom != null && !dbFrom.isEmpty()) ? dbFrom : defaultMailFrom;
+    }
 
     /**
      * Envia email simples
@@ -32,15 +63,16 @@ public class EmailService {
     @Async
     public void enviarEmail(String destinatario, String assunto, String corpo) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
+            JavaMailSender sender = getMailSender();
+            MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(destinatario);
             helper.setSubject(assunto);
             helper.setText(corpo, true); // true para HTML
-            helper.setFrom(mailFrom);
+            helper.setFrom(getMailFrom());
 
-            mailSender.send(message);
+            sender.send(message);
             logger.info("Email enviado com sucesso para: {}", destinatario);
 
         } catch (Exception e) {
@@ -66,16 +98,17 @@ public class EmailService {
     @Async
     public void enviarEmailComAnexo(String destinatario, String assunto, String corpoHtml, String nomeArquivo, byte[] anexo) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
+            JavaMailSender sender = getMailSender();
+            MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(destinatario);
             helper.setSubject(assunto);
             helper.setText(corpoHtml, true);
-            helper.setFrom(mailFrom);
+            helper.setFrom(getMailFrom());
             helper.addAttachment(nomeArquivo, new ByteArrayDataSource(anexo, "application/pdf"));
 
-            mailSender.send(message);
+            sender.send(message);
             logger.info("Email com anexo enviado para: {}", destinatario);
         } catch (Exception e) {
             logger.error("Erro ao enviar email com anexo para {}: {}", destinatario, e.getMessage());

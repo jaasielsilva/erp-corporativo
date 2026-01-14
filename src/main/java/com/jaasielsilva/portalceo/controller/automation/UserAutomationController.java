@@ -43,15 +43,20 @@ public class UserAutomationController {
                                    @RequestParam AutomationActionType actionType,
                                    @RequestParam String executionTime,
                                    RedirectAttributes redirectAttributes) {
-        Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        try {
+            Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
 
-        // Convert string "HH:mm" to LocalTime
-        LocalTime time = LocalTime.parse(executionTime, DateTimeFormatter.ofPattern("HH:mm"));
+            // Convert string "HH:mm" to LocalTime
+            LocalTime time = LocalTime.parse(executionTime, DateTimeFormatter.ofPattern("HH:mm"));
 
-        UserAutomation automation = new UserAutomation(usuario, eventType, actionType, time);
-        automationRepository.save(automation);
+            UserAutomation automation = new UserAutomation(usuario, eventType, actionType, time);
+            automationRepository.save(automation);
 
-        redirectAttributes.addFlashAttribute("successMessage", "Automação criada com sucesso!");
+            redirectAttributes.addFlashAttribute("successMessage", "Automação criada com sucesso!");
+        } catch (Exception e) {
+            e.printStackTrace(); // Log for debugging
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao criar automação: " + e.getMessage());
+        }
         return "redirect:/minha-conta/automacoes";
     }
 

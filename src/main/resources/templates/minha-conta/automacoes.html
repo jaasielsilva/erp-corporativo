@@ -38,6 +38,9 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
 
+                    <!-- Variável oculta para erro -->
+                    <div th:if="${errorMessage}" id="error-message-hidden" th:text="${errorMessage}" style="display: none;"></div>
+
                     <!-- Lista de Automações -->
                     <div class="row">
                         <div class="col-12">
@@ -107,6 +110,22 @@
     <script src="/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Verificar se existe mensagem de erro e exibir SweetAlert
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorDiv = document.getElementById('error-message-hidden');
+            if (errorDiv) {
+                const msg = errorDiv.innerText;
+                if (msg) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: msg,
+                        confirmButtonText: 'Entendi'
+                    });
+                }
+            }
+        });
+
         async function criarAutomacao() {
             const steps = ['1', '2', '3'];
             const Queue = Swal.mixin({

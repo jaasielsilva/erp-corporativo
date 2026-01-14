@@ -18,11 +18,11 @@ public class UserAutomation {
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private AutomationEventType eventType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private AutomationActionType actionType;
 
     private boolean active = true;

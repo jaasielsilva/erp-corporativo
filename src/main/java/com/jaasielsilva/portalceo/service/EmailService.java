@@ -63,23 +63,28 @@ public class EmailService {
     @Async
     public void enviarEmail(String destinatario, String assunto, String corpo) {
         try {
-            JavaMailSender sender = getMailSender();
-            MimeMessage message = sender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(destinatario);
-            helper.setSubject(assunto);
-            helper.setText(corpo, true); // true para HTML
-            helper.setFrom(getMailFrom());
-
-            sender.send(message);
+            enviarEmailTeste(destinatario, assunto, corpo);
             logger.info("Email enviado com sucesso para: {}", destinatario);
-
         } catch (Exception e) {
             logger.error("Erro ao enviar email para {}: {}", destinatario, e.getMessage());
-            // Em produção, você pode querer lançar uma exceção customizada
-            // throw new EmailException("Falha ao enviar email", e);
         }
+    }
+
+    /**
+     * Envia email de forma síncrona (para testes e depuração)
+     * Lança exceção em caso de erro para ser capturado pelo chamador
+     */
+    public void enviarEmailTeste(String destinatario, String assunto, String corpo) throws Exception {
+        JavaMailSender sender = getMailSender();
+        MimeMessage message = sender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(destinatario);
+        helper.setSubject(assunto);
+        helper.setText(corpo, true); // true para HTML
+        helper.setFrom(getMailFrom());
+
+        sender.send(message);
     }
 
     /**

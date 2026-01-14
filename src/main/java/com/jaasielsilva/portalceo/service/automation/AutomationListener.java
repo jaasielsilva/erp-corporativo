@@ -14,19 +14,28 @@ import java.util.List;
 
 import java.time.LocalTime;
 
+import com.jaasielsilva.portalceo.model.automation.AutomationLog;
+import com.jaasielsilva.portalceo.repository.automation.AutomationLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Component
 public class AutomationListener {
 
+    private static final Logger logger = LoggerFactory.getLogger(AutomationListener.class);
     private final UserAutomationRepository automationRepository;
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final AutomationLogRepository logRepository;
 
     public AutomationListener(UserAutomationRepository automationRepository,
                               EmailService emailService,
-                              NotificationService notificationService) {
+                              NotificationService notificationService,
+                              AutomationLogRepository logRepository) {
         this.automationRepository = automationRepository;
         this.emailService = emailService;
         this.notificationService = notificationService;
+        this.logRepository = logRepository;
     }
 
     @Async
@@ -40,10 +49,20 @@ public class AutomationListener {
             if (isSameHour(rule.getExecutionTime(), now)) {
                 String msg = "Detectamos " + event.getTotalInativos() + " clientes inativos há mais de 30 dias. Verifique a base para recuperação.";
 
-                if (rule.getActionType() == AutomationActionType.EMAIL_ALERT) {
-                    emailService.enviarEmail(rule.getUsuario().getEmail(), "Alerta de Clientes Inativos", msg);
-                } else if (rule.getActionType() == AutomationActionType.SYSTEM_NOTIFICATION) {
-                    notificationService.enviarNotificacao(rule.getUsuario().getEmail(), "Automação", msg);
+                try {
+                    if (rule.getActionType() == AutomationActionType.EMAIL_ALERT) {
+                        emailService.enviarEmail(rule.getUsuario().getEmail(), "Alerta de Clientes Inativos", msg);
+                    } else if (rule.getActionType() == AutomationActionType.SYSTEM_NOTIFICATION) {
+                        notificationService.enviarNotificacao(rule.getUsuario().getEmail(), "Automação", msg);
+                    }
+                    
+                    // Log de Sucesso
+                    logRepository.save(new AutomationLog(rule, "SUCCESS", "Executado com sucesso. " + event.getTotalInativos() + " clientes identificados."));
+                    
+                } catch (Exception e) {
+                    logger.error("Erro ao executar automação ID {}: {}", rule.getId(), e.getMessage());
+                    // Log de Erro
+                    logRepository.save(new AutomationLog(rule, "ERROR", "Falha na execução: " + e.getMessage()));
                 }
             }
         }

@@ -25,4 +25,10 @@ public class ChatSessionService {
         p.setLastHeartbeat(LocalDateTime.now());
         chatPresenceRepository.save(p);
     }
+
+    public boolean isUserOnline(Long userId) {
+        return chatPresenceRepository.findById(userId)
+                .map(p -> "ONLINE".equals(p.getStatus()))
+                .orElse(false);
+    }
 }

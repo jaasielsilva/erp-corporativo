@@ -40,10 +40,10 @@ public class ChatMessage {
     private Boolean read = false;
 
     @Lob
-    @Column(nullable = false)
+    @Column
     private byte[] ciphertext;
 
-    @Column(nullable = false, length = 32)
+    @Column(length = 32)
     private byte[] iv;
 
     @Lob

@@ -88,34 +88,44 @@ public class AutentiqueService {
                 String companyLink = null;
 
                 if (signatures != null) {
+                    String clientEmailLower = signerEmail != null ? signerEmail.toLowerCase() : null;
                     for (Map<String, Object> sig : signatures) {
                         Map<String, Object> user = (Map<String, Object>) sig.get("user");
                         if (user != null) {
                             String email = (String) user.get("email");
+                            String emailLower = email != null ? email.toLowerCase() : null;
                             Map<String, Object> linkObj = (Map<String, Object>) sig.get("link");
                             String link = linkObj != null ? (String) linkObj.get("short_link") : null;
 
-                            if (signerEmail.equalsIgnoreCase(email)) {
+                            if (clientEmailLower != null && clientEmailLower.equals(emailLower)) {
                                 publicId = (String) sig.get("public_id");
                                 signatureLink = link;
-                            } else if (companyEmail.equalsIgnoreCase(email)) {
+                            } else if (companyLink == null) {
                                 companyLink = link;
                             }
                         }
                     }
 
-                    // Fallback para o primeiro se não encontrar o publicId
                     if (publicId == null && !signatures.isEmpty()) {
                         publicId = (String) signatures.get(0).get("public_id");
                     }
                 }
 
+                String documentId = (String) createDocument.get("id");
+
                 Map<String, String> result = new HashMap<>();
-                result.put("id", (String) createDocument.get("id"));
+                result.put("id", documentId);
                 result.put("publicId", publicId);
-                result.put("link", signatureLink != null ? signatureLink
-                        : "https://www.autentique.com.br/v2/documento/" + publicId);
-                result.put("linkEmpresa", companyLink);
+
+                String defaultViewerLink = publicId != null
+                        ? "https://www.autentique.com.br/v2/documento/" + publicId
+                        : null;
+                result.put("link", signatureLink != null ? signatureLink : defaultViewerLink);
+
+                String companyPanelLink = documentId != null
+                        ? "https://painel.autentique.com.br/documentos/" + documentId
+                        : defaultViewerLink;
+                result.put("linkEmpresa", companyPanelLink);
 
                 log.info("Documento enviado com sucesso. ID: {}", result.get("id"));
                 return result;
@@ -137,11 +147,24 @@ public class AutentiqueService {
      * @return true se todos assinaram, false caso contrário
      */
     public boolean verificarSeEstaAssinado(String documentId) {
-        log.info("Consultando status do documento na Autentique: {}", documentId);
+        Map<String, Object> resumo = obterResumoAssinaturas(documentId);
+        Object todosAssinaram = resumo.get("todosAssinaram");
+        if (todosAssinaram instanceof Boolean) {
+            return (Boolean) todosAssinaram;
+        }
+        return false;
+    }
+
+    public Map<String, Object> obterResumoAssinaturas(String documentId) {
+        log.info("Consultando detalhes de assinaturas na Autentique: {}", documentId);
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("todosAssinaram", false);
+        resultado.put("pendentes", List.of());
 
         try {
             String query = "{\"query\": \"query { document(id: \\\"" + documentId
-                    + "\\\") { id name signatures { signed { created_at } } } }\"}";
+                    + "\\\") { id name signatures { user { name email } signed { created_at } } } }\"}";
 
             Map<String, Object> response = webClient.post()
                     .uri(apiUrl)
@@ -155,29 +178,90 @@ public class AutentiqueService {
             if (response != null && response.containsKey("data")) {
                 Map<String, Object> data = (Map<String, Object>) response.get("data");
                 if (data == null || data.get("document") == null) {
-                    return false;
+                    return resultado;
                 }
                 Map<String, Object> document = (Map<String, Object>) data.get("document");
                 List<Map<String, Object>> signatures = (List<Map<String, Object>>) document.get("signatures");
 
                 if (signatures == null || signatures.isEmpty()) {
-                    return false;
+                    return resultado;
                 }
 
-                // Verifica se TODOS os signatários já assinaram
+                java.util.List<String> pendentes = new java.util.ArrayList<>();
+                boolean todosAssinaram = true;
+
                 for (Map<String, Object> sig : signatures) {
-                    if (sig.get("signed") == null) {
-                        return false;
+                    Map<String, Object> signed = (Map<String, Object>) sig.get("signed");
+                    if (signed == null) {
+                        todosAssinaram = false;
+                        Map<String, Object> user = (Map<String, Object>) sig.get("user");
+                        String nome = user != null ? (String) user.get("name") : null;
+                        String email = user != null ? (String) user.get("email") : null;
+                        String identificador = nome != null && !nome.isBlank() ? nome : email;
+                        if (identificador != null && !identificador.isBlank()) {
+                            pendentes.add(identificador);
+                        }
                     }
                 }
 
-                return true;
+                resultado.put("todosAssinaram", todosAssinaram);
+                resultado.put("pendentes", pendentes);
+                return resultado;
             }
 
-            return false;
+            return resultado;
         } catch (Exception e) {
-            log.error("Erro ao consultar status do documento na Autentique", e);
-            return false;
+            log.error("Erro ao consultar detalhes de assinaturas na Autentique", e);
+            return resultado;
+        }
+    }
+
+    /**
+     * Baixa o documento assinado da Autentique.
+     * 
+     * @param documentId ID do documento na Autentique
+     * @return Conteúdo do arquivo em bytes ou null se falhar
+     */
+    public byte[] baixarDocumentoAssinado(String documentId) {
+        log.info("Baixando documento assinado da Autentique: {}", documentId);
+
+        try {
+            // Consulta para obter a URL do arquivo assinado
+            String query = "{\"query\": \"query { document(id: \\\"" + documentId
+                    + "\\\") { files { signed } } }\"}";
+
+            Map<String, Object> response = webClient.post()
+                    .uri(apiUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromValue(query))
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            if (response != null && response.containsKey("data")) {
+                Map<String, Object> data = (Map<String, Object>) response.get("data");
+                if (data == null || data.get("document") == null) {
+                    return null;
+                }
+                Map<String, Object> document = (Map<String, Object>) data.get("document");
+                Map<String, Object> files = (Map<String, Object>) document.get("files");
+                
+                if (files != null && files.get("signed") != null) {
+                    String signedUrl = (String) files.get("signed");
+                    
+                    // Baixar o arquivo da URL assinada (URL externa, usa novo cliente)
+                    return WebClient.create().get()
+                            .uri(signedUrl)
+                            .retrieve()
+                            .bodyToMono(byte[].class)
+                            .block();
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Erro ao baixar documento da Autentique", e);
+            return null;
         }
     }
 }

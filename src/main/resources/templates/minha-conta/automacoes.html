@@ -182,7 +182,12 @@
             executarWizardCriacaoEdicao(null);
         }
 
-        async function editarAutomacao(id, currentEvent, currentAction, currentTime) {
+        async function editarAutomacao(btn) {
+            const id = btn.getAttribute('data-id');
+            const currentEvent = btn.getAttribute('data-event');
+            const currentAction = btn.getAttribute('data-action');
+            const currentTime = btn.getAttribute('data-time') || '';
+
             // Ajustar formato de hora se vier com segundos (08:00:00 -> 08:00)
             const timeFormatted = currentTime.length > 5 ? currentTime.substring(0, 5) : currentTime;
 
@@ -293,7 +298,8 @@
 
         /* Função de teste comentada */
 
-        function verHistorico(id) {
+        function verHistorico(btn) {
+            const id = btn.getAttribute('data-id');
             Swal.fire({
                 title: 'Histórico de Execuções',
                 html: '<div id="log-content"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>',

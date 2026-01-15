@@ -132,12 +132,12 @@ public class UserAutomationController {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
             UserAutomation automation = automationRepository.findById(id).orElseThrow();
-            
+
             if (!automation.getUsuario().getId().equals(usuario.getId())) {
                  redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
                  return "redirect:/minha-conta/automacoes";
             }
-            
+
             automationRepository.delete(automation);
             redirectAttributes.addFlashAttribute("successMessage", "Automação excluída.");
         } catch (Exception e) {
@@ -145,6 +145,39 @@ public class UserAutomationController {
             redirectAttributes.addFlashAttribute("errorMessage", "Erro ao excluir: " + e.getMessage());
         }
         return "redirect:/minha-conta/automacoes";
+    }
+
+    @PostMapping("/toggle/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> toggleAutomation(@PathVariable Long id,
+                                                                @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+            UserAutomation automation = automationRepository.findById(id).orElseThrow();
+
+            if (!automation.getUsuario().getId().equals(usuario.getId())) {
+                return ResponseEntity.status(403).body(Map.of(
+                        "active", automation.isActive(),
+                        "message", "Acesso negado."
+                ));
+            }
+
+            boolean novoStatus = !automation.isActive();
+            automation.setActive(novoStatus);
+            automationRepository.save(automation);
+
+            String mensagem = novoStatus ? "Automação ativada." : "Automação pausada.";
+            return ResponseEntity.ok(Map.of(
+                    "active", novoStatus,
+                    "message", mensagem
+            ));
+        } catch (Exception e) {
+            logger.error("Erro ao alterar status da automação {}", id, e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "active", false,
+                    "message", "Erro ao alterar status: " + e.getMessage()
+            ));
+        }
     }
 
     @GetMapping("/logs/{id}")

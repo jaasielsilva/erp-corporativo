@@ -20,6 +20,12 @@ public class DocumentoJuridico {
     private String contentType;
     private String originalFilename;
     private Long tamanho;
+    private String destinatarioEmail;
+    private String autentiqueId;
+    private String linkAssinatura;
+    private String linkAssinaturaEmpresa;
+    private String statusAssinatura;
+    private String detalheStatusAssinatura;
 
     @ElementCollection
     private java.util.Set<String> tags = new java.util.HashSet<>();
@@ -130,5 +136,53 @@ public class DocumentoJuridico {
 
     public void setProcesso(ProcessoJuridico processo) {
         this.processo = processo;
+    }
+
+    public String getDestinatarioEmail() {
+        return destinatarioEmail;
+    }
+
+    public void setDestinatarioEmail(String destinatarioEmail) {
+        this.destinatarioEmail = destinatarioEmail;
+    }
+
+    public String getAutentiqueId() {
+        return autentiqueId;
+    }
+
+    public void setAutentiqueId(String autentiqueId) {
+        this.autentiqueId = autentiqueId;
+    }
+
+    public String getLinkAssinatura() {
+        return linkAssinatura;
+    }
+
+    public void setLinkAssinatura(String linkAssinatura) {
+        this.linkAssinatura = linkAssinatura;
+    }
+
+    public String getLinkAssinaturaEmpresa() {
+        return linkAssinaturaEmpresa;
+    }
+
+    public void setLinkAssinaturaEmpresa(String linkAssinaturaEmpresa) {
+        this.linkAssinaturaEmpresa = linkAssinaturaEmpresa;
+    }
+
+    public String getStatusAssinatura() {
+        return statusAssinatura;
+    }
+
+    public void setStatusAssinatura(String statusAssinatura) {
+        this.statusAssinatura = statusAssinatura;
+    }
+
+    public String getDetalheStatusAssinatura() {
+        return detalheStatusAssinatura;
+    }
+
+    public void setDetalheStatusAssinatura(String detalheStatusAssinatura) {
+        this.detalheStatusAssinatura = detalheStatusAssinatura;
     }
 }

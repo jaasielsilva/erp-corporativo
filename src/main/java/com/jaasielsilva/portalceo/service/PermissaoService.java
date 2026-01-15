@@ -239,7 +239,10 @@ public class PermissaoService {
         // --- Comercial ---
         permissoes.put("MENU_CLIENTES", "Menu Clientes");
         permissoes.put("MENU_CLIENTES_LISTAR", "Listar Clientes");
+        permissoes.put("MENU_CLIENTES_DETALHES", "Detalhes Cliente");
         permissoes.put("MENU_CLIENTES_NOVO", "Novo Cliente");
+        permissoes.put("CLIENTE_EDITAR", "Editar Cliente");
+        permissoes.put("CLIENTE_EXCLUIR", "Excluir Cliente");
         permissoes.put("MENU_CLIENTES_CONTRATOS_LISTAR", "Listar Contratos");
         permissoes.put("MENU_CLIENTES_HISTORICO_INTERACOES", "Histórico de Interações");
         permissoes.put("MENU_CLIENTES_HISTORICO_PEDIDOS", "Histórico de Pedidos");

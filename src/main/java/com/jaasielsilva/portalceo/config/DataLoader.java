@@ -238,17 +238,17 @@ public class DataLoader implements CommandLineRunner {
 
         // Estagiário Comercial
         Set<Permissao> permEstagiarioCom = new HashSet<>(permissoesUsuario);
-        permEstagiarioCom.addAll(buscarPermissoesPorPadrao("MENU_CLIENTES_LISTAR", "MENU_VENDAS_PDV"));
+        permEstagiarioCom.addAll(buscarPermissoesPorPadrao("MENU_CLIENTES_LISTAR", "MENU_CLIENTES_DETALHES", "MENU_VENDAS_PDV"));
         criarPerfilSeNaoExistir("ESTAGIARIO_COMERCIAL", new ArrayList<>(permEstagiarioCom));
 
         // Vendedor
         Set<Permissao> permVendedor = new HashSet<>(permEstagiarioCom);
-        permVendedor.addAll(buscarPermissoesPorPadrao("MENU_VENDAS_PEDIDOS", "MENU_CLIENTES_NOVO", "MENU_CLIENTES_HISTORICO"));
+        permVendedor.addAll(buscarPermissoesPorPadrao("MENU_VENDAS_PEDIDOS", "MENU_CLIENTES_NOVO", "CLIENTE_EDITAR", "MENU_CLIENTES_HISTORICO"));
         criarPerfilSeNaoExistir("VENDEDOR", new ArrayList<>(permVendedor));
 
         // Gerente Comercial
         Set<Permissao> permGerenteComercial = new HashSet<>(permVendedor);
-        permGerenteComercial.addAll(buscarPermissoesPorPadrao("MENU_VENDAS", "MENU_CLIENTES", "MENU_MARKETING"));
+        permGerenteComercial.addAll(buscarPermissoesPorPadrao("MENU_VENDAS", "MENU_CLIENTES", "CLIENTE_EXCLUIR", "MENU_MARKETING"));
         criarPerfilSeNaoExistir("GERENTE_COMERCIAL", new ArrayList<>(permGerenteComercial));
 
 
@@ -339,12 +339,24 @@ public class DataLoader implements CommandLineRunner {
     }
 
     private void criarPerfilSeNaoExistir(String nome, List<Permissao> permissoes) {
-        if (perfilRepository.findByNome(nome).isEmpty()) {
+        var existenteOpt = perfilRepository.findByNome(nome);
+        if (existenteOpt.isEmpty()) {
             Perfil perfil = new Perfil();
             perfil.setNome(nome);
             perfil.setPermissoes(new HashSet<>(permissoes));
             perfilRepository.save(perfil);
             System.out.println("Perfil criado: " + nome + " com " + permissoes.size() + " permissões.");
+        } else {
+            Perfil perfil = existenteOpt.get();
+            if (perfil.getPermissoes() == null) {
+                perfil.setPermissoes(new HashSet<>());
+            }
+            int antes = perfil.getPermissoes().size();
+            perfil.getPermissoes().addAll(permissoes);
+            if (perfil.getPermissoes().size() > antes) {
+                perfilRepository.save(perfil);
+                System.out.println("Perfil atualizado: " + nome + " agora com " + perfil.getPermissoes().size() + " permissões.");
+            }
         }
     }
 

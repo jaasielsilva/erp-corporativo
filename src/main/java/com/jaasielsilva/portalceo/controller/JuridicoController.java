@@ -63,6 +63,7 @@ public class JuridicoController {
     private final AuditoriaJuridicoLogService auditoriaJuridicoLogService;
     private final ResourceLoader resourceLoader;
     private final AutentiqueService autentiqueService;
+    private final com.jaasielsilva.portalceo.service.juridico.DocumentoJuridicoService documentoJuridicoService;
 
     @Value("${app.upload.path:uploads}")
     private String uploadBasePath;
@@ -477,7 +478,8 @@ public class JuridicoController {
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("documentosRecentes", recentes);
 
-        java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> todosModelos = documentoModeloRepository.findAll();
+        java.util.List<com.jaasielsilva.portalceo.model.juridico.DocumentoModelo> todosModelos = documentoModeloRepository
+                .findAll();
         boolean temOutrosModelos = todosModelos.stream().anyMatch(m -> !m.getNome().equals("Procuração Ad Judicia"));
 
         java.util.List<java.util.Map<String, Object>> modelosVm = todosModelos.stream()
@@ -507,7 +509,8 @@ public class JuridicoController {
                 if (!java.nio.file.Files.exists(path)) {
                     return ResponseEntity.notFound().build();
                 }
-                org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+                org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(
+                        path.toUri());
                 String contentType = java.nio.file.Files.probeContentType(path);
                 if (contentType == null)
                     contentType = "application/octet-stream";
@@ -1733,7 +1736,6 @@ public class JuridicoController {
                 .orElseGet(() -> ResponseEntity.status(404).body(java.util.Map.of("erro", "Modelo não encontrado")));
     }
 
-
     @PostMapping("/api/documentos/gerar")
     @ResponseBody
     public ResponseEntity<?> gerarDocumentoAPartirDeModelo(@RequestParam Long modeloId,
@@ -2303,50 +2305,13 @@ public class JuridicoController {
                                 .body(Map.of("erro", "Documento não possui vínculo com a Autentique"));
                     }
                     try {
-                        Map<String, Object> resumo = autentiqueService.obterResumoAssinaturas(d.getAutentiqueId());
-                        boolean assinado = Boolean.TRUE.equals(resumo.get("todosAssinaram"));
-                        @SuppressWarnings("unchecked")
-                        java.util.List<String> pendentes = (java.util.List<String>) resumo.getOrDefault("pendentes",
-                                java.util.Collections.emptyList());
+                        documentoJuridicoService.sincronizarDocumento(d);
 
-                        if (assinado) {
-                            d.setStatusAssinatura("ASSINADO");
-                            d.setDetalheStatusAssinatura(null);
-                            
-                            // Tenta baixar e atualizar o conteúdo do arquivo com a versão assinada
-                            try {
-                                byte[] conteudoAssinado = autentiqueService.baixarDocumentoAssinado(d.getAutentiqueId());
-                                if (conteudoAssinado != null && conteudoAssinado.length > 0) {
-                                    d.setConteudo(conteudoAssinado);
-                                    d.setTamanho((long) conteudoAssinado.length);
-                                    
-                                    // Adiciona indicador ao nome do arquivo se não houver
-                                    if (d.getOriginalFilename() != null && !d.getOriginalFilename().contains("(Assinado)")) {
-                                        String name = d.getOriginalFilename();
-                                        String ext = "";
-                                        int dot = name.lastIndexOf(".");
-                                        if (dot > 0) {
-                                            ext = name.substring(dot);
-                                            name = name.substring(0, dot);
-                                        }
-                                        d.setOriginalFilename(name + " (Assinado)" + ext);
-                                    }
-                                }
-                            } catch (Exception ex) {
-                                System.err.println("Erro ao baixar documento assinado: " + ex.getMessage());
-                                // Loga mas não falha a requisição principal
-                            }
-                        } else {
-                            d.setStatusAssinatura("PENDENTE");
-                            if (pendentes != null && !pendentes.isEmpty()) {
-                                String detalhe = "Falta assinatura de: " + String.join(", ", pendentes);
-                                d.setDetalheStatusAssinatura(detalhe);
-                            } else {
-                                d.setDetalheStatusAssinatura(null);
-                            }
-                        }
-                        documentoJuridicoRepository.save(d);
-                        
+                        // After synchronization, 'd' should be updated.
+                        // We need to determine 'assinado' status from the updated 'd' object.
+                        // Assuming 'sincronizarDocumento' updates the status and details in 'd'.
+                        boolean assinado = "ASSINADO".equals(d.getStatusAssinatura());
+
                         java.util.Map<String, Object> resp = new java.util.HashMap<>();
                         resp.put("id", d.getId());
                         resp.put("autentiqueId", d.getAutentiqueId());

@@ -41,10 +41,10 @@ public class UserAutomationController {
     private final AutomationLogRepository logRepository;
 
     public UserAutomationController(UserAutomationRepository automationRepository,
-                                    UsuarioRepository usuarioRepository,
-                                    EmailService emailService,
-                                    NotificationService notificationService,
-                                    AutomationLogRepository logRepository) {
+            UsuarioRepository usuarioRepository,
+            EmailService emailService,
+            NotificationService notificationService,
+            AutomationLogRepository logRepository) {
         this.automationRepository = automationRepository;
         this.usuarioRepository = usuarioRepository;
         this.emailService = emailService;
@@ -52,27 +52,38 @@ public class UserAutomationController {
         this.logRepository = logRepository;
     }
 
+    private boolean isAdminOrMaster(UserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
     @GetMapping
     public String listAutomations(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         try {
             logger.info("Listando automações para usuário: {}", userDetails.getUsername());
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-            
-            List<UserAutomation> automationsEntities = automationRepository.findByUsuarioId(usuario.getId());
+
+            List<UserAutomation> automationsEntities;
+            if (isAdminOrMaster(userDetails)) {
+                automationsEntities = automationRepository.findAll();
+            } else {
+                automationsEntities = automationRepository.findByUsuarioId(usuario.getId());
+            }
+
             if (automationsEntities == null) {
                 automationsEntities = List.of();
             }
             logger.info("Encontradas {} automações.", automationsEntities.size());
-            
+
             // Converter para DTO para evitar erros na View
             List<AutomationDTO> dtos = automationsEntities.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-            
+                    .map(this::toDTO)
+                    .collect(Collectors.toList());
+
             model.addAttribute("automations", dtos);
             model.addAttribute("eventTypes", AutomationEventType.values());
             model.addAttribute("actionTypes", AutomationActionType.values());
-            
+
             logger.info("DTOs criados e adicionados ao modelo.");
             return "minha-conta/automacoes";
         } catch (Exception e) {
@@ -84,20 +95,20 @@ public class UserAutomationController {
     }
 
     private AutomationDTO toDTO(UserAutomation entity) {
-        if (entity == null) return null;
-        
+        if (entity == null)
+            return null;
+
         try {
-            String timeStr = entity.getExecutionTime() != null 
-                ? entity.getExecutionTime().format(DateTimeFormatter.ofPattern("HH:mm")) 
-                : null;
-                
+            String timeStr = entity.getExecutionTime() != null
+                    ? entity.getExecutionTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+                    : null;
+
             return new AutomationDTO(
-                entity.getId(),
-                entity.getEventType() != null ? entity.getEventType().name() : null,
-                entity.getActionType() != null ? entity.getActionType().name() : null,
-                timeStr,
-                entity.isActive()
-            );
+                    entity.getId(),
+                    entity.getEventType() != null ? entity.getEventType().name() : null,
+                    entity.getActionType() != null ? entity.getActionType().name() : null,
+                    timeStr,
+                    entity.isActive());
         } catch (Exception e) {
             logger.error("Erro ao converter automação ID {} para DTO", entity.getId(), e);
             return null; // Retorna null para ser filtrado se necessário, ou lança erro
@@ -106,10 +117,10 @@ public class UserAutomationController {
 
     @PostMapping("/create")
     public String createAutomation(@AuthenticationPrincipal UserDetails userDetails,
-                                   @RequestParam AutomationEventType eventType,
-                                   @RequestParam AutomationActionType actionType,
-                                   @RequestParam String executionTime,
-                                   RedirectAttributes redirectAttributes) {
+            @RequestParam AutomationEventType eventType,
+            @RequestParam AutomationActionType actionType,
+            @RequestParam String executionTime,
+            RedirectAttributes redirectAttributes) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
 
@@ -126,16 +137,53 @@ public class UserAutomationController {
         }
         return "redirect:/minha-conta/automacoes";
     }
-    
-    @PostMapping("/delete/{id}")
-    public String deleteAutomation(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
+
+    @PostMapping("/update/{id}")
+    public String updateAutomation(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam AutomationEventType eventType,
+            @RequestParam AutomationActionType actionType,
+            @RequestParam String executionTime,
+            RedirectAttributes redirectAttributes) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
             UserAutomation automation = automationRepository.findById(id).orElseThrow();
 
-            if (!automation.getUsuario().getId().equals(usuario.getId())) {
-                 redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
-                 return "redirect:/minha-conta/automacoes";
+            // Verifica permissão
+            if (!automation.getUsuario().getId().equals(usuario.getId()) && !isAdminOrMaster(userDetails)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+                return "redirect:/minha-conta/automacoes";
+            }
+
+            // Convert string "HH:mm" to LocalTime
+            LocalTime time = LocalTime.parse(executionTime, DateTimeFormatter.ofPattern("HH:mm"));
+
+            // Atualiza campos
+            automation.setEventType(eventType);
+            automation.setActionType(actionType);
+            automation.setExecutionTime(time);
+
+            automationRepository.save(automation);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Automação atualizada com sucesso!");
+        } catch (Exception e) {
+            logger.error("Erro ao atualizar automação", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Erro ao atualizar: " + e.getMessage());
+        }
+        return "redirect:/minha-conta/automacoes";
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteAutomation(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+            UserAutomation automation = automationRepository.findById(id).orElseThrow();
+
+            // Verifica permissão: Dono OU Master/Admin
+            if (!automation.getUsuario().getId().equals(usuario.getId()) && !isAdminOrMaster(userDetails)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Acesso negado.");
+                return "redirect:/minha-conta/automacoes";
             }
 
             automationRepository.delete(automation);
@@ -150,16 +198,15 @@ public class UserAutomationController {
     @PostMapping("/toggle/{id}")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> toggleAutomation(@PathVariable Long id,
-                                                                @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
             UserAutomation automation = automationRepository.findById(id).orElseThrow();
 
-            if (!automation.getUsuario().getId().equals(usuario.getId())) {
+            if (!automation.getUsuario().getId().equals(usuario.getId()) && !isAdminOrMaster(userDetails)) {
                 return ResponseEntity.status(403).body(Map.of(
                         "active", automation.isActive(),
-                        "message", "Acesso negado."
-                ));
+                        "message", "Acesso negado."));
             }
 
             boolean novoStatus = !automation.isActive();
@@ -169,30 +216,29 @@ public class UserAutomationController {
             String mensagem = novoStatus ? "Automação ativada." : "Automação pausada.";
             return ResponseEntity.ok(Map.of(
                     "active", novoStatus,
-                    "message", mensagem
-            ));
+                    "message", mensagem));
         } catch (Exception e) {
             logger.error("Erro ao alterar status da automação {}", id, e);
             return ResponseEntity.status(500).body(Map.of(
                     "active", false,
-                    "message", "Erro ao alterar status: " + e.getMessage()
-            ));
+                    "message", "Erro ao alterar status: " + e.getMessage()));
         }
     }
 
     @GetMapping("/logs/{id}")
     @ResponseBody
-    public ResponseEntity<?> getAutomationLogs(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<?> getAutomationLogs(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
             UserAutomation automation = automationRepository.findById(id).orElseThrow();
 
-            if (!automation.getUsuario().getId().equals(usuario.getId())) {
+            if (!automation.getUsuario().getId().equals(usuario.getId()) && !isAdminOrMaster(userDetails)) {
                 return ResponseEntity.status(403).body(Map.of("error", "Acesso negado"));
             }
 
             List<AutomationLog> logs = logRepository.findTop10ByAutomationIdOrderByTimestampDesc(id);
-            
+
             // DTO simplificado para o frontend
             List<Map<String, Object>> logDtos = logs.stream().map(log -> {
                 Map<String, Object> map = new java.util.HashMap<>();
@@ -206,6 +252,61 @@ public class UserAutomationController {
         } catch (Exception e) {
             logger.error("Erro ao buscar logs", e);
             return ResponseEntity.status(500).body(Map.of("error", "Erro ao buscar logs: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/test/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> testAutomation(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            logger.info("Iniciando teste manual da automação ID: {}", id);
+            Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+            UserAutomation automation = automationRepository.findById(id).orElseThrow();
+
+            // Verifica permissão
+            if (!automation.getUsuario().getId().equals(usuario.getId()) && !isAdminOrMaster(userDetails)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Acesso negado"));
+            }
+
+            String emailDestino = automation.getUsuario().getEmail();
+            logger.info("Automação ID {} pertence ao usuário: {} (Email: {})", id, automation.getUsuario().getNome(),
+                    emailDestino);
+
+            String messageResult = "";
+
+            if (automation.getActionType() == AutomationActionType.EMAIL_ALERT) {
+                String subject = "[TESTE] Lembrete Diário de Automação";
+                String body = "Olá, " + automation.getUsuario().getNome() + ".\n\n" +
+                        "Este é um TESTE manual da sua automação configurada para " + automation.getExecutionTime()
+                        + ".\n\n" +
+                        "Se você recebeu este e-mail, sua configuração está correta.\n" +
+                        "Email de destino: " + emailDestino + "\n\n" +
+                        "Atenciosamente,\nPortal CEO";
+
+                logger.info("Enviando e-mail de teste para: {}", emailDestino);
+                emailService.enviarEmail(emailDestino, subject, body);
+                messageResult = "E-mail de teste enviado para: " + emailDestino;
+
+                // Grava log de sucesso do teste
+                logRepository.save(new AutomationLog(automation, "TEST_SUCCESS", "Teste manual: " + messageResult));
+
+            } else if (automation.getActionType() == AutomationActionType.SYNC_JURIDICO_SIGNATURES) {
+                messageResult = "Teste de sincronização não implementado via botão ainda. Logs apenas gravados.";
+                logger.info("Teste de sincronização solicitado.");
+            } else {
+                messageResult = "Tipo de ação não suportado para teste imediato.";
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", messageResult,
+                    "email", emailDestino));
+
+        } catch (Exception e) {
+            logger.error("Erro ao testar automação {}", id, e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "Erro no teste: " + e.getMessage()));
         }
     }
 }

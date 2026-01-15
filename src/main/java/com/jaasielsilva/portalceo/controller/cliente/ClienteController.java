@@ -37,11 +37,11 @@ public class ClienteController {
     @GetMapping({ "", "/", "/listar" })
     @PreAuthorize("hasAnyAuthority('MENU_CLIENTES_LISTAR', 'MENU_JURIDICO_CLIENTES') or hasRole('ADMIN') or hasRole('MASTER')")
     public String listarClientes(@RequestParam(value = "busca", required = false) String busca,
-                                 @RequestParam(value = "status", required = false) String status,
-                                 @RequestParam(value = "origem", required = false) String origem,
-                                 @RequestParam(value = "page", defaultValue = "0") int page,
-                                 @RequestParam(value = "size", defaultValue = "10") int size,
-                                 Model model) {
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "origem", required = false) String origem,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            Model model) {
         var clientesPage = clienteService.listarPaginado(busca, status, origem, page, size);
         model.addAttribute("clientes", clientesPage.getContent());
         model.addAttribute("currentPage", clientesPage.getNumber());
@@ -55,9 +55,11 @@ public class ClienteController {
 
         // Verificações de permissão para o frontend
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
-        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
-        
+        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR")
+                || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR")
+                || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+
         model.addAttribute("podeEditar", podeEditar);
         model.addAttribute("podeExcluir", podeExcluir);
 
@@ -86,7 +88,8 @@ public class ClienteController {
             @RequestParam(name = "status", required = false) String status,
             @RequestParam(name = "origem", required = false) String origem) {
         try {
-            var pagina = clienteService.listarPaginado(q, status, origem, Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+            var pagina = clienteService.listarPaginado(q, status, origem, Math.max(page, 0),
+                    Math.min(Math.max(size, 1), 100));
 
             java.util.List<java.util.Map<String, Object>> content = pagina.getContent().stream().map(c -> {
                 java.util.Map<String, Object> m = new java.util.HashMap<>();
@@ -108,10 +111,11 @@ public class ClienteController {
             resp.put("hasPrevious", pagina.hasPrevious());
             resp.put("hasNext", pagina.hasNext());
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.add("Cache-Control", "public, max-age=90");
+            headers.add("Cache-Control", "no-store, no-cache, must-revalidate");
             return new org.springframework.http.ResponseEntity<>(resp, headers, org.springframework.http.HttpStatus.OK);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(java.util.Map.of("erro", "Falha ao carregar clientes: " + e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(java.util.Map.of("erro", "Falha ao carregar clientes: " + e.getMessage()));
         }
     }
 
@@ -143,9 +147,11 @@ public class ClienteController {
 
         // Verificações de permissão para o frontend
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
-        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR") || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
-        
+        boolean podeEditar = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EDITAR")
+                || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+        boolean podeExcluir = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("CLIENTE_EXCLUIR")
+                || a.getAuthority().equals("ROLE_MASTER") || a.getAuthority().equals("ROLE_ADMIN"));
+
         model.addAttribute("podeEditar", podeEditar);
         model.addAttribute("podeExcluir", podeExcluir);
 
@@ -262,22 +268,23 @@ public class ClienteController {
             @RequestParam(value = "tipo", required = false, defaultValue = "") String tipo,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.Cliente> pagina = clienteService.listarAvancado(
-                busca,
-                null,
-                tipo,
-                null,
-                true,
-                null,
-                page,
-                size
-        );
+        org.springframework.data.domain.Page<com.jaasielsilva.portalceo.model.Cliente> pagina = clienteService
+                .listarAvancado(
+                        busca,
+                        null,
+                        tipo,
+                        null,
+                        true,
+                        null,
+                        page,
+                        size);
 
         var content = pagina.getContent().stream()
                 .map(c -> {
                     java.util.Map<String, Object> m = new java.util.HashMap<>();
                     m.put("id", c.getId());
-                    m.put("nome", c.getNomeFantasia() != null && !c.getNomeFantasia().isBlank() ? c.getNomeFantasia() : c.getNome());
+                    m.put("nome", c.getNomeFantasia() != null && !c.getNomeFantasia().isBlank() ? c.getNomeFantasia()
+                            : c.getNome());
                     m.put("tipoCliente", c.getTipoCliente());
                     m.put("status", c.getStatus());
                     return m;

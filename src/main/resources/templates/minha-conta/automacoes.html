@@ -76,6 +76,7 @@
                                                                 sem compra)</span>
                                                             <span th:case="'CONTRATO_VENCENDO'">Contrato Vencendo (30
                                                                 dias)</span>
+                                                            <span th:case="'DAILY_SCHEDULE'">Agendamento Diário</span>
                                                             <span th:case="*">[[${rule.eventType}]]</span>
                                                         </strong>
                                                         <strong th:unless="${rule.eventType != null}"
@@ -95,6 +96,8 @@
                                                             <span th:case="'EMAIL_ALERT'">Enviar E-mail</span>
                                                             <span th:case="'SYSTEM_NOTIFICATION'">Notificação no
                                                                 Sistema</span>
+                                                            <span th:case="'SYNC_JURIDICO_SIGNATURES'">Sincronizar
+                                                                Assinaturas</span>
                                                             <span th:case="*">[[${rule.actionType}]]</span>
                                                         </span>
                                                         <span th:unless="${rule.actionType != null}"
@@ -115,18 +118,24 @@
                                                     </td>
                                                     <td class="text-end pe-4">
 
+                                                        <button type="button" class="btn btn-outline-info btn-sm me-1"
+                                                            title="Testar Envio" th:data-id="${rule.id}"
+                                                            onclick="testarAutomacao(this)">
+                                                            <i class="fas fa-paper-plane"></i>
+                                                        </button>
+
                                                         <button type="button"
                                                             class="btn btn-outline-secondary btn-sm me-1"
-                                                            title="Histórico" data-id="[[${rule.id}]]"
+                                                            title="Histórico" th:data-id="${rule.id}"
                                                             onclick="verHistorico(this)">
                                                             <i class="fas fa-history"></i>
                                                         </button>
 
                                                         <button type="button"
                                                             class="btn btn-outline-warning btn-sm me-1" title="Editar"
-                                                            data-id="[[${rule.id}]]" data-event="[[${rule.eventType}]]"
-                                                            data-action="[[${rule.actionType}]]"
-                                                            data-time="[[${rule.executionTime}]]"
+                                                            th:data-id="${rule.id}" th:data-event="${rule.eventType}"
+                                                            th:data-action="${rule.actionType}"
+                                                            th:data-time="${rule.executionTime}"
                                                             onclick="editarAutomacao(this)">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
@@ -217,7 +226,8 @@
                 input: 'select',
                 inputOptions: {
                     'CLIENTE_INATIVO': 'Cliente Inativo (+30 dias sem compra)',
-                    'CONTRATO_VENCENDO': 'Contrato Próximo do Vencimento (30 dias)'
+                    'CONTRATO_VENCENDO': 'Contrato Próximo do Vencimento (30 dias)',
+                    'DAILY_SCHEDULE': 'Agendamento Diário (Executar todo dia)'
                 },
                 inputValue: isEdit ? dadosEdicao.event : '',
                 inputPlaceholder: 'Selecione um gatilho',
@@ -232,7 +242,9 @@
                 input: 'select',
                 inputOptions: {
                     'EMAIL_ALERT': 'Me envie um E-mail de Alerta',
-                    'SYSTEM_NOTIFICATION': 'Me notifique no Sistema (Sininho)'
+                    'SYSTEM_NOTIFICATION': 'Me notifique no Sistema (Sininho)',
+                    'SYNC_JURIDICO_SIGNATURES': 'Sincronizar Assinaturas (Jurídico)',
+                    'SEND_DAILY_LEGAL_REPORT': 'Enviar Panorama Jurídico (E-mail)'
                 },
                 inputValue: isEdit ? dadosEdicao.action : '',
                 inputPlaceholder: 'Selecione uma ação',
@@ -244,20 +256,8 @@
             // Passo 3: Horário
             const { value: executionTime } = await Queue.fire({
                 title: isEdit ? 'Editar Horário' : '3. Em qual horário?',
-                input: 'select',
-                inputOptions: {
-                    '08:00': '08:00 (Início do expediente)',
-                    '09:00': '09:00',
-                    '10:00': '10:00',
-                    '11:00': '11:00',
-                    '14:00': '14:00 (Após almoço)',
-                    '15:00': '15:00',
-                    '16:00': '16:00',
-                    '17:00': '17:00',
-                    '18:00': '18:00'
-                },
+                input: 'time',
                 inputValue: isEdit ? dadosEdicao.time : '08:00',
-                inputPlaceholder: 'Selecione o horário',
                 confirmButtonText: isEdit ? 'Salvar Alterações' : 'Criar Regra',
                 currentProgressStep: 2
             });
@@ -379,6 +379,62 @@
                         text: 'Não foi possível alterar o status.'
                     });
                 });
+        }
+        function testarAutomacao(btn) {
+            const id = btn.getAttribute('data-id');
+
+            Swal.fire({
+                title: 'Testar Automação?',
+                html: "Isso forçará a execução da ação (ex: enviar e-mail) agora mesmo.<br><br><strong>ID da Regra: " + id + "</strong>",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sim, testar!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Executando...',
+                        html: 'Aguarde um momento.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch(`/minha-conta/automacoes/test/${id}`, { method: 'POST' })
+                        .then(async response => {
+                            if (!response.ok) {
+                                const text = await response.text(); // Tenta pegar erro HTML/Texto
+                                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Teste Executado!',
+                                    data.message + '<br><small>Email: ' + (data.email || 'N/A') + '</small>',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Erro na Automação!',
+                                    data.message || 'Falha desconhecida.',
+                                    'error'
+                                );
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro detalhado:', error);
+                            Swal.fire(
+                                'Falha na Requisição',
+                                `Detalhes: ${error.message}`,
+                                'error'
+                            );
+                        });
+                }
+            })
         }
     </script>
 </body>

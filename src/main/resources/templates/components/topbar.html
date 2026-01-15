@@ -421,7 +421,8 @@
                             try { return JSON.parse(localStorage.getItem('juridicoSnoozes') || '{}'); } catch (e) { return {}; }
                         }
                         function saveSnooze(key, until) {
-                            var s = getSnoozes(); s[key] = until; localStorage.setItem('juridicoSnoozes', JSON.stringify(s));
+                            var s = getSnoozes(); s[key] = until;
+                            try { localStorage.setItem('juridicoSnoozes', JSON.stringify(s)); } catch (e) {}
                         }
                         function isSnoozed(key) {
                             var s = getSnoozes(); var until = s[key] || 0; return Number(until) > Date.now();
@@ -430,7 +431,8 @@
                             try { return JSON.parse(localStorage.getItem('juridicoReads') || '{}'); } catch (e) { return {}; }
                         }
                         function saveRead(key) {
-                            var r = getReads(); r[key] = true; localStorage.setItem('juridicoReads', JSON.stringify(r));
+                            var r = getReads(); r[key] = true;
+                            try { localStorage.setItem('juridicoReads', JSON.stringify(r)); } catch (e) {}
                         }
                         function isRead(key) {
                             var r = getReads(); return !!r[key];

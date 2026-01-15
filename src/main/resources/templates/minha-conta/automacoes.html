@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Minhas Automações - Portal CEO</title>
+    <!-- Corrigido link do Bootstrap (removido ponto final extra se existir) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/sidebar.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside th:replace="~{components/sidebar :: sidebar}"></aside>
+
+        <main class="main-content">
+            <!-- Topbar -->
+            <header th:replace="~{components/topbar :: topbar}"></header>
+
+            <section class="content-area p-4">
+                <div class="container-fluid">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-magic me-2"></i>Minhas Automações</h1>
+                            <p class="text-muted">Configure gatilhos automáticos para facilitar seu dia a dia.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="criarAutomacao()">
+                            <i class="fas fa-plus me-1"></i> Nova Automação
+                        </button>
+                    </div>
+
+                    <!-- Mensagens de Sucesso -->
+                    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <span th:text="${successMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Variável oculta para erro -->
+                    <div th:if="${errorMessage}" id="error-message-hidden" th:text="${errorMessage}"
+                        style="display: none;"></div>
+
+                    <!-- Lista de Automações -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="ps-4">Gatilho (Quando acontecer...)</th>
+                                                    <th>Ação (Então faça...)</th>
+                                                    <th>Status</th>
+                                                    <th class="text-end pe-4">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:if="${#lists.isEmpty(automations)}">
+                                                    <td colspan="4" class="text-center py-5 text-muted">
+                                                        <i class="fas fa-robot fa-3x mb-3 d-block opacity-25"></i>
+                                                        Nenhuma automação configurada ainda.
+                                                    </td>
+                                                </tr>
+                                                <tr th:each="rule : ${automations}" th:if="${rule != null}">
+                                                    <td class="ps-4">
+                                                        <span class="badge bg-warning text-dark me-2">GATILHO</span>
+                                                        <strong th:if="${rule.eventType != null}"
+                                                            th:switch="${rule.eventType}">
+                                                            <span th:case="'CLIENTE_INATIVO'">Cliente Inativo (+30 dias
+                                                                sem compra)</span>
+                                                            <span th:case="'CONTRATO_VENCENDO'">Contrato Vencendo (30
+                                                                dias)</span>
+                                                            <span th:case="'DAILY_SCHEDULE'">Agendamento Diário</span>
+                                                            <span th:case="*">[[${rule.eventType}]]</span>
+                                                        </strong>
+                                                        <strong th:unless="${rule.eventType != null}"
+                                                            class="text-danger">
+                                                            <i class="fas fa-exclamation-triangle"></i> Gatilho Inválido
+                                                        </strong>
+                                                        <div class="small text-muted mt-1"
+                                                            th:if="${rule.executionTime != null}">
+                                                            <i class="far fa-clock me-1"></i> Executa às
+                                                            [[${rule.executionTime}]]
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-success me-2">AÇÃO</span>
+                                                        <span th:if="${rule.actionType != null}"
+                                                            th:switch="${rule.actionType}">
+                                                            <span th:case="'EMAIL_ALERT'">Enviar E-mail</span>
+                                                            <span th:case="'SYSTEM_NOTIFICATION'">Notificação no
+                                                                Sistema</span>
+                                                            <span th:case="'SYNC_JURIDICO_SIGNATURES'">Sincronizar
+                                                                Assinaturas</span>
+                                                            <span th:case="*">[[${rule.actionType}]]</span>
+                                                        </span>
+                                                        <span th:unless="${rule.actionType != null}"
+                                                            class="text-danger">Ação não definida</span>
+                                                    </td>
+                                                    <td>
+                                                        <div
+                                                            class="form-check form-switch d-flex justify-content-center">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                role="switch" th:id="'switch-' + ${rule.id}"
+                                                                th:checked="${rule.active}"
+                                                                th:onchange="'toggleStatus(' + ${rule.id} + ')'">
+                                                            <label class="form-check-label ms-2"
+                                                                th:for="'switch-' + ${rule.id}"
+                                                                th:id="'label-' + ${rule.id}"
+                                                                th:text="${rule.active ? 'Ativo' : 'Pausado'}"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-end pe-4">
+
+                                                        <button type="button" class="btn btn-outline-info btn-sm me-1"
+                                                            title="Testar Envio" th:data-id="${rule.id}"
+                                                            onclick="testarAutomacao(this)">
+                                                            <i class="fas fa-paper-plane"></i>
+                                                        </button>
+
+                                                        <button type="button"
+                                                            class="btn btn-outline-secondary btn-sm me-1"
+                                                            title="Histórico" th:data-id="${rule.id}"
+                                                            onclick="verHistorico(this)">
+                                                            <i class="fas fa-history"></i>
+                                                        </button>
+
+                                                        <button type="button"
+                                                            class="btn btn-outline-warning btn-sm me-1" title="Editar"
+                                                            th:data-id="${rule.id}" th:data-event="${rule.eventType}"
+                                                            th:data-action="${rule.actionType}"
+                                                            th:data-time="${rule.executionTime}"
+                                                            onclick="editarAutomacao(this)">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+
+                                                        <form
+                                                            th:action="@{/minha-conta/automacoes/delete/{id}(id=${rule.id})}"
+                                                            method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                                title="Excluir">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+
+                                                    </td>
+
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/js/sidebar.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Verificar se existe mensagem de erro e exibir SweetAlert
+        document.addEventListener('DOMContentLoaded', function () {
+            const errorDiv = document.getElementById('error-message-hidden');
+            if (errorDiv) {
+                const msg = errorDiv.innerText;
+                if (msg) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: msg,
+                        confirmButtonText: 'Entendi'
+                    });
+                }
+            }
+        });
+
+        async function criarAutomacao() {
+            // Reutilizando lógica comum se possível, ou mantendo separado
+            executarWizardCriacaoEdicao(null);
+        }
+
+        async function editarAutomacao(btn) {
+            const id = btn.getAttribute('data-id');
+            const currentEvent = btn.getAttribute('data-event');
+            const currentAction = btn.getAttribute('data-action');
+            const currentTime = btn.getAttribute('data-time') || '';
+
+            // Ajustar formato de hora se vier com segundos (08:00:00 -> 08:00)
+            const timeFormatted = currentTime.length > 5 ? currentTime.substring(0, 5) : currentTime;
+
+            executarWizardCriacaoEdicao({
+                id: id,
+                event: currentEvent,
+                action: currentAction,
+                time: timeFormatted
+            });
+        }
+
+        async function executarWizardCriacaoEdicao(dadosEdicao) {
+            const isEdit = !!dadosEdicao;
+            const steps = ['1', '2', '3'];
+
+            const Queue = Swal.mixin({
+                progressSteps: steps,
+                confirmButtonText: 'Próximo >',
+                cancelButtonText: 'Cancelar',
+                showCancelButton: true,
+                currentProgressStep: 0
+            });
+
+            // Passo 1: Gatilho
+            const { value: eventType } = await Queue.fire({
+                title: isEdit ? 'Editar Gatilho' : '1. Quando acontecer isso:',
+                input: 'select',
+                inputOptions: {
+                    'CLIENTE_INATIVO': 'Cliente Inativo (+30 dias sem compra)',
+                    'CONTRATO_VENCENDO': 'Contrato Próximo do Vencimento (30 dias)',
+                    'DAILY_SCHEDULE': 'Agendamento Diário (Executar todo dia)'
+                },
+                inputValue: isEdit ? dadosEdicao.event : '',
+                inputPlaceholder: 'Selecione um gatilho',
+                currentProgressStep: 0
+            });
+
+            if (!eventType) return;
+
+            // Passo 2: Ação
+            const { value: actionType } = await Queue.fire({
+                title: isEdit ? 'Editar Ação' : '2. Faça isso:',
+                input: 'select',
+                inputOptions: {
+                    'EMAIL_ALERT': 'Me envie um E-mail de Alerta',
+                    'SYSTEM_NOTIFICATION': 'Me notifique no Sistema (Sininho)',
+                    'SYNC_JURIDICO_SIGNATURES': 'Sincronizar Assinaturas (Jurídico)',
+                    'SEND_DAILY_LEGAL_REPORT': 'Enviar Panorama Jurídico (E-mail)'
+                },
+                inputValue: isEdit ? dadosEdicao.action : '',
+                inputPlaceholder: 'Selecione uma ação',
+                currentProgressStep: 1
+            });
+
+            if (!actionType) return;
+
+            // Passo 3: Horário
+            const { value: executionTime } = await Queue.fire({
+                title: isEdit ? 'Editar Horário' : '3. Em qual horário?',
+                input: 'time',
+                inputValue: isEdit ? dadosEdicao.time : '08:00',
+                confirmButtonText: isEdit ? 'Salvar Alterações' : 'Criar Regra',
+                currentProgressStep: 2
+            });
+
+            if (!executionTime) return;
+
+            // Envio
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = isEdit ? `/minha-conta/automacoes/update/${dadosEdicao.id}` : '/minha-conta/automacoes/create';
+
+            const inputEvent = document.createElement('input');
+            inputEvent.name = 'eventType';
+            inputEvent.value = eventType;
+
+            const inputAction = document.createElement('input');
+            inputAction.name = 'actionType';
+            inputAction.value = actionType;
+
+            const inputTime = document.createElement('input');
+            inputTime.name = 'executionTime';
+            inputTime.value = executionTime;
+
+            form.appendChild(inputEvent);
+            form.appendChild(inputAction);
+            form.appendChild(inputTime);
+            document.body.appendChild(form);
+
+            Swal.fire({
+                title: isEdit ? 'Atualizando...' : 'Criando...',
+                timer: 1000,
+                didOpen: () => {
+                    Swal.showLoading();
+                    form.submit();
+                }
+            });
+        }
+
+        /* Função de teste comentada */
+
+        function verHistorico(btn) {
+            const id = btn.getAttribute('data-id');
+            Swal.fire({
+                title: 'Histórico de Execuções',
+                html: '<div id="log-content"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>',
+                width: '600px',
+                showCloseButton: true,
+                showConfirmButton: false,
+                didOpen: () => {
+                    fetch(`/minha-conta/automacoes/logs/${id}`)
+                        .then(r => r.json())
+                        .then(logs => {
+                            const content = document.getElementById('log-content');
+                            if (!logs || logs.length === 0) {
+                                content.innerHTML = '<p class="text-muted">Nenhuma execução registrada ainda.</p>';
+                                return;
+                            }
+
+                            let html = '<table class="table table-sm text-start" style="font-size: 0.9em;"><thead><tr><th>Data/Hora</th><th>Status</th><th>Mensagem</th></tr></thead><tbody>';
+
+                            logs.forEach(log => {
+                                const statusColor = log.status === 'SUCCESS' ? 'text-success' : 'text-danger';
+                                const icon = log.status === 'SUCCESS' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
+                                html += `<tr>
+                                    <td>${log.timestamp}</td>
+                                    <td class="${statusColor}">${icon} ${log.status}</td>
+                                    <td>${log.message}</td>
+                                </tr>`;
+                            });
+
+                            html += '</tbody></table>';
+                            content.innerHTML = html;
+                        })
+                        .catch(err => {
+                            document.getElementById('log-content').innerHTML = '<p class="text-danger">Erro ao carregar histórico.</p>';
+                        });
+                }
+            });
+        }
+
+        function toggleStatus(id) {
+            const switchEl = document.getElementById('switch-' + id);
+            const labelEl = document.getElementById('label-' + id);
+
+            // Feedback visual imediato (opcional, ou espera o fetch)
+            const isChecked = switchEl.checked;
+            labelEl.innerText = isChecked ? 'Salvando...' : 'Salvando...';
+
+            fetch(`/minha-conta/automacoes/toggle/${id}`, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) return response.json();
+                    throw new Error('Erro ao alterar status');
+                })
+                .then(data => {
+                    // Atualiza label com status real
+                    labelEl.innerText = data.active ? 'Ativo' : 'Pausado';
+
+                    const toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    toast.fire({
+                        icon: 'success',
+                        title: data.message
+                    });
+                })
+                .catch(error => {
+                    // Reverte em caso de erro
+                    switchEl.checked = !isChecked;
+                    labelEl.innerText = !isChecked ? 'Ativo' : 'Pausado';
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro',
+                        text: 'Não foi possível alterar o status.'
+                    });
+                });
+        }
+        function testarAutomacao(btn) {
+            const id = btn.getAttribute('data-id');
+
+            Swal.fire({
+                title: 'Testar Automação?',
+                html: "Isso forçará a execução da ação (ex: enviar e-mail) agora mesmo.<br><br><strong>ID da Regra: " + id + "</strong>",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sim, testar!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Executando...',
+                        html: 'Aguarde um momento.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch(`/minha-conta/automacoes/test/${id}`, { method: 'POST' })
+                        .then(async response => {
+                            if (!response.ok) {
+                                const text = await response.text(); // Tenta pegar erro HTML/Texto
+                                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Teste Executado!',
+                                    data.message + '<br><small>Email: ' + (data.email || 'N/A') + '</small>',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Erro na Automação!',
+                                    data.message || 'Falha desconhecida.',
+                                    'error'
+                                );
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro detalhado:', error);
+                            Swal.fire(
+                                'Falha na Requisição',
+                                `Detalhes: ${error.message}`,
+                                'error'
+                            );
+                        });
+                }
+            })
+        }
+    </script>
+</body>
+
+</html>

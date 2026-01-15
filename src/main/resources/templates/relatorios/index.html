@@ -4,37 +4,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Relatórios - ERP Empresarial</title>
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <title>Central de Relatórios - ERP Corporativo</title>
+
+    <!-- Bootstrap 5 & CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .report-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .report-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .icon-financeiro { background-color: #e3f2fd; color: #1565c0; }
+        .icon-rh { background-color: #e8f5e9; color: #2e7d32; }
+        .icon-juridico { background-color: #f3e5f5; color: #7b1fa2; }
+        .icon-vendas { background-color: #fff3e0; color: #ef6c00; }
+        .icon-estoque { background-color: #eceff1; color: #455a64; }
+        .icon-sistema { background-color: #fce4ec; color: #c2185b; }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .search-input {
+            height: 55px;
+            border-radius: 30px;
+            padding-left: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9e9e9e;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="app-container">
-
+    <div class="app-container d-flex">
+        
         <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
 
         <!-- Main Content -->
-        <main class="main-content">
-
+        <main class="main-content flex-grow-1 bg-light">
+            
             <!-- Topbar -->
             <header th:replace="~{components/topbar :: topbar}"></header>
 
-            <!-- Página em branco para Relatórios -->
-            <section class="content-area">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center py-5">
-                            <h1 class="display-6 text-muted">📊 Relatórios</h1>
-                            <p class="text-muted">Conteúdo ainda não implementado.</p>
+            <section class="content-area container-fluid py-5">
+                
+                <!-- Header Section -->
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-gray-800 mb-3">Central de Relatórios</h1>
+                    <p class="lead text-muted mb-4">Acesse todos os indicadores e relatórios do sistema em um só lugar.</p>
+                    
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchReports" class="form-control search-input" placeholder="O que você procura? Ex: Fluxo de Caixa, Folha...">
+                    </div>
+                </div>
+
+                <!-- Quick Actions / Favorites -->
+                <div class="mb-5">
+                    <h4 class="fw-bold mb-4 px-2 border-start border-4 border-primary">Destaques</h4>
+                    <div class="row g-4">
+                        <!-- Card 1: Fluxo de Caixa -->
+                        <div class="col-md-6 col-xl-3 report-item" data-category="financeiro" data-title="Fluxo de Caixa">
+                            <div class="card report-card h-100 shadow-sm" onclick="abrirModalRelatorio('Fluxo de Caixa', '/financeiro/relatorios/fluxo-caixa')">
+                                <div class="card-body text-center p-4">
+                                    <div class="report-icon icon-financeiro mx-auto">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Fluxo de Caixa</h5>
+                                    <p class="card-text text-muted small">Entradas e saídas detalhadas por período.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Folha de Pagamento -->
+                        <div class="col-md-6 col-xl-3 report-item" data-category="rh" data-title="Folha de Pagamento">
+                            <div class="card report-card h-100 shadow-sm" onclick="abrirModalRelatorio('Folha de Pagamento', '/rh/relatorios/folha')">
+                                <div class="card-body text-center p-4">
+                                    <div class="report-icon icon-rh mx-auto">
+                                        <i class="fas fa-users-cog"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Folha de Pagamento</h5>
+                                    <p class="card-text text-muted small">Resumo consolidado de vencimentos e descontos.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Vendas por Período -->
+                        <div class="col-md-6 col-xl-3 report-item" data-category="vendas" data-title="Vendas">
+                            <div class="card report-card h-100 shadow-sm" onclick="abrirModalRelatorio('Relatório de Vendas', '/vendas/relatorios/periodo')">
+                                <div class="card-body text-center p-4">
+                                    <div class="report-icon icon-vendas mx-auto">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Vendas por Período</h5>
+                                    <p class="card-text text-muted small">Performance comercial e metas atingidas.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Auditoria do Sistema -->
+                        <div class="col-md-6 col-xl-3 report-item" data-category="sistema" data-title="Auditoria">
+                            <div class="card report-card h-100 shadow-sm" onclick="abrirModalRelatorio('Logs de Auditoria', '/admin/relatorios/logs')">
+                                <div class="card-body text-center p-4">
+                                    <div class="report-icon icon-sistema mx-auto">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Auditoria</h5>
+                                    <p class="card-text text-muted small">Rastreabilidade de ações de usuários.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- All Reports by Category -->
+                <div class="mb-4">
+                    <h4 class="fw-bold mb-4 px-2 border-start border-4 border-secondary">Todos os Relatórios</h4>
+                    
+                    <!-- Financeiro -->
+                    <div class="card mb-4 border-0 shadow-sm report-category-group" data-category="financeiro">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-primary"><i class="fas fa-coins me-2"></i>Financeiro</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4 col-lg-3 report-item" data-title="DRE Gerencial">
+                                    <a href="#" class="text-decoration-none" onclick="abrirModalRelatorio('DRE Gerencial', '/financeiro/relatorios/dre')">
+                                        <div class="d-flex align-items-center p-2 border rounded hover-bg-light">
+                                            <i class="fas fa-file-invoice-dollar text-primary me-3 fs-4"></i>
+                                            <div>
+                                                <div class="fw-bold text-dark">DRE Gerencial</div>
+                                                <div class="small text-muted">Demonstrativo de Resultado</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-md-4 col-lg-3 report-item" data-title="Contas a Pagar">
+                                    <a href="#" class="text-decoration-none" onclick="abrirModalRelatorio('Contas a Pagar', '/financeiro/relatorios/pagar')">
+                                        <div class="d-flex align-items-center p-2 border rounded hover-bg-light">
+                                            <i class="fas fa-arrow-circle-down text-danger me-3 fs-4"></i>
+                                            <div>
+                                                <div class="fw-bold text-dark">Contas a Pagar</div>
+                                                <div class="small text-muted">Pendências e baixas</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-md-4 col-lg-3 report-item" data-title="Contas a Receber">
+                                    <a href="#" class="text-decoration-none" onclick="abrirModalRelatorio('Contas a Receber', '/financeiro/relatorios/receber')">
+                                        <div class="d-flex align-items-center p-2 border rounded hover-bg-light">
+                                            <i class="fas fa-arrow-circle-up text-success me-3 fs-4"></i>
+                                            <div>
+                                                <div class="fw-bold text-dark">Contas a Receber</div>
+                                                <div class="small text-muted">Previsão de receitas</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RH -->
+                    <div class="card mb-4 border-0 shadow-sm report-category-group" data-category="rh">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-success"><i class="fas fa-user-tie me-2"></i>Recursos Humanos</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4 col-lg-3 report-item" data-title="Espelho de Ponto">
+                                    <a href="#" class="text-decoration-none" onclick="abrirModalRelatorio('Espelho de Ponto', '/rh/relatorios/ponto')">
+                                        <div class="d-flex align-items-center p-2 border rounded hover-bg-light">
+                                            <i class="fas fa-clock text-success me-3 fs-4"></i>
+                                            <div>
+                                                <div class="fw-bold text-dark">Espelho de Ponto</div>
+                                                <div class="small text-muted">Registro de jornada</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-md-4 col-lg-3 report-item" data-title="Controle de Férias">
+                                    <a href="#" class="text-decoration-none" onclick="abrirModalRelatorio('Controle de Férias', '/rh/relatorios/ferias')">
+                                        <div class="d-flex align-items-center p-2 border rounded hover-bg-light">
+                                            <i class="fas fa-plane-departure text-info me-3 fs-4"></i>
+                                            <div>
+                                                <div class="fw-bold text-dark">Controle de Férias</div>
+                                                <div class="small text-muted">Concessão e saldo</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jurídico -->
+                    <div class="card mb-4 border-0 shadow-sm report-category-group" data-category="juridico">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-purple"><i class="fas fa-balance-scale me-2"></i>Jurídico</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4 col-lg-3 report-item" data-title="Contratos Ativos">
+                                    <a href="#" class="text-decoration-none" onclick="abrirModalRelatorio('Contratos Ativos', '/juridico/relatorios/contratos')">
+                                        <div class="d-flex align-items-center p-2 border rounded hover-bg-light">
+                                            <i class="fas fa-file-signature text-purple me-3 fs-4"></i>
+                                            <div>
+                                                <div class="fw-bold text-dark">Contratos Ativos</div>
+                                                <div class="small text-muted">Vigência e partes</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
             </section>
 
             <!-- Footer -->
@@ -43,9 +264,135 @@
         </main>
     </div>
 
-    <script src="/js/sidebar.js" defer></script>
+    <!-- Modal Padrão de Relatórios -->
+    <div class="modal fade" id="modalRelatorio" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formRelatorio" action="" method="GET" target="_blank">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalRelatorioTitulo">Gerar Relatório</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info py-2 small mb-3">
+                            <i class="fas fa-info-circle me-1"></i> Selecione os parâmetros para geração.
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label">Data Início</label>
+                                <input type="date" name="dataInicio" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Data Fim</label>
+                                <input type="date" name="dataFim" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Formato</label>
+                                <select name="formato" class="form-select">
+                                    <option value="pdf">PDF (Visualização)</option>
+                                    <option value="excel">Excel (Planilha)</option>
+                                    <option value="csv">CSV (Dados)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Departamento / Unidade</label>
+                                <select name="departamento" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="adm">Administrativo</option>
+                                    <option value="com">Comercial</option>
+                                    <option value="op">Operacional</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-print me-2"></i>Gerar Relatório</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script th:src="@{/js/notifications.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js" defer></script>
+    <script th:src="@{/js/notifications.js}" defer></script>
+
+    <script>
+        // Modal Logic
+        function abrirModalRelatorio(titulo, actionUrl) {
+            const modalEl = document.getElementById('modalRelatorio');
+            const modalTitle = document.getElementById('modalRelatorioTitulo');
+            const form = document.getElementById('formRelatorio');
+            
+            modalTitle.textContent = titulo;
+            // form.action = actionUrl; // Em produção, descomentar e usar a URL real
+            
+            // Para demonstração, vamos apenas logar ou prevenir o submit vazio se não houver backend
+            form.onsubmit = function(e) {
+                // e.preventDefault(); // Remove this line to allow actual submission if backend exists
+                console.log(`Gerando relatório: ${titulo} para ${actionUrl}`);
+                // Adicione aqui lógica extra se precisar
+                
+                // Fecha o modal após submeter (opcional, já que abre em nova aba)
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+            };
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        // Search Logic
+        document.getElementById('searchReports').addEventListener('keyup', function(e) {
+            const term = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.report-item');
+            const groups = document.querySelectorAll('.report-category-group');
+
+            items.forEach(item => {
+                const title = item.getAttribute('data-title').toLowerCase();
+                const category = item.getAttribute('data-category') || '';
+                
+                if (title.includes(term) || category.includes(term)) {
+                    item.style.display = '';
+                    // Se o item está dentro de um grupo, garante que o grupo apareça
+                    const parentGroup = item.closest('.report-category-group');
+                    if(parentGroup) parentGroup.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Ocultar grupos vazios
+            groups.forEach(group => {
+                const visibleItems = group.querySelectorAll('.report-item[style=""]'); // items visíveis (style vazio ou display block)
+                // O seletor acima é simplificado, melhor verificar display
+                const hasVisible = Array.from(group.querySelectorAll('.report-item')).some(el => el.style.display !== 'none');
+                
+                if (!hasVisible) {
+                    group.style.display = 'none';
+                } else {
+                    group.style.display = '';
+                }
+            });
+        });
+
+        // Set Default Dates (Current Month)
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            const formatDate = (date) => {
+                return date.toISOString().split('T')[0];
+            };
+
+            document.querySelector('input[name="dataInicio"]').value = formatDate(firstDay);
+            document.querySelector('input[name="dataFim"]').value = formatDate(today);
+        });
+    </script>
 </body>
 
 </html>

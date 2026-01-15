@@ -63,6 +63,8 @@ public class JuridicoController {
     private final com.jaasielsilva.portalceo.service.DocumentTemplateService documentTemplateService;
     private final AuditoriaJuridicoLogService auditoriaJuridicoLogService;
     private final ResourceLoader resourceLoader;
+    private final AutentiqueService autentiqueService;
+    private final com.jaasielsilva.portalceo.service.juridico.DocumentoJuridicoService documentoJuridicoService;
 
     @Value("${app.upload.path:uploads}")
     private String uploadBasePath;
@@ -1546,8 +1548,17 @@ public class JuridicoController {
             m.put("criadoEm", d.getCriadoEm());
             m.put("contentType", d.getContentType());
             m.put("originalFilename", d.getOriginalFilename());
+<<<<<<< HEAD
             // Inicializa a coleção lazy dentro da transação para evitar
             // LazyInitializationException
+=======
+            m.put("destinatarioEmail", d.getDestinatarioEmail());
+            m.put("autentiqueId", d.getAutentiqueId());
+            m.put("linkAssinatura", d.getLinkAssinatura());
+            m.put("linkAssinaturaEmpresa", d.getLinkAssinaturaEmpresa());
+            m.put("statusAssinatura", d.getStatusAssinatura());
+            m.put("detalheStatusAssinatura", d.getDetalheStatusAssinatura());
+>>>>>>> 4de3b00e324b43135b1ecf2979396bda6beefb1d
             m.put("tags", d.getTags() != null ? new ArrayList<>(d.getTags()) : new ArrayList<>());
             m.put("processoId", d.getProcesso() != null ? d.getProcesso().getId() : null);
             content.add(m);
@@ -1898,17 +1909,7 @@ public class JuridicoController {
 
             Map<String, String> placeholders = new HashMap<>();
 
-            // Resolve logo path
-            String logoPath = "";
-            try {
-                org.springframework.core.io.Resource logoRes = resourceLoader
-                        .getResource("classpath:static/img/logo-empresa.png");
-                if (logoRes.exists()) {
-                    logoPath = logoRes.getFile().toURI().toString();
-                }
-            } catch (Exception ignored) {
-            }
-            placeholders.put("logo_path", logoPath);
+            placeholders.put("logo_path", resolveLogoDataUri());
 
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
             placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
@@ -1977,17 +1978,7 @@ public class JuridicoController {
 
             Map<String, String> placeholders = new HashMap<>();
 
-            // Resolve logo path
-            String logoPath = "";
-            try {
-                org.springframework.core.io.Resource logoRes = resourceLoader
-                        .getResource("classpath:static/img/logo-empresa.png");
-                if (logoRes.exists()) {
-                    logoPath = logoRes.getFile().toURI().toString();
-                }
-            } catch (Exception ignored) {
-            }
-            placeholders.put("logo_path", logoPath);
+            placeholders.put("logo_path", resolveLogoDataUri());
 
             placeholders.put("escritorio_razao_social", "ITAMIR PINTO MAMEDE SOCIEDADE INDIVIDUAL DE ADVOCACIA");
             placeholders.put("escritorio_nome_advogado", "Itamir Pinto Mamede Advogado");
@@ -2207,7 +2198,150 @@ public class JuridicoController {
                     m.put("criadoEm", d.getCriadoEm());
                     m.put("contentType", d.getContentType());
                     m.put("originalFilename", d.getOriginalFilename());
+                    m.put("destinatarioEmail", d.getDestinatarioEmail());
+                    m.put("autentiqueId", d.getAutentiqueId());
+                    m.put("linkAssinatura", d.getLinkAssinatura());
+                    m.put("linkAssinaturaEmpresa", d.getLinkAssinaturaEmpresa());
+                    m.put("statusAssinatura", d.getStatusAssinatura());
                     return ResponseEntity.ok(m);
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado")));
+    }
+
+    @PostMapping("/api/documentos/{id}/enviar-assinatura")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO')")
+    public ResponseEntity<?> enviarDocumentoParaAssinatura(@PathVariable Long id,
+            @RequestParam("email") String email,
+            @RequestParam(value = "emailsExtras", required = false) String emailsExtras,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return documentoJuridicoRepository.findById(id)
+                .map(d -> {
+                    try {
+                        String destinatario = (email != null && !email.isBlank())
+                                ? email.trim()
+                                : d.getDestinatarioEmail();
+                        if (destinatario == null || destinatario.isBlank()) {
+                            return ResponseEntity.badRequest()
+                                    .body(Map.of("erro", "E-mail do destinatário não informado"));
+                        }
+                        String caminho = d.getCaminhoArquivo();
+                        java.io.File f;
+
+                        if (caminho != null && !caminho.isBlank()) {
+                            f = new java.io.File(caminho);
+                        } else if (d.getConteudo() != null && d.getConteudo().length > 0) {
+                            try {
+                                java.nio.file.Path temp = java.nio.file.Files.createTempFile(
+                                        "doc-juridico-" + d.getId() + "-",
+                                        ".pdf");
+                                java.nio.file.Files.write(temp, d.getConteudo());
+                                caminho = temp.toAbsolutePath().toString();
+                                f = temp.toFile();
+                            } catch (Exception ex) {
+                                return ResponseEntity.status(500)
+                                        .body(Map.of("erro", "Falha ao preparar arquivo para envio",
+                                                "detalhes", ex.getMessage()));
+                            }
+                        } else {
+                            return ResponseEntity.badRequest()
+                                    .body(Map.of("erro",
+                                            "Documento não possui conteúdo ou caminho de arquivo para envio"));
+                        }
+
+                        if (!f.exists()) {
+                            return ResponseEntity.status(404)
+                                    .body(Map.of("erro", "Arquivo físico do documento não encontrado"));
+                        }
+
+                        java.util.LinkedHashSet<String> extrasSet = new java.util.LinkedHashSet<>();
+                        if (emailsExtras != null && !emailsExtras.isBlank()) {
+                            for (String e : emailsExtras.split(",")) {
+                                if (e != null && !e.isBlank()) {
+                                    extrasSet.add(e.trim());
+                                }
+                            }
+                        }
+
+                        String emailAdvogado = null;
+                        if (userDetails != null && userDetails.getUsername() != null
+                                && !userDetails.getUsername().isBlank()) {
+                            final String advogadoUsername = userDetails.getUsername().trim();
+                            emailAdvogado = advogadoUsername;
+                            extrasSet.removeIf(e -> e.equalsIgnoreCase(advogadoUsername));
+                            extrasSet.removeIf(e -> e.equalsIgnoreCase(destinatario));
+                        }
+                        java.util.List<String> extrasList = new java.util.ArrayList<>(extrasSet);
+
+                        Map<String, String> resultado = autentiqueService.enviarDocumento(
+                                caminho,
+                                d.getTitulo() != null ? d.getTitulo() : d.getOriginalFilename(),
+                                destinatario,
+                                emailAdvogado,
+                                extrasList);
+                        if (resultado == null) {
+                            return ResponseEntity.status(500)
+                                    .body(Map.of("erro", "Falha ao enviar documento para Autentique"));
+                        }
+                        d.setDestinatarioEmail(destinatario);
+                        d.setAutentiqueId(resultado.get("id"));
+                        d.setLinkAssinatura(resultado.get("link"));
+                        d.setLinkAssinaturaEmpresa(resultado.get("linkEmpresa"));
+                        d.setStatusAssinatura("ENVIADO");
+                        documentoJuridicoRepository.save(d);
+
+                        java.util.Map<String, Object> body = new java.util.HashMap<>();
+                        body.put("id", d.getId());
+                        body.put("autentiqueId", d.getAutentiqueId());
+                        body.put("link", d.getLinkAssinatura());
+                        if (d.getLinkAssinaturaEmpresa() != null) {
+                            body.put("linkEmpresa", d.getLinkAssinaturaEmpresa());
+                        }
+                        return ResponseEntity.ok(body);
+                    } catch (Exception e) {
+                        return ResponseEntity.status(500)
+                                .body(Map.of("erro", "Falha ao enviar documento para assinatura",
+                                        "detalhes", e.getMessage()));
+                    }
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado")));
+    }
+
+    @PutMapping("/api/documentos/{id}/sincronizar-assinatura")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO')")
+    public ResponseEntity<?> sincronizarStatusAssinaturaDocumento(@PathVariable Long id) {
+        return documentoJuridicoRepository.findById(id)
+                .map(d -> {
+                    if (d.getAutentiqueId() == null || d.getAutentiqueId().isBlank()) {
+                        return ResponseEntity.badRequest()
+                                .body(Map.of("erro", "Documento não possui vínculo com a Autentique"));
+                    }
+                    try {
+                        documentoJuridicoService.sincronizarDocumento(d);
+
+                        // After synchronization, 'd' should be updated.
+                        // We need to determine 'assinado' status from the updated 'd' object.
+                        // Assuming 'sincronizarDocumento' updates the status and details in 'd'.
+                        boolean assinado = "ASSINADO".equals(d.getStatusAssinatura());
+
+                        java.util.Map<String, Object> resp = new java.util.HashMap<>();
+                        resp.put("id", d.getId());
+                        resp.put("autentiqueId", d.getAutentiqueId());
+                        resp.put("assinado", assinado);
+                        resp.put("statusAssinatura", d.getStatusAssinatura());
+                        resp.put("detalheStatusAssinatura", d.getDetalheStatusAssinatura());
+                        resp.put("link", d.getLinkAssinatura());
+                        if (d.getLinkAssinaturaEmpresa() != null) {
+                            resp.put("linkEmpresa", d.getLinkAssinaturaEmpresa());
+                        }
+                        return ResponseEntity.ok(resp);
+                    } catch (Exception e) {
+                        e.printStackTrace(); // Log completo para debug
+                        return ResponseEntity.status(500)
+                                .body(Map.of("erro", "Falha ao sincronizar status da assinatura",
+                                        "detalhes", e.getMessage() != null ? e.getMessage() : e.getClass().getName()));
+                    }
                 })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Documento não encontrado")));
     }
@@ -2953,5 +3087,21 @@ public class JuridicoController {
                 </body>
                 </html>
                 """;
+    }
+
+    private String resolveLogoDataUri() {
+        try {
+            org.springframework.core.io.Resource logoRes = resourceLoader
+                    .getResource("classpath:static/img/logo-empresa.png");
+            if (logoRes.exists()) {
+                try (java.io.InputStream is = logoRes.getInputStream()) {
+                    byte[] bytes = is.readAllBytes();
+                    String base64 = java.util.Base64.getEncoder().encodeToString(bytes);
+                    return "data:image/png;base64," + base64;
+                }
+            }
+        } catch (Exception e) {
+        }
+        return "";
     }
 }

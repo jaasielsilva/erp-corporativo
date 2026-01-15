@@ -70,7 +70,7 @@ public class DocumentTemplateService {
         String processed = replacePlaceholders(html, escaped);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         com.openhtmltopdf.pdfboxout.PdfRendererBuilder builder = new com.openhtmltopdf.pdfboxout.PdfRendererBuilder();
-        builder.withHtmlContent(processed, null);
+        builder.withHtmlContent(processed, "file:./");
         builder.toStream(baos);
         builder.run();
         return baos.toByteArray();

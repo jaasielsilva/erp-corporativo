@@ -2,6 +2,7 @@ package com.jaasielsilva.portalceo.repository;
 
 import com.jaasielsilva.portalceo.model.Cliente;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -128,5 +129,10 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
                                  @Param("ativo") Boolean ativo,
                                  @Param("origem") String origem,
                                  Pageable pageable);
+
+    @Query("SELECT c FROM Cliente c JOIN Pedido p ON p.cliente = c " +
+           "WHERE p.dataCriacao = (SELECT MAX(p2.dataCriacao) FROM Pedido p2 WHERE p2.cliente = c) " +
+           "AND p.dataCriacao <= :data")
+    List<Cliente> findByUltimaCompraAntesDe(@Param("data") LocalDateTime data);
 
 }

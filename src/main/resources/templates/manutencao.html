@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema em Manutenção</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .maintenance-card { text-align: center; padding: 3rem; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="maintenance-card">
+        <i class="fas fa-tools fa-5x text-warning mb-4"></i>
+        <h1 class="display-5 fw-bold text-dark">Em Manutenção</h1>
+        <p class="lead text-muted mb-4">Estamos realizando atualizações no sistema.<br>Por favor, tente novamente mais tarde.</p>
+        <a href="/login" class="btn btn-outline-primary">Tentar Login (Admin)</a>
+    </div>
+</body>
+</html>

@@ -2197,7 +2197,9 @@ public class JuridicoController {
     @ResponseBody
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MASTER','ROLE_JURIDICO')")
     public ResponseEntity<?> enviarDocumentoParaAssinatura(@PathVariable Long id,
-            @RequestParam("email") String email) {
+            @RequestParam("email") String email,
+            @RequestParam(value = "emailsExtras", required = false) String emailsExtras,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return documentoJuridicoRepository.findById(id)
                 .map(d -> {
                     try {
@@ -2236,10 +2238,32 @@ public class JuridicoController {
                             return ResponseEntity.status(404)
                                     .body(Map.of("erro", "Arquivo físico do documento não encontrado"));
                         }
+
+                        java.util.LinkedHashSet<String> extrasSet = new java.util.LinkedHashSet<>();
+                        if (emailsExtras != null && !emailsExtras.isBlank()) {
+                            for (String e : emailsExtras.split(",")) {
+                                if (e != null && !e.isBlank()) {
+                                    extrasSet.add(e.trim());
+                                }
+                            }
+                        }
+
+                        String emailAdvogado = null;
+                        if (userDetails != null && userDetails.getUsername() != null
+                                && !userDetails.getUsername().isBlank()) {
+                            final String advogadoUsername = userDetails.getUsername().trim();
+                            emailAdvogado = advogadoUsername;
+                            extrasSet.removeIf(e -> e.equalsIgnoreCase(advogadoUsername));
+                            extrasSet.removeIf(e -> e.equalsIgnoreCase(destinatario));
+                        }
+                        java.util.List<String> extrasList = new java.util.ArrayList<>(extrasSet);
+
                         Map<String, String> resultado = autentiqueService.enviarDocumento(
                                 caminho,
                                 d.getTitulo() != null ? d.getTitulo() : d.getOriginalFilename(),
-                                destinatario);
+                                destinatario,
+                                emailAdvogado,
+                                extrasList);
                         if (resultado == null) {
                             return ResponseEntity.status(500)
                                     .body(Map.of("erro", "Falha ao enviar documento para Autentique"));

@@ -35,16 +35,10 @@ public class AutentiqueService {
         this.webClient = webClientBuilder.build();
     }
 
-    /**
-     * Envia um documento para assinatura na Autentique.
-     * 
-     * @param filePath     Caminho do arquivo PDF
-     * @param documentName Nome do documento
-     * @param signerEmail  Email do signatário (Cliente)
-     * @return O ID do documento na Autentique ou null em caso de erro
-     */
-    public Map<String, String> enviarDocumento(String filePath, String documentName, String signerEmail) {
-        log.info("Iniciando envio de documento para Autentique: {} para {}", documentName, signerEmail);
+    public Map<String, String> enviarDocumento(String filePath, String documentName, String clienteEmail,
+            String advogadoEmail, java.util.List<String> extraEmails) {
+        log.info("Iniciando envio de documento para Autentique: {} cliente={} advogado={} extras={}", documentName,
+                clienteEmail, advogadoEmail, extraEmails);
 
         try {
             File pdfFile = new File(filePath);
@@ -53,13 +47,39 @@ public class AutentiqueService {
                 return null;
             }
 
-            // O email da empresa já está definido como campo da classe
+            java.util.LinkedHashSet<String> allSigners = new java.util.LinkedHashSet<>();
+            if (clienteEmail != null && !clienteEmail.isBlank()) {
+                allSigners.add(clienteEmail.trim());
+            }
+            if (advogadoEmail != null && !advogadoEmail.isBlank()) {
+                allSigners.add(advogadoEmail.trim());
+            }
+            if (extraEmails != null) {
+                for (String e : extraEmails) {
+                    if (e != null && !e.isBlank()) {
+                        allSigners.add(e.trim());
+                    }
+                }
+            }
+            if (allSigners.isEmpty()) {
+                log.error("Nenhum e-mail de signatário informado");
+                return null;
+            }
 
-            // Document e Signers inputs para a mutation
+            StringBuilder signersJson = new StringBuilder("[");
+            for (String s : allSigners) {
+                if (signersJson.length() > 1) {
+                    signersJson.append(",");
+                }
+                String email = s.replace("\"", "\\\"");
+                signersJson.append("{ \"email\": \"").append(email).append("\", \"action\": \"SIGN\" }");
+            }
+            signersJson.append("]");
+
+            String safeName = documentName != null ? documentName.replace("\"", "\\\"") : "Documento";
+
             String operations = "{\"query\": \"mutation createDocument($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) { createDocument(document: $document, signers: $signers, file: $file) { id name signatures { public_id user { email } link { short_link } } } }\", \"variables\": { \"document\": { \"name\": \""
-                    + documentName + "\" }, \"signers\": [ { \"email\": \"" + signerEmail
-                    + "\", \"action\": \"SIGN\" }, { \"email\": \"" + companyEmail
-                    + "\", \"action\": \"SIGN\" } ], \"file\": null } }";
+                    + safeName + "\" }, \"signers\": " + signersJson.toString() + ", \"file\": null } }";
             String map = "{ \"0\": [\"variables.file\"] }";
 
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -88,7 +108,16 @@ public class AutentiqueService {
                 String companyLink = null;
 
                 if (signatures != null) {
-                    String clientEmailLower = signerEmail != null ? signerEmail.toLowerCase() : null;
+                    String clientEmailLower = clienteEmail != null ? clienteEmail.toLowerCase() : null;
+                    java.util.Set<String> extrasLower = new java.util.HashSet<>();
+                    if (extraEmails != null) {
+                        for (String e : extraEmails) {
+                            if (e != null && !e.isBlank()) {
+                                extrasLower.add(e.trim().toLowerCase());
+                            }
+                        }
+                    }
+
                     for (Map<String, Object> sig : signatures) {
                         Map<String, Object> user = (Map<String, Object>) sig.get("user");
                         if (user != null) {
@@ -100,7 +129,7 @@ public class AutentiqueService {
                             if (clientEmailLower != null && clientEmailLower.equals(emailLower)) {
                                 publicId = (String) sig.get("public_id");
                                 signatureLink = link;
-                            } else if (companyLink == null) {
+                            } else if (extrasLower.contains(emailLower) && companyLink == null) {
                                 companyLink = link;
                             }
                         }
@@ -155,6 +184,20 @@ public class AutentiqueService {
         return false;
     }
 
+    /**
+     * Versão antiga mantida para compatibilidade (contratos, etc.).
+     * Usa apenas o e-mail principal e o e-mail padrão da empresa.
+     */
+    public Map<String, String> enviarDocumento(String filePath, String documentName, String signerEmail) {
+        java.util.List<String> extras = java.util.List.of(companyEmail);
+        return enviarDocumento(filePath, documentName, signerEmail, null, extras);
+    }
+
+    public Map<String, String> enviarDocumento(String filePath, String documentName, String clienteEmail,
+            java.util.List<String> extraEmails) {
+        return enviarDocumento(filePath, documentName, clienteEmail, null, extraEmails);
+    }
+
     public Map<String, Object> obterResumoAssinaturas(String documentId) {
         log.info("Consultando detalhes de assinaturas na Autentique: {}", documentId);
 
@@ -189,14 +232,21 @@ public class AutentiqueService {
 
                 java.util.List<String> pendentes = new java.util.ArrayList<>();
                 boolean todosAssinaram = true;
+                String companyEmailLower = companyEmail != null ? companyEmail.toLowerCase() : null;
 
                 for (Map<String, Object> sig : signatures) {
+                    Map<String, Object> user = (Map<String, Object>) sig.get("user");
+                    String nome = user != null ? (String) user.get("name") : null;
+                    String email = user != null ? (String) user.get("email") : null;
+                    String emailLower = email != null ? email.toLowerCase() : null;
+
+                    if (companyEmailLower != null && companyEmailLower.equals(emailLower)) {
+                        continue;
+                    }
+
                     Map<String, Object> signed = (Map<String, Object>) sig.get("signed");
                     if (signed == null) {
                         todosAssinaram = false;
-                        Map<String, Object> user = (Map<String, Object>) sig.get("user");
-                        String nome = user != null ? (String) user.get("name") : null;
-                        String email = user != null ? (String) user.get("email") : null;
                         String identificador = nome != null && !nome.isBlank() ? nome : email;
                         if (identificador != null && !identificador.isBlank()) {
                             pendentes.add(identificador);

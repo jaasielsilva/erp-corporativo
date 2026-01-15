@@ -32,9 +32,19 @@
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
         }
 
-        .table thead {
+        .docs-table thead {
             background: #667eea;
             color: #fff;
+        }
+
+        .docs-table {
+            background-color: #fff;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+        }
+
+        .docs-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.04);
         }
 
         .badge-category {
@@ -207,15 +217,15 @@
 
                             <!-- Tabela -->
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0 align-middle">
-                                    <thead class="bg-light text-secondary">
+                                <table class="table table-hover mb-0 align-middle shadow-sm docs-table">
+                                    <thead>
                                         <tr class="text-center small text-uppercase fw-bold">
                                             <th style="width: 10%;" class="border-bottom-0">Protocolo</th>
-                                            <th style="width: 35%;" class="text-start border-bottom-0">Documento</th>
+                                            <th style="width: 35%;" class="border-bottom-0">Documento</th>
                                             <th style="width: 15%;" class="border-bottom-0">Categoria</th>
                                             <th style="width: 15%;" class="border-bottom-0">Autor</th>
                                             <th style="width: 15%;" class="border-bottom-0">Data</th>
-                                            <th style="width: 10%;" class="text-end border-bottom-0 pe-4">Ações</th>
+                                            <th style="width: 10%;" class="border-bottom-0">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="docsTableBody" class="border-top-0 text-center">
@@ -559,7 +569,6 @@
                     const canPreviewDoc = CAN_PREVIEW && (isPdf || isImg);
                     const canDownloadDoc = CAN_DOWNLOAD;
                     const canSendSign = isPdf && CAN_DOWNLOAD;
-                    const canSignEmpresa = hasSignature;
                     const canSync = hasSignature;
 
                     let statusBadgeHtml = '';
@@ -585,7 +594,7 @@
                     }
 
                     const actions = `
-                        <div class="d-flex justify-content-end gap-1">
+                        <div class="d-flex justify-content-center gap-1">
                             <a class="btn btn-sm btn-white border text-secondary ${canPreviewDoc ? '' : 'disabled'}"
                                href="${canPreviewDoc ? `/juridico/documentos/preview/${d.id}` : '#'}"
                                target="_blank" title="Visualizar" tabindex="${canPreviewDoc ? '0' : '-1'}" aria-disabled="${canPreviewDoc ? 'false' : 'true'}">
@@ -599,16 +608,10 @@
                             <button type="button"
                                     class="btn btn-sm btn-success border text-white ${canSendSign ? '' : 'disabled'}"
                                     data-action="doc-assinar" data-id="${d.id}"
-                                    title="Enviar para assinatura ao cliente"
+                                    title="Enviar para assinatura"
                                     ${canSendSign ? '' : 'disabled'}>
                                 <i class="fas fa-paper-plane"></i>
                             </button>
-                            <a class="btn btn-sm btn-outline-success border ${canSignEmpresa ? '' : 'disabled'}"
-                               href="${canSignEmpresa ? (d.linkAssinaturaEmpresa || d.linkAssinatura) : '#'}"
-                               target="_blank" title="Assinar como escritório"
-                               tabindex="${canSignEmpresa ? '0' : '-1'}" aria-disabled="${canSignEmpresa ? 'false' : 'true'}">
-                                <i class="fas fa-pen-nib"></i>
-                            </a>
                             <button type="button"
                                     class="btn btn-sm btn-outline-secondary border ${canSync ? '' : 'disabled'}"
                                     data-action="doc-sync" data-id="${d.id}"
@@ -640,24 +643,24 @@
                     }
 
                     $tbody.append(`
-                <tr class="align-middle">
+                <tr class="align-middle text-center">
                     <td class="text-center text-muted small font-monospace">${docIdFormatted}</td>
-                    <td class="text-start">
-                        <div class="d-flex align-items-center">
+                    <td class="text-center">
+                        <div class="d-inline-flex align-items-center">
                             <div class="me-3 fs-4 ${iconColor}"><i class="fas ${iconClass}"></i></div>
-                            <div>
+                            <div class="text-start">
                                 <div class="fw-semibold text-dark">${d.titulo || 'Sem título'}</div>
                                 <div class="small text-muted text-truncate" style="max-width: 250px;">${d.descricao || d.originalFilename || '—'}</div>
                             </div>
                         </div>
                     </td>
-                    <td><span class="badge bg-light text-dark border fw-normal">${d.categoria || 'Geral'}</span></td>
-                    <td>${autorDisplay}</td>
-                    <td class="small text-secondary">
+                    <td class="text-center"><span class="badge bg-light text-dark border fw-normal">${d.categoria || 'Geral'}</span></td>
+                    <td class="text-center">${autorDisplay}</td>
+                    <td class="small text-secondary text-center">
                         ${dataCriado}
                         ${statusBadgeHtml}
                     </td>
-                    <td>${actions}</td>
+                    <td class="text-center">${actions}</td>
                 </tr>`);
                 });
             }
@@ -1017,34 +1020,55 @@
             $(document).on('click', '[data-action="doc-assinar"]', async function () {
                 if ($(this).hasClass('disabled') || $(this).prop('disabled')) return;
                 const id = $(this).attr('data-id');
-                const { value: email } = await Swal.fire({
+
+                const { value: formValues } = await Swal.fire({
                     title: 'Enviar para assinatura',
-                    input: 'email',
-                    inputLabel: 'E-mail do destinatário',
-                    inputPlaceholder: 'cliente@exemplo.com',
+                    html: `
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">E-mail do cliente</label>
+                                <input id="swalEmailPrincipal" class="form-control" type="email" placeholder="cliente@exemplo.com">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-bold">E-mails adicionais</label>
+                                <textarea id="swalEmailsExtras" class="form-control" rows="2" placeholder="advogado1@exemplo.com, advogado2@exemplo.com"></textarea>
+                                <div class="form-text small">Separe múltiplos e-mails por vírgula.</div>
+                            </div>
+                        </div>
+                    `,
+                    focusConfirm: false,
                     showCancelButton: true,
                     confirmButtonText: 'Enviar',
                     cancelButtonText: 'Cancelar',
-                    inputValidator: (value) => {
-                        if (!value) {
-                            return 'Informe um e-mail válido';
+                    preConfirm: () => {
+                        const emailPrincipal = document.getElementById('swalEmailPrincipal').value.trim();
+                        const emailsExtras = document.getElementById('swalEmailsExtras').value.trim();
+                        if (!emailPrincipal) {
+                            Swal.showValidationMessage('Informe o e-mail do cliente');
+                            return null;
                         }
-                        return null;
+                        return { emailPrincipal, emailsExtras };
                     }
                 });
-                if (!email) return;
+
+                if (!formValues) return;
+
+                const email = formValues.emailPrincipal;
+                const emailsExtras = formValues.emailsExtras;
+
                 Swal.fire({
                     title: 'Enviando...',
                     text: 'Aguarde enquanto o documento é enviado para assinatura.',
                     allowOutsideClick: false,
                     didOpen: () => Swal.showLoading()
                 });
-                $.post(`/juridico/api/documentos/${id}/enviar-assinatura`, { email })
+
+                $.post(`/juridico/api/documentos/${id}/enviar-assinatura`, { email, emailsExtras })
                     .done(res => {
                         Swal.fire({
                             icon: 'success',
                             title: 'Enviado!',
-                            text: 'Documento enviado para assinatura com sucesso.',
+                            text: 'Documento enviado para assinatura com sucesso para todas as partes.',
                             timer: 2000,
                             showConfirmButton: false
                         });

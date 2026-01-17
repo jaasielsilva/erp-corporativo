@@ -95,8 +95,8 @@
 .notification-overlay.show {
     opacity: 1;
     visibility: visible;
-    pointer-events: none; /* CORRIGIDO: não deve interceptar eventos */
-    z-index: 998; /* CORRIGIDO: z-index menor que o sidebar */
+    pointer-events: auto;
+    z-index: 998;
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 

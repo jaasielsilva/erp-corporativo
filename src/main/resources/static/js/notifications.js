@@ -44,6 +44,14 @@ $(document).ready(function () {
         $overlay.removeClass('show');
     });
 
+    // Fechar com tecla ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === "Escape" && $center.hasClass('show')) {
+            $center.removeClass('show');
+            $overlay.removeClass('show');
+        }
+    });
+
     // Filtros de notificação
     $(document).on('click', '.filter-btn', function() {
         $('.filter-btn').removeClass('active');

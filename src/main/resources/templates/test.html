@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo Jurídico - Sistema Integrado</title>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Cores do Sidebar */
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --sidebar-hover: #334155;
+            --sidebar-active: #3b82f6;
+            
+            /* Cores do Sistema */
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #c0392b;
+            --info: #3498db;
+            --purple: #8e44ad;
+            --dark-red: #8b0000;
+            --orange: #d35400;
+            --gray: #7f8c8d;
+            --light: #ecf0f1;
+            --white: #ffffff;
+            --border-radius: 6px;
+            --shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #f0f2f5;
+            color: var(--primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.3;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            background-color: var(--sidebar-bg);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .user-panel { padding: 1.5rem 1rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; background-color: #475569; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #94a3b8; border: 2px solid var(--sidebar-active); }
+        .user-name { font-weight: 600; font-size: 0.9rem; }
+        .user-role { font-size: 0.75rem; color: #94a3b8; }
+        .sidebar nav ul { list-style: none; padding: 0; margin: 0.5rem 0; }
+        .sidebar nav ul li a { display: flex; align-items: center; padding: 0.7rem 1.2rem; color: var(--sidebar-text); text-decoration: none; font-size: 0.85rem; transition: all 0.2s; border-left: 3px solid transparent; cursor: pointer; }
+        .sidebar nav ul li a:hover { background-color: var(--sidebar-hover); color: var(--white); }
+        .sidebar nav ul li a.active { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border-left-color: #60a5fa; }
+        .sidebar nav ul li a i { margin-right: 10px; width: 18px; text-align: center; }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        header {
+            background: var(--white);
+            padding: 0.8rem 1.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 50px;
+        }
+
+        header h2 { margin: 0; font-size: 1.1rem; color: var(--primary); }
+
+        /* VIEWS */
+        .view-section {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* DASHBOARD GRID */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .dash-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .dash-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .dash-card.active-card { background-color: #f1f5f9; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); transform: translateY(2px); }
+
+        .dash-card.red { border-left-color: var(--danger); }
+        .dash-card.green { border-left-color: var(--success); }
+        .dash-card.blue { border-left-color: var(--info); }
+        .dash-card.yellow { border-left-color: var(--warning); }
+        .dash-card.purple { border-left-color: var(--purple); }
+        .dash-card.dark-red { border-left-color: var(--dark-red); }
+        .dash-card.orange { border-left-color: var(--orange); }
+        .dash-card.gray { border-left-color: var(--gray); }
+        .dash-card.success { border-left-color: #27ae60; }
+
+        .dash-info h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+        .dash-info p { margin: 0; font-size: 0.8rem; color: #64748b; font-weight: 500; }
+        .dash-icon { font-size: 1.3rem; opacity: 0.2; }
+        
+        .dash-card.red .dash-icon { color: var(--danger); opacity: 0.8; }
+        .dash-card.green .dash-icon { color: var(--success); opacity: 0.8; }
+        .dash-card.blue .dash-icon { color: var(--info); opacity: 0.8; }
+        .dash-card.yellow .dash-icon { color: var(--warning); opacity: 0.8; }
+        .dash-card.purple .dash-icon { color: var(--purple); opacity: 0.8; }
+        .dash-card.dark-red .dash-icon { color: var(--dark-red); opacity: 0.8; }
+        .dash-card.orange .dash-icon { color: var(--orange); opacity: 0.8; }
+        .dash-card.gray .dash-icon { color: var(--gray); opacity: 0.8; }
+        .dash-card.success .dash-icon { color: #27ae60; opacity: 0.8; }
+
+        /* TABELA DE DETALHES E LISTAS */
+        .details-panel, .list-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .details-panel { display: none; animation: slideUp 0.3s ease; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .details-header, .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; }
+        .details-header h3, .list-header h3 { margin: 0; color: var(--primary); }
+        .close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; padding: 0; margin: 0; width: auto; }
+        .close-btn:hover { color: var(--danger); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { text-align: left; padding: 0.8rem; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 0.8rem; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:hover td { background: #f8fafc; }
+        
+        .badge-status { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-status.pendente { background: #fff1f2; color: var(--danger); }
+        .badge-status.pago { background: #f0fdf4; color: var(--success); }
+        .badge-status.ativo { background: #eff6ff; color: var(--info); }
+        .badge-status.atencao { background: #fef9c3; color: var(--warning); }
+        .badge-status.civil { background: #e2e8f0; color: #2c3e50; }
+
+        /* SEARCH BAR */
+        .search-bar { display: flex; gap: 10px; margin-bottom: 1rem; }
+        .search-input { flex: 1; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem; }
+
+        /* TIMELINE STYLES */
+        .timeline-wrapper { display: flex; overflow-x: auto; padding-bottom: 1.5rem; align-items: flex-start; }
+        .timeline { display: flex; position: relative; padding-top: 15px; min-width: min-content; }
+        .timeline::before { content: ''; position: absolute; top: 30px; left: 40px; right: 40px; height: 3px; background: #cbd5e1; border-radius: 2px; z-index: 0; }
+        .timeline-item { position: relative; width: 220px; margin: 0 10px; display: flex; flex-direction: column; align-items: center; z-index: 1; }
+        .timeline-marker { width: 30px; height: 30px; border-radius: 50%; background: var(--white); border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; margin-bottom: 10px; transition: all 0.3s ease; position: relative; z-index: 2; }
+        
+        .timeline-item.success .timeline-marker { border-color: var(--success); color: var(--success); background: #dcfce7; }
+        .timeline-item.warning .timeline-marker { border-color: var(--warning); color: var(--warning); background: #fef9c3; }
+        .timeline-item.danger .timeline-marker { border-color: var(--danger); color: var(--danger); background: #fee2e2; }
+        .timeline-item.active .timeline-marker { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.15); }
+        .timeline-item.info .timeline-marker { border-color: var(--info); color: var(--info); background: #e0f2fe; }
+
+        .card { background: var(--white); border-radius: var(--border-radius); padding: 0.8rem; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1); border-top: 3px solid #cbd5e1; width: 100%; transition: transform 0.2s; font-size: 0.85rem; }
+        .card:hover { transform: translateY(-2px); }
+
+        .timeline-item.success .card { border-top-color: var(--success); }
+        .timeline-item.warning .card { border-top-color: var(--warning); }
+        .timeline-item.danger .card { border-top-color: var(--danger); }
+        .timeline-item.active .card { border-top-color: var(--primary); }
+        .timeline-item.info .card { border-top-color: var(--info); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+        .card-title { font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--secondary); }
+        
+        .status-badge { padding: 0.15rem 0.4rem; border-radius: 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+        .status-badge.success { background: #dcfce7; color: #166534; }
+        .status-badge.warning { background: #fef9c3; color: #854d0e; }
+        .status-badge.danger { background: #fee2e2; color: #991b1b; }
+        .status-badge.neutral { background: #f1f5f9; color: #64748b; }
+        .status-badge.info { background: #e0f2fe; color: #0369a1; }
+
+        .card-content p { margin: 0 0 0.5rem 0; color: #64748b; font-size: 0.8rem; }
+
+        button { width: 100%; padding: 0.4rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.8rem; transition: opacity 0.2s; margin-top: 0.4rem; }
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: #fff; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-info { background: var(--info); color: white; }
+        .btn-outline { background: transparent; border: 1px solid #cbd5e1; color: #64748b; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-row { display: flex; gap: 0.3rem; }
+        .btn-sm { font-size: 0.7rem; padding: 0.25rem; }
+
+        details { background: #f8fafc; border-radius: 4px; padding: 0.4rem; font-size: 0.75rem; margin-bottom: 0.4rem; }
+        details summary { cursor: pointer; font-weight: 600; color: #475569; }
+        details ul { margin: 0.3rem 0 0 1rem; padding: 0; color: #475569; }
+
+        /* Modais */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(2px); }
+        .modal { background: white; padding: 1.2rem; border-radius: 8px; width: 90%; max-width: 380px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); }
+        .checklist-item { display: flex; align-items: center; padding: 0.4rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        #checklist-container { max-height: 250px; overflow-y: auto; margin: 0.8rem 0; }
+        .input-text { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; margin-top: 0.4rem; font-size: 0.9rem; }
+        
+        .alert-box { padding: 0.4rem; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.4rem; border: 1px solid transparent; }
+        .alert-danger { background: #fff1f2; color: var(--danger); border-color: var(--danger); }
+        .alert-info { background: #eff6ff; color: #1d4ed8; border-color: #3b82f6; }
+
+        /* AGENDA CALENDAR */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; }
+        .calendar-day-header { background: #f8fafc; padding: 0.5rem; text-align: center; font-weight: 600; color: #64748b; font-size: 0.8rem; }
+        .calendar-day { background: white; min-height: 100px; padding: 0.3rem; position: relative; cursor: pointer; transition: background 0.2s; display: flex; flex-direction: column; gap: 2px; }
+        .calendar-day:hover { background: #f1f5f9; }
+        .calendar-day.empty { background: #f8fafc; cursor: default; }
+        .day-number { font-weight: 600; font-size: 0.85rem; color: #334155; margin-bottom: 2px; display: flex; justify-content: space-between; }
+        .day-number.today { color: var(--sidebar-active); }
+        
+        .event-chip { font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; color: white; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .event-audiencia { background-color: var(--danger); }
+        .event-pericia { background-color: var(--info); }
+        .event-prazo { background-color: var(--warning); color: #444; }
+        .event-reuniao { background-color: var(--success); }
+        .event-conflito { background-color: var(--sidebar-active); border: 2px solid var(--danger); animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-left: 4px solid var(--danger); display: flex; align-items: flex-start; gap: 10px; width: 300px; animation: slideInRight 0.3s ease; }
+        .toast-content h4 { margin: 0 0 0.3rem 0; color: var(--danger); font-size: 0.9rem; }
+        .toast-content p { margin: 0; font-size: 0.8rem; color: #64748b; }
+        .toast-timer { height: 3px; background: #cbd5e1; margin-top: 0.5rem; border-radius: 2px; overflow: hidden; }
+        .toast-progress { height: 100%; background: var(--danger); width: 100%; transition: width 1s linear; }
+
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="user-panel">
+            <div class="user-avatar"><i class="fas fa-user"></i></div>
+            <div class="user-name">Admin</div>
+            <div class="user-role">Gestor</div>
+        </div>
+        <nav>
+            <ul>
+                <li><a onclick="switchView('dashboard')" id="nav-dashboard" class="active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a onclick="switchView('process-list')" id="nav-process-list"><i class="fas fa-gavel"></i> Judicial</a></li>
+                <li><a href="#"><i class="fas fa-folder"></i> Adm</a></li>
+                <li><a onclick="switchView('agenda')" id="nav-agenda"><i class="fas fa-calendar-alt"></i> Agenda</a></li>
+                <li><a href="#"><i class="fas fa-dollar-sign"></i> Financeiro</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <header>
+            <h2 id="page-title"><i class="fas fa-chart-line"></i> Dashboard Gerencial</h2>
+            <div style="font-size:0.8rem; color:#64748b;" id="page-subtitle">Visão Geral</div>
+        </header>
+
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="view-section active">
+            <h3 style="margin-top:0; color:var(--primary); margin-bottom: 1rem;">Panorama Geral (Centro de Comando)</h3>
+            
+            <div class="dashboard-grid">
+                <!-- Entrada / Triagem -->
+                <div class="dash-card blue" id="card-novos_contatos" onclick="toggleDetails('novos_contatos')">
+                    <div class="dash-info"><h3>8</h3><p>Novos Contatos</p></div>
+                    <div class="dash-icon"><i class="fas fa-comments"></i></div>
+                </div>
+                
+                <!-- Financeiro / Operacional -->
+                <div class="dash-card red" id="card-pagar_medico" onclick="toggleDetails('pagar_medico')">
+                    <div class="dash-info"><h3>R$ 12.450</h3><p>A Pagar (Médicos)</p></div>
+                    <div class="dash-icon"><i class="fas fa-user-md"></i></div>
+                </div>
+                <div class="dash-card yellow" id="card-aguardando_laudo" onclick="toggleDetails('aguardando_laudo')">
+                    <div class="dash-info"><h3>5</h3><p>Aguardando Laudo</p></div>
+                    <div class="dash-icon"><i class="fas fa-file-medical-alt"></i></div>
+                </div>
+                <div class="dash-card red" id="card-pendencias_docs" onclick="toggleDetails('pendencias_docs')">
+                    <div class="dash-info"><h3>42</h3><p>Pendências (Docs)</p></div>
+                    <div class="dash-icon"><i class="fas fa-file-contract"></i></div>
+                </div>
+                <div class="dash-card orange" id="card-contratos_pendentes" onclick="toggleDetails('contratos_pendentes')">
+                    <div class="dash-info"><h3>12</h3><p>Contratos a Assinar</p></div>
+                    <div class="dash-icon"><i class="fas fa-file-signature"></i></div>
+                </div>
+                <div class="dash-card green" id="card-receber_seguradora" onclick="toggleDetails('receber_seguradora')">
+                    <div class="dash-info"><h3>R$ 450k</h3><p>A Receber (Seg)</p></div>
+                    <div class="dash-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                </div>
+                
+                <!-- Controle / Gestão -->
+                <div class="dash-card blue" id="card-processos_ativos" onclick="toggleDetails('processos_ativos')">
+                    <div class="dash-info"><h3>1.240</h3><p>Processos Ativos</p></div>
+                    <div class="dash-icon"><i class="fas fa-folder-open"></i></div>
+                </div>
+                <div class="dash-card gray" id="card-contencioso_civil" onclick="toggleDetails('contencioso_civil')">
+                    <div class="dash-info"><h3>85</h3><p>Contencioso / Civil</p></div>
+                    <div class="dash-icon"><i class="fas fa-balance-scale"></i></div>
+                </div>
+                <div class="dash-card success" style="border-left-color: #27ae60;" id="card-processos_arquivados" onclick="toggleDetails('processos_arquivados')">
+                    <div class="dash-info"><h3>3.450</h3><p>Arquivados (Deferidos)</p></div>
+                    <div class="dash-icon"><i class="fas fa-archive"></i></div>
+                </div>
+                
+                <div class="dash-card yellow" id="card-prazos_criticos" onclick="toggleDetails('prazos_criticos')">
+                    <div class="dash-info"><h3>15</h3><p>Prazos Críticos (48h)</p></div>
+                    <div class="dash-icon"><i class="fas fa-hourglass-half"></i></div>
+                </div>
+                <div class="dash-card purple" id="card-produtividade" onclick="toggleDetails('produtividade')">
+                    <div class="dash-info"><h3>12</h3><p>Proc/Func (Dia)</p></div>
+                    <div class="dash-icon"><i class="fas fa-users-cog"></i></div>
+                </div>
+            </div>
+
+            <!-- Painel de Detalhes -->
+            <div id="details-panel" class="details-panel">
+                <div class="details-header">
+                    <h3 id="details-title">Detalhes</h3>
+                    <button class="close-btn" onclick="hideDetails()"><i class="fas fa-times"></i></button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table id="details-table">
+                        <thead>
+                            <tr>
+                                <th>Nome / Descrição</th>
+                                <th>Referência</th>
+                                <th>Valor / KPI</th>
+                                <th>Status</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="details-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: AGENDA (NOVA) -->
+        <div id="view-agenda" class="view-section">
+            <div class="calendar-header">
+                <h3 style="margin:0;"><i class="fas fa-calendar-alt"></i> Janeiro 2026</h3>
+                <div class="btn-row">
+                    <button class="btn-primary" style="width:auto;" onclick="abrirModalEvento()">+ Novo Agendamento</button>
+                    <button class="btn-outline" style="width:auto;"><i class="fas fa-chevron-left"></i></button>
+                    <button class="btn-outline" style="width:auto;">Hoje</button>
+                    <button class="btn-outline" style="width:auto;"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+            
+            <div class="calendar-grid" id="calendar-grid">
+                <!-- Cabeçalhos Dias da Semana -->
+                <div class="calendar-day-header">DOM</div>
+                <div class="calendar-day-header">SEG</div>
+                <div class="calendar-day-header">TER</div>
+                <div class="calendar-day-header">QUA</div>
+                <div class="calendar-day-header">QUI</div>
+                <div class="calendar-day-header">SEX</div>
+                <div class="calendar-day-header">SÁB</div>
+                <!-- Dias renderizados via JS -->
+            </div>
+            
+            <div style="margin-top:1rem; display:flex; gap:15px; font-size:0.8rem; color:#64748b;">
+                <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:var(--danger); border-radius:2px;"></div> Audiência</div>
+                <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:var(--info); border-radius:2px;"></div> Perícia</div>
+                <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:var(--warning); border-radius:2px;"></div> Prazo</div>
+                <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:var(--success); border-radius:2px;"></div> Reunião</div>
+            </div>
+        </div>
+
+        <!-- VIEW: PROCESS LIST (NOVA) -->
+        <div id="view-process-list" class="view-section">
+            <div class="list-panel">
+                <div class="list-header">
+                    <h3>Consulta de Processos</h3>
+                    <div class="search-bar" style="margin-bottom:0; width: 300px;">
+                        <input type="text" class="search-input" id="search-process" placeholder="Buscar por nome, CPF ou ID..." onkeyup="filterProcessList()">
+                        <button class="btn-primary" style="width:auto; margin-top:0;"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table id="process-list-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Etapa Atual</th>
+                                <th>Status</th>
+                                <th>Valor Est.</th>
+                                <th>Última Mov.</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="process-list-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:1rem; text-align:center; color:#94a3b8; font-size:0.8rem;">
+                    Exibindo 10 de 1.240 processos
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: FLOW DETAIL (ANTIGO JUDICIAL) -->
+        <div id="view-flow-detail" class="view-section">
+            <div style="margin-bottom: 1rem;">
+                <button class="btn-outline" style="width: auto;" onclick="closeFlow()"><i class="fas fa-arrow-left"></i> Voltar</button>
+            </div>
+            
+            <div class="timeline-wrapper">
+                <div class="timeline">
+                    <!-- Cards mantidos -->
+                    <div class="timeline-item active" id="step-1"><div class="timeline-marker">1</div><div class="card"><div class="card-header"><h3 class="card-title">Contato</h3><span class="status-badge neutral" id="status-1">Novo</span></div><div class="card-content"><p>Msg cliente.</p><button class="btn-primary" onclick="iniciarCadastro()"><i class="fas fa-play"></i> Iniciar</button></div></div></div>
+                    <div class="timeline-item neutral" id="step-2"><div class="timeline-marker">2</div><div class="card"><div class="card-header"><h3 class="card-title">Solicitação</h3><span class="status-badge neutral" id="status-2">Aguardando</span></div><div class="card-content"><p>Docs enviados.</p><details><summary>Ver Lista</summary><ul><li>RG/CNH</li><li>Comp. Residência</li><li>CTPS</li><li>Holerites</li><li>Docs Médicos</li><li>Prontuário</li><li>Dados Bancários</li><li>B.O / C.A.T</li></ul></details><div style="font-size:0.75rem; color:#64748b; margin-top:0.3rem;"><i class="fas fa-clock"></i> Data: <span id="data-envio">-</span></div></div></div></div>
+                    <div class="timeline-item neutral" id="step-3"><div class="timeline-marker">3</div><div class="card"><div class="card-header"><h3 class="card-title">Análise</h3><span class="status-badge neutral" id="status-3">Bloqueado</span></div><div class="card-content"><p>Triagem.</p><div id="pendencias-box" class="alert-box alert-danger" style="display:none;">Pendente</div><div class="btn-row"><button class="btn-success" onclick="validarDocumentos()" id="btn-validar" disabled>OK</button><button class="btn-warning" onclick="abrirModalPendencias('analise')" id="btn-pendencia" disabled>Pendente</button></div></div></div></div>
+                    <div class="timeline-item neutral" id="step-4"><div class="timeline-marker">4</div><div class="card"><div class="card-header"><h3 class="card-title">Contrato</h3><span class="status-badge neutral" id="status-4">Bloqueado</span></div><div class="card-content"><p>Formalização.</p><div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;"><span>Status:</span> <span id="contrato-status" style="font-weight:bold;">Não Enviado</span></div><button class="btn-primary" id="btn-env-contrato" onclick="enviarContrato()" disabled>Enviar</button><button class="btn-success" id="btn-conf-assinatura" onclick="confirmarAssinatura()" style="display:none;">Confirmar</button></div></div></div>
+                    <div class="timeline-item neutral" id="step-5"><div class="timeline-marker">5</div><div class="card"><div class="card-header"><h3 class="card-title">Médico</h3><span class="status-badge neutral" id="status-5">Bloqueado</span></div><div class="card-content"><p>Perícia.</p><div id="alerta-pagamento" class="alert-box alert-danger" style="display:none;">PAGAMENTO PENDENTE</div><div class="btn-row"><button class="btn-danger" id="btn-pgto-medico" onclick="pagarMedico()" disabled>$ Pagar</button><button class="btn-primary" id="btn-laudo" onclick="receberLaudo()" disabled>Laudo</button></div></div></div></div>
+                    <div class="timeline-item neutral" id="step-6"><div class="timeline-marker">6</div><div class="card"><div class="card-header"><h3 class="card-title">Seguradora</h3><span class="status-badge neutral" id="status-6">Bloqueado</span></div><div class="card-content"><p>Envio final.</p><div id="sinistro-info" class="alert-box alert-info" style="display:none;"><strong>Sinistro:</strong> <span id="num-sinistro"></span></div><details id="seguradora-pendencias-list" style="display:none; border:1px solid var(--danger); background:#fff1f2;"><summary style="color:var(--danger)">Docs Pendentes</summary><ul id="ul-pendencias-seg"></ul></details><div id="resultado-final-box" style="display:none; font-size:0.8rem; margin-top:0.3rem;"><strong>Res:</strong> <span id="res-final-txt"></span> | <strong>R$:</strong> <span id="res-valor-txt"></span></div><div class="btn-row" id="btns-seguradora-inicial"><button class="btn-primary" id="btn-env-seg" onclick="encaminharSeguradora()" disabled>Enviar</button><button class="btn-success" id="btn-res-seg" onclick="resultadoSeguradora()" disabled>Result.</button></div><div class="btn-row" id="btn-pendencia-seg" style="display:none;"><button class="btn-warning" onclick="resolverPendenciaSeg()">Resolver</button></div></div></div></div>
+                    <div class="timeline-item neutral" id="step-7" style="display:none;"><div class="timeline-marker">7</div><div class="card"><div class="card-header"><h3 class="card-title" id="titulo-passo-7">Recurso</h3><span class="status-badge neutral" id="status-7">Aguardando</span></div><div class="card-content"><p id="desc-passo-7">Finalização.</p><button class="btn-primary" id="btn-reanalise" onclick="solicitarReanalise()" style="display:none;">Reanálise</button><button class="btn-danger" id="btn-civil" onclick="abrirProcessoCivil()" style="display:none;">Processo Civil</button><button class="btn-success" id="btn-finalizar" onclick="alert('Arquivado!')" style="display:none;">Arquivar</button></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAIS (Mantidos) -->
+    <div class="modal-overlay" id="modal-lembrete-contrato"><div class="modal"><h3 style="color:var(--warning); margin-top:0; font-size:1.1rem;"><i class="fas fa-clock"></i> Lembrete</h3><p>Cliente assinou o contrato?</p><div class="btn-row" style="justify-content:flex-end; margin-top:1rem;"><button class="btn-outline" style="width:auto;" onclick="fecharModal('modal-lembrete-contrato')">Não</button><button class="btn-success" style="width:auto;" onclick="confirmarAssinaturaViaModal()">Sim</button></div></div></div>
+    <div class="modal-overlay" id="modal-pendencias"><div class="modal"><h3 style="margin-top:0; font-size:1.1rem;">Selecionar Docs Pendentes</h3><div id="checklist-container"></div><div class="btn-row" style="justify-content:flex-end; margin-top:1rem;"><button class="btn-outline" style="width:auto;" onclick="fecharModal('modal-pendencias')">Cancelar</button><button class="btn-primary" style="width:auto;" onclick="salvarPendencias()">Salvar</button></div></div></div>
+    <div class="modal-overlay" id="modal-sinistro"><div class="modal"><h3 style="margin-top:0; font-size:1.1rem;">Resultado Seguradora</h3><div class="form-group" style="margin-bottom:1rem;"><label style="font-weight:600; font-size:0.9rem;">Houve Pendência?</label><div class="btn-row"><button class="btn-warning" onclick="abrirModalPendencias('seguradora')">Sim (Listar)</button><button class="btn-primary" onclick="mostrarAreaResultado()">Não (Seguir)</button></div></div><div id="area-resultado-seg" style="display:none; border-top:1px solid #eee; padding-top:1rem;"><label style="font-weight:600;">Status:</label><select id="select-status-seg" class="input-text" style="margin-bottom:0.5rem;" onchange="checkStatusSeg()"><option value="ganha">🟢 Causa Ganha</option><option value="parcial">🟡 Parcial</option><option value="indeferido">🔴 Indeferido</option></select><div id="area-valor-indenizacao"><label style="font-weight:600;">Valor (R$):</label><input type="text" class="input-text" id="input-valor" placeholder="0,00"></div><label style="font-weight:600; margin-top:0.5rem; display:block;">Nº Sinistro:</label><input type="text" class="input-text" id="input-sinistro-num" placeholder="Ex: 2024.999"><div class="btn-row" style="justify-content:flex-end; margin-top:1rem;"><button class="btn-primary" onclick="salvarResultadoSeg()">Salvar</button></div></div></div></div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- MODAL NOVO EVENTO -->
+    <div class="modal-overlay" id="modal-novo-evento">
+        <div class="modal">
+            <h3 style="margin-top:0; font-size:1.1rem; color:var(--primary);"><i class="fas fa-calendar-plus"></i> Novo Agendamento</h3>
+            
+            <div class="form-group">
+                <label style="font-weight:600; font-size:0.85rem;">Título do Evento</label>
+                <input type="text" id="evt-titulo" class="input-text" placeholder="Ex: Audiência Trabalhista">
+            </div>
+
+            <div class="form-group" style="margin-top:0.5rem;">
+                <label style="font-weight:600; font-size:0.85rem;">Tipo</label>
+                <select id="evt-tipo" class="input-text">
+                    <option value="audiencia">Audiência (Vermelho)</option>
+                    <option value="pericia">Perícia Médica (Azul)</option>
+                    <option value="prazo">Prazo Fatal (Amarelo)</option>
+                    <option value="reuniao">Reunião (Verde)</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:0.5rem;">
+                <div style="flex:1;">
+                    <label style="font-weight:600; font-size:0.85rem;">Data</label>
+                    <input type="date" id="evt-data" class="input-text" value="2026-01-16">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-weight:600; font-size:0.85rem;">Hora</label>
+                    <input type="time" id="evt-hora" class="input-text">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:0.5rem;">
+                <label style="font-weight:600; font-size:0.85rem;">Cliente / Referência</label>
+                <input type="text" id="evt-cliente" class="input-text" placeholder="Ex: João Silva">
+            </div>
+
+            <div class="btn-row" style="justify-content:flex-end; margin-top:1.5rem;">
+                <button class="btn-outline" style="width:auto;" onclick="fecharModal('modal-novo-evento')">Cancelar</button>
+                <button class="btn-primary" style="width:auto;" onclick="salvarEvento()">Agendar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- NAVEGAÇÃO ---
+        let lastView = 'dashboard';
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar nav a').forEach(el => el.classList.remove('active'));
+            
+            // Mapeamento de menus
+            let navId = 'nav-' + viewName;
+            if (viewName === 'flow-detail') navId = 'nav-process-list'; // Fluxo fica sob menu Processos
+            
+            const navEl = document.getElementById(navId);
+            if(navEl) navEl.classList.add('active');
+
+            document.getElementById('view-' + viewName).classList.add('active');
+            
+            const title = document.getElementById('page-title');
+            const subtitle = document.getElementById('page-subtitle');
+            
+            if(viewName === 'dashboard') {
+                title.innerHTML = '<i class="fas fa-chart-line"></i> Dashboard Gerencial';
+                subtitle.innerText = 'Visão Geral';
+                lastView = 'dashboard';
+            } else if (viewName === 'process-list') {
+                title.innerHTML = '<i class="fas fa-gavel"></i> Processos Jurídicos';
+                subtitle.innerText = 'Listagem Geral';
+                lastView = 'process-list';
+                renderProcessList();
+            } else if (viewName === 'agenda') {
+                title.innerHTML = '<i class="fas fa-calendar-alt"></i> Agenda Corporativa';
+                subtitle.innerText = 'Eventos e Prazos';
+                lastView = 'agenda';
+                renderCalendar();
+            }
+        }
+
+
+        function openFlow(clientName, clientId) {
+            // Esconde outras views
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            // Mostra o fluxo
+            document.getElementById('view-flow-detail').classList.add('active');
+            
+            // Atualiza Header
+            const title = document.getElementById('page-title');
+            const subtitle = document.getElementById('page-subtitle');
+            title.innerHTML = `<i class="fas fa-project-diagram"></i> Fluxo: ${clientName}`;
+            subtitle.innerText = `Processo #${clientId}`;
+            
+            // Simula estado aleatório ou reset
+            resetFlowSimulation();
+        }
+
+        function closeFlow() {
+            switchView(lastView);
+        }
+
+        // --- DASHBOARD LOGIC ---
+        let currentOpenCard = null;
+
+        const mockData = {
+            'novos_contatos': [
+                { nome: 'Carlos Eduardo', ref: 'WhatsApp', valor: '16/01 09:30', status: 'ativo' },
+                { nome: 'Fernanda Lima', ref: 'Instagram', valor: '16/01 10:15', status: 'ativo' }
+            ],
+            'pagar_medico': [
+                { nome: 'João Silva', ref: 'Dr. Roberto', valor: 'R$ 450,00', status: 'pendente' },
+                { nome: 'Maria Oliveira', ref: 'Dra. Ana', valor: 'R$ 500,00', status: 'pendente' }
+            ],
+            'aguardando_laudo': [
+                { nome: 'Pedro Henrique', ref: 'Dr. Roberto (Ortopedista)', valor: 'Perícia: 10/01', status: 'atencao' },
+                { nome: 'Carla Dias', ref: 'Dra. Ana (Psiquiatra)', valor: 'Perícia: 12/01', status: 'pendente' },
+                { nome: 'Lucas Santos', ref: 'Dr. Marcos (Neurologista)', valor: 'Perícia: 15/01', status: 'ativo' },
+                { nome: 'Fernanda Souza', ref: 'Dr. Roberto (Ortopedista)', valor: 'Perícia: 16/01', status: 'ativo' },
+                { nome: 'Mariana Lima', ref: 'Dra. Ana (Psiquiatra)', valor: 'Perícia: 16/01', status: 'ativo' }
+            ],
+            'pendencias_docs': [
+                { nome: 'Lucas Mendes', ref: 'RG e CPF', valor: '-', status: 'atencao' },
+                { nome: 'Patricia Santos', ref: 'Holerites', valor: '-', status: 'atencao' }
+            ],
+            'contratos_pendentes': [
+                { nome: 'Marcos Paulo', ref: 'Desde 15/01', valor: '-', status: 'atencao' },
+                { nome: 'Ana Julia', ref: 'Desde 14/01', valor: '-', status: 'atencao' }
+            ],
+            'receber_seguradora': [
+                { nome: 'Amanda Costa', ref: 'Sinistro #9988', valor: 'R$ 15.000', status: 'pago' },
+                { nome: 'Bruno Souza', ref: 'Sinistro #7744', valor: 'R$ 8.200', status: 'pago' }
+            ],
+            'processos_ativos': [
+                { nome: 'Empresa X', ref: 'Trabalhista', valor: '-', status: 'ativo' }
+            ],
+            'contencioso_civil': [
+                { nome: 'Roberto Carlos', ref: 'TJ-SP #12345', valor: 'R$ 50k', status: 'civil' },
+                { nome: 'Julia Roberts', ref: 'TJ-RJ #67890', valor: 'R$ 30k', status: 'civil' }
+            ],
+            'processos_arquivados': [
+                { nome: 'Pedro Alcantara', ref: 'Deferido', valor: 'R$ 12.000', status: 'pago' },
+                { nome: 'Carla Dias', ref: 'Deferido', valor: 'R$ 8.500', status: 'pago' }
+            ],
+            'prazos_criticos': [
+                { nome: 'Juliana Paes', ref: 'Recurso - 24h', valor: 'Urgente', status: 'pendente' }
+            ],
+            'produtividade': [
+                { nome: 'Ana (Comercial)', ref: 'Atendimentos', valor: '18', status: 'ativo' }
+            ]
+        };
+
+        function toggleDetails(type) {
+            const panel = document.getElementById('details-panel');
+            if (currentOpenCard === type) { hideDetails(); return; }
+            document.querySelectorAll('.dash-card').forEach(c => c.classList.remove('active-card'));
+            document.getElementById('card-' + type).classList.add('active-card');
+            currentOpenCard = type;
+            
+            const tbody = document.getElementById('details-body');
+            const title = document.getElementById('details-title');
+            
+            const titles = {
+                'novos_contatos': 'Novos Leads / Contatos Iniciais',
+                'pagar_medico': 'Contas a Pagar - Médicos',
+                'aguardando_laudo': 'Aguardando Laudo Médico (Pós-Perícia)',
+                'pendencias_docs': 'Pendências de Documentação (Cliente/Seg)',
+                'contratos_pendentes': 'Contratos Aguardando Assinatura',
+                'receber_seguradora': 'Indenizações a Receber',
+                'processos_ativos': 'Processos em Andamento',
+                'contencioso_civil': 'Processos em Fase Judicial/Civil',
+                'processos_arquivados': 'Processos Finalizados / Arquivados',
+                'prazos_criticos': 'Prazos Judiciais Críticos',
+                'produtividade': 'Produtividade da Equipe'
+            };
+            title.innerText = titles[type] || 'Detalhes';
+
+            tbody.innerHTML = '';
+            const data = mockData[type] || [];
+            
+            data.forEach((item, index) => {
+                let badgeClass = item.status;
+                // Gerar ID fictício
+                let procId = '2025-' + Math.floor(1000 + Math.random() * 9000);
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.nome}</strong></td>
+                        <td>${item.ref}</td>
+                        <td>${item.valor}</td>
+                        <td><span class="badge-status ${badgeClass}">${item.status.toUpperCase()}</span></td>
+                        <td><button class="btn-outline btn-sm" style="width:auto; margin:0;" onclick="openFlow('${item.nome}', '${procId}')"><i class="fas fa-eye"></i></button></td>
+                    </tr>
+                `;
+            });
+            panel.style.display = 'block';
+        }
+
+        function hideDetails() {
+            document.getElementById('details-panel').style.display = 'none';
+            document.querySelectorAll('.dash-card').forEach(c => c.classList.remove('active-card'));
+            currentOpenCard = null;
+        }
+
+        // --- LISTA DE PROCESSOS (Nova Funcionalidade) ---
+        const allProcesses = [
+            { id: '2025-1001', nome: 'João Silva', etapa: 'Médico', status: 'Pendente Pagamento', valor: 'R$ 15.000', update: 'Hoje' },
+            { id: '2025-1002', nome: 'Maria Oliveira', etapa: 'Análise', status: 'Aguardando Docs', valor: 'R$ 8.000', update: 'Ontem' },
+            { id: '2025-1003', nome: 'Pedro Santos', etapa: 'Conclusão', status: 'Deferido', valor: 'R$ 12.500', update: '12/01/2026' },
+            { id: '2025-1004', nome: 'Ana Costa', etapa: 'Seguradora', status: 'Análise', valor: 'R$ 22.000', update: '15/01/2026' },
+            { id: '2025-1005', nome: 'Lucas Pereira', etapa: 'Contrato', status: 'Aguardando Assinatura', valor: '-', update: 'Hoje' },
+            { id: '2025-1006', nome: 'Fernanda Lima', etapa: 'Contato', status: 'Novo', valor: '-', update: 'Hoje' },
+            { id: '2025-1007', nome: 'Roberto Carlos', etapa: 'Civil', status: 'Recurso', valor: 'R$ 50.000', update: '10/01/2026' },
+            { id: '2025-1008', nome: 'Amanda Costa', etapa: 'Seguradora', status: 'Pago', valor: 'R$ 15.000', update: 'Hoje' },
+            { id: '2025-1009', nome: 'Juliana Paes', etapa: 'Civil', status: 'Prazo Crítico', valor: 'Urgente', update: 'Hoje' }
+        ];
+
+        function renderProcessList() {
+            const tbody = document.getElementById('process-list-body');
+            tbody.innerHTML = '';
+            const filter = document.getElementById('search-process').value.toLowerCase();
+            
+            allProcesses.forEach(p => {
+                if (p.nome.toLowerCase().includes(filter) || p.id.includes(filter)) {
+                    let badgeColor = 'neutral';
+                    if(p.status.includes('Pago') || p.status.includes('Deferido')) badgeColor = 'pago';
+                    if(p.status.includes('Pendente') || p.status.includes('Crítico')) badgeColor = 'pendente';
+                    if(p.status.includes('Aguardando')) badgeColor = 'atencao';
+                    if(p.status.includes('Novo')) badgeColor = 'ativo';
+                    if(p.status.includes('Civil') || p.status.includes('Recurso')) badgeColor = 'civil';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td><strong>${p.nome}</strong></td>
+                            <td>${p.etapa}</td>
+                            <td><span class="badge-status ${badgeColor}">${p.status}</span></td>
+                            <td>${p.valor}</td>
+                            <td>${p.update}</td>
+                            <td><button class="btn-primary btn-sm" style="width:auto; margin:0;" onclick="openFlow('${p.nome}', '${p.id}')"><i class="fas fa-folder-open"></i> Abrir</button></td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+        
+        function filterProcessList() { renderProcessList(); }
+
+        // --- FLUXO E SIMULAÇÃO ---
+        const docs = ["RG/CNH", "Comp. Residência", "Carteira Trabalho", "Holerites (3)", "Laudos Médicos", "Prontuário", "Dados Bancários", "B.O / C.A.T"];
+        let estado = { medicoPago: false, laudo: false, contratoAssinado: false, tentativasSeg: 0, contextoPendencia: '' };
+
+        function resetFlowSimulation() {
+            // Reset visual do fluxo para o estado inicial
+            // Na versão real, isso carregaria do banco de dados
+            // Aqui vamos simular um estado aleatório para demonstração
+            
+            // Limpa tudo
+            for(let i=1; i<=7; i++) {
+                updateStep('step-'+i, 'neutral', 'neutral', 'Aguardando');
+                document.getElementById('step-'+i).style.display = 'none';
+            }
+            
+            // Mostra passo 1
+            updateStep('step-1', 'active', 'neutral', 'Novo');
+            document.getElementById('step-1').style.display = 'flex';
+            
+            // Simulação: Avança aleatoriamente para dar vida
+            const randomStage = Math.floor(Math.random() * 6) + 1; // 1 a 6
+            
+            if (randomStage >= 2) { updateStep('step-1', 'success', 'success', 'OK'); updateStep('step-2', 'active', 'warning', 'Andamento'); document.getElementById('step-2').style.display = 'flex'; }
+            if (randomStage >= 3) { updateStep('step-2', 'success', 'success', 'Enviado'); updateStep('step-3', 'active', 'warning', 'Análise'); document.getElementById('step-3').style.display = 'flex'; }
+            if (randomStage >= 4) { updateStep('step-3', 'success', 'success', 'Validado'); updateStep('step-4', 'active', 'neutral', 'A Enviar'); document.getElementById('step-4').style.display = 'flex'; }
+            if (randomStage >= 5) { updateStep('step-4', 'success', 'success', 'Assinado'); updateStep('step-5', 'active', 'neutral', 'Aberto'); document.getElementById('step-5').style.display = 'flex'; }
+            
+            // Reset estado interno
+            estado = { medicoPago: false, laudo: false, contratoAssinado: false, tentativasSeg: 0, contextoPendencia: '' };
+        }
+
+        window.onload = () => { renderChecklist(); renderProcessList(); }; // Inicializa lista
+        
+        function renderChecklist() { const c = document.getElementById('checklist-container'); c.innerHTML = ''; docs.forEach(d => c.innerHTML += `<label class="checklist-item"><input type="checkbox" value="${d}" style="margin-right:10px;"> ${d}</label>`); }
+        function updateStep(id, status, badgeClass, badgeText) {
+            const el = document.getElementById(id); const badge = document.getElementById('status-' + id.split('-')[1]);
+            el.className = `timeline-item ${status}`; badge.className = `status-badge ${badgeClass}`; badge.innerText = badgeText;
+            if(['active','success','warning','danger','info'].includes(status)) el.style.display = 'flex';
+        }
+        function abrirModalPendencias(ctx) { estado.contextoPendencia = ctx; document.querySelectorAll('#checklist-container input').forEach(i => i.checked = false); fecharModal('modal-sinistro'); document.getElementById('modal-pendencias').style.display = 'flex'; }
+        function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+        function salvarPendencias() {
+            const checks = Array.from(document.querySelectorAll('#checklist-container input:checked')).map(c => c.value);
+            if(estado.contextoPendencia === 'analise') { if(checks.length > 0) updateStep('step-3', 'danger', 'danger', 'Pendente'); else validarDocumentos(); }
+            else if (estado.contextoPendencia === 'seguradora') {
+                if(checks.length > 0) {
+                    const ul = document.getElementById('ul-pendencias-seg'); ul.innerHTML = ''; checks.forEach(d => ul.innerHTML += `<li>${d}</li>`);
+                    document.getElementById('seguradora-pendencias-list').style.display = 'block'; updateStep('step-6', 'danger', 'danger', 'Pendência');
+                    document.getElementById('btns-seguradora-inicial').style.display = 'none'; document.getElementById('btn-pendencia-seg').style.display = 'flex';
+                }
+            } fecharModal('modal-pendencias');
+        }
+        function iniciarCadastro() { updateStep('step-1', 'success', 'success', 'OK'); updateStep('step-2', 'active', 'warning', 'Andamento'); document.getElementById('data-envio').innerText = new Date().toLocaleDateString(); setTimeout(() => { updateStep('step-2', 'success', 'success', 'Enviado'); liberarPasso3(); }, 600); }
+        function liberarPasso3() { updateStep('step-3', 'active', 'warning', 'Analisando'); document.getElementById('btn-validar').disabled = false; document.getElementById('btn-pendencia').disabled = false; }
+        function validarDocumentos() { updateStep('step-3', 'success', 'success', 'Validado'); liberarPasso4(); }
+        function liberarPasso4() { updateStep('step-4', 'active', 'neutral', 'A Enviar'); document.getElementById('btn-env-contrato').disabled = false; }
+        function enviarContrato() { updateStep('step-4', 'active', 'warning', 'Aguardando'); document.getElementById('contrato-status').innerText = 'Enviado'; document.getElementById('btn-env-contrato').style.display = 'none'; document.getElementById('btn-conf-assinatura').style.display = 'block'; setTimeout(() => { if(!estado.contratoAssinado) document.getElementById('modal-lembrete-contrato').style.display = 'flex'; }, 2000); }
+        function confirmarAssinaturaViaModal() { fecharModal('modal-lembrete-contrato'); confirmarAssinatura(); }
+        function confirmarAssinatura() { estado.contratoAssinado = true; document.getElementById('contrato-status').innerText = 'Assinado'; updateStep('step-4', 'success', 'success', 'OK'); document.getElementById('btn-conf-assinatura').disabled = true; liberarPasso5(); }
+        function liberarPasso5() { updateStep('step-5', 'active', 'neutral', 'Aberto'); document.getElementById('btn-pgto-medico').disabled = false; document.getElementById('btn-laudo').disabled = false; }
+        function pagarMedico() { estado.medicoPago = !estado.medicoPago; const btn = document.getElementById('btn-pgto-medico'); if(estado.medicoPago) { btn.className = 'btn-success'; btn.innerText = 'Pago'; } else { btn.className = 'btn-danger'; btn.innerText = '$ Pagar'; } checkPasso5(); }
+        function receberLaudo() { estado.laudo = true; const btn = document.getElementById('btn-laudo'); btn.className = 'btn-success'; btn.innerText = 'Laudo OK'; btn.disabled = true; checkPasso5(); }
+        function checkPasso5() { const alerta = document.getElementById('alerta-pagamento'); if (estado.laudo && !estado.medicoPago) { updateStep('step-5', 'danger', 'danger', 'Falta Pgto'); alerta.style.display = 'block'; liberarPasso6(); } else if (estado.laudo && estado.medicoPago) { updateStep('step-5', 'success', 'success', 'OK'); alerta.style.display = 'none'; liberarPasso6(); } else if (!estado.laudo && estado.medicoPago) { updateStep('step-5', 'warning', 'warning', 'Aguardando'); alerta.style.display = 'none'; } }
+        function liberarPasso6() { updateStep('step-6', 'active', 'neutral', 'A Enviar'); document.getElementById('btn-env-seg').disabled = false; }
+        function encaminharSeguradora() { updateStep('step-6', 'active', 'warning', 'Análise'); document.getElementById('btn-res-seg').disabled = false; document.getElementById('btn-pendencia-seg').style.display = 'none'; document.getElementById('btns-seguradora-inicial').style.display = 'flex'; document.getElementById('seguradora-pendencias-list').style.display = 'none'; }
+        function resultadoSeguradora() { document.getElementById('area-resultado-seg').style.display = 'none'; document.getElementById('modal-sinistro').style.display = 'flex'; }
+        function resolverPendenciaSeg() { alert('Reenviando...'); encaminharSeguradora(); }
+        function mostrarAreaResultado() { document.getElementById('area-resultado-seg').style.display = 'block'; }
+        function checkStatusSeg() { const status = document.getElementById('select-status-seg').value; document.getElementById('area-valor-indenizacao').style.display = (status === 'indeferido') ? 'none' : 'block'; }
+        function salvarResultadoSeg() { const status = document.getElementById('select-status-seg').value; const valor = document.getElementById('input-valor').value; const sinistro = document.getElementById('input-sinistro-num').value; document.getElementById('num-sinistro').innerText = sinistro || 'N/A'; document.getElementById('sinistro-info').style.display = 'block'; document.getElementById('res-final-txt').innerText = status.toUpperCase(); document.getElementById('res-valor-txt').innerText = valor || '0,00'; document.getElementById('resultado-final-box').style.display = 'block'; fecharModal('modal-sinistro'); if(status === 'ganha') { updateStep('step-6', 'success', 'success', 'Ganha'); liberarPasso7('final'); } else { updateStep('step-6', 'warning', 'warning', status === 'parcial' ? 'Parcial' : 'Indeferido'); liberarPasso7('recurso', status); } }
+        function liberarPasso7(tipo, motivo) { document.getElementById('step-7').style.display = 'flex'; const titulo = document.getElementById('titulo-passo-7'); const desc = document.getElementById('desc-passo-7'); const btnReanalise = document.getElementById('btn-reanalise'); const btnCivil = document.getElementById('btn-civil'); const btnFinal = document.getElementById('btn-finalizar'); btnReanalise.style.display = 'none'; btnCivil.style.display = 'none'; btnFinal.style.display = 'none'; if(tipo === 'final') { titulo.innerText = 'Conclusão'; desc.innerText = 'Deferido.'; btnFinal.style.display = 'block'; updateStep('step-7', 'success', 'success', 'Fim'); } else { titulo.innerText = 'Recurso'; estado.tentativasSeg++; if(estado.tentativasSeg >= 2) { desc.innerText = 'Negativa Final.'; btnCivil.style.display = 'block'; updateStep('step-7', 'danger', 'danger', 'Civil'); } else { desc.innerText = `Resultado ${motivo}.`; btnReanalise.style.display = 'block'; btnCivil.style.display = 'block'; updateStep('step-7', 'warning', 'warning', 'Decisão'); } } document.querySelector('.timeline-wrapper').scrollLeft = 10000; }
+        function solicitarReanalise() { alert('Voltando...'); updateStep('step-5', 'active', 'warning', 'Reanálise'); updateStep('step-6', 'neutral', 'neutral', 'Aguardando'); document.getElementById('step-7').style.display = 'none'; document.getElementById('btn-laudo').disabled = false; document.getElementById('btn-laudo').innerText = 'Novo Laudo'; estado.laudo = false; }
+        function abrirProcessoCivil() { alert('Civil Iniciado.'); updateStep('step-7', 'info', 'info', 'Civil'); }
+
+        // --- AGENDA CALENDAR LOGIC ---
+        const agendaEvents = [
+            // Semana 1 (04-10 Jan)
+            { id: 1, title: 'Audiência Inicial', date: '2026-01-05', time: '09:00', type: 'audiencia', client: 'João Silva' },
+            { id: 2, title: 'Perícia Dr. Roberto', date: '2026-01-07', time: '14:00', type: 'pericia', client: 'Maria Oliveira' },
+            { id: 3, title: 'Prazo Contestação', date: '2026-01-08', time: '18:00', type: 'prazo', client: 'Empresa X' },
+            
+            // Semana 2 (11-17 Jan)
+            { id: 4, title: 'Reunião Cliente', date: '2026-01-12', time: '10:00', type: 'reuniao', client: 'Pedro Santos' },
+            { id: 5, title: 'Perícia Dra. Ana', date: '2026-01-14', time: '11:00', type: 'pericia', client: 'Lucas Pereira' },
+            
+            // CONFLITO PROPOSITAL - 15/01 às 14:00
+            { id: 6, title: 'Audiência Instrução', date: '2026-01-15', time: '14:00', type: 'audiencia', client: 'Fernanda Lima' },
+            { id: 7, title: 'Perícia Dr. Marcos', date: '2026-01-15', time: '14:00', type: 'pericia', client: 'Roberto Carlos' },
+            
+            // Semana 3 (18-24 Jan)
+            { id: 8, title: 'Prazo Recurso', date: '2026-01-20', time: '23:59', type: 'prazo', client: 'Juliana Paes' },
+            { id: 9, title: 'Assinatura Contrato', date: '2026-01-22', time: '15:30', type: 'reuniao', client: 'Amanda Costa' },
+            
+            // Semana 4 (25-31 Jan)
+            { id: 10, title: 'Perícia Psiquiátrica', date: '2026-01-27', time: '08:00', type: 'pericia', client: 'Carla Dias' },
+            { id: 11, title: 'Audiência Una', date: '2026-01-29', time: '13:30', type: 'audiencia', client: 'Bruno Souza' }
+        ];
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            // Limpa dias anteriores (mantendo headers)
+            const headers = grid.querySelectorAll('.calendar-day-header');
+            grid.innerHTML = '';
+            headers.forEach(h => grid.appendChild(h));
+
+            const year = 2026;
+            const month = 0; // Janeiro (0-indexed)
+            
+            const firstDay = new Date(year, month, 1).getDay(); // Dia da semana do 1º dia
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Dias vazios antes do início
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                grid.appendChild(emptyDay);
+            }
+
+            // Dias do mês
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.innerHTML = `<div class="day-number ${day === 16 ? 'today' : ''}">${day}</div>`;
+                
+                // Filtrar eventos do dia
+                const dayEvents = agendaEvents.filter(e => e.date === dateStr);
+                
+                // Verificar conflitos no dia
+                const timeMap = {};
+                dayEvents.forEach(e => {
+                    if (timeMap[e.time]) {
+                        e.conflict = true;
+                        timeMap[e.time].conflict = true; // Marca o anterior também
+                    }
+                    timeMap[e.time] = e;
+                });
+
+                dayEvents.forEach(e => {
+                    const chip = document.createElement('div');
+                    chip.className = `event-chip event-${e.type} ${e.conflict ? 'event-conflito' : ''}`;
+                    chip.title = `${e.time} - ${e.title} (${e.client})`;
+                    chip.innerText = `${e.time} ${e.title}`;
+                    dayEl.appendChild(chip);
+                });
+
+                grid.appendChild(dayEl);
+            }
+            
+            checkConflicts();
+        }
+
+        function checkConflicts() {
+            // Verifica conflitos em todo o array
+            const timeMap = {};
+            const conflicts = [];
+            
+            agendaEvents.forEach(e => {
+                const key = `${e.date}-${e.time}`;
+                if (timeMap[key]) {
+                    conflicts.push({ event1: timeMap[key], event2: e });
+                }
+                timeMap[key] = e;
+            });
+
+            if (conflicts.length > 0) {
+                conflicts.forEach(c => {
+                    showToast(`⚠️ Conflito de Horário!`, 
+                        `Dia <strong>${formatDate(c.event2.date)}</strong> às <strong>${c.event2.time}</strong>.<br>
+                        1. ${c.event1.title}<br>2. ${c.event2.title}<br>
+                        <a href="#" style="color:var(--danger); font-weight:bold;">Clique para reagendar</a>`, 
+                        15000);
+                });
+            }
+        }
+
+        function showToast(title, message, duration) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <div style="font-size:1.5rem; color:var(--danger);"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="toast-content">
+                    <h4>${title}</h4>
+                    <p>${message}</p>
+                    <div class="toast-timer"><div class="toast-progress"></div></div>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            // Animação da barra de tempo
+            setTimeout(() => {
+                toast.querySelector('.toast-progress').style.width = '0%';
+            }, 100);
+
+            // Remover após duração
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function formatDate(isoDate) {
+            const [y, m, d] = isoDate.split('-');
+            return `${d}/${m}`;
+        }
+
+        // --- NOVO EVENTO LOGIC ---
+        function abrirModalEvento() {
+            document.getElementById('evt-titulo').value = '';
+            document.getElementById('evt-hora').value = '';
+            document.getElementById('evt-cliente').value = '';
+            document.getElementById('modal-novo-evento').style.display = 'flex';
+        }
+
+        function salvarEvento() {
+            const titulo = document.getElementById('evt-titulo').value;
+            const tipo = document.getElementById('evt-tipo').value;
+            const data = document.getElementById('evt-data').value;
+            const hora = document.getElementById('evt-hora').value;
+            const cliente = document.getElementById('evt-cliente').value;
+
+            if (!titulo || !data || !hora || !cliente) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            const novoEvento = {
+                id: Date.now(),
+                title: titulo,
+                date: data,
+                time: hora,
+                type: tipo,
+                client: cliente
+            };
+
+            agendaEvents.push(novoEvento);
+            renderCalendar(); // Vai detectar conflito automaticamente se houver
+            fecharModal('modal-novo-evento');
+            
+            // Verifica se o novo evento causou conflito específico
+            const conflito = agendaEvents.find(e => e.id !== novoEvento.id && e.date === data && e.time === hora);
+            if (!conflito) {
+                // Sucesso (se não houver conflito)
+                // Se houver conflito, o checkConflicts() já vai mostrar o Toast
+                // Aqui poderíamos mostrar um Toast de sucesso, mas vamos manter simples
+            }
+        }
+    </script>
+</body>
+</html>

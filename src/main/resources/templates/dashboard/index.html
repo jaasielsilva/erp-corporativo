@@ -798,15 +798,27 @@
         // Função para abrir painel de notificações
         function abrirNotificacoes() {
             // Criar modal de notificações se não existir
-            if (!document.getElementById('modalNotificacoes')) {
+            const modalEl = document.getElementById('modalNotificacoes');
+            if (!modalEl) {
                 criarModalNotificacoes();
             }
-
+            
             // Carregar notificações
             carregarNotificacoes();
 
+            // Obter instância existente ou criar nova
+            const el = document.getElementById('modalNotificacoes');
+            let modal = bootstrap.Modal.getInstance(el);
+            
+            if (!modal) {
+                modal = new bootstrap.Modal(el, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+            }
+
             // Mostrar modal
-            const modal = new bootstrap.Modal(document.getElementById('modalNotificacoes'));
             modal.show();
         }
 

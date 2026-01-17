@@ -1548,17 +1548,12 @@ public class JuridicoController {
             m.put("criadoEm", d.getCriadoEm());
             m.put("contentType", d.getContentType());
             m.put("originalFilename", d.getOriginalFilename());
-<<<<<<< HEAD
-            // Inicializa a coleção lazy dentro da transação para evitar
-            // LazyInitializationException
-=======
             m.put("destinatarioEmail", d.getDestinatarioEmail());
             m.put("autentiqueId", d.getAutentiqueId());
             m.put("linkAssinatura", d.getLinkAssinatura());
             m.put("linkAssinaturaEmpresa", d.getLinkAssinaturaEmpresa());
             m.put("statusAssinatura", d.getStatusAssinatura());
             m.put("detalheStatusAssinatura", d.getDetalheStatusAssinatura());
->>>>>>> 4de3b00e324b43135b1ecf2979396bda6beefb1d
             m.put("tags", d.getTags() != null ? new ArrayList<>(d.getTags()) : new ArrayList<>());
             m.put("processoId", d.getProcesso() != null ? d.getProcesso().getId() : null);
             content.add(m);

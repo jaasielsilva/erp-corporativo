@@ -187,6 +187,7 @@
         .timeline-wrapper { display: flex; overflow-x: auto; padding-bottom: 1.5rem; align-items: flex-start; }
         .timeline { display: flex; position: relative; padding-top: 15px; min-width: min-content; }
         .timeline::before { content: ''; position: absolute; top: 30px; left: 40px; right: 40px; height: 3px; background: #cbd5e1; border-radius: 2px; z-index: 0; }
+        .timeline-progress { position: absolute; top: 30px; left: 40px; height: 3px; background: var(--success); border-radius: 2px; z-index: 1; width: 0; transition: width 0.3s ease; }
         .timeline-item { position: relative; width: 220px; margin: 0 10px; display: flex; flex-direction: column; align-items: center; z-index: 1; }
         .timeline-marker { width: 30px; height: 30px; border-radius: 50%; background: var(--white); border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; margin-bottom: 10px; transition: all 0.3s ease; position: relative; z-index: 2; }
         
@@ -461,12 +462,13 @@
             
             <div class="timeline-wrapper">
                 <div class="timeline">
+                    <div class="timeline-progress" id="timeline-progress"></div>
                     <!-- Cards mantidos -->
                     <div class="timeline-item active" id="step-1"><div class="timeline-marker">1</div><div class="card"><div class="card-header"><h3 class="card-title">Contato</h3><span class="status-badge neutral" id="status-1">Novo</span></div><div class="card-content"><p>Msg cliente.</p><button class="btn-primary" onclick="iniciarCadastro()"><i class="fas fa-play"></i> Iniciar</button></div></div></div>
                     <div class="timeline-item neutral" id="step-2"><div class="timeline-marker">2</div><div class="card"><div class="card-header"><h3 class="card-title">Solicitação</h3><span class="status-badge neutral" id="status-2">Aguardando</span></div><div class="card-content"><p>Docs enviados.</p><details><summary>Ver Lista</summary><ul><li>RG/CNH</li><li>Comp. Residência</li><li>CTPS</li><li>Holerites</li><li>Docs Médicos</li><li>Prontuário</li><li>Dados Bancários</li><li>B.O / C.A.T</li></ul></details><div style="font-size:0.75rem; color:#64748b; margin-top:0.3rem;"><i class="fas fa-clock"></i> Data: <span id="data-envio">-</span></div></div></div></div>
-                    <div class="timeline-item neutral" id="step-3"><div class="timeline-marker">3</div><div class="card"><div class="card-header"><h3 class="card-title">Análise</h3><span class="status-badge neutral" id="status-3">Bloqueado</span></div><div class="card-content"><p>Triagem.</p><div id="pendencias-box" class="alert-box alert-danger" style="display:none;">Pendente</div><div class="btn-row"><button class="btn-success" onclick="validarDocumentos()" id="btn-validar" disabled>OK</button><button class="btn-warning" onclick="abrirModalPendencias('analise')" id="btn-pendencia" disabled>Pendente</button></div></div></div></div>
+                    <div class="timeline-item neutral" id="step-3"><div class="timeline-marker">3</div><div class="card"><div class="card-header"><h3 class="card-title">Análise</h3><span class="status-badge neutral" id="status-3">Bloqueado</span></div><div class="card-content"><p>Triagem.</p><div id="pendencias-box" class="alert-box alert-danger" style="display:none;">Pendente</div><div id="analise-pendente-info" style="display:none; font-size:0.75rem; color:#64748b; margin-top:0.3rem;"><i class="fas fa-clock"></i> Data: <span id="data-pendencia-analise">-</span></div><div class="btn-row"><button class="btn-success" onclick="validarDocumentos()" id="btn-validar" disabled>OK</button><button class="btn-warning" onclick="abrirModalPendencias('analise')" id="btn-pendencia" disabled>Pendente</button></div></div></div></div>
                     <div class="timeline-item neutral" id="step-4"><div class="timeline-marker">4</div><div class="card"><div class="card-header"><h3 class="card-title">Contrato</h3><span class="status-badge neutral" id="status-4">Bloqueado</span></div><div class="card-content"><p>Formalização.</p><div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;"><span>Status:</span> <span id="contrato-status" style="font-weight:bold;">Não Enviado</span></div><button class="btn-primary" id="btn-env-contrato" onclick="enviarContrato()" disabled>Enviar</button><button class="btn-success" id="btn-conf-assinatura" onclick="confirmarAssinatura()" style="display:none;">Confirmar</button></div></div></div>
-                    <div class="timeline-item neutral" id="step-5"><div class="timeline-marker">5</div><div class="card"><div class="card-header"><h3 class="card-title">Médico</h3><span class="status-badge neutral" id="status-5">Bloqueado</span></div><div class="card-content"><p>Perícia.</p><div id="alerta-pagamento" class="alert-box alert-danger" style="display:none;">PAGAMENTO PENDENTE</div><div class="btn-row"><button class="btn-danger" id="btn-pgto-medico" onclick="pagarMedico()" disabled>$ Pagar</button><button class="btn-primary" id="btn-laudo" onclick="receberLaudo()" disabled>Laudo</button></div></div></div></div>
+                    <div class="timeline-item neutral" id="step-5"><div class="timeline-marker">5</div><div class="card"><div class="card-header"><h3 class="card-title">Médico</h3><span class="status-badge neutral" id="status-5">Bloqueado</span></div><div class="card-content"><p>Perícia.</p><div id="alerta-pagamento" class="alert-box alert-danger" style="display:none;">PAGAMENTO PENDENTE</div><div class="btn-row"><button class="btn-danger" id="btn-pgto-medico" onclick="abrirModalPgtoMedico()" disabled>$ Pagar</button><button class="btn-primary" id="btn-laudo" onclick="receberLaudo()" disabled>Laudo</button></div></div></div></div>
                     <div class="timeline-item neutral" id="step-6"><div class="timeline-marker">6</div><div class="card"><div class="card-header"><h3 class="card-title">Seguradora</h3><span class="status-badge neutral" id="status-6">Bloqueado</span></div><div class="card-content"><p>Envio final.</p><div id="sinistro-info" class="alert-box alert-info" style="display:none;"><strong>Sinistro:</strong> <span id="num-sinistro"></span></div><details id="seguradora-pendencias-list" style="display:none; border:1px solid var(--danger); background:#fff1f2;"><summary style="color:var(--danger)">Docs Pendentes</summary><ul id="ul-pendencias-seg"></ul></details><div id="resultado-final-box" style="display:none; font-size:0.8rem; margin-top:0.3rem;"><strong>Res:</strong> <span id="res-final-txt"></span> | <strong>R$:</strong> <span id="res-valor-txt"></span></div><div class="btn-row" id="btns-seguradora-inicial"><button class="btn-primary" id="btn-env-seg" onclick="encaminharSeguradora()" disabled>Enviar</button><button class="btn-success" id="btn-res-seg" onclick="resultadoSeguradora()" disabled>Result.</button></div><div class="btn-row" id="btn-pendencia-seg" style="display:none;"><button class="btn-warning" onclick="resolverPendenciaSeg()">Resolver</button></div></div></div></div>
                     <div class="timeline-item neutral" id="step-7" style="display:none;"><div class="timeline-marker">7</div><div class="card"><div class="card-header"><h3 class="card-title" id="titulo-passo-7">Recurso</h3><span class="status-badge neutral" id="status-7">Aguardando</span></div><div class="card-content"><p id="desc-passo-7">Finalização.</p><button class="btn-primary" id="btn-reanalise" onclick="solicitarReanalise()" style="display:none;">Reanálise</button><button class="btn-danger" id="btn-civil" onclick="abrirProcessoCivil()" style="display:none;">Processo Civil</button><button class="btn-success" id="btn-finalizar" onclick="alert('Arquivado!')" style="display:none;">Arquivar</button></div></div></div>
                 </div>
@@ -478,6 +480,7 @@
     <div class="modal-overlay" id="modal-lembrete-contrato"><div class="modal"><h3 style="color:var(--warning); margin-top:0; font-size:1.1rem;"><i class="fas fa-clock"></i> Lembrete</h3><p>Cliente assinou o contrato?</p><div class="btn-row" style="justify-content:flex-end; margin-top:1rem;"><button class="btn-outline" style="width:auto;" onclick="fecharModal('modal-lembrete-contrato')">Não</button><button class="btn-success" style="width:auto;" onclick="confirmarAssinaturaViaModal()">Sim</button></div></div></div>
     <div class="modal-overlay" id="modal-pendencias"><div class="modal"><h3 style="margin-top:0; font-size:1.1rem;">Selecionar Docs Pendentes</h3><div id="checklist-container"></div><div class="btn-row" style="justify-content:flex-end; margin-top:1rem;"><button class="btn-outline" style="width:auto;" onclick="fecharModal('modal-pendencias')">Cancelar</button><button class="btn-primary" style="width:auto;" onclick="salvarPendencias()">Salvar</button></div></div></div>
     <div class="modal-overlay" id="modal-sinistro"><div class="modal"><h3 style="margin-top:0; font-size:1.1rem;">Resultado Seguradora</h3><div class="form-group" style="margin-bottom:1rem;"><label style="font-weight:600; font-size:0.9rem;">Houve Pendência?</label><div class="btn-row"><button class="btn-warning" onclick="abrirModalPendencias('seguradora')">Sim (Listar)</button><button class="btn-primary" onclick="mostrarAreaResultado()">Não (Seguir)</button></div></div><div id="area-resultado-seg" style="display:none; border-top:1px solid #eee; padding-top:1rem;"><label style="font-weight:600;">Status:</label><select id="select-status-seg" class="input-text" style="margin-bottom:0.5rem;" onchange="checkStatusSeg()"><option value="ganha">🟢 Causa Ganha</option><option value="parcial">🟡 Parcial</option><option value="indeferido">🔴 Indeferido</option></select><div id="area-valor-indenizacao"><label style="font-weight:600;">Valor (R$):</label><input type="text" class="input-text" id="input-valor" placeholder="0,00"></div><label style="font-weight:600; margin-top:0.5rem; display:block;">Nº Sinistro:</label><input type="text" class="input-text" id="input-sinistro-num" placeholder="Ex: 2024.999"><div class="btn-row" style="justify-content:flex-end; margin-top:1rem;"><button class="btn-primary" onclick="salvarResultadoSeg()">Salvar</button></div></div></div></div>
+    <div class="modal-overlay" id="modal-comprovante-medico"><div class="modal"><h3 style="margin-top:0; font-size:1.1rem;">Comprovante de Pagamento</h3><p style="font-size:0.85rem; color:#64748b;">Anexe o comprovante de pagamento do médico para seguir o fluxo.</p><div class="form-group" style="margin:0.5rem 0 1rem 0;"><input type="file" class="input-text" id="input-comprovante-medico"></div><div class="btn-row" style="justify-content:flex-end; margin-top:0.5rem;"><button class="btn-outline" style="width:auto;" onclick="fecharModal('modal-comprovante-medico')">Cancelar</button><button class="btn-success" style="width:auto;" onclick="confirmarPagamentoMedico()">Confirmar Pagamento</button></div></div></div>
 
     <!-- TOAST CONTAINER -->
     <div class="toast-container" id="toast-container"></div>
@@ -731,7 +734,7 @@
 
         // --- FLUXO E SIMULAÇÃO ---
         const docs = ["RG/CNH", "Comp. Residência", "Carteira Trabalho", "Holerites (3)", "Laudos Médicos", "Prontuário", "Dados Bancários", "B.O / C.A.T"];
-        let estado = { medicoPago: false, laudo: false, contratoAssinado: false, tentativasSeg: 0, contextoPendencia: '' };
+        let estado = { medicoPago: false, laudo: false, contratoAssinado: false, tentativasSeg: 0, contextoPendencia: '', dataPendenciaAnalise: null };
 
         function resetFlowSimulation() {
             // Reset visual do fluxo para o estado inicial
@@ -742,6 +745,12 @@
             for(let i=1; i<=7; i++) {
                 updateStep('step-'+i, 'neutral', 'neutral', 'Aguardando');
                 document.getElementById('step-'+i).style.display = 'none';
+            }
+            const infoPend = document.getElementById('analise-pendente-info');
+            const dataPend = document.getElementById('data-pendencia-analise');
+            if (infoPend && dataPend) {
+                infoPend.style.display = 'none';
+                dataPend.innerText = '-';
             }
             
             // Mostra passo 1
@@ -757,7 +766,8 @@
             if (randomStage >= 5) { updateStep('step-4', 'success', 'success', 'Assinado'); updateStep('step-5', 'active', 'neutral', 'Aberto'); document.getElementById('step-5').style.display = 'flex'; }
             
             // Reset estado interno
-            estado = { medicoPago: false, laudo: false, contratoAssinado: false, tentativasSeg: 0, contextoPendencia: '' };
+            estado = { medicoPago: false, laudo: false, contratoAssinado: false, tentativasSeg: 0, contextoPendencia: '', dataPendenciaAnalise: null };
+            atualizarLinhaProgresso();
         }
 
         window.onload = () => { renderChecklist(); renderProcessList(); }; // Inicializa lista
@@ -767,12 +777,63 @@
             const el = document.getElementById(id); const badge = document.getElementById('status-' + id.split('-')[1]);
             el.className = `timeline-item ${status}`; badge.className = `status-badge ${badgeClass}`; badge.innerText = badgeText;
             if(['active','success','warning','danger','info'].includes(status)) el.style.display = 'flex';
+            atualizarLinhaProgresso();
+        }
+
+        function atualizarLinhaProgresso() {
+            const timeline = document.querySelector('#view-flow-detail .timeline');
+            const progressEl = document.getElementById('timeline-progress');
+            if (!timeline || !progressEl) return;
+            const items = Array.from(timeline.querySelectorAll('.timeline-item'));
+            if (items.length === 0) return;
+            const firstItem = items[0];
+            const firstMarker = firstItem.querySelector('.timeline-marker');
+            if (!firstMarker) return;
+            let lastIndex = 0;
+            items.forEach((item, index) => {
+                if (!item.classList.contains('neutral')) {
+                    lastIndex = index;
+                }
+            });
+            if (lastIndex === 0) {
+                progressEl.style.width = '0';
+                return;
+            }
+            const lastItem = items[lastIndex];
+            const lastMarker = lastItem.querySelector('.timeline-marker');
+            if (!lastMarker) return;
+            const timelineRect = timeline.getBoundingClientRect();
+            const firstRect = firstMarker.getBoundingClientRect();
+            const lastRect = lastMarker.getBoundingClientRect();
+            const startX = firstRect.left - timelineRect.left + firstRect.width / 2;
+            const endX = lastRect.left - timelineRect.left + lastRect.width / 2;
+            const width = Math.max(0, endX - startX);
+            progressEl.style.left = startX + 'px';
+            progressEl.style.width = width + 'px';
         }
         function abrirModalPendencias(ctx) { estado.contextoPendencia = ctx; document.querySelectorAll('#checklist-container input').forEach(i => i.checked = false); fecharModal('modal-sinistro'); document.getElementById('modal-pendencias').style.display = 'flex'; }
         function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
         function salvarPendencias() {
             const checks = Array.from(document.querySelectorAll('#checklist-container input:checked')).map(c => c.value);
-            if(estado.contextoPendencia === 'analise') { if(checks.length > 0) updateStep('step-3', 'danger', 'danger', 'Pendente'); else validarDocumentos(); }
+            if(estado.contextoPendencia === 'analise') {
+                if(checks.length > 0) {
+                    updateStep('step-3', 'danger', 'danger', 'Pendente');
+                    const box = document.getElementById('pendencias-box');
+                    const info = document.getElementById('analise-pendente-info');
+                    const dataSpan = document.getElementById('data-pendencia-analise');
+                    if (box) box.style.display = 'block';
+                    if (info && dataSpan) {
+                        info.style.display = 'block';
+                        if (!estado.dataPendenciaAnalise) {
+                            const hoje = new Date().toLocaleDateString('pt-BR');
+                            estado.dataPendenciaAnalise = hoje;
+                        }
+                        dataSpan.innerText = estado.dataPendenciaAnalise;
+                    }
+                } else {
+                    validarDocumentos();
+                }
+            }
             else if (estado.contextoPendencia === 'seguradora') {
                 if(checks.length > 0) {
                     const ul = document.getElementById('ul-pendencias-seg'); ul.innerHTML = ''; checks.forEach(d => ul.innerHTML += `<li>${d}</li>`);
@@ -781,15 +842,26 @@
                 }
             } fecharModal('modal-pendencias');
         }
-        function iniciarCadastro() { updateStep('step-1', 'success', 'success', 'OK'); updateStep('step-2', 'active', 'warning', 'Andamento'); document.getElementById('data-envio').innerText = new Date().toLocaleDateString(); setTimeout(() => { updateStep('step-2', 'success', 'success', 'Enviado'); liberarPasso3(); }, 600); }
+        function iniciarCadastro() { updateStep('step-1', 'success', 'success', 'OK'); updateStep('step-2', 'active', 'warning', 'Andamento'); document.getElementById('data-envio').innerText = new Date().toLocaleDateString('pt-BR'); setTimeout(() => { updateStep('step-2', 'success', 'success', 'Enviado'); liberarPasso3(); }, 600); }
         function liberarPasso3() { updateStep('step-3', 'active', 'warning', 'Analisando'); document.getElementById('btn-validar').disabled = false; document.getElementById('btn-pendencia').disabled = false; }
-        function validarDocumentos() { updateStep('step-3', 'success', 'success', 'Validado'); liberarPasso4(); }
+        function validarDocumentos() {
+            updateStep('step-3', 'success', 'success', 'Validado');
+            const box = document.getElementById('pendencias-box');
+            const info = document.getElementById('analise-pendente-info');
+            const dataSpan = document.getElementById('data-pendencia-analise');
+            if (box) box.style.display = 'none';
+            if (info) info.style.display = 'none';
+            if (dataSpan) dataSpan.innerText = '-';
+            estado.dataPendenciaAnalise = null;
+            liberarPasso4();
+        }
         function liberarPasso4() { updateStep('step-4', 'active', 'neutral', 'A Enviar'); document.getElementById('btn-env-contrato').disabled = false; }
         function enviarContrato() { updateStep('step-4', 'active', 'warning', 'Aguardando'); document.getElementById('contrato-status').innerText = 'Enviado'; document.getElementById('btn-env-contrato').style.display = 'none'; document.getElementById('btn-conf-assinatura').style.display = 'block'; setTimeout(() => { if(!estado.contratoAssinado) document.getElementById('modal-lembrete-contrato').style.display = 'flex'; }, 2000); }
         function confirmarAssinaturaViaModal() { fecharModal('modal-lembrete-contrato'); confirmarAssinatura(); }
         function confirmarAssinatura() { estado.contratoAssinado = true; document.getElementById('contrato-status').innerText = 'Assinado'; updateStep('step-4', 'success', 'success', 'OK'); document.getElementById('btn-conf-assinatura').disabled = true; liberarPasso5(); }
         function liberarPasso5() { updateStep('step-5', 'active', 'neutral', 'Aberto'); document.getElementById('btn-pgto-medico').disabled = false; document.getElementById('btn-laudo').disabled = false; }
-        function pagarMedico() { estado.medicoPago = !estado.medicoPago; const btn = document.getElementById('btn-pgto-medico'); if(estado.medicoPago) { btn.className = 'btn-success'; btn.innerText = 'Pago'; } else { btn.className = 'btn-danger'; btn.innerText = '$ Pagar'; } checkPasso5(); }
+        function abrirModalPgtoMedico() { document.getElementById('modal-comprovante-medico').style.display = 'flex'; }
+        function confirmarPagamentoMedico() { fecharModal('modal-comprovante-medico'); estado.medicoPago = true; const btn = document.getElementById('btn-pgto-medico'); btn.className = 'btn-success'; btn.innerText = 'Pago'; checkPasso5(); }
         function receberLaudo() { estado.laudo = true; const btn = document.getElementById('btn-laudo'); btn.className = 'btn-success'; btn.innerText = 'Laudo OK'; btn.disabled = true; checkPasso5(); }
         function checkPasso5() { const alerta = document.getElementById('alerta-pagamento'); if (estado.laudo && !estado.medicoPago) { updateStep('step-5', 'danger', 'danger', 'Falta Pgto'); alerta.style.display = 'block'; liberarPasso6(); } else if (estado.laudo && estado.medicoPago) { updateStep('step-5', 'success', 'success', 'OK'); alerta.style.display = 'none'; liberarPasso6(); } else if (!estado.laudo && estado.medicoPago) { updateStep('step-5', 'warning', 'warning', 'Aguardando'); alerta.style.display = 'none'; } }
         function liberarPasso6() { updateStep('step-6', 'active', 'neutral', 'A Enviar'); document.getElementById('btn-env-seg').disabled = false; }

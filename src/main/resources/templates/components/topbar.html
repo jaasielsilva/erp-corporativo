@@ -412,7 +412,7 @@
                 document.addEventListener('DOMContentLoaded', function () {
                     var container = document.getElementById('juridico-toast-container');
                     if (container) {
-                        // Move to body to avoid stacking context issues (transform, overflow, etc.)
+                        // Move to body to avoid stacking context issues
                         document.body.appendChild(container);
 
                         var toastElList = [].slice.call(container.querySelectorAll('.toast'));
@@ -421,8 +421,11 @@
                             try { return JSON.parse(localStorage.getItem('juridicoSnoozes') || '{}'); } catch (e) { return {}; }
                         }
                         function saveSnooze(key, until) {
-                            var s = getSnoozes(); s[key] = until;
-                            try { localStorage.setItem('juridicoSnoozes', JSON.stringify(s)); } catch (e) {}
+                            try {
+                                var s = getSnoozes(); 
+                                s[key] = until;
+                                localStorage.setItem('juridicoSnoozes', JSON.stringify(s)); 
+                            } catch (e) { console.error('Error saving snooze', e); }
                         }
                         function isSnoozed(key) {
                             var s = getSnoozes(); var until = s[key] || 0; return Number(until) > Date.now();
@@ -431,8 +434,11 @@
                             try { return JSON.parse(localStorage.getItem('juridicoReads') || '{}'); } catch (e) { return {}; }
                         }
                         function saveRead(key) {
-                            var r = getReads(); r[key] = true;
-                            try { localStorage.setItem('juridicoReads', JSON.stringify(r)); } catch (e) {}
+                            try {
+                                var r = getReads(); 
+                                r[key] = true;
+                                localStorage.setItem('juridicoReads', JSON.stringify(r)); 
+                            } catch (e) { console.error('Error saving read', e); }
                         }
                         function isRead(key) {
                             var r = getReads(); return !!r[key];
@@ -441,117 +447,111 @@
                             try {
                                 var content = el.querySelector('.fw-medium');
                                 var raw = content ? (content.innerText || content.textContent || '').trim() : (el.innerText || '').trim();
+                                // Normalize whitespace
+                                raw = raw.replace(/\s+/g, ' ');
                                 var hash = 0;
                                 for (var i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
                                 return 'juridico:' + hash;
                             } catch (e) { return 'juridico:' + Math.random().toString(36).slice(2); }
                         }
 
-                        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-                            toastElList.map(function (toastEl) {
-                                var key = getAlertKey(toastEl);
-                                var t = new bootstrap.Toast(toastEl, { autohide: false });
-                                if (!isSnoozed(key) && !isRead(key)) {
-                                    t.show();
-                                } else {
-                                    try { t.hide(); } catch (e) { }
-                                    toastEl.classList.remove('show');
-                                    toastEl.style.display = 'none';
-                                }
-                                var btn = toastEl.querySelector('.btn-snooze-1h');
-                                if (btn) {
-                                    btn.addEventListener('click', function () {
-                                        var k = getAlertKey(toastEl);
-                                        saveSnooze(k, Date.now() + 60 * 60 * 1000);
-                                        try { t.hide(); } catch (e) { }
-                                        toastEl.classList.remove('show');
-                                        toastEl.style.display = 'none';
-                                    });
-                                }
-                                var btnResolve = toastEl.querySelector('.btn-resolver-agora');
-                                if (btnResolve) {
-                                    btnResolve.addEventListener('click', function () {
-                                        var link = toastEl.querySelector('.fw-medium a[href]');
-                                        var k = getAlertKey(toastEl);
-                                        saveRead(k);
-                                        try { t.hide(); } catch (e) { }
-                                        toastEl.classList.remove('show');
-                                        toastEl.style.display = 'none';
-                                        if (link && link.getAttribute('href')) {
-                                            window.location.href = link.getAttribute('href');
-                                        }
-                                    });
-                                }
-                                var btnRead = toastEl.querySelector('.btn-marcar-lido');
-                                if (btnRead) {
-                                    btnRead.addEventListener('click', function () {
-                                        var k = getAlertKey(toastEl);
-                                        saveRead(k);
-                                        try { t.hide(); } catch (e) { }
-                                        toastEl.classList.remove('show');
-                                        toastEl.style.display = 'none';
-                                    });
-                                }
-                                return t;
-                            });
-                        } else {
-                            // Fallback for pages without Bootstrap JS
-                            toastElList.forEach(function (el) {
-                                var key = getAlertKey(el);
-                                if (!isSnoozed(key) && !isRead(key)) {
-                                    el.classList.add('show');
-                                    el.style.display = 'block';
-                                    el.style.opacity = '1';
-                                    el.style.backgroundColor = '#fff';
-                                    el.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
-                                    el.style.marginBottom = '0.75rem';
-                                } else {
-                                    el.classList.remove('show');
-                                    el.style.display = 'none';
-                                }
-
-                                // Manual close handler
-                                var btn = el.querySelector('.btn-close');
-                                if (btn) {
-                                    btn.style.cursor = 'pointer';
-                                    btn.onclick = function () {
-                                        el.style.display = 'none';
-                                        el.classList.remove('show');
-                                    };
-                                }
-                                var snoozeBtn = el.querySelector('.btn-snooze-1h');
-                                if (snoozeBtn) {
-                                    snoozeBtn.addEventListener('click', function () {
-                                        var k = getAlertKey(el);
-                                        saveSnooze(k, Date.now() + 60 * 60 * 1000);
-                                        el.classList.remove('show');
-                                        el.style.display = 'none';
-                                    });
-                                }
-                                var resolveBtn = el.querySelector('.btn-resolver-agora');
-                                if (resolveBtn) {
-                                    resolveBtn.addEventListener('click', function () {
-                                        var link = el.querySelector('.fw-medium a[href]');
-                                        var k = getAlertKey(el);
-                                        saveRead(k);
-                                        el.classList.remove('show');
-                                        el.style.display = 'none';
-                                        if (link && link.getAttribute('href')) {
-                                            window.location.href = link.getAttribute('href');
-                                        }
-                                    });
-                                }
-                                var readBtn = el.querySelector('.btn-marcar-lido');
-                                if (readBtn) {
-                                    readBtn.addEventListener('click', function () {
-                                        var k = getAlertKey(el);
-                                        saveRead(k);
-                                        el.classList.remove('show');
-                                        el.style.display = 'none';
-                                    });
-                                }
-                            });
+                        // Helper to hide toast
+                        function hideToast(el, bsToast) {
+                            try {
+                                if (bsToast) bsToast.hide();
+                            } catch(e) {}
+                            
+                            // Force hide
+                            el.classList.remove('show');
+                            el.style.setProperty('display', 'none', 'important');
+                            el.style.setProperty('opacity', '0', 'important');
                         }
+
+                        // Check if Bootstrap is available and working
+                        var useBootstrap = typeof bootstrap !== 'undefined' && bootstrap.Toast;
+
+                        toastElList.forEach(function (toastEl) {
+                            var key = getAlertKey(toastEl);
+                            var bsToast = null;
+
+                            // Initialize Bootstrap Toast if available
+                            if (useBootstrap) {
+                                try {
+                                    bsToast = new bootstrap.Toast(toastEl, { autohide: false });
+                                } catch(e) {
+                                    console.warn('Bootstrap Toast init failed', e);
+                                    useBootstrap = false;
+                                }
+                            }
+
+                            // Show or Hide based on status
+                            if (!isSnoozed(key) && !isRead(key)) {
+                                if (useBootstrap && bsToast) {
+                                    bsToast.show();
+                                } else {
+                                    toastEl.classList.add('show');
+                                    toastEl.style.display = 'block';
+                                    toastEl.style.opacity = '1';
+                                }
+                            } else {
+                                hideToast(toastEl, bsToast);
+                            }
+
+                            // Attach Event Listeners
+                            
+                            // Snooze 1h
+                            var btnSnooze = toastEl.querySelector('.btn-snooze-1h');
+                            if (btnSnooze) {
+                                btnSnooze.onclick = function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    var k = getAlertKey(toastEl);
+                                    saveSnooze(k, Date.now() + 60 * 60 * 1000); // 1 hour
+                                    hideToast(toastEl, bsToast);
+                                };
+                            }
+
+                            // Mark as Read
+                            var btnRead = toastEl.querySelector('.btn-marcar-lido');
+                            if (btnRead) {
+                                btnRead.onclick = function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    var k = getAlertKey(toastEl);
+                                    saveRead(k);
+                                    hideToast(toastEl, bsToast);
+                                };
+                            }
+                            
+                            // Resolve Now (if exists)
+                            var btnResolve = toastEl.querySelector('.btn-resolver-agora');
+                            if (btnResolve) {
+                                btnResolve.onclick = function (e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    var k = getAlertKey(toastEl);
+                                    saveRead(k);
+                                    hideToast(toastEl, bsToast);
+                                    
+                                    var link = toastEl.querySelector('.fw-medium a[href]');
+                                    if (link && link.getAttribute('href')) {
+                                        window.location.href = link.getAttribute('href');
+                                    }
+                                };
+                            }
+
+                            // Close Button (X)
+                            var btnClose = toastEl.querySelector('.btn-close');
+                            if (btnClose) {
+                                btnClose.onclick = function(e) {
+                                    // Just hide, don't mark as read/snoozed? Or standard behavior?
+                                    // Standard BS dismiss just hides.
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    hideToast(toastEl, bsToast);
+                                };
+                            }
+                        });
                     }
                 });
             </script>

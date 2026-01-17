@@ -461,6 +461,121 @@
                   </div>
               </div>
               <div class="tab-pane fade" id="previd-content-timeline" role="tabpanel">
+                  <div class="timeline-wrapper mb-4">
+                      <div class="timeline">
+                          <div class="timeline-progress"></div>
+
+                          <div class="timeline-item active" id="previd-step-1">
+                              <div class="timeline-marker">1</div>
+                              <div class="card">
+                                  <div class="card-header d-flex justify-content-between align-items-center">
+                                      <h3 class="card-title mb-0">Contato</h3>
+                                      <span class="status-badge neutral" id="previd-status-1">Novo</span>
+                                  </div>
+                                  <div class="card-content p-3">
+                                      <p class="mb-2">Msg cliente.</p>
+                                      <button class="btn btn-primary btn-sm">
+                                          <i class="fas fa-play me-1"></i> Iniciar
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="timeline-item neutral" id="previd-step-2">
+                              <div class="timeline-marker">2</div>
+                              <div class="card">
+                                  <div class="card-header d-flex justify-content-between align-items-center">
+                                      <h3 class="card-title mb-0">Solicitação</h3>
+                                      <span class="status-badge neutral" id="previd-status-2">Aguardando</span>
+                                  </div>
+                                  <div class="card-content p-3">
+                                      <p class="mb-2">Docs enviados.</p>
+                                      <details>
+                                          <summary>Ver Lista</summary>
+                                          <ul class="mb-1">
+                                              <li>RG/CNH</li>
+                                              <li>Comp. Residência</li>
+                                              <li>CTPS</li>
+                                              <li>Holerites</li>
+                                              <li>Docs Médicos</li>
+                                              <li>Prontuário</li>
+                                              <li>Dados Bancários</li>
+                                              <li>B.O / C.A.T</li>
+                                          </ul>
+                                      </details>
+                                      <div style="font-size:0.75rem; color:#64748b; margin-top:0.3rem;">
+                                          <i class="fas fa-clock me-1"></i> Data: <span id="previd-data-envio">-</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="timeline-item neutral" id="previd-step-3">
+                              <div class="timeline-marker">3</div>
+                              <div class="card">
+                                  <div class="card-header d-flex justify-content-between align-items-center">
+                                      <h3 class="card-title mb-0">Análise</h3>
+                                      <span class="status-badge neutral" id="previd-status-3">Bloqueado</span>
+                                  </div>
+                                  <div class="card-content p-3">
+                                      <p class="mb-2">Triagem.</p>
+                                      <div class="alert-box alert-danger mb-2" id="previd-pendencias-box" style="display:none;">
+                                          Pendente
+                                      </div>
+                                      <div id="previd-analise-info" style="display:none; font-size:0.75rem; color:#64748b; margin-top:0.3rem;">
+                                          <i class="fas fa-clock me-1"></i> Data: <span id="previd-data-analise">-</span>
+                                      </div>
+                                      <div class="btn-row mt-2 d-flex gap-2">
+                                          <button class="btn btn-success btn-sm" id="previd-btn-ok" disabled>OK</button>
+                                          <button class="btn btn-warning btn-sm" id="previd-btn-pendente" disabled>Pendente</button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="timeline-item neutral" id="previd-step-4">
+                              <div class="timeline-marker">4</div>
+                              <div class="card">
+                                  <div class="card-header d-flex justify-content-between align-items-center">
+                                      <h3 class="card-title mb-0">Contrato</h3>
+                                      <span class="status-badge neutral" id="previd-status-4">Bloqueado</span>
+                                  </div>
+                                  <div class="card-content p-3">
+                                      <p class="mb-2">Formalização.</p>
+                                      <div class="d-flex justify-content-between align-items-center mb-2" style="font-size:0.8rem;">
+                                          <span>Status:</span>
+                                          <span id="previd-contrato-status" style="font-weight:bold;">Não Enviado</span>
+                                      </div>
+                                      <div class="btn-row d-flex gap-2">
+                                          <button class="btn btn-primary btn-sm" id="previd-btn-env-contrato" disabled>Enviar</button>
+                                          <button class="btn btn-success btn-sm" id="previd-btn-conf-assinatura" style="display:none;">Confirmar</button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="timeline-item neutral" id="previd-step-5">
+                              <div class="timeline-marker">5</div>
+                              <div class="card">
+                                  <div class="card-header d-flex justify-content-between align-items-center">
+                                      <h3 class="card-title mb-0">Médico</h3>
+                                      <span class="status-badge neutral" id="previd-status-5">Bloqueado</span>
+                                  </div>
+                                  <div class="card-content p-3">
+                                      <p class="mb-2">Perícia.</p>
+                                      <div class="alert-box alert-danger mb-2" id="previd-alerta-pagamento" style="display:none;">
+                                          PAGAMENTO PENDENTE
+                                      </div>
+                                      <div class="btn-row d-flex gap-2">
+                                          <button class="btn btn-danger btn-sm" id="previd-btn-pgto-medico" disabled>$ Pagar</button>
+                                          <button class="btn btn-primary btn-sm" id="previd-btn-laudo" disabled>Laudo</button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
                   <div class="timeline-modern" id="previdTimeline">
                       <div class="text-center py-4 text-muted">Carregando timeline...</div>
                   </div>

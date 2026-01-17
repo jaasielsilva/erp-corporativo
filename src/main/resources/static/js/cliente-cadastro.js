@@ -71,9 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (origem.value === 'Indicação') {
       divIndicacao.style.display = 'block';
-      if (indicadorNome) indicadorNome.setAttribute('required', 'required');
-      if (indicadorTelefone) indicadorTelefone.setAttribute('required', 'required');
-      
       // Preencher data atual se estiver vazio
       if (dataIndicacao && !dataIndicacao.value) {
         const hoje = new Date().toISOString().split('T')[0];
@@ -81,14 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else {
       divIndicacao.style.display = 'none';
-      if (indicadorNome) {
-        indicadorNome.removeAttribute('required');
-        indicadorNome.value = '';
-      }
-      if (indicadorTelefone) {
-        indicadorTelefone.removeAttribute('required');
-        indicadorTelefone.value = '';
-      }
+      if (indicadorNome) indicadorNome.value = '';
+      if (indicadorTelefone) indicadorTelefone.value = '';
       if (dataIndicacao) dataIndicacao.value = '';
     }
   }

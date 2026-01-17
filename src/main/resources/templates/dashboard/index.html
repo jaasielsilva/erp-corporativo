@@ -10,163 +10,245 @@
     <link href="/css/sidebar.css" rel="stylesheet">
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <style>
-        .stats-row {
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
-        .stat-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-
-        .stat-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-number {
-            font-size: 36px;
-            font-weight: 800;
-            color: #1e293b;
-            margin: 10px 0;
-        }
-
-        .stat-label {
-            font-size: 16px;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        .stat-change {
-            font-size: 12px;
-            margin-top: 8px;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .stat-change.positive {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .stat-change.negative {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .charts-section {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .chart-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .chart-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .chart-container {
-            height: 350px;
-        }
-
-        .chart-container-small {
-            height: 250px;
-        }
-
-        .chart-container-narrow {
-            height: 200px;
-            width: 60%;
-            margin: 0 auto;
-        }
-
-        .secondary-charts {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-
-
-        .performance-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .performance-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .performance-metric {
+        .dash-card {
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f5f9;
+            position: relative;
         }
 
-        .performance-metric:last-child {
-            border-bottom: none;
+        .dash-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .metric-label {
-            font-weight: 500;
-            color: #64748b;
+        .dash-card.active-card {
+            background-color: #f1f5f9;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+            transform: translateY(2px);
         }
 
-        .metric-value {
+        .dash-card.red {
+            border-left-color: #c0392b;
+        }
+
+        .dash-card.green {
+            border-left-color: #27ae60;
+        }
+
+        .dash-card.blue {
+            border-left-color: #3498db;
+        }
+
+        .dash-card.yellow {
+            border-left-color: #f39c12;
+        }
+
+        .dash-card.purple {
+            border-left-color: #8e44ad;
+        }
+
+        .dash-card.dark-red {
+            border-left-color: #8b0000;
+        }
+
+        .dash-card.orange {
+            border-left-color: #d35400;
+        }
+
+        .dash-card.gray {
+            border-left-color: #7f8c8d;
+        }
+
+        .dash-card.success {
+            border-left-color: #27ae60;
+        }
+
+        .dash-info h3 {
+            margin: 0;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: #1e293b;
+            color: #2c3e50;
+        }
+
+        .dash-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .dash-icon {
+            font-size: 1.5rem;
+            opacity: 0.25;
+        }
+
+        .dash-card.red .dash-icon {
+            color: #c0392b;
+            opacity: 0.8;
+        }
+
+        .dash-card.green .dash-icon {
+            color: #27ae60;
+            opacity: 0.8;
+        }
+
+        .dash-card.blue .dash-icon {
+            color: #3498db;
+            opacity: 0.8;
+        }
+
+        .dash-card.yellow .dash-icon {
+            color: #f39c12;
+            opacity: 0.8;
+        }
+
+        .dash-card.purple .dash-icon {
+            color: #8e44ad;
+            opacity: 0.8;
+        }
+
+        .dash-card.dark-red .dash-icon {
+            color: #8b0000;
+            opacity: 0.8;
+        }
+
+        .dash-card.orange .dash-icon {
+            color: #d35400;
+            opacity: 0.8;
+        }
+
+        .dash-card.gray .dash-icon {
+            color: #7f8c8d;
+            opacity: 0.8;
+        }
+
+        .dash-card.success .dash-icon {
+            color: #27ae60;
+            opacity: 0.8;
+        }
+
+        .details-panel {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 1rem;
+        }
+
+        .details-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            margin: 0;
+            width: auto;
+        }
+
+        .close-btn:hover {
+            color: #c0392b;
+        }
+
+        #details-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        #details-table th {
+            text-align: left;
+            padding: 0.8rem;
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        #details-table td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+
+        #details-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .badge-status {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-status.pendente {
+            background: #fff1f2;
+            color: #c0392b;
+        }
+
+        .badge-status.pago {
+            background: #f0fdf4;
+            color: #27ae60;
+        }
+
+        .badge-status.ativo {
+            background: #eff6ff;
+            color: #3498db;
+        }
+
+        .badge-status.atencao {
+            background: #fef9c3;
+            color: #f39c12;
+        }
+
+        .badge-status.civil {
+            background: #e2e8f0;
+            color: #2c3e50;
         }
     </style>
 </head>
@@ -176,916 +258,297 @@
     <div data-user-email="[[${#httpServletRequest.remoteUser != null ? #httpServletRequest.remoteUser : ''}]]" style="display: none;"></div>
 
     <div class="app-container">
-        <!-- Sidebar -->
         <aside th:replace="~{components/sidebar :: sidebar}"></aside>
-
-        <!-- Conteúdo principal -->
         <main class="main-content">
             <header th:replace="~{components/topbar :: topbar}"></header>
 
             <section class="content-area">
-                <div class="container">
-                    <!-- Header -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h2 class="mb-0">Dashboard Executivo</h2>
-
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <!-- Indicador de Notificações -->
-                                    <div class="position-relative" th:if="${notificacaoesNaoLidas > 0}">
-                                        <button class="btn btn-outline-primary position-relative"
-                                            onclick="abrirNotificacoes()">
-                                            <i class="fas fa-bell"></i>
-                                            <span
-                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                                th:text="${notificacaoesNaoLidas}" th:if="${notificacaoesNaoLidas > 0}">
-                                                <span class="visually-hidden">notificações não lidas</span>
-                                            </span>
-                                        </button>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Cards de indicadores-chave -->
-                    <div class="stats-row">
-                        <div class="stat-card" th:if="${podeVisualizarFinanceiro}">
-                            <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                            <div class="stat-number" id="kpiFaturamentoMensal" th:text="${faturamentoMensal}">R$ 2.847.350</div>
-                            <div class="stat-label">Faturamento Últimos 12 Meses</div>
-                            <div class="stat-change" id="kpiCrescimentoFaturamento"
-                                th:class="${crescimentoFaturamento.startsWith('+') ? 'stat-change positive' : 'stat-change negative'}"
-                                th:text="${crescimentoFaturamento} + ' vs mês anterior'">+12.5% vs mês anterior</div>
-                        </div>
-                        <div class="stat-card" th:if="${podeVisualizarFinanceiro}">
-                            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                            <div class="stat-number" id="kpiInadimplencia" th:text="${inadimplencia}">0,0%</div>
-                            <div class="stat-label">Inadimplência</div>
-                        </div>
-                        <div class="stat-card" th:if="${podeVisualizarOperacional or podeVisualizarFinanceiro}">
-                            <div class="stat-icon"><i class="fas fa-users"></i></div>
-                            <div class="stat-number" id="kpiTotalClientes" th:text="${totalClientes}">3.892</div>
-                            <div class="stat-label">Clientes Ativos</div>
-                            <div class="stat-change positive" id="kpiNovosClientes"
-                                th:text="'+' + ${novosClientes30Dias} + ' novos nos últimos 30 dias'">+156 novos nos últimos 30 dias</div>
-                        </div>
-                        <div class="stat-card" th:if="${podeVisualizarOperacional}">
-                            <div class="stat-icon"><i class="fas fa-boxes"></i></div>
-                            <div class="stat-number" id="kpiTotalProdutos" th:text="${totalProdutos}" th:attr="data-value=${totalProdutos}">847</div>
-                            <div class="stat-label">Produtos em Estoque</div>
-                            <div class="stat-change negative" id="kpiProdutosCriticos" th:text="${produtosCriticos}" th:attr="data-value=${produtosCriticos}">
-                                -23 produtos críticos</div>
-                        </div>
-                        <div class="stat-card" th:if="${podeVisualizarRH}">
-                            <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
-                            <div class="stat-number" id="kpiTotalFuncionarios" th:text="${totalFuncionarios}" th:attr="data-value=${totalFuncionarios}">156</div>
-                            <div class="stat-label">Funcionários Ativos</div>
-                            <div class="stat-change positive" id="kpiContratacoes12Meses" th:text="${contratacoes12Meses}" th:attr="data-value=${contratacoes12Meses}">+5 contratações nos últimos 12 meses</div>
-                        </div>
-                        <div class="stat-card" th:if="${podeVisualizarRH}">
-                            <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
-                            <div class="stat-number" id="kpiProcessosAdesaoTotal" th:text="${processosAdesaoTotal}">23</div>
-                            <div class="stat-label">Processos de Adesão</div>
-                            <div class="stat-change"
-                                id="kpiProcessosAguardando"
-                                th:class="${processosAguardandoAprovacao > 0 ? 'stat-change negative' : 'stat-change positive'}"
-                                th:text="${processosAguardandoAprovacao} + ' aguardando aprovação'">
-                                5 aguardando aprovação
-                            </div>
-                        </div>
-                        <div class="stat-card" onclick="window.location.href='/juridico'" th:if="${podeVisualizarJuridico}">
-                            <div class="stat-icon"><i class="fas fa-gavel"></i></div>
-                            <div class="stat-number" id="kpiJuridicoProcessos">0</div>
-                            <div class="stat-label">Processos Jurídicos em Andamento</div>
-                            <div class="stat-change" id="kpiJuridicoPrazos">Prazos a vencer: 0</div>
-                        </div>
-
-                    </div>
-
-                    <!-- Gráficos Principais -->
-                    <div class="charts-section">
-                        <div class="chart-card" th:if="${podeVisualizarFinanceiro}">
-                            <div class="chart-title">
-                                <i class="fas fa-chart-line"></i>
-                                Evolução de Vendas - Últimos 12 Meses
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="graficoVendas"></canvas>
-                            </div>
-                        </div>
-                        <div class="chart-card" th:if="${podeVisualizarOperacional}">
-                            <div class="chart-title">
-                                <i class="fas fa-chart-pie"></i>
-                                Vendas por Categoria
-                            </div>
-                            <div class="chart-container-small">
-                                <canvas id="graficoCategorias"></canvas>
-                            </div>
+                <div class="container-fluid">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3">
+                        <div>
+                            <h1 class="h2 mb-1">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard Executivo
+                            </h1>
+                            <p class="text-muted mb-0">Clique nos cards para ver os detalhes abaixo.</p>
                         </div>
                     </div>
 
-                    <!-- Gráficos Secundários -->
-                    <div class="secondary-charts">
-                        <div class="chart-card" th:if="${podeVisualizarExecutivo or isAdmin}">
-                            <div class="chart-title">
-                                <i class="fas fa-user-lock"></i>
-                                Solicitações de Acesso ao Sistema
+                    <div class="dashboard-grid">
+                        <div class="dash-card blue" id="card-novos_contatos" onclick="toggleDetails('novos_contatos')">
+                            <div class="dash-info">
+                                <h3>8</h3>
+                                <p>Novos Contatos</p>
                             </div>
-                            <div class="chart-container-small">
-                                <canvas id="graficoSolicitacoes"></canvas>
-                            </div>
-                        </div>
-                        <div class="chart-card" th:if="${podeVisualizarRH}">
-                            <div class="chart-title">
-                                <i class="fas fa-user-plus"></i>
-                                Processos de Adesão RH
-                            </div>
-                            <div class="chart-container-narrow">
-                                <canvas id="graficoAdesaoRH"></canvas>
+                            <div class="dash-icon">
+                                <i class="fas fa-comments"></i>
                             </div>
                         </div>
-                        <div class="chart-card" th:if="${podeVisualizarExecutivo}">
-                            <div class="chart-title">
-                                <i class="fas fa-chart-bar"></i>
-                                Performance Mensal
+
+                        <div class="dash-card red" id="card-pagar_medico" onclick="toggleDetails('pagar_medico')">
+                            <div class="dash-info">
+                                <h3>R$ 12.450</h3>
+                                <p>A Pagar (Médicos)</p>
                             </div>
-                            <div class="chart-container-small">
-                                <canvas id="graficoPerformance"></canvas>
+                            <div class="dash-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card yellow" id="card-aguardando_laudo"
+                            onclick="toggleDetails('aguardando_laudo')">
+                            <div class="dash-info">
+                                <h3>5</h3>
+                                <p>Aguardando Laudo</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-file-medical-alt"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card red" id="card-pendencias_docs" onclick="toggleDetails('pendencias_docs')">
+                            <div class="dash-info">
+                                <h3>42</h3>
+                                <p>Pendências (Docs)</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card orange" id="card-contratos_pendentes"
+                            onclick="toggleDetails('contratos_pendentes')">
+                            <div class="dash-info">
+                                <h3>12</h3>
+                                <p>Contratos a Assinar</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card green" id="card-receber_seguradora"
+                            onclick="toggleDetails('receber_seguradora')">
+                            <div class="dash-info">
+                                <h3>R$ 450k</h3>
+                                <p>A Receber (Seg)</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card blue" id="card-processos_ativos"
+                            onclick="toggleDetails('processos_ativos')">
+                            <div class="dash-info">
+                                <h3>1.240</h3>
+                                <p>Processos Ativos</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card gray" id="card-contencioso_civil"
+                            onclick="toggleDetails('contencioso_civil')">
+                            <div class="dash-info">
+                                <h3>85</h3>
+                                <p>Contencioso / Civil</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card success" id="card-processos_arquivados"
+                            onclick="toggleDetails('processos_arquivados')">
+                            <div class="dash-info">
+                                <h3>3.450</h3>
+                                <p>Arquivados (Deferidos)</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-archive"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card yellow" id="card-prazos_criticos"
+                            onclick="toggleDetails('prazos_criticos')">
+                            <div class="dash-info">
+                                <h3>15</h3>
+                                <p>Prazos Críticos (48h)</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-card purple" id="card-produtividade"
+                            onclick="toggleDetails('produtividade')">
+                            <div class="dash-info">
+                                <h3>12</h3>
+                                <p>Proc/Func (Dia)</p>
+                            </div>
+                            <div class="dash-icon">
+                                <i class="fas fa-users-cog"></i>
                             </div>
                         </div>
                     </div>
 
-                    
-                    <!-- Métricas de Performance -->
-                    <div class="performance-grid">
-                        <div class="performance-card" th:if="${podeVisualizarFinanceiro}">
-                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-chart-line"></i>
-                                Indicadores Financeiros</h4>
-                            <div class="performance-metric">
-                                <span class="metric-label">Margem de Lucro</span>
-                                <span class="metric-value" id="kpiMargemLucro" th:text="${margemLucro}">23.5%</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Ticket Médio</span>
-                                <span class="metric-value" id="kpiTicketMedio" th:text="${ticketMedio}">R$ 0,00</span>
-                            </div>
-
-                            <div class="performance-metric">
-                                <span class="metric-label">ROI Mensal</span>
-                                <span class="metric-value" id="kpiRoiMensal" th:text="${roiMensal}">18.7%</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Inadimplência</span>
-                                <span class="metric-value" id="kpiInadimplencia" th:text="${inadimplencia}">0,0%</span>
-                            </div>
-
+                    <div id="details-panel" class="details-panel">
+                        <div class="details-header">
+                            <h3 id="details-title">Detalhes</h3>
+                            <button type="button" class="close-btn" onclick="hideDetails()">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                        <div class="performance-card" th:if="${podeVisualizarRH}">
-                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-users"></i> Recursos
-                                Humanos</h4>
-                            <div class="performance-metric">
-                                <span class="metric-label">Taxa de Retenção</span>
-                                <span class="metric-value" id="kpiTaxaRetencao" th:text="${taxaRetencao}">94.2%</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Produtividade Média</span>
-                                <span class="metric-value" id="kpiProdutividadeMedia" th:text="${produtividadeMedia}">87.3%</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Processos Aprovados</span>
-                                <span class="metric-value" th:text="${processosAprovados}">18</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Tempo Médio Aprovação</span>
-                                <span class="metric-value" th:text="${tempoMedioAprovacao}">2.3 dias</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Satisfação Interna</span>
-                                <span class="metric-value" id="kpiSatisfacaoInterna" th:text="${satisfacaoInterna}">8.7/10</span>
-                            </div>
-                        </div>
-                        <div class="performance-card" th:if="${podeVisualizarOperacional}">
-                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-warehouse"></i> Operações
-                            </h4>
-                            <div class="performance-metric">
-                                <span class="metric-label">Giro de Estoque</span>
-                                <span class="metric-value" id="kpiGiroEstoque" th:text="${giroEstoque}">4.2x</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Tempo Médio Entrega</span>
-                                <span class="metric-value" id="kpiTempoEntrega" th:text="${tempoEntrega}">2.3 dias</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Taxa de Devolução</span>
-                                <span class="metric-value" id="kpiTaxaDevolucao" th:text="${taxaDevolucao}">1.8%</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Eficiência Logística</span>
-                                <span class="metric-value" id="kpiEficienciaLogistica" th:text="${eficienciaLogistica}">91.5%</span>
-                            </div>
+                        <div class="table-responsive">
+                            <table id="details-table" class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Nome / Descrição</th>
+                                        <th>Referência</th>
+                                        <th>Valor / KPI</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="details-body"></tbody>
+                            </table>
                         </div>
                     </div>
-
-                    <div class="performance-grid" style="margin-top: 20px;" th:if="${isAdmin}">
-                        <div class="performance-card">
-                            <h4 style="margin-bottom: 20px; color: #1e293b;"><i class="fas fa-info-circle"></i> Informações do Sistema</h4>
-                            <div class="performance-metric">
-                                <span class="metric-label">Ambiente</span>
-                                <span class="metric-value" id="sysAmbiente">—</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Versão</span>
-                                <span class="metric-value" id="sysVersao">—</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Uptime</span>
-                                <span class="metric-value" id="sysUptime">—</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Memória</span>
-                                <span class="metric-value" id="sysMemoria">—</span>
-                            </div>
-                            <div class="performance-metric">
-                                <span class="metric-label">Java</span>
-                                <span class="metric-value" id="sysJava">—</span>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
+            </section>
+        </main>
     </div>
 
-    <!-- Footer -->
     <div th:replace="~{components/footer :: footer}"></div>
 
-    <!-- Scripts Chart.js -->
-    <script th:inline="javascript">
-        window.LOGS = false;
-        if (!window.LOGS) { try { console.log = function(){}; } catch(e){} }
-        // Configurações globais dos gráficos
-        Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
-        Chart.defaults.color = '#64748b';
-
-        // Gráfico Vendas últimos 12 meses
-        const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
-
-        // Dados estáticos para teste
-        let vendasLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        let vendasValores = [15000, 18000, 22000, 19000, 25000, 28000, 32000, 29000, 31000, 35000, 38000, 42000];
-        let metaValores = [20000, 20000, 20000, 25000, 25000, 25000, 30000, 30000, 30000, 35000, 35000, 35000];
-
-        // Tentar obter dados dinâmicos
-        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
-
-        const chartVendas = new Chart(ctxVendas, {
-            type: 'line',
-            data: {
-                labels: vendasLabels,
-                datasets: [{
-                    label: 'Vendas (R$)',
-                    data: vendasValores,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#667eea',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6
-                }, {
-                    label: 'Meta (R$)',
-                    data: metaValores,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: true, position: 'top' },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#667eea',
-                        borderWidth: 1
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
-                        ticks: {
-                            callback: function (value) {
-                                return 'R$ ' + value.toLocaleString('pt-BR');
-                            }
-                        }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-
-        // Gráfico Vendas por Categoria
-        const ctxCategorias = document.getElementById('graficoCategorias').getContext('2d');
-
-        // Dados estáticos para teste
-        let categoriasLabels = ['Eletrônicos', 'Roupas', 'Casa e Jardim', 'Livros'];
-        let categoriasValores = [2500, 1800, 1200, 800];
-
-        // Tentar obter dados dinâmicos
-        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
-
-        const chartCategorias = new Chart(ctxCategorias, {
-            type: 'doughnut',
-            data: {
-                labels: categoriasLabels,
-                datasets: [{
-                    data: categoriasValores,
-                    backgroundColor: [
-                        '#667eea', '#764ba2', '#f093fb', '#f5576c',
-                        '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'
-                    ],
-                    borderWidth: 0,
-                    hoverBorderWidth: 3,
-                    hoverBorderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { padding: 20 } },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                return context.label + ': R$ ' +
-                                    context.parsed.toLocaleString('pt-BR');
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Gráfico Solicitações por Status
-        const ctxSolicitacoes = document.getElementById('graficoSolicitacoes').getContext('2d');
-
-        // Dados estáticos para teste
-        let solicitacoesLabels = ['Pendentes', 'Aprovadas', 'Rejeitadas', 'Em Análise'];
-        let solicitacoesValores = [25, 45, 8, 12];
-
-        // Tentar obter dados dinâmicos
-        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
-
-        const chartSolicitacoes = new Chart(ctxSolicitacoes, {
-            type: 'doughnut',
-            data: {
-                labels: solicitacoesLabels,
-                datasets: [{
-                    data: solicitacoesValores,
-                    backgroundColor: ['#fbbf24', '#10b981', '#ef4444', '#3b82f6'],
-                    borderWidth: 0,
-                    hoverBorderWidth: 3,
-                    hoverBorderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { padding: 15 } }
-                }
-            }
-        });
-
-        // Gráfico Performance Mensal
-        const ctxPerformance = document.getElementById('graficoPerformance').getContext('2d');
-
-        // Dados estáticos para teste
-        let performanceLabels = ['Vendas', 'Atendimento', 'Logística', 'Qualidade', 'Financeiro'];
-        let performanceValores = [85, 92, 78, 88, 91];
-
-        // Tentar obter dados dinâmicos
-        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
-
-        const chartPerformance = new Chart(ctxPerformance, {
-            type: 'bar',
-            data: {
-                labels: performanceLabels,
-                datasets: [{
-                    label: 'Performance (%)',
-                    data: performanceValores,
-                    backgroundColor: [
-                        'rgba(102, 126, 234, 0.8)',
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(239, 68, 68, 0.8)',
-                        'rgba(59, 130, 246, 0.8)'
-                    ],
-                    borderColor: [
-                        '#667eea', '#10b981', '#f59e0b', '#ef4444', '#3b82f6'
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
-                        ticks: {
-                            callback: function (value) {
-                                return value + '%';
-                            }
-                        }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-
-        // Gráfico Adesão RH
-        const ctxAdesaoRH = document.getElementById('graficoAdesaoRH').getContext('2d');
-
-        // Dados estáticos para teste (fallback)
-        let adesaoLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
-        let adesaoValores = [12, 18, 15, 22, 19, 25];
-
-        // Tentar obter dados dinâmicos dos últimos 6 meses
-        // Dados dinâmicos serão carregados via AJAX do endpoint /dashboard/api/metrics
-
-        const chartAdesaoRH = new Chart(ctxAdesaoRH, {
-            type: 'bar',
-            data: {
-                labels: adesaoLabels,
-                datasets: [{
-                    label: 'Adesões RH',
-                    data: adesaoValores,
-                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                    borderColor: '#10b981',
-                    borderWidth: 2,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-
-        // Animações de entrada para os cards
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        // Aplicar animações aos cards
-        document.querySelectorAll('.stat-card, .chart-card, .performance-card').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(card);
-        });
-
-        function atualizarDashboard() {
-            fetch('/dashboard/api/metrics')
-                .then(r => r.json())
-                .then(d => {
-                    const vf = v => (v === null || typeof v === 'undefined') ? '—' : v;
-                    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = vf(val); };
-                    el('kpiFaturamentoMensal', d.faturamentoMensalFormatado);
-                    el('kpiCrescimentoFaturamento', d.crescimentoFaturamento + ' vs mês anterior');
-                    el('kpiTotalVendas', d.totalVendas);
-                    el('kpiCrescimentoVendas', d.crescimentoVendas + ' vs mês anterior');
-                    el('kpiTotalClientes', d.totalClientes);
-                    el('kpiNovosClientes', '+' + vf(d.novosClientes30Dias) + ' novos nos últimos 30 dias');
-                    { const v = Number(d.totalProdutos || 0); el('kpiTotalProdutos', v.toLocaleString('pt-BR')); }
-                    { const v = Number(d.produtosCriticos || 0); const t = '-' + Math.abs(v).toLocaleString('pt-BR') + (Math.abs(v) === 1 ? ' produto crítico' : ' produtos críticos'); el('kpiProdutosCriticos', t); const e = document.getElementById('kpiProdutosCriticos'); if (e) { e.classList.add('negative'); e.classList.remove('positive'); } }
-                    { const v = Number(d.totalFuncionarios || 0); el('kpiTotalFuncionarios', v.toLocaleString('pt-BR')); }
-                    { const v = Number(d.contratacoes12Meses || 0); const t = (v >= 0 ? '+' : '-') + Math.abs(v).toLocaleString('pt-BR') + (Math.abs(v) === 1 ? ' contratação' : ' contratações') + ' nos últimos 12 meses'; el('kpiContratacoes12Meses', t); const e = document.getElementById('kpiContratacoes12Meses'); if (e) { if (v >= 0) { e.classList.add('positive'); e.classList.remove('negative'); } else { e.classList.add('negative'); e.classList.remove('positive'); } } }
-                    el('kpiProcessosAdesaoTotal', d.processosAdesaoTotal);
-                    el('kpiProcessosAguardando', vf(d.processosAguardandoAprovacao) + ' aguardando aprovação');
-                    el('kpiMargemLucro', d.margemLucro);
-                    el('kpiTicketMedio', d.ticketMedioFormatado);
-                    el('kpiRoiMensal', d.roiMensal);
-                    el('kpiInadimplencia', d.inadimplencia);
-                    el('kpiGiroEstoque', d.giroEstoque);
-                    el('kpiTempoEntrega', d.tempoEntrega);
-                    el('kpiTaxaDevolucao', d.taxaDevolucao);
-                    el('kpiEficienciaLogistica', d.eficienciaLogistica);
-                    if (Array.isArray(d.ultimos12MesesLabels) && d.ultimos12MesesLabels.length > 0) {
-                        chartVendas.data.labels = d.ultimos12MesesLabels;
-                        chartVendas.data.datasets[0].data = Array.isArray(d.ultimos12MesesValores) ? d.ultimos12MesesValores : [];
-                        chartVendas.data.datasets[1].data = Array.isArray(d.metaVendasMensal) ? d.metaVendasMensal : [];
-                        chartVendas.update();
-                    }
-                    if (Array.isArray(d.categoriasLabels) && Array.isArray(d.categoriasValores)) {
-                        chartCategorias.data.labels = d.categoriasLabels;
-                        chartCategorias.data.datasets[0].data = d.categoriasValores;
-                        chartCategorias.update();
-                    }
-                    if (Array.isArray(d.solicitacoesStatus)) {
-                        chartSolicitacoes.data.datasets[0].data = d.solicitacoesStatus;
-                        chartSolicitacoes.update();
-                    }
-                    if (Array.isArray(d.adesaoRHLabels)) {
-                        chartAdesaoRH.data.labels = d.adesaoRHLabels;
-                    }
-                    if (Array.isArray(d.adesaoRHValores)) {
-                        chartAdesaoRH.data.datasets[0].data = d.adesaoRHValores;
-                        chartAdesaoRH.update();
-                    }
-                    if (Array.isArray(d.performanceIndicadores) && d.performanceIndicadores.length > 0) {
-                        chartPerformance.data.datasets[0].data = d.performanceIndicadores;
-                        chartPerformance.update();
-                    }
-                    const lu = document.getElementById('lastUpdate');
-                    if (lu) lu.textContent = new Date().toLocaleString('pt-BR');
-                });
-            fetch('/juridico/api/dashboard/estatisticas')
-                .then(r => r.json())
-                .then(j => {
-                    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
-                    el('kpiJuridicoProcessos', (j && typeof j.processosAndamento !== 'undefined') ? j.processosAndamento : '0');
-                    el('kpiJuridicoPrazos', 'Prazos a vencer: ' + ((j && typeof j.prazosVencendo !== 'undefined') ? j.prazosVencendo : '0'));
-                });
-        }
-        function formatBytes(bytes) {
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-            if (bytes === 0) return '0 B';
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
-            return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
-        }
-
-        function formatUptime(ms) {
-            const s = Math.floor(ms / 1000);
-            const d = Math.floor(s / 86400);
-            const h = Math.floor((s % 86400) / 3600);
-            const m = Math.floor((s % 3600) / 60);
-            const sec = s % 60;
-            return `${d}d ${h}h ${m}m ${sec}s`;
-        }
-
-        function atualizarSistema() {
-            fetch('/dashboard/api/system')
-                .then(r => r.json())
-                .then(d => {
-                    const perf = v => (v === null || typeof v === 'undefined') ? '—' : v;
-                    const amb = Array.isArray(d.activeProfiles) && d.activeProfiles.length > 0 ? d.activeProfiles.join(', ') : 'default';
-                    const mem = d.memory ? `${formatBytes(d.memory.used)} / ${formatBytes(d.memory.total)}` : '—';
-                    const up = typeof d.uptimeMillis === 'number' ? formatUptime(d.uptimeMillis) : '—';
-                    const ver = d.app && d.app.version ? d.app.version : '—';
-                    const jv = perf(d.java);
-                    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
-                    el('sysAmbiente', amb);
-                    el('sysVersao', ver);
-                    el('sysUptime', up);
-                    el('sysMemoria', mem);
-                    el('sysJava', jv);
-                });
-        }
-
-        atualizarDashboard();
-        atualizarSistema();
-        setInterval(() => { atualizarDashboard(); verificarNovasNotificacoes(); atualizarSistema(); }, 300000);
-
-        // Função para abrir painel de notificações
-        function abrirNotificacoes() {
-            // Criar modal de notificações se não existir
-            const modalEl = document.getElementById('modalNotificacoes');
-            if (!modalEl) {
-                criarModalNotificacoes();
-            }
-            
-            // Carregar notificações
-            carregarNotificacoes();
-
-            // Obter instância existente ou criar nova
-            const el = document.getElementById('modalNotificacoes');
-            let modal = bootstrap.Modal.getInstance(el);
-            
-            if (!modal) {
-                modal = new bootstrap.Modal(el, {
-                    backdrop: true,
-                    keyboard: true,
-                    focus: true
-                });
-            }
-
-            // Mostrar modal
-            modal.show();
-        }
-
-        function criarModalNotificacoes() {
-            const modalHtml = `
-                <div class="modal fade" id="modalNotificacoes" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-bell me-2"></i>Notificações
-                                </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="filtrarNotificacoes('todas')" id="btnTodas">Todas</button>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="filtrarNotificacoes('nao-lidas')" id="btnNaoLidas">Não Lidas</button>
-                                    </div>
-                                    <button class="btn btn-sm btn-outline-success" onclick="marcarTodasComoLidas()">
-                                        <i class="fas fa-check-double me-1"></i>Marcar Todas como Lidas
-                                    </button>
-                                </div>
-                                <div id="listaNotificacoes">
-                                    <div class="text-center py-4">
-                                        <div class="spinner-border text-primary" role="status"></div>
-                                        <p class="mt-2 text-muted">Carregando notificações...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
-
-        function carregarNotificacoes(filtro = 'todas') {
-            const endpoint = filtro === 'nao-lidas' ? '/api/notifications/legacy/nao-lidas' : '/api/notifications/legacy';
-
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(notificacoes => {
-                    renderizarNotificacoes(notificacoes);
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar notificações:', error);
-                    document.getElementById('listaNotificacoes').innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Erro ao carregar notificações
-                        </div>
-                    `;
-                });
-        }
-
-        function renderizarNotificacoes(notificacoes) {
-            const lista = document.getElementById('listaNotificacoes');
-
-            if (!notificacoes || notificacoes.length === 0) {
-                lista.innerHTML = `
-                    <div class="text-center py-4">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Nenhuma notificação encontrada</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-            notificacoes.forEach(notificacao => {
-                const tipoClass = getTipoNotificacaoClass(notificacao.tipo);
-                const tipoIcon = getTipoNotificacaoIcon(notificacao.tipo);
-                const dataFormatada = new Date(notificacao.dataHora).toLocaleString('pt-BR');
-
-                html += `
-                    <div class="card mb-2 ${notificacao.lida ? 'opacity-75' : 'border-primary'}" data-notificacao-id="${notificacao.id}">
-                        <div class="card-body py-2">
-                            <div class="d-flex align-items-start">
-                                <div class="me-3">
-                                    <i class="${tipoIcon} ${tipoClass}"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1 ${!notificacao.lida ? 'fw-bold' : ''}">${notificacao.titulo}</h6>
-                                    <p class="mb-1 small">${notificacao.mensagem}</p>
-                                    <small class="text-muted">${dataFormatada}</small>
-                                </div>
-                                <div class="ms-2">
-                                    ${!notificacao.lida ? `
-                                        <button class="btn btn-sm btn-outline-primary" onclick="marcarComoLida('${notificacao.id}')" title="Marcar como lida">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    ` : ''}
-                                    ${notificacao.url ? `
-                                        <a href="${notificacao.url}" class="btn btn-sm btn-outline-info ms-1" title="Ver detalhes">
-                                            <i class="fas fa-external-link-alt"></i>
-                                        </a>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            lista.innerHTML = html;
-        }
-
-        function filtrarNotificacoes(filtro) {
-            // Atualizar botões
-            document.getElementById('btnTodas').className = filtro === 'todas' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
-            document.getElementById('btnNaoLidas').className = filtro === 'nao-lidas' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-primary';
-
-            // Carregar notificações
-            carregarNotificacoes(filtro);
-        }
-
-        function marcarComoLida(notificacaoId) {
-            fetch(`/api/notifications/legacy/${notificacaoId}/marcar-lida`, {
-                method: 'POST'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Remover da lista ou atualizar visualmente
-                        const elemento = document.querySelector(`[data-notificacao-id="${notificacaoId}"]`);
-                        if (elemento) {
-                            elemento.classList.add('opacity-75');
-                            elemento.classList.remove('border-primary');
-                            elemento.querySelector('.btn-outline-primary')?.remove();
-                        }
-
-                        // Atualizar contador
-                        verificarNovasNotificacoes();
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao marcar notificação como lida:', error);
-                });
-        }
-
-        function marcarTodasComoLidas() {
-            fetch('/api/notifications/legacy/marcar-todas-lidas', {
-                method: 'POST'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Recarregar notificações
-                        carregarNotificacoes();
-
-                        // Atualizar contador
-                        verificarNovasNotificacoes();
-
-                        // Mostrar mensagem de sucesso
-                        alert('Todas as notificações foram marcadas como lidas!');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao marcar todas as notificações como lidas:', error);
-                });
-        }
-
-        function verificarNovasNotificacoes() {
-            fetch('/api/notifications/unread-count')
-                .then(response => response.json())
-                .then(data => {
-                    const badge = document.querySelector('.badge.bg-danger');
-                    const botaoNotificacoes = document.querySelector('button[onclick="abrirNotificacoes()"]');
-
-                    if (data.count > 0) {
-                        if (badge) {
-                            badge.textContent = data.count;
-                        }
-                        if (botaoNotificacoes && !botaoNotificacoes.closest('.position-relative')) {
-                            // Criar indicador se não existir
-                            location.reload(); // Recarregar para mostrar o indicador
-                        }
-                    } else {
-                        if (badge) {
-                            badge.style.display = 'none';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao verificar notificações:', error);
-                });
-        }
-
-        function getTipoNotificacaoClass(tipo) {
-            const classes = {
-                'info': 'text-info',
-                'warning': 'text-warning',
-                'success': 'text-success',
-                'error': 'text-danger'
-            };
-            return classes[tipo] || 'text-secondary';
-        }
-
-        function getTipoNotificacaoIcon(tipo) {
-            const icons = {
-                'info': 'fas fa-info-circle',
-                'warning': 'fas fa-exclamation-triangle',
-                'success': 'fas fa-check-circle',
-                'error': 'fas fa-times-circle'
-            };
-            return icons[tipo] || 'fas fa-bell';
-        }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            function fmt(n) {
-                try {
-                    if (n == null) return '0';
-                    const s = String(n).trim();
-                    const num = typeof n === 'number' ? n : parseFloat(s.replace(/[^\d-]/g, ''));
-                    if (!isFinite(num)) return s;
-                    return num.toLocaleString('pt-BR');
-                } catch { return String(n); }
-            }
-            const elProdutos = document.getElementById('kpiTotalProdutos');
-            if (elProdutos) {
-                const v = elProdutos.dataset.value ?? elProdutos.textContent;
-                elProdutos.textContent = fmt(v);
-            }
-            const elCriticos = document.getElementById('kpiProdutosCriticos');
-            if (elCriticos) {
-                const raw = elCriticos.dataset.value ?? elCriticos.textContent;
-                let num = parseInt(String(raw).replace(/[^\d-]/g, ''));
-                if (!isFinite(num)) num = 0;
-                const abs = Math.abs(num);
-                const plural = abs === 1 ? 'produto crítico' : 'produtos críticos';
-                const sign = num < 0 ? '-' : '+';
-                elCriticos.textContent = `${sign}${fmt(abs)} ${plural}`;
-                elCriticos.classList.toggle('positive', num >= 0);
-                elCriticos.classList.toggle('negative', num < 0);
-            }
-            const elFunc = document.getElementById('kpiTotalFuncionarios');
-            if (elFunc) {
-                const v = elFunc.dataset.value ?? elFunc.textContent;
-                elFunc.textContent = fmt(v);
-            }
-            const elContr = document.getElementById('kpiContratacoes12Meses');
-            if (elContr) {
-                const raw = elContr.dataset.value ?? elContr.textContent;
-                let num = parseInt(String(raw).replace(/[^\d-]/g, ''));
-                if (!isFinite(num)) num = 0;
-                const sign = num >= 0 ? '+' : '-';
-                const abs = Math.abs(num);
-                const plural = abs === 1 ? 'contratação' : 'contratações';
-                elContr.textContent = `${sign}${fmt(abs)} ${plural} nos últimos 12 meses`;
-                elContr.classList.toggle('positive', num >= 0);
-                elContr.classList.toggle('negative', num < 0);
-            }
-        });
-    </script>
-    </div>
-    </section>
-    </main>
-    </div>
- 
     <!-- Scripts da página: global é carregado no Topbar -->
     <script th:src="@{/js/notifications.js}" defer></script>
     <script src="/js/sidebar.js" defer></script>
+    <script>
+        let currentOpenCard = null;
 
+        const mockData = {
+            'novos_contatos': [
+                { nome: 'Carlos Eduardo', ref: 'WhatsApp', valor: '16/01 09:30', status: 'ativo' },
+                { nome: 'Fernanda Lima', ref: 'Instagram', valor: '16/01 10:15', status: 'ativo' }
+            ],
+            'pagar_medico': [
+                { nome: 'João Silva', ref: 'Dr. Roberto', valor: 'R$ 450,00', status: 'pendente' },
+                { nome: 'Maria Oliveira', ref: 'Dra. Ana', valor: 'R$ 500,00', status: 'pendente' }
+            ],
+            'aguardando_laudo': [
+                { nome: 'Pedro Henrique', ref: 'Dr. Roberto (Ortopedista)', valor: 'Perícia: 10/01', status: 'atencao' },
+                { nome: 'Carla Dias', ref: 'Dra. Ana (Psiquiatra)', valor: 'Perícia: 12/01', status: 'pendente' },
+                { nome: 'Lucas Santos', ref: 'Dr. Marcos (Neurologista)', valor: 'Perícia: 15/01', status: 'ativo' },
+                { nome: 'Fernanda Souza', ref: 'Dr. Roberto (Ortopedista)', valor: 'Perícia: 16/01', status: 'ativo' },
+                { nome: 'Mariana Lima', ref: 'Dra. Ana (Psiquiatra)', valor: 'Perícia: 16/01', status: 'ativo' }
+            ],
+            'pendencias_docs': [
+                { nome: 'Lucas Mendes', ref: 'RG e CPF', valor: '-', status: 'atencao' },
+                { nome: 'Patricia Santos', ref: 'Holerites', valor: '-', status: 'atencao' }
+            ],
+            'contratos_pendentes': [
+                { nome: 'Marcos Paulo', ref: 'Desde 15/01', valor: '-', status: 'atencao' },
+                { nome: 'Ana Julia', ref: 'Desde 14/01', valor: '-', status: 'atencao' }
+            ],
+            'receber_seguradora': [
+                { nome: 'Amanda Costa', ref: 'Sinistro #9988', valor: 'R$ 15.000', status: 'pago' },
+                { nome: 'Bruno Souza', ref: 'Sinistro #7744', valor: 'R$ 8.200', status: 'pago' }
+            ],
+            'processos_ativos': [
+                { nome: 'Empresa X', ref: 'Trabalhista', valor: '-', status: 'ativo' }
+            ],
+            'contencioso_civil': [
+                { nome: 'Roberto Carlos', ref: 'TJ-SP #12345', valor: 'R$ 50k', status: 'civil' },
+                { nome: 'Julia Roberts', ref: 'TJ-RJ #67890', valor: 'R$ 30k', status: 'civil' }
+            ],
+            'processos_arquivados': [
+                { nome: 'Pedro Alcantara', ref: 'Deferido', valor: 'R$ 12.000', status: 'pago' },
+                { nome: 'Carla Dias', ref: 'Deferido', valor: 'R$ 8.500', status: 'pago' }
+            ],
+            'prazos_criticos': [
+                { nome: 'Juliana Paes', ref: 'Recurso - 24h', valor: 'Urgente', status: 'pendente' }
+            ],
+            'produtividade': [
+                { nome: 'Ana (Comercial)', ref: 'Atendimentos', valor: '18', status: 'ativo' }
+            ]
+        };
+
+        function toggleDetails(type) {
+            const panel = document.getElementById('details-panel');
+
+            if (currentOpenCard === type) {
+                hideDetails();
+                return;
+            }
+
+            document.querySelectorAll('.dash-card').forEach(c => c.classList.remove('active-card'));
+            const currentCard = document.getElementById('card-' + type);
+            if (currentCard) {
+                currentCard.classList.add('active-card');
+            }
+
+            currentOpenCard = type;
+
+            const tbody = document.getElementById('details-body');
+            const title = document.getElementById('details-title');
+
+            const titles = {
+                'novos_contatos': 'Novos Leads / Contatos Iniciais',
+                'pagar_medico': 'Contas a Pagar - Médicos',
+                'aguardando_laudo': 'Aguardando Laudo Médico (Pós-Perícia)',
+                'pendencias_docs': 'Pendências de Documentação (Cliente/Seg)',
+                'contratos_pendentes': 'Contratos Aguardando Assinatura',
+                'receber_seguradora': 'Indenizações a Receber',
+                'processos_ativos': 'Processos em Andamento',
+                'contencioso_civil': 'Processos em Fase Judicial/Civil',
+                'processos_arquivados': 'Processos Finalizados / Arquivados',
+                'prazos_criticos': 'Prazos Judiciais Críticos',
+                'produtividade': 'Produtividade da Equipe'
+            };
+
+            title.innerText = titles[type] || 'Detalhes';
+
+            tbody.innerHTML = '';
+            const data = mockData[type] || [];
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+
+                const nomeTd = document.createElement('td');
+                nomeTd.innerHTML = '<strong>' + item.nome + '</strong>';
+
+                const refTd = document.createElement('td');
+                refTd.textContent = item.ref;
+
+                const valorTd = document.createElement('td');
+                valorTd.textContent = item.valor;
+
+                const statusTd = document.createElement('td');
+                const span = document.createElement('span');
+                span.className = 'badge-status ' + item.status;
+                span.textContent = item.status.toUpperCase();
+                statusTd.appendChild(span);
+
+                row.appendChild(nomeTd);
+                row.appendChild(refTd);
+                row.appendChild(valorTd);
+                row.appendChild(statusTd);
+
+                tbody.appendChild(row);
+            });
+
+            panel.style.display = 'block';
+        }
+
+        function hideDetails() {
+            const panel = document.getElementById('details-panel');
+            panel.style.display = 'none';
+            document.querySelectorAll('.dash-card').forEach(c => c.classList.remove('active-card'));
+            currentOpenCard = null;
+        }
+    </script>
 
 </body>
 

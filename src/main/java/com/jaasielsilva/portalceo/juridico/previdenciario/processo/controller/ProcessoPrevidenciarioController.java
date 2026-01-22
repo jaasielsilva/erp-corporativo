@@ -15,6 +15,7 @@ import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.Proces
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -221,6 +222,18 @@ public class ProcessoPrevidenciarioController {
             m.put("dataAbertura", p.getDataAbertura());
             m.put("dataProtocolo", p.getDataProtocolo());
             m.put("urlMeuInss", p.getUrlMeuInss());
+
+            // Timeline fields
+            m.put("dataEnvioDocumentacao", p.getDataEnvioDocumentacao());
+            m.put("pendenciaAnalise", p.getPendenciaAnalise());
+            m.put("dataAnalise", p.getDataAnalise());
+            m.put("statusContrato", p.getStatusContrato());
+            m.put("dataEnvioContrato", p.getDataEnvioContrato());
+            m.put("dataAssinaturaContrato", p.getDataAssinaturaContrato());
+            m.put("statusMedico", p.getStatusMedico());
+            m.put("dataPagamentoMedico", p.getDataPagamentoMedico());
+            m.put("dataLaudoMedico", p.getDataLaudoMedico());
+
             return ResponseEntity.ok(m);
         } catch (Exception e) {
             return ResponseEntity.status(404).body(Map.of("erro", "Processo previdenciário não encontrado"));
@@ -366,5 +379,82 @@ public class ProcessoPrevidenciarioController {
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    @PostMapping("/{id}/ganho")
+    public String registrarGanho(@PathVariable Long id,
+            @RequestParam BigDecimal valor,
+            @RequestParam(required = false) String dataVencimento,
+            @RequestParam(required = false) String numeroDocumento,
+            @RequestParam(required = false) String observacoes,
+            @AuthenticationPrincipal Usuario usuario,
+            RedirectAttributes redirectAttributes) {
+        try {
+            LocalDate vencimento = null;
+            if (dataVencimento != null && !dataVencimento.isBlank()) {
+                vencimento = LocalDate.parse(dataVencimento);
+            }
+            processoService.registrarGanho(id, valor, vencimento, numeroDocumento, observacoes, usuario);
+            redirectAttributes.addFlashAttribute("mensagem", "Ganho de causa registrado com sucesso!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao registrar ganho: " + e.getMessage());
+        }
+        return "redirect:/juridico/previdenciario/" + id;
+    }
+
+    @PostMapping("/{id}/acoes/iniciar")
+    @ResponseBody
+    public ResponseEntity<?> iniciarProcesso(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario, Authentication auth) {
+        workflowService.avancarEtapa(id, EtapaWorkflowCodigo.DOCUMENTACAO, usuario, auth);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/acoes/enviar-docs")
+    @ResponseBody
+    public ResponseEntity<?> enviarDocs(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        processoService.atualizarEnvioDocumentacao(id, usuario);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/acoes/analise-ok")
+    @ResponseBody
+    public ResponseEntity<?> analiseOk(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        processoService.atualizarAnalise(id, true, usuario);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/acoes/analise-pendente")
+    @ResponseBody
+    public ResponseEntity<?> analisePendente(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        processoService.atualizarAnalise(id, false, usuario);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/acoes/enviar-contrato")
+    @ResponseBody
+    public ResponseEntity<?> enviarContrato(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        processoService.atualizarEnvioContrato(id, usuario);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/acoes/assinar-contrato")
+    @ResponseBody
+    public ResponseEntity<?> assinarContrato(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        processoService.atualizarAssinaturaContrato(id, usuario);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/acoes/pagar-medico")
+    @ResponseBody
+    public ResponseEntity<?> pagarMedico(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        processoService.atualizarPagamentoMedico(id, usuario);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/acoes/laudo-medico")
+    @ResponseBody
+    public ResponseEntity<?> laudoMedico(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        processoService.atualizarLaudoMedico(id, usuario);
+        return ResponseEntity.ok().build();
     }
 }

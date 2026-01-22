@@ -225,4 +225,66 @@ public class ProcessoPrevidenciarioService {
                 observacoes != null ? observacoes : "Valor: " + (valor != null ? valor : "—"));
         return atualizado;
     }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarEnvioDocumentacao(Long processoId, Usuario usuarioExecutor) {
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        p.setDataEnvioDocumentacao(LocalDateTime.now());
+        // p.setEtapaAtual(EtapaWorkflowCodigo.DOCUMENTACAO); // Assume workflow handles transition or already there
+        historicoProcessoService.registrar(p, "ENVIO_DOCS", usuarioExecutor, "Documentação enviada");
+        return processoRepository.save(p);
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarAnalise(Long processoId, boolean aprovado, Usuario usuarioExecutor) {
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        if (aprovado) {
+            p.setDataAnalise(LocalDateTime.now());
+            p.setPendenciaAnalise(false);
+            p.setEtapaAtual(EtapaWorkflowCodigo.CONTRATO); 
+            historicoProcessoService.registrar(p, "ANALISE_OK", usuarioExecutor, "Análise validada - Avançou para Contrato");
+        } else {
+            p.setPendenciaAnalise(true);
+            historicoProcessoService.registrar(p, "ANALISE_PENDENTE", usuarioExecutor, "Pendência identificada na análise");
+        }
+        return processoRepository.save(p);
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarEnvioContrato(Long processoId, Usuario usuarioExecutor) {
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        p.setStatusContrato("ENVIADO");
+        p.setDataEnvioContrato(LocalDateTime.now());
+        historicoProcessoService.registrar(p, "CONTRATO_ENVIADO", usuarioExecutor, "Contrato enviado");
+        return processoRepository.save(p);
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarAssinaturaContrato(Long processoId, Usuario usuarioExecutor) {
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        p.setStatusContrato("ASSINADO");
+        p.setDataAssinaturaContrato(LocalDateTime.now());
+        p.setEtapaAtual(EtapaWorkflowCodigo.MEDICO);
+        historicoProcessoService.registrar(p, "CONTRATO_ASSINADO", usuarioExecutor, "Contrato assinado - Avançou para Médico");
+        return processoRepository.save(p);
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarPagamentoMedico(Long processoId, Usuario usuarioExecutor) {
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        p.setStatusMedico("PAGO");
+        p.setDataPagamentoMedico(LocalDateTime.now());
+        historicoProcessoService.registrar(p, "MEDICO_PAGO", usuarioExecutor, "Médico pago");
+        return processoRepository.save(p);
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarLaudoMedico(Long processoId, Usuario usuarioExecutor) {
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        p.setStatusMedico("LAUDO_EMITIDO");
+        p.setDataLaudoMedico(LocalDateTime.now());
+        p.setEtapaAtual(EtapaWorkflowCodigo.PROTOCOLO_INSS);
+        historicoProcessoService.registrar(p, "LAUDO_MEDICO", usuarioExecutor, "Laudo emitido - Avançou para Protocolo INSS");
+        return processoRepository.save(p);
+    }
 }

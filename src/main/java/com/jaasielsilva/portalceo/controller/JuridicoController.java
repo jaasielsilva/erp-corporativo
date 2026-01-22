@@ -899,9 +899,7 @@ public class JuridicoController {
         } else if (statusEnum != null) {
             processos = processoJuridicoRepository.findByStatus(statusEnum, pageable);
         } else if (hasSearch) {
-            processos = processoJuridicoRepository
-                    .findByNumeroContainingIgnoreCaseOrParteContainingIgnoreCaseOrAssuntoContainingIgnoreCase(
-                            search, search, search, pageable);
+            processos = processoJuridicoRepository.searchByText(search, pageable);
         } else {
             processos = processoJuridicoRepository.findAll(pageable);
         }
@@ -917,6 +915,13 @@ public class JuridicoController {
             item.put("assunto", p.getAssunto());
             item.put("status", p.getStatus());
             item.put("dataAbertura", p.getDataAbertura());
+            if (p.getCliente() != null) {
+                item.put("clienteNome", p.getCliente().getNome());
+                item.put("clienteCpfCnpj", p.getCliente().getCpfCnpj());
+            }
+            item.put("valorCausa", p.getValorCausa());
+            item.put("dataUltimaMovimentacao", p.getDataUltimaMovimentacao());
+            item.put("etapaAtual", p.getTipo() != null ? p.getTipo().getDescricao() : null);
             content.add(item);
         }
         Map<String, Object> payload = new HashMap<>();
@@ -942,6 +947,12 @@ public class JuridicoController {
                     m.put("assunto", p.getAssunto());
                     m.put("status", p.getStatus());
                     m.put("dataAbertura", p.getDataAbertura());
+                    if (p.getCliente() != null) {
+                        m.put("clienteNome", p.getCliente().getNome());
+                        m.put("clienteCpfCnpj", p.getCliente().getCpfCnpj());
+                    }
+                    m.put("valorCausa", p.getValorCausa());
+                    m.put("dataUltimaMovimentacao", p.getDataUltimaMovimentacao());
                     return ResponseEntity.ok(m);
                 })
                 .orElseGet(() -> ResponseEntity.status(404).body(Map.of("erro", "Processo não encontrado")));
@@ -1186,7 +1197,6 @@ public class JuridicoController {
                 andamento.setTipoEtapa(com.jaasielsilva.portalceo.model.juridico.AndamentoProcesso.TipoEtapa.ANDAMENTO);
             }
 
-            // Tenta pegar a data do body ou usa agora
             String dataStr = (String) body.get("dataHora");
             if (dataStr != null && !dataStr.isBlank()) {
                 try {
@@ -1207,10 +1217,69 @@ public class JuridicoController {
             }
             andamento.setUsuario(usuarioNome);
 
+            java.time.LocalDate dataEtapa = andamento.getDataHora() != null
+                    ? andamento.getDataHora().toLocalDate()
+                    : java.time.LocalDate.now();
+            String tituloEtapa = andamento.getTitulo() != null ? andamento.getTitulo() : "";
+
+            if ("Contato inicial".equals(tituloEtapa) && proc.getDataAbertura() == null) {
+                proc.setDataAbertura(dataEtapa);
+            }
+            if ("Documentos recebidos".equals(tituloEtapa) && proc.getDataDocsRecebidos() == null) {
+                proc.setDataDocsRecebidos(dataEtapa);
+            }
+            if (("Análise concluída".equals(tituloEtapa) || "Análise pendente".equals(tituloEtapa))
+                    && proc.getDataAnalise() == null) {
+                proc.setDataAnalise(dataEtapa);
+            }
+            if (("Contrato".equals(tituloEtapa) || "Contrato pendente".equals(tituloEtapa))
+                    && proc.getDataContrato() == null) {
+                proc.setDataContrato(dataEtapa);
+            }
+
+            if (body.containsKey("documentosPendentes")) {
+                Object docsObj = body.get("documentosPendentes");
+                if (docsObj instanceof List) {
+                    List<?> list = (List<?>) docsObj;
+                    if (!list.isEmpty()) {
+                        String pendencias = list.stream().map(Object::toString)
+                                .collect(java.util.stream.Collectors.joining(","));
+                        proc.setDocumentosPendentes(pendencias);
+                        String dataPendenciaStr = (String) body.get("dataPendencia");
+                        if (dataPendenciaStr != null && !dataPendenciaStr.isBlank()) {
+                            try {
+                                proc.setDataPendencia(java.time.LocalDate.parse(dataPendenciaStr));
+                            } catch (Exception e) {
+                                proc.setDataPendencia(java.time.LocalDate.now());
+                            }
+                        } else {
+                            proc.setDataPendencia(java.time.LocalDate.now());
+                        }
+                    } else {
+                        proc.setDocumentosPendentes(null);
+                        proc.setDataPendencia(null);
+                    }
+                }
+            }
+
+            if ("Contrato pendente".equals(tituloEtapa)) {
+                proc.setStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
+            }
+
+            if ("Análise pendente".equals(tituloEtapa)) {
+                proc.setStatus(com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
+            }
+
+            if ("Análise concluída".equals(tituloEtapa)
+                    && (proc.getDocumentosPendentes() == null || proc.getDocumentosPendentes().isBlank())) {
+                proc.setDataPendencia(null);
+            }
+
+            processoJuridicoRepository.save(proc);
             processoJuridicoService.adicionarAndamento(andamento);
             return ResponseEntity.ok(Map.of("mensagem", "Movimentação registrada com sucesso!"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Erro ao salvar andamento: " + e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("erro", "Erro ao salvar andamento."));
         }
     }
 

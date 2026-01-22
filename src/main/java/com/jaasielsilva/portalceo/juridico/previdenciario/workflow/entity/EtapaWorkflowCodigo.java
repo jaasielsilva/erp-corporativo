@@ -4,6 +4,8 @@ public enum EtapaWorkflowCodigo {
     CADASTRO,
     DOCUMENTACAO,
     ANALISE,
+    CONTRATO,
+    MEDICO,
     PROTOCOLO_INSS,
     ACOMPANHAMENTO,
     DECISAO,

@@ -263,7 +263,7 @@ public class ClienteController {
     @GetMapping("/api/select")
     @ResponseBody
     @PreAuthorize("hasAuthority('MENU_CLIENTES_LISTAR')")
-    public java.util.Map<String, Object> selecionarClientesApi(
+    public ResponseEntity<java.util.Map<String, Object>> selecionarClientesApi(
             @RequestParam(value = "busca", required = false) String busca,
             @RequestParam(value = "tipo", required = false, defaultValue = "") String tipo,
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -298,6 +298,29 @@ public class ClienteController {
         resp.put("totalElements", pagina.getTotalElements());
         resp.put("hasPrevious", pagina.hasPrevious());
         resp.put("hasNext", pagina.hasNext());
-        return resp;
+
+        return ResponseEntity.ok(resp);
+    }
+
+    @PostMapping("/api/salvar-rapido")
+    @ResponseBody
+    @PreAuthorize("hasAuthority('MENU_CLIENTES_NOVO') or hasRole('ADMIN') or hasRole('MASTER')")
+    public ResponseEntity<?> salvarRapido(@RequestBody Map<String, String> dados) {
+        try {
+            Cliente cliente = new Cliente();
+            cliente.setNome(dados.get("nome"));
+            cliente.setTipoCliente(dados.getOrDefault("tipoCliente", "PF"));
+            cliente.setCelular(dados.get("celular"));
+            cliente.setStatus("Ativo");
+            
+            clienteService.salvar(cliente);
+            
+            Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("id", cliente.getId());
+            resp.put("nome", cliente.getNome());
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "Erro ao salvar cliente: " + e.getMessage()));
+        }
     }
 }

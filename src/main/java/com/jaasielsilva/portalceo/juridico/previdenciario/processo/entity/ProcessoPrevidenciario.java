@@ -85,6 +85,33 @@ public class ProcessoPrevidenciario {
     @Column(name = "observacao_decisao", length = 1000)
     private String observacaoDecisao;
 
+    @Column(name = "data_envio_documentacao")
+    private LocalDateTime dataEnvioDocumentacao;
+
+    @Column(name = "data_analise")
+    private LocalDateTime dataAnalise;
+
+    @Column(name = "pendencia_analise")
+    private Boolean pendenciaAnalise = false;
+
+    @Column(name = "status_contrato", length = 30)
+    private String statusContrato; // NAO_ENVIADO, ENVIADO, ASSINADO
+
+    @Column(name = "data_envio_contrato")
+    private LocalDateTime dataEnvioContrato;
+
+    @Column(name = "data_assinatura_contrato")
+    private LocalDateTime dataAssinaturaContrato;
+
+    @Column(name = "status_medico", length = 30)
+    private String statusMedico; // PENDENTE, PAGO, LAUDO_EMITIDO
+
+    @Column(name = "data_pagamento_medico")
+    private LocalDateTime dataPagamentoMedico;
+
+    @Column(name = "data_laudo_medico")
+    private LocalDateTime dataLaudoMedico;
+
     @PrePersist
     public void prePersist() {
         if (dataAbertura == null) {

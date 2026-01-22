@@ -27,19 +27,25 @@ public class WorkflowPrevidenciarioInitializer implements CommandLineRunner {
                 etapas.put(EtapaWorkflowCodigo.DOCUMENTACAO,
                                 obterOuCriarEtapa(EtapaWorkflowCodigo.DOCUMENTACAO, 2, true));
                 etapas.put(EtapaWorkflowCodigo.ANALISE, obterOuCriarEtapa(EtapaWorkflowCodigo.ANALISE, 3, true));
+                etapas.put(EtapaWorkflowCodigo.CONTRATO, obterOuCriarEtapa(EtapaWorkflowCodigo.CONTRATO, 4, true));
+                etapas.put(EtapaWorkflowCodigo.MEDICO, obterOuCriarEtapa(EtapaWorkflowCodigo.MEDICO, 5, true));
                 etapas.put(EtapaWorkflowCodigo.PROTOCOLO_INSS,
-                                obterOuCriarEtapa(EtapaWorkflowCodigo.PROTOCOLO_INSS, 4, true));
+                                obterOuCriarEtapa(EtapaWorkflowCodigo.PROTOCOLO_INSS, 6, true));
                 etapas.put(EtapaWorkflowCodigo.ACOMPANHAMENTO,
-                                obterOuCriarEtapa(EtapaWorkflowCodigo.ACOMPANHAMENTO, 5, true));
-                etapas.put(EtapaWorkflowCodigo.DECISAO, obterOuCriarEtapa(EtapaWorkflowCodigo.DECISAO, 6, true));
-                etapas.put(EtapaWorkflowCodigo.RECURSO, obterOuCriarEtapa(EtapaWorkflowCodigo.RECURSO, 7, true));
-                etapas.put(EtapaWorkflowCodigo.FINALIZADO, obterOuCriarEtapa(EtapaWorkflowCodigo.FINALIZADO, 8, false));
+                                obterOuCriarEtapa(EtapaWorkflowCodigo.ACOMPANHAMENTO, 7, true));
+                etapas.put(EtapaWorkflowCodigo.DECISAO, obterOuCriarEtapa(EtapaWorkflowCodigo.DECISAO, 8, true));
+                etapas.put(EtapaWorkflowCodigo.RECURSO, obterOuCriarEtapa(EtapaWorkflowCodigo.RECURSO, 9, true));
+                etapas.put(EtapaWorkflowCodigo.FINALIZADO, obterOuCriarEtapa(EtapaWorkflowCodigo.FINALIZADO, 10, false));
 
                 garantirTransicoes(etapas.get(EtapaWorkflowCodigo.CADASTRO),
                                 etapas.get(EtapaWorkflowCodigo.DOCUMENTACAO));
                 garantirTransicoes(etapas.get(EtapaWorkflowCodigo.DOCUMENTACAO),
                                 etapas.get(EtapaWorkflowCodigo.ANALISE));
                 garantirTransicoes(etapas.get(EtapaWorkflowCodigo.ANALISE),
+                                etapas.get(EtapaWorkflowCodigo.CONTRATO));
+                garantirTransicoes(etapas.get(EtapaWorkflowCodigo.CONTRATO),
+                                etapas.get(EtapaWorkflowCodigo.MEDICO));
+                garantirTransicoes(etapas.get(EtapaWorkflowCodigo.MEDICO),
                                 etapas.get(EtapaWorkflowCodigo.PROTOCOLO_INSS));
                 garantirTransicoes(etapas.get(EtapaWorkflowCodigo.PROTOCOLO_INSS),
                                 etapas.get(EtapaWorkflowCodigo.ACOMPANHAMENTO));
@@ -53,8 +59,12 @@ public class WorkflowPrevidenciarioInitializer implements CommandLineRunner {
                                 etapas.get(EtapaWorkflowCodigo.CADASTRO));
                 garantirTransicoes(etapas.get(EtapaWorkflowCodigo.ANALISE),
                                 etapas.get(EtapaWorkflowCodigo.DOCUMENTACAO));
-                garantirTransicoes(etapas.get(EtapaWorkflowCodigo.PROTOCOLO_INSS),
+                garantirTransicoes(etapas.get(EtapaWorkflowCodigo.CONTRATO),
                                 etapas.get(EtapaWorkflowCodigo.ANALISE));
+                garantirTransicoes(etapas.get(EtapaWorkflowCodigo.MEDICO),
+                                etapas.get(EtapaWorkflowCodigo.CONTRATO));
+                garantirTransicoes(etapas.get(EtapaWorkflowCodigo.PROTOCOLO_INSS),
+                                etapas.get(EtapaWorkflowCodigo.MEDICO));
                 garantirTransicoes(etapas.get(EtapaWorkflowCodigo.ACOMPANHAMENTO),
                                 etapas.get(EtapaWorkflowCodigo.PROTOCOLO_INSS));
                 garantirTransicoes(etapas.get(EtapaWorkflowCodigo.DECISAO),
@@ -63,9 +73,17 @@ public class WorkflowPrevidenciarioInitializer implements CommandLineRunner {
         }
 
         private EtapaWorkflow obterOuCriarEtapa(EtapaWorkflowCodigo codigo, int ordem, boolean permiteAnexo) {
-                return etapaRepository.findByCodigo(codigo)
-                                .orElseGet(() -> etapaRepository
-                                                .save(new EtapaWorkflow(null, codigo, ordem, permiteAnexo)));
+                EtapaWorkflow etapa = etapaRepository.findByCodigo(codigo)
+                                .orElse(new EtapaWorkflow(null, codigo, ordem, permiteAnexo));
+                
+                if (etapa.getId() != null && (etapa.getOrdem() != ordem || !etapa.getPermiteAnexo().equals(permiteAnexo))) {
+                        etapa.setOrdem(ordem);
+                        etapa.setPermiteAnexo(permiteAnexo);
+                        return etapaRepository.save(etapa);
+                } else if (etapa.getId() == null) {
+                        return etapaRepository.save(etapa);
+                }
+                return etapa;
         }
 
         private void garantirTransicoes(EtapaWorkflow origem, EtapaWorkflow destino) {

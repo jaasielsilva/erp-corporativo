@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,9 @@ public class ProcessoJuridicoService {
         if (processo.getStatus() == null) {
             processo.setStatus(ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
         }
+        if (processo.getDataUltimaMovimentacao() == null) {
+            processo.setDataUltimaMovimentacao(LocalDateTime.now());
+        }
         return processoRepo.save(processo);
     }
     
@@ -61,6 +65,16 @@ public class ProcessoJuridicoService {
     @Transactional(readOnly = true)
     public int contarProcessosEmAndamento() {
         return (int) processoRepo.countByStatus(ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProcessoJuridico> listarProcessosAtivos() {
+        return processoRepo.findByStatus(ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProcessoJuridico> listarProcessosComPendenciasDocs() {
+        return processoRepo.findByDocumentosPendentesIsNotNull();
     }
 
     @Transactional(readOnly = true)
@@ -177,6 +191,10 @@ public class ProcessoJuridicoService {
             throw new IllegalStateException("Não é possível modificar prazos de processos encerrados");
         }
         p.setCumprido(true);
+        if (proc.getDataUltimaMovimentacao() == null || proc.getDataUltimaMovimentacao().isBefore(LocalDateTime.now())) {
+            proc.setDataUltimaMovimentacao(LocalDateTime.now());
+            processoRepo.save(proc);
+        }
         return prazoRepo.save(p);
     }
 
@@ -226,6 +244,8 @@ public class ProcessoJuridicoService {
         }
         a.setDataHora(LocalDateTime.now());
         a.setUsuario(usuarioNome != null ? usuarioNome : "Sistema"); 
+        proc.setDataUltimaMovimentacao(a.getDataHora());
+        processoRepo.save(proc);
         return andamentoRepo.save(a);
     }
 
@@ -246,6 +266,8 @@ public class ProcessoJuridicoService {
             p.setDataLimite(LocalDate.now().plusDays(15));
         }
         p.setCumprido(false);
+        proc.setDataUltimaMovimentacao(LocalDateTime.now());
+        processoRepo.save(proc);
         return prazoRepo.save(p);
     }
 
@@ -261,13 +283,53 @@ public class ProcessoJuridicoService {
         a.setDataHora(LocalDateTime.parse(dataHora));
         a.setTipo(tipo);
         a.setObservacoes(observacoes);
+        proc.setDataUltimaMovimentacao(a.getDataHora());
+        processoRepo.save(proc);
         return audienciaRepo.save(a);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Double> calcularIndicadoresTempoFluxo() {
+        List<ProcessoJuridico> processos = processoRepo.findAll();
+        long somaContatoDocs = 0;
+        long somaDocsAnalise = 0;
+        long somaAnaliseContrato = 0;
+        int nContatoDocs = 0;
+        int nDocsAnalise = 0;
+        int nAnaliseContrato = 0;
+
+        for (ProcessoJuridico p : processos) {
+            LocalDate dContato = p.getDataAbertura();
+            LocalDate dDocs = p.getDataDocsRecebidos();
+            LocalDate dAnalise = p.getDataAnalise();
+            LocalDate dContrato = p.getDataContrato();
+
+            if (dContato != null && dDocs != null && !dDocs.isBefore(dContato)) {
+                somaContatoDocs += ChronoUnit.DAYS.between(dContato, dDocs);
+                nContatoDocs++;
+            }
+            if (dDocs != null && dAnalise != null && !dAnalise.isBefore(dDocs)) {
+                somaDocsAnalise += ChronoUnit.DAYS.between(dDocs, dAnalise);
+                nDocsAnalise++;
+            }
+            if (dAnalise != null && dContrato != null && !dContrato.isBefore(dAnalise)) {
+                somaAnaliseContrato += ChronoUnit.DAYS.between(dAnalise, dContrato);
+                nAnaliseContrato++;
+            }
+        }
+
+        Map<String, Double> resultado = new HashMap<>();
+        resultado.put("contatoDocs", nContatoDocs > 0 ? (double) somaContatoDocs / nContatoDocs : 0.0);
+        resultado.put("docsAnalise", nDocsAnalise > 0 ? (double) somaDocsAnalise / nDocsAnalise : 0.0);
+        resultado.put("analiseContrato", nAnaliseContrato > 0 ? (double) somaAnaliseContrato / nAnaliseContrato : 0.0);
+        return resultado;
     }
 
     @Transactional
     public ProcessoJuridico atualizarStatus(Long id, ProcessoJuridico.StatusProcesso status) {
         ProcessoJuridico p = processoRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Processo não encontrado"));
         p.setStatus(status);
+        p.setDataUltimaMovimentacao(LocalDateTime.now());
         return processoRepo.save(p);
     }
 }

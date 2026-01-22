@@ -177,14 +177,130 @@
                     </div>
                 </div>
 
-                <!-- Conteúdo Timeline -->
                 <div class="tab-pane fade" id="content-timeline" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h6 class="text-muted text-uppercase small fw-bold mb-0">Linha do Tempo</h6>
                     </div>
 
-                    <div id="timelineContainer" class="timeline-modern">
-                        <!-- Timeline items injected via JS -->
+                    <div class="timeline-wrapper mb-4">
+                        <div class="timeline">
+                            <div class="timeline-progress"></div>
+
+                            <div class="timeline-item active" id="previd-step-1">
+                                <div class="timeline-marker">1</div>
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title mb-0">Contato</h3>
+                                        <span class="status-badge neutral" id="previd-status-1">Novo</span>
+                                    </div>
+                                    <div class="card-content p-3">
+                                        <p class="mb-2">Msg cliente.</p>
+                                        <button class="btn btn-primary btn-sm" id="previd-btn-iniciar">
+                                            <i class="fas fa-play me-1"></i> Iniciar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item neutral" id="previd-step-2">
+                                <div class="timeline-marker">2</div>
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title mb-0">Solicitação</h3>
+                                        <span class="status-badge neutral" id="previd-status-2">Aguardando</span>
+                                    </div>
+                                    <div class="card-content p-3">
+                                        <p class="mb-2">Docs enviados.</p>
+                                        <button class="btn btn-primary btn-sm mb-2" id="previd-btn-enviado" disabled>
+                                            <i class="fas fa-check me-1"></i> Enviado
+                                        </button>
+                                        <details>
+                                            <summary>Ver Lista</summary>
+                                            <ul class="mb-1">
+                                                <li>RG/CNH</li>
+                                                <li>Comp. Residência</li>
+                                                <li>CTPS</li>
+                                                <li>Holerites</li>
+                                                <li>Docs Médicos</li>
+                                                <li>Prontuário</li>
+                                                <li>Dados Bancários</li>
+                                                <li>B.O / C.A.T</li>
+                                            </ul>
+                                        </details>
+                                        <div style="font-size:0.75rem; color:#64748b; margin-top:0.3rem;">
+                                            <i class="fas fa-clock me-1"></i> Data: <span id="previd-data-envio">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item neutral" id="previd-step-3">
+                                <div class="timeline-marker">3</div>
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title mb-0">Análise</h3>
+                                        <span class="status-badge neutral" id="previd-status-3">Bloqueado</span>
+                                    </div>
+                                    <div class="card-content p-3">
+                                        <p class="mb-2">Triagem.</p>
+                                        <div class="alert-box alert-danger mb-2" id="previd-pendencias-box" style="display:none;">
+                                            Pendente
+                                        </div>
+                                        <div id="previd-analise-info" style="display:none; font-size:0.75rem; color:#64748b; margin-top:0.3rem;">
+                                            <i class="fas fa-clock me-1"></i> Data: <span id="previd-data-analise">-</span>
+                                        </div>
+                                        <div class="btn-row mt-2 d-flex gap-2">
+                                            <button class="btn btn-success btn-sm" id="previd-btn-ok" disabled>OK</button>
+                                            <button class="btn btn-warning btn-sm" id="previd-btn-pendente" disabled>Pendente</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item neutral" id="previd-step-4">
+                                <div class="timeline-marker">4</div>
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title mb-0">Contrato</h3>
+                                        <span class="status-badge neutral" id="previd-status-4">Bloqueado</span>
+                                    </div>
+                                    <div class="card-content p-3">
+                                        <p class="mb-2">Formalização.</p>
+                                        <div class="d-flex justify-content-between align-items-center mb-2" style="font-size:0.8rem;">
+                                            <span>Status:</span>
+                                            <span id="previd-contrato-status" style="font-weight:bold;">Não Enviado</span>
+                                        </div>
+                                        <div class="btn-row d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm" id="previd-btn-env-contrato" disabled>Enviar</button>
+                                            <button class="btn btn-success btn-sm" id="previd-btn-conf-assinatura" style="display:none;">Confirmar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item neutral" id="previd-step-5">
+                                <div class="timeline-marker">5</div>
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title mb-0">Médico</h3>
+                                        <span class="status-badge neutral" id="previd-status-5">Bloqueado</span>
+                                    </div>
+                                    <div class="card-content p-3">
+                                        <p class="mb-2">Perícia.</p>
+                                        <div class="alert-box alert-danger mb-2" id="previd-alerta-pagamento" style="display:none;">
+                                            PAGAMENTO PENDENTE
+                                        </div>
+                                        <div class="btn-row d-flex gap-2">
+                                            <button class="btn btn-danger btn-sm" id="previd-btn-pgto-medico" disabled>$ Pagar</button>
+                                            <button class="btn btn-primary btn-sm" id="previd-btn-laudo" disabled>Laudo</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="previdTimeline" class="timeline-modern">
                         <div class="text-center text-muted py-5">
                             <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
                             <p>Carregando histórico...</p>
@@ -203,8 +319,7 @@
     <script th:inline="javascript">
         const sucessoMsg = /*[[${sucesso}]]*/ null;
         const erroMsg = /*[[${erro}]]*/ null;
-        
-        // Estado da paginação
+
         let currentPage = 0;
         let currentSize = 10;
         let currentSearch = '';
@@ -220,10 +335,25 @@
             }
         }
 
-        $(function () {
-            // --- DEFINIÇÃO DE FUNÇÕES ---
+        function notify(type, title, message) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: type,
+                    confirmButtonColor: '#0d6efd'
+                });
+            } else if (typeof toastr !== 'undefined') {
+                if (type === 'error') toastr.error(message, title);
+                else if (type === 'success') toastr.success(message, title);
+                else if (type === 'warning') toastr.warning(message, title);
+                else toastr.info(message, title);
+            } else {
+                alert(title + "\n" + message);
+            }
+        }
 
-            // Função para carregar processos
+        $(function () {
             window.loadProcessos = function(page) {
                 currentPage = page;
                 $('#procTableBody').html('<tr><td colspan="9" class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i><p class="text-muted mb-0">Carregando processos...</p></td></tr>');
@@ -248,7 +378,6 @@
                     });
             };
 
-            // Renderizar linhas da tabela
             function renderRows(processos) {
                 const tbody = $('#procTableBody');
                 tbody.empty();
@@ -311,7 +440,6 @@
                 });
             }
 
-            // Renderizar paginação
             function renderPagination(data) {
                 const el = $('#pagination');
                 el.empty();
@@ -355,12 +483,8 @@
                 el.after(`<div class="text-center mt-2 text-muted small">Mostrando página ${page + 1} de ${Math.max(totalPages, 1)} (${totalElements} registros)</div>`);
             }
 
-            // --- INICIALIZAÇÃO ---
-
-            // Inicializar carga
             loadProcessos(0);
 
-            // Listeners de filtro
             $('#filtroBusca').on('input', function() {
                 clearTimeout(debounceTimer);
                 currentSearch = $(this).val();
@@ -372,27 +496,30 @@
                 loadProcessos(0);
             });
 
-            // --- OFF CANVAS LOGIC (MANTIDA) ---
-
-            // Função para abrir detalhes
             function abrirDetalhesProcesso(id) {
                 if (!id) return;
-                
-                // Reset e mostra Offcanvas
+
                 $('#procDetailNumeroHeader').text('Carregando...');
                 $('#procDetailStatusHeader').text('...');
                 $('#procDetailEtapa').text('...');
                 $('#procDetailProtocolo').text('...');
                 $('#procDetailDataAbertura').text('...');
-                
-                $('#timelineContainer').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Carregando histórico...</p></div>');
+
+                $('#previdTimeline').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Carregando histórico...</p></div>');
+
+                $('.timeline-item').removeClass('active completed neutral').addClass('neutral');
+                $('.status-badge').text('Bloqueado').removeClass('neutral success warning danger').addClass('neutral');
+                $('button[id^="previd-btn-"]').prop('disabled', true);
+                $('#previd-pendencias-box').hide();
+                $('#previd-analise-info').hide();
+                $('#previd-alerta-pagamento').hide();
+                $('#previd-btn-conf-assinatura').hide();
 
                 const offcanvasEl = document.getElementById('procDetailOffcanvas');
                 if (offcanvasEl) {
                     const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
                     offcanvas.show();
-                    
-                    // Reset tab
+
                     const firstTabEl = document.querySelector('#procTabs button[data-bs-target="#content-resumo"]');
                     if (firstTabEl) {
                         const tab = new bootstrap.Tab(firstTabEl);
@@ -400,16 +527,17 @@
                     }
                 }
 
-                // 1. Fetch Detalhes
+                $('#procDetailOffcanvas').attr('data-proc-id', id);
+
                 $.get(`/juridico/previdenciario/api/processos/${id}`)
                     .done(res => {
                         $('#procDetailNumeroHeader').text(res.numero || 'Novo Processo');
-                        
+
                         const status = res.status || '—';
                         const statusBadge = $('#procDetailStatusHeader');
                         statusBadge.text(status);
                         statusBadge.removeClass('bg-success bg-warning bg-secondary bg-dark text-dark text-white');
-                        
+
                         if (status === 'EM_ANDAMENTO') statusBadge.addClass('bg-success text-white');
                         else if (status === 'SUSPENSO') statusBadge.addClass('bg-warning text-dark');
                         else if (status === 'ENCERRADO') statusBadge.addClass('bg-dark text-white');
@@ -419,26 +547,18 @@
                         $('#procDetailProtocolo').text(res.numero || '—');
                         $('#procDetailDataAbertura').text(res.dataAbertura ? new Date(res.dataAbertura).toLocaleDateString('pt-BR') : '—');
 
-                        // Links de ação
                         $('#btnDetalhesCompleto').attr('href', `/juridico/previdenciario/${id}`);
-                        $('#btnEditarOffcanvas').attr('href', `/juridico/previdenciario/${id}`); 
+                        $('#btnEditarOffcanvas').attr('href', `/juridico/previdenciario/${id}`);
 
-                        // 2. Fetch Timeline
-                        $.get(`/juridico/previdenciario/api/processos/${id}/historico`)
-                            .done(timeline => {
-                                renderTimeline(timeline);
-                            })
-                            .fail(() => {
-                                renderTimeline([]);
-                            });
+                        carregarTimelinePrevid(id);
+                        atualizarEstadoTimelinePrevid(res);
                     })
                     .fail(() => {
-                        // notify('error', 'Erro', 'Não foi possível carregar os detalhes.');
                     });
             }
 
             function renderTimeline(items) {
-                const $container = $('#timelineContainer');
+                const $container = $('#previdTimeline');
                 $container.empty();
 
                 if (!items || items.length === 0) {
@@ -476,21 +596,162 @@
                 });
             }
 
-            // Click na linha
             $(document).on('click', '.proc-row', function (e) {
-                // Se clicou num link ou botão dentro da linha, não abre o offcanvas
                 if ($(e.target).closest('a').length > 0 || $(e.target).closest('button').length > 0) return;
                 
                 const id = $(this).data('id');
                 if (id) abrirDetalhesProcesso(id);
             });
             
-            // Auto open from URL param
             const params = new URLSearchParams(window.location.search);
             const openId = params.get('openProcessId');
             if (openId) {
                 abrirDetalhesProcesso(openId);
             }
+
+            function carregarTimelinePrevid(id) {
+                $.get(`/juridico/previdenciario/api/processos/${id}/historico`)
+                    .done(timeline => {
+                        renderTimeline(timeline);
+                    })
+                    .fail(() => {
+                        renderTimeline([]);
+                    });
+            }
+
+            function atualizarEstadoTimelinePrevid(p) {
+                const etapa = p.etapa;
+
+                const setStep = (num, status, badgeText, badgeClass) => {
+                    const $el = $(`#previd-step-${num}`);
+                    $el.removeClass('neutral active completed').addClass(status);
+                    $(`#previd-status-${num}`).text(badgeText).removeClass('neutral success warning danger').addClass(badgeClass);
+                };
+
+                if (etapa === 'CADASTRO') {
+                    setStep(1, 'active', 'Ação Necessária', 'warning');
+                    $('#previd-btn-iniciar').prop('disabled', false);
+                } else {
+                    setStep(1, 'completed', 'Concluído', 'success');
+                    $('#previd-btn-iniciar').prop('disabled', true);
+                }
+
+                if (etapa === 'DOCUMENTACAO') {
+                    setStep(2, 'active', 'Aguardando Envio', 'warning');
+                    $('#previd-btn-enviado').prop('disabled', false);
+                } else if (['CADASTRO'].includes(etapa)) {
+                    setStep(2, 'neutral', 'Aguardando', 'neutral');
+                } else {
+                    setStep(2, 'completed', 'Concluído', 'success');
+                    $('#previd-btn-enviado').prop('disabled', true);
+                }
+
+                if (p.dataEnvioDocumentacao) {
+                    const d = new Date(p.dataEnvioDocumentacao);
+                    $('#previd-data-envio').text(d.toLocaleDateString('pt-BR'));
+                } else {
+                    $('#previd-data-envio').text('-');
+                }
+
+                if (etapa === 'ANALISE') {
+                    setStep(3, 'active', 'Em Análise', 'warning');
+                    $('#previd-btn-ok').prop('disabled', false);
+                    $('#previd-btn-pendente').prop('disabled', false);
+                } else if (['DOCUMENTACAO', 'CADASTRO'].includes(etapa)) {
+                    setStep(3, 'neutral', 'Bloqueado', 'neutral');
+                } else {
+                    setStep(3, 'completed', 'Concluído', 'success');
+                    $('#previd-btn-ok').prop('disabled', true);
+                    $('#previd-btn-pendente').prop('disabled', true);
+                }
+
+                if (p.pendenciaAnalise) {
+                    $('#previd-pendencias-box').show();
+                } else {
+                    $('#previd-pendencias-box').hide();
+                }
+
+                if (p.dataAnalise) {
+                    const d = new Date(p.dataAnalise);
+                    $('#previd-analise-info').show();
+                    $('#previd-data-analise').text(d.toLocaleDateString('pt-BR'));
+                } else {
+                    $('#previd-analise-info').hide();
+                    $('#previd-data-analise').text('-');
+                }
+
+                if (etapa === 'CONTRATO') {
+                    setStep(4, 'active', 'Em Formalização', 'warning');
+                    $('#previd-btn-env-contrato').prop('disabled', false);
+                } else if (['CADASTRO', 'DOCUMENTACAO', 'ANALISE'].includes(etapa)) {
+                    setStep(4, 'neutral', 'Bloqueado', 'neutral');
+                    $('#previd-btn-env-contrato').prop('disabled', true);
+                } else {
+                    setStep(4, 'completed', 'Concluído', 'success');
+                    $('#previd-btn-env-contrato').prop('disabled', true);
+                }
+
+                const statusContrato = p.statusContrato || 'NAO_ENVIADO';
+                if (statusContrato === 'NAO_ENVIADO') {
+                    $('#previd-contrato-status').text('Não Enviado');
+                    $('#previd-btn-conf-assinatura').hide();
+                } else if (statusContrato === 'ENVIADO') {
+                    $('#previd-contrato-status').text('Enviado');
+                    $('#previd-btn-conf-assinatura').show().prop('disabled', false);
+                } else if (statusContrato === 'ASSINADO') {
+                    $('#previd-contrato-status').text('Assinado');
+                    $('#previd-btn-conf-assinatura').hide();
+                }
+
+                if (etapa === 'MEDICO') {
+                    setStep(5, 'active', 'Em Andamento', 'warning');
+                    $('#previd-btn-pgto-medico').prop('disabled', false);
+                    $('#previd-btn-laudo').prop('disabled', !p.dataPagamentoMedico);
+                } else if (['CADASTRO', 'DOCUMENTACAO', 'ANALISE', 'CONTRATO'].includes(etapa)) {
+                    setStep(5, 'neutral', 'Bloqueado', 'neutral');
+                    $('#previd-btn-pgto-medico').prop('disabled', true);
+                    $('#previd-btn-laudo').prop('disabled', true);
+                } else {
+                    setStep(5, 'completed', 'Concluído', 'success');
+                    $('#previd-btn-pgto-medico').prop('disabled', true);
+                    $('#previd-btn-laudo').prop('disabled', true);
+                }
+
+                if (p.statusMedico === 'PENDENTE_PAGAMENTO') {
+                    $('#previd-alerta-pagamento').show();
+                } else {
+                    $('#previd-alerta-pagamento').hide();
+                }
+
+                if (p.dataPagamentoMedico) {
+                    $('#previd-alerta-pagamento').hide();
+                    $('#previd-btn-laudo').prop('disabled', false);
+                }
+            }
+
+            function apiAction(urlPattern, msg) {
+                const procId = $('#procDetailOffcanvas').attr('data-proc-id');
+                if(!procId) return;
+                $.post(urlPattern.replace('{id}', procId))
+                    .done(() => {
+                        notify('success', 'Sucesso', msg);
+                        $.get(`/juridico/previdenciario/api/processos/${procId}`)
+                            .done(data => {
+                                atualizarEstadoTimelinePrevid(data);
+                                carregarTimelinePrevid(procId);
+                            });
+                    })
+                    .fail(() => notify('error', 'Erro', 'Falha ao processar ação.'));
+            }
+
+            $('#previd-btn-iniciar').click(() => apiAction('/juridico/previdenciario/{id}/acoes/iniciar', 'Processo iniciado!'));
+            $('#previd-btn-enviado').click(() => apiAction('/juridico/previdenciario/{id}/acoes/enviar-docs', 'Documentação enviada!'));
+            $('#previd-btn-ok').click(() => apiAction('/juridico/previdenciario/{id}/acoes/analise-ok', 'Análise aprovada!'));
+            $('#previd-btn-pendente').click(() => apiAction('/juridico/previdenciario/{id}/acoes/analise-pendente', 'Pendência registrada.'));
+            $('#previd-btn-env-contrato').click(() => apiAction('/juridico/previdenciario/{id}/acoes/enviar-contrato', 'Contrato enviado!'));
+            $('#previd-btn-conf-assinatura').click(() => apiAction('/juridico/previdenciario/{id}/acoes/assinar-contrato', 'Contrato assinado!'));
+            $('#previd-btn-pgto-medico').click(() => apiAction('/juridico/previdenciario/{id}/acoes/pagar-medico', 'Pagamento médico registrado!'));
+            $('#previd-btn-laudo').click(() => apiAction('/juridico/previdenciario/{id}/acoes/laudo-medico', 'Laudo médico emitido!'));
         });
     </script>
 </body>

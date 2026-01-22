@@ -12,6 +12,394 @@
     <link href="/css/notifications.css" rel="stylesheet">
     <link href="/css/corporate.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .processos-wrapper {
+            padding: 0;
+        }
+
+        .processos-wrapper .view-section {
+            display: none;
+        }
+
+        .processos-wrapper .view-section.active {
+            display: block;
+        }
+
+        .processos-wrapper .list-panel {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .processos-wrapper .list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .processos-wrapper .list-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .processos-wrapper .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0;
+            width: 320px;
+        }
+
+        .processos-wrapper .search-input {
+            flex: 1;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .processos-wrapper .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .processos-wrapper .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .processos-wrapper .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        .processos-wrapper .table-wrapper {
+            overflow-x: auto;
+            margin-top: 0.5rem;
+        }
+
+        .processos-wrapper #process-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .processos-wrapper #process-list-table thead th {
+            text-align: left;
+            padding: 0.75rem;
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        .processos-wrapper #process-list-table tbody td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #0f172a;
+            vertical-align: middle;
+        }
+
+        .processos-wrapper #process-list-table tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+        .processos-wrapper .badge-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .processos-wrapper .badge-status.pendente {
+            background: #fff1f2;
+            color: #dc2626;
+        }
+
+        .processos-wrapper .badge-status.pago {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .processos-wrapper .badge-status.ativo {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .processos-wrapper .badge-status.atencao {
+            background: #fef9c3;
+            color: #d97706;
+        }
+
+        .processos-wrapper .badge-status.civil {
+            background: #e2e8f0;
+            color: #1f2933;
+        }
+
+        .processos-wrapper .badge-status.neutral {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .processos-wrapper .list-footer {
+            margin-top: 1rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        .processos-wrapper .flow-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .processos-wrapper .back-button {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .processos-wrapper .back-button:hover {
+            background: #f8fafc;
+        }
+
+        .processos-wrapper .flow-titles h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .processos-wrapper .flow-subtitle {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .processos-wrapper .timeline-wrapper {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .processos-wrapper .timeline {
+            display: flex;
+            position: relative;
+            padding-top: 15px;
+            min-width: min-content;
+        }
+
+        .processos-wrapper .timeline::before {
+            content: '';
+            position: absolute;
+            top: 34px;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: #cbd5e1;
+            border-radius: 2px;
+            z-index: 0;
+        }
+
+        .processos-wrapper .timeline-progress {
+            position: absolute;
+            top: 34px;
+            left: 40px;
+            height: 3px;
+            background: #16a34a;
+            border-radius: 2px;
+            z-index: 1;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .processos-wrapper .timeline-item {
+            position: relative;
+            margin-right: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            z-index: 1;
+            min-width: 230px;
+        }
+
+        .processos-wrapper .timeline-item.pendente .card {
+            border-top-color: #dc2626;
+            background-color: #fef2f2;
+        }
+
+        .processos-wrapper .timeline-marker {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.3);
+        }
+
+        .processos-wrapper .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 0.9rem;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
+            border-top: 3px solid #cbd5e1;
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .processos-wrapper .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .processos-wrapper .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin: 0;
+            color: #0f172a;
+        }
+
+        .processos-wrapper .status-badge {
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .processos-wrapper .status-badge.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .processos-wrapper .status-badge.warning {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .processos-wrapper .status-badge.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .processos-wrapper .status-badge.neutral {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .processos-wrapper .card-content p {
+            margin: 0 0 0.4rem 0;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .processos-wrapper .btn-row {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .processos-wrapper .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+        }
+
+        .processos-wrapper .btn-success {
+            background: #16a34a;
+            border: none;
+            color: #ffffff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+        }
+
+        .processos-wrapper .btn-warning {
+            background: #f59e0b;
+            border: none;
+            color: #1f2933;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+        }
+
+        .processos-wrapper .btn-danger {
+            background: #dc2626;
+            border: none;
+            color: #ffffff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+        }
+
+        .processos-wrapper details summary {
+            cursor: pointer;
+            font-size: 0.78rem;
+            color: #0f172a;
+        }
+
+        .processos-wrapper details ul {
+            padding-left: 1.1rem;
+            margin-top: 0.3rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .processos-wrapper details li {
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .processos-wrapper .list-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .processos-wrapper .search-bar {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -21,730 +409,1440 @@
             <header th:replace="~{components/topbar :: topbar}"></header>
 
             <section class="content-area">
-                <div class="container-fluid py-4">
+                <div class="container-fluid py-4 processos-wrapper">
 
-                    <!-- Header Moderno -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb mb-1">
-                                    <li class="breadcrumb-item"><a href="/juridico"
-                                            class="text-decoration-none text-muted small">Jurídico</a></li>
+                                    <li class="breadcrumb-item">
+                                        <a href="/juridico" class="text-decoration-none text-muted small">Jurídico</a>
+                                    </li>
                                     <li class="breadcrumb-item active" aria-current="page">Processos</li>
                                 </ol>
                             </nav>
-                            <h1 class="display-6 text-dark mb-0">
-                                <i class="fas fa-balance-scale text-primary me-2"></i>Processos
+                            <h1 class="h3 text-dark mb-0">
+                                <i class="fas fa-gavel text-primary me-2"></i>Processos Jurídicos
                             </h1>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/api/juridico/relatorios/processos/export}"
-                                th:if="${#authorization.expression('hasAuthority(''JURIDICO_PROCESSOS_EXPORTAR'')')}"
-                                class="btn btn-outline-success rounded-pill px-4 shadow-sm">
-                                <i class="fas fa-file-excel me-2"></i> Exportar
-                            </a>
-                            <a href="/juridico/processos/novo" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                                <i class="fas fa-plus me-2"></i> Novo Processo
-                            </a>
                         </div>
                     </div>
 
-                    <!-- Card de Listagem -->
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white border-bottom-0 py-3">
-                            <div class="row g-3 align-items-center">
-                                <div class="col-md-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0"><i
-                                                class="fas fa-filter text-muted"></i></span>
-                                        <select id="filtroStatusProcesso"
-                                            class="form-select border-start-0 ps-0 bg-light">
-                                            <option value="">Todos os Status</option>
-                                            <option value="EM_ANDAMENTO">Em Andamento</option>
-                                            <option value="SUSPENSO">Suspensos</option>
-                                            <option value="ENCERRADO">Encerrados</option>
-                                        </select>
+                    <div id="view-process-list" class="view-section active">
+                        <div class="list-panel">
+                            <div class="list-header">
+                                <h3>Consulta de Processos</h3>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="search-bar">
+                                        <input type="text" class="search-input" id="search-process"
+                                            placeholder="Buscar por nome, CPF ou ID..." onkeyup="filterProcessList()">
+                                        <button class="btn-primary search-button" type="button">
+                                            <i class="fas fa-search"></i>
+                                        </button>
                                     </div>
+                                    <a th:href="@{/juridico/processos/novo}" class="btn-primary" style="white-space: nowrap;">
+                                        <i class="fas fa-plus"></i> Novo Processo
+                                    </a>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0"><i
-                                                class="fas fa-search text-muted"></i></span>
-                                        <input id="filtroBuscaProcesso"
-                                            class="form-control border-start-0 ps-0 bg-light" type="text"
-                                            placeholder="Buscar por número, parte ou assunto..." />
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <button id="btnBuscarProcessos" class="btn btn-outline-primary w-100"><i
-                                            class="fas fa-search me-2"></i> Filtrar</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table id="process-list-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Etapa Atual</th>
+                                            <th>Status</th>
+                                            <th>Valor Est.</th>
+                                            <th>Última Mov.</th>
+                                            <th>Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="process-list-body">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="list-footer">
+                                Exibindo <span id="process-count">0</span> processos • exemplo fictício
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-flow-detail" class="view-section">
+                        <div style="margin-bottom: 1rem;" class="flow-header">
+                            <button class="back-button" onclick="closeFlow()">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </button>
+                            <div class="flow-titles">
+                                <h3 id="flow-title">
+                                    <i class="fas fa-project-diagram"></i>
+                                    Fluxo: <span id="flow-client-name">Cliente</span>
+                                </h3>
+                                <div class="flow-subtitle">
+                                    Processo #<span id="flow-process-id">-</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th
-                                            class="border-top-0 text-muted small text-uppercase fw-bold ps-4 text-center">
-                                            Número</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
-                                            Tipo / Tribunal</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
-                                            Parte</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
-                                            Assunto</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
-                                            Status</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-center">
-                                            Data Abertura</th>
-                                        <th class="border-top-0 text-muted small text-uppercase fw-bold text-end pe-4">
-                                            Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="procTableBody">
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-5">Carregando processos...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <div class="timeline-wrapper">
+                            <div class="timeline">
+                                <div class="timeline-progress" id="timeline-progress"></div>
 
-                        <div class="card-footer bg-white border-top-0 py-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="text-muted small" id="procPageInfo">Carregando...</div>
-                                <div class="btn-group">
-                                    <button class="btn btn-outline-secondary btn-sm rounded-start-pill" id="procPrev"
-                                        disabled><i class="fas fa-chevron-left"></i> Anterior</button>
-                                    <button class="btn btn-outline-secondary btn-sm rounded-end-pill" id="procNext"
-                                        disabled>Próximo <i class="fas fa-chevron-right"></i></button>
+                                <div class="timeline-item active" id="step-1">
+                                    <div class="timeline-marker">1</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Contato</h3>
+                                            <span class="status-badge neutral" id="status-1">Novo</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Msg cliente.</p>
+                                            <div class="btn-row">
+                                                <button class="btn-primary" id="btn-contato-iniciar" type="button" onclick="iniciarCadastro()">
+                                                    <i class="fas fa-play"></i> Iniciar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <div class="timeline-item neutral" id="step-2">
+                                    <div class="timeline-marker">2</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Solicitação</h3>
+                                            <span class="status-badge neutral" id="status-2">Aguardando</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Docs enviados.</p>
+                                            <details>
+                                                <summary>Ver Lista</summary>
+                                                <ul>
+                                                    <li>RG/CNH</li>
+                                                    <li>Comp. Residência</li>
+                                                    <li>CTPS</li>
+                                                    <li>Holerites</li>
+                                                    <li>Docs Médicos</li>
+                                                    <li>Prontuário</li>
+                                                    <li>Dados Bancários</li>
+                                                    <li>B.O / C.A.T</li>
+                                                </ul>
+                                            </details>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-top:0.2rem;">
+                                                <i class="fas fa-clock"></i> Data: <span id="data-envio">-</span>
+                                            </div>
+                                            <div class="btn-row" style="margin-top: 0.5rem;">
+                                                <button class="btn-success" type="button" onclick="confirmarDocumentos()">
+                                                    <i class="fas fa-check"></i> Docs Recebidos
+                                                </button>
+                                                <button class="btn-warning" type="button" onclick="marcarSolicitacaoPendente()">
+                                                    Pendente
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-3">
+                                    <div class="timeline-marker">3</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Análise</h3>
+                                            <span class="status-badge neutral" id="status-3">Bloqueado</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Triagem.</p>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-top:0.2rem;">
+                                                <i class="fas fa-clock"></i> Data: <span id="data-analise-pendente">-</span>
+                                            </div>
+                                            <div class="btn-row">
+                                                <button class="btn-success" type="button" onclick="marcarAnaliseOk()">OK</button>
+                                                <button class="btn-warning" type="button" onclick="marcarAnalisePendente()">Pendente</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-4">
+                                    <div class="timeline-marker">4</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Contrato</h3>
+                                            <span class="status-badge neutral" id="status-4">Bloqueado</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Formalização.</p>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.3rem;">
+                                                <span>Status:</span> <span style="font-weight:bold;">Assinado</span>
+                                            </div>
+                                            <div class="btn-row">
+                                                <button class="btn-success" type="button" onclick="confirmarContratoFluxo()">Confirmar</button>
+                                                <button class="btn-warning" type="button" onclick="marcarContratoPendente()">Pendente</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-5">
+                                    <div class="timeline-marker">5</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Médico</h3>
+                                            <span class="status-badge neutral" id="status-5">Bloqueado</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Perícia.</p>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.3rem;">
+                                                <div>Pago</div>
+                                                <div>Laudo OK</div>
+                                            </div>
+                                            <div class="btn-row">
+                                                <button class="btn-danger" type="button" onclick="registrarPagamentoMedico()">$ Pagar</button>
+                                                <button class="btn-primary" type="button" onclick="registrarLaudoMedico()">Laudo</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-6">
+                                    <div class="timeline-marker">6</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Seguradora</h3>
+                                            <span class="status-badge neutral" id="status-6">Bloqueado</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Envio final.</p>
+                                            <div id="seguradora-result-info" style="font-size:0.75rem; color:#0f172a; margin-bottom:0.5rem; display:none;"></div>
+                                            <div class="btn-row">
+                                                <button class="btn-primary" type="button" onclick="enviarParaSeguradora()">Enviar</button>
+                                                <button class="btn-success" type="button" onclick="registrarResultadoSeguradora()">Result.</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-7">
+                                    <div class="timeline-marker">7</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Conclusão</h3>
+                                            <span class="status-badge neutral" id="status-7">Aguardando</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Deferido.</p>
+                                            <div class="btn-row">
+                                                <button class="btn-success" type="button" onclick="arquivarProcessoFluxo()">Arquivar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-8">
+                                    <div class="timeline-marker">8</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Contador</h3>
+                                            <span class="status-badge neutral" id="status-8">Aguardando</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Envio de informações ao contador.</p>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.3rem;">
+                                                <span>Status:</span> <span style="font-weight:bold;">Enviado</span>
+                                            </div>
+                                            <div class="btn-row">
+                                                <button class="btn-primary btn-sm" type="button" onclick="enviarDadosContadorFluxo()">Enviar dados</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-9">
+                                    <div class="timeline-marker">9</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Dízimo</h3>
+                                            <span class="status-badge neutral" id="status-9">Opcional</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Dízimo da igreja sobre a pensão recebida.</p>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.3rem;">
+                                                <span id="dizimo-label">Valor sugerido:</span>
+                                                <span id="dizimo-valor" style="font-weight:bold;">-</span>
+                                            </div>
+                                            <div class="btn-row">
+                                                <button class="btn-success btn-sm" type="button" onclick="registrarContribuicaoDizimoFluxo()">Registrar contribuição</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-10">
+                                    <div class="timeline-marker">10</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Indicação</h3>
+                                            <span class="status-badge neutral" id="status-10">Aguardando</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Cliente possui indicação cadastrada.</p>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.3rem;">
+                                                <span>Indicador:</span>
+                                                <span style="font-weight:bold;">Indicador cadastrado</span>
+                                            </div>
+                                            <div class="btn-row">
+                                                <button class="btn-primary btn-sm" type="button" onclick="abrirFluxoIndicacaoFluxo()">Ver / Cadastrar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item neutral" id="step-11">
+                                    <div class="timeline-marker">11</div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">Nota Fiscal</h3>
+                                            <span class="status-badge neutral" id="status-11">Aguardando</span>
+                                        </div>
+                                        <div class="card-content">
+                                            <p>Emissão de nota fiscal do serviço.</p>
+                                            <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.3rem;">
+                                                <span>Situação:</span>
+                                                <span style="font-weight:bold;">Emitida/Anexada</span>
+                                            </div>
+                                            <div class="btn-row">
+                                                <button class="btn-primary btn-sm" type="button" onclick="registrarNotaFiscalFluxo()">Emitir / Anexar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
 
                 </div>
             </section>
+
             <footer th:replace="~{components/footer :: footer}"></footer>
         </main>
     </div>
 
-    <!-- Offcanvas de Detalhes do Processo (Inovação Jurídica) -->
-    <div class="offcanvas offcanvas-end process-offcanvas" tabindex="-1" id="procDetailOffcanvas"
-        aria-labelledby="procDetailOffcanvasLabel">
-        <div class="offcanvas-header">
-            <div>
-                <h5 class="offcanvas-title fw-bold" id="procDetailOffcanvasLabel">Detalhes do Processo</h5>
-                <div class="process-meta">
-                    <span id="procDetailNumeroHeader"
-                        class="badge bg-white text-dark bg-opacity-25">0000000-00.0000.0.00.0000</span>
-                    <span id="procDetailStatusHeader" class="badge bg-success">EM ANDAMENTO</span>
-                </div>
-            </div>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body p-0">
-            <!-- Navegação em Abas Modernas -->
-            <ul class="nav nav-tabs modern-tabs px-3 pt-2" id="procTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tab-resumo" data-bs-toggle="tab"
-                        data-bs-target="#content-resumo" type="button" role="tab">Resumo</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-timeline" data-bs-toggle="tab" data-bs-target="#content-timeline"
-                        type="button" role="tab">Timeline</button>
-                </li>
-            </ul>
-
-            <div class="tab-content p-4">
-                <!-- Conteúdo Resumo -->
-                <div class="tab-pane fade show active" id="content-resumo" role="tabpanel">
-                    <div class="row g-3">
-                        <div class="col-12 mb-2">
-                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Informações Gerais</h6>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-card">
-                                <div class="info-label"><i class="fas fa-balance-scale me-1"></i> Tribunal</div>
-                                <div class="info-value" id="procDetailTribunal">—</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-card">
-                                <div class="info-label"><i class="fas fa-tag me-1"></i> Tipo</div>
-                                <div class="info-value" id="procDetailTipo">—</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="info-card">
-                                <div class="info-label"><i class="fas fa-user-friends me-1"></i> Parte Contrária</div>
-                                <div class="info-value" id="procDetailParte">—</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="info-card">
-                                <div class="info-label"><i class="fas fa-file-alt me-1"></i> Assunto</div>
-                                <div class="info-value" id="procDetailAssunto">—</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-card">
-                                <div class="info-label"><i class="far fa-calendar-alt me-1"></i> Abertura</div>
-                                <div class="info-value" id="procDetailDataAbertura">—</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="info-card border-0 bg-light">
-                                <div class="info-label">Ações Rápidas</div>
-                                <a id="btnDetalhesCompleto" href="#" class="btn btn-sm btn-outline-info w-100 mb-2"><i
-                                        class="fas fa-external-link-alt"></i> Ver Detalhes</a>
-                                <a id="btnEditarOffcanvas" href="#" class="btn btn-sm btn-outline-primary w-100 mb-2"><i
-                                        class="fas fa-edit"></i> Editar Completo</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Conteúdo Timeline -->
-                <div class="tab-pane fade" id="content-timeline" role="tabpanel">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h6 class="text-muted text-uppercase small fw-bold mb-0">Linha do Tempo</h6>
-                        <button class="btn btn-sm btn-primary rounded-pill px-3" id="btnNovoAndamento">
-                            <i class="fas fa-plus me-1"></i> Novo Evento
-                        </button>
-                    </div>
-
-                    <!-- Form Inline de Nova Movimentação (Oculto por padrão) -->
-                    <div id="formAndamento" class="card mb-4 border-0 shadow-sm bg-light d-none"
-                        style="border-radius: 12px;">
-                        <div class="card-body">
-                            <h6 class="card-title mb-3 text-primary fw-bold">Registrar Movimentação</h6>
-                            <div class="row g-2">
-                                <div class="col-md-8">
-                                    <input type="text" id="andamentoTitulo"
-                                        class="form-control form-control-sm border-0 shadow-sm"
-                                        placeholder="Título (ex: Conclusão para Sentença)" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <select id="andamentoTipo" class="form-select form-select-sm border-0 shadow-sm">
-                                        <option value="ANDAMENTO">Comum</option>
-                                        <option value="INICIAL">Inicial</option>
-                                        <option value="IMPORTANTE">Decisão</option>
-                                        <option value="AUDIENCIA">Audiência</option>
-                                        <option value="FINAL">Sentença</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <textarea id="andamentoDescricao"
-                                        class="form-control form-control-sm border-0 shadow-sm" rows="2"
-                                        placeholder="Detalhes..."></textarea>
-                                </div>
-                                <div class="col-12 text-end mt-2">
-                                    <button type="button" class="btn btn-sm btn-light me-1"
-                                        id="btnCancelarAndamento">Cancelar</button>
-                                    <button type="button" class="btn btn-sm btn-success"
-                                        id="btnSalvarAndamento">Salvar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="timelineContainer" class="timeline-modern">
-                        <!-- Timeline items injected via JS -->
-                        <div class="text-center text-muted py-5">
-                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-                            <p>Carregando histórico...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Scripts Essenciais -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/notifications.js}"></script>
     <script src="/js/sidebar.js" defer></script>
 
     <script>
-        // Configuração do Toastr
-        if (typeof toastr !== 'undefined') {
-            toastr.options = {
-                "closeButton": true,
-                "progressBar": true,
-                "positionClass": "toast-top-right",
-                "timeOut": "3000"
-            };
+        let allProcesses = [];
+        let currentProcessId = null;
+        let isPaymentCompleted = false;
+        let valorSeguradoraBase = 0;
+
+        function atualizarLinhaProgresso() {
+            const timeline = document.querySelector('#view-flow-detail .timeline');
+            const progressEl = document.getElementById('timeline-progress');
+            if (!timeline || !progressEl) return;
+            const items = Array.from(timeline.querySelectorAll('.timeline-item'));
+            if (items.length === 0) return;
+
+            const firstItem = items[0];
+            const firstMarker = firstItem.querySelector('.timeline-marker');
+            if (!firstMarker) return;
+
+            let lastIndex = 0;
+            items.forEach((item, index) => {
+                if (!item.classList.contains('neutral') && item.style.display !== 'none') {
+                    lastIndex = index;
+                }
+            });
+
+            if (lastIndex === 0) {
+                progressEl.style.width = '0';
+                return;
+            }
+
+            const lastItem = items[lastIndex];
+            const lastMarker = lastItem.querySelector('.timeline-marker');
+            if (!lastMarker) return;
+
+            const timelineRect = timeline.getBoundingClientRect();
+            const firstRect = firstMarker.getBoundingClientRect();
+            const lastRect = lastMarker.getBoundingClientRect();
+
+            const startX = firstRect.left - timelineRect.left + firstRect.width / 2;
+            const endX = lastRect.left - timelineRect.left + lastRect.width / 2;
+            const width = Math.max(0, endX - startX);
+
+            progressEl.style.left = startX + 'px';
+            progressEl.style.width = width + 'px';
         }
 
-        function notify(type, title, message) {
-            if (typeof toastr !== 'undefined') {
-                if (type === 'error') toastr.error(message, title);
-                else if (type === 'success') toastr.success(message, title);
-                else if (type === 'warning') toastr.warning(message, title);
-                else toastr.info(message, title);
-            } else {
-                alert(title + "\n" + message);
+        function updateStep(id, status, badgeClass, badgeText) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const stepNumber = id.split('-')[1];
+            const badge = document.getElementById('status-' + stepNumber);
+            el.className = 'timeline-item ' + status;
+            if (badge) {
+                badge.className = 'status-badge ' + badgeClass;
+                badge.innerText = badgeText;
+            }
+            if (['active', 'success', 'warning', 'danger', 'info'].includes(status)) {
+                el.style.display = 'flex';
+            }
+            atualizarLinhaProgresso();
+        }
+
+        function resetFlowTimeline() {
+            const defaults = {
+                1: { badge: 'neutral', text: 'Novo' },
+                2: { badge: 'neutral', text: 'Aguardando' },
+                3: { badge: 'neutral', text: 'Bloqueado' },
+                4: { badge: 'neutral', text: 'Bloqueado' },
+                5: { badge: 'neutral', text: 'Bloqueado' },
+                6: { badge: 'neutral', text: 'Bloqueado' },
+                7: { badge: 'neutral', text: 'Aguardando' },
+                8: { badge: 'neutral', text: 'Aguardando' },
+                9: { badge: 'neutral', text: 'Opcional' },
+                10: { badge: 'neutral', text: 'Aguardando' },
+                11: { badge: 'neutral', text: 'Aguardando' }
+            };
+
+            for (let i = 1; i <= 11; i++) {
+                const cfg = defaults[i] || { badge: 'neutral', text: 'Aguardando' };
+                updateStep('step-' + i, 'neutral', cfg.badge, cfg.text);
+                const el = document.getElementById('step-' + i);
+                if (el) {
+                    el.style.display = 'none';
+                }
+            }
+
+            const firstCfg = defaults[1];
+            updateStep('step-1', 'active', firstCfg.badge, firstCfg.text);
+            const first = document.getElementById('step-1');
+            if (first) {
+                first.style.display = 'flex';
+            }
+            atualizarLinhaProgresso();
+        }
+
+        function formatCurrency(valor) {
+            if (valor == null) return '-';
+            try {
+                const numero = typeof valor === 'number' ? valor : parseFloat(valor);
+                if (isNaN(numero)) return '-';
+                return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            } catch (e) {
+                return '-';
             }
         }
 
-        function formatBRLInput(el) {
-            let digits = (el.value || '').replace(/\D/g, '');
-            if (!digits) { el.value = ''; return; }
-            const num = Number(digits) / 100;
-            el.value = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        function maskCurrency(input) {
+            let value = input.value.replace(/\D/g, "");
+            value = (value / 100).toFixed(2) + "";
+            value = value.replace(".", ",");
+            value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            input.value = value;
         }
 
-        $(function () {
+        function formatDate(iso) {
+            if (!iso) return '';
+            try {
+                const d = new Date(iso);
+                if (isNaN(d.getTime())) return '';
+                return d.toLocaleDateString('pt-BR');
+            } catch (e) {
+                return '';
+            }
+        }
 
-            // Listagem dinâmica de processos
-            let procPage = 0;
-            let procTotalPages = 1;
-            const procSize = 10;
+        function loadProcesses() {
+            const search = document.getElementById('search-process') ? document.getElementById('search-process').value : '';
+            const params = new URLSearchParams();
+            params.append('page', '0');
+            params.append('size', '50');
+            if (search && search.trim() !== '') {
+                params.append('search', search.trim());
+            }
 
-            function renderProcessos(items) {
-                const $tbody = $('#procTableBody');
-                $tbody.empty();
-                if (!items || items.length === 0) {
-                    $tbody.append('<tr><td colspan="7" class="text-center text-muted py-5"><i class="fas fa-inbox fa-3x mb-3 opacity-25"></i><br>Nenhum processo encontrado.</td></tr>');
-                    return;
-                }
-                items.forEach(p => {
-                    const status = p.status || '—';
-                    let statusClass = 'bg-secondary';
-                    if (status === 'EM_ANDAMENTO') statusClass = 'bg-success';
-                    else if (status === 'SUSPENSO') statusClass = 'bg-warning text-dark';
-                    else if (status === 'ENCERRADO') statusClass = 'bg-dark';
+            fetch('/juridico/api/processos?' + params.toString())
+                .then(r => r.json())
+                .then(data => {
+                    const content = data && Array.isArray(data.content) ? data.content : [];
+                    allProcesses = content.map(p => ({
+                        id: p.id,
+                        displayId: p.numero || p.id,
+                        nome: p.clienteNome || p.parte || '—',
+                        etapa: p.etapaAtual || '',
+                        status: p.status || '',
+                        valor: formatCurrency(p.valorCausa),
+                        update: formatDate(p.dataUltimaMovimentacao)
+                    }));
+                    renderProcessList();
+                })
+                .catch(() => {
+                    allProcesses = [];
+                    renderProcessList();
+                });
+        }
 
-                    $tbody.append(`
-                        <tr class="cursor-pointer proc-row" data-id="${p.id || ''}">
-                            <td class="ps-4 fw-medium text-dark text-center">${p.numero || '—'}</td>
-                            <td class="text-center">
-                                <div class="fw-bold text-dark">${p.tipo || '—'}</div>
-                                <div class="small text-muted">${p.tribunal || '—'}</div>
-                            </td>
-                            <td class="text-center">${p.parte || '—'}</td>
-                            <td class="text-center"><span class="d-inline-block text-truncate" style="max-width: 200px;" title="${p.assunto || ''}">${p.assunto || '—'}</span></td>
-                            <td class="text-center"><span class="badge ${statusClass} rounded-pill font-monospace">${status}</span></td>
-                            <td class="text-center">${p.dataAbertura ? new Date(p.dataAbertura).toLocaleDateString('pt-BR') : '—'}</td>
-                            <td class="text-end pe-4">
-                                <div class="d-flex gap-2 justify-content-end w-100">
-                                    <button class="btn btn-sm btn-info text-white proc-detail" type="button" data-id="${p.id}" title="Visualizar Rápido">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <a href="/juridico/processos/novo?id=${p.id}" class="btn btn-sm btn-warning" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-success proc-ganho" type="button" data-id="${p.id}" title="Registrar ganho de causa">
-                                        <i class="fas fa-hand-holding-usd"></i>
-                                    </button>
-                                </div>
+        function renderProcessList() {
+            const tbody = document.getElementById('process-list-body');
+            const countEl = document.getElementById('process-count');
+            tbody.innerHTML = '';
+            const filter = document.getElementById('search-process').value.toLowerCase();
+            let count = 0;
+
+            allProcesses.forEach(p => {
+                const nome = String(p.nome || '').toLowerCase();
+                const displayId = String(p.displayId || '').toLowerCase();
+                if (nome.includes(filter) || displayId.includes(filter)) {
+                    count++;
+                    let badgeColor = 'neutral';
+                    const statusText = String(p.status || '');
+                    if (statusText.includes('Pago') || statusText.includes('Deferido') || statusText.includes('ENCERRADO')) badgeColor = 'pago';
+                    if (statusText.includes('Pendente') || statusText.includes('Crítico')) badgeColor = 'pendente';
+                    if (statusText.includes('Aguardando') || statusText.includes('EM_ANDAMENTO')) badgeColor = 'atencao';
+                    if (statusText.includes('Novo')) badgeColor = 'ativo';
+                    if (statusText.includes('Civil') || statusText.includes('Recurso')) badgeColor = 'civil';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${p.displayId}</td>
+                            <td><strong>${p.nome}</strong></td>
+                            <td>${p.etapa}</td>
+                            <td><span class="badge-status ${badgeColor}">${p.status}</span></td>
+                            <td>${p.valor}</td>
+                            <td>${p.update}</td>
+                            <td>
+                                <button class="btn-primary btn-sm" type="button" onclick="openFlow('${p.nome}', '${p.id}')">
+                                    <i class="fas fa-folder-open"></i> Abrir
+                                </button>
                             </td>
                         </tr>
-                    `);
-                });
+                    `;
+                }
+            });
+
+            countEl.textContent = count;
+        }
+
+        function filterProcessList() {
+            loadProcesses();
+        }
+
+        function marcarContatoConcluidoVisualmente() {
+            const btn = document.getElementById('btn-contato-iniciar');
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+                btn.textContent = 'Contato concluído';
             }
+        }
 
-            function atualizarPaginacao() {
-                $('#procPageInfo').text(`Página ${procPage + 1} de ${procTotalPages}`);
-                $('#procPrev').prop('disabled', procPage <= 0);
-                $('#procNext').prop('disabled', procPage >= procTotalPages - 1);
-            }
+        function loadFlowState(processId) {
+            if (!processId) return;
+            fetch('/juridico/api/processos/' + processId + '/timeline')
+                .then(r => r.json())
+                .then(timeline => {
+                    if (!timeline || !Array.isArray(timeline)) return;
+                    timeline.sort((a, b) => new Date(a.data) - new Date(b.data));
 
-            function carregarProcessos(page = 0) {
-                const status = $('#filtroStatusProcesso').val();
-                const search = $('#filtroBuscaProcesso').val()?.trim();
-                $('#procTableBody').html('<tr><td colspan="7" class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><br>Carregando processos...</td></tr>');
+                    let solicitacaoPendenteData = null;
+                    let solicitacaoResolvida = false;
+                    let contratoPendenteData = null;
+                    let contratoResolvido = false;
+                    isPaymentCompleted = false;
+                    valorSeguradoraBase = 0;
 
-                $.get('/juridico/api/processos', { status, search, page, size: procSize })
-                    .done(res => {
-                        procPage = res.page || 0;
-                        procTotalPages = res.totalPages || 1;
-                        renderProcessos(res.content);
-                        atualizarPaginacao();
-                    })
-                    .fail(() => {
-                        notify('error', 'Falha ao listar', 'Não foi possível carregar os processos.', 'high');
-                        $('#procTableBody').html('<tr><td colspan="7" class="text-center text-muted py-5"><i class="fas fa-exclamation-circle fa-2x text-danger mb-2"></i><br>Erro ao carregar processos.</td></tr>');
-                    });
-            }
+                    timeline.forEach(item => {
+                        const titulo = item.titulo;
 
-            // Event Listeners
-            $('#btnBuscarProcessos').click(() => carregarProcessos(0));
-            $('#filtroStatusProcesso').change(() => carregarProcessos(0));
-            $('#filtroBuscaProcesso').keypress(function (e) {
-                if (e.which == 13) carregarProcessos(0);
-            });
-
-            $('#procPrev').click(() => {
-                if (procPage > 0) carregarProcessos(procPage - 1);
-            });
-            $('#procNext').click(() => {
-                if (procPage < procTotalPages - 1) carregarProcessos(procPage + 1);
-            });
-
-            // Delegate events for dynamic buttons (Unified Row Click)
-            $(document).on('click', '.proc-row, .proc-detail', function (e) {
-                // Prevent opening details if clicking on action buttons
-                if ($(e.target).closest('.proc-ganho').length > 0) return;
-                if ($(e.target).closest('a').length > 0 && !$(e.target).closest('.proc-detail').length) return;
-
-                const id = $(this).data('id');
-                if (id) abrirDetalhesProcesso(id);
-            });
-            $(document).on('click', '.proc-ganho', async function () {
-                const id = $(this).data('id');
-                const r = await Swal.fire({
-                    title: 'Registrar ganho de causa',
-                    html: `
-                        <div class="text-start">
-                            <div class="mb-2">
-                                <label class="form-label">Valor (R$)</label>
-                                <input id="swValorGanho" class="form-control" placeholder="Ex.: 15.000,00" inputmode="numeric">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Vencimento</label>
-                                <input id="swVencimento" type="date" class="form-control" value="${new Date().toISOString().slice(0, 10)}">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Número do documento (opcional)</label>
-                                <input id="swDocNum" class="form-control" placeholder="Ex.: Proc-12345">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Observações (opcional)</label>
-                                <textarea id="swObs" class="form-control" rows="2" placeholder="Detalhes do acordo/indenização"></textarea>
-                            </div>
-                        </div>
-                    `,
-                    showCancelButton: true,
-                    confirmButtonText: 'Registrar',
-                    cancelButtonText: 'Cancelar',
-                    focusConfirm: false,
-                    didOpen: () => {
-                        const el = document.getElementById('swValorGanho');
-                        el.addEventListener('input', () => formatBRLInput(el));
-                        el.addEventListener('blur', () => formatBRLInput(el));
-                    },
-                    preConfirm: () => {
-                        const vStr = document.getElementById('swValorGanho').value;
-                        const dt = document.getElementById('swVencimento').value;
-                        if (!vStr || !dt) {
-                            Swal.showValidationMessage('Informe Valor e Vencimento.');
-                            return false;
-                        }
-                        return {
-                            valor: vStr,
-                            vencimento: dt,
-                            numeroDocumento: document.getElementById('swDocNum').value || '',
-                            observacoes: document.getElementById('swObs').value || ''
-                        };
-                    }
-                });
-                if (!r.isConfirmed || !r.value) return;
-                $.ajax({
-                    url: `/juridico/api/processos/${id}/ganho`,
-                    method: 'POST',
-                    contentType: 'application/json; charset=utf-8',
-                    data: JSON.stringify(r.value)
-                })
-                    .done(res => {
-                        notify('success', 'Registrado', 'Ganho registrado e lançado em Contas a Receber.');
-                        carregarProcessos(procPage);
-                    })
-                    .fail(xhr => {
-                        let msg = 'Falha ao registrar ganho';
-                        try {
-                            if (xhr.responseJSON && xhr.responseJSON.erro) {
-                                msg = xhr.responseJSON.erro;
-                            } else if (xhr.responseText) {
-                                const maybeJson = JSON.parse(xhr.responseText);
-                                if (maybeJson && maybeJson.erro) msg = maybeJson.erro;
-                                else msg = xhr.responseText;
-                            } else if (xhr.statusText) {
-                                msg = xhr.statusText;
+                        if (titulo === 'Contato inicial') {
+                            updateStep('step-1', 'success', 'success', 'OK');
+                            updateStep('step-2', 'active', 'neutral', 'Aguardando');
+                            marcarContatoConcluidoVisualmente();
+                        } else if (titulo === 'Solicitação pendente') {
+                            updateStep('step-2', 'pendente', 'danger', 'Pendente');
+                            if (item.data) {
+                                solicitacaoPendenteData = new Date(item.data);
                             }
-                        } catch (e) {
-                            if (xhr.responseText) msg = xhr.responseText;
+                        } else if (titulo === 'Documentos recebidos') {
+                            updateStep('step-2', 'success', 'success', 'Enviado');
+                            updateStep('step-3', 'active', 'neutral', 'Análise');
+                            solicitacaoResolvida = true;
+                            const spanEnvio = document.getElementById('data-envio');
+                            if (spanEnvio && item.data) {
+                                const d = new Date(item.data);
+                                if (!isNaN(d.getTime())) {
+                                    spanEnvio.textContent = d.toLocaleDateString('pt-BR');
+                                }
+                            }
+                        } else if (titulo === 'Análise concluída') {
+                            updateStep('step-3', 'success', 'success', 'Validado');
+                            updateStep('step-4', 'active', 'neutral', 'Aguardando');
+                        } else if (titulo === 'Análise pendente') {
+                            updateStep('step-3', 'pendente', 'danger', 'Pendente');
+                            const spanAnalise = document.getElementById('data-analise-pendente');
+                            if (spanAnalise && item.data) {
+                                const d = new Date(item.data);
+                                if (!isNaN(d.getTime())) {
+                                    spanAnalise.textContent = d.toLocaleDateString('pt-BR');
+                                }
+                            }
+                        } else if (titulo === 'Contrato') {
+                            updateStep('step-4', 'success', 'success', 'Assinado');
+                            updateStep('step-5', 'active', 'neutral', 'Aguardando');
+                            contratoResolvido = true;
+                        } else if (titulo === 'Contrato pendente') {
+                            updateStep('step-4', 'pendente', 'danger', 'Pendente');
+                            if (item.data) {
+                                contratoPendenteData = new Date(item.data);
+                            }
+                        } else if (titulo === 'Pagamento médico') {
+                            updateStep('step-5', 'active', 'warning', 'Pagamento');
+                            isPaymentCompleted = true;
+                        } else if (titulo === 'Laudo médico') {
+                            updateStep('step-5', 'success', 'success', 'Laudo OK');
+                            updateStep('step-6', 'active', 'neutral', 'Aguardando');
+                        } else if (titulo === 'Laudo pendente de pagamento') {
+                            updateStep('step-5', 'pendente', 'danger', 'Pendente');
+                            updateStep('step-6', 'active', 'neutral', 'Aguardando');
+                        } else if (titulo === 'Envio para seguradora') {
+                            updateStep('step-6', 'active', 'neutral', 'Enviado');
+                        } else if (titulo === 'Resultado seguradora') {
+                            updateStep('step-6', 'success', 'success', 'Resultado');
+                            updateStep('step-7', 'active', 'neutral', 'Aguardando');
+                            
+                            // Parse description to show info
+                            const desc = item.descricao || '';
+                            const infoDiv = document.getElementById('seguradora-result-info');
+                            if (infoDiv && desc.includes('Sinistro:')) {
+                                infoDiv.style.display = 'block';
+                                // Extract values based on standard format "Sinistro: X | Res: Y | R$: Z"
+                                let sinistro = '', resultado = '', valor = '';
+                                const parts = desc.split('|');
+                                parts.forEach(part => {
+                                    const [k, v] = part.split(':').map(s => s.trim());
+                                    if (k === 'Sinistro') sinistro = v;
+                                    if (k === 'Res') resultado = v;
+                                    if (k === 'R$') {
+                                        valor = v;
+                                        try {
+                                            valorSeguradoraBase = parseFloat(v.replace(/\./g, '').replace(',', '.'));
+                                        } catch(e) {}
+                                    }
+                                });
+                                
+                                infoDiv.innerHTML = `
+                                    <strong>Número do Sinistro:</strong> ${sinistro} <br>
+                                    <strong>Resultado:</strong> ${resultado} <br>
+                                    <strong>Valor (R$):</strong> ${valor}
+                                `;
+                            }
+                        } else if (titulo === 'Resultado pendente') {
+                             updateStep('step-6', 'pendente', 'danger', 'Pendente');
+                             // Show pendencies if needed or just mark as red
+                        } else if (titulo === 'Conclusão') {
+                            updateStep('step-7', 'success', 'success', 'Arquivado');
+                            updateStep('step-8', 'active', 'neutral', 'Aguardando');
+                        } else if (titulo === 'Contador') {
+                            updateStep('step-8', 'success', 'success', 'Enviado');
+                            updateStep('step-9', 'active', 'neutral', 'Opcional');
+                        } else if (titulo === 'Dízimo') {
+                            updateStep('step-9', 'success', 'success', 'Registrado');
+                            updateStep('step-10', 'active', 'neutral', 'Aguardando');
+                            
+                            // Parse registered value
+                            const desc = item.descricao || '';
+                            const match = desc.match(/Valor: R\$ ([\d\.,]+)/);
+                            if (match && match[1]) {
+                                const lbl = document.getElementById('dizimo-label');
+                                const val = document.getElementById('dizimo-valor');
+                                if (lbl) lbl.textContent = 'Valor Contribuição:';
+                                if (val) val.textContent = 'R$ ' + match[1];
+                            }
+                        } else if (titulo === 'Indicação') {
+                            updateStep('step-10', 'success', 'success', 'Concluído');
+                            updateStep('step-11', 'active', 'neutral', 'Aguardando');
+                        } else if (titulo === 'Nota Fiscal') {
+                            updateStep('step-11', 'success', 'success', 'Concluído');
                         }
-                        notify('error', 'Erro', msg);
                     });
-            });
 
-            // Inicialização
-            carregarProcessos(0);
-
-            (function autoOpenFromQuery() {
-                try {
-                    const params = new URLSearchParams(window.location.search);
-                    const openId = params.get('openProcessId');
-                    if (openId) {
-                        const idNum = parseInt(openId, 10);
-                        if (!isNaN(idNum) && idNum > 0) {
-                            setTimeout(() => abrirDetalhesProcesso(idNum), 200);
-                        }
-                    }
-                } catch (e) { }
-            })();
-
-            // --- Lógica do Offcanvas (Timeline, etc) ---
-
-            function setProcDetail(id, data) {
-                // Header Metadados
-                $('#procDetailNumeroHeader').text(data && data.numero ? data.numero : '0000000-00.0000.0.00.0000');
-                $('#procDetailStatusHeader')
-                    .text(data && data.status ? data.status : 'EM ANDAMENTO')
-                    .removeClass('bg-success bg-warning bg-secondary text-dark text-white bg-dark')
-                    .addClass(data && data.status === 'SUSPENSO' ? 'bg-warning text-dark' :
-                        (data && data.status === 'ENCERRADO' ? 'bg-dark text-white' : 'bg-success text-white'));
-
-                // Detalhes Cards
-                $('#procDetailTipo').text(data && data.tipo ? data.tipo : '—');
-                $('#procDetailTribunal').text(data && data.tribunal ? data.tribunal : '—');
-                $('#procDetailParte').text(data && data.parte ? data.parte : '—');
-                $('#procDetailAssunto').text(data && data.assunto ? data.assunto : '—');
-                $('#procDetailDataAbertura').text(data && data.dataAbertura ? new Date(data.dataAbertura).toLocaleDateString('pt-BR') : '—');
-
-                // Botão Editar no Offcanvas
-                $('#btnEditarOffcanvas').attr('href', `/juridico/processos/novo?id=${id}`);
-                $('#btnDetalhesCompleto').attr('href', `/juridico/processos/${id}/detalhes`);
-
-                $('#procDetailOffcanvas').attr('data-proc-id', id);
-            }
-
-            function renderTimeline(items, processType) {
-                const $container = $('#timelineContainer');
-                $container.empty();
-
-                // Mock Expert Data if empty (for demonstration)
-                if (!items || items.length === 0) {
-                    items = generateExpertMockData(processType);
-                }
-
-                items.forEach(item => {
-                    const tipoClass = (item.tipo || 'ANDAMENTO').toLowerCase();
-
-                    // Ícones mais sofisticados
-                    let iconClass = 'fa-circle';
-                    if (item.tipo === 'INICIAL') iconClass = 'fa-file-signature';
-                    else if (item.tipo === 'AUDIENCIA') iconClass = 'fa-gavel';
-                    else if (item.tipo === 'FINAL') iconClass = 'fa-flag-checkered';
-                    else if (item.tipo === 'IMPORTANTE') iconClass = 'fa-star';
-
-                    // Formatar data se possível
-                    let dataFormatada = item.data;
-                    try {
-                        if (item.data && item.data.includes('T')) {
-                            const d = new Date(item.data);
-                            dataFormatada = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) +
-                                ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                        }
-                    } catch (e) { }
-
-                    $container.append(`
-                        <div class="timeline-item-modern ${tipoClass}">
-                            <div class="timeline-icon-modern">
-                                <i class="fas ${iconClass}"></i>
-                            </div>
-                            <div class="timeline-content-modern">
-                                <span class="timeline-date-modern">${dataFormatada}</span>
-                                <h5 class="timeline-title-modern">${item.titulo}</h5>
-                                <div class="timeline-desc-modern">${item.descricao}</div>
-                                ${item.usuario ? `<small class="text-muted mt-2 d-block border-top pt-2"><i class="fas fa-user-circle me-1"></i> ${item.usuario}</small>` : ''}
-                            </div>
-                        </div>
-                    `);
-                });
-            }
-
-            function generateExpertMockData(processType) {
-                const now = new Date();
-                const mocks = [];
-                const type = (processType || '').toUpperCase();
-
-                if (type.includes('INSS') || type.includes('PREVIDENCIARIO')) {
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 2).toISOString(),
-                        titulo: "Conclusão para Sentença",
-                        descricao: "Processo concluso para julgamento após apresentação de laudos.",
-                        tipo: "IMPORTANTE",
-                        usuario: "Sistema"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 15).toISOString(),
-                        titulo: "Laudo Pericial Juntado",
-                        descricao: "Perícia médica realizada. Constatação de incapacidade laborativa temporária.",
-                        tipo: "ANDAMENTO",
-                        usuario: "Perito Dr. Mendes"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 45).toISOString(),
-                        titulo: "Perícia Médica Agendada",
-                        descricao: "Agendamento de perícia para avaliação de auxílio-doença.",
-                        tipo: "AUDIENCIA", // Reused for scheduling
-                        usuario: "Secretaria"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 60).toISOString(),
-                        titulo: "Citação do INSS",
-                        descricao: "Autarquia citada para apresentar contestação.",
-                        tipo: "ANDAMENTO",
-                        usuario: "Oficial de Justiça"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 65).toISOString(),
-                        titulo: "Petição Inicial Protocolada",
-                        descricao: "Distribuição automática. Requerimento de restabelecimento de benefício.",
-                        tipo: "INICIAL",
-                        usuario: "Dr. Advogado"
-                    });
-                } else if (type.includes('SEGURADORA') || type.includes('CIVEL') || type.includes('INDENIZACAO')) {
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 5).toISOString(),
-                        titulo: "Impugnação à Contestação",
-                        descricao: "Réplica apresentada rebatendo as preliminares da seguradora.",
-                        tipo: "ANDAMENTO",
-                        usuario: "Dr. Advogado"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 20).toISOString(),
-                        titulo: "Contestação Juntada",
-                        descricao: "Seguradora apresenta defesa alegando exclusão de cobertura.",
-                        tipo: "IMPORTANTE",
-                        usuario: "Sistema PJe"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 40).toISOString(),
-                        titulo: "Aviso de Recebimento (AR) Positivo",
-                        descricao: "Citação efetivada na sede da ré.",
-                        tipo: "ANDAMENTO",
-                        usuario: "Correios"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 50).toISOString(),
-                        titulo: "Distribuição",
-                        descricao: "Ação de Cobrança de Seguro c/c Danos Morais.",
-                        tipo: "INICIAL",
-                        usuario: "Distribuidor"
-                    });
-                } else {
-                    // Generic
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 10).toISOString(),
-                        titulo: "Movimentação de Processo",
-                        descricao: "Processo em análise pelo juiz.",
-                        tipo: "ANDAMENTO",
-                        usuario: "Sistema"
-                    });
-                    mocks.push({
-                        data: new Date(now.getTime() - 86400000 * 30).toISOString(),
-                        titulo: "Abertura de Processo",
-                        descricao: "Processo cadastrado no sistema.",
-                        tipo: "INICIAL",
-                        usuario: "Admin"
-                    });
-                }
-                return mocks;
-            }
-
-            function abrirDetalhesProcesso(id) {
-                if (!id) return;
-
-                // Reset e mostra Offcanvas
-                setProcDetail(id, null);
-                $('#timelineContainer').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Carregando histórico...</p></div>');
-
-                const offcanvasEl = document.getElementById('procDetailOffcanvas');
-                if (offcanvasEl) {
-                    const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
-                    offcanvas.show();
-
-                    // Reset tab to first one
-                    const firstTabEl = document.querySelector('#procTabs button[data-bs-target="#content-resumo"]');
-                    if (firstTabEl) {
-                        const tab = new bootstrap.Tab(firstTabEl);
-                        tab.show();
-                    }
-                }
-
-                // 1. Fetch Detalhes
-                $.get(`/juridico/api/processos/${id}`)
-                    .done(res => {
-                        setProcDetail(id, res);
-
-                        // 2. Fetch Timeline
-                        $.get(`/juridico/api/processos/${id}/timeline`)
-                            .done(timeline => {
-                                renderTimeline(timeline, res.tipo);
-                            })
-                            .fail(() => {
-                                renderTimeline([], res.tipo); // Fallback mock
+                    if (solicitacaoPendenteData && !solicitacaoResolvida) {
+                        const hoje = new Date();
+                        const diffMs = hoje.setHours(0,0,0,0) - solicitacaoPendenteData.setHours(0,0,0,0);
+                        const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                        if (dias >= 1) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Solicitação pendente',
+                                text: 'Os documentos solicitados estão pendentes há ' + dias + ' dia' + (dias > 1 ? 's' : '') + '. Verifique o retorno do cliente.',
+                                confirmButtonText: 'OK'
                             });
+                        }
+                    }
+
+                    if (contratoPendenteData && !contratoResolvido) {
+                        const hoje = new Date();
+                        const diffMsContrato = hoje.setHours(0,0,0,0) - contratoPendenteData.setHours(0,0,0,0);
+                        const diasContrato = Math.floor(diffMsContrato / (1000 * 60 * 60 * 24));
+                        if (diasContrato >= 1) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Contrato pendente',
+                                text: 'O contrato está pendente há ' + diasContrato + ' dia' + (diasContrato > 1 ? 's' : '') + '. Confirme se o cliente já assinou e devolveu o contrato.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                })
+                .catch(err => console.error('Erro ao carregar timeline:', err));
+        }
+
+        function openFlow(clientName, clientId) {
+            currentProcessId = clientId;
+            resetFlowTimeline();
+            document.getElementById('view-process-list').classList.remove('active');
+            document.getElementById('view-flow-detail').classList.add('active');
+            document.getElementById('flow-client-name').textContent = clientName;
+            document.getElementById('flow-process-id').textContent = clientId;
+
+            if (clientId) {
+                loadFlowState(clientId);
+                fetch('/juridico/api/processos/' + clientId)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (!data) return;
+                        if (data.clienteNome) {
+                            document.getElementById('flow-client-name').textContent = data.clienteNome;
+                        }
+                        if (data.numero) {
+                            document.getElementById('flow-process-id').textContent = data.numero;
+                        }
                     })
-                    .fail(() => {
-                        notify('error', 'Erro', 'Não foi possível carregar os detalhes.');
-                    });
+                    .catch(() => {});
+            }
+        }
+
+        function closeFlow() {
+            document.getElementById('view-flow-detail').classList.remove('active');
+            document.getElementById('view-process-list').classList.add('active');
+        }
+
+        function registrarEtapa(titulo, descricao, tipoEtapa, extraData = {}) {
+            if (!currentProcessId) {
+                alert('Selecione um processo na lista antes de usar o fluxo.');
+                return Promise.reject();
             }
 
-            // --- Lógica de Novo Andamento (Simples) ---
-            $('#btnNovoAndamento').click(function () {
-                $('#formAndamento').removeClass('d-none');
+            const payload = {
+                titulo: titulo,
+                descricao: descricao,
+                tipo: tipoEtapa,
+                dataHora: new Date().toISOString(),
+                ...extraData
+            };
+
+            return fetch('/juridico/api/processos/' + currentProcessId + '/andamentos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(r => r.json().then(body => ({ ok: r.ok, body })))
+                .then(res => {
+                    if (!res.ok) {
+                        const msg = res.body && res.body.erro ? res.body.erro : 'Erro ao registrar etapa.';
+                        alert(msg);
+                        return Promise.reject(msg);
+                    }
+                    return res.body;
+                })
+                .catch(() => {
+                    alert('Erro ao comunicar com o servidor.');
+                    return Promise.reject();
+                });
+        }
+
+        function iniciarCadastro() {
+            registrarEtapa('Contato inicial', 'Mensagem do cliente recebida e cadastro iniciado.', 'INICIAL')
+                .then(() => {
+                    updateStep('step-1', 'success', 'success', 'OK');
+                    updateStep('step-2', 'active', 'neutral', 'Aguardando');
+                    marcarContatoConcluidoVisualmente();
+                })
+                .finally(() => {
+                    window.open('/clientes/cadastro', '_blank');
+                });
+        }
+
+        function confirmarDocumentos() {
+            registrarEtapa('Documentos recebidos', 'Documentação inicial recebida.', 'ANDAMENTO')
+                .then(() => {
+                    updateStep('step-2', 'success', 'success', 'Enviado');
+                    updateStep('step-3', 'active', 'neutral', 'Análise');
+                    const spanEnvio = document.getElementById('data-envio');
+                    if (spanEnvio) {
+                        spanEnvio.textContent = new Date().toLocaleDateString('pt-BR');
+                    }
+                });
+        }
+
+        function marcarSolicitacaoPendente() {
+            registrarEtapa('Solicitação pendente', 'Documentos solicitados ainda não retornados pelo cliente.', 'IMPORTANTE')
+                .then(() => {
+                    updateStep('step-2', 'pendente', 'danger', 'Pendente');
+                });
+        }
+
+        function marcarAnaliseOk() {
+            registrarEtapa('Análise concluída', 'Documentos validados.', 'IMPORTANTE')
+                .then(() => {
+                    updateStep('step-3', 'success', 'success', 'Validado');
+                    updateStep('step-4', 'active', 'neutral', 'Aguardando');
+                });
+        }
+
+        function marcarAnalisePendente() {
+            Swal.fire({
+                title: 'Pendências de Documentação',
+                html: `
+                    <div class="text-start">
+                        <p>Selecione os documentos pendentes:</p>
+                        <div class="checkbox-group">
+                            <label class="d-block mb-2"><input type="checkbox" value="RG/CNH" class="swal2-checkbox"> RG/CNH</label>
+                            <label class="d-block mb-2"><input type="checkbox" value="Comp. Residência" class="swal2-checkbox"> Comp. Residência</label>
+                            <label class="d-block mb-2"><input type="checkbox" value="CTPS" class="swal2-checkbox"> CTPS</label>
+                            <label class="d-block mb-2"><input type="checkbox" value="Holerites" class="swal2-checkbox"> Holerites</label>
+                            <label class="d-block mb-2"><input type="checkbox" value="Docs Médicos" class="swal2-checkbox"> Docs Médicos</label>
+                            <label class="d-block mb-2"><input type="checkbox" value="Prontuário" class="swal2-checkbox"> Prontuário</label>
+                            <label class="d-block mb-2"><input type="checkbox" value="Dados Bancários" class="swal2-checkbox"> Dados Bancários</label>
+                            <label class="d-block mb-2"><input type="checkbox" value="B.O / C.A.T" class="swal2-checkbox"> B.O / C.A.T</label>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label d-block">Data da Pendência:</label>
+                            <input type="date" id="swal-data-pendencia" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                preConfirm: () => {
+                    const checks = document.querySelectorAll('.swal2-checkbox:checked');
+                    const pendencias = Array.from(checks).map(cb => cb.value);
+                    const dataPendencia = document.getElementById('swal-data-pendencia').value;
+
+                    if (pendencias.length === 0) {
+                        Swal.showValidationMessage('Selecione pelo menos um documento pendente.');
+                        return false;
+                    }
+
+                    return { pendencias, dataPendencia };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const { pendencias, dataPendencia } = result.value;
+                    const descricao = 'Pendências: ' + pendencias.join(', ');
+
+                    registrarEtapa('Análise pendente', descricao, 'IMPORTANTE', {
+                        documentosPendentes: pendencias,
+                        dataPendencia: dataPendencia
+                    }).then(() => {
+                        updateStep('step-3', 'pendente', 'danger', 'Pendente');
+                        const spanAnalise = document.getElementById('data-analise-pendente');
+                        if (spanAnalise) {
+                            const d = new Date(dataPendencia);
+                            d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
+                            spanAnalise.textContent = d.toLocaleDateString('pt-BR');
+                        }
+                    });
+                }
             });
+        }
 
-            $('#btnCancelarAndamento').click(function () {
-                $('#formAndamento').addClass('d-none');
-                $('#andamentoTitulo').val('');
-                $('#andamentoDescricao').val('');
-            });
+        function confirmarContratoFluxo() {
+            registrarEtapa('Contrato', 'Contrato assinado pelo cliente.', 'IMPORTANTE')
+                .then(() => {
+                    updateStep('step-4', 'success', 'success', 'Assinado');
+                    updateStep('step-5', 'active', 'neutral', 'Aguardando');
+                });
+        }
 
-            $('#btnSalvarAndamento').click(function () {
-                const titulo = $('#andamentoTitulo').val();
-                const descricao = $('#andamentoDescricao').val();
-                const tipo = $('#andamentoTipo').val();
-                const procId = $('#procDetailOffcanvas').attr('data-proc-id');
+        function marcarContratoPendente() {
+            registrarEtapa('Contrato pendente', 'Contrato pendente de assinatura ou formalização.', 'IMPORTANTE')
+                .then(() => {
+                    updateStep('step-4', 'pendente', 'danger', 'Pendente');
+                });
+        }
 
-                if (!titulo || !descricao) {
-                    notify('warning', 'Atenção', 'Preencha título e descrição.');
+        function registrarPagamentoMedico() {
+            if (!currentProcessId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Selecione um processo',
+                    text: 'Escolha um processo na lista antes de registrar o pagamento do médico.'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Pagamento do Médico',
+                html: `
+                    <div class="text-start">
+                        <p class="mb-2">Anexe o comprovante de pagamento e informe a data.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Comprovante *</label>
+                            <input id="swalMedicoArquivo" type="file" class="form-control" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                            <div class="form-text small">Tipos permitidos: PDF, DOC, DOCX, PNG, JPG. Máx. 10MB.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Data do Pagamento *</label>
+                            <input id="swalMedicoData" type="date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Anexar e Pagar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                focusConfirm: false,
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    const fileInput = document.getElementById('swalMedicoArquivo');
+                    const file = fileInput ? fileInput.files[0] : null;
+                    const dataPagamento = document.getElementById('swalMedicoData').value;
+
+                    if (!file) {
+                        Swal.showValidationMessage('Anexe o comprovante de pagamento para continuar.');
+                        return false;
+                    }
+
+                    if (!dataPagamento) {
+                        Swal.showValidationMessage('Informe a data do pagamento.');
+                        return false;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('titulo', 'Comprovante de Pagamento do Médico');
+                    formData.append('categoria', 'Comprovante de Pagamento');
+                    formData.append('descricao', `Data do pagamento: ${dataPagamento}`);
+                    formData.append('processoId', currentProcessId);
+
+                    return $.ajax({
+                        url: '/juridico/api/documentos/upload',
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false
+                    }).then(() => {
+                        return { dataPagamento };
+                    }).catch(error => {
+                        const msg = error.responseJSON && error.responseJSON.erro
+                            ? error.responseJSON.erro
+                            : 'Erro ao enviar o comprovante. Tente novamente.';
+                        Swal.showValidationMessage(msg);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (!result.isConfirmed) {
                     return;
                 }
 
-                // Simulação de salvamento
-                $.ajax({
-                    url: `/juridico/api/processos/${procId}/andamentos`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        titulo: titulo,
-                        descricao: descricao,
-                        tipo: tipo
-                    }),
-                    success: function () {
-                        notify('success', 'Sucesso', 'Movimentação registrada!');
-                        $('#btnCancelarAndamento').click();
-                        // Reload timeline
-                        $.get(`/juridico/api/processos/${procId}/timeline`)
-                            .done(timeline => {
-                                // Need to fetch process type again or store it. 
-                                // For now just re-render whatever comes back.
-                                renderTimeline(timeline, '');
-                            });
-                    },
-                    error: function () {
-                        // Fallback visual para teste sem backend
-                        notify('success', 'Sucesso', 'Movimentação registrada (Simulação)!');
-                        $('#btnCancelarAndamento').click();
-                        // Reload mock
-                        renderTimeline([], '');
-                    }
-                });
-            });
+                const { dataPagamento } = result.value;
+                registrarEtapa('Pagamento médico', `Comprovante anexado. Data do pagamento: ${dataPagamento}`, 'IMPORTANTE', {
+                    documentosPendentes: [],
+                    dataPendencia: null
+                }).then(() => {
+                        updateStep('step-5', 'active', 'warning', 'Pagamento');
+                        isPaymentCompleted = true;
+                        
+                        fetch('/juridico/api/processos/' + currentProcessId + '/status?status=EM_ANDAMENTO', { method: 'PUT' });
 
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Pagamento registrado',
+                            text: 'Comprovante anexado e pagamento registrado na linha do tempo.',
+                            timer: 1600,
+                            showConfirmButton: false
+                        });
+                    });
+            });
+        }
+
+        function registrarLaudoMedico() {
+            if (!isPaymentCompleted) {
+                const today = new Date().toISOString().split('T')[0];
+                registrarEtapa('Laudo pendente de pagamento', 'Laudo registrado sem pagamento prévio.', 'IMPORTANTE', {
+                    documentosPendentes: ['Comprovante de Pagamento Médico'],
+                    dataPendencia: today
+                }).then(() => {
+                        updateStep('step-5', 'pendente', 'danger', 'Pendente');
+                        updateStep('step-6', 'active', 'neutral', 'Aguardando');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Laudo registrado sem pagamento',
+                            text: 'O card foi marcado como pendente por falta de pagamento do médico.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        fetch('/juridico/api/processos/' + currentProcessId + '/status?status=PENDENTE_PAGAMENTO', { method: 'PUT' });
+                    });
+            } else {
+                registrarEtapa('Laudo médico', 'Laudo médico recebido e vinculado ao processo.', 'IMPORTANTE')
+                    .then(() => {
+                        updateStep('step-5', 'success', 'success', 'Laudo OK');
+                        updateStep('step-6', 'active', 'neutral', 'Aguardando');
+                    });
+            }
+        }
+
+        function enviarParaSeguradora() {
+            registrarEtapa('Envio para seguradora', 'Processo encaminhado para análise da seguradora.', 'ANDAMENTO')
+                .then(() => {
+                    updateStep('step-6', 'active', 'neutral', 'Enviado');
+                });
+        }
+
+        function registrarResultadoSeguradora() {
+            Swal.fire({
+                title: 'Resultado Seguradora',
+                text: 'Houve Pendência?',
+                icon: 'question',
+                showDenyButton: true,
+                confirmButtonText: 'Não (Seguir)',
+                denyButtonText: 'Sim (Listar)',
+                confirmButtonColor: '#198754',
+                denyButtonColor: '#ffc107',
+                customClass: {
+                    denyButton: 'text-dark'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    mostrarModalResultadoDados();
+                } else if (result.isDenied) {
+                    mostrarModalPendenciaSeguradora();
+                }
+            });
+        }
+
+        function mostrarModalResultadoDados() {
+            Swal.fire({
+                title: 'Dados do Resultado',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="form-label">Número do Sinistro</label>
+                            <input id="swal-sinistro" class="form-control" type="text" placeholder="Ex: 4354">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Resultado</label>
+                            <select id="swal-resultado" class="form-select">
+                                <option value="GANHA">GANHA</option>
+                                <option value="PERDA">PERDA</option>
+                                <option value="IMPROCEDENTE">IMPROCEDENTE</option>
+                                <option value="ACORDO">ACORDO</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Valor (R$)</label>
+                            <input id="swal-valor" class="form-control" type="text" placeholder="0,00" onkeyup="maskCurrency(this)">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Salvar Resultado',
+                preConfirm: () => {
+                    return {
+                        sinistro: document.getElementById('swal-sinistro').value,
+                        resultado: document.getElementById('swal-resultado').value,
+                        valor: document.getElementById('swal-valor').value
+                    };
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const { sinistro, resultado, valor } = res.value;
+                    const desc = `Sinistro: ${sinistro} | Res: ${resultado} | R$: ${valor}`;
+                    
+                    registrarEtapa('Resultado seguradora', desc, 'IMPORTANTE', {
+                        sinistro: sinistro,
+                        resultado: resultado,
+                        valor: valor
+                    }).then(() => {
+                        updateStep('step-6', 'success', 'success', 'Resultado');
+                        updateStep('step-7', 'active', 'neutral', 'Aguardando');
+                        
+                        // Update base value for Dízimo
+                        try {
+                            valorSeguradoraBase = parseFloat(valor.replace(/\./g, '').replace(',', '.'));
+                        } catch(e) { valorSeguradoraBase = 0; }
+
+                        const infoDiv = document.getElementById('seguradora-result-info');
+                        if(infoDiv) {
+                            infoDiv.style.display = 'block';
+                            infoDiv.innerHTML = `<strong>Sinistro:</strong> ${sinistro}<br><strong>Res:</strong> ${resultado} | <strong>R$:</strong> ${valor}`;
+                        }
+                    });
+                }
+            });
+        }
+
+        function mostrarModalPendenciaSeguradora() {
+            const today = new Date().toISOString().split('T')[0];
+            Swal.fire({
+                title: 'Pendências Seguradora',
+                html: `
+                    <div class="text-start">
+                        <p>Selecione as pendências:</p>
+                        <div class="checkbox-group">
+                             <label class="d-block"><input type="checkbox" value="Laudo Complementar" class="swal2-checkbox"> Laudo Complementar</label>
+                             <label class="d-block"><input type="checkbox" value="Doc. Ilegível" class="swal2-checkbox"> Doc. Ilegível</label>
+                             <label class="d-block"><input type="checkbox" value="Formulário Incorreto" class="swal2-checkbox"> Formulário Incorreto</label>
+                             <label class="d-block"><input type="checkbox" value="Falta Assinatura" class="swal2-checkbox"> Falta Assinatura</label>
+                        </div>
+                        <div class="mt-3">
+                            <label>Data da Pendência:</label>
+                            <input type="date" id="swal-data-pendencia-seg" class="form-control" value="${today}">
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: 'Registrar Pendência',
+                preConfirm: () => {
+                    const checkboxes = document.querySelectorAll('.swal2-checkbox:checked');
+                    const pendencias = Array.from(checkboxes).map(c => c.value);
+                    const data = document.getElementById('swal-data-pendencia-seg').value;
+                    if (pendencias.length === 0) {
+                        Swal.showValidationMessage('Selecione pelo menos uma pendência');
+                        return false;
+                    }
+                    return { pendencias, data };
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const { pendencias, data } = res.value;
+                    registrarEtapa('Resultado pendente', 'Pendências: ' + pendencias.join(', '), 'IMPORTANTE', {
+                        documentosPendentes: pendencias,
+                        dataPendencia: data
+                    }).then(() => {
+                        updateStep('step-6', 'pendente', 'danger', 'Pendente');
+                        fetch('/juridico/api/processos/' + currentProcessId + '/status?status=PENDENTE_SEGURADORA', { method: 'PUT' });
+                    });
+                }
+            });
+        }
+
+        function arquivarProcessoFluxo() {
+            if (!currentProcessId) return;
+
+            Swal.fire({
+                title: 'Arquivar Processo',
+                width: '600px',
+                html: `
+                    <div class="text-start">
+                        <p class="mb-3">Para arquivar o processo, anexe todos os documentos obrigatórios.</p>
+                        <div class="mb-2"><label class="form-label small mb-1">RG/CNH</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="RG/CNH"></div>
+                        <div class="mb-2"><label class="form-label small mb-1">Comprovante de Residência</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="Comprovante de Residência"></div>
+                        <div class="mb-2"><label class="form-label small mb-1">Carteira de Trabalho</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="Carteira de Trabalho"></div>
+                        <div class="mb-2"><label class="form-label small mb-1">Holerites (3 últimos)</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="Holerites"></div>
+                        <div class="mb-2"><label class="form-label small mb-1">Laudos Médicos</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="Laudos Médicos"></div>
+                        <div class="mb-2"><label class="form-label small mb-1">Prontuário</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="Prontuário"></div>
+                        <div class="mb-2"><label class="form-label small mb-1">Dados Bancários</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="Dados Bancários"></div>
+                        <div class="mb-2"><label class="form-label small mb-1">B.O / C.A.T</label><input type="file" class="form-control form-control-sm arq-doc" data-titulo="B.O / C.A.T"></div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar Arquivamento',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#198754',
+                preConfirm: () => {
+                    const inputs = document.querySelectorAll('.arq-doc');
+                    const filesToUpload = [];
+                    inputs.forEach(input => {
+                        if (input.files.length > 0) {
+                            filesToUpload.push({
+                                file: input.files[0],
+                                titulo: input.getAttribute('data-titulo')
+                            });
+                        }
+                    });
+                    return filesToUpload;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const files = result.value;
+                    let promiseChain = Promise.resolve();
+
+                    if (files.length > 0) {
+                        Swal.fire({
+                            title: 'Enviando arquivos...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+
+                        files.forEach(item => {
+                            promiseChain = promiseChain.then(() => {
+                                const fd = new FormData();
+                                fd.append('file', item.file);
+                                fd.append('titulo', item.titulo);
+                                fd.append('categoria', 'Documentos Arquivamento');
+                                fd.append('descricao', 'Anexado no arquivamento');
+                                fd.append('processoId', currentProcessId);
+                                return $.ajax({
+                                    url: '/juridico/api/documentos/upload',
+                                    method: 'POST',
+                                    data: fd,
+                                    processData: false,
+                                    contentType: false
+                                });
+                            });
+                        });
+                    }
+
+                    promiseChain.then(() => {
+                        return registrarEtapa('Conclusão', 'Processo deferido e arquivado. Documentos anexados.', 'FINAL');
+                    }).then(() => {
+                        updateStep('step-7', 'success', 'success', 'Arquivado');
+                        updateStep('step-8', 'active', 'neutral', 'Aguardando');
+                        Swal.fire('Sucesso', 'Arquivamento realizado e documentos enviados.', 'success');
+                    }).catch(err => {
+                        console.error(err);
+                        Swal.fire('Erro', 'Erro ao enviar documentos ou registrar etapa.', 'error');
+                    });
+                }
+            });
+        }
+
+        function enviarDadosContadorFluxo() {
+            // Flow transition logic only, or simple confirmation
+            Swal.fire({
+                title: 'Contador',
+                text: 'Confirmar envio dos dados para o contador?',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar Envio',
+                confirmButtonColor: '#198754'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    registrarEtapa('Contador', 'Dados enviados ao contador.', 'ANDAMENTO')
+                        .then(() => {
+                            updateStep('step-8', 'success', 'success', 'Enviado');
+                            updateStep('step-9', 'active', 'neutral', 'Opcional');
+                        });
+                }
+            });
+        }
+
+        function registrarContribuicaoDizimoFluxo() {
+            let sugestao = '1.000,00';
+            if (valorSeguradoraBase > 0) {
+                const dezPorcento = valorSeguradoraBase * 0.10;
+                sugestao = dezPorcento.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            Swal.fire({
+                title: 'Dízimo',
+                html: `
+                    <div class="text-start">
+                        <p>Dízimo da igreja sobre a pensão recebida.</p>
+                        <div class="mb-3">
+                            <label class="form-label">Valor sugerido (R$)</label>
+                            <input id="swal-dizimo-valor" class="form-control" value="${sugestao}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Data</label>
+                            <input id="swal-dizimo-data" type="date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Registrar contribuição',
+                confirmButtonColor: '#198754',
+                preConfirm: () => {
+                    return {
+                        valor: document.getElementById('swal-dizimo-valor').value,
+                        data: document.getElementById('swal-dizimo-data').value
+                    };
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const { valor, data } = res.value;
+                    registrarEtapa('Dízimo', `Contribuição registrada. Valor: R$ ${valor} - Data: ${data}`, 'ANDAMENTO')
+                        .then(() => {
+                            updateStep('step-9', 'success', 'success', 'Registrado');
+                            updateStep('step-10', 'active', 'neutral', 'Aguardando');
+
+                            const lbl = document.getElementById('dizimo-label');
+                            const val = document.getElementById('dizimo-valor');
+                            if (lbl) lbl.textContent = 'Valor Contribuição:';
+                            if (val) val.textContent = 'R$ ' + valor;
+                        });
+                }
+            });
+        }
+
+        function abrirFluxoIndicacaoFluxo() {
+            Swal.fire({
+                title: 'Indicação',
+                html: `
+                    <div class="text-start">
+                        <p>Cliente possui indicação cadastrada.</p>
+                        <p><strong>Indicador:</strong> Indicador cadastrado (Exemplo)</p>
+                        <hr>
+                        <p>Deseja registrar o pagamento da indicação?</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Registrar Pagamento',
+                denyButtonText: 'Apenas Visualizar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#198754',
+                denyButtonColor: '#6c757d'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    // Open payment modal
+                    Swal.fire({
+                        title: 'Pagamento Indicação',
+                        html: `
+                            <div class="text-start">
+                                <div class="mb-3">
+                                    <label class="form-label">Data do Pagamento</label>
+                                    <input id="swal-ind-data" type="date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Comprovante</label>
+                                    <input id="swal-ind-file" type="file" class="form-control">
+                                </div>
+                            </div>
+                        `,
+                        confirmButtonText: 'Salvar',
+                        confirmButtonColor: '#198754',
+                        preConfirm: () => {
+                            const fileInput = document.getElementById('swal-ind-file');
+                            const data = document.getElementById('swal-ind-data').value;
+                            if (!fileInput.files.length) {
+                                Swal.showValidationMessage('Anexe o comprovante.');
+                                return false;
+                            }
+                            return { file: fileInput.files[0], data };
+                        }
+                    }).then((pRes) => {
+                        if (pRes.isConfirmed) {
+                            const { file, data } = pRes.value;
+                            const fd = new FormData();
+                            fd.append('file', file);
+                            fd.append('titulo', 'Comprovante Indicação');
+                            fd.append('categoria', 'Pagamentos');
+                            fd.append('descricao', `Pagamento Indicação - Data: ${data}`);
+                            fd.append('processoId', currentProcessId);
+
+                            $.ajax({
+                                url: '/juridico/api/documentos/upload',
+                                method: 'POST',
+                                data: fd,
+                                processData: false,
+                                contentType: false
+                            }).then(() => {
+                                registrarEtapa('Indicação', `Pagamento realizado ao indicador. Data: ${data}`, 'ANDAMENTO')
+                                    .then(() => {
+                                        updateStep('step-10', 'success', 'success', 'Concluído');
+                                        updateStep('step-11', 'active', 'neutral', 'Aguardando');
+                                    });
+                            });
+                        }
+                    });
+                } else if (res.isDenied) {
+                    registrarEtapa('Indicação', 'Indicação verificada sem pagamento registrado.', 'ANDAMENTO')
+                        .then(() => {
+                            updateStep('step-10', 'success', 'success', 'Verificado');
+                            updateStep('step-11', 'active', 'neutral', 'Aguardando');
+                        });
+                }
+            });
+        }
+
+        function registrarNotaFiscalFluxo() {
+            Swal.fire({
+                title: 'Nota Fiscal',
+                html: `
+                    <div class="text-start">
+                        <p>Emissão de nota fiscal do serviço.</p>
+                        <p><strong>Situação:</strong> Não emitida</p>
+                        <div class="mb-3">
+                            <label class="form-label">Anexar Nota Fiscal</label>
+                            <input id="swal-nf-file" type="file" class="form-control" accept=".pdf,.xml">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Emitir / Anexar',
+                confirmButtonColor: '#198754',
+                preConfirm: () => {
+                    const fileInput = document.getElementById('swal-nf-file');
+                    if (!fileInput.files.length) {
+                        Swal.showValidationMessage('Anexe o arquivo da Nota Fiscal.');
+                        return false;
+                    }
+                    return fileInput.files[0];
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const file = res.value;
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('titulo', 'Nota Fiscal de Serviço');
+                    fd.append('categoria', 'Fiscal');
+                    fd.append('descricao', 'Nota Fiscal emitida e anexada');
+                    fd.append('processoId', currentProcessId);
+
+                    Swal.fire({ title: 'Enviando...', didOpen: () => Swal.showLoading() });
+
+                    $.ajax({
+                        url: '/juridico/api/documentos/upload',
+                        method: 'POST',
+                        data: fd,
+                        processData: false,
+                        contentType: false
+                    }).then(() => {
+                        return registrarEtapa('Nota Fiscal', 'Nota fiscal emitida e processo encerrado.', 'FINAL');
+                    }).then(() => {
+                        updateStep('step-11', 'success', 'success', 'Concluído');
+                        
+                        // NOW we close the process
+                        fetch('/juridico/api/processos/' + currentProcessId + '/status?status=ENCERRADO', {
+                            method: 'PUT'
+                        }).then(() => {
+                            Swal.fire('Processo Encerrado', 'O processo foi finalizado com sucesso.', 'success');
+                        });
+                    }).catch(() => {
+                        Swal.fire('Erro', 'Erro ao finalizar processo.', 'error');
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchParam = urlParams.get('search');
+            if (searchParam) {
+                const searchInput = document.getElementById('search-process');
+                if (searchInput) searchInput.value = searchParam;
+            }
+            loadProcesses();
         });
     </script>
 </body>
 
 </html>
+

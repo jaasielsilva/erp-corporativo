@@ -2,7 +2,9 @@ package com.jaasielsilva.portalceo.model.juridico;
 
 import com.jaasielsilva.portalceo.model.Cliente;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class ProcessoJuridico {
@@ -25,8 +27,17 @@ public class ProcessoJuridico {
     @Enumerated(EnumType.STRING)
     private StatusProcesso status;
     private LocalDate dataAbertura;
+    private BigDecimal valorCausa;
+    private LocalDateTime dataUltimaMovimentacao;
+    
+    @Column(columnDefinition = "TEXT")
+    private String documentosPendentes;
+    private LocalDate dataPendencia;
+    private LocalDate dataAnalise;
+    private LocalDate dataDocsRecebidos;
+    private LocalDate dataContrato;
 
-    public enum StatusProcesso { EM_ANDAMENTO, SUSPENSO, ENCERRADO }
+    public enum StatusProcesso { EM_ANDAMENTO, SUSPENSO, ENCERRADO, PENDENTE_DOCS, PENDENTE_CONTRATO, PENDENTE_PAGAMENTO, PENDENTE_SEGURADORA }
     
     public enum TipoAcaoJuridica {
         TRABALHISTA("Trabalhista"),
@@ -64,4 +75,24 @@ public class ProcessoJuridico {
     public void setStatus(StatusProcesso status) { this.status = status; }
     public LocalDate getDataAbertura() { return dataAbertura; }
     public void setDataAbertura(LocalDate dataAbertura) { this.dataAbertura = dataAbertura; }
+    public BigDecimal getValorCausa() { return valorCausa; }
+    public void setValorCausa(BigDecimal valorCausa) { this.valorCausa = valorCausa; }
+    public LocalDateTime getDataUltimaMovimentacao() { return dataUltimaMovimentacao; }
+    public void setDataUltimaMovimentacao(LocalDateTime dataUltimaMovimentacao) { this.dataUltimaMovimentacao = dataUltimaMovimentacao; }
+
+    public String getDocumentosPendentes() { return documentosPendentes; }
+    public void setDocumentosPendentes(String documentosPendentes) { this.documentosPendentes = documentosPendentes; }
+    public LocalDate getDataPendencia() { return dataPendencia; }
+    public void setDataPendencia(LocalDate dataPendencia) { this.dataPendencia = dataPendencia; }
+
+    public LocalDate getDataAnalise() { return dataAnalise; }
+    public void setDataAnalise(LocalDate dataAnalise) { this.dataAnalise = dataAnalise; }
+    public LocalDate getDataDocsRecebidos() { return dataDocsRecebidos; }
+    public void setDataDocsRecebidos(LocalDate dataDocsRecebidos) { this.dataDocsRecebidos = dataDocsRecebidos; }
+    public LocalDate getDataContrato() { return dataContrato; }
+    public void setDataContrato(LocalDate dataContrato) { this.dataContrato = dataContrato; }
+
+    public String getTipoDescricao() {
+        return tipo != null ? tipo.getDescricao() : "";
+    }
 }

@@ -127,11 +127,33 @@ public class ProcessoJuridicoController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute ProcessoJuridico processo, RedirectAttributes redirectAttributes) {
+    public String salvar(@ModelAttribute ProcessoJuridico processo,
+                         RedirectAttributes redirectAttributes,
+                         @AuthenticationPrincipal UserDetails userDetails) {
         try {
+            boolean novo = processo.getId() == null;
             ProcessoJuridico salvo = processoService.salvar(processo);
             log.info("Processo salvo com sucesso: ID {}", salvo.getId());
+
+            if (novo) {
+                String usuarioNome = "Sistema";
+                if (userDetails != null) {
+                    usuarioNome = usuarioRepository.findByEmail(userDetails.getUsername())
+                            .or(() -> usuarioRepository.findByMatricula(userDetails.getUsername()))
+                            .map(u -> u.getNome())
+                            .orElse(userDetails.getUsername());
+                }
+                processoService.adicionarAndamento(salvo.getId(),
+                        "Contato inicial",
+                        "Processo criado para cliente já cadastrado.",
+                        "INICIAL",
+                        usuarioNome);
+            }
+
             redirectAttributes.addFlashAttribute("mensagem", "Processo salvo com sucesso!");
+            if (novo) {
+                return "redirect:/juridico/processos";
+            }
             return "redirect:/juridico/processos/" + salvo.getId() + "/detalhes";
         } catch (Exception e) {
             log.error("Erro ao salvar processo", e);
@@ -144,11 +166,16 @@ public class ProcessoJuridicoController {
     public String listarPorCliente(@PathVariable Long clienteId, 
                                    @RequestParam(defaultValue = "0") int page,
                                    Model model) {
-        Page<ProcessoJuridico> processos = processoService.listarPorCliente(clienteId, PageRequest.of(page, 10));
-        clienteService.buscarPorId(clienteId).ifPresent(cliente -> model.addAttribute("cliente", cliente));
-        
-        model.addAttribute("processos", processos);
-        model.addAttribute("processosPrevidenciarios", processoPrevidenciarioService.listarPorCliente(clienteId));
-        return "juridico/lista-processos-cliente";
+        java.util.Optional<Cliente> cliente = clienteService.buscarPorId(clienteId);
+        if (cliente.isPresent()) {
+            String nome = cliente.get().getNome();
+            try {
+                String encodedNome = java.net.URLEncoder.encode(nome, java.nio.charset.StandardCharsets.UTF_8.toString());
+                return "redirect:/juridico/processos?search=" + encodedNome;
+            } catch (Exception e) {
+                return "redirect:/juridico/processos";
+            }
+        }
+        return "redirect:/juridico/processos";
     }
 }

@@ -26,6 +26,8 @@ import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.SolicitacaoAcessoService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
 import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
+import com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService;
+import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
 
 import com.jaasielsilva.portalceo.service.DashboardMetricsService;
 import com.jaasielsilva.portalceo.service.DashboardMetricsService.DashboardMetricsDTO;
@@ -67,6 +69,9 @@ public class DashboardController {
 
     @Autowired
     private DashboardMetricsService dashboardMetricsService;
+
+    @Autowired
+    private ProcessoJuridicoService processoJuridicoService;
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyAuthority('DASHBOARD_EXECUTIVO_VISUALIZAR','DASHBOARD_OPERACIONAL_VISUALIZAR','DASHBOARD_FINANCEIRO_VISUALIZAR')")
@@ -172,6 +177,25 @@ public class DashboardController {
         model.addAttribute("tempoEntrega", tempoEntrega);
         model.addAttribute("taxaDevolucao", taxaDevolucao);
         model.addAttribute("eficienciaLogistica", eficienciaLogistica);
+
+        // ===== PROCESSOS JURÍDICOS ATIVOS =====
+        int processosAtivosCount = processoJuridicoService.contarProcessosEmAndamento();
+        List<ProcessoJuridico> processosAtivos = processoJuridicoService.listarProcessosAtivos();
+        model.addAttribute("processosAtivosCount", String.format("%,d", processosAtivosCount)); // Formata com ponto de milhar
+        model.addAttribute("processosAtivos", processosAtivos);
+
+        // ===== PROCESSOS COM PENDÊNCIAS DE DOCUMENTOS =====
+        List<ProcessoJuridico> pendenciasDocs = processoJuridicoService.listarProcessosComPendenciasDocs();
+        model.addAttribute("pendenciasDocsCount", String.format("%,d", pendenciasDocs.size()));
+        model.addAttribute("pendenciasDocs", pendenciasDocs);
+
+        java.util.Map<String, Double> temposFluxo = processoJuridicoService.calcularIndicadoresTempoFluxo();
+        double tempoContatoDocs = temposFluxo.getOrDefault("contatoDocs", 0.0);
+        double tempoDocsAnalise = temposFluxo.getOrDefault("docsAnalise", 0.0);
+        double tempoAnaliseContrato = temposFluxo.getOrDefault("analiseContrato", 0.0);
+        model.addAttribute("tempoContatoDocs", String.format("%.1f", tempoContatoDocs));
+        model.addAttribute("tempoDocsAnalise", String.format("%.1f", tempoDocsAnalise));
+        model.addAttribute("tempoAnaliseContrato", String.format("%.1f", tempoAnaliseContrato));
 
         System.out.println("Margem Lucro: " + margemLucro);
         System.out.println("ROI Mensal: " + roiMensal);

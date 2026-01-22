@@ -474,7 +474,7 @@
                                   </div>
                                   <div class="card-content p-3">
                                       <p class="mb-2">Msg cliente.</p>
-                                      <button class="btn btn-primary btn-sm">
+                                      <button class="btn btn-primary btn-sm" id="previd-btn-iniciar">
                                           <i class="fas fa-play me-1"></i> Iniciar
                                       </button>
                                   </div>
@@ -490,6 +490,9 @@
                                   </div>
                                   <div class="card-content p-3">
                                       <p class="mb-2">Docs enviados.</p>
+                                      <button class="btn btn-primary btn-sm mb-2" id="previd-btn-enviado" disabled>
+                                          <i class="fas fa-check me-1"></i> Enviado
+                                      </button>
                                       <details>
                                           <summary>Ver Lista</summary>
                                           <ul class="mb-1">
@@ -980,6 +983,16 @@
         function abrirDetalhesPrevidenciario(id) {
             $('#previdDetailNumeroHeader').text('Carregando...');
             $('#previdTimeline').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>');
+            
+            // Reset Visual State
+            $('.timeline-item').removeClass('active completed neutral').addClass('neutral');
+            $('.status-badge').text('Bloqueado').removeClass('success warning danger neutral').addClass('neutral');
+            $('button[id^="previd-btn-"]').prop('disabled', true);
+            $('#previd-pendencias-box').hide();
+            $('#previd-analise-info').hide();
+            $('#previd-alerta-pagamento').hide();
+            $('#previd-btn-conf-assinatura').hide();
+
             $('#previdDetailOffcanvas').attr('data-proc-id', id);
             previdOffcanvas.show();
             $.get(`/juridico/previdenciario/api/processos/${id}`)
@@ -994,11 +1007,132 @@
                     $('#previdDetailProtocolo').text(data.numero || '—');
                     $('#previdDetailUrlMeuInss').text(data.urlMeuInss || '—');
                     carregarTimelinePrevid(id);
+                    atualizarEstadoTimelinePrevid(data);
                 })
                 .fail(function() {
                     notify('error', 'Erro', 'Não foi possível carregar os detalhes do processo INSS.');
                 });
         }
+
+        function atualizarEstadoTimelinePrevid(p) {
+            const etapa = p.etapa; 
+            
+            const setStep = (num, status, badgeText, badgeClass) => {
+                const $el = $(`#previd-step-${num}`);
+                $el.removeClass('neutral active completed').addClass(status);
+                $(`#previd-status-${num}`).text(badgeText).removeClass('neutral success warning danger').addClass(badgeClass);
+            };
+
+            // 1. Contato
+            if (etapa === 'CADASTRO') {
+                setStep(1, 'active', 'Ação Necessária', 'warning');
+                $('#previd-btn-iniciar').prop('disabled', false);
+            } else {
+                setStep(1, 'completed', 'Concluído', 'success');
+                $('#previd-btn-iniciar').prop('disabled', true);
+            }
+
+            // 2. Solicitação
+            if (etapa === 'DOCUMENTACAO') {
+                setStep(2, 'active', 'Aguardando Envio', 'warning');
+                $('#previd-btn-enviado').prop('disabled', false);
+            } else if (['CADASTRO'].includes(etapa)) {
+                 setStep(2, 'neutral', 'Aguardando', 'neutral');
+            } else {
+                setStep(2, 'completed', 'Enviado', 'success');
+                if (p.dataEnvioDocumentacao) {
+                    $('#previd-data-envio').text(formatarData(p.dataEnvioDocumentacao));
+                }
+            }
+
+            // 3. Análise
+            if (etapa === 'ANALISE') {
+                if (p.pendenciaAnalise) {
+                    setStep(3, 'active', 'Com Pendência', 'danger');
+                    $('#previd-pendencias-box').show();
+                    $('#previd-btn-ok').prop('disabled', false);
+                    $('#previd-btn-pendente').prop('disabled', true);
+                } else {
+                    setStep(3, 'active', 'Em Análise', 'warning');
+                    $('#previd-btn-ok').prop('disabled', false);
+                    $('#previd-btn-pendente').prop('disabled', false);
+                }
+            } else if (['CADASTRO', 'DOCUMENTACAO'].includes(etapa)) {
+                setStep(3, 'neutral', 'Bloqueado', 'neutral');
+            } else {
+                setStep(3, 'completed', 'Validado', 'success');
+                if (p.dataAnalise) {
+                    $('#previd-analise-info').show();
+                    $('#previd-data-analise').text(formatarData(p.dataAnalise));
+                }
+            }
+
+            // 4. Contrato
+            if (etapa === 'CONTRATO') {
+                setStep(4, 'active', 'Formalização', 'warning');
+                const statusContrato = p.statusContrato || 'NAO_ENVIADO';
+                $('#previd-contrato-status').text(statusContrato.replace('_', ' '));
+                
+                if (statusContrato === 'NAO_ENVIADO') {
+                    $('#previd-btn-env-contrato').prop('disabled', false).text('Enviar');
+                    $('#previd-btn-conf-assinatura').hide();
+                } else if (statusContrato === 'ENVIADO') {
+                    $('#previd-btn-env-contrato').prop('disabled', false).text('Reenviar');
+                    $('#previd-btn-conf-assinatura').show();
+                } else if (statusContrato === 'ASSINADO') {
+                    $('#previd-btn-env-contrato').prop('disabled', true);
+                    $('#previd-btn-conf-assinatura').prop('disabled', true).text('Assinado');
+                }
+            } else if (['CADASTRO', 'DOCUMENTACAO', 'ANALISE'].includes(etapa)) {
+                 setStep(4, 'neutral', 'Bloqueado', 'neutral');
+            } else {
+                setStep(4, 'completed', 'Assinado', 'success');
+                $('#previd-contrato-status').text('ASSINADO');
+            }
+
+            // 5. Médico
+            if (etapa === 'MEDICO') {
+                setStep(5, 'active', 'Perícia', 'warning');
+                const statusMedico = p.statusMedico || 'PENDENTE';
+                
+                if (statusMedico === 'PENDENTE') {
+                    $('#previd-alerta-pagamento').show().text('PAGAMENTO PENDENTE');
+                    $('#previd-btn-pgto-medico').prop('disabled', false);
+                    $('#previd-btn-laudo').prop('disabled', true);
+                } else if (statusMedico === 'PAGO') {
+                    $('#previd-alerta-pagamento').hide();
+                    $('#previd-btn-pgto-medico').prop('disabled', true).text('Pago');
+                    $('#previd-btn-laudo').prop('disabled', false);
+                }
+            } else if (['CADASTRO', 'DOCUMENTACAO', 'ANALISE', 'CONTRATO'].includes(etapa)) {
+                 setStep(5, 'neutral', 'Bloqueado', 'neutral');
+            } else {
+                 setStep(5, 'completed', 'Concluído', 'success');
+                 $('#previd-btn-pgto-medico').prop('disabled', true);
+                 $('#previd-btn-laudo').prop('disabled', true);
+            }
+        }
+
+        function apiAction(urlPattern, msg) {
+             const procId = $('#previdDetailOffcanvas').attr('data-proc-id');
+             if(!procId) return;
+             $.post(urlPattern.replace('{id}', procId))
+                .done(() => {
+                    notify('success', 'Sucesso', msg);
+                    $.get(`/juridico/previdenciario/api/processos/${procId}`)
+                        .done(data => atualizarEstadoTimelinePrevid(data));
+                })
+                .fail(() => notify('error', 'Erro', 'Falha ao processar ação.'));
+        }
+
+        $('#previd-btn-iniciar').click(() => apiAction('/juridico/previdenciario/{id}/acoes/iniciar', 'Processo iniciado!'));
+        $('#previd-btn-enviado').click(() => apiAction('/juridico/previdenciario/{id}/acoes/enviar-docs', 'Documentação enviada!'));
+        $('#previd-btn-ok').click(() => apiAction('/juridico/previdenciario/{id}/acoes/analise-ok', 'Análise aprovada!'));
+        $('#previd-btn-pendente').click(() => apiAction('/juridico/previdenciario/{id}/acoes/analise-pendente', 'Pendência registrada.'));
+        $('#previd-btn-env-contrato').click(() => apiAction('/juridico/previdenciario/{id}/acoes/enviar-contrato', 'Contrato enviado!'));
+        $('#previd-btn-conf-assinatura').click(() => apiAction('/juridico/previdenciario/{id}/acoes/assinar-contrato', 'Contrato assinado!'));
+        $('#previd-btn-pgto-medico').click(() => apiAction('/juridico/previdenciario/{id}/acoes/pagar-medico', 'Pagamento médico registrado!'));
+        $('#previd-btn-laudo').click(() => apiAction('/juridico/previdenciario/{id}/acoes/laudo-medico', 'Laudo médico emitido!'));
 
         // --- Lógica de Andamentos (Timeline) ---
         $('#btnNovoAndamento').on('click', function() {

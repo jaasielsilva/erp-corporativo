@@ -16,6 +16,8 @@
     <!-- Toastr for notifications -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -82,6 +84,9 @@
                                                 <option th:each="c : ${clientes}" th:value="${c.id}"
                                                     th:text="${c.nome}"></option>
                                             </select>
+                                            <button type="button" class="btn btn-outline-primary" id="btnNovoClienteRapido" title="Cadastro Rápido de Cliente">
+                                                <i class="fas fa-plus"></i> Novo
+                                            </button>
                                         </div>
                                     </div>
 
@@ -207,6 +212,88 @@
                         alert('Preencha os campos obrigatórios.');
                     }
                 }
+            });
+
+            // Cadastro Rápido de Cliente com SweetAlert2
+            $('#btnNovoClienteRapido').click(function() {
+                Swal.fire({
+                    title: 'Novo Cliente Rápido',
+                    html: `
+                        <div class="text-start">
+                            <div class="mb-3">
+                                <label for="swal-nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                                <input type="text" id="swal-nome" class="form-control" placeholder="Nome do cliente">
+                            </div>
+                            <div class="mb-3">
+                                <label for="swal-celular" class="form-label">Celular/WhatsApp</label>
+                                <input type="text" id="swal-celular" class="form-control" placeholder="(00) 00000-0000">
+                            </div>
+                            <div class="mb-3">
+                                <label for="swal-tipo" class="form-label">Tipo</label>
+                                <select id="swal-tipo" class="form-select">
+                                    <option value="PF" selected>Pessoa Física</option>
+                                    <option value="PJ">Pessoa Jurídica</option>
+                                </select>
+                            </div>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Salvar e Selecionar',
+                    cancelButtonText: 'Cancelar',
+                    focusConfirm: false,
+                    preConfirm: () => {
+                        const nome = document.getElementById('swal-nome').value;
+                        const celular = document.getElementById('swal-celular').value;
+                        const tipo = document.getElementById('swal-tipo').value;
+
+                        if (!nome) {
+                            Swal.showValidationMessage('O nome é obrigatório');
+                            return false;
+                        }
+
+                        return { nome: nome, celular: celular, tipoCliente: tipo };
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const data = result.value;
+                        
+                        // Show loading
+                        Swal.fire({
+                            title: 'Salvando...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: '/clientes/api/salvar-rapido',
+                            method: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(data),
+                            success: function(resp) {
+                                // Adiciona ao select e seleciona
+                                const newOption = new Option(resp.nome, resp.id, true, true);
+                                $('#cliente').append(newOption).trigger('change');
+                                
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Sucesso!',
+                                    text: 'Cliente cadastrado e selecionado.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: 'Erro ao salvar cliente: ' + (xhr.responseJSON?.erro || 'Erro desconhecido')
+                                });
+                            }
+                        });
+                    }
+                });
             });
         });
     </script>

@@ -308,7 +308,7 @@
 
                         <div class="dash-card red" id="card-pendencias_docs" onclick="toggleDetails('pendencias_docs')">
                             <div class="dash-info">
-                                <h3>42</h3>
+                                <h3 th:text="${pendenciasDocsCount}">42</h3>
                                 <p>Pendências (Docs)</p>
                             </div>
                             <div class="dash-icon">
@@ -341,7 +341,7 @@
                         <div class="dash-card blue" id="card-processos_ativos"
                             onclick="toggleDetails('processos_ativos')">
                             <div class="dash-info">
-                                <h3>1.240</h3>
+                                <h3 th:text="${processosAtivosCount}">1.240</h3>
                                 <p>Processos Ativos</p>
                             </div>
                             <div class="dash-icon">
@@ -394,6 +394,18 @@
                         </div>
                     </div>
 
+                    <div class="mt-2 mb-3">
+                        <small class="text-muted">
+                            Tempo médio entre etapas Jurídico:
+                            Contato → Docs:
+                            <span th:text="${tempoContatoDocs} + ' dias'">0,0 dias</span> |
+                            Docs → Análise:
+                            <span th:text="${tempoDocsAnalise} + ' dias'">0,0 dias</span> |
+                            Análise → Contrato:
+                            <span th:text="${tempoAnaliseContrato} + ' dias'">0,0 dias</span>
+                        </small>
+                    </div>
+
                     <div id="details-panel" class="details-panel">
                         <div class="details-header">
                             <h3 id="details-title">Detalhes</h3>
@@ -425,6 +437,57 @@
     <!-- Scripts da página: global é carregado no Topbar -->
     <script th:src="@{/js/notifications.js}" defer></script>
     <script src="/js/sidebar.js" defer></script>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const processosAtivosServer = /*[[${processosAtivos}]]*/ [];
+        const pendenciasDocsServer = /*[[${pendenciasDocs}]]*/ [];
+        
+        // Helper to format currency
+        const formatter = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+        });
+
+        const processosAtivosMapped = processosAtivosServer ? processosAtivosServer.map(p => ({
+            nome: p.cliente ? (p.cliente.nomeFantasia || p.cliente.nome) : (p.parte || 'Sem Nome'),
+            ref: p.tipoDescricao || p.tipo || 'Outros',
+            valor: p.valorCausa ? formatter.format(p.valorCausa) : '-',
+            status: 'ativo'
+        })) : [];
+
+        const pendenciasDocsMapped = pendenciasDocsServer ? pendenciasDocsServer.map(p => {
+            let diasTexto = '-';
+            if (p.dataPendencia) {
+                let data;
+                if (typeof p.dataPendencia === 'string') {
+                    data = new Date(p.dataPendencia);
+                } else if (typeof p.dataPendencia === 'object' && p.dataPendencia.year) {
+                    data = new Date(p.dataPendencia.year, (p.dataPendencia.monthValue || p.dataPendencia.month || 1) - 1, p.dataPendencia.dayOfMonth || p.dataPendencia.day || 1);
+                }
+                if (data && !isNaN(data.getTime())) {
+                    const hoje = new Date();
+                    const diffMs = hoje.setHours(0,0,0,0) - data.setHours(0,0,0,0);
+                    const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    if (dias <= 0) {
+                        diasTexto = 'pendente hoje';
+                    } else if (dias === 1) {
+                        diasTexto = 'pendente há 1 dia';
+                    } else {
+                        diasTexto = 'pendente há ' + dias + ' dias';
+                    }
+                }
+            }
+            return {
+                nome: p.cliente ? (p.cliente.nomeFantasia || p.cliente.nome) : (p.parte || 'Sem Nome'),
+                ref: p.documentosPendentes ? p.documentosPendentes : 'Documentação incompleta',
+                valor: diasTexto,
+                status: 'ATENCAO'
+            };
+        }) : [];
+        /*]]>*/
+    </script>
+
     <script>
         let currentOpenCard = null;
 
@@ -444,10 +507,11 @@
                 { nome: 'Fernanda Souza', ref: 'Dr. Roberto (Ortopedista)', valor: 'Perícia: 16/01', status: 'ativo' },
                 { nome: 'Mariana Lima', ref: 'Dra. Ana (Psiquiatra)', valor: 'Perícia: 16/01', status: 'ativo' }
             ],
-            'pendencias_docs': [
-                { nome: 'Lucas Mendes', ref: 'RG e CPF', valor: '-', status: 'atencao' },
-                { nome: 'Patricia Santos', ref: 'Holerites', valor: '-', status: 'atencao' }
-            ],
+            'pendencias_docs': {
+                title: "Pendências de Documentação (Cliente/Seg)",
+                columns: ["Nome / Descrição", "Referência", "Valor / KPI", "Status"],
+                data: pendenciasDocsMapped
+            },
             'contratos_pendentes': [
                 { nome: 'Marcos Paulo', ref: 'Desde 15/01', valor: '-', status: 'atencao' },
                 { nome: 'Ana Julia', ref: 'Desde 14/01', valor: '-', status: 'atencao' }
@@ -456,9 +520,7 @@
                 { nome: 'Amanda Costa', ref: 'Sinistro #9988', valor: 'R$ 15.000', status: 'pago' },
                 { nome: 'Bruno Souza', ref: 'Sinistro #7744', valor: 'R$ 8.200', status: 'pago' }
             ],
-            'processos_ativos': [
-                { nome: 'Empresa X', ref: 'Trabalhista', valor: '-', status: 'ativo' }
-            ],
+            'processos_ativos': (typeof processosAtivosMapped !== 'undefined') ? processosAtivosMapped : [],
             'contencioso_civil': [
                 { nome: 'Roberto Carlos', ref: 'TJ-SP #12345', valor: 'R$ 50k', status: 'civil' },
                 { nome: 'Julia Roberts', ref: 'TJ-RJ #67890', valor: 'R$ 30k', status: 'civil' }
@@ -493,6 +555,7 @@
 
             const tbody = document.getElementById('details-body');
             const title = document.getElementById('details-title');
+            const theadTr = document.querySelector('#details-table thead tr');
 
             const titles = {
                 'novos_contatos': 'Novos Leads / Contatos Iniciais',
@@ -508,10 +571,42 @@
                 'produtividade': 'Produtividade da Equipe'
             };
 
-            title.innerText = titles[type] || 'Detalhes';
+            let data = mockData[type] || [];
+            let columns = ["Nome / Descrição", "Referência", "Valor / KPI", "Status"];
+            let panelTitle = titles[type] || 'Detalhes';
+
+            if (!Array.isArray(data) && data.data) {
+                // Object format
+                columns = data.columns || columns;
+                panelTitle = data.title || panelTitle;
+                data = data.data;
+            }
+
+            title.innerText = panelTitle;
+            
+            // Update headers
+            if (theadTr) {
+                theadTr.innerHTML = '';
+                columns.forEach(col => {
+                    const th = document.createElement('th');
+                    th.textContent = col;
+                    theadTr.appendChild(th);
+                });
+            }
 
             tbody.innerHTML = '';
-            const data = mockData[type] || [];
+
+            if (data.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = columns.length;
+                cell.className = 'text-center text-muted py-3';
+                cell.textContent = 'Nenhum registro encontrado.';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+                panel.style.display = 'block';
+                return;
+            }
 
             data.forEach(item => {
                 const row = document.createElement('tr');
@@ -527,8 +622,8 @@
 
                 const statusTd = document.createElement('td');
                 const span = document.createElement('span');
-                span.className = 'badge-status ' + item.status;
-                span.textContent = item.status.toUpperCase();
+                span.className = 'badge-status ' + (item.status ? item.status.toLowerCase() : 'neutral');
+                span.textContent = (item.status || '-').toUpperCase();
                 statusTd.appendChild(span);
 
                 row.appendChild(nomeTd);

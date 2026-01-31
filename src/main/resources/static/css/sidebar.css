@@ -4,6 +4,9 @@
 .sidebar {
     background-color: #1e293b;
     color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
 }
 
 /* Logo ou topo do sidebar */
@@ -20,6 +23,9 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 /* Itens do menu */
@@ -46,6 +52,14 @@
 .sidebar ul li a i {
     margin-right: 15px;
     font-size: 1.2rem;
+}
+ 
+.sidebar ul li.logout {
+    margin-top: auto;
+    border-top: 1px solid #334155;
+}
+.sidebar ul li.logout a {
+    padding-top: 15px;
 }
 
 /* =========================

@@ -1,36 +1,33 @@
 package com.jaasielsilva.portalceo.controller;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.security.Principal;
-import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import com.jaasielsilva.portalceo.model.ContaReceber;
 import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
 import com.jaasielsilva.portalceo.service.ClienteService;
 import com.jaasielsilva.portalceo.service.ColaboradorService;
+import com.jaasielsilva.portalceo.service.DashboardMetricsService;
+import com.jaasielsilva.portalceo.service.DashboardMetricsService.DashboardMetricsDTO;
 import com.jaasielsilva.portalceo.service.EstoqueService;
 import com.jaasielsilva.portalceo.service.IndicadorService;
 import com.jaasielsilva.portalceo.service.ProdutoService;
 import com.jaasielsilva.portalceo.service.SolicitacaoAcessoService;
 import com.jaasielsilva.portalceo.service.UsuarioService;
-import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
 import com.jaasielsilva.portalceo.service.juridico.ProcessoJuridicoService;
-import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
-
-import com.jaasielsilva.portalceo.service.DashboardMetricsService;
-import com.jaasielsilva.portalceo.service.DashboardMetricsService.DashboardMetricsDTO;
+import com.jaasielsilva.portalceo.service.rh.WorkflowAdesaoService;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciario;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.service.ProcessoPrevidenciarioService;
 
 @Controller
 public class DashboardController {
@@ -72,6 +69,9 @@ public class DashboardController {
 
     @Autowired
     private ProcessoJuridicoService processoJuridicoService;
+
+    @Autowired
+    private ProcessoPrevidenciarioService processoPrevidenciarioService;
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyAuthority('DASHBOARD_EXECUTIVO_VISUALIZAR','DASHBOARD_OPERACIONAL_VISUALIZAR','DASHBOARD_FINANCEIRO_VISUALIZAR')")
@@ -179,8 +179,8 @@ public class DashboardController {
         model.addAttribute("eficienciaLogistica", eficienciaLogistica);
 
         // ===== PROCESSOS JURÍDICOS ATIVOS =====
-        int processosAtivosCount = processoJuridicoService.contarProcessosEmAndamento();
-        List<ProcessoJuridico> processosAtivos = processoJuridicoService.listarProcessosAtivos();
+        int processosAtivosCount = processoJuridicoService.contarProcessosNaoEncerrados();
+        List<ProcessoJuridico> processosAtivos = processoJuridicoService.listarProcessosNaoEncerrados();
         model.addAttribute("processosAtivosCount", String.format("%,d", processosAtivosCount)); // Formata com ponto de milhar
         model.addAttribute("processosAtivos", processosAtivos);
 
@@ -196,6 +196,36 @@ public class DashboardController {
         model.addAttribute("tempoContatoDocs", String.format("%.1f", tempoContatoDocs));
         model.addAttribute("tempoDocsAnalise", String.format("%.1f", tempoDocsAnalise));
         model.addAttribute("tempoAnaliseContrato", String.format("%.1f", tempoAnaliseContrato));
+
+        // ===== INDENIZAÇÕES A RECEBER (JURÍDICO) =====
+        List<ContaReceber> receberSeguradora = contaReceberService.findByCategoriaEStatuses(
+                ContaReceber.CategoriaContaReceber.JURIDICO,
+                java.util.List.of(
+                        ContaReceber.StatusContaReceber.PENDENTE,
+                        ContaReceber.StatusContaReceber.PARCIAL,
+                        ContaReceber.StatusContaReceber.VENCIDA,
+                        ContaReceber.StatusContaReceber.INADIMPLENTE));
+        model.addAttribute("receberSeguradora", receberSeguradora);
+
+        // ===== PROCESSOS ARQUIVADOS (DEFERIDOS) =====
+        List<ProcessoPrevidenciario> processosArquivados = processoPrevidenciarioService.listarEncerradosDeferidos();
+        model.addAttribute("processosArquivados", processosArquivados);
+        model.addAttribute("processosArquivadosCount", String.format("%,d", processosArquivados != null ? processosArquivados.size() : 0));
+
+        // ===== A PAGAR (MÉDICOS) =====
+        List<ProcessoPrevidenciario> medicosAPagar = processoPrevidenciarioService.listarMedicosAPagar();
+        java.math.BigDecimal totalMedicosAPagar = medicosAPagar != null
+                ? medicosAPagar.stream()
+                        .map(p -> p.getValorMedicoPrevisto() != null ? p.getValorMedicoPrevisto() : java.math.BigDecimal.ZERO)
+                        .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add)
+                : java.math.BigDecimal.ZERO;
+        model.addAttribute("medicosAPagar", medicosAPagar);
+        model.addAttribute("medicosAPagarTotal", formatarMoeda(totalMedicosAPagar));
+
+        // ===== CONTRATOS A ASSINAR =====
+        List<ProcessoPrevidenciario> contratosPendentes = processoPrevidenciarioService.listarContratosPendentesAssinatura();
+        model.addAttribute("contratosPendentes", contratosPendentes);
+        model.addAttribute("contratosPendentesCount", String.format("%,d", contratosPendentes != null ? contratosPendentes.size() : 0));
 
         System.out.println("Margem Lucro: " + margemLucro);
         System.out.println("ROI Mensal: " + roiMensal);

@@ -26,4 +26,19 @@ public interface ProcessoPrevidenciarioRepository extends JpaRepository<Processo
     Page<ProcessoPrevidenciario> buscarComFiltros(@Param("status") ProcessoPrevidenciarioStatus status, 
                                                   @Param("search") String search, 
                                                   Pageable pageable);
+
+    @EntityGraph(attributePaths = { "cliente" })
+    @Query("SELECT p FROM ProcessoPrevidenciario p WHERE p.statusAtual = com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciarioStatus.ENCERRADO AND " +
+           "(p.resultadoDecisao = com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado.DEFERIDO OR p.ganhouCausa = TRUE) " +
+           "ORDER BY p.dataEncerramento DESC")
+    List<ProcessoPrevidenciario> findEncerradosDeferidos();
+
+    @EntityGraph(attributePaths = { "cliente" })
+    @Query("SELECT p FROM ProcessoPrevidenciario p WHERE p.statusMedico = 'PENDENTE' AND p.valorMedicoPrevisto IS NOT NULL AND p.valorMedicoPrevisto > 0 " +
+           "ORDER BY p.dataAbertura DESC")
+    List<ProcessoPrevidenciario> findMedicosAPagar();
+
+    @EntityGraph(attributePaths = { "cliente" })
+    @Query("SELECT p FROM ProcessoPrevidenciario p WHERE p.statusContrato = 'ENVIADO' AND p.dataAssinaturaContrato IS NULL ORDER BY p.dataEnvioContrato DESC")
+    List<ProcessoPrevidenciario> findContratosPendentesAssinatura();
 }

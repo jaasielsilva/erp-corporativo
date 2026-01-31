@@ -100,4 +100,9 @@ public interface ContaReceberRepository extends JpaRepository<ContaReceber, Long
 
     @Query("SELECT c FROM ContaReceber c LEFT JOIN FETCH c.cliente WHERE c.status = :status ORDER BY c.dataVencimento")
     List<ContaReceber> findByStatusWithCliente(@Param("status") ContaReceber.StatusContaReceber status);
+
+    @Query("SELECT c FROM ContaReceber c LEFT JOIN FETCH c.cliente WHERE c.categoria = :categoria AND c.status IN :statuses ORDER BY c.dataVencimento")
+    List<ContaReceber> findByCategoriaAndStatusesWithCliente(
+            @Param("categoria") ContaReceber.CategoriaContaReceber categoria,
+            @Param("statuses") List<ContaReceber.StatusContaReceber> statuses);
 }

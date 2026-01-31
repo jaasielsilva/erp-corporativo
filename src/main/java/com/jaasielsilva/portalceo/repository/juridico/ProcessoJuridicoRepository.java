@@ -1,18 +1,21 @@
 package com.jaasielsilva.portalceo.repository.juridico;
 
-import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
+import com.jaasielsilva.portalceo.model.juridico.ProcessoJuridico;
 
 public interface ProcessoJuridicoRepository extends JpaRepository<ProcessoJuridico, Long> {
     long countByStatus(ProcessoJuridico.StatusProcesso status);
     java.util.List<ProcessoJuridico> findByStatus(ProcessoJuridico.StatusProcesso status);
     java.util.List<ProcessoJuridico> findByDocumentosPendentesIsNotNull();
+    long countByStatusNot(ProcessoJuridico.StatusProcesso status);
+    java.util.List<ProcessoJuridico> findByStatusNot(ProcessoJuridico.StatusProcesso status);
 
     Page<ProcessoJuridico> findByStatus(ProcessoJuridico.StatusProcesso status, Pageable pageable);
 

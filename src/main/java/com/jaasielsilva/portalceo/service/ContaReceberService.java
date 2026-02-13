@@ -244,6 +244,12 @@ public class ContaReceberService {
     }
 
     @Transactional(readOnly = true)
+    public List<ContaReceber> findByCategoriaEStatuses(ContaReceber.CategoriaContaReceber categoria,
+            List<ContaReceber.StatusContaReceber> statuses) {
+        return contaReceberRepository.findByCategoriaAndStatusesWithCliente(categoria, statuses);
+    }
+
+    @Transactional(readOnly = true)
     public Page<ContaReceber> findAllPaged(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return contaReceberRepository.findAll(pageable);

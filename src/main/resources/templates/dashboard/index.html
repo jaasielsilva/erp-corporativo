@@ -287,7 +287,7 @@
 
                         <div class="dash-card red" id="card-pagar_medico" onclick="toggleDetails('pagar_medico')">
                             <div class="dash-info">
-                                <h3>R$ 12.450</h3>
+                                <h3 th:text="${medicosAPagarTotal}">R$ 0,00</h3>
                                 <p>A Pagar (Médicos)</p>
                             </div>
                             <div class="dash-icon">
@@ -319,7 +319,7 @@
                         <div class="dash-card orange" id="card-contratos_pendentes"
                             onclick="toggleDetails('contratos_pendentes')">
                             <div class="dash-info">
-                                <h3>12</h3>
+                                <h3 th:text="${contratosPendentesCount}">0</h3>
                                 <p>Contratos a Assinar</p>
                             </div>
                             <div class="dash-icon">
@@ -363,7 +363,7 @@
                         <div class="dash-card success" id="card-processos_arquivados"
                             onclick="toggleDetails('processos_arquivados')">
                             <div class="dash-info">
-                                <h3>3.450</h3>
+                                <h3 th:text="${processosArquivadosCount}">0</h3>
                                 <p>Arquivados (Deferidos)</p>
                             </div>
                             <div class="dash-icon">
@@ -392,18 +392,6 @@
                                 <i class="fas fa-users-cog"></i>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="mt-2 mb-3">
-                        <small class="text-muted">
-                            Tempo médio entre etapas Jurídico:
-                            Contato → Docs:
-                            <span th:text="${tempoContatoDocs} + ' dias'">0,0 dias</span> |
-                            Docs → Análise:
-                            <span th:text="${tempoDocsAnalise} + ' dias'">0,0 dias</span> |
-                            Análise → Contrato:
-                            <span th:text="${tempoAnaliseContrato} + ' dias'">0,0 dias</span>
-                        </small>
                     </div>
 
                     <div id="details-panel" class="details-panel">
@@ -442,6 +430,10 @@
         /*<![CDATA[*/
         const processosAtivosServer = /*[[${processosAtivos}]]*/ [];
         const pendenciasDocsServer = /*[[${pendenciasDocs}]]*/ [];
+        const processosArquivadosServer = /*[[${processosArquivados}]]*/ [];
+        const medicosAPagarServer = /*[[${medicosAPagar}]]*/ [];
+        const contratosPendentesServer = /*[[${contratosPendentes}]]*/ [];
+        const receberSeguradoraServer = /*[[${receberSeguradora}]]*/ [];
         
         // Helper to format currency
         const formatter = new Intl.NumberFormat('pt-BR', {
@@ -485,6 +477,41 @@
                 status: 'ATENCAO'
             };
         }) : [];
+        
+        const processosArquivadosMapped = processosArquivadosServer ? processosArquivadosServer.map(p => ({
+            nome: p.cliente ? (p.cliente.nomeFantasia || p.cliente.nome) : ('Processo #' + (p.id || '—')),
+            ref: (p.resultadoDecisao ? p.resultadoDecisao : 'Deferido'),
+            valor: p.valorConcedido ? formatter.format(p.valorConcedido) : (p.valorCausa ? formatter.format(p.valorCausa) : '-'),
+            status: 'deferido'
+        })) : [];
+        
+        const medicosAPagarMapped = medicosAPagarServer ? medicosAPagarServer.map(p => ({
+            nome: p.cliente ? (p.cliente.nomeFantasia || p.cliente.nome) : ('Processo #' + (p.id || '—')),
+            ref: 'Perícia / Médico',
+            valor: p.valorMedicoPrevisto ? formatter.format(p.valorMedicoPrevisto) : '-',
+            status: 'pendente'
+        })) : [];
+
+        const contratosPendentesMapped = contratosPendentesServer ? contratosPendentesServer.map(p => ({
+            nome: p.cliente ? (p.cliente.nomeFantasia || p.cliente.nome) : ('Processo #' + (p.id || '—')),
+            ref: p.dataEnvioContrato ? ('Desde ' + new Date(p.dataEnvioContrato).toLocaleDateString('pt-BR')) : 'Contrato enviado',
+            valor: '-',
+            status: 'ATENCAO'
+        })) : [];
+        
+        const receberSeguradoraMapped = receberSeguradoraServer ? receberSeguradoraServer.map(c => ({
+            nome: c.cliente ? (c.cliente.nomeFantasia || c.cliente.nome) : (c.descricao || '—'),
+            ref: c.numeroDocumento || c.descricao || '—',
+            valor: formatter.format(
+                (typeof c.valorTotal !== 'undefined' && c.valorTotal != null)
+                    ? c.valorTotal
+                    : ((c.valorOriginal || 0)
+                        + (c.valorJuros || 0)
+                        + (c.valorMulta || 0)
+                        - (c.valorDesconto || 0))
+            ),
+            status: (c.status ? c.status.toLowerCase() : 'pendente')
+        })) : [];
         /*]]>*/
     </script>
 
@@ -497,8 +524,8 @@
                 { nome: 'Fernanda Lima', ref: 'Instagram', valor: '16/01 10:15', status: 'ativo' }
             ],
             'pagar_medico': [
-                { nome: 'João Silva', ref: 'Dr. Roberto', valor: 'R$ 450,00', status: 'pendente' },
-                { nome: 'Maria Oliveira', ref: 'Dra. Ana', valor: 'R$ 500,00', status: 'pendente' }
+                // Dados reais dos processos com médico a pagar
+                ...medicosAPagarMapped
             ],
             'aguardando_laudo': [
                 { nome: 'Pedro Henrique', ref: 'Dr. Roberto (Ortopedista)', valor: 'Perícia: 10/01', status: 'atencao' },
@@ -512,23 +539,14 @@
                 columns: ["Nome / Descrição", "Referência", "Valor / KPI", "Status"],
                 data: pendenciasDocsMapped
             },
-            'contratos_pendentes': [
-                { nome: 'Marcos Paulo', ref: 'Desde 15/01', valor: '-', status: 'atencao' },
-                { nome: 'Ana Julia', ref: 'Desde 14/01', valor: '-', status: 'atencao' }
-            ],
-            'receber_seguradora': [
-                { nome: 'Amanda Costa', ref: 'Sinistro #9988', valor: 'R$ 15.000', status: 'pago' },
-                { nome: 'Bruno Souza', ref: 'Sinistro #7744', valor: 'R$ 8.200', status: 'pago' }
-            ],
+            'contratos_pendentes': contratosPendentesMapped,
+            'receber_seguradora': receberSeguradoraMapped,
             'processos_ativos': (typeof processosAtivosMapped !== 'undefined') ? processosAtivosMapped : [],
             'contencioso_civil': [
                 { nome: 'Roberto Carlos', ref: 'TJ-SP #12345', valor: 'R$ 50k', status: 'civil' },
                 { nome: 'Julia Roberts', ref: 'TJ-RJ #67890', valor: 'R$ 30k', status: 'civil' }
             ],
-            'processos_arquivados': [
-                { nome: 'Pedro Alcantara', ref: 'Deferido', valor: 'R$ 12.000', status: 'pago' },
-                { nome: 'Carla Dias', ref: 'Deferido', valor: 'R$ 8.500', status: 'pago' }
-            ],
+            'processos_arquivados': processosArquivadosMapped,
             'prazos_criticos': [
                 { nome: 'Juliana Paes', ref: 'Recurso - 24h', valor: 'Urgente', status: 'pendente' }
             ],

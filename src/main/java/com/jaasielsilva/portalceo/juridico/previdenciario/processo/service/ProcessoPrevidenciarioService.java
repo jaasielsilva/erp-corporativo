@@ -1,29 +1,29 @@
 package com.jaasielsilva.portalceo.juridico.previdenciario.processo.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.jaasielsilva.portalceo.juridico.previdenciario.historico.service.HistoricoProcessoService;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado;
 import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciario;
 import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciarioStatus;
 import com.jaasielsilva.portalceo.juridico.previdenciario.processo.repository.ProcessoPrevidenciarioRepository;
 import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.entity.EtapaWorkflowCodigo;
 import com.jaasielsilva.portalceo.model.Cliente;
+import com.jaasielsilva.portalceo.model.ContaReceber;
 import com.jaasielsilva.portalceo.model.Usuario;
 import com.jaasielsilva.portalceo.repository.UsuarioRepository;
 import com.jaasielsilva.portalceo.service.ClienteService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.math.BigDecimal;
-import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado;
 import com.jaasielsilva.portalceo.service.ContaReceberService;
-import com.jaasielsilva.portalceo.model.ContaReceber;
-import org.springframework.dao.DataIntegrityViolationException;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -212,7 +212,7 @@ public class ProcessoPrevidenciarioService {
         conta.setDataEmissao(LocalDate.now());
         conta.setDataVencimento(vencimento != null ? vencimento : LocalDate.now().plusDays(30));
         conta.setTipo(ContaReceber.TipoContaReceber.SERVICO);
-        conta.setCategoria(ContaReceber.CategoriaContaReceber.SERVICO);
+        conta.setCategoria(ContaReceber.CategoriaContaReceber.JURIDICO);
         conta.setNumeroDocumento(numeroDocumento != null && !numeroDocumento.isBlank()
                 ? numeroDocumento
                 : ("PREV-" + existente.getId() + "-" + LocalDate.now()));
@@ -245,6 +245,7 @@ public class ProcessoPrevidenciarioService {
             historicoProcessoService.registrar(p, "ANALISE_OK", usuarioExecutor, "Análise validada - Avançou para Contrato");
         } else {
             p.setPendenciaAnalise(true);
+            p.setDataPendenciaAnalise(LocalDate.now());
             historicoProcessoService.registrar(p, "ANALISE_PENDENTE", usuarioExecutor, "Pendência identificada na análise");
         }
         return processoRepository.save(p);
@@ -256,6 +257,15 @@ public class ProcessoPrevidenciarioService {
         p.setStatusContrato("ENVIADO");
         p.setDataEnvioContrato(LocalDateTime.now());
         historicoProcessoService.registrar(p, "CONTRATO_ENVIADO", usuarioExecutor, "Contrato enviado");
+        return processoRepository.save(p);
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario atualizarAnalisePendente(Long processoId, LocalDate data, Usuario usuarioExecutor) {
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        p.setPendenciaAnalise(true);
+        p.setDataPendenciaAnalise(data != null ? data : LocalDate.now());
+        historicoProcessoService.registrar(p, "ANALISE_PENDENTE", usuarioExecutor, "Pendência identificada na análise");
         return processoRepository.save(p);
     }
 
@@ -285,6 +295,34 @@ public class ProcessoPrevidenciarioService {
         p.setDataLaudoMedico(LocalDateTime.now());
         p.setEtapaAtual(EtapaWorkflowCodigo.PROTOCOLO_INSS);
         historicoProcessoService.registrar(p, "LAUDO_MEDICO", usuarioExecutor, "Laudo emitido - Avançou para Protocolo INSS");
+        return processoRepository.save(p);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProcessoPrevidenciario> listarEncerradosDeferidos() {
+        return processoRepository.findEncerradosDeferidos();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProcessoPrevidenciario> listarMedicosAPagar() {
+        return processoRepository.findMedicosAPagar();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProcessoPrevidenciario> listarContratosPendentesAssinatura() {
+        return processoRepository.findContratosPendentesAssinatura();
+    }
+
+    @Transactional
+    public ProcessoPrevidenciario registrarValorMedicoPrevisto(Long processoId, BigDecimal valorPrevisto, Usuario usuarioExecutor, String observacao) {
+        if (valorPrevisto == null || valorPrevisto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor previsto do médico deve ser maior que zero");
+        }
+        ProcessoPrevidenciario p = buscarPorId(processoId);
+        p.setValorMedicoPrevisto(valorPrevisto);
+        p.setStatusMedico("PENDENTE");
+        historicoProcessoService.registrar(p, "VALOR_MEDICO_PREVISTO", usuarioExecutor,
+                observacao != null ? observacao : ("Valor previsto: " + valorPrevisto));
         return processoRepository.save(p);
     }
 }

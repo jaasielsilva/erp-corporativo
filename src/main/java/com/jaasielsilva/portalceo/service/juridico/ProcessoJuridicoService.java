@@ -68,10 +68,19 @@ public class ProcessoJuridicoService {
     }
 
     @Transactional(readOnly = true)
+    public int contarProcessosNaoEncerrados() {
+        return (int) processoRepo.countByStatusNot(ProcessoJuridico.StatusProcesso.ENCERRADO);
+    }
+
+    @Transactional(readOnly = true)
     public List<ProcessoJuridico> listarProcessosAtivos() {
         return processoRepo.findByStatus(ProcessoJuridico.StatusProcesso.EM_ANDAMENTO);
     }
 
+    @Transactional(readOnly = true)
+    public List<ProcessoJuridico> listarProcessosNaoEncerrados() {
+        return processoRepo.findByStatusNot(ProcessoJuridico.StatusProcesso.ENCERRADO);
+    }
     @Transactional(readOnly = true)
     public List<ProcessoJuridico> listarProcessosComPendenciasDocs() {
         return processoRepo.findByDocumentosPendentesIsNotNull();

@@ -1052,6 +1052,10 @@
                     $('#previd-pendencias-box').show();
                     $('#previd-btn-ok').prop('disabled', false);
                     $('#previd-btn-pendente').prop('disabled', true);
+                    if (p.dataPendenciaAnalise) {
+                        $('#previd-analise-info').show();
+                        $('#previd-data-analise').text(formatarData(p.dataPendenciaAnalise));
+                    }
                 } else {
                     setStep(3, 'active', 'Em Análise', 'warning');
                     $('#previd-btn-ok').prop('disabled', false);
@@ -1128,7 +1132,20 @@
         $('#previd-btn-iniciar').click(() => apiAction('/juridico/previdenciario/{id}/acoes/iniciar', 'Processo iniciado!'));
         $('#previd-btn-enviado').click(() => apiAction('/juridico/previdenciario/{id}/acoes/enviar-docs', 'Documentação enviada!'));
         $('#previd-btn-ok').click(() => apiAction('/juridico/previdenciario/{id}/acoes/analise-ok', 'Análise aprovada!'));
-        $('#previd-btn-pendente').click(() => apiAction('/juridico/previdenciario/{id}/acoes/analise-pendente', 'Pendência registrada.'));
+        $('#previd-btn-pendente').click(() => {
+            const hoje = new Date().toISOString().split('T')[0];
+            const data = prompt('Data da Pendência (YYYY-MM-DD):', hoje);
+            if (data === null || data.trim() === '') return;
+            const procId = $('#previdDetailOffcanvas').attr('data-proc-id');
+            if(!procId) return;
+            $.post(`/juridico/previdenciario/${procId}/acoes/analise-pendente?data=${encodeURIComponent(data)}`)
+                .done(() => {
+                    notify('success', 'Sucesso', 'Pendência registrada.');
+                    $.get(`/juridico/previdenciario/api/processos/${procId}`)
+                        .done(data => atualizarEstadoTimelinePrevid(data));
+                })
+                .fail(() => notify('error', 'Erro', 'Falha ao registrar pendência.'));
+        });
         $('#previd-btn-env-contrato').click(() => apiAction('/juridico/previdenciario/{id}/acoes/enviar-contrato', 'Contrato enviado!'));
         $('#previd-btn-conf-assinatura').click(() => apiAction('/juridico/previdenciario/{id}/acoes/assinar-contrato', 'Contrato assinado!'));
         $('#previd-btn-pgto-medico').click(() => apiAction('/juridico/previdenciario/{id}/acoes/pagar-medico', 'Pagamento médico registrado!'));

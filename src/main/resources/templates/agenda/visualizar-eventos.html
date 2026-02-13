@@ -9,19 +9,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables CSS (compatível com CSP) -->
+    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link th:href="@{/css/agenda.css}" rel="stylesheet">
 </head>
 <body>
     <!-- Sidebar -->
-    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div th:replace="~{components/sidebar :: sidebar}"></div>
     
     <!-- Main Content -->
     <div class="main-content">
         <!-- Top Bar -->
-        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        <div th:replace="~{components/topbar :: topbar}"></div>
         
         <!-- Page Content -->
         <div class="container-fluid p-4">
@@ -177,11 +177,10 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Título</th>
-                                    <th>Data/Hora</th>
-                                    <th>Categoria</th>
-                                    <th>Prioridade</th>
+                                    <th>Início</th>
+                                    <th>Fim</th>
                                     <th>Local</th>
-                                    <th>Status</th>
+                                    <th>Lembrete</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -198,37 +197,19 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div>
-                                            <i class="fas fa-clock me-1"></i>
-                                            <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
-                                        </div>
-                                        <div th:if="${evento.dataFim}" class="text-muted small">
-                                            até <span th:text="${#temporals.format(evento.dataFim, 'dd/MM/yyyy HH:mm')}">01/01/2024 11:00</span>
-                                        </div>
+                                        <i class="fas fa-clock me-1"></i>
+                                        <span th:text="${#temporals.format(evento.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
                                     </td>
                                     <td>
-                                        <span class="badge" th:classappend="${evento.categoria == 'REUNIAO' ? 'bg-primary' : 
-                                                                              evento.categoria == 'COMPROMISSO' ? 'bg-info' : 
-                                                                              evento.categoria == 'EVENTO' ? 'bg-success' : 
-                                                                              evento.categoria == 'TAREFA' ? 'bg-warning' : 
-                                                                              evento.categoria == 'LEMBRETE' ? 'bg-secondary' : 'bg-dark'}" 
-                                              th:text="${evento.categoria}">Categoria</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge" th:classappend="${evento.prioridade == 'URGENTE' ? 'bg-danger' : 
-                                                                              evento.prioridade == 'ALTA' ? 'bg-warning' : 
-                                                                              evento.prioridade == 'MEDIA' ? 'bg-info' : 'bg-secondary'}" 
-                                              th:text="${evento.prioridade}">Prioridade</span>
+                                        <span th:if="${evento.dataHoraFim}" th:text="${#temporals.format(evento.dataHoraFim, 'dd/MM/yyyy HH:mm')}">01/01/2024 11:00</span>
+                                        <span th:unless="${evento.dataHoraFim}" class="text-muted">-</span>
                                     </td>
                                     <td>
                                         <span th:if="${evento.local}" th:text="${evento.local}">Local</span>
                                         <span th:unless="${evento.local}" class="text-muted">-</span>
                                     </td>
                                     <td>
-                                        <span class="badge" th:classappend="${evento.status == 'ATIVO' ? 'bg-success' : 
-                                                                              evento.status == 'CANCELADO' ? 'bg-danger' : 
-                                                                              evento.status == 'ADIADO' ? 'bg-warning' : 'bg-secondary'}" 
-                                              th:text="${evento.status}">Status</span>
+                                        <span class="badge" th:classappend="${evento.lembrete ? 'bg-success' : 'bg-secondary'}" th:text="${evento.lembrete ? 'SIM' : 'NÃO'}">SIM</span>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
@@ -256,51 +237,35 @@
                 </div>
             </div>
             
-            <!-- Visualização em Cards -->
+            <!-- Visualização em Cards (simplificada, oculta por padrão) -->
             <div id="visualizacaoCards" class="row" style="display: none;">
                 <div class="col-md-4 mb-4" th:each="evento : ${eventos}">
                     <div class="card h-100 shadow-sm">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="mb-0" th:text="${evento.titulo}">Título do Evento</h6>
-                            <span class="badge" th:classappend="${evento.prioridade == 'URGENTE' ? 'bg-danger' : 
-                                                                  evento.prioridade == 'ALTA' ? 'bg-warning' : 
-                                                                  evento.prioridade == 'MEDIA' ? 'bg-info' : 'bg-secondary'}" 
-                                  th:text="${evento.prioridade}">Prioridade</span>
+                            <span class="badge" th:classappend="${evento.lembrete ? 'bg-success' : 'bg-secondary'}" th:text="${evento.lembrete ? 'Lembrete' : 'Evento'}">Evento</span>
                         </div>
                         <div class="card-body">
                             <p class="card-text" th:text="${#strings.abbreviate(evento.descricao, 100)}">Descrição do evento...</p>
-                            
                             <div class="mb-2">
                                 <i class="fas fa-clock text-primary me-1"></i>
-                                <small th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+                                <small th:text="${#temporals.format(evento.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</small>
+                                <span th:if="${evento.dataHoraFim}"> - <small th:text="${#temporals.format(evento.dataHoraFim, 'dd/MM/yyyy HH:mm')}">11:00</small></span>
                             </div>
-                            
                             <div class="mb-2" th:if="${evento.local}">
                                 <i class="fas fa-map-marker-alt text-danger me-1"></i>
                                 <small th:text="${evento.local}">Local</small>
                             </div>
-                            
-                            <div class="mb-2">
-                                <span class="badge" th:classappend="${evento.categoria == 'REUNIAO' ? 'bg-primary' : 
-                                                                      evento.categoria == 'COMPROMISSO' ? 'bg-info' : 
-                                                                      evento.categoria == 'EVENTO' ? 'bg-success' : 
-                                                                      evento.categoria == 'TAREFA' ? 'bg-warning' : 
-                                                                      evento.categoria == 'LEMBRETE' ? 'bg-secondary' : 'bg-dark'}" 
-                                      th:text="${evento.categoria}">Categoria</span>
-                            </div>
                         </div>
                         <div class="card-footer">
                             <div class="btn-group w-100" role="group">
-                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        th:onclick="'visualizarDetalhes(' + ${evento.id} + ')'">
+                                <button type="button" class="btn btn-sm btn-outline-primary" th:onclick="'visualizarDetalhes(' + ${evento.id} + ')'">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <a th:href="@{/agenda/editar/{id}(id=${evento.id})}" 
-                                   class="btn btn-sm btn-outline-warning">
+                                <a th:href="@{/agenda/editar/{id}(id=${evento.id})}" class="btn btn-sm btn-outline-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" 
-                                        th:onclick="'confirmarExclusao(' + ${evento.id} + ')'">
+                                <button type="button" class="btn btn-sm btn-outline-danger" th:onclick="'confirmarExclusao(' + ${evento.id} + ')'">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -367,13 +332,13 @@
     </div>
     
     <!-- Footer -->
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{components/footer :: footer}"></div>
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     
     <script>
@@ -385,13 +350,13 @@
             // Inicializar DataTable
             tabelaEventos = $('#tabelaEventos').DataTable({
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                    url: 'https://cdn.jsdelivr.net/npm/datatables.net-plugins@1.13.6/i18n/pt-BR.json'
                 },
                 pageLength: 10,
                 responsive: true,
                 order: [[1, 'asc']], // Ordenar por data
                 columnDefs: [
-                    { orderable: false, targets: [6] } // Desabilitar ordenação na coluna de ações
+                    { orderable: false, targets: [5] } // Desabilitar ordenação na coluna de ações
                 ]
             });
             
@@ -444,16 +409,6 @@
             
             // Aplicar filtros customizados no DataTable
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Filtro por categoria
-                if (categoria && !data[2].includes(categoria)) {
-                    return false;
-                }
-                
-                // Filtro por prioridade
-                if (prioridade && !data[3].includes(prioridade)) {
-                    return false;
-                }
-                
                 // Filtro por data (implementação simplificada)
                 // Em uma implementação real, seria necessário parsing das datas
                 
@@ -523,9 +478,34 @@
         }
         
         function visualizarDetalhes(eventoId) {
-            // Carregar detalhes do evento via AJAX
-            $.get('/agenda/api/evento/' + eventoId, function(data) {
-                $('#conteudoDetalhesEvento').html(data);
+            $.getJSON('/agenda/api/evento/' + eventoId, function(data) {
+                if (!data || !data.id) {
+                    alert('Evento não encontrado.');
+                    return;
+                }
+                const inicio = data.dataHoraInicio ? new Date(data.dataHoraInicio).toLocaleString('pt-BR') : '-';
+                const fim = data.dataHoraFim ? new Date(data.dataHoraFim).toLocaleString('pt-BR') : '-';
+                const html = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-info-circle me-2"></i>Informações</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>Título:</strong></td><td>${data.titulo || '-'}</td></tr>
+                                <tr><td><strong>Descrição:</strong></td><td>${data.descricao || '-'}</td></tr>
+                                <tr><td><strong>Local:</strong></td><td>${data.local || '-'}</td></tr>
+                                <tr><td><strong>Lembrete:</strong></td><td>${data.lembrete ? 'SIM' : 'NÃO'}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-clock me-2"></i>Data/Hora</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>Início:</strong></td><td>${inicio}</td></tr>
+                                <tr><td><strong>Fim:</strong></td><td>${fim}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                $('#conteudoDetalhesEvento').html(html);
                 $('#btnEditarEvento').attr('onclick', 'window.location.href="/agenda/editar/' + eventoId + '"');
                 $('#modalDetalhesEvento').modal('show');
             }).fail(function() {

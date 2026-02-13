@@ -1,18 +1,15 @@
 package com.jaasielsilva.portalceo.juridico.previdenciario.processo.controller;
 
-import com.jaasielsilva.portalceo.juridico.previdenciario.documentos.entity.TipoDocumentoProcesso;
-import com.jaasielsilva.portalceo.juridico.previdenciario.documentos.service.DocumentoProcessoService;
-import com.jaasielsilva.portalceo.juridico.previdenciario.historico.service.HistoricoProcessoService;
-import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciario;
-import com.jaasielsilva.portalceo.juridico.previdenciario.processo.service.ProcessoPrevidenciarioService;
-import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.entity.EtapaWorkflow;
-import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.entity.EtapaWorkflowCodigo;
-import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.service.WorkflowService;
-import com.jaasielsilva.portalceo.model.Usuario;
-import com.jaasielsilva.portalceo.repository.UsuarioRepository;
-import com.jaasielsilva.portalceo.service.ClienteService;
-import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciarioStatus;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,22 +18,27 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.http.ResponseEntity;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
-import java.math.BigDecimal;
+import com.jaasielsilva.portalceo.juridico.previdenciario.documentos.entity.TipoDocumentoProcesso;
+import com.jaasielsilva.portalceo.juridico.previdenciario.documentos.service.DocumentoProcessoService;
+import com.jaasielsilva.portalceo.juridico.previdenciario.historico.service.HistoricoProcessoService;
 import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciario;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoPrevidenciarioStatus;
+import com.jaasielsilva.portalceo.juridico.previdenciario.processo.service.ProcessoPrevidenciarioService;
+import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.entity.EtapaWorkflow;
+import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.entity.EtapaWorkflowCodigo;
+import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.service.WorkflowService;
+import com.jaasielsilva.portalceo.model.Usuario;
+import com.jaasielsilva.portalceo.repository.UsuarioRepository;
+import com.jaasielsilva.portalceo.service.ClienteService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/juridico/previdenciario")
@@ -227,6 +229,7 @@ public class ProcessoPrevidenciarioController {
             m.put("dataEnvioDocumentacao", p.getDataEnvioDocumentacao());
             m.put("pendenciaAnalise", p.getPendenciaAnalise());
             m.put("dataAnalise", p.getDataAnalise());
+            m.put("dataPendenciaAnalise", p.getDataPendenciaAnalise());
             m.put("statusContrato", p.getStatusContrato());
             m.put("dataEnvioContrato", p.getDataEnvioContrato());
             m.put("dataAssinaturaContrato", p.getDataAssinaturaContrato());
@@ -360,6 +363,25 @@ public class ProcessoPrevidenciarioController {
         }
     }
 
+    @PostMapping("/api/processos/{id}/medico/valor-previsto")
+    @ResponseBody
+    public ResponseEntity<?> registrarValorMedicoPrevistoApi(@PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            Authentication authentication) {
+        try {
+            Usuario executor = usuarioLogado(authentication);
+            BigDecimal valorPrevisto = parseDecimal(body.get("valorPrevisto") != null ? String.valueOf(body.get("valorPrevisto")) : null);
+            String observacao = body.get("observacao") != null ? String.valueOf(body.get("observacao")) : null;
+            if (valorPrevisto == null || valorPrevisto.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("erro", "Valor previsto inválido"));
+            }
+            processoService.registrarValorMedicoPrevisto(id, valorPrevisto, executor, observacao);
+            return ResponseEntity.ok(Map.of("sucesso", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
+    }
+
     private Usuario usuarioLogado(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             throw new IllegalStateException("Usuário não autenticado");
@@ -425,8 +447,20 @@ public class ProcessoPrevidenciarioController {
 
     @PostMapping("/{id}/acoes/analise-pendente")
     @ResponseBody
-    public ResponseEntity<?> analisePendente(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
-        processoService.atualizarAnalise(id, false, usuario);
+    public ResponseEntity<?> analisePendente(@PathVariable Long id, 
+                                             @RequestParam(value = "data", required = false) String data,
+                                             @AuthenticationPrincipal Usuario usuario) {
+        java.time.LocalDate d = null;
+        if (data != null && !data.isBlank()) {
+            try {
+                d = java.time.LocalDate.parse(data);
+            } catch (Exception ignored) {}
+        }
+        if (d != null) {
+            processoService.atualizarAnalisePendente(id, d, usuario);
+        } else {
+            processoService.atualizarAnalise(id, false, usuario);
+        }
         return ResponseEntity.ok().build();
     }
 

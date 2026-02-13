@@ -520,7 +520,7 @@
         <li sec:authorize="hasAuthority('MENU_ADMIN_USUARIOS')"><a href="/usuarios/index"><i class="fas fa-user-friends"></i> Usuários</a></li>
 
         <!-- Gestão de Acesso -->
-        <li class="has-submenu" sec:authorize="hasAuthority('MENU_ADMIN_GESTAO_ACESSO')">
+        <!--<li class="has-submenu" sec:authorize="hasAuthority('MENU_ADMIN_GESTAO_ACESSO')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-user-shield"></i> Gestão de Acesso
           </a>
@@ -614,15 +614,14 @@
         <!--
         <li sec:authorize="hasAuthority('MENU_DOCS_GERENCIAL')"><a href="/documentos"><i class="fas fa-file-alt"></i> Documentos Gerenciais</a></li>
         -->
-        <li sec:authorize="hasAuthority('MENU_DOCS_PESSOAL')"><a href="/documentos"><i class="fas fa-file-alt"></i> Meus Documentos</a></li>
+        <!-- <li sec:authorize="hasAuthority('MENU_DOCS_PESSOAL')"><a href="/documentos"><i class="fas fa-file-alt"></i> Meus Documentos</a></li>
         <!--
         <li sec:authorize="hasAuthority('MENU_DOCS_PESSOAL')"><a href="/termos"><i class="fas fa-file-contract"></i> Termos de Uso</a></li>
         -->
         <!-- <li><a href="/suporte"><i class="fas fa-life-ring"></i> Suporte</a></li> -->
         <li><a href="/agenda"><i class="fas fa-calendar-check"></i> Agenda</a></li>
 
-        <!-- Logout sempre no fim -->
-        <li style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px;">
+        <li class="logout">
           <a href="/logout"><i class="fas fa-power-off"></i> Sair</a>
         </li>
       </ul>

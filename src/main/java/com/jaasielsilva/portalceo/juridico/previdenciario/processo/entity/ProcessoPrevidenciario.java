@@ -1,8 +1,13 @@
 package com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import com.jaasielsilva.portalceo.juridico.previdenciario.workflow.entity.EtapaWorkflowCodigo;
 import com.jaasielsilva.portalceo.model.Cliente;
 import com.jaasielsilva.portalceo.model.Usuario;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,11 +23,6 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.math.BigDecimal;
-import com.jaasielsilva.portalceo.juridico.previdenciario.processo.entity.ProcessoDecisaoResultado;
 
 @Entity
 @Table(name = "juridico_previd_processo")
@@ -93,6 +93,9 @@ public class ProcessoPrevidenciario {
 
     @Column(name = "pendencia_analise")
     private Boolean pendenciaAnalise = false;
+    
+    @Column(name = "data_pendencia_analise")
+    private LocalDate dataPendenciaAnalise;
 
     @Column(name = "status_contrato", length = 30)
     private String statusContrato; // NAO_ENVIADO, ENVIADO, ASSINADO
@@ -111,6 +114,9 @@ public class ProcessoPrevidenciario {
 
     @Column(name = "data_laudo_medico")
     private LocalDateTime dataLaudoMedico;
+
+    @Column(name = "valor_medico_previsto", precision = 15, scale = 2)
+    private BigDecimal valorMedicoPrevisto;
 
     @PrePersist
     public void prePersist() {

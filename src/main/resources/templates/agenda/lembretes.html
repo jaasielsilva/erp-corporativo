@@ -16,12 +16,12 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div th:replace="~{components/sidebar :: sidebar}"></div>
     
     <!-- Main Content -->
     <div class="main-content">
         <!-- Top Bar -->
-        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        <div th:replace="~{components/topbar :: topbar}"></div>
         
         <!-- Page Content -->
         <div class="container-fluid p-4">
@@ -378,7 +378,7 @@
     </div>
     
     <!-- Footer -->
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{components/footer :: footer}"></div>
     
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -186,8 +186,6 @@
         </li>
         
 
-
-        <!-- Compras - Fornecedores comentado para uso futuro -->
         
         <li sec:authorize="hasAuthority('MENU_COMPRAS')"><a href="/fornecedores"><i class="fas fa-handshake"></i> Fornecedores</a></li>
         
@@ -209,8 +207,7 @@
         
 
 
-        <!-- Módulo RH (MENU_RH) oculto temporariamente -->
-        <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH')" th:if="${false}">
+        <li class="has-submenu" sec:authorize="hasAuthority('MENU_RH')">
           <a href="javascript:void(0);" class="submenu-toggle">
             <i class="fas fa-users"></i> Recursos Humanos
           </a>
